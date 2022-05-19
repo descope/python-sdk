@@ -31,6 +31,8 @@ jobs:
           options: "--check --verbose"
       - name: Run isort
         uses: isort/isort-action@master
+        with:
+          args: --profile black
       - name: Unittest
         run: |
           python -m unittest tests/auth_tests.py
