@@ -32,7 +32,7 @@ jobs:
       - name: Run isort
         uses: isort/isort-action@master
         with:
-          args: --profile black
+          configuration: --profile black
       - name: Unittest
         run: |
           python -m unittest tests/auth_tests.py
