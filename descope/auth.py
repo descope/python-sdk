@@ -64,7 +64,6 @@ class AuthClient:
 
         try:
             # Load and validate public key
-            print(f"debugdebug {public_key}")
             self.public_key = jwt.PyJWK(public_key)
         except jwt.InvalidKeyError as e:
             raise AuthException(
