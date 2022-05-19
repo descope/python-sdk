@@ -40,13 +40,11 @@ jobs:
 
       - name: Unittest
         run: |
-          echo $PYTHON_PATH
-          echo $(pwd)
           python -m pytest tests/*
 
       - name: Build coverage file
         run: |
-          pytest --junitxml=/tmp/pytest.xml --cov-report=term-missing:skip-covered --cov=descope tests/ | tee /tmp/pytest-coverage.txt
+          python -m pytest --junitxml=/tmp/pytest.xml --cov-report=term-missing:skip-covered --cov=descope tests/ | tee /tmp/pytest-coverage.txt
 
       - name: Pytest coverage comment
         id: coverageComment
