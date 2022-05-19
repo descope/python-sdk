@@ -4,3 +4,4 @@ flask
 flake8
 pytest
 PyJWT
+cryptography
