@@ -10,7 +10,9 @@ from requests.models import Response  # noqa: F401
 
 from descope.common import (
     DEFAULT_BASE_URI,
+    DEFAULT_FETCH_PUBLIC_KEY_URI,
     EMAIL_REGEX,
+    GET_KEYS_PATH,
     PHONE_REGEX,
     SIGNIN_OTP_PATH,
     SIGNUP_OTP_PATH,
@@ -22,8 +24,7 @@ from descope.exceptions import AuthException
 
 
 class AuthClient:
-    def __init__(self, project_id: str, public_key: str):
-
+    def __init__(self, project_id: str, public_key: str = None):
         # validate project id
         if project_id is None or project_id == "":
             # try get the project_id from env
@@ -37,14 +38,15 @@ class AuthClient:
         self.project_id = project_id
 
         if public_key is None or public_key == "":
-            public_key = os.getenv("DESCOPE_PUBLIC_KEY", "")
-            if public_key == "":
-                raise AuthException(
-                    500,
-                    "Init failure",
-                    "Failed to init AuthClient object, public key cannot be found",
-                )
+            public_key = os.getenv("DESCOPE_PUBLIC_KEY", None)
 
+        if public_key is None:
+            self.public_key = None  # public key will be fetch later (on demand)
+        else:
+            self.public_key = self._validate_and_load_public_key(public_key)
+
+    @staticmethod
+    def _validate_and_load_public_key(public_key) -> jwt.PyJWK:
         if isinstance(public_key, str):
             try:
                 public_key = json.loads(public_key)
@@ -64,7 +66,7 @@ class AuthClient:
 
         try:
             # Load and validate public key
-            self.public_key = jwt.PyJWK(public_key)
+            return jwt.PyJWK(public_key)
         except jwt.InvalidKeyError as e:
             raise AuthException(
                 500,
@@ -76,6 +78,40 @@ class AuthClient:
                 500,
                 "Init failure",
                 f"Failed to init AuthClient object, failed to load public key {e}",
+            )
+
+    def _fetch_public_key(self, kid: str) -> None:
+        response = requests.get(
+            f"{DEFAULT_FETCH_PUBLIC_KEY_URI}{GET_KEYS_PATH}/{self.project_id}",
+            headers=self._get_default_headers(),
+        )
+
+        if not response.ok:
+            raise AuthException(
+                401, "public key fetching failed", f"err: {response.reason}"
+            )
+
+        jwks_data = response.text
+        try:
+            jwkeys = json.loads(jwks_data)
+        except Exception as e:
+            raise AuthException(
+                401, "public key fetching failed", f"Failed to load jwks {e}"
+            )
+
+        founded_key = None
+        for key in jwkeys:
+            if key["kid"] == kid:
+                founded_key = key
+                break
+
+        if founded_key:
+            self.public_key = AuthClient._validate_and_load_public_key(founded_key)
+        else:
+            raise AuthException(
+                401,
+                "public key validation failed",
+                "Failed to validate public key, public key not found",
             )
 
     @staticmethod
@@ -219,22 +255,28 @@ class AuthClient:
         """
         DOC
         """
+
         try:
             unverified_header = jwt.get_unverified_header(signed_token)
         except Exception as e:
             raise AuthException(
                 401,
                 "token validation failure",
-                f"Failed to get unverified token header, {e}",
+                f"Failed to parse token header, {e}",
             )
-        token_type = unverified_header.get("typ", None)
-        alg = unverified_header.get("alg", None)
-        if token_type is None or alg is None:
+
+        kid = unverified_header.get("kid", None)
+        if kid is None:
             raise AuthException(
                 401,
                 "token validation failure",
-                f"Token header is missing token type or algorithm, token_type={token_type} alg={alg}",
+                "Token header is missing kid property",
             )
+
+        if self.public_key is None:
+            self._fetch_public_key(
+                kid
+            )  # will set self.public_key or raise exception if failed
 
         try:
             jwt.decode(jwt=signed_token, key=self.public_key.key, algorithms=["ES384"])

@@ -37,16 +37,27 @@ def main():
             )
             logging.info("Code is valid")
             token = cookies.get(COOKIE_NAME)
-        except AuthException:
-            logging.info("Invalid code")
+        except AuthException as e:
+            logging.info(f"Invalid code {e}")
             raise
 
         try:
             logging.info("going to validate session..")
             auth_client.validate_session_request(token)
             logging.info("Session is valid and all is OK")
-        except AuthException:
-            logging.info("Session is not valid")
+        except AuthException as e:
+            logging.info(f"Session is not valid {e}")
+
+        try:
+            old_public_key = auth_client.public_key
+            # fetch and load the public key associated with this project (by kid)
+            auth_client._fetch_public_key(project_id)
+            if old_public_key != auth_client.public_key:
+                logging.info("new public key fetched successfully")
+            else:
+                logging.info("failed to fetch new public_key")
+        except AuthException as e:
+            logging.info(f"failed to fetch public key for this project {e}")
 
     except AuthException:
         raise

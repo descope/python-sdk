@@ -25,16 +25,67 @@ class TestAuthClient(unittest.TestCase):
             AuthException, AuthClient, project_id=None, public_key="dummy"
         )
         self.assertRaises(AuthException, AuthClient, project_id="", public_key="dummy")
-        self.assertRaises(
-            AuthException, AuthClient, project_id="dummy", public_key=None
+        self.assertIsNotNone(
+            AuthException, AuthClient(project_id="dummy", public_key=None)
         )
-        self.assertRaises(AuthException, AuthClient, project_id="dummy", public_key="")
+        self.assertIsNotNone(
+            AuthException, AuthClient(project_id="dummy", public_key="")
+        )
         self.assertRaises(
             AuthException, AuthClient, project_id="dummy", public_key="not dict object"
         )
         self.assertIsNotNone(
             AuthClient(project_id="dummy", public_key=self.public_key_str)
         )
+
+    def test_validate_and_load_public_key(self):
+        # test invalid json
+        self.assertRaises(
+            AuthException,
+            AuthClient._validate_and_load_public_key,
+            public_key="invalid json",
+        )
+        # test not dict object
+        self.assertRaises(
+            AuthException, AuthClient._validate_and_load_public_key, public_key=555
+        )
+        # test invalid dict
+        self.assertRaises(
+            AuthException,
+            AuthClient._validate_and_load_public_key,
+            public_key={"kid": "dummy"},
+        )
+
+    def test_fetch_public_key(self):
+        client = AuthClient(self.dummy_project_id, self.public_key_dict)
+        valid_keys_response = """[
+    {
+        "alg": "ES384",
+        "crv": "P-384",
+        "kid": "299psneX92K3vpbqPMRCnbZKb27",
+        "kty": "EC",
+        "use": "sig",
+        "x": "435yhcD0tqH6z5M8kNFYEcEYXjzBQWiOvIOZO17rOatpXj-MbA6CKrktiblT4xMb",
+        "y": "YMf1EIz68z2_RKBys5byWRUXlqNF_BhO5F0SddkaRtiqZ8M6n7ZnKl65JGN0EEGr"
+    }
+]
+        """
+
+        # Test failed flows
+        with patch("requests.get") as mock_get:
+            mock_get.return_value.ok = False
+            self.assertRaises(AuthException, client._fetch_public_key, "dummy_kid")
+
+        with patch("requests.get") as mock_get:
+            mock_get.return_value.ok = True
+            mock_get.return_value.text = "invalid json"
+            self.assertRaises(AuthException, client._fetch_public_key, "dummy_kid")
+
+        # test success flow
+        with patch("requests.get") as mock_get:
+            mock_get.return_value.ok = True
+            mock_get.return_value.text = valid_keys_response
+            self.assertIsNone(client._fetch_public_key("299psneX92K3vpbqPMRCnbZKb27"))
 
     def test_verify_delivery_method(self):
         self.assertEqual(
