@@ -35,4 +35,6 @@ jobs:
           configuration: --profile black
       - name: Unittest
         run: |
+          echo $(ls -l)
+          echo $(pwd)
           python -m unittest tests/auth_tests.py
