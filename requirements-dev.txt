@@ -3,3 +3,4 @@ mock
 flask
 flake8
 pytest
+PyJWT
