@@ -2,6 +2,8 @@ import base64
 import json
 import os
 import re
+from threading import RLock
+from typing import Tuple
 
 import jwt
 import requests
@@ -22,6 +24,7 @@ from descope.exceptions import AuthException
 
 class AuthClient:
     def __init__(self, project_id: str, public_key: str = None):
+        self.lock_public_keys = RLock()
         # validate project id
         if project_id is None or project_id == "":
             # try get the project_id from env
@@ -30,54 +33,63 @@ class AuthClient:
                 raise AuthException(
                     500,
                     "Init failure",
-                    "Failed to init AuthClient object, project id is empty",
+                    "Failed to init AuthClient object, project should not be empty",
                 )
         self.project_id = project_id
 
         if public_key is None or public_key == "":
             public_key = os.getenv("DESCOPE_PUBLIC_KEY", None)
 
-        if public_key is None:
-            self.public_key = None  # public key will be fetch later (on demand)
-        else:
-            self.public_key = self._validate_and_load_public_key(public_key)
+        with self.lock_public_keys:
+            if public_key is None or public_key == "":
+                self.public_keys = {}  # public key will be fetch later (on demand)
+            else:
+                kid, pub_key = self._validate_and_load_public_key(public_key)
+                self.public_keys = {kid: pub_key}
 
     @staticmethod
-    def _validate_and_load_public_key(public_key) -> jwt.PyJWK:
+    def _validate_and_load_public_key(public_key) -> Tuple[str, jwt.PyJWK]:
         if isinstance(public_key, str):
             try:
                 public_key = json.loads(public_key)
             except Exception as e:
                 raise AuthException(
                     500,
-                    "Init failure",
-                    f"Failed to init AuthClient object, invalid public key, err: {e}",
+                    "Public key failure",
+                    f"Failed to load public key, invalid public key, err: {e}",
                 )
 
         if not isinstance(public_key, dict):
             raise AuthException(
                 500,
-                "Init failure",
-                "Failed to init AuthClient object, invalid public key (unknown type)",
+                "Public key failure",
+                "Failed to load public key, invalid public key (unknown type)",
             )
 
+        kid = public_key.get("kid", None)
+        if kid is None:
+            raise AuthException(
+                500,
+                "Public key failure",
+                "Failed to load public key, missing kid property",
+            )
         try:
             # Load and validate public key
-            return jwt.PyJWK(public_key)
+            return (kid, jwt.PyJWK(public_key))
         except jwt.InvalidKeyError as e:
             raise AuthException(
                 500,
-                "Init failure",
-                f"Failed to init AuthClient object, failed to load public key {e}",
+                "Public key failure",
+                f"Failed to load public key {e}",
             )
         except jwt.PyJWKError as e:
             raise AuthException(
                 500,
-                "Init failure",
-                f"Failed to init AuthClient object, failed to load public key {e}",
+                "Public key failure",
+                f"Failed to load public key {e}",
             )
 
-    def _fetch_public_key(self, kid: str) -> None:
+    def _fetch_public_keys(self) -> None:
         response = requests.get(
             f"{DEFAULT_FETCH_PUBLIC_KEY_URI}{EndpointsV1.publicKeyPath}/{self.project_id}",
             headers=self._get_default_headers(),
@@ -96,20 +108,16 @@ class AuthClient:
                 401, "public key fetching failed", f"Failed to load jwks {e}"
             )
 
-        found_key = None
-        for key in jwkeys:
-            if key["kid"] == kid:
-                found_key = key
-                break
-
-        if found_key:
-            self.public_key = AuthClient._validate_and_load_public_key(found_key)
-        else:
-            raise AuthException(
-                401,
-                "public key validation failed",
-                "Failed to validate public key, public key not found",
-            )
+        with self.lock_public_keys:
+            # Load all public keys for this project
+            self.public_keys = {}
+            for key in jwkeys:
+                try:
+                    loaded_kid, pub_key = AuthClient._validate_and_load_public_key(key)
+                    self.public_keys[loaded_kid] = pub_key
+                except Exception:
+                    # just continue to the next key
+                    pass
 
     @staticmethod
     def _verify_delivery_method(method: DeliveryMethod, identifier: str) -> bool:
@@ -270,13 +278,23 @@ class AuthClient:
                 "Token header is missing kid property",
             )
 
-        if self.public_key is None:
-            self._fetch_public_key(
-                kid
-            )  # will set self.public_key or raise exception if failed
+        with self.lock_public_keys:
+            if self.public_keys == {} or self.public_keys.get(kid, None) is None:
+                self._fetch_public_keys()
+
+            found_key = self.public_keys.get(kid, None)
+            if found_key is None:
+                raise AuthException(
+                    401,
+                    "public key validation failed",
+                    "Failed to validate public key, public key not found",
+                )
+            # copy the key so we can release the lock
+            # copy_key = deepcopy(found_key)
+            copy_key = found_key
 
         try:
-            jwt.decode(jwt=signed_token, key=self.public_key.key, algorithms=["ES384"])
+            jwt.decode(jwt=signed_token, key=copy_key.key, algorithms=["ES384"])
         except Exception as e:
             raise AuthException(
                 401, "token validation failure", f"token is not valid, {e}"

@@ -1,5 +1,6 @@
 import json
 import unittest
+from copy import deepcopy
 from enum import Enum
 from unittest.mock import patch
 
@@ -82,18 +83,18 @@ class TestAuthClient(unittest.TestCase):
         # Test failed flows
         with patch("requests.get") as mock_get:
             mock_get.return_value.ok = False
-            self.assertRaises(AuthException, client._fetch_public_key, "dummy_kid")
+            self.assertRaises(AuthException, client._fetch_public_keys)
 
         with patch("requests.get") as mock_get:
             mock_get.return_value.ok = True
             mock_get.return_value.text = "invalid json"
-            self.assertRaises(AuthException, client._fetch_public_key, "dummy_kid")
+            self.assertRaises(AuthException, client._fetch_public_keys)
 
         # test success flow
         with patch("requests.get") as mock_get:
             mock_get.return_value.ok = True
             mock_get.return_value.text = valid_keys_response
-            self.assertIsNone(client._fetch_public_key("299psneX92K3vpbqPMRCnbZKb27"))
+            self.assertIsNone(client._fetch_public_keys())
 
     def test_verify_delivery_method(self):
         self.assertEqual(
@@ -351,15 +352,26 @@ class TestAuthClient(unittest.TestCase):
         )
         self.assertIsNone(client.validate_session_request(valid_jwt_token))
 
-        # with patch("requests.get") as mock_request:
-        #    #with patch("descope.AuthClient.validate_session_request") as mo:
-        #    with patch.object(client.public_key, None) as mo:
-        #        #mo.self.public_key = None
-        #        mock_request.return_value.text = """[{"kid": "dummy_kid"}]"""
-        #        mock_request.return_value.ok = True
-        #        self.assertRaises(
-        #            AuthException, client.validate_session_request, valid_jwt_token
-        #        )
+        # Test case where key id cannot be found
+        client2 = AuthClient(self.dummy_project_id, None)
+        with patch("requests.get") as mock_request:
+            fake_key = deepcopy(self.public_key_dict)
+            # overwrite the kid (so it will not be found)
+            fake_key["kid"] = "dummy_kid"
+            mock_request.return_value.text = json.dumps([fake_key])
+            mock_request.return_value.ok = True
+            self.assertRaises(
+                AuthException, client2.validate_session_request, valid_jwt_token
+            )
+
+        # Test case where we failed to load key
+        client3 = AuthClient(self.dummy_project_id, None)
+        with patch("requests.get") as mock_request:
+            mock_request.return_value.text = """[{"kid": "dummy_kid"}]"""
+            mock_request.return_value.ok = True
+            self.assertRaises(
+                AuthException, client3.validate_session_request, valid_jwt_token
+            )
 
     def test_exception_object(self):
         ex = AuthException(401, "dummy error type", "dummy error message")

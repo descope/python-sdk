@@ -46,10 +46,10 @@ def main():
             logging.info(f"Session is not valid {e}")
 
         try:
-            old_public_key = auth_client.public_key
+            old_public_key = auth_client.public_keys
             # fetch and load the public key associated with this project (by kid)
-            auth_client._fetch_public_key(project_id)
-            if old_public_key != auth_client.public_key:
+            auth_client._fetch_public_keys(project_id)
+            if old_public_key != auth_client.public_keys:
                 logging.info("new public key fetched successfully")
             else:
                 logging.info("failed to fetch new public_key")
