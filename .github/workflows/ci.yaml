@@ -36,6 +36,7 @@ jobs:
         with:
           configuration: --profile black
 
+      - uses: actions/checkout@v3
       - name: Check leaks
         uses: ./github/actions/gitleaks
 
