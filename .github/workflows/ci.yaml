@@ -24,9 +24,7 @@ jobs:
 
       - name: Lint with flake8
         run: |
-          # stop the build if there are Python syntax errors or undefined names
-          #flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-           flake8 . --count --show-source --statistics
+            flake8 . --count --show-source --statistics
 
       - name: Lint with black
         uses: psf/black@stable
@@ -38,7 +36,10 @@ jobs:
         with:
           configuration: --profile black
 
-      - name: Unittest
+      - name: Check leaks
+        uses: ./github/actions/gitleaks
+
+      - name: Tests
         run: |
           python -m pytest tests/*
 
@@ -52,6 +53,7 @@ jobs:
         with:
           pytest-coverage-path: /tmp/pytest-coverage.txt
           junitxml-path: /tmp/pytest.xml
+          create-new-comment: false
 
       - name: Check the output coverage
         run: |
