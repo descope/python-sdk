@@ -1,0 +1,9 @@
+name: Leaks checks
+description: 'gitleaks checks'
+runs:
+  steps:
+    - name: gitleaks checks
+      run: |
+        chmod +x ./scripts/gitleaks/gitleaks.sh
+        ./scripts/gitleaks/gitleaks.sh
+      shell: bash
