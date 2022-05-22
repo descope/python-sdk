@@ -1,5 +1,6 @@
 import json
 import unittest
+from enum import Enum
 from unittest.mock import patch
 
 from descope import AuthClient, AuthException, DeliveryMethod, User
@@ -25,6 +26,13 @@ class TestAuthClient(unittest.TestCase):
             AuthException, AuthClient, project_id=None, public_key="dummy"
         )
         self.assertRaises(AuthException, AuthClient, project_id="", public_key="dummy")
+
+        with patch("os.getenv") as mock_getenv:
+            mock_getenv.return_value = ""
+            self.assertRaises(
+                AuthException, AuthClient, project_id=None, public_key="dummy"
+            )
+
         self.assertIsNotNone(
             AuthException, AuthClient(project_id="dummy", public_key=None)
         )
@@ -147,6 +155,14 @@ class TestAuthClient(unittest.TestCase):
             False,
         )
 
+        class AAA(Enum):
+            DUMMY = 4
+
+        self.assertEqual(
+            AuthClient._verify_delivery_method(AAA.DUMMY, "unvalid@phone.number"),
+            False,
+        )
+
     def test_get_identifier_name_by_method(self):
         self.assertEqual(
             AuthClient._get_identifier_name_by_method(DeliveryMethod.EMAIL), "email"
@@ -156,6 +172,13 @@ class TestAuthClient(unittest.TestCase):
         )
         self.assertEqual(
             AuthClient._get_identifier_name_by_method(DeliveryMethod.WHATSAPP), "phone"
+        )
+
+        class AAA(Enum):
+            DUMMY = 4
+
+        self.assertRaises(
+            AuthException, AuthClient._get_identifier_name_by_method, AAA.DUMMY
         )
 
     def test_compose_verify_code_url(self):
@@ -232,7 +255,7 @@ class TestAuthClient(unittest.TestCase):
                 AuthException,
                 client.sign_up_otp,
                 DeliveryMethod.EMAIL,
-                "dummy@dummy",
+                "dummy@dummy.com",
                 signup_user_details,
             )
 
@@ -244,6 +267,12 @@ class TestAuthClient(unittest.TestCase):
                     DeliveryMethod.EMAIL, "dummy@dummy.com", signup_user_details
                 )
             )
+
+        # test undefined enum value
+        class Dummy(Enum):
+            DUMMY = 7
+
+        self.assertRaises(AuthException, AuthClient._compose_signin_url, Dummy.DUMMY)
 
     def test_sign_in(self):
         client = AuthClient(self.dummy_project_id, self.public_key_dict)
@@ -258,7 +287,10 @@ class TestAuthClient(unittest.TestCase):
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
-                AuthException, client.sign_in_otp, DeliveryMethod.EMAIL, "dummy@dummy"
+                AuthException,
+                client.sign_in_otp,
+                DeliveryMethod.EMAIL,
+                "dummy@dummy.com",
             )
 
         # Test success flow
@@ -289,7 +321,7 @@ class TestAuthClient(unittest.TestCase):
                 AuthException,
                 client.verify_code,
                 DeliveryMethod.EMAIL,
-                "dummy@dummy",
+                "dummy@dummy.com",
                 code,
             )
 
@@ -318,6 +350,21 @@ class TestAuthClient(unittest.TestCase):
             AuthException, client.validate_session_request, expired_jwt_token
         )
         self.assertIsNone(client.validate_session_request(valid_jwt_token))
+
+        # with patch("requests.get") as mock_request:
+        #    #with patch("descope.AuthClient.validate_session_request") as mo:
+        #    with patch.object(client.public_key, None) as mo:
+        #        #mo.self.public_key = None
+        #        mock_request.return_value.text = """[{"kid": "dummy_kid"}]"""
+        #        mock_request.return_value.ok = True
+        #        self.assertRaises(
+        #            AuthException, client.validate_session_request, valid_jwt_token
+        #        )
+
+    def test_exception_object(self):
+        ex = AuthException(401, "dummy error type", "dummy error message")
+        str_ex = str(ex)  # noqa: F841
+        repr_ex = repr(ex)  # noqa: F841
 
 
 if __name__ == "__main__":
