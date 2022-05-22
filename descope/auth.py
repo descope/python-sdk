@@ -12,12 +12,9 @@ from descope.common import (
     DEFAULT_BASE_URI,
     DEFAULT_FETCH_PUBLIC_KEY_URI,
     EMAIL_REGEX,
-    GET_KEYS_PATH,
     PHONE_REGEX,
-    SIGNIN_OTP_PATH,
-    SIGNUP_OTP_PATH,
-    VERIFY_CODE_PATH,
     DeliveryMethod,
+    EndpointsV1,
     User,
 )
 from descope.exceptions import AuthException
@@ -82,7 +79,7 @@ class AuthClient:
 
     def _fetch_public_key(self, kid: str) -> None:
         response = requests.get(
-            f"{DEFAULT_FETCH_PUBLIC_KEY_URI}{GET_KEYS_PATH}/{self.project_id}",
+            f"{DEFAULT_FETCH_PUBLIC_KEY_URI}{EndpointsV1.publicKeyPath}/{self.project_id}",
             headers=self._get_default_headers(),
         )
 
@@ -99,14 +96,14 @@ class AuthClient:
                 401, "public key fetching failed", f"Failed to load jwks {e}"
             )
 
-        founded_key = None
+        found_key = None
         for key in jwkeys:
             if key["kid"] == kid:
-                founded_key = key
+                found_key = key
                 break
 
-        if founded_key:
-            self.public_key = AuthClient._validate_and_load_public_key(founded_key)
+        if found_key:
+            self.public_key = AuthClient._validate_and_load_public_key(found_key)
         else:
             raise AuthException(
                 401,
@@ -151,15 +148,15 @@ class AuthClient:
 
     @staticmethod
     def _compose_signin_url(method: DeliveryMethod) -> str:
-        return AuthClient._compose_url(SIGNIN_OTP_PATH, method)
+        return AuthClient._compose_url(EndpointsV1.signInAuthOTPPath, method)
 
     @staticmethod
     def _compose_signup_url(method: DeliveryMethod) -> str:
-        return AuthClient._compose_url(SIGNUP_OTP_PATH, method)
+        return AuthClient._compose_url(EndpointsV1.signUpAuthOTPPath, method)
 
     @staticmethod
     def _compose_verify_code_url(method: DeliveryMethod) -> str:
-        return AuthClient._compose_url(VERIFY_CODE_PATH, method)
+        return AuthClient._compose_url(EndpointsV1.verifyCodeAuthPath, method)
 
     @staticmethod
     def _get_identifier_name_by_method(method: DeliveryMethod) -> str:

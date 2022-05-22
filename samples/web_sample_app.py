@@ -8,7 +8,7 @@ from flask_cors import cross_origin
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
 from descope import AuthException  # noqa: E402
-from descope import COOKIE_NAME, AuthClient, DeliveryMethod, User  # noqa: E402
+from descope import SESSION_COOKIE_NAME, AuthClient, DeliveryMethod, User  # noqa: E402
 
 APP = Flask(__name__)
 
@@ -32,7 +32,7 @@ def descope_validate_auth(f):
 
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = request.cookies.get(COOKIE_NAME)
+        token = request.cookies.get(SESSION_COOKIE_NAME)
         try:
             auth_client.validate_session_request(token)
         except AuthException:

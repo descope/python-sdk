@@ -8,7 +8,7 @@ setuptools.setup(
     version="0.0.1",
     author="Descope",
     author_email="author@example.com",
-    description="Descope Python sdk package",
+    description="Descope Python SDK package",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/pypa/sampleproject",
