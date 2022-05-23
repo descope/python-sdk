@@ -48,7 +48,7 @@ def main():
         try:
             old_public_key = auth_client.public_keys
             # fetch and load the public key associated with this project (by kid)
-            auth_client._fetch_public_keys(project_id)
+            auth_client._fetch_public_keys()
             if old_public_key != auth_client.public_keys:
                 logging.info("new public key fetched successfully")
             else:

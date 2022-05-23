@@ -7,13 +7,13 @@ from typing import Tuple
 
 import jwt
 import requests
+from email_validator import EmailNotValidError, validate_email
 from requests.cookies import RequestsCookieJar  # noqa: F401
 from requests.models import Response  # noqa: F401
 
 from descope.common import (
     DEFAULT_BASE_URI,
     DEFAULT_FETCH_PUBLIC_KEY_URI,
-    EMAIL_REGEX,
     PHONE_REGEX,
     DeliveryMethod,
     EndpointsV1,
@@ -42,7 +42,7 @@ class AuthClient:
 
         with self.lock_public_keys:
             if public_key is None or public_key == "":
-                self.public_keys = {}  # public key will be fetch later (on demand)
+                self.public_keys = {}  # public key will be fetched later (on demand)
             else:
                 kid, pub_key = self._validate_and_load_public_key(public_key)
                 self.public_keys = {kid: pub_key}
@@ -125,7 +125,10 @@ class AuthClient:
             return False
 
         if method == DeliveryMethod.EMAIL:
-            if not re.match(EMAIL_REGEX, identifier):
+            try:
+                validate_email(identifier)
+                return True
+            except EmailNotValidError:
                 return False
         elif method == DeliveryMethod.PHONE:
             if not re.match(PHONE_REGEX, identifier):
@@ -228,7 +231,7 @@ class AuthClient:
             data=json.dumps(body),
         )
         if not response.ok:
-            raise AuthException(response.status_code, "", response.reason)
+            raise AuthException(response.status_code, "", response.text)
 
     def verify_code(
         self, method: DeliveryMethod, identifier: str, code: str
