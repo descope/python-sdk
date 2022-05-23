@@ -77,4 +77,4 @@ jobs:
           label: Coverage Report
           message: ${{ steps.coverageComment.outputs.coverage }}
           color: ${{ steps.coverageComment.outputs.color }}
-          namedLogo: python
+          namedLogo: pytest
