@@ -27,3 +27,9 @@ repos:
   rev: 4.0.1
   hooks:
     - id: flake8
+- repo: https://github.com/dhatim/python-license-check
+  rev: master
+  hooks:
+  - id: liccheck
+    language: system
+    args: ["-r./requirements-dev.txt", "-lparanoid"]

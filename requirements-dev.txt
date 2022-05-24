@@ -1,4 +1,5 @@
 pre-commit
+requests
 mock
 flask
 flake8
@@ -7,3 +8,4 @@ PyJWT
 cryptography
 pytest-cov
 email-validator
+liccheck

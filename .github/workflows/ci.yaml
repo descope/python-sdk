@@ -39,6 +39,15 @@ jobs:
       - name: Check leaks
         uses: ./.github/actions/gitleaks
 
+      - name: License Checker
+        uses: andersy005/gh-action-py-liccheck@main
+        with:
+          strategy-ini-file: ./liccheck.ini
+          level: standard
+          requirements-txt-file: ./requirements-dev.txt
+          no-deps: false
+          liccheck-version: 0.6.4
+
       - name: Tests
         run: |
           python -m pytest tests/*
