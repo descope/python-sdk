@@ -48,7 +48,7 @@ jobs:
           python -m pytest --junitxml=/tmp/pytest.xml --cov-report=term-missing:skip-covered --cov=descope tests/
 
       - name: Python Cov
-        uses: orgoro/coverage/v2
+        uses: orgoro/coverage@v2
         with:
             coverageFile: /tmp/pytest.xml
             token: ${{ github.token }}
