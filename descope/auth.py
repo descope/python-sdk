@@ -8,6 +8,7 @@ from typing import Tuple
 import jwt
 import requests
 from email_validator import EmailNotValidError, validate_email
+from jwt.exceptions import ExpiredSignatureError
 from requests.cookies import RequestsCookieJar  # noqa: F401
 from requests.models import Response  # noqa: F401
 
@@ -342,15 +343,13 @@ class AuthClient:
 
         try:
             jwt.decode(jwt=signed_token, key=copy_key.key, algorithms=["ES384"])
-            print("muaaaaa44444")
             return signed_token
-        except jwt.exceptions.ExpiredSignatureError:
-            print("muaaaaa2222")
+        # except jwt.exceptions.ExpiredSignatureError:
+        except ExpiredSignatureError:
             return self.refresh_token(
                 signed_token, signed_refresh_token
             )  # return the new session cookie
         except Exception as e:
-            print("muaaaaa111")
             raise AuthException(
                 401, "token validation failure", f"token is not valid, {e}"
             )
