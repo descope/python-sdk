@@ -15,6 +15,8 @@ from descope.common import (
     DEFAULT_BASE_URI,
     DEFAULT_FETCH_PUBLIC_KEY_URI,
     PHONE_REGEX,
+    REFRESH_SESSION_COOKIE_NAME,
+    SESSION_COOKIE_NAME,
     DeliveryMethod,
     EndpointsV1,
     User,
@@ -170,6 +172,14 @@ class AuthClient:
         return AuthClient._compose_url(EndpointsV1.verifyCodeAuthPath, method)
 
     @staticmethod
+    def _compose_refresh_token_url() -> str:
+        return EndpointsV1.refreshTokenPath
+
+    @staticmethod
+    def _compose_logout_url() -> str:
+        return EndpointsV1.logoutPath
+
+    @staticmethod
     def _get_identifier_name_by_method(method: DeliveryMethod) -> str:
         if method is DeliveryMethod.EMAIL:
             return "email"
@@ -193,6 +203,9 @@ class AuthClient:
                 "identifier failure",
                 f"Identifier {identifier} is not valid by delivery method {method}",
             )
+
+        if user.username == "":
+            user.username = identifier
 
         body = {
             self._get_identifier_name_by_method(method): identifier,
@@ -259,7 +272,37 @@ class AuthClient:
             raise AuthException(response.status_code, "", response.reason)
         return response.cookies
 
-    def validate_session_request(self, signed_token):
+    def refresh_token(self, signed_token: str, signed_refresh_token: str) -> str:
+        cookies = {
+            SESSION_COOKIE_NAME: signed_token,
+            REFRESH_SESSION_COOKIE_NAME: signed_refresh_token,
+        }
+
+        uri = AuthClient._compose_refresh_token_url()
+        response = requests.get(
+            f"{DEFAULT_BASE_URI}{uri}",
+            headers=self._get_default_headers(),
+            cookies=cookies,
+        )
+
+        if not response.ok:
+            raise AuthException(
+                response.status_code,
+                "Refresh token failed",
+                f"Failed to refresh token with error: {response.text}",
+            )
+
+        res_cookies = response.cookies
+        ds_cookie = res_cookies.get(SESSION_COOKIE_NAME, None)
+        if not ds_cookie:
+            raise AuthException(
+                401, "Refresh token failed", "Failed to get new refreshed token"
+            )
+        return ds_cookie
+
+    def validate_session_request(
+        self, signed_token: str, signed_refresh_token: str
+    ) -> str:
         """
         DOC
         """
@@ -295,12 +338,41 @@ class AuthClient:
             # copy the key so we can release the lock
             # copy_key = deepcopy(found_key)
             copy_key = found_key
+            # TODO: fix the above
 
         try:
             jwt.decode(jwt=signed_token, key=copy_key.key, algorithms=["ES384"])
+            print("muaaaaa44444")
+            return signed_token
+        except jwt.exceptions.ExpiredSignatureError:
+            print("muaaaaa2222")
+            return self.refresh_token(
+                signed_token, signed_refresh_token
+            )  # return the new session cookie
         except Exception as e:
+            print("muaaaaa111")
             raise AuthException(
                 401, "token validation failure", f"token is not valid, {e}"
+            )
+
+    def logout(self, signed_token: str, signed_refresh_token: str) -> None:
+        uri = AuthClient._compose_logout_url()
+        cookies = {
+            SESSION_COOKIE_NAME: signed_token,
+            REFRESH_SESSION_COOKIE_NAME: signed_refresh_token,
+        }
+
+        response = requests.get(
+            f"{DEFAULT_BASE_URI}{uri}",
+            headers=self._get_default_headers(),
+            cookies=cookies,
+        )
+
+        if not response.ok:
+            raise AuthException(
+                response.status_code,
+                "Failed logout",
+                f"logout request failed with error {response.text}",
             )
 
     def _get_default_headers(self):

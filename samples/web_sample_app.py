@@ -8,7 +8,13 @@ from flask_cors import cross_origin
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
 from descope import AuthException  # noqa: E402
-from descope import SESSION_COOKIE_NAME, AuthClient, DeliveryMethod, User  # noqa: E402
+from descope import (  # noqa: E402
+    REFRESH_SESSION_COOKIE_NAME,
+    SESSION_COOKIE_NAME,
+    AuthClient,
+    DeliveryMethod,
+    User,
+)
 
 APP = Flask(__name__)
 
@@ -32,16 +38,55 @@ def descope_validate_auth(f):
 
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = request.cookies.get(SESSION_COOKIE_NAME)
+        cookies = request.cookies.copy()
+        session_token = cookies.get(SESSION_COOKIE_NAME)
+        refresh_token = cookies.get(REFRESH_SESSION_COOKIE_NAME)
         try:
-            auth_client.validate_session_request(token)
+            session_token = auth_client.validate_session_request(
+                session_token, refresh_token
+            )
+            cookies[SESSION_COOKIE_NAME] = session_token
         except AuthException:
             return Response(
                 "Access denied",
                 401,
                 {"WWW-Authenticate": 'Basic realm="Login Required"'},
             )
-        return f(*args, **kwargs)
+
+        # Execute the original API
+        response = f(*args, **kwargs)
+
+        for key, val in cookies.items():
+            response.set_cookie(key, val)
+        return response
+
+    return decorated
+
+
+def descope_verify_code(f):
+    """
+    Verify code
+    """
+
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        data = request.get_json(force=True)
+        email = data.get("email", None)
+        code = data.get("code", None)
+        if not code or not email:
+            return Response("Unauthorized", 401)
+
+        try:
+            cookies = auth_client.verify_code(DeliveryMethod.EMAIL, email, code)
+        except AuthException:
+            return Response("Unauthorized", 401)
+
+        # Execute the original API
+        response = f(*args, **kwargs)
+
+        for key, val in cookies.items():
+            response.set_cookie(key, val)
+        return response
 
     return decorated
 
@@ -69,7 +114,7 @@ def signup():
 
     try:
         usr = User(
-            user.get("username", ""),
+            user.get("username", "dummy"),
             user.get("name", ""),
             user.get("phone", ""),
             user.get("email", ""),
@@ -99,6 +144,7 @@ def signin():
 
 
 @APP.route("/api/verify")
+# @descope_verify_code #Use this decorator or the inline code below
 def verify():
     data = request.get_json(force=True)
     email = data.get("email", None)

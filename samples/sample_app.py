@@ -5,6 +5,7 @@ import sys
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
 from descope import (  # noqa: E402
+    REFRESH_SESSION_COOKIE_NAME,
     SESSION_COOKIE_NAME,
     AuthClient,
     AuthException,
@@ -15,9 +16,11 @@ logging.basicConfig(level=logging.INFO)
 
 
 def main():
-    project_id = "299psneX92K3vpbqPMRCnbZKb27"
-    public_key = """{"crv": "P-384", "key_ops": ["verify"], "kty": "EC", "x": "Zd7Unk3ijm3MKXt9vbHR02Y1zX-cpXu6H1_wXRtMl3e39TqeOJ3XnJCxSfE5vjMX", "y": "Cv8AgXWpMkMFWvLGhJ_Gsb8LmapAtEurnBsFI4CAG42yUGDfkZ_xjFXPbYssJl7U", "alg": "ES384", "use": "sig", "kid": "32b3da5277b142c7e24fdf0ef09e0919"}"""
     identifier = "dummy@dummy.com"
+    project_id = ""
+    public_key = (
+        None  # will automatically fetch all public keys related to the project_id
+    )
 
     try:
         auth_client = AuthClient(project_id=project_id, public_key=public_key)
@@ -33,28 +36,32 @@ def main():
                 method=DeliveryMethod.EMAIL, identifier=identifier, code=value
             )
             logging.info("Code is valid")
-            token = cookies.get(SESSION_COOKIE_NAME)
+            token = cookies.get(SESSION_COOKIE_NAME, "")
+            refresh_token = cookies.get(REFRESH_SESSION_COOKIE_NAME, "")
+            logging.info(f"token: {token} \n refresh token: {refresh_token}")
         except AuthException as e:
             logging.info(f"Invalid code {e}")
             raise
 
         try:
             logging.info("going to validate session..")
-            auth_client.validate_session_request(token)
+            token = auth_client.validate_session_request(token, refresh_token)
             logging.info("Session is valid and all is OK")
         except AuthException as e:
             logging.info(f"Session is not valid {e}")
 
         try:
-            old_public_key = auth_client.public_keys
-            # fetch and load the public key associated with this project (by kid)
-            auth_client._fetch_public_keys()
-            if old_public_key != auth_client.public_keys:
-                logging.info("new public key fetched successfully")
-            else:
-                logging.info("failed to fetch new public_key")
+            logging.info("refreshing the session token..")
+            new_session_token = auth_client.refresh_token(token, refresh_token)
+            logging.info(
+                "going to revalidate the session with the newly refreshed token.."
+            )
+            token = auth_client.validate_session_request(
+                new_session_token, refresh_token
+            )
+            logging.info("Session is valid also for the refreshed token.")
         except AuthException as e:
-            logging.info(f"failed to fetch public key for this project {e}")
+            logging.info(f"Session is not valid for the refreshed token: {e}")
 
     except AuthException:
         raise

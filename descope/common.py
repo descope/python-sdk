@@ -5,7 +5,8 @@ DEFAULT_FETCH_PUBLIC_KEY_URI = "http://localhost:8152"  # will use the same base
 
 PHONE_REGEX = """^(?:(?:\\(?(?:00|\\+)([1-4]\\d\\d|[1-9]\\d?)\\)?)?[\\-\\.\\ \\\\/]?)?((?:\\(?\\d{1,}\\)?[\\-\\.\\ \\\\/]?){0,})(?:[\\-\\.\\ \\\\/]?(?:#|ext\\.?|extension|x)[\\-\\.\\ \\\\/]?(\\d+))?$"""
 
-SESSION_COOKIE_NAME = "S"
+SESSION_COOKIE_NAME = "DS"
+REFRESH_SESSION_COOKIE_NAME = "DSR"
 
 
 class EndpointsV1:
@@ -13,6 +14,8 @@ class EndpointsV1:
     signUpAuthOTPPath = "/v1/auth/signup/otp"
     verifyCodeAuthPath = "/v1/auth/code/verify"
     publicKeyPath = "/v1/keys"
+    refreshTokenPath = "/v1/refresh"
+    logoutPath = "/v1/logoutall"
 
 
 class DeliveryMethod(Enum):

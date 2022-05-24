@@ -4,7 +4,7 @@ from copy import deepcopy
 from enum import Enum
 from unittest.mock import patch
 
-from descope import AuthClient, AuthException, DeliveryMethod, User
+from descope import SESSION_COOKIE_NAME, AuthClient, AuthException, DeliveryMethod, User
 
 
 class TestAuthClient(unittest.TestCase):
@@ -54,6 +54,13 @@ class TestAuthClient(unittest.TestCase):
             AuthClient._validate_and_load_public_key,
             public_key="invalid json",
         )
+        # test public key without kid property
+        self.assertRaises(
+            AuthException,
+            AuthClient._validate_and_load_public_key,
+            public_key={"test": "dummy"},
+        )
+
         # test not dict object
         self.assertRaises(
             AuthException, AuthClient._validate_and_load_public_key, public_key=555
@@ -182,7 +189,7 @@ class TestAuthClient(unittest.TestCase):
             AuthException, AuthClient._get_identifier_name_by_method, AAA.DUMMY
         )
 
-    def test_compose_verify_code_url(self):
+    def test_compose_signup_url(self):
         self.assertEqual(
             AuthClient._compose_signup_url(DeliveryMethod.EMAIL),
             "/v1/auth/signup/otp/email",
@@ -195,6 +202,8 @@ class TestAuthClient(unittest.TestCase):
             AuthClient._compose_signup_url(DeliveryMethod.WHATSAPP),
             "/v1/auth/signup/otp/whatsapp",
         )
+
+    def test_compose_signin_url(self):
         self.assertEqual(
             AuthClient._compose_signin_url(DeliveryMethod.EMAIL),
             "/v1/auth/signin/otp/email",
@@ -207,6 +216,8 @@ class TestAuthClient(unittest.TestCase):
             AuthClient._compose_signin_url(DeliveryMethod.WHATSAPP),
             "/v1/auth/signin/otp/whatsapp",
         )
+
+    def test_compose_verify_code_url(self):
         self.assertEqual(
             AuthClient._compose_verify_code_url(DeliveryMethod.EMAIL),
             "/v1/auth/code/verify/email",
@@ -219,6 +230,35 @@ class TestAuthClient(unittest.TestCase):
             AuthClient._compose_verify_code_url(DeliveryMethod.WHATSAPP),
             "/v1/auth/code/verify/whatsapp",
         )
+
+    def test_compose_refresh_token_url(self):
+        self.assertEqual(
+            AuthClient._compose_refresh_token_url(),
+            "/v1/refresh",
+        )
+
+    def test_compose_logout_url(self):
+        self.assertEqual(
+            AuthClient._compose_logout_url(),
+            "/v1/logoutall",
+        )
+
+    def test_logout(self):
+        dummy_refresh_token = ""
+        dummy_valid_jwt_token = ""
+        client = AuthClient(self.dummy_project_id, self.public_key_dict)
+
+        # Test failed flow
+        with patch("requests.get") as mock_get:
+            mock_get.return_value.ok = False
+            self.assertRaises(
+                AuthException, client.logout, dummy_valid_jwt_token, dummy_refresh_token
+            )
+
+        # Test success flow
+        with patch("requests.get") as mock_get:
+            mock_get.return_value.ok = True
+            self.assertIsNone(client.logout(dummy_valid_jwt_token, dummy_refresh_token))
 
     def test_sign_up_otp(self):
         signup_user_details = User(
@@ -261,6 +301,18 @@ class TestAuthClient(unittest.TestCase):
             )
 
         # Test success flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(
+                client.sign_up_otp(
+                    DeliveryMethod.EMAIL, "dummy@dummy.com", signup_user_details
+                )
+            )
+
+        # Test flow where username not set and we used the identifier as default
+        signup_user_details = User(
+            username="", name="john", phone="972525555555", email="dummy@dummy.com"
+        )
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
@@ -336,21 +388,41 @@ class TestAuthClient(unittest.TestCase):
     def test_validate_session(self):
         client = AuthClient(self.dummy_project_id, self.public_key_dict)
 
+        dummy_refresh_token = ""
+
         invalid_header_jwt_token = "AyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImR1bW15In0.Bcz3xSxEcxgBSZOzqrTvKnb9-u45W-RlAbHSBL6E8zo2yJ9SYfODphdZ8tP5ARNTvFSPj2wgyu1SeiZWoGGPHPNMt4p65tPeVf5W8--d2aKXCc4KvAOOK3B_Cvjy_TO8"
-        invalid_payload_jwt_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCJ9.AyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImR1bW15In0.Bcz3xSxEcxgBSZOzqrTvKnb9-u45W-RlAbHSBL6E8zo2yJ9SYfODphdZ8tP5ARNTvFSPj2wgyu1SeiZWoGGPHPNMt4p65tPeVf5W8--d2aKXCc4KvAOOK3B_Cvjy_TO8"
+        missing_kid_header_jwt_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCIsImFhYSI6IjMyYjNkYTUyNzdiMTQyYzdlMjRmZGYwZWYwOWUwOTE5In0.eyJleHAiOjE5ODEzOTgxMTF9.GQ3nLYT4XWZWezJ1tRV6ET0ibRvpEipeo6RCuaCQBdP67yu98vtmUvusBElDYVzRxGRtw5d20HICyo0_3Ekb0euUP3iTupgS3EU1DJMeAaJQgOwhdQnQcJFkOpASLKWh"
+        invalid_payload_jwt_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCIsImtpZCI6IjMyYjNkYTUyNzdiMTQyYzdlMjRmZGYwZWYwOWUwOTE5In0.eyJleHAiOjE5ODEzOTgxMTF9.AQ3nLYT4XWZWezJ1tRV6ET0ibRvpEipeo6RCuaCQBdP67yu98vtmUvusBElDYVzRxGRtw5d20HICyo0_3Ekb0euUP3iTupgS3EU1DJMeAaJQgOwhdQnQcJFkOpASLKWh"
         expired_jwt_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCIsImtpZCI6IjMyYjNkYTUyNzdiMTQyYzdlMjRmZGYwZWYwOWUwOTE5In0.eyJleHAiOjExODEzOTgxMTF9.EdetpQro-frJV1St1mWGygRSzxf6Bg01NNR_Ipwy_CAQyGDmIQ6ITGQ620hfmjW5HDtZ9-0k7AZnwoLnb709QQgbHMFxlDpIOwtFIAJuU-CqaBDwsNWA1f1RNyPpLxop"
         valid_jwt_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCIsImtpZCI6IjMyYjNkYTUyNzdiMTQyYzdlMjRmZGYwZWYwOWUwOTE5In0.eyJleHAiOjE5ODEzOTgxMTF9.GQ3nLYT4XWZWezJ1tRV6ET0ibRvpEipeo6RCuaCQBdP67yu98vtmUvusBElDYVzRxGRtw5d20HICyo0_3Ekb0euUP3iTupgS3EU1DJMeAaJQgOwhdQnQcJFkOpASLKWh"
 
         self.assertRaises(
-            AuthException, client.validate_session_request, invalid_header_jwt_token
+            AuthException,
+            client.validate_session_request,
+            missing_kid_header_jwt_token,
+            dummy_refresh_token,
         )
         self.assertRaises(
-            AuthException, client.validate_session_request, invalid_payload_jwt_token
+            AuthException,
+            client.validate_session_request,
+            invalid_header_jwt_token,
+            dummy_refresh_token,
         )
         self.assertRaises(
-            AuthException, client.validate_session_request, expired_jwt_token
+            AuthException,
+            client.validate_session_request,
+            invalid_payload_jwt_token,
+            dummy_refresh_token,
         )
-        self.assertIsNone(client.validate_session_request(valid_jwt_token))
+        self.assertRaises(
+            AuthException,
+            client.validate_session_request,
+            expired_jwt_token,
+            dummy_refresh_token,
+        )
+        self.assertIsNotNone(
+            client.validate_session_request(valid_jwt_token, dummy_refresh_token)
+        )
 
         # Test case where key id cannot be found
         client2 = AuthClient(self.dummy_project_id, None)
@@ -361,7 +433,10 @@ class TestAuthClient(unittest.TestCase):
             mock_request.return_value.text = json.dumps([fake_key])
             mock_request.return_value.ok = True
             self.assertRaises(
-                AuthException, client2.validate_session_request, valid_jwt_token
+                AuthException,
+                client2.validate_session_request,
+                valid_jwt_token,
+                dummy_refresh_token,
             )
 
         # Test case where we failed to load key
@@ -370,13 +445,55 @@ class TestAuthClient(unittest.TestCase):
             mock_request.return_value.text = """[{"kid": "dummy_kid"}]"""
             mock_request.return_value.ok = True
             self.assertRaises(
-                AuthException, client3.validate_session_request, valid_jwt_token
+                AuthException,
+                client3.validate_session_request,
+                valid_jwt_token,
+                dummy_refresh_token,
             )
 
     def test_exception_object(self):
         ex = AuthException(401, "dummy error type", "dummy error message")
         str_ex = str(ex)  # noqa: F841
         repr_ex = repr(ex)  # noqa: F841
+
+    def test_expired_token(self):
+        expired_jwt_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCIsImtpZCI6IjMyYjNkYTUyNzdiMTQyYzdlMjRmZGYwZWYwOWUwOTE5In0.eyJleHAiOjExODEzOTgxMTF9.EdetpQro-frJV1St1mWGygRSzxf6Bg01NNR_Ipwy_CAQyGDmIQ6ITGQ620hfmjW5HDtZ9-0k7AZnwoLnb709QQgbHMFxlDpIOwtFIAJuU-CqaBDwsNWA1f1RNyPpLxop"
+        dummy_refresh_token = "dummy refresh token"
+        client = AuthClient(self.dummy_project_id, self.public_key_dict)
+
+        # Test fail flow
+        with patch("requests.get") as mock_request:
+            mock_request.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.validate_session_request,
+                expired_jwt_token,
+                dummy_refresh_token,
+            )
+
+        with patch("requests.get") as mock_request:
+            mock_request.return_value.cookies = {"aaa": "aaa"}
+            mock_request.return_value.ok = True
+            self.assertRaises(
+                AuthException,
+                client.validate_session_request,
+                expired_jwt_token,
+                dummy_refresh_token,
+            )
+
+        # Test success flow
+        new_refreshed_token = "new token"
+        with patch("requests.get") as mock_request:
+            mock_request.return_value.cookies = {
+                SESSION_COOKIE_NAME: new_refreshed_token
+            }
+            mock_request.return_value.ok = True
+            refreshed_token = client.validate_session_request(
+                expired_jwt_token, dummy_refresh_token
+            )
+            self.assertEqual(
+                refreshed_token, new_refreshed_token, "Failed to refresh token"
+            )
 
 
 if __name__ == "__main__":
