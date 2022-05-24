@@ -45,36 +45,10 @@ jobs:
 
       - name: Build coverage file
         run: |
-          python -m pytest --junitxml=/tmp/pytest.xml --cov-report=term-missing:skip-covered --cov=descope tests/ | tee /tmp/pytest-coverage.txt
+          python -m pytest --junitxml=/tmp/pytest.xml --cov-report=term-missing:skip-covered --cov=descope tests/
 
-      - name: Pytest coverage comment
-        id: coverageComment
-        uses: MishaKav/pytest-coverage-comment@main
+      - name: Python Cov
+        uses: orgoro/coverage/v2
         with:
-          pytest-coverage-path: /tmp/pytest-coverage.txt
-          junitxml-path: /tmp/pytest.xml
-          create-new-comment: false
-
-      - name: Check the output coverage
-        run: |
-          echo "Coverage Percantage - ${{ steps.coverageComment.outputs.coverage }}"
-          echo "Coverage Color - ${{ steps.coverageComment.outputs.color }}"
-          echo "Coverage Html - ${{ steps.coverageComment.outputs.coverageHtml }}"
-          echo "Coverage Warnings - ${{ steps.coverageComment.outputs.warnings }}"
-          echo "Coverage Errors - ${{ steps.coverageComment.outputs.errors }}"
-          echo "Coverage Failures - ${{ steps.coverageComment.outputs.failures }}"
-          echo "Coverage Skipped - ${{ steps.coverageComment.outputs.skipped }}"
-          echo "Coverage Tests - ${{ steps.coverageComment.outputs.tests }}"
-          echo "Coverage Time - ${{ steps.coverageComment.outputs.time }}"
-          echo "Not Success Test Info - ${{ steps.coverageComment.outputs.notSuccessTestInfo }}"
-
-      - name: Create the Badge
-        uses: schneegans/dynamic-badges-action@v1.0.0
-        with:
-          auth: ${{ secrets.CI_READ_COMMON }}
-          gistID: 277ec23e4e70728824362a0d24fbd0f9
-          filename: pytest-coverage-comment.json
-          label: Coverage Report
-          message: ${{ steps.coverageComment.outputs.coverage }}
-          color: ${{ steps.coverageComment.outputs.color }}
-          namedLogo: pytest
+            coverageFile: /tmp/pytest.xml
+            token: ${{ github.token }}
