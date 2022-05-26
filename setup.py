@@ -7,13 +7,13 @@ setuptools.setup(
     name="descope-auth",
     version="0.0.1",
     author="Descope",
-    author_email="author@example.com",
+    author_email="guyp@descope.com",
     description="Descope Python SDK package",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/pypa/sampleproject",
+    url="https://github.com/descope/python-sdk",
     project_urls={
-        "Bug Tracker": "https://github.com/pypa/sampleproject/issues",
+        "Bug Tracker": "https://github.com/descope/python-sdk/issues",
     },
     classifiers=[
         "Programming Language :: Python :: 3",

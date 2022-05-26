@@ -390,7 +390,6 @@ class AuthClient:
         try:
             jwt.decode(jwt=signed_token, key=copy_key.key, algorithms=["ES384"])
             return signed_token
-        # except jwt.exceptions.ExpiredSignatureError:
         except ExpiredSignatureError:
             return self.refresh_token(
                 signed_token, signed_refresh_token
