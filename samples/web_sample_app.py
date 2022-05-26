@@ -106,7 +106,7 @@ def private():
 # This doesn't need authentication
 @APP.route("/")
 def home():
-    return "Hello"
+    return "OK"
 
 
 if __name__ == "__main__":

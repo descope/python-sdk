@@ -3,13 +3,10 @@ Python library used to integrate with Descope
 
 ### Prerequisites
 
-1. In order to initiate the AuthClient object you must specify the project ID given by Descope either by:
+In order to initiate the AuthClient object you must specify the project ID given by Descope either by:
    - Set the `DESCOPE_PROJECT_ID` environment variable.
    - Set the project_id argument when initialization the AuthClient object.
-1. When using the session validation API you may specify the public key given by Descope either by:
-   - Set the `DESCOPE_PUBLIC_KEY` environment variable.
-   - Set the public_key argument when initialization the AuthClient object.
-   - Or keep empty to fetch matching public keys from descope services.
+
 
 ### Installation
 Install the Descope Python SDK using the following command.
@@ -35,20 +32,20 @@ class DeliveryMethod(Enum):
 
 User(username: str, name: str, phone: str, email: str)
 
-AuthClient(PROJECT_ID, PUBLIC_KEY)
+AuthClient(PROJECT_ID, PUBLIC_KEY=None)
 
 sign_up_otp(method: DeliveryMethod, identifier: str, user: User)
 Example:
 from descope import DeliveryMethod, User, AuthClient
 user = User("username", "name", "11111111111", "dummy@dummy.com")
-auth_client = AuthClient(PROJECT_ID, PUBLIC_KEY)
+auth_client = AuthClient(PROJECT_ID)
 auth_client.sign_up_otp(DeliveryMethod.EMAIL, "dummy@dummy.com", user)
 
 
 sign_in_otp(method: DeliveryMethod, identifier: str)
 Example:
 from descope import DeliveryMethod, AuthClient
-auth_client = AuthClient(PROJECT_ID, PUBLIC_KEY)
+auth_client = AuthClient(PROJECT_ID)
 auth_client.sign_in_otp(DeliveryMethod.EMAIL, "dummy@dummy.com")
 
 @descope_signin_otp_by_email
@@ -63,7 +60,7 @@ Or one of the decorators:
 
 Example:
 from descope import DeliveryMethod, AuthClient
-auth_client = AuthClient(PROJECT_ID, PUBLIC_KEY)
+auth_client = AuthClient(PROJECT_ID)
 auth_client.verify_code(DeliveryMethod.EMAIL, "1111")
 Or decorator
 
@@ -81,13 +78,13 @@ Or decorator
 
 Example:
 from descope import AuthClient
-auth_client = AuthClient(PROJECT_ID, PUBLIC_KEY)
+auth_client = AuthClient(PROJECT_ID)
 new_valid_token = auth_client.validate_session_request('session_token', 'refresh_token')
 
 logout(signed_token: str, signed_refresh_token: str)
 Example:
 from descope import AuthClient
-auth_client = AuthClient(PROJECT_ID, PUBLIC_KEY)
+auth_client = AuthClient(PROJECT_ID)
 auth_client.logout('session_token', 'refresh_token')
 
 #### Exception
@@ -97,7 +94,7 @@ AuthException
 Example:
 from descope import DeliveryMethod, AuthClient, AuthException
 try:
-    auth_client = AuthClient(PROJECT_ID, PUBLIC_KEY)
+    auth_client = AuthClient(PROJECT_ID)
     auth_client.sign_in_otp(DeliveryMethod.EMAIL, "dummy@dummy.com")
 except AuthException:
     #Handle exception
@@ -108,7 +105,7 @@ except AuthException:
 1. Clone repo locally `git clone github.com/descope/python-sdk`
 2. Install the requirements `pip3 install -r requirements-dev.txt`
 
-3. export your project id a
+3. export your project id
 
 ```
 export DESCOPE_PROJECT_ID=<insert here>
