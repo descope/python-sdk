@@ -2,7 +2,7 @@ import base64
 import json
 import os
 import re
-from threading import RLock
+from threading import Lock
 from typing import Tuple
 
 import jwt
@@ -27,7 +27,7 @@ from descope.exceptions import AuthException
 
 class AuthClient:
     def __init__(self, project_id: str, public_key: str = None):
-        self.lock_public_keys = RLock()
+        self.lock_public_keys = Lock()
         # validate project id
         if project_id is None or project_id == "":
             # try get the project_id from env
@@ -45,7 +45,7 @@ class AuthClient:
 
         with self.lock_public_keys:
             if public_key is None or public_key == "":
-                self.public_keys = {}  # public key will be fetched later (on demand)
+                self.public_keys = {}
             else:
                 kid, pub_key = self._validate_and_load_public_key(public_key)
                 self.public_keys = {kid: pub_key}
@@ -93,6 +93,9 @@ class AuthClient:
             )
 
     def _fetch_public_keys(self) -> None:
+
+        # This function called under mutex protection so no need to acquire it once again
+
         response = requests.get(
             f"{DEFAULT_FETCH_PUBLIC_KEY_URI}{EndpointsV1.publicKeyPath}/{self.project_id}",
             headers=self._get_default_headers(),
@@ -111,16 +114,15 @@ class AuthClient:
                 401, "public key fetching failed", f"Failed to load jwks {e}"
             )
 
-        with self.lock_public_keys:
-            # Load all public keys for this project
-            self.public_keys = {}
-            for key in jwkeys:
-                try:
-                    loaded_kid, pub_key = AuthClient._validate_and_load_public_key(key)
-                    self.public_keys[loaded_kid] = pub_key
-                except Exception:
-                    # just continue to the next key
-                    pass
+        # Load all public keys for this project
+        self.public_keys = {}
+        for key in jwkeys:
+            try:
+                loaded_kid, pub_key = AuthClient._validate_and_load_public_key(key)
+                self.public_keys[loaded_kid] = pub_key
+            except Exception:
+                # just continue to the next key
+                pass
 
     @staticmethod
     def _verify_delivery_method(method: DeliveryMethod, identifier: str) -> bool:
@@ -195,7 +197,19 @@ class AuthClient:
 
     def sign_up_otp(self, method: DeliveryMethod, identifier: str, user: User) -> None:
         """
-        DOC
+        Sign up a new user by OTP
+
+        Args:
+        method (DeliveryMethod): The OTP method you would like to verify the code
+        sent to you (by the same delivery method)
+
+        identifier (str): The identifier based on the chosen delivery method,
+        For email it should be the email address.
+        For phone it should be the phone number you would like to get the code
+        For whatsapp it should be the phone number you would like to get the code
+
+        Raise:
+        AuthException: for any case sign up by otp operation failed
         """
 
         if not self._verify_delivery_method(method, identifier):
@@ -250,8 +264,27 @@ class AuthClient:
     def verify_code(
         self, method: DeliveryMethod, identifier: str, code: str
     ) -> requests.cookies.RequestsCookieJar:
-        """
-        DOC
+        """Verify OTP code sent by the delivery method that chosen
+
+        Args:
+        method (DeliveryMethod): The OTP method you would like to verify the code
+        sent to you (by the same delivery method)
+
+        identifier (str): The identifier based on the chosen delivery method,
+        For email it should be the email address.
+        For phone it should be the phone number you would like to get the code
+        For whatsapp it should be the phone number you would like to get the code
+
+        code (str): The authorization code you get by the delivery method during signup/signin
+
+        Return value (requests.cookies.RequestsCookieJar):
+        Return the authorization cookies (session token and session refresh token)
+        cookies can be access as a dict like the following:
+        for name, val in cookies.items():
+            response.set_cookie(name, val)
+
+        Raise:
+        AuthException: for any case code is not valid and verification failed
         """
 
         if not self._verify_delivery_method(method, identifier):
@@ -305,7 +338,21 @@ class AuthClient:
         self, signed_token: str, signed_refresh_token: str
     ) -> str:
         """
-        DOC
+        Validate session request by verify the session JWT token
+        and refresh it in case it expired
+
+        Args:
+        signed_token (str): The session JWT token to get its signature verified
+
+        signed_refresh_token (str): The session refresh JWT token that will be use to refresh the session token (if expired)
+
+        Return value (str):
+        Return the existing signed token or the signed refreshed token
+        if token signature expired
+
+        Raise:
+        AuthException: for any case token is not valid means session is not
+        authorized
         """
 
         try:
@@ -336,10 +383,9 @@ class AuthClient:
                     "public key validation failed",
                     "Failed to validate public key, public key not found",
                 )
-            # copy the key so we can release the lock
-            # copy_key = deepcopy(found_key)
+            # save reference to the founded key
+            # (as another thread can change the self.public_keys dict)
             copy_key = found_key
-            # TODO: fix the above
 
         try:
             jwt.decode(jwt=signed_token, key=copy_key.key, algorithms=["ES384"])
