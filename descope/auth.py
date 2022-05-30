@@ -26,6 +26,8 @@ from descope.exceptions import AuthException
 
 
 class AuthClient:
+    ALGORITHM_KEY = "alg"
+
     def __init__(self, project_id: str, public_key: str = None):
         self.lock_public_keys = Lock()
         # validate project id
@@ -69,7 +71,7 @@ class AuthClient:
                 "Failed to load public key, invalid public key (unknown type)",
             )
 
-        alg = public_key.get("alg", None)
+        alg = public_key.get(AuthClient.ALGORITHM_KEY, None)
         if alg is None:
             raise AuthException(
                 400,
@@ -286,7 +288,7 @@ class AuthClient:
 
         Return value (Tuple[dict, dict]):
         Return two dicts where the first contains the jwt claims data and
-        second that contains the existing signed token (or the new signed
+        second contains the existing signed token (or the new signed
         token in case the old one expired) and refreshed session token
 
         Raise:
@@ -363,7 +365,7 @@ class AuthClient:
                 401, "token validation failure", f"Failed to parse token header, {e}"
             )
 
-        alg_header = unverified_header.get("alg", None)
+        alg_header = unverified_header.get(AuthClient.ALGORITHM_KEY, None)
         if alg_header is None or alg_header == "none":
             raise AuthException(
                 401, "token validation failure", "Token header is missing alg property"
@@ -461,7 +463,7 @@ class AuthClient:
 
         Return value (Tuple[dict, dict]):
         Return two dicts where the first contains the jwt claims data and
-        second that contains the existing signed token (or the new signed
+        second contains the existing signed token (or the new signed
         token in case the old one expired) and refreshed session token
 
         Raise:
