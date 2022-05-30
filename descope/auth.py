@@ -47,47 +47,55 @@ class AuthClient:
             if public_key is None or public_key == "":
                 self.public_keys = {}
             else:
-                kid, pub_key = self._validate_and_load_public_key(public_key)
-                self.public_keys = {kid: pub_key}
+                kid, pub_key, alg = self._validate_and_load_public_key(public_key)
+                self.public_keys = {kid: (pub_key, alg)}
 
     @staticmethod
-    def _validate_and_load_public_key(public_key) -> Tuple[str, jwt.PyJWK]:
+    def _validate_and_load_public_key(public_key) -> Tuple[str, jwt.PyJWK, str]:
         if isinstance(public_key, str):
             try:
                 public_key = json.loads(public_key)
             except Exception as e:
                 raise AuthException(
-                    500,
+                    400,
                     "Public key failure",
                     f"Failed to load public key, invalid public key, err: {e}",
                 )
 
         if not isinstance(public_key, dict):
             raise AuthException(
-                500,
+                400,
                 "Public key failure",
                 "Failed to load public key, invalid public key (unknown type)",
+            )
+
+        alg = public_key.get("alg", None)
+        if alg is None:
+            raise AuthException(
+                400,
+                "Public key failure",
+                "Failed to load public key, missing alg property",
             )
 
         kid = public_key.get("kid", None)
         if kid is None:
             raise AuthException(
-                500,
+                400,
                 "Public key failure",
                 "Failed to load public key, missing kid property",
             )
         try:
             # Load and validate public key
-            return (kid, jwt.PyJWK(public_key))
+            return (kid, jwt.PyJWK(public_key), alg)
         except jwt.InvalidKeyError as e:
             raise AuthException(
-                500,
+                400,
                 "Public key failure",
                 f"Failed to load public key {e}",
             )
         except jwt.PyJWKError as e:
             raise AuthException(
-                500,
+                400,
                 "Public key failure",
                 f"Failed to load public key {e}",
             )
@@ -118,8 +126,8 @@ class AuthClient:
         self.public_keys = {}
         for key in jwkeys:
             try:
-                loaded_kid, pub_key = AuthClient._validate_and_load_public_key(key)
-                self.public_keys[loaded_kid] = pub_key
+                loaded_kid, pub_key, alg = AuthClient._validate_and_load_public_key(key)
+                self.public_keys[loaded_kid] = (pub_key, alg)
             except Exception:
                 # just continue to the next key
                 pass
@@ -195,7 +203,9 @@ class AuthClient:
                 500, "identifier failure", f"Unknown delivery method {method}"
             )
 
-    def sign_up_otp(self, method: DeliveryMethod, identifier: str, user: User) -> None:
+    def sign_up_otp(
+        self, method: DeliveryMethod, identifier: str, user: User = None
+    ) -> None:
         """
         Sign up a new user by OTP
 
@@ -219,13 +229,10 @@ class AuthClient:
                 f"Identifier {identifier} is not valid by delivery method {method}",
             )
 
-        if user.username == "":
-            user.username = identifier
+        body = {self._get_identifier_name_by_method(method): identifier}
 
-        body = {
-            self._get_identifier_name_by_method(method): identifier,
-            "user": user.get_data(),
-        }
+        if user is not None:
+            body["user"] = user.get_data()
 
         uri = AuthClient._compose_signup_url(method)
         response = requests.post(
@@ -263,7 +270,7 @@ class AuthClient:
 
     def verify_code(
         self, method: DeliveryMethod, identifier: str, code: str
-    ) -> requests.cookies.RequestsCookieJar:
+    ) -> Tuple[dict, dict]:  # Tuple(dict of claims, dict of tokens)
         """Verify OTP code sent by the delivery method that chosen
 
         Args:
@@ -277,14 +284,13 @@ class AuthClient:
 
         code (str): The authorization code you get by the delivery method during signup/signin
 
-        Return value (requests.cookies.RequestsCookieJar):
-        Return the authorization cookies (session token and session refresh token)
-        cookies can be access as a dict like the following:
-        for name, val in cookies.items():
-            response.set_cookie(name, val)
+        Return value (Tuple[dict, dict]):
+        Return two dicts where the first contains the jwt claims data and
+        second that contains the existing signed token (or the new signed
+        token in case the old one expired) and refreshed session token
 
         Raise:
-        AuthException: for any case code is not valid and verification failed
+        AuthException: for any case code is not valid or tokens verification failed
         """
 
         if not self._verify_delivery_method(method, identifier):
@@ -304,7 +310,12 @@ class AuthClient:
         )
         if not response.ok:
             raise AuthException(response.status_code, "", response.reason)
-        return response.cookies
+
+        session_token = response.cookies.get(SESSION_COOKIE_NAME)
+        refresh_token = response.cookies.get(REFRESH_SESSION_COOKIE_NAME)
+
+        claims, tokens = self._validate_and_load_tokens(session_token, refresh_token)
+        return (claims, tokens)
 
     def refresh_token(self, signed_token: str, signed_refresh_token: str) -> str:
         cookies = {
@@ -334,42 +345,34 @@ class AuthClient:
             )
         return ds_cookie
 
-    def validate_session_request(
+    def _validate_and_load_tokens(
         self, signed_token: str, signed_refresh_token: str
-    ) -> str:
-        """
-        Validate session request by verify the session JWT token
-        and refresh it in case it expired
+    ) -> Tuple[dict, dict]:  # Tuple(dict of claims, dict of tokens)
 
-        Args:
-        signed_token (str): The session JWT token to get its signature verified
-
-        signed_refresh_token (str): The session refresh JWT token that will be use to refresh the session token (if expired)
-
-        Return value (str):
-        Return the existing signed token or the signed refreshed token
-        if token signature expired
-
-        Raise:
-        AuthException: for any case token is not valid means session is not
-        authorized
-        """
+        if signed_token is None or signed_refresh_token is None:
+            raise AuthException(
+                401,
+                "token validation failure",
+                f"signed token {signed_token} or/and signed refresh token {signed_refresh_token} are empty",
+            )
 
         try:
             unverified_header = jwt.get_unverified_header(signed_token)
         except Exception as e:
             raise AuthException(
-                401,
-                "token validation failure",
-                f"Failed to parse token header, {e}",
+                401, "token validation failure", f"Failed to parse token header, {e}"
+            )
+
+        alg_header = unverified_header.get("alg", None)
+        if alg_header is None or alg_header == "none":
+            raise AuthException(
+                401, "token validation failure", "Token header is missing alg property"
             )
 
         kid = unverified_header.get("kid", None)
         if kid is None:
             raise AuthException(
-                401,
-                "token validation failure",
-                "Token header is missing kid property",
+                401, "token validation failure", "Token header is missing kid property"
             )
 
         with self.lock_public_keys:
@@ -387,19 +390,89 @@ class AuthClient:
             # (as another thread can change the self.public_keys dict)
             copy_key = found_key
 
+        alg_from_key = copy_key[1]
+        if alg_header != alg_from_key:
+            raise AuthException(
+                401,
+                "token validation failure",
+                "header algorithm is not matched key algorithm",
+            )
+
         try:
-            jwt.decode(jwt=signed_token, key=copy_key.key, algorithms=["ES384"])
-            return signed_token
+            claims = jwt.decode(
+                jwt=signed_token, key=copy_key[0].key, algorithms=[alg_header]
+            )
+            tokens = {
+                SESSION_COOKIE_NAME: signed_token,
+                REFRESH_SESSION_COOKIE_NAME: signed_refresh_token,
+            }
+            return (claims, tokens)
         except ExpiredSignatureError:
-            return self.refresh_token(
+            # Session token expired, check that refresh token is valid
+            try:
+                jwt.decode(
+                    jwt=signed_refresh_token,
+                    key=copy_key[0].key,
+                    algorithms=[alg_header],
+                )
+            except Exception as e:
+                raise AuthException(
+                    401, "token validation failure", f"refresh token is not valid, {e}"
+                )
+            # Refresh token is valid now refresh the session token
+            refreshed_session_token = self.refresh_token(
                 signed_token, signed_refresh_token
-            )  # return the new session cookie
+            )
+            # Parse the new session token
+            try:
+                claims = jwt.decode(
+                    jwt=refreshed_session_token,
+                    key=copy_key[0].key,
+                    algorithms=[alg_header],
+                )
+                tokens = {
+                    SESSION_COOKIE_NAME: refreshed_session_token,
+                    REFRESH_SESSION_COOKIE_NAME: signed_refresh_token,
+                }
+                return (claims, tokens)
+            except Exception as e:
+                raise AuthException(
+                    401,
+                    "token validation failure",
+                    f"new session token is not valid, {e}",
+                )
         except Exception as e:
             raise AuthException(
                 401, "token validation failure", f"token is not valid, {e}"
             )
 
-    def logout(self, signed_token: str, signed_refresh_token: str) -> None:
+    def validate_session_request(
+        self, signed_token: str, signed_refresh_token: str
+    ) -> Tuple[dict, dict]:  # Tuple(dict of claims, dict of tokens)
+        """
+        Validate session request by verify the session JWT session token
+        and session refresh token in case it expired
+
+        Args:
+        signed_token (str): The session JWT token to get its signature verified
+
+        signed_refresh_token (str): The session refresh JWT token that will be
+        use to refresh the session token (if expired)
+
+        Return value (Tuple[dict, dict]):
+        Return two dicts where the first contains the jwt claims data and
+        second that contains the existing signed token (or the new signed
+        token in case the old one expired) and refreshed session token
+
+        Raise:
+        AuthException: for any case token is not valid means session is not
+        authorized
+        """
+        return self._validate_and_load_tokens(signed_token, signed_refresh_token)
+
+    def logout(
+        self, signed_token: str, signed_refresh_token: str
+    ) -> requests.cookies.RequestsCookieJar:
         uri = AuthClient._compose_logout_url()
         cookies = {
             SESSION_COOKIE_NAME: signed_token,
@@ -418,6 +491,8 @@ class AuthClient:
                 "Failed logout",
                 f"logout request failed with error {response.text}",
             )
+
+        return response.cookies
 
     def _get_default_headers(self):
         headers = {}

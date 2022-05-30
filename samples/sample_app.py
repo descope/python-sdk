@@ -32,36 +32,48 @@ def main():
 
         value = input("Please insert the code you received by email:\n")
         try:
-            cookies = auth_client.verify_code(
+            claims, tokens = auth_client.verify_code(
                 method=DeliveryMethod.EMAIL, identifier=identifier, code=value
             )
             logging.info("Code is valid")
-            token = cookies.get(SESSION_COOKIE_NAME, "")
-            refresh_token = cookies.get(REFRESH_SESSION_COOKIE_NAME, "")
-            logging.info(f"token: {token} \n refresh token: {refresh_token}")
+            session_token = tokens.get(SESSION_COOKIE_NAME, "")
+            refresh_token = tokens.get(REFRESH_SESSION_COOKIE_NAME, "")
+            logging.info(
+                f"session token: {session_token} \n refresh token: {refresh_token} claims: {claims}"
+            )
         except AuthException as e:
             logging.info(f"Invalid code {e}")
             raise
 
         try:
             logging.info("going to validate session..")
-            token = auth_client.validate_session_request(token, refresh_token)
+            claims, tokens = auth_client.validate_session_request(
+                session_token, refresh_token
+            )
+            session_token = tokens.get(SESSION_COOKIE_NAME, "")
+            refresh_token = tokens.get(REFRESH_SESSION_COOKIE_NAME, "")
             logging.info("Session is valid and all is OK")
         except AuthException as e:
             logging.info(f"Session is not valid {e}")
 
         try:
             logging.info("refreshing the session token..")
-            new_session_token = auth_client.refresh_token(token, refresh_token)
+            new_session_token = auth_client.refresh_token(session_token, refresh_token)
             logging.info(
                 "going to revalidate the session with the newly refreshed token.."
             )
-            token = auth_client.validate_session_request(
+            claims, tokens = auth_client.validate_session_request(
                 new_session_token, refresh_token
             )
             logging.info("Session is valid also for the refreshed token.")
         except AuthException as e:
             logging.info(f"Session is not valid for the refreshed token: {e}")
+
+        try:
+            auth_client.logout(new_session_token, refresh_token)
+            logging.info("User logged out")
+        except AuthException as e:
+            logging.info(f"Failed to logged out user, err: {e}")
 
     except AuthException:
         raise

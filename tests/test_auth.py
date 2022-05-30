@@ -5,6 +5,7 @@ from enum import Enum
 from unittest.mock import patch
 
 from descope import SESSION_COOKIE_NAME, AuthClient, AuthException, DeliveryMethod, User
+from descope.common import REFRESH_SESSION_COOKIE_NAME
 
 
 class TestAuthClient(unittest.TestCase):
@@ -258,7 +259,9 @@ class TestAuthClient(unittest.TestCase):
         # Test success flow
         with patch("requests.get") as mock_get:
             mock_get.return_value.ok = True
-            self.assertIsNone(client.logout(dummy_valid_jwt_token, dummy_refresh_token))
+            self.assertIsNotNone(
+                client.logout(dummy_valid_jwt_token, dummy_refresh_token)
+            )
 
     def test_sign_up_otp(self):
         signup_user_details = User(
@@ -379,8 +382,13 @@ class TestAuthClient(unittest.TestCase):
             )
 
         # Test success flow
+        valid_jwt_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCIsImtpZCI6IjMyYjNkYTUyNzdiMTQyYzdlMjRmZGYwZWYwOWUwOTE5In0.eyJleHAiOjE5ODEzOTgxMTF9.GQ3nLYT4XWZWezJ1tRV6ET0ibRvpEipeo6RCuaCQBdP67yu98vtmUvusBElDYVzRxGRtw5d20HICyo0_3Ekb0euUP3iTupgS3EU1DJMeAaJQgOwhdQnQcJFkOpASLKWh"
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
+            mock_post.return_value.cookies = {
+                SESSION_COOKIE_NAME: valid_jwt_token,
+                REFRESH_SESSION_COOKIE_NAME: "dummy refresh token",
+            }
             self.assertIsNotNone(
                 client.verify_code(DeliveryMethod.EMAIL, "dummy@dummy.com", code)
             )
@@ -444,6 +452,42 @@ class TestAuthClient(unittest.TestCase):
                 dummy_refresh_token,
             )
 
+        # Test case where header_alg != key[alg]
+        self.public_key_dict["alg"] = "ES521"
+        client4 = AuthClient(self.dummy_project_id, self.public_key_dict)
+        with patch("requests.get") as mock_request:
+            mock_request.return_value.text = """[{"kid": "dummy_kid"}]"""
+            mock_request.return_value.ok = True
+            self.assertRaises(
+                AuthException,
+                client4.validate_session_request,
+                valid_jwt_token,
+                dummy_refresh_token,
+            )
+
+        # Test case where header_alg != key[alg]
+        client4 = AuthClient(self.dummy_project_id, None)
+        self.assertRaises(
+            AuthException,
+            client4.validate_session_request,
+            None,
+            None,
+        )
+
+        #
+        expired_jwt_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCIsImtpZCI6IjMyYjNkYTUyNzdiMTQyYzdlMjRmZGYwZWYwOWUwOTE5In0.eyJleHAiOjExODEzOTgxMTF9.EdetpQro-frJV1St1mWGygRSzxf6Bg01NNR_Ipwy_CAQyGDmIQ6ITGQ620hfmjW5HDtZ9-0k7AZnwoLnb709QQgbHMFxlDpIOwtFIAJuU-CqaBDwsNWA1f1RNyPpLxop"
+        valid_refresh_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCIsImtpZCI6IjMyYjNkYTUyNzdiMTQyYzdlMjRmZGYwZWYwOWUwOTE5In0.eyJleHAiOjE5ODEzOTgxMTF9.GQ3nLYT4XWZWezJ1tRV6ET0ibRvpEipeo6RCuaCQBdP67yu98vtmUvusBElDYVzRxGRtw5d20HICyo0_3Ekb0euUP3iTupgS3EU1DJMeAaJQgOwhdQnQcJFkOpASLKWh"
+        with patch("requests.get") as mock_request:
+            mock_request.return_value.cookies = {SESSION_COOKIE_NAME: expired_jwt_token}
+            mock_request.return_value.ok = True
+
+            self.assertRaises(
+                AuthException,
+                client3.validate_session_request,
+                expired_jwt_token,
+                valid_refresh_token,
+            )
+
     def test_exception_object(self):
         ex = AuthException(401, "dummy error type", "dummy error message")
         str_ex = str(ex)  # noqa: F841
@@ -474,19 +518,97 @@ class TestAuthClient(unittest.TestCase):
                 dummy_refresh_token,
             )
 
+        # Test fail flow
+        dummy_session_token = "dummy session token"
+        dummy_client = AuthClient(self.dummy_project_id, self.public_key_dict)
+        with patch("jwt.get_unverified_header") as mock_jwt_get_unverified_header:
+            mock_jwt_get_unverified_header.return_value = {}
+            self.assertRaises(
+                AuthException,
+                dummy_client.validate_session_request,
+                dummy_session_token,
+                dummy_refresh_token,
+            )
+
         # Test success flow
-        new_refreshed_token = "new token"
+        new_refreshed_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCIsImtpZCI6IjMyYjNkYTUyNzdiMTQyYzdlMjRmZGYwZWYwOWUwOTE5In0.eyJleHAiOjE5ODEzOTgxMTF9.GQ3nLYT4XWZWezJ1tRV6ET0ibRvpEipeo6RCuaCQBdP67yu98vtmUvusBElDYVzRxGRtw5d20HICyo0_3Ekb0euUP3iTupgS3EU1DJMeAaJQgOwhdQnQcJFkOpASLKWh"
+        dummy_refresh_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCIsImtpZCI6IjMyYjNkYTUyNzdiMTQyYzdlMjRmZGYwZWYwOWUwOTE5In0.eyJleHAiOjE5ODEzOTgxMTF9.GQ3nLYT4XWZWezJ1tRV6ET0ibRvpEipeo6RCuaCQBdP67yu98vtmUvusBElDYVzRxGRtw5d20HICyo0_3Ekb0euUP3iTupgS3EU1DJMeAaJQgOwhdQnQcJFkOpASLKWh"
         with patch("requests.get") as mock_request:
             mock_request.return_value.cookies = {
                 SESSION_COOKIE_NAME: new_refreshed_token
             }
             mock_request.return_value.ok = True
-            refreshed_token = client.validate_session_request(
+            claims, tokens = client.validate_session_request(
                 expired_jwt_token, dummy_refresh_token
             )
+            new_session_token = tokens[SESSION_COOKIE_NAME]
             self.assertEqual(
-                refreshed_token, new_refreshed_token, "Failed to refresh token"
+                new_session_token, new_refreshed_token, "Failed to refresh token"
             )
+
+        expired_jwt_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCIsImtpZCI6IjMyYjNkYTUyNzdiMTQyYzdlMjRmZGYwZWYwOWUwOTE5In0.eyJleHAiOjExODEzOTgxMTF9.EdetpQro-frJV1St1mWGygRSzxf6Bg01NNR_Ipwy_CAQyGDmIQ6ITGQ620hfmjW5HDtZ9-0k7AZnwoLnb709QQgbHMFxlDpIOwtFIAJuU-CqaBDwsNWA1f1RNyPpLxop"
+        valid_refresh_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCIsImtpZCI6IjMyYjNkYTUyNzdiMTQyYzdlMjRmZGYwZWYwOWUwOTE5In0.eyJleHAiOjE5ODEzOTgxMTF9.GQ3nLYT4XWZWezJ1tRV6ET0ibRvpEipeo6RCuaCQBdP67yu98vtmUvusBElDYVzRxGRtw5d20HICyo0_3Ekb0euUP3iTupgS3EU1DJMeAaJQgOwhdQnQcJFkOpASLKWh"
+        new_refreshed_token = (
+            expired_jwt_token  # the refreshed token should be invalid (or expired)
+        )
+        with patch("requests.get") as mock_request:
+            mock_request.return_value.cookies = {
+                SESSION_COOKIE_NAME: new_refreshed_token
+            }
+            mock_request.return_value.ok = True
+            self.assertRaises(
+                AuthException,
+                dummy_client.validate_session_request,
+                expired_jwt_token,
+                valid_refresh_token,
+            )
+
+    def test_refresh_token(self):
+        expired_jwt_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCIsImtpZCI6IjMyYjNkYTUyNzdiMTQyYzdlMjRmZGYwZWYwOWUwOTE5In0.eyJleHAiOjExODEzOTgxMTF9.EdetpQro-frJV1St1mWGygRSzxf6Bg01NNR_Ipwy_CAQyGDmIQ6ITGQ620hfmjW5HDtZ9-0k7AZnwoLnb709QQgbHMFxlDpIOwtFIAJuU-CqaBDwsNWA1f1RNyPpLxop"
+        dummy_refresh_token = "dummy refresh token"
+        client = AuthClient(self.dummy_project_id, self.public_key_dict)
+
+        # Test fail flow
+        with patch("requests.get") as mock_request:
+            mock_request.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.refresh_token,
+                expired_jwt_token,
+                dummy_refresh_token,
+            )
+
+        with patch("requests.get") as mock_request:
+            mock_request.return_value.ok = True
+            mock_request.return_value.cookies = {SESSION_COOKIE_NAME: None}
+            self.assertRaises(
+                AuthException,
+                client.refresh_token,
+                expired_jwt_token,
+                dummy_refresh_token,
+            )
+
+    def test_public_key_load(self):
+        # Test key without kty property
+        invalid_public_key = deepcopy(self.public_key_dict)
+        invalid_public_key.pop("kty")
+        with self.assertRaises(AuthException) as cm:
+            AuthClient(self.dummy_project_id, invalid_public_key)
+        self.assertEqual(cm.exception.status_code, 400)
+
+        # Test key without kid property
+        invalid_public_key = deepcopy(self.public_key_dict)
+        invalid_public_key.pop("kid")
+        with self.assertRaises(AuthException) as cm:
+            AuthClient(self.dummy_project_id, invalid_public_key)
+        self.assertEqual(cm.exception.status_code, 400)
+
+        # Test key with unknown algorithm
+        invalid_public_key = deepcopy(self.public_key_dict)
+        invalid_public_key["alg"] = "unknown algorithm"
+        with self.assertRaises(AuthException) as cm:
+            AuthClient(self.dummy_project_id, invalid_public_key)
+        self.assertEqual(cm.exception.status_code, 400)
 
 
 if __name__ == "__main__":

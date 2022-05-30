@@ -1,13 +1,14 @@
 import os
 import sys
 
-from flask import Flask, Response, jsonify, request
-from flask_cors import cross_origin
+from flask import Flask, Response, _request_ctx_stack, jsonify, request
 
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
-from decorators.flask_decorators import (  # noqa: E402; , descope_verify_code_by_email
+from decorators.flask_decorators import (  # noqa: E402;
+    descope_logout,
     descope_validate_auth,
+    descope_verify_code_by_email,
 )
 
 from descope import AuthException  # noqa: E402
@@ -75,7 +76,6 @@ def signin():
 
 
 @APP.route("/api/verify")
-# @descope_verify_code_by_email #Use this decorator or the inline code below
 def verify():
     data = request.get_json(force=True)
     email = data.get("email", None)
@@ -84,22 +84,37 @@ def verify():
         return Response("Unauthorized", 401)
 
     try:
-        cookies = auth_client.verify_code(DeliveryMethod.EMAIL, email, code)
+        claims, tokens = auth_client.verify_code(DeliveryMethod.EMAIL, email, code)
     except AuthException:
         return Response("Unauthorized", 401)
 
     response = Response("Token verified", 200)
-    for name, value in cookies.iteritems():
+    for name, value in tokens.iteritems():
         response.set_cookie(name, value)
+
     return response
+
+
+@APP.route("/api/verify_by_decorator")
+@descope_verify_code_by_email
+def verify_by_decorator(*args, **kwargs):
+    claims = _request_ctx_stack.top.claims
+    response = f"This is a code verification API, claims are: {claims}"
+    return jsonify(message=response)
 
 
 # This needs authentication
 @APP.route("/api/private")
-@cross_origin(headers=["Content-Type", "Authorization"])
 @descope_validate_auth
 def private():
     response = "This is a private API and you must be authenticated to see this"
+    return jsonify(message=response)
+
+
+@APP.route("/api/logout")
+@descope_logout
+def logout():
+    response = "Logged out"
     return jsonify(message=response)
 
 
