@@ -247,7 +247,19 @@ class AuthClient:
 
     def sign_in_otp(self, method: DeliveryMethod, identifier: str) -> None:
         """
-        DOC
+        Sign in a user by OTP
+
+        Args:
+        method (DeliveryMethod): The OTP method you would like to verify the code
+        sent to you (by the same delivery method)
+
+        identifier (str): The identifier based on the chosen delivery method,
+        For email it should be the email address.
+        For phone it should be the phone number you would like to get the code
+        For whatsapp it should be the phone number you would like to get the code
+
+        Raise:
+        AuthException: for any case sign up by otp operation failed
         """
 
         if not self._verify_delivery_method(method, identifier):
