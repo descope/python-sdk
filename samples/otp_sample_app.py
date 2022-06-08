@@ -18,12 +18,8 @@ logging.basicConfig(level=logging.INFO)
 def main():
     identifier = "dummy@dummy.com"
     project_id = ""
-    public_key = (
-        None  # will automatically fetch all public keys related to the project_id
-    )
-
     try:
-        auth_client = AuthClient(project_id=project_id, public_key=public_key)
+        auth_client = AuthClient(project_id=project_id)
 
         logging.info(
             "Going to signin new user.. expect an email to arrive with the new code.."
