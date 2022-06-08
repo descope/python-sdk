@@ -35,7 +35,7 @@ def handle_auth_error(ex):
     return response
 
 
-@APP.route("/api/signup", methods = ['POST'])
+@APP.route("/api/signup", methods=["POST"])
 def signup():
     data = request.get_json(force=True)
     email = data.get("email", None)
@@ -58,7 +58,7 @@ def signup():
     return jsonify(message=response)
 
 
-@APP.route("/api/signin", methods = ['POST'])
+@APP.route("/api/signin", methods=["POST"])
 def signin():
     data = request.get_json(force=True)
     email = data.get("email", None)
@@ -74,7 +74,7 @@ def signin():
     return jsonify(message=response)
 
 
-@APP.route("/api/verify", methods = ['POST'])
+@APP.route("/api/verify", methods=["POST"])
 def verify():
     data = request.get_json(force=True)
     email = data.get("email", None)
@@ -94,7 +94,7 @@ def verify():
     return response
 
 
-@APP.route("/api/verify_by_decorator", methods = ['POST'])
+@APP.route("/api/verify_by_decorator", methods=["POST"])
 @descope_verify_code_by_email(auth_client)
 def verify_by_decorator(*args, **kwargs):
     claims = _request_ctx_stack.top.claims
@@ -103,7 +103,7 @@ def verify_by_decorator(*args, **kwargs):
 
 
 # This needs authentication
-@APP.route("/api/private", methods = ['POST'])
+@APP.route("/api/private", methods=["POST"])
 @descope_validate_auth(auth_client)
 def private():
     response = "This is a private API and you must be authenticated to see this"

@@ -36,7 +36,7 @@ def handle_auth_error(ex):
     return response
 
 
-@APP.route("/api/signup", methods = ['POST'])
+@APP.route("/api/signup", methods=["POST"])
 def signup():
     data = request.get_json(force=True)
     email = data.get("email", None)
@@ -51,7 +51,7 @@ def signup():
             user.get("phone", ""),
             user.get("email", ""),
         )
-        auth_client.sign_up_magiclink(DeliveryMethod.EMAIL, email,URI, usr)
+        auth_client.sign_up_magiclink(DeliveryMethod.EMAIL, email, URI, usr)
     except AuthException:
         return Response("Unauthorized", 401)
 
@@ -59,7 +59,7 @@ def signup():
     return jsonify(message=response)
 
 
-@APP.route("/api/signin", methods = ['POST'])
+@APP.route("/api/signin", methods=["POST"])
 def signin():
     data = request.get_json(force=True)
     email = data.get("email", None)
@@ -75,7 +75,7 @@ def signin():
     return jsonify(message=response)
 
 
-@APP.route("/api/verify", methods = ['POST'])
+@APP.route("/api/verify", methods=["POST"])
 def verify():
     data = request.get_json(force=True)
     code = data.get("code", None)
@@ -94,7 +94,7 @@ def verify():
     return response
 
 
-@APP.route("/api/verify_by_decorator", methods = ['GET'])
+@APP.route("/api/verify_by_decorator", methods=["GET"])
 @descope_verify_magiclink_token(auth_client)
 def verify_by_decorator(*args, **kwargs):
     claims = _request_ctx_stack.top.claims

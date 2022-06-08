@@ -357,7 +357,7 @@ class TestAuthClient(unittest.TestCase):
             DUMMY = 7
 
         self.assertRaises(AuthException, AuthClient._compose_signin_url, Dummy.DUMMY)
-    
+
     def test_sign_up_magiclink(self):
         signup_user_details = User(
             username="jhon", name="john", phone="972525555555", email="dummy@dummy.com"
@@ -407,7 +407,10 @@ class TestAuthClient(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.sign_up_magiclink(
-                    DeliveryMethod.EMAIL, "dummy@dummy.com","http://test.me", signup_user_details
+                    DeliveryMethod.EMAIL,
+                    "dummy@dummy.com",
+                    "http://test.me",
+                    signup_user_details,
                 )
             )
 
@@ -419,7 +422,10 @@ class TestAuthClient(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.sign_up_magiclink(
-                    DeliveryMethod.EMAIL, "dummy@dummy.com", "http://test.me", signup_user_details
+                    DeliveryMethod.EMAIL,
+                    "dummy@dummy.com",
+                    "http://test.me",
+                    signup_user_details,
                 )
             )
 
@@ -427,7 +433,9 @@ class TestAuthClient(unittest.TestCase):
         class Dummy(Enum):
             DUMMY = 7
 
-        self.assertRaises(AuthException, AuthClient._compose_signin_magiclink_url, Dummy.DUMMY)
+        self.assertRaises(
+            AuthException, AuthClient._compose_signin_magiclink_url, Dummy.DUMMY
+        )
 
     def test_sign_in(self):
         client = AuthClient(self.dummy_project_id, self.public_key_dict)
@@ -460,10 +468,26 @@ class TestAuthClient(unittest.TestCase):
 
         # Test failed flows
         self.assertRaises(
-            AuthException, client.sign_in_magiclink, DeliveryMethod.EMAIL, "dummy@dummy", "http://test.me"
+            AuthException,
+            client.sign_in_magiclink,
+            DeliveryMethod.EMAIL,
+            "dummy@dummy",
+            "http://test.me",
         )
-        self.assertRaises(AuthException, client.sign_in_magiclink, DeliveryMethod.EMAIL, "", "http://test.me")
-        self.assertRaises(AuthException, client.sign_in_magiclink, DeliveryMethod.EMAIL, None, "http://test.me")
+        self.assertRaises(
+            AuthException,
+            client.sign_in_magiclink,
+            DeliveryMethod.EMAIL,
+            "",
+            "http://test.me",
+        )
+        self.assertRaises(
+            AuthException,
+            client.sign_in_magiclink,
+            DeliveryMethod.EMAIL,
+            None,
+            "http://test.me",
+        )
 
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = False
@@ -472,14 +496,16 @@ class TestAuthClient(unittest.TestCase):
                 client.sign_in_magiclink,
                 DeliveryMethod.EMAIL,
                 "dummy@dummy.com",
-                "http://test.me"
+                "http://test.me",
             )
 
         # Test success flow
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
-                client.sign_in_magiclink(DeliveryMethod.EMAIL, "dummy@dummy.com", "http://test.me")
+                client.sign_in_magiclink(
+                    DeliveryMethod.EMAIL, "dummy@dummy.com", "http://test.me"
+                )
             )
 
     def test_verify_code(self):
@@ -540,9 +566,7 @@ class TestAuthClient(unittest.TestCase):
                 SESSION_COOKIE_NAME: valid_jwt_token,
                 REFRESH_SESSION_COOKIE_NAME: "dummy refresh token",
             }
-            self.assertIsNotNone(
-                client.verify_magiclink(code)
-            )
+            self.assertIsNotNone(client.verify_magiclink(code))
 
     def test_validate_session(self):
         client = AuthClient(self.dummy_project_id, self.public_key_dict)

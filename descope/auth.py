@@ -385,7 +385,9 @@ class AuthClient:
         if not response.ok:
             raise AuthException(response.status_code, "", response.reason)
 
-    def sign_in_magiclink(self, method: DeliveryMethod, identifier: str, uri: str) -> None:
+    def sign_in_magiclink(
+        self, method: DeliveryMethod, identifier: str, uri: str
+    ) -> None:
         """
         Sign in a user by magiclink
 
@@ -411,10 +413,7 @@ class AuthClient:
                 f"Identifier {identifier} is not valid by delivery method {method}",
             )
 
-        body = {
-            self._get_identifier_name_by_method(method): identifier,
-            "URI": uri
-        }
+        body = {self._get_identifier_name_by_method(method): identifier, "URI": uri}
 
         requestUri = AuthClient._compose_signin_magiclink_url(method)
         response = requests.post(

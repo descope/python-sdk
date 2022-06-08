@@ -10,15 +10,17 @@ from descope import AuthException  # noqa: E402
 from descope import (  # noqa: E402
     REFRESH_SESSION_COOKIE_NAME,
     SESSION_COOKIE_NAME,
-    AuthClient,
     DeliveryMethod,
     User,
 )
 
+
 def descope_signup_otp_by_email(auth_client):
+
     """
     Signup new user using OTP by email
     """
+
     def decorator(f):
         @wraps(f)
         def decorated(*args, **kwargs):
@@ -52,6 +54,7 @@ def descope_signin_otp_by_email(auth_client):
     """
     Signin using OTP by email
     """
+
     def decorator(f):
         @wraps(f)
         def decorated(*args, **kwargs):
@@ -76,6 +79,7 @@ def descope_validate_auth(auth_client):
     """
     Test for valid Access Token
     """
+
     def decorator(f):
         @wraps(f)
         def decorated(*args, **kwargs):
@@ -103,7 +107,7 @@ def descope_validate_auth(auth_client):
             return response
 
         return decorated
-    
+
     return decorator
 
 
@@ -111,6 +115,7 @@ def descope_verify_code_by_email(auth_client):
     """
     Verify code by email decorator
     """
+
     def decorator(f):
         @wraps(f)
         def decorated(*args, **kwargs):
@@ -121,7 +126,9 @@ def descope_verify_code_by_email(auth_client):
                 return Response("Unauthorized", 401)
 
             try:
-                claims, tokens = auth_client.verify_code(DeliveryMethod.EMAIL, email, code)
+                claims, tokens = auth_client.verify_code(
+                    DeliveryMethod.EMAIL, email, code
+                )
             except AuthException:
                 return Response("Unauthorized", 401)
 
@@ -142,6 +149,7 @@ def descope_verify_code_by_phone(auth_client):
     """
     Verify code by email decorator
     """
+
     def decorator(f):
         @wraps(f)
         def decorated(*args, **kwargs):
@@ -152,7 +160,9 @@ def descope_verify_code_by_phone(auth_client):
                 return Response("Unauthorized", 401)
 
             try:
-                claims, tokens = auth_client.verify_code(DeliveryMethod.PHONE, phone, code)
+                claims, tokens = auth_client.verify_code(
+                    DeliveryMethod.PHONE, phone, code
+                )
             except AuthException:
                 return Response("Unauthorized", 401)
 
@@ -173,6 +183,7 @@ def descope_verify_code_by_whatsapp(auth_client):
     """
     Verify code by whatsapp decorator
     """
+
     def decorator(f):
         @wraps(f)
         def decorated(*args, **kwargs):
@@ -240,6 +251,7 @@ def descope_signin_magiclink_by_email(auth_client, uri):
     """
     Signin using magiclink via email
     """
+
     def decorator(f):
         @wraps(f)
         def decorated(*args, **kwargs):
@@ -262,8 +274,9 @@ def descope_signin_magiclink_by_email(auth_client, uri):
 
 def descope_verify_magiclink_token(auth_client):
     """
-    Verify magiclink token 
+    Verify magiclink token
     """
+
     def decorator(f):
         @wraps(f)
         def decorated(*args, **kwargs):
@@ -285,7 +298,7 @@ def descope_verify_magiclink_token(auth_client):
             return response
 
         return decorated
-    
+
     return decorator
 
 
@@ -293,6 +306,7 @@ def descope_logout(auth_client):
     """
     Logout
     """
+
     def decorator(f):
         @wraps(f)
         def decorated(*args, **kwargs):

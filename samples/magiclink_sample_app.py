@@ -25,7 +25,9 @@ def main():
         logging.info(
             "Going to signup a new user.. expect an email to arrive with the new link.."
         )
-        auth_client.sign_up_magiclink(method=DeliveryMethod.EMAIL, identifier=identifier, uri="http://test.me")
+        auth_client.sign_up_magiclink(
+            method=DeliveryMethod.EMAIL, identifier=identifier, uri="http://test.me"
+        )
 
         value = input("Please insert the code you received by email:\n")
         try:
@@ -50,7 +52,9 @@ def main():
         logging.info(
             "Going to signin same user again.. expect another email to arrive with the new link.."
         )
-        auth_client.sign_in_magiclink(method=DeliveryMethod.EMAIL, identifier=identifier, uri="http://test.me")
+        auth_client.sign_in_magiclink(
+            method=DeliveryMethod.EMAIL, identifier=identifier, uri="http://test.me"
+        )
 
         value = input("Please insert the code you received by email:\n")
         try:
