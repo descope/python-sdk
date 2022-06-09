@@ -185,6 +185,18 @@ class AuthClient:
         return AuthClient._compose_url(EndpointsV1.verifyCodeAuthPath, method)
 
     @staticmethod
+    def _compose_signin_magiclink_url(method: DeliveryMethod) -> str:
+        return AuthClient._compose_url(EndpointsV1.signInAuthMagicLinkPath, method)
+
+    @staticmethod
+    def _compose_signup_magiclink_url(method: DeliveryMethod) -> str:
+        return AuthClient._compose_url(EndpointsV1.signUpAuthMagicLinkPath, method)
+
+    @staticmethod
+    def _compose_verify_magiclink_url() -> str:
+        return EndpointsV1.verifyMagicLinkAuthPath
+
+    @staticmethod
     def _compose_refresh_token_url() -> str:
         return EndpointsV1.refreshTokenPath
 
@@ -317,6 +329,121 @@ class AuthClient:
         body = {self._get_identifier_name_by_method(method): identifier, "code": code}
 
         uri = AuthClient._compose_verify_code_url(method)
+        response = requests.post(
+            f"{DEFAULT_BASE_URI}{uri}",
+            headers=self._get_default_headers(),
+            data=json.dumps(body),
+        )
+        if not response.ok:
+            raise AuthException(response.status_code, "", response.reason)
+
+        session_token = response.cookies.get(SESSION_COOKIE_NAME)
+        refresh_token = response.cookies.get(REFRESH_SESSION_COOKIE_NAME)
+
+        claims, tokens = self._validate_and_load_tokens(session_token, refresh_token)
+        return (claims, tokens)
+
+    def sign_up_magiclink(
+        self, method: DeliveryMethod, identifier: str, uri: str, user: User = None
+    ) -> None:
+        """
+        Sign up a new user by magic link
+
+        Args:
+        method (DeliveryMethod): The Magic Link method you would like to verify the code
+        sent to you (by the same delivery method)
+
+        identifier (str): The identifier based on the chosen delivery method,
+        For email it should be the email address.
+        For phone it should be the phone number you would like to get the link
+        For whatsapp it should be the phone number you would like to get the link
+
+        uri (str): The base URI that should contain the magic link code
+
+        Raise:
+        AuthException: for any case sign up by magic link operation failed
+        """
+
+        if not self._verify_delivery_method(method, identifier):
+            raise AuthException(
+                500,
+                "identifier failure",
+                f"Identifier {identifier} is not valid by delivery method {method}",
+            )
+
+        body = {self._get_identifier_name_by_method(method): identifier, "URI": uri}
+
+        if user is not None:
+            body["user"] = user.get_data()
+
+        requestUri = AuthClient._compose_signup_magiclink_url(method)
+        response = requests.post(
+            f"{DEFAULT_BASE_URI}{requestUri}",
+            headers=self._get_default_headers(),
+            data=json.dumps(body),
+        )
+        if not response.ok:
+            raise AuthException(response.status_code, "", response.reason)
+
+    def sign_in_magiclink(
+        self, method: DeliveryMethod, identifier: str, uri: str
+    ) -> None:
+        """
+        Sign in a user by magiclink
+
+        Args:
+        method (DeliveryMethod): The Magic Link method you would like to verify the link
+        sent to you (by the same delivery method)
+
+        identifier (str): The identifier based on the chosen delivery method,
+        For email it should be the email address.
+        For phone it should be the phone number you would like to get the link
+        For whatsapp it should be the phone number you would like to get the link
+
+        uri (str): The base URI that should contain the magic link code
+
+        Raise:
+        AuthException: for any case sign up by otp operation failed
+        """
+
+        if not self._verify_delivery_method(method, identifier):
+            raise AuthException(
+                500,
+                "identifier failure",
+                f"Identifier {identifier} is not valid by delivery method {method}",
+            )
+
+        body = {self._get_identifier_name_by_method(method): identifier, "URI": uri}
+
+        requestUri = AuthClient._compose_signin_magiclink_url(method)
+        response = requests.post(
+            f"{DEFAULT_BASE_URI}{requestUri}",
+            headers=self._get_default_headers(),
+            data=json.dumps(body),
+        )
+        if not response.ok:
+            raise AuthException(response.status_code, "", response.text)
+
+    def verify_magiclink(
+        self, code: str
+    ) -> Tuple[dict, dict]:  # Tuple(dict of claims, dict of tokens)
+        """Verify magiclink
+
+        Args:
+        code (str): The authorization code you get by the delivery method during signup/signin
+
+        Return value (Tuple[dict, dict]):
+        Return two dicts where the first contains the jwt claims data and
+        second contains the existing signed token (or the new signed
+        token in case the old one expired) and refreshed session token
+
+        Raise:
+        AuthException: for any case code is not valid or tokens verification failed
+        """
+
+        body = {"token": code}
+
+        uri = AuthClient._compose_verify_magiclink_url()
         response = requests.post(
             f"{DEFAULT_BASE_URI}{uri}",
             headers=self._get_default_headers(),
