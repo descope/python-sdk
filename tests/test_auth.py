@@ -263,13 +263,13 @@ class TestAuthClient(unittest.TestCase):
     def test_compose_refresh_token_url(self):
         self.assertEqual(
             AuthClient._compose_refresh_token_url(),
-            "/v1/refresh",
+            "/v1/auth/refresh",
         )
 
     def test_compose_logout_url(self):
         self.assertEqual(
             AuthClient._compose_logout_url(),
-            "/v1/logoutall",
+            "/v1/auth/logoutall",
         )
 
     def test_logout(self):
