@@ -17,8 +17,8 @@ class EndpointsV1:
     signUpAuthMagicLinkPath = "/v1/auth/signup/magiclink"
     verifyMagicLinkAuthPath = "/v1/auth/magiclink/verify"
     publicKeyPath = "/v1/keys"
-    refreshTokenPath = "/v1/refresh"
-    logoutPath = "/v1/logoutall"
+    refreshTokenPath = "/v1/auth/refresh"
+    logoutPath = "/v1/auth/logoutall"
 
 
 class DeliveryMethod(Enum):
