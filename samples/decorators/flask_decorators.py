@@ -2,7 +2,7 @@ import os
 import sys
 from functools import wraps
 
-from flask import Response, _request_ctx_stack, request
+from flask import Response, _request_ctx_stack, redirect, request
 
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
@@ -324,6 +324,37 @@ def descope_logout(auth_client):
             # Copy the new empty cookies (so session will be invalidated)
             for key, val in cookies.items():
                 response.set_cookie(key, val)
+            return response
+
+        return decorated
+
+    return decorator
+
+
+def descope_oauth(auth_client):
+    """
+    OAuth login
+    """
+
+    def decorator(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            try:
+                args = request.args
+                provider = args.get("provider")
+                redirect_url, res = auth_client.oauth_start(provider)
+            except AuthException as e:
+                return Response(f"OAuth failed {e}", e.status_code)
+
+            # Execute the original API
+            # (ignore return value as anyway we redirect)
+            f(*args, **kwargs)
+
+            response = redirect(redirect_url, 302)
+            for key, val in res.cookies.items():
+                response.set_cookie(key, val)
+            for key, val in res.headers.items():
+                response.headers.add(key, val)
             return response
 
         return decorated

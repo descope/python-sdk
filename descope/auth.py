@@ -20,6 +20,7 @@ from descope.common import (
     SESSION_COOKIE_NAME,
     DeliveryMethod,
     EndpointsV1,
+    OAuthProviders,
     User,
 )
 from descope.exceptions import AuthException
@@ -642,3 +643,45 @@ class AuthClient:
         bytes = f"{self.project_id}:".encode("ascii")
         headers["Authorization"] = f"Basic {base64.b64encode(bytes).decode('ascii')}"
         return headers
+
+    @staticmethod
+    def _verify_oauth_provider(oauth_provider: str) -> str:
+        if oauth_provider == "" or oauth_provider is None:
+            return False
+
+        if oauth_provider in [
+            OAuthProviders.OAuthFacebook,
+            OAuthProviders.OAuthGithub,
+            OAuthProviders.OAuthGoogle,
+            OAuthProviders.OAuthMicrosoft,
+            OAuthProviders.OAuthGitlab,
+            OAuthProviders.OAuthApple,
+        ]:
+            return True
+        else:
+            return False
+
+    def oauth_start(self, provider: str) -> Tuple[str, requests.Response]:
+        """ """
+        if not self._verify_oauth_provider(provider):
+            raise AuthException(
+                500,
+                "Unknown OAuth provider",
+                f"Unknown OAuth provider: {provider}",
+            )
+
+        uri = f"{DEFAULT_BASE_URI}{EndpointsV1.oauthStart}"
+        response = requests.get(
+            uri, headers=self._get_default_headers(), params={"provider": provider}
+        )
+
+        if not response.ok:
+            raise AuthException(
+                response.status_code, "OAuth send request failure", response.text
+            )
+
+        # response_headers = deepcopy(response.headers)
+        # response_cookies = deepcopy(response.cookies)
+        # return response.url, response_headers, response_cookies
+
+        return response.url, response
