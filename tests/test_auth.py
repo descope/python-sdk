@@ -5,7 +5,12 @@ from enum import Enum
 from unittest.mock import patch
 
 from descope import SESSION_COOKIE_NAME, AuthClient, AuthException, DeliveryMethod, User
-from descope.common import REFRESH_SESSION_COOKIE_NAME, OAuthProviders
+from descope.common import (
+    DEFAULT_BASE_URI,
+    REFRESH_SESSION_COOKIE_NAME,
+    EndpointsV1,
+    OAuthProviders,
+)
 
 
 class TestAuthClient(unittest.TestCase):
@@ -209,6 +214,19 @@ class TestAuthClient(unittest.TestCase):
         with patch("requests.get") as mock_get:
             mock_get.return_value.ok = True
             self.assertIsNotNone(client.oauth_start(OAuthProviders.OAuthGoogle))
+
+        with patch("requests.get") as mock_get:
+            mock_get.return_value.ok = True
+            client.oauth_start(OAuthProviders.OAuthFacebook)
+            expected_uri = f"{DEFAULT_BASE_URI}{EndpointsV1.oauthStart}"
+            mock_get.assert_called_with(
+                expected_uri,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": "Basic ZHVtbXk6",
+                },
+                params={"provider": "facebook"},
+            )
 
     def test_get_identifier_name_by_method(self):
         self.assertEqual(
