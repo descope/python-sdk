@@ -30,13 +30,14 @@ class DeliveryMethod(Enum):
     EMAIL = 3
 
 
-class OAuthProviders:
-    OAuthFacebook = "facebook"
-    OAuthGithub = "github"
-    OAuthGoogle = "google"
-    OAuthMicrosoft = "microsoft"
-    OAuthGitlab = "gitlab"
-    OAuthApple = "apple"
+# class OAuthProviders():
+#    OAuthFacebook = "facebook"
+#    OAuthGithub = "github"
+#    OAuthGoogle = "google"
+#    OAuthMicrosoft = "microsoft"
+#    OAuthGitlab = "gitlab"
+#    OAuthApple = "apple"
+OAuthProviders = ["facebook", "github", "google", "microsoft", "gitlab", "apple"]
 
 
 class User:

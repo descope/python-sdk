@@ -649,14 +649,7 @@ class AuthClient:
         if oauth_provider == "" or oauth_provider is None:
             return False
 
-        if oauth_provider in [
-            OAuthProviders.OAuthFacebook,
-            OAuthProviders.OAuthGithub,
-            OAuthProviders.OAuthGoogle,
-            OAuthProviders.OAuthMicrosoft,
-            OAuthProviders.OAuthGitlab,
-            OAuthProviders.OAuthApple,
-        ]:
+        if oauth_provider in OAuthProviders:
             return True
         else:
             return False

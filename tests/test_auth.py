@@ -5,12 +5,7 @@ from enum import Enum
 from unittest.mock import patch
 
 from descope import SESSION_COOKIE_NAME, AuthClient, AuthException, DeliveryMethod, User
-from descope.common import (
-    DEFAULT_BASE_URI,
-    REFRESH_SESSION_COOKIE_NAME,
-    EndpointsV1,
-    OAuthProviders,
-)
+from descope.common import DEFAULT_BASE_URI, REFRESH_SESSION_COOKIE_NAME, EndpointsV1
 
 
 class TestAuthClient(unittest.TestCase):
@@ -194,7 +189,7 @@ class TestAuthClient(unittest.TestCase):
         )
 
         self.assertEqual(
-            AuthClient._verify_oauth_provider(OAuthProviders.OAuthGoogle),
+            AuthClient._verify_oauth_provider("google"),
             True,
         )
 
@@ -206,18 +201,16 @@ class TestAuthClient(unittest.TestCase):
 
         with patch("requests.get") as mock_get:
             mock_get.return_value.ok = False
-            self.assertRaises(
-                AuthException, client.oauth_start, OAuthProviders.OAuthGoogle
-            )
+            self.assertRaises(AuthException, client.oauth_start, "google")
 
         # Test success flow
         with patch("requests.get") as mock_get:
             mock_get.return_value.ok = True
-            self.assertIsNotNone(client.oauth_start(OAuthProviders.OAuthGoogle))
+            self.assertIsNotNone(client.oauth_start("google"))
 
         with patch("requests.get") as mock_get:
             mock_get.return_value.ok = True
-            client.oauth_start(OAuthProviders.OAuthFacebook)
+            client.oauth_start("facebook")
             expected_uri = f"{DEFAULT_BASE_URI}{EndpointsV1.oauthStart}"
             mock_get.assert_called_with(
                 expected_uri,
