@@ -342,7 +342,7 @@ def descope_oauth(auth_client):
             try:
                 args = request.args
                 provider = args.get("provider")
-                redirect_url, res = auth_client.oauth_start(provider)
+                redirect_url = auth_client.oauth_start(provider)
             except AuthException as e:
                 return Response(f"OAuth failed {e}", e.status_code)
 
@@ -350,12 +350,7 @@ def descope_oauth(auth_client):
             # (ignore return value as anyway we redirect)
             f(*args, **kwargs)
 
-            response = redirect(redirect_url, 302)
-            for key, val in res.cookies.items():
-                response.set_cookie(key, val)
-            for key, val in res.headers.items():
-                response.headers.add(key, val)
-            return response
+            return redirect(redirect_url, 302)
 
         return decorated
 

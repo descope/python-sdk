@@ -4,6 +4,7 @@ import os
 import re
 from threading import Lock
 from typing import Tuple
+from wsgiref import headers
 
 import jwt
 import requests
@@ -615,6 +616,14 @@ class AuthClient:
     def logout(
         self, signed_token: str, signed_refresh_token: str
     ) -> requests.cookies.RequestsCookieJar:
+
+        if signed_token is None or signed_refresh_token is None:
+            raise AuthException(
+                401,
+                "token validation failure",
+                f"signed token {signed_token} or/and signed refresh token {signed_refresh_token} are empty",
+            )
+
         uri = AuthClient._compose_logout_url()
         cookies = {
             SESSION_COOKIE_NAME: signed_token,
@@ -654,7 +663,7 @@ class AuthClient:
         else:
             return False
 
-    def oauth_start(self, provider: str) -> Tuple[str, requests.Response]:
+    def oauth_start(self, provider: str) -> str:
         """ """
         if not self._verify_oauth_provider(provider):
             raise AuthException(
@@ -664,8 +673,12 @@ class AuthClient:
             )
 
         uri = f"{DEFAULT_BASE_URI}{EndpointsV1.oauthStart}"
+        print(f"muaaa {headers}")
         response = requests.get(
-            uri, headers=self._get_default_headers(), params={"provider": provider}
+            uri,
+            headers=self._get_default_headers(),
+            params={"provider": provider},
+            allow_redirects=False,
         )
 
         if not response.ok:
@@ -673,8 +686,5 @@ class AuthClient:
                 response.status_code, "OAuth send request failure", response.text
             )
 
-        # response_headers = deepcopy(response.headers)
-        # response_cookies = deepcopy(response.cookies)
-        # return response.url, response_headers, response_cookies
-
-        return response.url, response
+        redirect_url = response.headers.get("Location", "")
+        return redirect_url
