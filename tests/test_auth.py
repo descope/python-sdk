@@ -219,6 +219,7 @@ class TestAuthClient(unittest.TestCase):
                     "Authorization": "Basic ZHVtbXk6",
                 },
                 params={"provider": "facebook"},
+                allow_redirects=False,
             )
 
     def test_get_identifier_name_by_method(self):
@@ -325,6 +326,8 @@ class TestAuthClient(unittest.TestCase):
         dummy_refresh_token = ""
         dummy_valid_jwt_token = ""
         client = AuthClient(self.dummy_project_id, self.public_key_dict)
+
+        self.assertRaises(AuthException, client.logout, None, None)
 
         # Test failed flow
         with patch("requests.get") as mock_get:
