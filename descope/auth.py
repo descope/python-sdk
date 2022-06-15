@@ -4,7 +4,6 @@ import os
 import re
 from threading import Lock
 from typing import Tuple
-from wsgiref import headers
 
 import jwt
 import requests
@@ -673,7 +672,6 @@ class AuthClient:
             )
 
         uri = f"{DEFAULT_BASE_URI}{EndpointsV1.oauthStart}"
-        print(f"muaaa {headers}")
         response = requests.get(
             uri,
             headers=self._get_default_headers(),
