@@ -8,6 +8,8 @@ PHONE_REGEX = """^(?:(?:\\(?(?:00|\\+)([1-4]\\d\\d|[1-9]\\d?)\\)?)?[\\-\\.\\ \\\
 SESSION_COOKIE_NAME = "DS"
 REFRESH_SESSION_COOKIE_NAME = "DSR"
 
+REDIRECT_LOCATION_COOKIE_NAME = "Location"
+
 
 class EndpointsV1:
     signInAuthOTPPath = "/v1/auth/signin/otp"
@@ -16,6 +18,7 @@ class EndpointsV1:
     signInAuthMagicLinkPath = "/v1/auth/signin/magiclink"
     signUpAuthMagicLinkPath = "/v1/auth/signup/magiclink"
     verifyMagicLinkAuthPath = "/v1/auth/magiclink/verify"
+    oauthStart = "/v1/oauth/authorize"
     publicKeyPath = "/v1/keys"
     refreshTokenPath = "/v1/auth/refresh"
     logoutPath = "/v1/auth/logoutall"
@@ -25,6 +28,9 @@ class DeliveryMethod(Enum):
     WHATSAPP = 1
     PHONE = 2
     EMAIL = 3
+
+
+OAuthProviders = ["facebook", "github", "google", "microsoft", "gitlab", "apple"]
 
 
 class User:

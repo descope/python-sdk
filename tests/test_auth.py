@@ -5,7 +5,7 @@ from enum import Enum
 from unittest.mock import patch
 
 from descope import SESSION_COOKIE_NAME, AuthClient, AuthException, DeliveryMethod, User
-from descope.common import REFRESH_SESSION_COOKIE_NAME
+from descope.common import DEFAULT_BASE_URI, REFRESH_SESSION_COOKIE_NAME, EndpointsV1
 
 
 class TestAuthClient(unittest.TestCase):
@@ -172,6 +172,56 @@ class TestAuthClient(unittest.TestCase):
             False,
         )
 
+    def test_verify_oauth_providers(self):
+        self.assertEqual(
+            AuthClient._verify_oauth_provider(""),
+            False,
+        )
+
+        self.assertEqual(
+            AuthClient._verify_oauth_provider(None),
+            False,
+        )
+
+        self.assertEqual(
+            AuthClient._verify_oauth_provider("unknown provider"),
+            False,
+        )
+
+        self.assertEqual(
+            AuthClient._verify_oauth_provider("google"),
+            True,
+        )
+
+    def test_oauth_start(self):
+        client = AuthClient(self.dummy_project_id, self.public_key_dict)
+
+        # Test failed flows
+        self.assertRaises(AuthException, client.oauth_start, "")
+
+        with patch("requests.get") as mock_get:
+            mock_get.return_value.ok = False
+            self.assertRaises(AuthException, client.oauth_start, "google")
+
+        # Test success flow
+        with patch("requests.get") as mock_get:
+            mock_get.return_value.ok = True
+            self.assertIsNotNone(client.oauth_start("google"))
+
+        with patch("requests.get") as mock_get:
+            mock_get.return_value.ok = True
+            client.oauth_start("facebook")
+            expected_uri = f"{DEFAULT_BASE_URI}{EndpointsV1.oauthStart}"
+            mock_get.assert_called_with(
+                expected_uri,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": "Basic ZHVtbXk6",
+                },
+                params={"provider": "facebook"},
+                allow_redirects=False,
+            )
+
     def test_get_identifier_name_by_method(self):
         self.assertEqual(
             AuthClient._get_identifier_name_by_method(DeliveryMethod.EMAIL), "email"
@@ -276,6 +326,8 @@ class TestAuthClient(unittest.TestCase):
         dummy_refresh_token = ""
         dummy_valid_jwt_token = ""
         client = AuthClient(self.dummy_project_id, self.public_key_dict)
+
+        self.assertRaises(AuthException, client.logout, None, None)
 
         # Test failed flow
         with patch("requests.get") as mock_get:
