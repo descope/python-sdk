@@ -4,6 +4,8 @@ from copy import deepcopy
 from enum import Enum
 from unittest.mock import patch
 
+import requests
+
 from descope import SESSION_COOKIE_NAME, AuthClient, AuthException, DeliveryMethod, User
 from descope.common import DEFAULT_BASE_URI, REFRESH_SESSION_COOKIE_NAME, EndpointsV1
 
@@ -589,10 +591,16 @@ class TestAuthClient(unittest.TestCase):
         valid_jwt_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCIsImtpZCI6IjMyYjNkYTUyNzdiMTQyYzdlMjRmZGYwZWYwOWUwOTE5In0.eyJleHAiOjE5ODEzOTgxMTF9.GQ3nLYT4XWZWezJ1tRV6ET0ibRvpEipeo6RCuaCQBdP67yu98vtmUvusBElDYVzRxGRtw5d20HICyo0_3Ekb0euUP3iTupgS3EU1DJMeAaJQgOwhdQnQcJFkOpASLKWh"
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
-            mock_post.return_value.cookies = {
-                SESSION_COOKIE_NAME: valid_jwt_token,
-                REFRESH_SESSION_COOKIE_NAME: "dummy refresh token",
-            }
+            cookie_jar = requests.cookies.RequestsCookieJar()
+            cookie_object = requests.cookies.create_cookie(
+                name=REFRESH_SESSION_COOKIE_NAME,
+                value="dummy refresh token",
+                rest={"HttpOnly": True},
+            )
+            cookie_jar.set_cookie(cookie_object)
+            mock_post.return_value.json = lambda: {"jwt": valid_jwt_token}
+            mock_post.return_value.cookies = cookie_jar
+
             self.assertIsNotNone(
                 client.verify_code(DeliveryMethod.EMAIL, "dummy@dummy.com", code)
             )
@@ -614,10 +622,15 @@ class TestAuthClient(unittest.TestCase):
         valid_jwt_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCIsImtpZCI6IjMyYjNkYTUyNzdiMTQyYzdlMjRmZGYwZWYwOWUwOTE5In0.eyJleHAiOjE5ODEzOTgxMTF9.GQ3nLYT4XWZWezJ1tRV6ET0ibRvpEipeo6RCuaCQBdP67yu98vtmUvusBElDYVzRxGRtw5d20HICyo0_3Ekb0euUP3iTupgS3EU1DJMeAaJQgOwhdQnQcJFkOpASLKWh"
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
-            mock_post.return_value.cookies = {
-                SESSION_COOKIE_NAME: valid_jwt_token,
-                REFRESH_SESSION_COOKIE_NAME: "dummy refresh token",
-            }
+            cookie_jar = requests.cookies.RequestsCookieJar()
+            cookie_object = requests.cookies.create_cookie(
+                name=REFRESH_SESSION_COOKIE_NAME,
+                value="dummy refresh token",
+                rest={"HttpOnly": True},
+            )
+            cookie_jar.set_cookie(cookie_object)
+            mock_post.return_value.json = lambda: {"jwt": valid_jwt_token}
+            mock_post.return_value.cookies = cookie_jar
             self.assertIsNotNone(client.verify_magiclink(code))
 
     def test_validate_session(self):
@@ -736,7 +749,6 @@ class TestAuthClient(unittest.TestCase):
             )
 
         with patch("requests.get") as mock_request:
-            mock_request.return_value.cookies = {"aaa": "aaa"}
             mock_request.return_value.ok = True
             self.assertRaises(
                 AuthException,
@@ -761,9 +773,15 @@ class TestAuthClient(unittest.TestCase):
         new_refreshed_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCIsImtpZCI6IjMyYjNkYTUyNzdiMTQyYzdlMjRmZGYwZWYwOWUwOTE5In0.eyJleHAiOjE5ODEzOTgxMTF9.GQ3nLYT4XWZWezJ1tRV6ET0ibRvpEipeo6RCuaCQBdP67yu98vtmUvusBElDYVzRxGRtw5d20HICyo0_3Ekb0euUP3iTupgS3EU1DJMeAaJQgOwhdQnQcJFkOpASLKWh"
         dummy_refresh_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCIsImtpZCI6IjMyYjNkYTUyNzdiMTQyYzdlMjRmZGYwZWYwOWUwOTE5In0.eyJleHAiOjE5ODEzOTgxMTF9.GQ3nLYT4XWZWezJ1tRV6ET0ibRvpEipeo6RCuaCQBdP67yu98vtmUvusBElDYVzRxGRtw5d20HICyo0_3Ekb0euUP3iTupgS3EU1DJMeAaJQgOwhdQnQcJFkOpASLKWh"
         with patch("requests.get") as mock_request:
-            mock_request.return_value.cookies = {
-                SESSION_COOKIE_NAME: new_refreshed_token
-            }
+            cookie_jar = requests.cookies.RequestsCookieJar()
+            cookie_object = requests.cookies.create_cookie(
+                name=REFRESH_SESSION_COOKIE_NAME,
+                value=dummy_refresh_token,
+                rest={"HttpOnly": True},
+            )
+            cookie_jar.set_cookie(cookie_object)
+            mock_request.return_value.json = lambda: {"jwt": new_refreshed_token}
+            mock_request.return_value.cookies = cookie_jar
             mock_request.return_value.ok = True
             claims, tokens = client.validate_session_request(
                 expired_jwt_token, dummy_refresh_token
@@ -807,7 +825,16 @@ class TestAuthClient(unittest.TestCase):
 
         with patch("requests.get") as mock_request:
             mock_request.return_value.ok = True
-            mock_request.return_value.cookies = {SESSION_COOKIE_NAME: None}
+            cookie_jar = requests.cookies.RequestsCookieJar()
+            cookie_object = requests.cookies.create_cookie(
+                name=REFRESH_SESSION_COOKIE_NAME,
+                value="dummy refresh token",
+                rest={"HttpOnly": True},
+            )
+            cookie_jar.set_cookie(cookie_object)
+            mock_request.return_value.json = lambda: {"jwt": None}
+            mock_request.return_value.cookies = cookie_jar
+
             self.assertRaises(
                 AuthException,
                 client.refresh_token,
