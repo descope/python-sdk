@@ -22,7 +22,7 @@ def main():
         auth_client = AuthClient(project_id=project_id)
 
         logging.info(
-            "Going to signin new user.. expect an email to arrive with the new code.."
+            "Going to sign in new user.. expect an email to arrive with the new code.."
         )
         auth_client.sign_in_otp(method=DeliveryMethod.EMAIL, identifier=identifier)
 

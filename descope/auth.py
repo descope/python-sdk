@@ -244,7 +244,7 @@ class AuthClient:
                 f"Identifier {identifier} is not valid by delivery method {method}",
             )
 
-        body = {self._get_identifier_name_by_method(method): identifier}
+        body = {"externalID": identifier}
 
         if user is not None:
             body["user"] = user.get_data()
@@ -283,7 +283,7 @@ class AuthClient:
             )
 
         body = {
-            self._get_identifier_name_by_method(method): identifier,
+            "externalID": identifier,
         }
 
         uri = AuthClient._compose_signin_url(method)
@@ -327,7 +327,7 @@ class AuthClient:
                 f"Identifier {identifier} is not valid by delivery method {method}",
             )
 
-        body = {self._get_identifier_name_by_method(method): identifier, "code": code}
+        body = {"externalID": identifier, "code": code}
 
         uri = AuthClient._compose_verify_code_url(method)
         response = requests.post(
@@ -338,8 +338,13 @@ class AuthClient:
         if not response.ok:
             raise AuthException(response.status_code, "", response.reason)
 
-        session_token = response.cookies.get(SESSION_COOKIE_NAME)
+        jwtResp = response.json()
+        session_token = jwtResp["jwt"]
         refresh_token = response.cookies.get(REFRESH_SESSION_COOKIE_NAME)
+        cookie_object = requests.cookies.create_cookie(
+            name=SESSION_COOKIE_NAME, value=session_token, rest={"HttpOnly": True}
+        )
+        response.cookies.set_cookie(cookie_object)
 
         claims, tokens = self._validate_and_load_tokens(session_token, refresh_token)
         return (claims, tokens)
@@ -372,7 +377,7 @@ class AuthClient:
                 f"Identifier {identifier} is not valid by delivery method {method}",
             )
 
-        body = {self._get_identifier_name_by_method(method): identifier, "URI": uri}
+        body = {"externalID": identifier, "URI": uri}
 
         if user is not None:
             body["user"] = user.get_data()
@@ -414,7 +419,7 @@ class AuthClient:
                 f"Identifier {identifier} is not valid by delivery method {method}",
             )
 
-        body = {self._get_identifier_name_by_method(method): identifier, "URI": uri}
+        body = {"externalID": identifier, "URI": uri}
 
         requestUri = AuthClient._compose_signin_magiclink_url(method)
         response = requests.post(
@@ -453,8 +458,13 @@ class AuthClient:
         if not response.ok:
             raise AuthException(response.status_code, "", response.reason)
 
-        session_token = response.cookies.get(SESSION_COOKIE_NAME)
+        jwtResp = response.json()
+        session_token = jwtResp["jwt"]
         refresh_token = response.cookies.get(REFRESH_SESSION_COOKIE_NAME)
+        cookie_object = requests.cookies.create_cookie(
+            name=SESSION_COOKIE_NAME, value=session_token, rest={"HttpOnly": True}
+        )
+        response.cookies.set_cookie(cookie_object)
 
         claims, tokens = self._validate_and_load_tokens(session_token, refresh_token)
         return (claims, tokens)
@@ -479,13 +489,13 @@ class AuthClient:
                 f"Failed to refresh token with error: {response.text}",
             )
 
-        res_cookies = response.cookies
-        ds_cookie = res_cookies.get(SESSION_COOKIE_NAME, None)
-        if not ds_cookie:
+        jwtResp = response.json()
+        session_token = jwtResp["jwt"]
+        if not session_token:
             raise AuthException(
                 401, "Refresh token failed", "Failed to get new refreshed token"
             )
-        return ds_cookie
+        return session_token
 
     def _validate_and_load_tokens(
         self, signed_token: str, signed_refresh_token: str
@@ -625,7 +635,6 @@ class AuthClient:
 
         uri = AuthClient._compose_logout_url()
         cookies = {
-            SESSION_COOKIE_NAME: signed_token,
             REFRESH_SESSION_COOKIE_NAME: signed_refresh_token,
         }
 
