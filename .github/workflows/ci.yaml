@@ -54,7 +54,7 @@ jobs:
 
       - name: Build package
         run: |
-          python3 -m build
+          pwd && python3 -m build
 
       - name:
         uses: actions/upload-artifact@v3
