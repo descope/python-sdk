@@ -54,6 +54,7 @@ jobs:
 
       - name: Build package
         run: |
+          mkdir src
           python -m build
 
       - name:
