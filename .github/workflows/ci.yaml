@@ -57,7 +57,7 @@ jobs:
           python -m build
 
       - name:
-      - uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v3
         with:
           name: descope-auth-0.0.1.tar.gz
           path: ./dist/descope-auth-0.0.1.tar.gz
