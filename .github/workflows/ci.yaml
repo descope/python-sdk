@@ -63,6 +63,34 @@ jobs:
           name: descope-auth-0.0.1.tar.gz
           path: ./dist/descope-auth-0.0.1.tar.gz
 
-      - name: repo name
-        run: echo '${{ github.repository }}'
-        shell: bash
+      - name: Download artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          # Optional, GitHub token, a Personal Access Token with `public_repo` scope if needed
+          # Required, if artifact is from a different repo
+          # Required, if repo is private a Personal Access Token with `repo` scope is needed
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          # Required, workflow file name or ID
+          workflow: ci.yml
+          # Optional, the status or conclusion of a completed workflow to search for
+          # Can be one of a workflow conclusion:
+          #   "failure", "success", "neutral", "cancelled", "skipped", "timed_out", "action_required"
+          # Or a workflow status:
+          #   "completed", "in_progress", "queued"
+          workflow_conclusion: success
+          # Optional, will use the branch
+          branch: upload-artifacts
+          # Optional, defaults to all types
+          event: push
+          # Optional, uploaded artifact name,
+          # will download all artifacts if not specified
+          # and extract them in respective subdirectories
+          # https://github.com/actions/download-artifact#download-all-artifacts
+          name: descope-auth-0.0.1.tar.gz
+          # Optional, defaults to current repo
+          #descope/python-sdk
+          repo: descope/python-sdk
+
+      - name: Check artifact
+        run: |
+          ls -l
