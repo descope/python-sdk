@@ -71,7 +71,7 @@ jobs:
           # Required, if repo is private a Personal Access Token with `repo` scope is needed
           github_token: ${{secrets.GITHUB_TOKEN}}
           # Required, workflow file name or ID
-          workflow: ci.yml
+          workflow: ci.yaml
           # Optional, the status or conclusion of a completed workflow to search for
           # Can be one of a workflow conclusion:
           #   "failure", "success", "neutral", "cancelled", "skipped", "timed_out", "action_required"
