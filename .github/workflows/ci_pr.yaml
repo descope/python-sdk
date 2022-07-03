@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
@@ -46,13 +46,13 @@ jobs:
           echo "Coverage Time - ${{ steps.coverageComment.outputs.time }}"
           echo "Not Success Test Info - ${{ steps.coverageComment.outputs.notSuccessTestInfo }}"
 
-      - name: Create the Badge
-        uses: schneegans/dynamic-badges-action@v1.4.0
-        with:
-          auth: ${{ secrets.CI_READ_COMMON }}
-          gistID: 277ec23e4e70728824362a0d24fbd0f9
-          filename: pytest-coverage-comment.json
-          label: Coverage Report
-          message: ${{ steps.coverageComment.outputs.coverage }}
-          color: ${{ steps.coverageComment.outputs.color }}
-          namedLogo: pytest
+      #- name: Create the Badge
+      #  uses: schneegans/dynamic-badges-action@v1.4.0
+      #  with:
+      #    auth: ${{ secrets.CI_READ_COMMON }}
+      #    gistID: 277ec23e4e70728824362a0d24fbd0f9
+      #    filename: pytest-coverage-comment.json
+      #    label: Coverage Report
+      #    message: ${{ steps.coverageComment.outputs.coverage }}
+      #    color: ${{ steps.coverageComment.outputs.color }}
+      #    namedLogo: pytest
