@@ -73,7 +73,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Push the tagged Docker image
-        run: docker push descope/py-example:0.1      
+        run: docker push ghcr.io/descope/py-example:0.1      
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
