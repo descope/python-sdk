@@ -2,6 +2,9 @@ name: Python package
 
 on: [push]
 
+env:
+  EXAMPLE_IMAGE_NAME: ghcr.io/descope/py-example:0.1
+
 jobs:
   build:
 
@@ -82,7 +85,7 @@ jobs:
       - name: Build example docker image
         working-directory: samples/
         run: |
-          docker build . --tag ghcr.io/descope/py-example:0.1  
+          docker build . --tag ${{ env.EXAMPLE_IMAGE_NAME }} 
       
       - name: Log in to the Container registry
         uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
@@ -91,4 +94,4 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Push the tagged Docker image
-        run: docker push ghcr.io/descope/py-example:0.1      
+        run: docker push ${{ env.EXAMPLE_IMAGE_NAME }}      
