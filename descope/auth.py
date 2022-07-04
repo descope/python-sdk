@@ -39,7 +39,7 @@ class AuthClient:
                 raise AuthException(
                     500,
                     "Init failure",
-                    "Failed to init AuthClient object, project should not be empty, remember to set env variable DESCOPE_PROJECT_ID",
+                    "Failed to init AuthClient object, project should not be empty, remember to set env variable DESCOPE_PROJECT_ID or pass along it to init funcation",
                 )
         self.project_id = project_id
 
