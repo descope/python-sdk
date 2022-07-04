@@ -77,9 +77,9 @@ jobs:
           name: descope-auth-0.0.1.tar.gz
           path: ./dist/descope-auth-0.0.1.tar.gz    
 
-      - run: ls ./dist/
+      - run: ls -lsh ./dist/
       - run: cp ./dist/descope-auth-0.0.1.tar.gz samples/        
-      - run: ls samples/  
+      - run: ls -lsh samples/  
 
       - name: Build example docker image
         working-directory: samples/
