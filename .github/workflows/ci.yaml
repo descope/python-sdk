@@ -57,6 +57,15 @@ jobs:
           mkdir src
           python -m build
 
+      - name: Get version
+        id: vars
+        run: echo ::set-output name=tag::$(echo ${GITHUB_REF:10})          
+
+      - name: Build example docker image
+        working-directory: samples/
+        run: |
+          docker build . --tag descope/py-example:${{steps.vars.outputs.tag}}     
+
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
