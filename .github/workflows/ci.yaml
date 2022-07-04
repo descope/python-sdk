@@ -79,6 +79,7 @@ jobs:
 
       - run: ls ./dist/
       - run: cp ./dist/descope-auth-0.0.1.tar.gz samples/        
+      - run: ls samples/  
 
       - name: Build example docker image
         working-directory: samples/
@@ -93,9 +94,3 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Push the tagged Docker image
         run: docker push ghcr.io/descope/py-example:0.1      
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: descope-auth-0.0.1.tar.gz
-          path: ./dist/descope-auth-0.0.1.tar.gz
