@@ -64,7 +64,16 @@ jobs:
       - name: Build example docker image
         working-directory: samples/
         run: |
-          docker build . --tag descope/py-example:0.1     
+          docker build . --tag descope/py-example:0.1  
+      
+      - name: Log in to the Container registry
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push the tagged Docker image
+        run: docker push descope/py-example:0.1      
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
