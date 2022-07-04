@@ -64,7 +64,7 @@ jobs:
       - name: Build example docker image
         working-directory: samples/
         run: |
-          docker build . --tag descope/py-example:${{steps.vars.outputs.tag}}     
+          docker build . --tag descope/py-example:0.1     
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
