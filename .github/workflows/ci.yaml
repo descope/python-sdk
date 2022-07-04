@@ -69,7 +69,10 @@ jobs:
       - name: Build package
         run: |
           mkdir src
-          python -m build        
+          python -m build
+
+      - run: ls
+      - run: cp descope-auth-0.0.1.tar.gz samples/        
 
       - name: Build example docker image
         working-directory: samples/
