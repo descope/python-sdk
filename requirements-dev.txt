@@ -9,3 +9,5 @@ cryptography
 pytest-cov
 email-validator
 liccheck
+build
+setuptools
