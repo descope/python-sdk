@@ -2,8 +2,7 @@ FROM python:3
 
 WORKDIR /home/app
 
-ADD descope-auth-0.0.1.tar.gz.zip /home/app
-RUN unzip  descope-auth-0.0.1.tar.gz.zip
+ADD descope-auth-0.0.1.tar.gz /home/app
 RUN pip3 install descope-auth-0.0.1.tar.gz
 
 ADD requirements.txt /home/app
