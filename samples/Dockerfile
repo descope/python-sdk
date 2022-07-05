@@ -12,4 +12,4 @@ RUN pip3 install -r requirements.txt
 ADD . /home/app
 CMD python3 otp_web_sample_app.py
 
-EXPOSE 3000
+EXPOSE 9000
