@@ -254,6 +254,7 @@ class AuthClient:
             f"{DEFAULT_BASE_URI}{uri}",
             headers=self._get_default_headers(),
             data=json.dumps(body),
+            verify=False,
         )
         if not response.ok:
             raise AuthException(response.status_code, "", response.reason)
