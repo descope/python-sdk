@@ -1,149 +1,133 @@
-# Python SDK
-Python library used to integrate with Descope
+# ExpresSDK for Python
+
+Use the Descope ExpresSDK for Python to quickly and easily add user authentication to your application or website. If you need a bit more background on how the ExpresSDKs work, [click here](/sdk/index.mdx).
+
+The Descope ExpresSDK for Python supports 3.6 and above.
+
+## ExpressStart with OTP Authentication
+
+This section will show you how to implement user authentication using a one-time password (OTP). A typical four step flow for OTP authentictaion is shown below.
+
+```mermaid
+flowchart LR
+  signup[1. customer sign-up]-- customer gets OTP -->verify[3. customer verification]
+  signin[2. customer sign-in]-- customer gets OTP -->verify
+  verify-- customer does stuff -->validate[4. session validation]
+```
+
+Decorators shown in the code below are valid for Python Flask.
 
 ### Prerequisites
 
-In order to initiate the AuthClient object you must specify the project ID given by Descope either by:
-   - Set the `DESCOPE_PROJECT_ID` environment variable.
-   - Set the project_id argument when initialization the AuthClient object.
+Replace any instance of  `<ProjectID>` in the code below with your company's Project ID, which can be found in the [Descope console](link).
 
+* Run the following code in your project:
 
-### Installation
-Install the Descope Python SDK using the following command.
-Descope Python SDK supports Python 3.6 and above
+    These commands will add the Descope ExpresSDK for Python as a project dependency, and set the `DESCOPE_PROJECT_ID` variable to a valid \<ProjectID\>.
 
-.. code-block:: python
-
+     ```code Python
     pip install Descope-Auth
+    export DESCOPE_PROJECT_ID=<ProjectID>
+     ```
 
+* Import and initialize the ExpresSDK for Python client in your source code
 
-## Usage
-Use (copy-paste) the pre defined samples decorators based on your framework (Flask supported) or the api as describe below
+    ```code Python
+    from descope import DeliveryMethod, User, AuthClient
+    ```
 
-### API
-.. code-block:: python
+### 1. Customer Sign-up
 
-from descope import DeliveryMethod, User, AuthClient
+In your sign-up route for OTP (for example, `myapp.com/signup`) generate a sign-up request and send the OTP verification code via the selected OTP delivery method. In the example below an email is sent to "mytestmail@test.com". In additon, optional user data (for exmaple, a custom username in the code sample below) can be gathered during the sign-up process.
 
-class DeliveryMethod(Enum):
-    WHATSAPP = 1
-    PHONE = 2
-    EMAIL = 3
+```code Python
+user = User("newusername", "full name", "555-555-1212", "mytestmail@test.com")
+auth_client.sign_up_otp(DeliveryMethod.EMAIL, "mytestmail@test.com, user)
+```
 
-User(username: str, name: str, phone: str, email: str)
+### 2. Customer Sign-in
+In your sign-in route for OTP (for exmaple, `myapp.com/login`) generate a sign-in request send the OTP verification code via the selected OTP delivery method. In the example below an email is sent to "mytestmail@test.com".
 
-AuthClient(PROJECT_ID, PUBLIC_KEY=None)
-
-sign_up_otp(method: DeliveryMethod, identifier: str, user: User)
-Example:
-from descope import DeliveryMethod, User, AuthClient
-user = User("username", "name", "11111111111", "dummy@dummy.com")
-auth_client = AuthClient(PROJECT_ID)
-auth_client.sign_up_otp(DeliveryMethod.EMAIL, "dummy@dummy.com", user)
-
-
-sign_in_otp(method: DeliveryMethod, identifier: str)
-Example:
-from descope import DeliveryMethod, AuthClient
-auth_client = AuthClient(PROJECT_ID)
-auth_client.sign_in_otp(DeliveryMethod.EMAIL, "dummy@dummy.com")
-
+```code Python
+auth_client.sign_in_otp(DeliveryMethod.EMAIL, "mytestemail@test.com")
+}
+```
+```code Flask Decorator
 @descope_signin_otp_by_email
+```
 
-verify_code(method: DeliveryMethod, identifier: str, code: str)
---Upon successful verification new session cookies will returned and should be set on the response
-Or one of the decorators:
+### 3. Customer Verification
+
+
+In your verify customer route for OTP (for example, `myapp.com/verify`) verify the OTP from either a customer sign-up or sign-in. The validate_session_request function call will write the necessary tokens and cookies to validate each session interaction.
+
+```code Python
+claims, tokens = validate_session_request(signed_token: str, signed_refresh_token: str)
+```
+```code Flask Decorator
 @descope_verify_code_by_email
-@descope_verify_code_by_phone
-@descope_verify_code_by_whatsapp
+```
 
+### 4. Session Validation
 
-Example:
-from descope import DeliveryMethod, AuthClient
-auth_client = AuthClient(PROJECT_ID)
-auth_client.verify_code(DeliveryMethod.EMAIL, "1111")
-Or decorator
+Session validation checks to see that the visitor to your website or application is who they say they are, by comparing the value in the validation variables against the session data that is already stored.
 
-APP = Flask(__name__)
-@APP.route("/api/verify")
-@descope_verify_code_by_email
-def verify():
-    pass
+In the code below the validates the original session tokens and cookies (`session_token`) and validates the tokens and cookies from the client. ValidateSession returns true if the user is authorized, and false if the user is not authorized. In addition, the session will automatically be extended if the user is valid but the sesssion has expired by writing the updated tokens and cookies to the response writer (w).
 
-
-
-validate_session_request(signed_token: str, signed_refresh_token: str)
-Or decorator
+```code Python
+claims, tokens = auth_client.validate_session_request('session_token', 'refresh_token')
+```
+```code Flask Decorator
 @descope_validate_auth
-
-Example:
-from descope import AuthClient
-auth_client = AuthClient(PROJECT_ID)
-new_valid_token = auth_client.validate_session_request('session_token', 'refresh_token')
-
-logout(signed_token: str, signed_refresh_token: str)
-Example:
-from descope import AuthClient
-auth_client = AuthClient(PROJECT_ID)
-auth_client.logout('session_token', 'refresh_token')
-
-#### Exception
-.. code-block:: python
-
-AuthException
-Example:
-from descope import DeliveryMethod, AuthClient, AuthException
-try:
-    auth_client = AuthClient(PROJECT_ID)
-    auth_client.sign_in_otp(DeliveryMethod.EMAIL, "dummy@dummy.com")
-except AuthException:
-    #Handle exception
-
-#
-### Run The Example
-
-1. Clone repo locally `git clone github.com/descope/python-sdk`
-2. Install the requirements `pip3 install -r requirements-dev.txt`
-
-3. export your project id
-
-```
-export DESCOPE_PROJECT_ID=<insert here>
 ```
 
-5. Run the example application `python samples/web_sample_app.py`
-6. Application runs on `http://localhost:9000`
-7. Now you can perform GET requests to the server api like the following example:
+## ExpressStart with MagicLink Authentication
 
-Signup a new user by OTP via email, verify the OTP code and then access private (authenticated) api
+:::warning for the reviewer!
+This is currenly a placeholder section only - to demonstrate how the framework can include addtional SDK flows.
+:::
 
-.. code-block
+This section will help you implement user authentication using Magiclinks. etc. etc. The flow for MagicLinks is 
 
-    /api/signup
-    Body:
-    {
-        "email": "dummy@dummy.com",
-        "user": {
-            "username": "dummy",
-            "name": "dummy",
-            "phone": "11111111111",
-            "email": "dummy@dummy.com"
-       }
-    }
+```mermaid
+flowchart LR
+  signup[1. customer sign-up]-- customer gets MagicLink -->verify[3. MagicLink verification]
+  signin[2. customer sign-in]-- customer gets MagicLink -->verify
+  verify-- customer does stuff -->validate[4. session validation]
+```
 
-    /api/verify
-    Body:
-    {
-        "code": "111111",
-        "email": "dummy@dummy.com"
-    }
+### Prerequisites
 
-    ** Response will have the new generate session cookies
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc laoreet diam vel dignissim posuere. Vestibulum consectetur ante justo, in pretium ligula sollicitudin ut. 
 
-    /api/private
-    Use the session cookies (otherwise you will get HTTP 401 - Unauthorized)
+### 1. do this
 
-### Unit Testing
-.. code-block:: python
+Sed porttitor eu metus vitae molestie. Sed sed erat risus. Donec eu tempor leo. In hac habitasse platea dictumst. Etiam ornare non tellus eget ultricies. 
 
+### 2. do that
+
+Praesent a eros ut est fermentum egestas. Nulla eget leo diam. Vestibulum nec mi nisi. In finibus est in tellus sodales mattis. Etiam gravida nisl id arcu commodo malesuada. 
+
+## ExpressStart with Oauth
+
+:::warning placeholder
+placeholder for instanst-start OAuth example
+:::
+
+## ExpresStart for WebAuthn
+
+:::warning placeholder
+placeholder for instanst-start WebAuthn example
+:::
+
+
+## Unit Testing
+Simplify your unit testing by using the predefined mocks and mock objects provided with the ExpresSDK.
+
+```code python
 python -m pytest tests/*
+```
+
+## License
+
+The Descope ExpresSDK for Python is licensed for use under the terms and conditions of the [MIT license Agreement](https://github.com/descope/python-sdk/blob/main/LICENSE).
