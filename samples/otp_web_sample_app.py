@@ -2,6 +2,7 @@ import os
 import sys
 
 from flask import Flask, Response, _request_ctx_stack, jsonify, request
+import json
 
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
@@ -12,11 +13,11 @@ from decorators.flask_decorators import (  # noqa: E402;
 )
 
 from descope import AuthException  # noqa: E402
-from descope import AuthClient, DeliveryMethod, User  # noqa: E402
+from descope import AuthClient, DeliveryMethod  # noqa: E402
 
 APP = Flask(__name__)
 
-PROJECT_ID = ""
+PROJECT_ID = "2Bt5WLccLUey1Dp7utptZb3Fx9K"
 
 # init the AuthClient
 auth_client = AuthClient(PROJECT_ID)
@@ -39,18 +40,14 @@ def handle_auth_error(ex):
 def signup():
     data = request.get_json(force=True)
     email = data.get("email", None)
-    user = data.get("user", None)
-    if not email or not user:
+    name = data.get("name", None)
+    if not email:
+        print("muaa")
         return Response("Unauthorized", 401)
 
     try:
-        usr = User(
-            user.get("username", "dummy"),
-            user.get("name", ""),
-            user.get("phone", ""),
-            user.get("email", ""),
-        )
-        auth_client.sign_up_otp(DeliveryMethod.EMAIL, email, usr)
+        user = {"name": name, "phone": "", "email": email}
+        auth_client.sign_up_otp(DeliveryMethod.EMAIL, email, user)
     except AuthException:
         return Response("Unauthorized", 401)
 
@@ -73,6 +70,20 @@ def signin():
     response = "This is SignIn API handling"
     return jsonify(message=response)
 
+@APP.route("/api/signuporin", methods=["POST"])
+def signuporin():
+    data = request.get_json(force=True)
+    email = data.get("email", None)
+    if not email:
+        return Response("Unauthorized, missing email", 401)
+
+    try:
+        auth_client.sign_up_or_in_otp(DeliveryMethod.EMAIL, email)
+    except AuthException:
+        return Response("Unauthorized, something went wrong when sending email", 401)
+
+    response = "This is SignUpOrIn API handling"
+    return jsonify(message=response)
 
 @APP.route("/api/verify", methods=["POST"])
 def verify():
@@ -83,14 +94,12 @@ def verify():
         return Response("Unauthorized", 401)
 
     try:
-        _, tokens = auth_client.verify_code(DeliveryMethod.EMAIL, email, code)
-    except AuthException:
+        jwt_response, session_token = auth_client.verify_code(DeliveryMethod.EMAIL, email, code)
+    except AuthException as ex:
+        print(ex)
         return Response("Unauthorized", 401)
 
-    response = Response("Token verified", 200)
-    for name, value in tokens.iteritems():
-        response.set_cookie(name, value)
-
+    response = Response(json.dumps(jwt_response), 200)
     return response
 
 

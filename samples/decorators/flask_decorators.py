@@ -11,8 +11,20 @@ from descope import (  # noqa: E402
     REFRESH_SESSION_COOKIE_NAME,
     SESSION_COOKIE_NAME,
     DeliveryMethod,
-    User,
 )
+
+def set_cookie_on_response(response, data, token):
+    return response.set_cookie(
+        key=data.get("cookieName", ""),
+        value=token,
+        max_age=data.get("cookieMaxAge", 2591999),
+        expires=data.get("cookieExpiration", 1660336439),
+        path=data.get("cookiePath", ""),
+        #domain=data.get("cookieDomain", ""), #Setting 'domain' for a cookie on a server running locally (ex: localhost) is not supported by complying browsers. You should have something like: '127.0.0.1 localhost dev.localhost' on your hosts file and then point your server to run on 'dev.localhost' and also set 'domain' for 'dev.localhost'
+        secure=True,
+        httponly=True,
+        samesite="None" #"Strict", "Lax", "None"
+    )
 
 
 def descope_signup_otp_by_email(auth_client):
@@ -31,15 +43,7 @@ def descope_signup_otp_by_email(auth_client):
                 return Response("Bad Request, missing email", 400)
 
             try:
-                usr = None
-                if user is not None:
-                    usr = User(
-                        user.get("username", ""),
-                        user.get("name", ""),
-                        user.get("phone", ""),
-                        user.get("email", ""),
-                    )
-                auth_client.sign_up_otp(DeliveryMethod.EMAIL, email, usr)
+                auth_client.sign_up_otp(DeliveryMethod.EMAIL, email, user)
             except AuthException as e:
                 return Response(f"Failed to signup, err: {e}", 500)
 
@@ -79,7 +83,6 @@ def descope_validate_auth(auth_client):
     """
     Test for valid Access Token
     """
-
     def decorator(f):
         @wraps(f)
         def decorated(*args, **kwargs):
@@ -105,9 +108,7 @@ def descope_validate_auth(auth_client):
             for key, val in cookies.items():
                 response.set_cookie(key, val)
             return response
-
         return decorated
-
     return decorator
 
 
@@ -115,7 +116,6 @@ def descope_verify_code_by_email(auth_client):
     """
     Verify code by email decorator
     """
-
     def decorator(f):
         @wraps(f)
         def decorated(*args, **kwargs):
@@ -126,22 +126,23 @@ def descope_verify_code_by_email(auth_client):
                 return Response("Unauthorized", 401)
 
             try:
-                claims, tokens = auth_client.verify_code(
+                jwt_response, session_token = auth_client.verify_code(
                     DeliveryMethod.EMAIL, email, code
                 )
             except AuthException:
                 return Response("Unauthorized", 401)
 
             # Save the claims on the context execute the original API
-            _request_ctx_stack.top.claims = claims
+            _request_ctx_stack.top.claims = (jwt_response, session_token)
             response = f(*args, **kwargs)
+            print(jwt_response)
+            tokens = jwt_response["jwts"]
+            for token, data in tokens.items():
+                set_cookie_on_response(response, data, token)
+            print(response.headers)
 
-            for key, val in tokens.items():
-                response.set_cookie(key, val)
             return response
-
         return decorated
-
     return decorator
 
 
@@ -172,6 +173,7 @@ def descope_verify_code_by_phone(auth_client):
 
             for key, val in tokens.items():
                 response.set_cookie(key, val)
+                #set_cookie_on_response(..)
             return response
 
         return decorated
@@ -228,15 +230,7 @@ def descope_signup_magiclink_by_email(auth_client, uri):
                 return Response("Bad Request, missing email", 400)
 
             try:
-                usr = None
-                if user is not None:
-                    usr = User(
-                        user.get("username", ""),
-                        user.get("name", ""),
-                        user.get("phone", ""),
-                        user.get("email", ""),
-                    )
-                auth_client.sign_up_magiclink(DeliveryMethod.EMAIL, email, uri, usr)
+                auth_client.sign_up_magiclink(DeliveryMethod.EMAIL, email, uri, user)
             except AuthException as e:
                 return Response(f"Failed to signup, err: {e}", 500)
 

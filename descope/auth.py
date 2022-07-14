@@ -21,7 +21,6 @@ from descope.common import (
     DeliveryMethod,
     EndpointsV1,
     OAuthProviders,
-    User,
 )
 from descope.exceptions import AuthException
 
@@ -212,14 +211,14 @@ class AuthClient:
         elif method is DeliveryMethod.PHONE:
             return "phone"
         elif method is DeliveryMethod.WHATSAPP:
-            return "phone"
+            return "whatsapp"
         else:
             raise AuthException(
                 500, "identifier failure", f"Unknown delivery method {method}"
             )
 
     def sign_up_otp(
-        self, method: DeliveryMethod, identifier: str, user: User = None
+        self, method: DeliveryMethod, identifier: str, user: dict = None
     ) -> None:
         """
         Sign up a new user by OTP
@@ -247,7 +246,7 @@ class AuthClient:
         body = {self._get_identifier_name_by_method(method): identifier}
 
         if user is not None:
-            body["user"] = user.get_data()
+            body["user"] = user
 
         uri = AuthClient._compose_signup_url(method)
         response = requests.post(
@@ -283,7 +282,7 @@ class AuthClient:
             )
 
         body = {
-            self._get_identifier_name_by_method(method): identifier,
+            "externalID": identifier,
         }
 
         uri = AuthClient._compose_signin_url(method)
@@ -294,6 +293,9 @@ class AuthClient:
         )
         if not response.ok:
             raise AuthException(response.status_code, "", response.text)
+
+    def sign_up_or_in_otp(self, method: DeliveryMethod, identifier: str) -> None:
+        return self.sign_in_otp(method, identifier)
 
     def verify_code(
         self, method: DeliveryMethod, identifier: str, code: str
@@ -327,7 +329,7 @@ class AuthClient:
                 f"Identifier {identifier} is not valid by delivery method {method}",
             )
 
-        body = {self._get_identifier_name_by_method(method): identifier, "code": code}
+        body = {"externalID": identifier, "code": code}
 
         uri = AuthClient._compose_verify_code_url(method)
         response = requests.post(
@@ -338,14 +340,43 @@ class AuthClient:
         if not response.ok:
             raise AuthException(response.status_code, "", response.reason)
 
-        session_token = response.cookies.get(SESSION_COOKIE_NAME)
-        refresh_token = response.cookies.get(REFRESH_SESSION_COOKIE_NAME)
+        resp = response.json()
+        jwt_response, session_token = self._generate_auth_info(resp)
+        return jwt_response, session_token
 
-        claims, tokens = self._validate_and_load_tokens(session_token, refresh_token)
-        return (claims, tokens)
+    def _generate_auth_info(self, response_body: dict): #-> Tuple[str, dict, dict]:
+        #if response_body is None:
+        #    raise AuthException(, "", )
+        #if "JWTS" not in response_body.keys():
+        #    raise AuthException(, "", )
+        tokens = {}
+        session_token = ""
+        session_claims = None
+        for token in response_body["jwts"]:
+            token_claims, _ = self._validate_and_load_tokens(token, None)
+            tokens[token] = token_claims
+            if token_claims["cookieName"] == SESSION_COOKIE_NAME:
+                session_token = token
+                session_claims = token_claims
+
+        jwt_response = {
+            "error": response_body.get("error", ""),
+            "jwts": tokens,
+            "user": response_body.get("user", ""),
+            "firstSeen": response_body.get("firstSeen", True)
+        }
+        #session_claims should we need it probably the important thing)??
+        return jwt_response, session_token #TODO: Aviad what should we return here?
+            
+
+    def _validate_and_load_token(self, token: str) -> Tuple[str, dict]:
+        ###
+        ### return value is: token, dict of (token)claims
+        ###
+        return "", {}
 
     def sign_up_magiclink(
-        self, method: DeliveryMethod, identifier: str, uri: str, user: User = None
+        self, method: DeliveryMethod, identifier: str, uri: str, user: dict = None
     ) -> None:
         """
         Sign up a new user by magic link
@@ -375,7 +406,7 @@ class AuthClient:
         body = {self._get_identifier_name_by_method(method): identifier, "URI": uri}
 
         if user is not None:
-            body["user"] = user.get_data()
+            body["user"] = user
 
         requestUri = AuthClient._compose_signup_magiclink_url(method)
         response = requests.post(
@@ -453,11 +484,9 @@ class AuthClient:
         if not response.ok:
             raise AuthException(response.status_code, "", response.reason)
 
-        session_token = response.cookies.get(SESSION_COOKIE_NAME)
-        refresh_token = response.cookies.get(REFRESH_SESSION_COOKIE_NAME)
-
-        claims, tokens = self._validate_and_load_tokens(session_token, refresh_token)
-        return (claims, tokens)
+        resp = response.json()
+        jwt_response, session_token = self._generate_auth_info(resp)
+        return jwt_response, session_token
 
     def refresh_token(self, signed_token: str, signed_refresh_token: str) -> str:
         cookies = {
@@ -491,7 +520,7 @@ class AuthClient:
         self, signed_token: str, signed_refresh_token: str
     ) -> Tuple[dict, dict]:  # Tuple(dict of claims, dict of tokens)
 
-        if signed_token is None or signed_refresh_token is None:
+        if signed_token is None:
             raise AuthException(
                 401,
                 "token validation failure",
@@ -610,6 +639,7 @@ class AuthClient:
         AuthException: for any case token is not valid means session is not
         authorized
         """
+        #true, Token(signed_token, claims)
         return self._validate_and_load_tokens(signed_token, signed_refresh_token)
 
     def logout(
@@ -650,6 +680,7 @@ class AuthClient:
 
         bytes = f"{self.project_id}:".encode("ascii")
         headers["Authorization"] = f"Basic {base64.b64encode(bytes).decode('ascii')}"
+        x = headers["Authorization"]
         return headers
 
     @staticmethod
