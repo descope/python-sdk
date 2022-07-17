@@ -26,8 +26,7 @@ def set_cookie_on_response(response, data):
         expires=data.get("cookieExpiration", 1660336439),
         path=data.get("cookiePath", ""),
         domain=cookie_domain,
-        # secure=True,
-        secure=False,
+        secure=False,  # True
         httponly=True,
         samesite="None",  # "Strict", "Lax", "None"
     )
