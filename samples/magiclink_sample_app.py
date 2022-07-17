@@ -25,8 +25,12 @@ def main():
         logging.info(
             "Going to signup a new user.. expect an email to arrive with the new link.."
         )
+        user = {"name": "John", "phone": "1111111111111"}
         auth_client.sign_up_magiclink(
-            method=DeliveryMethod.EMAIL, identifier=identifier, uri="http://test.me"
+            method=DeliveryMethod.EMAIL,
+            identifier=identifier,
+            uri="http://test.me",
+            user=user,
         )
 
         value = input("Please insert the code you received by email:\n")

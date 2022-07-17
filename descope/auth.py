@@ -205,13 +205,18 @@ class AuthClient:
         return EndpointsV1.logoutPath
 
     @staticmethod
-    def _get_identifier_name_by_method(method: DeliveryMethod) -> str:
+    def _get_identifier_by_method(
+        method: DeliveryMethod, user: dict
+    ) -> Tuple[str, str]:
         if method is DeliveryMethod.EMAIL:
-            return "email"
+            email = user.get("email", "")
+            return "email", email
         elif method is DeliveryMethod.PHONE:
-            return "phone"
+            phone = user.get("phone", "")
+            return "phone", phone
         elif method is DeliveryMethod.WHATSAPP:
-            return "whatsapp"
+            whatsapp = user.get("phone", "")
+            return ("whatsapp", whatsapp)
         else:
             raise AuthException(
                 500, "identifier failure", f"Unknown delivery method {method}"
@@ -243,13 +248,12 @@ class AuthClient:
                 f"Identifier {identifier} is not valid by delivery method {method}",
             )
 
-        body = {
-            "externalID": identifier,
-            self._get_identifier_name_by_method(method): identifier,
-        }
+        body = {"externalID": identifier}
 
         if user is not None:
-            body["user"] = user
+            body["User"] = user
+            method_str, val = self._get_identifier_by_method(method, user)
+            body[method_str] = val
 
         uri = AuthClient._compose_signup_url(method)
         response = requests.post(
@@ -408,13 +412,14 @@ class AuthClient:
 
         body = {
             "externalID": identifier,
-            self._get_identifier_name_by_method(method): identifier,
             "URI": uri,
             "CrossDevice": False,
         }
 
         if user is not None:
-            body["user"] = user
+            body["User"] = user
+            method_str, val = self._get_identifier_by_method(method, user)
+            body[method_str] = val
 
         requestUri = AuthClient._compose_signup_magiclink_url(method)
         response = requests.post(
@@ -455,7 +460,6 @@ class AuthClient:
 
         body = {
             "externalID": identifier,
-            self._get_identifier_name_by_method(method): identifier,
             "URI": uri,
             "CrossDevice": False,
         }

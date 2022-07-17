@@ -232,22 +232,25 @@ class TestAuthClient(unittest.TestCase):
             )
 
     def test_get_identifier_name_by_method(self):
+        user = {"email": "dummy@dummy.com", "phone": "11111111"}
         self.assertEqual(
-            AuthClient._get_identifier_name_by_method(DeliveryMethod.EMAIL), "email"
+            AuthClient._get_identifier_by_method(DeliveryMethod.EMAIL, user),
+            ("email", "dummy@dummy.com"),
         )
         self.assertEqual(
-            AuthClient._get_identifier_name_by_method(DeliveryMethod.PHONE), "phone"
+            AuthClient._get_identifier_by_method(DeliveryMethod.PHONE, user),
+            ("phone", "11111111"),
         )
         self.assertEqual(
-            AuthClient._get_identifier_name_by_method(DeliveryMethod.WHATSAPP),
-            "whatsapp",
+            AuthClient._get_identifier_by_method(DeliveryMethod.WHATSAPP, user),
+            ("whatsapp", "11111111"),
         )
 
         class AAA(Enum):
             DUMMY = 4
 
         self.assertRaises(
-            AuthException, AuthClient._get_identifier_name_by_method, AAA.DUMMY
+            AuthException, AuthClient._get_identifier_by_method, AAA.DUMMY, user
         )
 
     def test_compose_signup_url(self):
