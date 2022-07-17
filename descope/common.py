@@ -31,4 +31,3 @@ class DeliveryMethod(Enum):
 
 
 OAuthProviders = ["facebook", "github", "google", "microsoft", "gitlab", "apple"]
-
