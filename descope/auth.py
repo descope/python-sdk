@@ -243,7 +243,10 @@ class AuthClient:
                 f"Identifier {identifier} is not valid by delivery method {method}",
             )
 
-        body = {self._get_identifier_name_by_method(method): identifier}
+        body = {
+            "externalID": identifier,
+            self._get_identifier_name_by_method(method): identifier,
+        }
 
         if user is not None:
             body["user"] = user
@@ -294,12 +297,7 @@ class AuthClient:
         if not response.ok:
             raise AuthException(response.status_code, "", response.text)
 
-    def sign_up_or_in_otp(self, method: DeliveryMethod, identifier: str) -> None:
-        return self.sign_in_otp(method, identifier)
-
-    def verify_code(
-        self, method: DeliveryMethod, identifier: str, code: str
-    ) -> Tuple[dict, dict]:  # Tuple(dict of claims, dict of tokens)
+    def verify_code(self, method: DeliveryMethod, identifier: str, code: str) -> dict:
         """Verify OTP code sent by the delivery method that chosen
 
         Args:
@@ -341,39 +339,44 @@ class AuthClient:
             raise AuthException(response.status_code, "", response.reason)
 
         resp = response.json()
-        jwt_response, session_token = self._generate_auth_info(resp)
-        return jwt_response, session_token
+        jwt_response = self._generate_jwt_response(
+            resp, response.cookies.get(SESSION_COOKIE_NAME, None)
+        )
+        return jwt_response
 
-    def _generate_auth_info(self, response_body: dict): #-> Tuple[str, dict, dict]:
-        #if response_body is None:
-        #    raise AuthException(, "", )
-        #if "JWTS" not in response_body.keys():
-        #    raise AuthException(, "", )
+    def _generate_auth_info(self, response_body, cookie) -> dict:
         tokens = {}
-        session_token = ""
-        session_claims = None
         for token in response_body["jwts"]:
-            token_claims, _ = self._validate_and_load_tokens(token, None)
-            tokens[token] = token_claims
-            if token_claims["cookieName"] == SESSION_COOKIE_NAME:
-                session_token = token
-                session_claims = token_claims
+            token_claims = self._validate_and_load_tokens(token, None)
+            token_claims["projectId"] = token_claims.pop(
+                "iss"
+            )  # replace the key name from iss->projectId
+            token_claims["userId"] = token_claims.pop(
+                "sub"
+            )  # replace the key name from sub->userId
+            tokens[token_claims["cookieName"]] = token_claims
 
+        if cookie:
+            token_claims = self._validate_and_load_tokens(cookie, None)
+            token_claims["projectId"] = token_claims.pop(
+                "iss"
+            )  # replace the key name from iss->projectId
+            token_claims["userId"] = token_claims.pop(
+                "sub"
+            )  # replace the key name from sub->userId
+            tokens[token_claims["cookieName"]] = token_claims
+
+        return tokens
+
+    def _generate_jwt_response(self, response_body, cookie) -> dict:
+        tokens = self._generate_auth_info(response_body, cookie)
         jwt_response = {
             "error": response_body.get("error", ""),
             "jwts": tokens,
             "user": response_body.get("user", ""),
-            "firstSeen": response_body.get("firstSeen", True)
+            "firstSeen": response_body.get("firstSeen", True),
         }
-        #session_claims should we need it probably the important thing)??
-        return jwt_response, session_token #TODO: Aviad what should we return here?
-            
-
-    def _validate_and_load_token(self, token: str) -> Tuple[str, dict]:
-        ###
-        ### return value is: token, dict of (token)claims
-        ###
-        return "", {}
+        return jwt_response
 
     def sign_up_magiclink(
         self, method: DeliveryMethod, identifier: str, uri: str, user: dict = None
@@ -403,7 +406,12 @@ class AuthClient:
                 f"Identifier {identifier} is not valid by delivery method {method}",
             )
 
-        body = {self._get_identifier_name_by_method(method): identifier, "URI": uri}
+        body = {
+            "externalID": identifier,
+            self._get_identifier_name_by_method(method): identifier,
+            "URI": uri,
+            "CrossDevice": False,
+        }
 
         if user is not None:
             body["user"] = user
@@ -445,7 +453,12 @@ class AuthClient:
                 f"Identifier {identifier} is not valid by delivery method {method}",
             )
 
-        body = {self._get_identifier_name_by_method(method): identifier, "URI": uri}
+        body = {
+            "externalID": identifier,
+            self._get_identifier_name_by_method(method): identifier,
+            "URI": uri,
+            "CrossDevice": False,
+        }
 
         requestUri = AuthClient._compose_signin_magiclink_url(method)
         response = requests.post(
@@ -456,9 +469,7 @@ class AuthClient:
         if not response.ok:
             raise AuthException(response.status_code, "", response.text)
 
-    def verify_magiclink(
-        self, code: str
-    ) -> Tuple[dict, dict]:  # Tuple(dict of claims, dict of tokens)
+    def verify_magiclink(self, code: str) -> dict:
         """Verify magiclink
 
         Args:
@@ -485,10 +496,12 @@ class AuthClient:
             raise AuthException(response.status_code, "", response.reason)
 
         resp = response.json()
-        jwt_response, session_token = self._generate_auth_info(resp)
-        return jwt_response, session_token
+        jwt_response = self._generate_jwt_response(
+            resp, response.cookies.get(SESSION_COOKIE_NAME, None)
+        )
+        return jwt_response
 
-    def refresh_token(self, signed_token: str, signed_refresh_token: str) -> str:
+    def refresh_token(self, signed_token: str, signed_refresh_token: str) -> dict:
         cookies = {
             SESSION_COOKIE_NAME: signed_token,
             REFRESH_SESSION_COOKIE_NAME: signed_refresh_token,
@@ -508,23 +521,20 @@ class AuthClient:
                 f"Failed to refresh token with error: {response.text}",
             )
 
-        res_cookies = response.cookies
-        ds_cookie = res_cookies.get(SESSION_COOKIE_NAME, None)
-        if not ds_cookie:
-            raise AuthException(
-                401, "Refresh token failed", "Failed to get new refreshed token"
-            )
-        return ds_cookie
+        resp = response.json()
+        auth_info = self._generate_auth_info(
+            resp, response.cookies.get(SESSION_COOKIE_NAME, None)
+        )
+        return auth_info
 
     def _validate_and_load_tokens(
         self, signed_token: str, signed_refresh_token: str
-    ) -> Tuple[dict, dict]:  # Tuple(dict of claims, dict of tokens)
-
+    ) -> dict:
         if signed_token is None:
             raise AuthException(
                 401,
                 "token validation failure",
-                f"signed token {signed_token} or/and signed refresh token {signed_refresh_token} are empty",
+                f"signed token {signed_token} is empty",
             )
 
         try:
@@ -573,11 +583,10 @@ class AuthClient:
             claims = jwt.decode(
                 jwt=signed_token, key=copy_key[0].key, algorithms=[alg_header]
             )
-            tokens = {
-                SESSION_COOKIE_NAME: signed_token,
-                REFRESH_SESSION_COOKIE_NAME: signed_refresh_token,
-            }
-            return (claims, tokens)
+
+            claims["jwt"] = signed_token
+            return claims
+
         except ExpiredSignatureError:
             # Session token expired, check that refresh token is valid
             try:
@@ -590,28 +599,13 @@ class AuthClient:
                 raise AuthException(
                     401, "token validation failure", f"refresh token is not valid, {e}"
                 )
+
             # Refresh token is valid now refresh the session token
-            refreshed_session_token = self.refresh_token(
-                signed_token, signed_refresh_token
-            )
-            # Parse the new session token
-            try:
-                claims = jwt.decode(
-                    jwt=refreshed_session_token,
-                    key=copy_key[0].key,
-                    algorithms=[alg_header],
-                )
-                tokens = {
-                    SESSION_COOKIE_NAME: refreshed_session_token,
-                    REFRESH_SESSION_COOKIE_NAME: signed_refresh_token,
-                }
-                return (claims, tokens)
-            except Exception as e:
-                raise AuthException(
-                    401,
-                    "token validation failure",
-                    f"new session token is not valid, {e}",
-                )
+            auth_info = self.refresh_token(signed_token, signed_refresh_token)
+
+            claims = auth_info[SESSION_COOKIE_NAME]
+            return claims
+
         except Exception as e:
             raise AuthException(
                 401, "token validation failure", f"token is not valid, {e}"
@@ -619,7 +613,7 @@ class AuthClient:
 
     def validate_session_request(
         self, signed_token: str, signed_refresh_token: str
-    ) -> Tuple[dict, dict]:  # Tuple(dict of claims, dict of tokens)
+    ) -> dict:
         """
         Validate session request by verify the session JWT session token
         and session refresh token in case it expired
@@ -639,8 +633,10 @@ class AuthClient:
         AuthException: for any case token is not valid means session is not
         authorized
         """
-        #true, Token(signed_token, claims)
-        return self._validate_and_load_tokens(signed_token, signed_refresh_token)
+        token_claims = self._validate_and_load_tokens(
+            signed_token, signed_refresh_token
+        )
+        return {token_claims["cookieName"]: token_claims}
 
     def logout(
         self, signed_token: str, signed_refresh_token: str
@@ -680,7 +676,6 @@ class AuthClient:
 
         bytes = f"{self.project_id}:".encode("ascii")
         headers["Authorization"] = f"Basic {base64.b64encode(bytes).decode('ascii')}"
-        x = headers["Authorization"]
         return headers
 
     @staticmethod

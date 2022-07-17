@@ -1,8 +1,8 @@
+import json
 import os
 import sys
 
 from flask import Flask, Response, _request_ctx_stack, jsonify, request
-import json
 
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
@@ -70,6 +70,7 @@ def signin():
     response = "This is SignIn API handling"
     return jsonify(message=response)
 
+
 @APP.route("/api/signuporin", methods=["POST"])
 def signuporin():
     data = request.get_json(force=True)
@@ -85,6 +86,7 @@ def signuporin():
     response = "This is SignUpOrIn API handling"
     return jsonify(message=response)
 
+
 @APP.route("/api/verify", methods=["POST"])
 def verify():
     data = request.get_json(force=True)
@@ -94,7 +96,7 @@ def verify():
         return Response("Unauthorized", 401)
 
     try:
-        jwt_response, session_token = auth_client.verify_code(DeliveryMethod.EMAIL, email, code)
+        jwt_response = auth_client.verify_code(DeliveryMethod.EMAIL, email, code)
     except AuthException as ex:
         print(ex)
         return Response("Unauthorized", 401)
@@ -107,6 +109,7 @@ def verify():
 @descope_verify_code_by_email(auth_client)
 def verify_by_decorator(*args, **kwargs):
     claims = _request_ctx_stack.top.claims
+
     response = f"This is a code verification API, claims are: {claims}"
     return jsonify(message=response)
 
