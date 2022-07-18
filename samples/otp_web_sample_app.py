@@ -17,7 +17,7 @@ from descope import AuthClient, DeliveryMethod  # noqa: E402
 
 APP = Flask(__name__)
 
-PROJECT_ID = "2Bt5WLccLUey1Dp7utptZb3Fx9K"
+PROJECT_ID = ""
 
 # init the AuthClient
 auth_client = AuthClient(PROJECT_ID)
