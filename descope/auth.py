@@ -248,7 +248,7 @@ class AuthClient:
                 f"Identifier {identifier} is not valid by delivery method {method}",
             )
 
-        body = {"externalID": identifier}
+        body = {"externalId": identifier}
 
         if user is not None:
             body["user"] = user
@@ -289,7 +289,7 @@ class AuthClient:
             )
 
         body = {
-            "externalID": identifier,
+            "externalId": identifier,
         }
 
         uri = AuthClient._compose_signin_url(method)
@@ -331,7 +331,7 @@ class AuthClient:
                 f"Identifier {identifier} is not valid by delivery method {method}",
             )
 
-        body = {"externalID": identifier, "code": code}
+        body = {"externalId": identifier, "code": code}
 
         uri = AuthClient._compose_verify_code_url(method)
         response = requests.post(
@@ -411,7 +411,7 @@ class AuthClient:
             )
 
         body = {
-            "externalID": identifier,
+            "externalId": identifier,
             "URI": uri,
             "crossDevice": False,
         }
@@ -459,7 +459,7 @@ class AuthClient:
             )
 
         body = {
-            "externalID": identifier,
+            "externalId": identifier,
             "URI": uri,
             "crossDevice": False,
         }
