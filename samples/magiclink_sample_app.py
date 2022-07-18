@@ -25,7 +25,7 @@ def main():
         logging.info(
             "Going to signup a new user.. expect an email to arrive with the new link.."
         )
-        user = {"name": "John", "phone": "1111111111111"}
+        user = {"name": "John", "phone": "+972111111111"}
         auth_client.sign_up_magiclink(
             method=DeliveryMethod.EMAIL,
             identifier=identifier,

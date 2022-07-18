@@ -251,7 +251,7 @@ class AuthClient:
         body = {"externalID": identifier}
 
         if user is not None:
-            body["User"] = user
+            body["user"] = user
             method_str, val = self._get_identifier_by_method(method, user)
             body[method_str] = val
 
@@ -344,7 +344,7 @@ class AuthClient:
 
         resp = response.json()
         jwt_response = self._generate_jwt_response(
-            resp, response.cookies.get(SESSION_COOKIE_NAME, None)
+            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
         )
         return jwt_response
 
@@ -413,11 +413,11 @@ class AuthClient:
         body = {
             "externalID": identifier,
             "URI": uri,
-            "CrossDevice": False,
+            "crossDevice": False,
         }
 
         if user is not None:
-            body["User"] = user
+            body["user"] = user
             method_str, val = self._get_identifier_by_method(method, user)
             body[method_str] = val
 
@@ -461,7 +461,7 @@ class AuthClient:
         body = {
             "externalID": identifier,
             "URI": uri,
-            "CrossDevice": False,
+            "crossDevice": False,
         }
 
         requestUri = AuthClient._compose_signin_magiclink_url(method)
@@ -501,7 +501,7 @@ class AuthClient:
 
         resp = response.json()
         jwt_response = self._generate_jwt_response(
-            resp, response.cookies.get(SESSION_COOKIE_NAME, None)
+            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
         )
         return jwt_response
 
@@ -527,7 +527,7 @@ class AuthClient:
 
         resp = response.json()
         auth_info = self._generate_auth_info(
-            resp, response.cookies.get(SESSION_COOKIE_NAME, None)
+            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
         )
         return auth_info
 

@@ -1,3 +1,4 @@
+import datetime
 import os
 import sys
 from functools import wraps
@@ -19,11 +20,14 @@ def set_cookie_on_response(response, data):
     if cookie_domain == "":
         cookie_domain = None
 
+    current_time = datetime.datetime.now()
+    expire_time = current_time + datetime.timedelta(days=30)
+
     return response.set_cookie(
         key=data.get("cookieName", ""),
         value=data.get("jwt", ""),
-        max_age=data.get("cookieMaxAge", 2591999),
-        expires=data.get("cookieExpiration", 1660336439),
+        max_age=data.get("cookieMaxAge", int(expire_time.timestamp())),
+        expires=data.get("cookieExpiration", expire_time),
         path=data.get("cookiePath", ""),
         domain=cookie_domain,
         secure=False,  # True
@@ -33,7 +37,6 @@ def set_cookie_on_response(response, data):
 
 
 def descope_signup_otp_by_email(auth_client):
-
     """
     Signup new user using OTP by email
     """
