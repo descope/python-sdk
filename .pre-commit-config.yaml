@@ -36,7 +36,7 @@ repos:
 - repo: local
   hooks:
     - id: print_statement
-      name: Check that print statement isn't in source code
+      name: Check that print statement isnt in source code
       types: [python]
       entry: 'print'
       language: pygrep
