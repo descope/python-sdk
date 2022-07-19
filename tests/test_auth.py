@@ -11,16 +11,6 @@ from descope.common import DEFAULT_BASE_URI, REFRESH_SESSION_COOKIE_NAME, Endpoi
 class TestAuthClient(unittest.TestCase):
     def setUp(self) -> None:
         self.dummy_project_id = "dummy"
-        # self.public_key_dict = {
-        #     "crv": "P-384",
-        #     "key_ops": ["verify"],
-        #     "kty": "EC",
-        #     "x": "Zd7Unk3ijm3MKXt9vbHR02Y1zX-cpXu6H1_wXRtMl3e39TqeOJ3XnJCxSfE5vjMX",
-        #     "y": "Cv8AgXWpMkMFWvLGhJ_Gsb8LmapAtEurnBsFI4CAG42yUGDfkZ_xjFXPbYssJl7U",
-        #     "alg": "ES384",
-        #     "use": "sig",
-        #     "kid": "32b3da5277b142c7e24fdf0ef09e0919",
-        # }
         self.public_key_dict = {
             "alg": "ES384",
             "crv": "P-384",
