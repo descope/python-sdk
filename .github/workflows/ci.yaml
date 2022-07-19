@@ -61,7 +61,7 @@ jobs:
     if: ${{ github.ref == 'refs/heads/main' }}
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python 
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: 3.7
@@ -79,15 +79,15 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: descope-auth-0.0.1.tar.gz
-          path: ./dist/descope-auth-0.0.1.tar.gz    
+          path: ./dist/descope-auth-0.0.1.tar.gz
 
-      - run: cp ./dist/descope-auth-0.0.1.tar.gz samples/        
+      - run: cp ./dist/descope-auth-0.0.1.tar.gz samples/
 
       - name: Build example docker image
         working-directory: samples/
         run: |
-          docker build . --tag ${{ env.EXAMPLE_IMAGE_NAME }} 
-      
+          docker build . --tag ${{ env.EXAMPLE_IMAGE_NAME }}
+
       - name: Log in to the Container registry
         uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
         with:
@@ -95,4 +95,4 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Push the tagged Docker image
-        run: docker push ${{ env.EXAMPLE_IMAGE_NAME }}      
+        run: docker push ${{ env.EXAMPLE_IMAGE_NAME }}

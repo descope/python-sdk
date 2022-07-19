@@ -103,8 +103,7 @@ def descope_validate_auth(auth_client):
                     session_token, refresh_token
                 )
 
-            except AuthException as ex:
-                print(ex)
+            except AuthException:
                 return Response("Access denied", 401)
 
             # Save the claims on the context execute the original API

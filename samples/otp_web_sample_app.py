@@ -96,8 +96,7 @@ def verify():
 
     try:
         jwt_response = auth_client.verify_code(DeliveryMethod.EMAIL, email, code)
-    except AuthException as ex:
-        print(ex)
+    except AuthException:
         return Response("Unauthorized", 401)
 
     response = Response(json.dumps(jwt_response), 200)
