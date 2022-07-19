@@ -42,7 +42,6 @@ def signup():
     email = data.get("email", None)
     name = data.get("name", None)
     if not email:
-        print("muaa")
         return Response("Unauthorized", 401)
 
     try:
