@@ -9,10 +9,11 @@ from decorators.flask_decorators import (  # noqa: E402;
     descope_logout,
     descope_validate_auth,
     descope_verify_magiclink_token,
+    set_cookie_on_response,
 )
 
 from descope import AuthException  # noqa: E402
-from descope import AuthClient, DeliveryMethod, User  # noqa: E402
+from descope import AuthClient, DeliveryMethod  # noqa: E402
 
 APP = Flask(__name__)
 
@@ -45,12 +46,7 @@ def signup():
         return Response("Unauthorized", 401)
 
     try:
-        usr = User(
-            user.get("username", "dummy"),
-            user.get("name", ""),
-            user.get("phone", ""),
-            user.get("email", ""),
-        )
+        usr = {"username": "dummy", "name": "", "phone": "", "email": ""}
         auth_client.sign_up_magiclink(DeliveryMethod.EMAIL, email, URI, usr)
     except AuthException:
         return Response("Unauthorized", 401)
@@ -83,13 +79,14 @@ def verify():
         return Response("Unauthorized", 401)
 
     try:
-        _, tokens = auth_client.verify_magiclink(DeliveryMethod.EMAIL, code)
+        jwt_response = auth_client.verify_magiclink(DeliveryMethod.EMAIL, code)
     except AuthException:
         return Response("Unauthorized", 401)
 
     response = Response("Token verified", 200)
-    for name, value in tokens.iteritems():
-        response.set_cookie(name, value)
+    tokens = jwt_response["jwts"]
+    for _, data in tokens.items():
+        set_cookie_on_response(response, data)
 
     return response
 

@@ -1,3 +1,4 @@
+import datetime
 import os
 import sys
 from functools import wraps
@@ -11,12 +12,31 @@ from descope import (  # noqa: E402
     REFRESH_SESSION_COOKIE_NAME,
     SESSION_COOKIE_NAME,
     DeliveryMethod,
-    User,
 )
 
 
-def descope_signup_otp_by_email(auth_client):
+def set_cookie_on_response(response, data):
+    cookie_domain = data.get("cookieDomain", "")
+    if cookie_domain == "":
+        cookie_domain = None
 
+    current_time = datetime.datetime.now()
+    expire_time = current_time + datetime.timedelta(days=30)
+
+    return response.set_cookie(
+        key=data.get("cookieName", ""),
+        value=data.get("jwt", ""),
+        max_age=data.get("cookieMaxAge", int(expire_time.timestamp())),
+        expires=data.get("cookieExpiration", expire_time),
+        path=data.get("cookiePath", ""),
+        domain=cookie_domain,
+        secure=False,  # True
+        httponly=True,
+        samesite="None",  # "Strict", "Lax", "None"
+    )
+
+
+def descope_signup_otp_by_email(auth_client):
     """
     Signup new user using OTP by email
     """
@@ -31,15 +51,7 @@ def descope_signup_otp_by_email(auth_client):
                 return Response("Bad Request, missing email", 400)
 
             try:
-                usr = None
-                if user is not None:
-                    usr = User(
-                        user.get("username", ""),
-                        user.get("name", ""),
-                        user.get("phone", ""),
-                        user.get("email", ""),
-                    )
-                auth_client.sign_up_otp(DeliveryMethod.EMAIL, email, usr)
+                auth_client.sign_up_otp(DeliveryMethod.EMAIL, email, user)
             except AuthException as e:
                 return Response(f"Failed to signup, err: {e}", 500)
 
@@ -87,23 +99,20 @@ def descope_validate_auth(auth_client):
             session_token = cookies.get(SESSION_COOKIE_NAME, None)
             refresh_token = cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
             try:
-                claims, tokens = auth_client.validate_session_request(
+                claims = auth_client.validate_session_request(
                     session_token, refresh_token
                 )
-                cookies[SESSION_COOKIE_NAME] = tokens[SESSION_COOKIE_NAME]
+
             except AuthException:
-                return Response(
-                    "Access denied",
-                    401,
-                    {"WWW-Authenticate": 'Basic realm="Login Required"'},
-                )
+                return Response("Access denied", 401)
 
             # Save the claims on the context execute the original API
             _request_ctx_stack.top.claims = claims
             response = f(*args, **kwargs)
 
-            for key, val in cookies.items():
-                response.set_cookie(key, val)
+            tokens = claims
+            for _, data in tokens.items():
+                set_cookie_on_response(response, data)
             return response
 
         return decorated
@@ -126,18 +135,20 @@ def descope_verify_code_by_email(auth_client):
                 return Response("Unauthorized", 401)
 
             try:
-                claims, tokens = auth_client.verify_code(
+                jwt_response = auth_client.verify_code(
                     DeliveryMethod.EMAIL, email, code
                 )
             except AuthException:
                 return Response("Unauthorized", 401)
 
             # Save the claims on the context execute the original API
-            _request_ctx_stack.top.claims = claims
+            _request_ctx_stack.top.claims = jwt_response
             response = f(*args, **kwargs)
 
-            for key, val in tokens.items():
-                response.set_cookie(key, val)
+            tokens = jwt_response["jwts"]
+            for _, data in tokens.items():
+                set_cookie_on_response(response, data)
+
             return response
 
         return decorated
@@ -160,18 +171,20 @@ def descope_verify_code_by_phone(auth_client):
                 return Response("Unauthorized", 401)
 
             try:
-                claims, tokens = auth_client.verify_code(
+                jwt_response = auth_client.verify_code(
                     DeliveryMethod.PHONE, phone, code
                 )
             except AuthException:
                 return Response("Unauthorized", 401)
 
             # Save the claims on the context execute the original API
-            _request_ctx_stack.top.claims = claims
+            _request_ctx_stack.top.claims = jwt_response
             response = f(*args, **kwargs)
 
-            for key, val in tokens.items():
-                response.set_cookie(key, val)
+            tokens = jwt_response["jwts"]
+            for _, data in tokens.items():
+                set_cookie_on_response(response, data)
+
             return response
 
         return decorated
@@ -194,18 +207,20 @@ def descope_verify_code_by_whatsapp(auth_client):
                 return Response("Unauthorized", 401)
 
             try:
-                claims, tokens = auth_client.verify_code(
+                jwt_response = auth_client.verify_code(
                     DeliveryMethod.WHATSAPP, phone, code
                 )
             except AuthException:
                 return Response("Unauthorized", 401)
 
             # Save the claims on the context execute the original API
-            _request_ctx_stack.top.claims = claims
+            _request_ctx_stack.top.claims = jwt_response
             response = f(*args, **kwargs)
 
-            for key, val in tokens.items():
-                response.set_cookie(key, val)
+            tokens = jwt_response["jwts"]
+            for _, data in tokens.items():
+                set_cookie_on_response(response, data)
+
             return response
 
         return decorated
@@ -228,15 +243,7 @@ def descope_signup_magiclink_by_email(auth_client, uri):
                 return Response("Bad Request, missing email", 400)
 
             try:
-                usr = None
-                if user is not None:
-                    usr = User(
-                        user.get("username", ""),
-                        user.get("name", ""),
-                        user.get("phone", ""),
-                        user.get("email", ""),
-                    )
-                auth_client.sign_up_magiclink(DeliveryMethod.EMAIL, email, uri, usr)
+                auth_client.sign_up_magiclink(DeliveryMethod.EMAIL, email, uri, user)
             except AuthException as e:
                 return Response(f"Failed to signup, err: {e}", 500)
 
@@ -285,16 +292,17 @@ def descope_verify_magiclink_token(auth_client):
                 return Response("Unauthorized", 401)
 
             try:
-                claims, tokens = auth_client.verify_magiclink(code)
+                jwt_response = auth_client.verify_magiclink(code)
             except AuthException:
                 return Response("Unauthorized", 401)
 
             # Save the claims on the context execute the original API
-            _request_ctx_stack.top.claims = claims
+            _request_ctx_stack.top.claims = jwt_response
             response = f(*args, **kwargs)
 
-            for key, val in tokens.items():
-                response.set_cookie(key, val)
+            tokens = jwt_response["jwts"]
+            for _, data in tokens.items():
+                set_cookie_on_response(response, data)
             return response
 
         return decorated

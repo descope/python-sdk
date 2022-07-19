@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 
@@ -12,7 +13,7 @@ from decorators.flask_decorators import (  # noqa: E402;
 )
 
 from descope import AuthException  # noqa: E402
-from descope import AuthClient, DeliveryMethod, User  # noqa: E402
+from descope import AuthClient, DeliveryMethod  # noqa: E402
 
 APP = Flask(__name__)
 
@@ -39,18 +40,13 @@ def handle_auth_error(ex):
 def signup():
     data = request.get_json(force=True)
     email = data.get("email", None)
-    user = data.get("user", None)
-    if not email or not user:
+    name = data.get("name", None)
+    if not email:
         return Response("Unauthorized", 401)
 
     try:
-        usr = User(
-            user.get("username", "dummy"),
-            user.get("name", ""),
-            user.get("phone", ""),
-            user.get("email", ""),
-        )
-        auth_client.sign_up_otp(DeliveryMethod.EMAIL, email, usr)
+        user = {"name": name, "phone": "", "email": email}
+        auth_client.sign_up_otp(DeliveryMethod.EMAIL, email, user)
     except AuthException:
         return Response("Unauthorized", 401)
 
@@ -74,6 +70,22 @@ def signin():
     return jsonify(message=response)
 
 
+@APP.route("/api/signuporin", methods=["POST"])
+def signuporin():
+    data = request.get_json(force=True)
+    email = data.get("email", None)
+    if not email:
+        return Response("Unauthorized, missing email", 401)
+
+    try:
+        auth_client.sign_up_or_in_otp(DeliveryMethod.EMAIL, email)
+    except AuthException:
+        return Response("Unauthorized, something went wrong when sending email", 401)
+
+    response = "This is SignUpOrIn API handling"
+    return jsonify(message=response)
+
+
 @APP.route("/api/verify", methods=["POST"])
 def verify():
     data = request.get_json(force=True)
@@ -83,14 +95,11 @@ def verify():
         return Response("Unauthorized", 401)
 
     try:
-        _, tokens = auth_client.verify_code(DeliveryMethod.EMAIL, email, code)
+        jwt_response = auth_client.verify_code(DeliveryMethod.EMAIL, email, code)
     except AuthException:
         return Response("Unauthorized", 401)
 
-    response = Response("Token verified", 200)
-    for name, value in tokens.iteritems():
-        response.set_cookie(name, value)
-
+    response = Response(json.dumps(jwt_response), 200)
     return response
 
 
@@ -98,6 +107,7 @@ def verify():
 @descope_verify_code_by_email(auth_client)
 def verify_by_decorator(*args, **kwargs):
     claims = _request_ctx_stack.top.claims
+
     response = f"This is a code verification API, claims are: {claims}"
     return jsonify(message=response)
 
