@@ -5,6 +5,8 @@ from functools import wraps
 
 from flask import Response, _request_ctx_stack, redirect, request
 
+from descope.auth import AuthClient
+
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
 from descope import AuthException  # noqa: E402
@@ -339,7 +341,7 @@ def descope_logout(auth_client):
     return decorator
 
 
-def descope_oauth(auth_client):
+def descope_oauth(auth_client:AuthClient):
     """
     OAuth login
     """
@@ -350,7 +352,7 @@ def descope_oauth(auth_client):
             try:
                 args = request.args
                 provider = args.get("provider")
-                redirect_url = auth_client.oauth_start(provider)
+                redirect_url = auth_client.oauth.start(provider)
             except AuthException as e:
                 return Response(f"OAuth failed {e}", e.status_code)
 

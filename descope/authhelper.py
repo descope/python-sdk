@@ -136,8 +136,9 @@ class AuthHelper:
             raise AuthException(
                 401, "public key fetching failed", f"err: {response.reason}"
             )
-
+        
         jwks_data = response.text
+        print(f"jwks_data {jwks_data}")
         try:
             jwkeys = json.loads(jwks_data)
         except Exception as e:
