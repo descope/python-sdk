@@ -72,15 +72,6 @@ class AuthClient:
         return self._webauthn
 
 
-    def _compose_signin_url(self, method: DeliveryMethod) -> str:
-        return self._auth_helper._compose_url(EndpointsV1.signInAuthOTPPath, method)
-
-    def _compose_signup_url(self, method: DeliveryMethod) -> str:
-        return self._auth_helper._compose_url(EndpointsV1.signUpAuthOTPPath, method)
-
-    def _compose_verify_code_url(self, method: DeliveryMethod) -> str:
-        return self._auth_helper._compose_url(EndpointsV1.verifyCodeAuthPath, method)
-
     def _compose_signin_magiclink_url(self, method: DeliveryMethod) -> str:
         return self._auth_helper._compose_url(EndpointsV1.signInAuthMagicLinkPath, method)
 

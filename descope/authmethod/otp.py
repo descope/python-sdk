@@ -14,12 +14,13 @@ from descope.common import (
     EndpointsV1,
 )
 from descope.exceptions import AuthException
+from descope.authhelper import AuthHelper
 
 class OTP():
     client = None
 
-    def __init__(self, client):
-        self.client = client
+    def __init__(self, auth_helper: AuthHelper):
+        self._auth_helper = auth_helper
     
     
     def _compose_signin_url(self, method: DeliveryMethod) -> str:
@@ -30,6 +31,33 @@ class OTP():
 
     def _compose_verify_code_url(self, method: DeliveryMethod) -> str:
         return self.client._compose_url(EndpointsV1.verifyCodeAuthPath, method)
+
+
+    def _compose_signup_body(self, method: DeliveryMethod , identifier: str, user: dict) -> dict:
+        body = { "externalId": identifier }
+
+        if user is not None:
+            body["user"] = user
+            method_str, val = self._auth_helper._get_identifier_by_method(method, user)
+            body[method_str] = val
+
+    def _compose_verify_code_body(self, identifier: str, code: str) -> dict:
+        return {
+            "externalId": identifier,
+            "code": code    
+        }
+
+    def _compose_update_user_email_body(self, identifier: str, email: str) -> dict:
+        return {
+            "externalId": identifier,
+            "email": email
+        }
+
+    def _compose_update_user_phone_body(self, identifier: str, phone: str) -> dict:
+        return {
+            "externalId": identifier,
+            "phone": phone
+        }
 
 
     def sign_up(
@@ -58,21 +86,9 @@ class OTP():
                 f"Identifier {identifier} is not valid by delivery method {method}",
             )
 
-        body = {"externalId": identifier}
-
-        if user is not None:
-            body["user"] = user
-            method_str, val = self.client._get_identifier_by_method(method, user)
-            body[method_str] = val
-
+        body = self._compose_signup_body(identifier, uri, user)
         uri = self._compose_signup_url(method)
-        response = requests.post(
-            f"{DEFAULT_BASE_URI}{uri}",
-            headers=self.client._get_default_headers(),
-            data=json.dumps(body),
-        )
-        if not response.ok:
-            raise AuthException(response.status_code, "", response.reason)
+        self._auth_helper.do_post(uri, body)
 
     def sign_in(self, method: DeliveryMethod, identifier: str) -> None:
         """
@@ -98,18 +114,9 @@ class OTP():
                 f"Identifier {identifier} is not valid by delivery method {method}",
             )
 
-        body = {
-            "externalId": identifier,
-        }
-
+        body = {"externalId": identifier}
         uri = self._compose_signin_url(method)
-        response = requests.post(
-            f"{DEFAULT_BASE_URI}{uri}",
-            headers=self.client._get_default_headers(),
-            data=json.dumps(body),
-        )
-        if not response.ok:
-            raise AuthException(response.status_code, "", response.text)
+        self._auth_helper.do_post(uri, body)
 
     def sign_up_or_in(self, method: DeliveryMethod, identifier: str) -> None:
         return self.sign_in(method, identifier)
@@ -144,19 +151,12 @@ class OTP():
                 f"Identifier {identifier} is not valid by delivery method {method}",
             )
 
-        body = {"externalId": identifier, "code": code}
-
+        body = self._compose_verify_code_body(identifier, code)
         uri = self._compose_verify_code_url(method)
-        response = requests.post(
-            f"{DEFAULT_BASE_URI}{uri}",
-            headers=self.client._get_default_headers(),
-            data=json.dumps(body),
-        )
-        if not response.ok:
-            raise AuthException(response.status_code, "", response.reason)
+        response = self._auth_helper.do_post(uri, body)
 
         resp = response.json()
-        jwt_response = self._generate_jwt_response(
+        jwt_response = self._auth_helper._generate_jwt_response(
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
         )
         return jwt_response
@@ -174,19 +174,9 @@ class OTP():
         except EmailNotValidError as ex:
             raise AuthException(500, "Invalid argument", f"Email address is not valid: {ex}")
 
-        body = {
-            "externalId": identifier,
-            "email": email
-        }
-
+        body = self._compose_update_user_email_body(identifier, email)
         uri = f"{DEFAULT_BASE_URI}{EndpointsV1.updateUserEmailOTPPath}"
-        response = requests.post(
-            uri,
-            headers=self.client._get_default_headers(refresh_token),
-            data=json.dumps(body),
-        )
-        if not response.ok:
-            raise AuthException(response.status_code, "", response.text)
+        self._auth_helper.do_post(uri, body, None, refresh_token)
 
 
     def update_user_phone(self, method: DeliveryMethod, identifier: str, phone: str, refresh_token: str) -> None:
@@ -202,16 +192,6 @@ class OTP():
         if method != DeliveryMethod.PHONE and method == DeliveryMethod.WHATSAPP:
             raise AuthException(500, "Invalid argument", f"Invalid method supplied")
 
-        body = {
-            "externalId": identifier,
-            "phone": phone
-        }
-
+        body = self._compose_update_user_phone_body(identifier, phone)
         uri = f"{DEFAULT_BASE_URI}{EndpointsV1.updateUserPhoneOTPPath}"
-        response = requests.post(
-            uri,
-            headers=self.client._get_default_headers(refresh_token),
-            data=json.dumps(body),
-        )
-        if not response.ok:
-            raise AuthException(response.status_code, "", response.text)
+        self._auth_helper.do_post(uri, body, None, refresh_token)

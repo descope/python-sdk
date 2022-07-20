@@ -62,10 +62,10 @@ class AuthHelper:
             raise AuthException(response.status_code, "", response.text)
         return response
 
-    def do_post(self, uri: str, body: dict, cookies=None) -> requests.Response:
+    def do_post(self, uri: str, body: dict, cookies=None, pswd: str=None) -> requests.Response:
         response = requests.post(
             f"{DEFAULT_BASE_URI}{uri}",
-            headers=self._get_default_headers(),
+            headers=self._get_default_headers(pswd),
             data=json.dumps(body),
             cookies=cookies,
         )
@@ -245,11 +245,14 @@ class AuthHelper:
         }
         return jwt_response
 
-    def _get_default_headers(self):
+    def _get_default_headers(self, pswd: str=None):
         headers = {}
         headers["Content-Type"] = "application/json"
 
-        bytes = f"{self.project_id}:".encode("ascii")
+        if pswd:
+            bytes = f"{self.project_id}:{pswd}".encode("ascii")
+        else:
+            bytes = f"{self.project_id}:".encode("ascii")
         headers["Authorization"] = f"Basic {base64.b64encode(bytes).decode('ascii')}"
         return headers
 
