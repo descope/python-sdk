@@ -22,7 +22,7 @@ def main():
         auth_client = AuthClient(project_id=project_id)
 
         logging.info("Going to sign-in / sign-up...")
-        email = "asaf@descope.com" # input("Please insert email to sign in / sign-up:\n")
+        email = input("Please insert email to sign in / sign-up:\n")
         auth_client.magiclink.sign_up_or_in(
             method=DeliveryMethod.EMAIL,
             identifier=email,
@@ -56,9 +56,9 @@ def main():
             method=DeliveryMethod.EMAIL, identifier=email, uri="http://test.me"
         )
 
-        value = input("Please insert the code you received by email:\n")
+        token = input("Please insert the code you received by email:\n")
         try:
-            jwt_response = auth_client.verify_magiclink(code=value)
+            jwt_response = auth_client.magiclink.verify(token=token)
             logging.info("Code is valid")
             session_token_1 = jwt_response["jwts"].get(SESSION_COOKIE_NAME).get("jwt")
             refresh_token_1 = (
@@ -75,13 +75,13 @@ def main():
                 session_token_1, refresh_token_1
             )
             session_token_2 = claims.get(SESSION_COOKIE_NAME).get("jwt")
-            logging.info("Session is valid and all is OK", session_token_2, refresh_token)
+            logging.info("Session is valid and all is OK", session_token_2, refresh_token_1)
         except AuthException as e:
             logging.info(f"Session is not valid {e}")
 
         try:
-            logging.info(f"Going to logout at the second time\nsession_token_2: {session_token_2}\nrefresh_token: {refresh_token}")
-            auth_client.logout(session_token_2, refresh_token)
+            logging.info(f"Going to logout at the second time\nsession_token_2: {session_token_2}\nrefresh_token: {refresh_token_1}")
+            auth_client.logout(session_token_2, refresh_token_1)
             logging.info("User logged out")
         except AuthException as e:
             logging.info(f"Failed to logged out user, err: {e}")

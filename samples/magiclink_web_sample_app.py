@@ -38,7 +38,7 @@ def handle_auth_error(ex):
 
 
 @APP.route("/api/signup", methods=["POST"])
-def signup():
+def sign_up():
     data = request.get_json(force=True)
     email = data.get("email", None)
     user = data.get("user", None)
@@ -47,29 +47,44 @@ def signup():
 
     try:
         usr = {"username": "dummy", "name": "", "phone": "", "email": ""}
-        auth_client.sign_up_magiclink(DeliveryMethod.EMAIL, email, URI, usr)
+        auth_client.magiclink.sign_up(DeliveryMethod.EMAIL, email, URI, usr)
     except AuthException:
         return Response("Unauthorized", 401)
 
-    response = "This is SignUp API handling"
+    response = "This is sign up API handling"
     return jsonify(message=response)
 
 
 @APP.route("/api/signin", methods=["POST"])
-def signin():
+def sign_in():
     data = request.get_json(force=True)
     email = data.get("email", None)
     if not email:
         return Response("Unauthorized, missing email", 401)
 
     try:
-        auth_client.sign_in_magiclink(DeliveryMethod.EMAIL, email, URI)
+        auth_client.magiclink.sign_in(DeliveryMethod.EMAIL, email, URI)
     except AuthException:
         return Response("Unauthorized, something went wrong when sending email", 401)
 
-    response = "This is SignIn API handling"
+    response = "This is sign in API handling"
     return jsonify(message=response)
 
+
+@APP.route("/api/sign-up-or-in", methods=["POST"])
+def sign_up_or_in():
+    data = request.get_json(force=True)
+    email = data.get("email", None)
+    if not email:
+        return Response("Unauthorized, missing email", 401)
+
+    try:
+        auth_client.magiclink.sign_up_or_in(DeliveryMethod.EMAIL, email, URI)
+    except AuthException:
+        return Response("Unauthorized, something went wrong when sending email", 401)
+
+    response = "This is sign up or in API handling"
+    return jsonify(message=response)
 
 @APP.route("/api/verify", methods=["POST"])
 def verify():
@@ -79,7 +94,7 @@ def verify():
         return Response("Unauthorized", 401)
 
     try:
-        jwt_response = auth_client.verify_magiclink(DeliveryMethod.EMAIL, code)
+        jwt_response = auth_client.magiclink.verify(DeliveryMethod.EMAIL, code)
     except AuthException:
         return Response("Unauthorized", 401)
 
