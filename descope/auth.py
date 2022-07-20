@@ -6,11 +6,13 @@ from threading import Lock
 from typing import Tuple
 
 import jwt
+from pytest import param
 import requests
 from email_validator import EmailNotValidError, validate_email
 from jwt.exceptions import ExpiredSignatureError
 from requests.cookies import RequestsCookieJar  # noqa: F401
-from requests.models import Response  # noqa: F401
+from requests.models import Response
+from descope.authhelper import AuthHelper  # noqa: F401
 
 from descope.authmethod.magiclink import MagicLink  # noqa: F401
 from descope.authmethod.otp import OTP  # noqa: F401
@@ -36,36 +38,14 @@ class AuthClient:
     ALGORITHM_KEY = "alg"
 
     def __init__(self, project_id: str, public_key: str = None):
-        self.lock_public_keys = Lock()
-        # validate project id
-        if project_id is None or project_id == "":
-            # try get the project_id from env
-            project_id = os.getenv("DESCOPE_PROJECT_ID", "")
-            if project_id == "":
-                raise AuthException(
-                    500,
-                    "Init failure",
-                    "Failed to init AuthClient object, project should not be empty, remember to set env variable DESCOPE_PROJECT_ID or pass along it to init funcation",
-                )
-        self.project_id = project_id
-
-        if public_key is None or public_key == "":
-            public_key = os.getenv("DESCOPE_PUBLIC_KEY", None)
-
-        with self.lock_public_keys:
-            if public_key is None or public_key == "":
-                self.public_keys = {}
-            else:
-                kid, pub_key, alg = self._validate_and_load_public_key(public_key)
-                self.public_keys = {kid: (pub_key, alg)}
-
-
-        self._magiclink = MagicLink(self)
-        self._otp = OTP(self)
-        self._totp = TOTP(self)
-        self._oauth = OAuth(self)
-        self._saml = SAML(self)
-        self._webauthn = WebauthN(self)
+        auth_helper = AuthHelper(project_id, public_key)
+        self._auth_helper = auth_helper
+        self._magiclink = MagicLink(auth_helper)
+        self._otp = OTP(auth_helper)
+        self._totp = TOTP(auth_helper)
+        self._oauth = OAuth(auth_helper)
+        self._saml = SAML(auth_helper)
+        self._webauthn = WebauthN(auth_helper)
     
     @property
     def magiclink(self):
@@ -91,145 +71,21 @@ class AuthClient:
     def webauthn(self):
         return self._webauthn
 
-    @staticmethod
-    def _validate_and_load_public_key(public_key) -> Tuple[str, jwt.PyJWK, str]:
-        if isinstance(public_key, str):
-            try:
-                public_key = json.loads(public_key)
-            except Exception as e:
-                raise AuthException(
-                    400,
-                    "Public key failure",
-                    f"Failed to load public key, invalid public key, err: {e}",
-                )
 
-        if not isinstance(public_key, dict):
-            raise AuthException(
-                400,
-                "Public key failure",
-                "Failed to load public key, invalid public key (unknown type)",
-            )
+    def _compose_signin_url(self, method: DeliveryMethod) -> str:
+        return self._auth_helper._compose_url(EndpointsV1.signInAuthOTPPath, method)
 
-        alg = public_key.get(AuthClient.ALGORITHM_KEY, None)
-        if alg is None:
-            raise AuthException(
-                400,
-                "Public key failure",
-                "Failed to load public key, missing alg property",
-            )
+    def _compose_signup_url(self, method: DeliveryMethod) -> str:
+        return self._auth_helper._compose_url(EndpointsV1.signUpAuthOTPPath, method)
 
-        kid = public_key.get("kid", None)
-        if kid is None:
-            raise AuthException(
-                400,
-                "Public key failure",
-                "Failed to load public key, missing kid property",
-            )
-        try:
-            # Load and validate public key
-            return (kid, jwt.PyJWK(public_key), alg)
-        except jwt.InvalidKeyError as e:
-            raise AuthException(
-                400,
-                "Public key failure",
-                f"Failed to load public key {e}",
-            )
-        except jwt.PyJWKError as e:
-            raise AuthException(
-                400,
-                "Public key failure",
-                f"Failed to load public key {e}",
-            )
+    def _compose_verify_code_url(self, method: DeliveryMethod) -> str:
+        return self._auth_helper._compose_url(EndpointsV1.verifyCodeAuthPath, method)
 
-    def _fetch_public_keys(self) -> None:
+    def _compose_signin_magiclink_url(self, method: DeliveryMethod) -> str:
+        return self._auth_helper._compose_url(EndpointsV1.signInAuthMagicLinkPath, method)
 
-        # This function called under mutex protection so no need to acquire it once again
-
-        response = requests.get(
-            f"{DEFAULT_FETCH_PUBLIC_KEY_URI}{EndpointsV1.publicKeyPath}/{self.project_id}",
-            headers=self._get_default_headers(),
-        )
-
-        if not response.ok:
-            raise AuthException(
-                401, "public key fetching failed", f"err: {response.reason}"
-            )
-
-        jwks_data = response.text
-        try:
-            jwkeys = json.loads(jwks_data)
-        except Exception as e:
-            raise AuthException(
-                401, "public key fetching failed", f"Failed to load jwks {e}"
-            )
-
-        # Load all public keys for this project
-        self.public_keys = {}
-        for key in jwkeys:
-            try:
-                loaded_kid, pub_key, alg = AuthClient._validate_and_load_public_key(key)
-                self.public_keys[loaded_kid] = (pub_key, alg)
-            except Exception:
-                # just continue to the next key
-                pass
-
-    @staticmethod
-    def _verify_delivery_method(method: DeliveryMethod, identifier: str) -> bool:
-        if identifier == "" or identifier is None:
-            return False
-
-        if method == DeliveryMethod.EMAIL:
-            try:
-                validate_email(identifier)
-                return True
-            except EmailNotValidError:
-                return False
-        elif method == DeliveryMethod.PHONE:
-            if not re.match(PHONE_REGEX, identifier):
-                return False
-        elif method == DeliveryMethod.WHATSAPP:
-            if not re.match(PHONE_REGEX, identifier):
-                return False
-        else:
-            return False
-
-        return True
-
-    @staticmethod
-    def _compose_url(base: str, method: DeliveryMethod) -> str:
-        suffix = ""
-        if method is DeliveryMethod.EMAIL:
-            suffix = "email"
-        elif method is DeliveryMethod.PHONE:
-            suffix = "sms"
-        elif method is DeliveryMethod.WHATSAPP:
-            suffix = "whatsapp"
-        else:
-            raise AuthException(
-                500, "url composing failure", f"Unknown delivery method {method}"
-            )
-
-        return f"{base}/{suffix}"
-
-    @staticmethod
-    def _compose_signin_url(method: DeliveryMethod) -> str:
-        return AuthClient._compose_url(EndpointsV1.signInAuthOTPPath, method)
-
-    @staticmethod
-    def _compose_signup_url(method: DeliveryMethod) -> str:
-        return AuthClient._compose_url(EndpointsV1.signUpAuthOTPPath, method)
-
-    @staticmethod
-    def _compose_verify_code_url(method: DeliveryMethod) -> str:
-        return AuthClient._compose_url(EndpointsV1.verifyCodeAuthPath, method)
-
-    @staticmethod
-    def _compose_signin_magiclink_url(method: DeliveryMethod) -> str:
-        return AuthClient._compose_url(EndpointsV1.signInAuthMagicLinkPath, method)
-
-    @staticmethod
-    def _compose_signup_magiclink_url(method: DeliveryMethod) -> str:
-        return AuthClient._compose_url(EndpointsV1.signUpAuthMagicLinkPath, method)
+    def _compose_signup_magiclink_url(self, method: DeliveryMethod) -> str:
+        return self._auth_helper._compose_url(EndpointsV1.signUpAuthMagicLinkPath, method)
 
     @staticmethod
     def _compose_verify_magiclink_url() -> str:
@@ -261,163 +117,6 @@ class AuthClient:
                 500, "identifier failure", f"Unknown delivery method {method}"
             )
 
-    def _generate_auth_info(self, response_body, cookie) -> dict:
-        tokens = {}
-        for token in response_body["jwts"]:
-            token_claims = self._validate_and_load_tokens(token, None)
-            token_claims["projectId"] = token_claims.pop(
-                "iss"
-            )  # replace the key name from iss->projectId
-            token_claims["userId"] = token_claims.pop(
-                "sub"
-            )  # replace the key name from sub->userId
-            tokens[token_claims["cookieName"]] = token_claims
-
-        if cookie:
-            token_claims = self._validate_and_load_tokens(cookie, None)
-            token_claims["projectId"] = token_claims.pop(
-                "iss"
-            )  # replace the key name from iss->projectId
-            token_claims["userId"] = token_claims.pop(
-                "sub"
-            )  # replace the key name from sub->userId
-            tokens[token_claims["cookieName"]] = token_claims
-
-        return tokens
-
-    def _generate_jwt_response(self, response_body, cookie) -> dict:
-        tokens = self._generate_auth_info(response_body, cookie)
-        jwt_response = {
-            "error": response_body.get("error", ""),
-            "jwts": tokens,
-            "user": response_body.get("user", ""),
-            "firstSeen": response_body.get("firstSeen", True),
-        }
-        return jwt_response
-
-    def sign_up_magiclink(
-        self, method: DeliveryMethod, identifier: str, uri: str, user: dict = None
-    ) -> None:
-        """
-        Sign up a new user by magic link
-
-        Args:
-        method (DeliveryMethod): The Magic Link method you would like to verify the code
-        sent to you (by the same delivery method)
-
-        identifier (str): The identifier based on the chosen delivery method,
-        For email it should be the email address.
-        For phone it should be the phone number you would like to get the link
-        For whatsapp it should be the phone number you would like to get the link
-
-        uri (str): The base URI that should contain the magic link code
-
-        Raise:
-        AuthException: for any case sign up by magic link operation failed
-        """
-
-        if not self._verify_delivery_method(method, identifier):
-            raise AuthException(
-                500,
-                "identifier failure",
-                f"Identifier {identifier} is not valid by delivery method {method}",
-            )
-
-        body = {
-            "externalId": identifier,
-            "URI": uri,
-            "crossDevice": False,
-        }
-
-        if user is not None:
-            body["user"] = user
-            method_str, val = self._get_identifier_by_method(method, user)
-            body[method_str] = val
-
-        requestUri = AuthClient._compose_signup_magiclink_url(method)
-        response = requests.post(
-            f"{DEFAULT_BASE_URI}{requestUri}",
-            headers=self._get_default_headers(),
-            data=json.dumps(body),
-        )
-        if not response.ok:
-            raise AuthException(response.status_code, "", response.reason)
-
-    def sign_in_magiclink(
-        self, method: DeliveryMethod, identifier: str, uri: str
-    ) -> None:
-        """
-        Sign in a user by magiclink
-
-        Args:
-        method (DeliveryMethod): The Magic Link method you would like to verify the link
-        sent to you (by the same delivery method)
-
-        identifier (str): The identifier based on the chosen delivery method,
-        For email it should be the email address.
-        For phone it should be the phone number you would like to get the link
-        For whatsapp it should be the phone number you would like to get the link
-
-        uri (str): The base URI that should contain the magic link code
-
-        Raise:
-        AuthException: for any case sign up by otp operation failed
-        """
-
-        if not self._verify_delivery_method(method, identifier):
-            raise AuthException(
-                500,
-                "identifier failure",
-                f"Identifier {identifier} is not valid by delivery method {method}",
-            )
-
-        body = {
-            "externalId": identifier,
-            "URI": uri,
-            "crossDevice": False,
-        }
-
-        requestUri = AuthClient._compose_signin_magiclink_url(method)
-        response = requests.post(
-            f"{DEFAULT_BASE_URI}{requestUri}",
-            headers=self._get_default_headers(),
-            data=json.dumps(body),
-        )
-        if not response.ok:
-            raise AuthException(response.status_code, "", response.text)
-
-    def verify_magiclink(self, code: str) -> dict:
-        """Verify magiclink
-
-        Args:
-        code (str): The authorization code you get by the delivery method during signup/signin
-
-        Return value (Tuple[dict, dict]):
-        Return two dicts where the first contains the jwt claims data and
-        second contains the existing signed token (or the new signed
-        token in case the old one expired) and refreshed session token
-
-        Raise:
-        AuthException: for any case code is not valid or tokens verification failed
-        """
-
-        body = {"token": code}
-
-        uri = AuthClient._compose_verify_magiclink_url()
-        response = requests.post(
-            f"{DEFAULT_BASE_URI}{uri}",
-            headers=self._get_default_headers(),
-            data=json.dumps(body),
-        )
-        if not response.ok:
-            raise AuthException(response.status_code, "", response.reason)
-
-        resp = response.json()
-        jwt_response = self._generate_jwt_response(
-            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
-        )
-        return jwt_response
-
     def refresh_token(self, signed_token: str, signed_refresh_token: str) -> dict:
         cookies = {
             SESSION_COOKIE_NAME: signed_token,
@@ -425,108 +124,13 @@ class AuthClient:
         }
 
         uri = AuthClient._compose_refresh_token_url()
-        response = requests.get(
-            f"{DEFAULT_BASE_URI}{uri}",
-            headers=self._get_default_headers(),
-            cookies=cookies,
-        )
-
-        if not response.ok:
-            raise AuthException(
-                response.status_code,
-                "Refresh token failed",
-                f"Failed to refresh token with error: {response.text}",
-            )
+        response = self._auth_helper.do_post(uri, None, cookies)
 
         resp = response.json()
         auth_info = self._generate_auth_info(
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
         )
         return auth_info
-
-    def _validate_and_load_tokens(
-        self, signed_token: str, signed_refresh_token: str
-    ) -> dict:
-        if signed_token is None:
-            raise AuthException(
-                401,
-                "token validation failure",
-                f"signed token {signed_token} is empty",
-            )
-
-        try:
-            unverified_header = jwt.get_unverified_header(signed_token)
-        except Exception as e:
-            raise AuthException(
-                401, "token validation failure", f"Failed to parse token header, {e}"
-            )
-
-        alg_header = unverified_header.get(AuthClient.ALGORITHM_KEY, None)
-        if alg_header is None or alg_header == "none":
-            raise AuthException(
-                401, "token validation failure", "Token header is missing alg property"
-            )
-
-        kid = unverified_header.get("kid", None)
-        if kid is None:
-            raise AuthException(
-                401, "token validation failure", "Token header is missing kid property"
-            )
-
-        with self.lock_public_keys:
-            if self.public_keys == {} or self.public_keys.get(kid, None) is None:
-                self._fetch_public_keys()
-
-            found_key = self.public_keys.get(kid, None)
-            if found_key is None:
-                raise AuthException(
-                    401,
-                    "public key validation failed",
-                    "Failed to validate public key, public key not found",
-                )
-            # save reference to the founded key
-            # (as another thread can change the self.public_keys dict)
-            copy_key = found_key
-
-        alg_from_key = copy_key[1]
-        if alg_header != alg_from_key:
-            raise AuthException(
-                401,
-                "token validation failure",
-                "header algorithm is not matched key algorithm",
-            )
-
-        try:
-            claims = jwt.decode(
-                jwt=signed_token, key=copy_key[0].key, algorithms=[alg_header]
-            )
-
-            claims["jwt"] = signed_token
-            return claims
-
-        except ExpiredSignatureError:
-            # Session token expired, check that refresh token is valid
-            try:
-                jwt.decode(
-                    jwt=signed_refresh_token,
-                    key=copy_key[0].key,
-                    algorithms=[alg_header],
-                )
-            except Exception as e:
-                raise AuthException(
-                    401, "token validation failure", f"refresh token is not valid, {e}"
-                )
-
-            # Refresh token is valid now refresh the session token
-            auth_info = self.refresh_token(signed_token, signed_refresh_token)
-
-            claims = auth_info[SESSION_COOKIE_NAME]
-            return claims
-
-        except Exception as e:
-            raise AuthException(
-                401, "token validation failure", f"token is not valid, {e}"
-            )
 
     def validate_session_request(
         self, signed_token: str, signed_refresh_token: str
@@ -550,7 +154,7 @@ class AuthClient:
         AuthException: for any case token is not valid means session is not
         authorized
         """
-        token_claims = self._validate_and_load_tokens(
+        token_claims = self._auth_helper._validate_and_load_tokens(
             signed_token, signed_refresh_token
         )
         return {token_claims["cookieName"]: token_claims}
@@ -572,28 +176,8 @@ class AuthClient:
             REFRESH_SESSION_COOKIE_NAME: signed_refresh_token,
         }
 
-        response = requests.get(
-            f"{DEFAULT_BASE_URI}{uri}",
-            headers=self._get_default_headers(),
-            cookies=cookies,
-        )
-
-        if not response.ok:
-            raise AuthException(
-                response.status_code,
-                "Failed logout",
-                f"logout request failed with error {response.text}",
-            )
-
+        response = self._auth_helper.do_get(uri, cookies)
         return response.cookies
-
-    def _get_default_headers(self):
-        headers = {}
-        headers["Content-Type"] = "application/json"
-
-        bytes = f"{self.project_id}:".encode("ascii")
-        headers["Authorization"] = f"Basic {base64.b64encode(bytes).decode('ascii')}"
-        return headers
 
     @staticmethod
     def _verify_oauth_provider(oauth_provider: str) -> str:
@@ -614,14 +198,9 @@ class AuthClient:
                 f"Unknown OAuth provider: {provider}",
             )
 
-        uri = f"{DEFAULT_BASE_URI}{EndpointsV1.oauthStart}"
-        response = requests.get(
-            uri,
-            headers=self._get_default_headers(),
-            params={"provider": provider},
-            allow_redirects=False,
-        )
-
+        uri = EndpointsV1.oauthStart
+        response = self._auth_helper.do_get(uri, None, {"provider": provider}, False)
+    
         if not response.ok:
             raise AuthException(
                 response.status_code, "OAuth send request failure", response.text

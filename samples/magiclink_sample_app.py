@@ -16,26 +16,22 @@ logging.basicConfig(level=logging.INFO)
 
 
 def main():
-    identifier = "test@me.com"
     project_id = ""
 
     try:
         auth_client = AuthClient(project_id=project_id)
 
-        logging.info(
-            "Going to signup a new user.. expect an email to arrive with the new link.."
-        )
-        user = {"name": "John", "phone": "+972111111111"}
-        auth_client.sign_up_magiclink(
+        logging.info("Going to sign-in / sign-up...")
+        email = "asaf@descope.com" # input("Please insert email to sign in / sign-up:\n")
+        auth_client.magiclink.sign_up_or_in(
             method=DeliveryMethod.EMAIL,
-            identifier=identifier,
+            identifier=email,
             uri="http://test.me",
-            user=user,
         )
 
-        value = input("Please insert the code you received by email:\n")
+        token = input("Please insert the token you received by email:\n")
         try:
-            jwt_response = auth_client.verify_magiclink(code=value)
+            jwt_response = auth_client.magiclink.verify(token=token)
             logging.info("Code is valid")
             session_token = jwt_response["jwts"].get(SESSION_COOKIE_NAME).get("jwt")
             refresh_token = (
@@ -47,17 +43,17 @@ def main():
             raise
 
         try:
-            logging.info("Going to logout")
+            logging.info("Going to logout after sign-in / sign-up")
             auth_client.logout(session_token, refresh_token)
-            logging.info("User logged out")
+            logging.info("User logged out after sign-in / sign-up")
         except AuthException as e:
-            logging.info(f"Failed to logged out user, err: {e}")
+            logging.info(f"Failed to logged after sign-in / sign-up, err: {e}")
 
         logging.info(
-            "Going to sign in same user again.. expect another email to arrive with the new link.."
+            "Going to sign in same user again..."
         )
-        auth_client.sign_in_magiclink(
-            method=DeliveryMethod.EMAIL, identifier=identifier, uri="http://test.me"
+        auth_client.magiclink.sign_in(
+            method=DeliveryMethod.EMAIL, identifier=email, uri="http://test.me"
         )
 
         value = input("Please insert the code you received by email:\n")
@@ -74,17 +70,17 @@ def main():
             raise
 
         try:
-            logging.info("going to validate session..")
+            logging.info(f"going to validate session...{session_token_1}")
             claims = auth_client.validate_session_request(
                 session_token_1, refresh_token_1
             )
             session_token_2 = claims.get(SESSION_COOKIE_NAME).get("jwt")
-            logging.info("Session is valid and all is OK")
+            logging.info("Session is valid and all is OK", session_token_2, refresh_token)
         except AuthException as e:
             logging.info(f"Session is not valid {e}")
 
         try:
-            logging.info("Going to logout")
+            logging.info(f"Going to logout at the second time\nsession_token_2: {session_token_2}\nrefresh_token: {refresh_token}")
             auth_client.logout(session_token_2, refresh_token)
             logging.info("User logged out")
         except AuthException as e:

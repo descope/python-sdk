@@ -1,7 +1,7 @@
 from enum import Enum
 
-DEFAULT_BASE_URI = "https://localhost:8443"  # "http://127.0.0.1:8191"
-DEFAULT_FETCH_PUBLIC_KEY_URI = "https://localhost:8443"  # "http://127.0.0.1:8152"  # will use the same base uri as above once gateway will be available
+DEFAULT_BASE_URI = "http://127.0.0.1:8191"
+DEFAULT_FETCH_PUBLIC_KEY_URI = "http://127.0.0.1:8152"  # will use the same base uri as above once gateway will be available
 
 PHONE_REGEX = """^(?:(?:\\(?(?:00|\\+)([1-4]\\d\\d|[1-9]\\d?)\\)?)?[\\-\\.\\ \\\\/]?)?((?:\\(?\\d{1,}\\)?[\\-\\.\\ \\\\/]?){0,})(?:[\\-\\.\\ \\\\/]?(?:#|ext\\.?|extension|x)[\\-\\.\\ \\\\/]?(\\d+))?$"""
 
@@ -18,6 +18,7 @@ class EndpointsV1:
     updateUserEmailOTPPath = "/v1/user/update/email/otp"
     updateUserPhoneOTPPath = "/v1/user/update/phone/otp/sms"
     signInAuthMagicLinkPath = "/v1/auth/signin/magiclink"
+    signUpOrInAuthMagicLinkPath = "/v1/auth/sign-up-or-in/magiclink"
     signUpAuthMagicLinkPath = "/v1/auth/signup/magiclink"
     verifyMagicLinkAuthPath = "/v1/auth/magiclink/verify"
     oauthStart = "/v1/oauth/authorize"
