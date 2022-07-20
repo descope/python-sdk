@@ -1,16 +1,5 @@
-import requests
-import json
-import re
-
-from email_validator import EmailNotValidError, validate_email
-
 from descope.common import (
-    DEFAULT_BASE_URI,
-    DEFAULT_FETCH_PUBLIC_KEY_URI,
-    PHONE_REGEX,
     REFRESH_SESSION_COOKIE_NAME,
-    SESSION_COOKIE_NAME,
-    DeliveryMethod,
     EndpointsV1,
 )
 from descope.exceptions import AuthException
@@ -21,6 +10,23 @@ class TOTP():
 
     def __init__(self, auth_helper):
         self._auth_helper = auth_helper
+
+    @staticmethod
+    def _compose_signup_body(identifier: str, user: dict) -> dict:
+        body = { "externalId": identifier }
+        if user is not None:
+            body["user"] = user
+        return body
+
+    @staticmethod
+    def _compose_signin_body(identifier: str, code: str) -> dict:
+        return { "externalId": identifier,
+                 "code": code
+         }
+
+    @staticmethod
+    def _compose_update_user_body(identifier: str) -> dict:
+        return { "externalId": identifier }
     
     def sign_up(
         self, identifier: str, user: dict = None
@@ -29,23 +35,14 @@ class TOTP():
         Docs
         """
 
-        if identifier == "":
+        if identifier is None or identifier == "":
             raise AuthException(500, "Invalid argument", "Identifier cannot be empty")
 
-        body = {"externalId": identifier}
+        uri = EndpointsV1.signUpAuthTOTPPath
+        body = TOTP._compose_signup_body(identifier, user)
+        response = self._auth_helper.do_post(uri, body)
 
-        if user is not None:
-            body["user"] = user
-
-        uri = f"{DEFAULT_BASE_URI}{EndpointsV1.signUpAuthTOTPPath}"
-        response = requests.post(
-            f"{DEFAULT_BASE_URI}{uri}",
-            headers=self.client._get_default_headers(),
-            data=json.dumps(body),
-        )
-        if not response.ok:
-            raise AuthException(response.status_code, "", response.reason)
-
+        print(response.json())
         return response.json()
         # Response should have these schema:
         # string provisioningURL = 1;
@@ -58,48 +55,37 @@ class TOTP():
         Docs
         """
 
-        if identifier == "":
+        if identifier is None or identifier == "":
             raise AuthException(500, "Invalid argument", "Identifier cannot be empty")
 
-        body = {"externalId": identifier,
-                "code": code}
+        if code is None or code == "":
+            raise AuthException(500, "Invalid argument", "Code cannot be empty")
 
-
-        uri = f"{DEFAULT_BASE_URI}{EndpointsV1.verifyTOTPPath}"
-        response = requests.post(
-            f"{DEFAULT_BASE_URI}{uri}",
-            headers=self.client._get_default_headers(),
-            data=json.dumps(body),
-        )
-        if not response.ok:
-            raise AuthException(response.status_code, "", response.reason)
+        uri = EndpointsV1.verifyTOTPPath
+        body = TOTP._compose_signin_body(identifier, code)
+        response = self._auth_helper.do_post(uri, body)
 
         resp = response.json()
-        jwt_response = self._generate_jwt_response(
+        jwt_response = self._auth_helper._generate_jwt_response(
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
         )
+        print(jwt_response)
         return jwt_response
 
-    #UpdateUserTOTP
     def update_user(self, identifier: str, refresh_token: str) -> None:
         """
         Docs
         """
 
-        if identifier == "":
+        if identifier is None or identifier == "":
             raise AuthException(500, "Invalid argument", "Identifier cannot be empty")
 
-        body = {"externalId": identifier}
+        if refresh_token is None or refresh_token == "":
+            raise AuthException(500, "Invalid argument", "Refresh token cannot be empty")
 
-
-        uri = f"{DEFAULT_BASE_URI}{EndpointsV1.verifyTOTPPath}"
-        response = requests.post(
-            f"{DEFAULT_BASE_URI}{uri}",
-            headers=self.client._get_default_headers(refresh_token),
-            data=json.dumps(body),
-        )
-        if not response.ok:
-            raise AuthException(response.status_code, "", response.reason)
+        uri = EndpointsV1.verifyTOTPPath
+        body = TOTP._compose_update_user_body(identifier)
+        response = self._auth_helper.do_post(uri, body, None, refresh_token)
 
         return response.json()
         # Response should have these schema:

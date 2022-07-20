@@ -27,6 +27,12 @@ class EndpointsV1:
     publicKeyPath = "/v1/keys"
     refreshTokenPath = "/v1/auth/refresh"
     logoutPath = "/v1/auth/logoutall"
+    signUpAuthWebauthnStart = "/v1/webauthn/signup/start"
+    signUpAuthWebauthnFinish = "/v1/webauthn/signup/finish"
+    signInAuthWebauthnStart = "/v1/webauthn/signin/start"
+    signInAuthWebauthnFinish = "/v1/webauthn/signin/finish"
+    deviceAddAuthWebauthnStart= "/v1/webauthn/device/add/start"
+    deviceAddAuthWebauthnFinish= "/v1/webauthn/device/add/finish"
 
 
 class DeliveryMethod(Enum):
