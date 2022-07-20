@@ -1,6 +1,8 @@
 import logging
 import os
 import sys
+import contextlib
+from http.client import HTTPConnection
 
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
@@ -22,7 +24,7 @@ def main():
         auth_client = AuthClient(project_id=project_id)
 
         logging.info("Going to sign-in / sign-up...")
-        email = input("Please insert email to sign in / sign-up:\n")
+        email = "asaf@descope.com" #input("Please insert email to sign in / sign-up:\n")
         auth_client.magiclink.sign_up_or_in(
             method=DeliveryMethod.EMAIL,
             identifier=email,

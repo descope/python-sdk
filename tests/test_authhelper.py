@@ -5,6 +5,7 @@ from enum import Enum
 from unittest.mock import patch
 
 from descope import SESSION_COOKIE_NAME, AuthClient, AuthException, DeliveryMethod
+from descope.authhelper import AuthHelper
 from descope.common import DEFAULT_BASE_URI, REFRESH_SESSION_COOKIE_NAME, EndpointsV1
 
 
@@ -51,24 +52,24 @@ class TestAuthClient(unittest.TestCase):
         # test invalid json
         self.assertRaises(
             AuthException,
-            AuthClient._validate_and_load_public_key,
+            AuthHelper._validate_and_load_public_key,
             public_key="invalid json",
         )
         # test public key without kid property
         self.assertRaises(
             AuthException,
-            AuthClient._validate_and_load_public_key,
+            AuthHelper._validate_and_load_public_key,
             public_key={"test": "dummy"},
         )
 
         # test not dict object
         self.assertRaises(
-            AuthException, AuthClient._validate_and_load_public_key, public_key=555
+            AuthException, AuthHelper._validate_and_load_public_key, public_key=555
         )
         # test invalid dict
         self.assertRaises(
             AuthException,
-            AuthClient._validate_and_load_public_key,
+            AuthHelper._validate_and_load_public_key,
             public_key={"kid": "dummy"},
         )
 
@@ -90,74 +91,74 @@ class TestAuthClient(unittest.TestCase):
         # Test failed flows
         with patch("requests.get") as mock_get:
             mock_get.return_value.ok = False
-            self.assertRaises(AuthException, client._fetch_public_keys)
+            self.assertRaises(AuthException, AuthHelper._fetch_public_keys)
 
         with patch("requests.get") as mock_get:
             mock_get.return_value.ok = True
             mock_get.return_value.text = "invalid json"
-            self.assertRaises(AuthException, client._fetch_public_keys)
+            self.assertRaises(AuthException, AuthHelper._fetch_public_keys)
 
         # test success flow
         with patch("requests.get") as mock_get:
             mock_get.return_value.ok = True
             mock_get.return_value.text = valid_keys_response
-            self.assertIsNone(client._fetch_public_keys())
+            self.assertIsNone(AuthHelper._fetch_public_keys())
 
     def test_verify_delivery_method(self):
         self.assertEqual(
-            AuthClient._verify_delivery_method(DeliveryMethod.EMAIL, "dummy@dummy.com"),
+            AuthHelper._verify_delivery_method(DeliveryMethod.EMAIL, "dummy@dummy.com"),
             True,
         )
         self.assertEqual(
-            AuthClient._verify_delivery_method(DeliveryMethod.EMAIL, "dummy@dummy.com"),
+            AuthHelper._verify_delivery_method(DeliveryMethod.EMAIL, "dummy@dummy.com"),
             True,
         )
         self.assertEqual(
-            AuthClient._verify_delivery_method(DeliveryMethod.EMAIL, "dummy@dummy.com"),
+            AuthHelper._verify_delivery_method(DeliveryMethod.EMAIL, "dummy@dummy.com"),
             True,
         )
         self.assertEqual(
-            AuthClient._verify_delivery_method(DeliveryMethod.EMAIL, ""), False
+            AuthHelper._verify_delivery_method(DeliveryMethod.EMAIL, ""), False
         )
         self.assertEqual(
-            AuthClient._verify_delivery_method(DeliveryMethod.EMAIL, "dummy@dummy"),
+            AuthHelper._verify_delivery_method(DeliveryMethod.EMAIL, "dummy@dummy"),
             False,
         )
 
         self.assertEqual(
-            AuthClient._verify_delivery_method(DeliveryMethod.PHONE, "111111111111"),
+            AuthHelper._verify_delivery_method(DeliveryMethod.PHONE, "111111111111"),
             True,
         )
         self.assertEqual(
-            AuthClient._verify_delivery_method(DeliveryMethod.PHONE, "+111111111111"),
+            AuthHelper._verify_delivery_method(DeliveryMethod.PHONE, "+111111111111"),
             True,
         )
         self.assertEqual(
-            AuthClient._verify_delivery_method(DeliveryMethod.PHONE, "++111111111111"),
+            AuthHelper._verify_delivery_method(DeliveryMethod.PHONE, "++111111111111"),
             False,
         )
         self.assertEqual(
-            AuthClient._verify_delivery_method(DeliveryMethod.PHONE, "asdsad"), False
+            AuthHelper._verify_delivery_method(DeliveryMethod.PHONE, "asdsad"), False
         )
         self.assertEqual(
-            AuthClient._verify_delivery_method(DeliveryMethod.PHONE, ""), False
+            AuthHelper._verify_delivery_method(DeliveryMethod.PHONE, ""), False
         )
         self.assertEqual(
-            AuthClient._verify_delivery_method(
+            AuthHelper._verify_delivery_method(
                 DeliveryMethod.PHONE, "unvalid@phone.number"
             ),
             False,
         )
 
         self.assertEqual(
-            AuthClient._verify_delivery_method(DeliveryMethod.WHATSAPP, "111111111111"),
+            AuthHelper._verify_delivery_method(DeliveryMethod.WHATSAPP, "111111111111"),
             True,
         )
         self.assertEqual(
-            AuthClient._verify_delivery_method(DeliveryMethod.WHATSAPP, ""), False
+            AuthHelper._verify_delivery_method(DeliveryMethod.WHATSAPP, ""), False
         )
         self.assertEqual(
-            AuthClient._verify_delivery_method(
+            AuthHelper._verify_delivery_method(
                 DeliveryMethod.WHATSAPP, "unvalid@phone.number"
             ),
             False,
@@ -167,7 +168,7 @@ class TestAuthClient(unittest.TestCase):
             DUMMY = 4
 
         self.assertEqual(
-            AuthClient._verify_delivery_method(AAA.DUMMY, "unvalid@phone.number"),
+            AuthHelper._verify_delivery_method(AAA.DUMMY, "unvalid@phone.number"),
             False,
         )
 
@@ -224,15 +225,15 @@ class TestAuthClient(unittest.TestCase):
     def test_get_identifier_name_by_method(self):
         user = {"email": "dummy@dummy.com", "phone": "11111111"}
         self.assertEqual(
-            AuthClient._get_identifier_by_method(DeliveryMethod.EMAIL, user),
+            AuthHelper._get_identifier_by_method(DeliveryMethod.EMAIL, user),
             ("email", "dummy@dummy.com"),
         )
         self.assertEqual(
-            AuthClient._get_identifier_by_method(DeliveryMethod.PHONE, user),
+            AuthHelper._get_identifier_by_method(DeliveryMethod.PHONE, user),
             ("phone", "11111111"),
         )
         self.assertEqual(
-            AuthClient._get_identifier_by_method(DeliveryMethod.WHATSAPP, user),
+            AuthHelper._get_identifier_by_method(DeliveryMethod.WHATSAPP, user),
             ("whatsapp", "11111111"),
         )
 
@@ -240,35 +241,10 @@ class TestAuthClient(unittest.TestCase):
             DUMMY = 4
 
         self.assertRaises(
-            AuthException, AuthClient._get_identifier_by_method, AAA.DUMMY, user
-        )
+            AuthException, AuthHelper._get_identifier_by_method, AAA.DUMMY, user
+        )       
 
-    def test_compose_signup_url(self):
-        self.assertEqual(
-            AuthClient._compose_signup_url(DeliveryMethod.EMAIL),
-            "/v1/auth/signup/otp/email",
-        )
-        self.assertEqual(
-            AuthClient._compose_signup_url(DeliveryMethod.PHONE),
-            "/v1/auth/signup/otp/sms",
-        )
-        self.assertEqual(
-            AuthClient._compose_signup_url(DeliveryMethod.WHATSAPP),
-            "/v1/auth/signup/otp/whatsapp",
-        )
-        self.assertEqual(
-            AuthClient._compose_signup_magiclink_url(DeliveryMethod.EMAIL),
-            "/v1/auth/signup/magiclink/email",
-        )
-        self.assertEqual(
-            AuthClient._compose_signup_magiclink_url(DeliveryMethod.PHONE),
-            "/v1/auth/signup/magiclink/sms",
-        )
-        self.assertEqual(
-            AuthClient._compose_signup_magiclink_url(DeliveryMethod.WHATSAPP),
-            "/v1/auth/signup/magiclink/whatsapp",
-        )
-
+    @unittest.skip("move otp methods")
     def test_compose_signin_url(self):
         self.assertEqual(
             AuthClient._compose_signin_url(DeliveryMethod.EMAIL),
@@ -281,18 +257,6 @@ class TestAuthClient(unittest.TestCase):
         self.assertEqual(
             AuthClient._compose_signin_url(DeliveryMethod.WHATSAPP),
             "/v1/auth/signin/otp/whatsapp",
-        )
-        self.assertEqual(
-            AuthClient._compose_signin_magiclink_url(DeliveryMethod.EMAIL),
-            "/v1/auth/signin/magiclink/email",
-        )
-        self.assertEqual(
-            AuthClient._compose_signin_magiclink_url(DeliveryMethod.PHONE),
-            "/v1/auth/signin/magiclink/sms",
-        )
-        self.assertEqual(
-            AuthClient._compose_signin_magiclink_url(DeliveryMethod.WHATSAPP),
-            "/v1/auth/signin/magiclink/whatsapp",
         )
 
     def test_compose_verify_code_url(self):
@@ -307,10 +271,6 @@ class TestAuthClient(unittest.TestCase):
         self.assertEqual(
             AuthClient._compose_verify_code_url(DeliveryMethod.WHATSAPP),
             "/v1/auth/code/verify/whatsapp",
-        )
-        self.assertEqual(
-            AuthClient._compose_verify_magiclink_url(),
-            "/v1/auth/magiclink/verify",
         )
 
     def test_compose_refresh_token_url(self):
@@ -420,92 +380,6 @@ class TestAuthClient(unittest.TestCase):
 
         self.assertRaises(AuthException, AuthClient._compose_signin_url, Dummy.DUMMY)
 
-    def test_sign_up_magiclink(self):
-        signup_user_details = {
-            "username": "jhon",
-            "name": "john",
-            "phone": "972525555555",
-            "email": "dummy@dummy.com",
-        }
-
-        client = AuthClient(self.dummy_project_id, self.public_key_dict)
-
-        # Test failed flows
-        self.assertRaises(
-            AuthException,
-            client.sign_up_magiclink,
-            DeliveryMethod.EMAIL,
-            "dummy@dummy",
-            "http://test.me",
-            signup_user_details,
-        )
-        self.assertRaises(
-            AuthException,
-            client.sign_up_magiclink,
-            DeliveryMethod.EMAIL,
-            "",
-            "http://test.me",
-            signup_user_details,
-        )
-        self.assertRaises(
-            AuthException,
-            client.sign_up_magiclink,
-            DeliveryMethod.EMAIL,
-            None,
-            "http://test.me",
-            signup_user_details,
-        )
-
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.sign_up_magiclink,
-                DeliveryMethod.EMAIL,
-                "dummy@dummy.com",
-                "http://test.me",
-                signup_user_details,
-            )
-
-        # Test success flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
-                client.sign_up_magiclink(
-                    DeliveryMethod.EMAIL,
-                    "dummy@dummy.com",
-                    "http://test.me",
-                    signup_user_details,
-                )
-            )
-
-        # Test flow where username not set and we used the identifier as default
-        signup_user_details = {
-            "username": "",
-            "name": "john",
-            "phone": "972525555555",
-            "email": "dummy@dummy.com",
-        }
-
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
-                client.sign_up_magiclink(
-                    DeliveryMethod.EMAIL,
-                    "dummy@dummy.com",
-                    "http://test.me",
-                    signup_user_details,
-                )
-            )
-
-        # test undefined enum value
-        class Dummy(Enum):
-            DUMMY = 7
-
-        self.assertRaises(
-            AuthException, AuthClient._compose_signin_magiclink_url, Dummy.DUMMY
-        )
-
     def test_sign_in(self):
         client = AuthClient(self.dummy_project_id, self.public_key_dict)
 
@@ -531,52 +405,8 @@ class TestAuthClient(unittest.TestCase):
             self.assertIsNone(
                 client.sign_in_otp(DeliveryMethod.EMAIL, "dummy@dummy.com")
             )
-
-    def test_sign_in_magiclink(self):
-        client = AuthClient(self.dummy_project_id, self.public_key_dict)
-
-        # Test failed flows
-        self.assertRaises(
-            AuthException,
-            client.sign_in_magiclink,
-            DeliveryMethod.EMAIL,
-            "dummy@dummy",
-            "http://test.me",
-        )
-        self.assertRaises(
-            AuthException,
-            client.sign_in_magiclink,
-            DeliveryMethod.EMAIL,
-            "",
-            "http://test.me",
-        )
-        self.assertRaises(
-            AuthException,
-            client.sign_in_magiclink,
-            DeliveryMethod.EMAIL,
-            None,
-            "http://test.me",
-        )
-
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.sign_in_magiclink,
-                DeliveryMethod.EMAIL,
-                "dummy@dummy.com",
-                "http://test.me",
-            )
-
-        # Test success flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
-                client.sign_in_magiclink(
-                    DeliveryMethod.EMAIL, "dummy@dummy.com", "http://test.me"
-                )
-            )
-
+    
+    
     def test_verify_code(self):
         code = "1234"
 
@@ -614,29 +444,6 @@ class TestAuthClient(unittest.TestCase):
             self.assertIsNotNone(
                 client.verify_code(DeliveryMethod.EMAIL, "dummy@dummy.com", code)
             )
-
-    def test_verify_magiclink(self):
-        code = "1234"
-
-        client = AuthClient(self.dummy_project_id, self.public_key_dict)
-
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.verify_magiclink,
-                code,
-            )
-
-        # Test success flow
-        valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkVGVuYW50cyI6eyIiOm51bGx9LCJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwNjc5MjA4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MjA5MDA4NzIwOCwiaWF0IjoxNjU4MDg3MjA4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQzU1dnl4dzBzUkw2RmRNNjhxUnNDRGRST1YifQ.cWP5up4R5xeIl2qoG2NtfLH3Q5nRJVKdz-FDoAXctOQW9g3ceZQi6rZQ-TPBaXMKw68bijN3bLJTqxWW5WHzqRUeopfuzTcMYmC0wP2XGJkrdF6A8D5QW6acSGqglFgu"
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
-            mock_post.return_value.cookies = {
-                SESSION_COOKIE_NAME: "dummy session token",
-                REFRESH_SESSION_COOKIE_NAME: valid_jwt_token,
-            }
-            self.assertIsNotNone(client.verify_magiclink(code))
 
     def test_validate_session(self):
         client = AuthClient(self.dummy_project_id, self.public_key_dict)

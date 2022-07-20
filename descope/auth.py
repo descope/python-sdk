@@ -80,17 +80,6 @@ class AuthClient:
 
     def _compose_verify_code_url(self, method: DeliveryMethod) -> str:
         return self._auth_helper._compose_url(EndpointsV1.verifyCodeAuthPath, method)
-
-    def _compose_signin_magiclink_url(self, method: DeliveryMethod) -> str:
-        return self._auth_helper._compose_url(EndpointsV1.signInAuthMagicLinkPath, method)
-
-    def _compose_signup_magiclink_url(self, method: DeliveryMethod) -> str:
-        return self._auth_helper._compose_url(EndpointsV1.signUpAuthMagicLinkPath, method)
-
-    @staticmethod
-    def _compose_verify_magiclink_url() -> str:
-        return EndpointsV1.verifyMagicLinkAuthPath
-
     @staticmethod
     def _compose_refresh_token_url() -> str:
         return EndpointsV1.refreshTokenPath
