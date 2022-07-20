@@ -17,7 +17,7 @@ from descope.exceptions import AuthException
 from descope.authhelper import AuthHelper
 
 class OTP():
-    client = None
+    _auth_helper: AuthHelper
 
     def __init__(self, auth_helper: AuthHelper):
         self._auth_helper = auth_helper

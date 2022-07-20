@@ -25,11 +25,11 @@ def main():
         logging.info(
             "Going to sign in new user.. expect an email to arrive with the new code.."
         )
-        auth_client.sign_in_otp(method=DeliveryMethod.EMAIL, identifier=email)
+        auth_client.otp.sign_in(method=DeliveryMethod.EMAIL, identifier=email)
 
         value = input("Please insert the code you received by email:\n")
         try:
-            jwt_response = auth_client.verify_code(
+            jwt_response = auth_client.otp.verify_code(
                 method=DeliveryMethod.EMAIL, identifier=email, code=value
             )
             logging.info("Code is valid")

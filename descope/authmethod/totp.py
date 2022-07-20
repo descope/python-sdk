@@ -14,10 +14,13 @@ from descope.common import (
     EndpointsV1,
 )
 from descope.exceptions import AuthException
+from descope.authhelper import AuthHelper
 
 class TOTP():
-    def __init__(self, client):
-        self.client = client
+    _auth_helper: AuthHelper
+
+    def __init__(self, auth_helper):
+        self._auth_helper = auth_helper
     
     def sign_up(
         self, identifier: str, user: dict = None
