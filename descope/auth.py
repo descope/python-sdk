@@ -12,6 +12,13 @@ from jwt.exceptions import ExpiredSignatureError
 from requests.cookies import RequestsCookieJar  # noqa: F401
 from requests.models import Response  # noqa: F401
 
+from descope.authmethod.magiclink import MagicLink  # noqa: F401
+from descope.authmethod.otp import OTP  # noqa: F401
+from descope.authmethod.totp import TOTP  # noqa: F401
+from descope.authmethod.saml import SAML  # noqa: F401
+from descope.authmethod.oauth import OAuth  # noqa: F401
+from descope.authmethod.webauthn import WebauthN  # noqa: F401
+
 from descope.common import (
     DEFAULT_BASE_URI,
     DEFAULT_FETCH_PUBLIC_KEY_URI,
@@ -51,6 +58,38 @@ class AuthClient:
             else:
                 kid, pub_key, alg = self._validate_and_load_public_key(public_key)
                 self.public_keys = {kid: (pub_key, alg)}
+
+
+        self._magiclink = MagicLink(self)
+        self._otp = OTP(self)
+        self._totp = TOTP(self)
+        self._oauth = OAuth(self)
+        self._saml = SAML(self)
+        self._webauthn = WebauthN(self)
+    
+    @property
+    def magiclink(self):
+        return self._magiclink
+
+    @property
+    def otp(self):
+        return self._otp
+
+    @property
+    def totp(self):
+        return self._totp
+
+    @property
+    def oauth(self):
+        return self._oauth
+
+    @property
+    def saml(self):
+        return self._saml
+
+    @property
+    def webauthn(self):
+        return self._webauthn
 
     @staticmethod
     def _validate_and_load_public_key(public_key) -> Tuple[str, jwt.PyJWK, str]:
