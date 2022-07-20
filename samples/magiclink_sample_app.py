@@ -35,7 +35,6 @@ def main():
         try:
             jwt_response = auth_client.magiclink.verify(token=token)
             logging.info("Code is valid")
-            session_token = jwt_response["jwts"].get(SESSION_COOKIE_NAME).get("jwt")
             refresh_token = (
                 jwt_response["jwts"].get(REFRESH_SESSION_COOKIE_NAME).get("jwt")
             )
@@ -46,7 +45,7 @@ def main():
 
         try:
             logging.info("Going to logout after sign-in / sign-up")
-            auth_client.logout(session_token, refresh_token)
+            auth_client.logout(refresh_token)
             logging.info("User logged out after sign-in / sign-up")
         except AuthException as e:
             logging.info(f"Failed to logged after sign-in / sign-up, err: {e}")
@@ -76,14 +75,13 @@ def main():
             claims = auth_client.validate_session_request(
                 session_token_1, refresh_token_1
             )
-            session_token_2 = claims.get(SESSION_COOKIE_NAME).get("jwt")
-            logging.info("Session is valid and all is OK", session_token_2, refresh_token_1)
+            logging.info("Session is valid and all is OK", refresh_token_1)
         except AuthException as e:
             logging.info(f"Session is not valid {e}")
 
         try:
-            logging.info(f"Going to logout at the second time\nsession_token_2: {session_token_2}\nrefresh_token: {refresh_token_1}")
-            auth_client.logout(session_token_2, refresh_token_1)
+            logging.info(f"Going to logout at the second time\nrefresh_token: {refresh_token_1}")
+            auth_client.logout(refresh_token_1)
             logging.info("User logged out")
         except AuthException as e:
             logging.info(f"Failed to logged out user, err: {e}")

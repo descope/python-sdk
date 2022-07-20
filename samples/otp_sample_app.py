@@ -45,15 +45,13 @@ def main():
         try:
             logging.info("going to validate session..")
             claims = auth_client.validate_session_request(session_token, refresh_token)
-
-            session_token = claims.get(SESSION_COOKIE_NAME).get("jwt")
             logging.info("Session is valid and all is OK")
         except AuthException as e:
             logging.info(f"Session is not valid {e}")
 
         try:
             logging.info("refreshing the session token..")
-            claims = auth_client.refresh_token(session_token, refresh_token)
+            claims = auth_client._auth_helper.refresh_token(refresh_token)
             logging.info(
                 "going to revalidate the session with the newly refreshed token.."
             )
@@ -67,7 +65,7 @@ def main():
             logging.info(f"Session is not valid for the refreshed token: {e}")
 
         try:
-            auth_client.logout(new_session_token, refresh_token)
+            auth_client.logout(refresh_token)
             logging.info("User logged out")
         except AuthException as e:
             logging.info(f"Failed to logged out user, err: {e}")

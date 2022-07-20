@@ -19,6 +19,7 @@ from descope.common import (
     DeliveryMethod,
     EndpointsV1,
     SESSION_COOKIE_NAME,
+    REFRESH_SESSION_COOKIE_NAME
 )
 from descope.exceptions import AuthException
 
@@ -50,10 +51,14 @@ class AuthHelper:
                 kid, pub_key, alg = self._validate_and_load_public_key(public_key)
                 self.public_keys = {kid: (pub_key, alg)}
 
-    def do_get(self, uri: str, cookies=None, params=None, allow_redirects=None) -> requests.Response:
+    @staticmethod
+    def _compose_refresh_token_url() -> str:
+        return EndpointsV1.refreshTokenPath
+
+    def do_get(self, uri: str, cookies=None, params=None, allow_redirects=None, pswd: str=None) -> requests.Response:
         response = requests.get(
             f"{DEFAULT_BASE_URI}{uri}",
-            headers=self._get_default_headers(),
+            headers=self._get_default_headers(pswd),
             cookies=cookies,
             params=params,
             allow_redirects=allow_redirects,
@@ -331,7 +336,7 @@ class AuthHelper:
                 )
 
             # Refresh token is valid now refresh the session token
-            auth_info = self.refresh_token(signed_token, signed_refresh_token)
+            auth_info = self.refresh_token(signed_refresh_token)
 
             claims = auth_info[SESSION_COOKIE_NAME]
             return claims
@@ -341,3 +346,12 @@ class AuthHelper:
                 401, "token validation failure", f"token is not valid, {e}"
             )
 
+    def refresh_token(self, signed_refresh_token: str) -> dict:
+        uri = AuthHelper._compose_refresh_token_url()
+        response = self.do_get(uri, None, None, None, signed_refresh_token)
+
+        resp = response.json()
+        auth_info = self._generate_auth_info(
+            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
+        )
+        return auth_info

@@ -91,18 +91,18 @@ class TestAuthClient(unittest.TestCase):
         # Test failed flows
         with patch("requests.get") as mock_get:
             mock_get.return_value.ok = False
-            self.assertRaises(AuthException, AuthHelper._fetch_public_keys)
+            self.assertRaises(AuthException, client._auth_helper._fetch_public_keys)
 
         with patch("requests.get") as mock_get:
             mock_get.return_value.ok = True
             mock_get.return_value.text = "invalid json"
-            self.assertRaises(AuthException, AuthHelper._fetch_public_keys)
+            self.assertRaises(AuthException, client._auth_helper._fetch_public_keys)
 
         # test success flow
         with patch("requests.get") as mock_get:
             mock_get.return_value.ok = True
             mock_get.return_value.text = valid_keys_response
-            self.assertIsNone(AuthHelper._fetch_public_keys())
+            self.assertIsNone(client._auth_helper._fetch_public_keys())
 
     def test_verify_delivery_method(self):
         self.assertEqual(
@@ -192,40 +192,11 @@ class TestAuthClient(unittest.TestCase):
 
         self.assertRaises(
             AuthException, AuthHelper._get_identifier_by_method, AAA.DUMMY, user
-        )       
-
-    @unittest.skip("move otp methods")
-    def test_compose_signin_url(self):
-        self.assertEqual(
-            AuthClient._compose_signin_url(DeliveryMethod.EMAIL),
-            "/v1/auth/signin/otp/email",
-        )
-        self.assertEqual(
-            AuthClient._compose_signin_url(DeliveryMethod.PHONE),
-            "/v1/auth/signin/otp/sms",
-        )
-        self.assertEqual(
-            AuthClient._compose_signin_url(DeliveryMethod.WHATSAPP),
-            "/v1/auth/signin/otp/whatsapp",
-        )
-
-    def test_compose_verify_code_url(self):
-        self.assertEqual(
-            AuthClient._compose_verify_code_url(DeliveryMethod.EMAIL),
-            "/v1/auth/code/verify/email",
-        )
-        self.assertEqual(
-            AuthClient._compose_verify_code_url(DeliveryMethod.PHONE),
-            "/v1/auth/code/verify/sms",
-        )
-        self.assertEqual(
-            AuthClient._compose_verify_code_url(DeliveryMethod.WHATSAPP),
-            "/v1/auth/code/verify/whatsapp",
         )
 
     def test_compose_refresh_token_url(self):
         self.assertEqual(
-            AuthClient._compose_refresh_token_url(),
+            AuthHelper._compose_refresh_token_url(),
             "/v1/auth/refresh",
         )
 
@@ -240,160 +211,21 @@ class TestAuthClient(unittest.TestCase):
         dummy_valid_jwt_token = ""
         client = AuthClient(self.dummy_project_id, self.public_key_dict)
 
-        self.assertRaises(AuthException, client.logout, None, None)
+        self.assertRaises(AuthException, client.logout, None)
 
         # Test failed flow
         with patch("requests.get") as mock_get:
             mock_get.return_value.ok = False
             self.assertRaises(
-                AuthException, client.logout, dummy_valid_jwt_token, dummy_refresh_token
+                AuthException, client.logout, dummy_refresh_token
             )
 
         # Test success flow
         with patch("requests.get") as mock_get:
             mock_get.return_value.ok = True
             self.assertIsNotNone(
-                client.logout(dummy_valid_jwt_token, dummy_refresh_token)
-            )
-
-    def test_sign_up_otp(self):
-        signup_user_details = {
-            "username": "jhon",
-            "name": "john",
-            "phone": "972525555555",
-            "email": "dummy@dummy.com",
-        }
-
-        client = AuthClient(self.dummy_project_id, self.public_key_dict)
-
-        # Test failed flows
-        self.assertRaises(
-            AuthException,
-            client.sign_up_otp,
-            DeliveryMethod.EMAIL,
-            "dummy@dummy",
-            signup_user_details,
-        )
-        self.assertRaises(
-            AuthException,
-            client.sign_up_otp,
-            DeliveryMethod.EMAIL,
-            "",
-            signup_user_details,
-        )
-        self.assertRaises(
-            AuthException,
-            client.sign_up_otp,
-            DeliveryMethod.EMAIL,
-            None,
-            signup_user_details,
-        )
-
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.sign_up_otp,
-                DeliveryMethod.EMAIL,
-                "dummy@dummy.com",
-                signup_user_details,
-            )
-
-        # Test success flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
-                client.sign_up_otp(
-                    DeliveryMethod.EMAIL, "dummy@dummy.com", signup_user_details
-                )
-            )
-
-        # Test flow where username not set and we used the identifier as default
-        signup_user_details = {
-            "username": "",
-            "name": "john",
-            "phone": "972525555555",
-            "email": "dummy@dummy.com",
-        }
-
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
-                client.sign_up_otp(
-                    DeliveryMethod.EMAIL, "dummy@dummy.com", signup_user_details
-                )
-            )
-
-        # test undefined enum value
-        class Dummy(Enum):
-            DUMMY = 7
-
-        self.assertRaises(AuthException, AuthClient._compose_signin_url, Dummy.DUMMY)
-
-    def test_sign_in(self):
-        client = AuthClient(self.dummy_project_id, self.public_key_dict)
-
-        # Test failed flows
-        self.assertRaises(
-            AuthException, client.sign_in_otp, DeliveryMethod.EMAIL, "dummy@dummy"
-        )
-        self.assertRaises(AuthException, client.sign_in_otp, DeliveryMethod.EMAIL, "")
-        self.assertRaises(AuthException, client.sign_in_otp, DeliveryMethod.EMAIL, None)
-
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.sign_in_otp,
-                DeliveryMethod.EMAIL,
-                "dummy@dummy.com",
-            )
-
-        # Test success flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
-                client.sign_in_otp(DeliveryMethod.EMAIL, "dummy@dummy.com")
-            )
-    
-    
-    def test_verify_code(self):
-        code = "1234"
-
-        client = AuthClient(self.dummy_project_id, self.public_key_dict)
-
-        self.assertRaises(
-            AuthException, client.verify_code, DeliveryMethod.EMAIL, "dummy@dummy", code
-        )
-        self.assertRaises(
-            AuthException, client.verify_code, DeliveryMethod.EMAIL, "", code
-        )
-        self.assertRaises(
-            AuthException, client.verify_code, DeliveryMethod.EMAIL, None, code
-        )
-
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.verify_code,
-                DeliveryMethod.EMAIL,
-                "dummy@dummy.com",
-                code,
-            )
-
-        # Test success flow
-        # valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkVGVuYW50cyI6eyIiOm51bGx9LCJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwNjc5MjA4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEUyIsImNvb2tpZVBhdGgiOiIvIiwiZXhwIjoyMDkwMDg3MjA4LCJpYXQiOjE2NTgwODcyMDgsImlzcyI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInN1YiI6IjJDNTV2eXh3MHNSTDZGZE02OHFSc0NEZFJPViJ9.E8f9CHePkAA7JDqerO6cWbAA29MqIBipqMpitR6xsRYl4-Wm4f7DtekV9fJF3SYaftrTuVM0W965tq634_ltzj0rhd7gm6N7AcNVRtdstTQJHuuCDKVJEho-qtv2ZMVX"
-        valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkVGVuYW50cyI6eyIiOm51bGx9LCJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwNjc5MjA4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MjA5MDA4NzIwOCwiaWF0IjoxNjU4MDg3MjA4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQzU1dnl4dzBzUkw2RmRNNjhxUnNDRGRST1YifQ.cWP5up4R5xeIl2qoG2NtfLH3Q5nRJVKdz-FDoAXctOQW9g3ceZQi6rZQ-TPBaXMKw68bijN3bLJTqxWW5WHzqRUeopfuzTcMYmC0wP2XGJkrdF6A8D5QW6acSGqglFgu"
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
-            mock_post.return_value.cookies = {
-                SESSION_COOKIE_NAME: "dummy session token",
-                REFRESH_SESSION_COOKIE_NAME: valid_jwt_token,
-            }
-            self.assertIsNotNone(
-                client.verify_code(DeliveryMethod.EMAIL, "dummy@dummy.com", code)
-            )
+                client.logout(dummy_refresh_token)
+            )    
 
     def test_validate_session(self):
         client = AuthClient(self.dummy_project_id, self.public_key_dict)
@@ -577,8 +409,7 @@ class TestAuthClient(unittest.TestCase):
             mock_request.return_value.ok = False
             self.assertRaises(
                 AuthException,
-                client.refresh_token,
-                expired_jwt_token,
+                client._auth_helper.refresh_token,
                 dummy_refresh_token,
             )
 

@@ -22,38 +22,44 @@ class OTP():
     def __init__(self, auth_helper: AuthHelper):
         self._auth_helper = auth_helper
     
-    
-    def _compose_signin_url(self, method: DeliveryMethod) -> str:
-        return self.client.compose_url(EndpointsV1.signInAuthOTPPath, method)
+    @staticmethod
+    def _compose_signin_url(method: DeliveryMethod) -> str:
+        return AuthHelper._compose_url(EndpointsV1.signInAuthOTPPath, method)
 
-    def _compose_signup_url(self, method: DeliveryMethod) -> str:
-        return self.client.compose_url(EndpointsV1.signUpAuthOTPPath, method)
+    @staticmethod
+    def _compose_signup_url(method: DeliveryMethod) -> str:
+        return AuthHelper._compose_url(EndpointsV1.signUpAuthOTPPath, method)
 
-    def _compose_verify_code_url(self, method: DeliveryMethod) -> str:
-        return self.client._compose_url(EndpointsV1.verifyCodeAuthPath, method)
+    @staticmethod
+    def _compose_verify_code_url(method: DeliveryMethod) -> str:
+        return AuthHelper._compose_url(EndpointsV1.verifyCodeAuthPath, method)
 
-
-    def _compose_signup_body(self, method: DeliveryMethod , identifier: str, user: dict) -> dict:
+    @staticmethod
+    def _compose_signup_body(method: DeliveryMethod, identifier: str, user: dict) -> dict:
         body = { "externalId": identifier }
 
         if user is not None:
             body["user"] = user
-            method_str, val = self._auth_helper._get_identifier_by_method(method, user)
+            method_str, val = AuthHelper._get_identifier_by_method(method, user)
             body[method_str] = val
+        return body
 
-    def _compose_verify_code_body(self, identifier: str, code: str) -> dict:
+    @staticmethod
+    def _compose_verify_code_body(identifier: str, code: str) -> dict:
         return {
             "externalId": identifier,
             "code": code    
         }
 
-    def _compose_update_user_email_body(self, identifier: str, email: str) -> dict:
+    @staticmethod
+    def _compose_update_user_email_body(identifier: str, email: str) -> dict:
         return {
             "externalId": identifier,
             "email": email
         }
 
-    def _compose_update_user_phone_body(self, identifier: str, phone: str) -> dict:
+    @staticmethod
+    def _compose_update_user_phone_body(identifier: str, phone: str) -> dict:
         return {
             "externalId": identifier,
             "phone": phone
@@ -79,15 +85,15 @@ class OTP():
         AuthException: for any case sign up by otp operation failed
         """
 
-        if not self.client._verify_delivery_method(method, identifier):
+        if not self._auth_helper._verify_delivery_method(method, identifier):
             raise AuthException(
                 500,
                 "identifier failure",
                 f"Identifier {identifier} is not valid by delivery method {method}",
             )
 
-        body = self._compose_signup_body(identifier, uri, user)
-        uri = self._compose_signup_url(method)
+        uri = OTP._compose_signup_url(method)
+        body = OTP._compose_signup_body(method, identifier, user)
         self._auth_helper.do_post(uri, body)
 
     def sign_in(self, method: DeliveryMethod, identifier: str) -> None:
@@ -107,7 +113,7 @@ class OTP():
         AuthException: for any case sign up by otp operation failed
         """
 
-        if not self.client._verify_delivery_method(method, identifier):
+        if not self._auth_helper._verify_delivery_method(method, identifier):
             raise AuthException(
                 500,
                 "identifier failure",
@@ -115,7 +121,7 @@ class OTP():
             )
 
         body = {"externalId": identifier}
-        uri = self._compose_signin_url(method)
+        uri = OTP._compose_signin_url(method)
         self._auth_helper.do_post(uri, body)
 
     def sign_up_or_in(self, method: DeliveryMethod, identifier: str) -> None:
@@ -144,15 +150,15 @@ class OTP():
         AuthException: for any case code is not valid or tokens verification failed
         """
 
-        if not self.client._verify_delivery_method(method, identifier):
+        if not self._auth_helper._verify_delivery_method(method, identifier):
             raise AuthException(
                 500,
                 "identifier failure",
                 f"Identifier {identifier} is not valid by delivery method {method}",
             )
 
-        body = self._compose_verify_code_body(identifier, code)
-        uri = self._compose_verify_code_url(method)
+        body = OTP._compose_verify_code_body(identifier, code)
+        uri = OTP._compose_verify_code_url(method)
         response = self._auth_helper.do_post(uri, body)
 
         resp = response.json()
@@ -174,7 +180,7 @@ class OTP():
         except EmailNotValidError as ex:
             raise AuthException(500, "Invalid argument", f"Email address is not valid: {ex}")
 
-        body = self._compose_update_user_email_body(identifier, email)
+        body = OTP._compose_update_user_email_body(identifier, email)
         uri = f"{DEFAULT_BASE_URI}{EndpointsV1.updateUserEmailOTPPath}"
         self._auth_helper.do_post(uri, body, None, refresh_token)
 
@@ -192,6 +198,6 @@ class OTP():
         if method != DeliveryMethod.PHONE and method == DeliveryMethod.WHATSAPP:
             raise AuthException(500, "Invalid argument", f"Invalid method supplied")
 
-        body = self._compose_update_user_phone_body(identifier, phone)
+        body = OTP._compose_update_user_phone_body(identifier, phone)
         uri = f"{DEFAULT_BASE_URI}{EndpointsV1.updateUserPhoneOTPPath}"
         self._auth_helper.do_post(uri, body, None, refresh_token)

@@ -321,10 +321,9 @@ def descope_logout(auth_client):
         @wraps(f)
         def decorated(*args, **kwargs):
             cookies = request.cookies.copy()
-            session_token = cookies.get(SESSION_COOKIE_NAME)
             refresh_token = cookies.get(REFRESH_SESSION_COOKIE_NAME)
             try:
-                cookies = auth_client.logout(session_token, refresh_token)
+                cookies = auth_client.logout(refresh_token)
             except AuthException as e:
                 return Response(f"Logout failed {e}", e.status_code)
 

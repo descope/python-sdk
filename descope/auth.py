@@ -72,9 +72,7 @@ class AuthClient:
         return self._webauthn
 
 
-    @staticmethod
-    def _compose_refresh_token_url() -> str:
-        return EndpointsV1.refreshTokenPath
+    
 
     @staticmethod
     def _compose_logout_url() -> str:
@@ -97,21 +95,6 @@ class AuthClient:
             raise AuthException(
                 500, "identifier failure", f"Unknown delivery method {method}"
             )
-
-    def refresh_token(self, signed_token: str, signed_refresh_token: str) -> dict:
-        cookies = {
-            SESSION_COOKIE_NAME: signed_token,
-            REFRESH_SESSION_COOKIE_NAME: signed_refresh_token,
-        }
-
-        uri = AuthClient._compose_refresh_token_url()
-        response = self._auth_helper.do_post(uri, None, cookies)
-
-        resp = response.json()
-        auth_info = self._generate_auth_info(
-            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
-        )
-        return auth_info
 
     def validate_session_request(
         self, signed_token: str, signed_refresh_token: str
@@ -141,22 +124,18 @@ class AuthClient:
         return {token_claims["cookieName"]: token_claims}
 
     def logout(
-        self, signed_token: str, signed_refresh_token: str
+        self, signed_refresh_token: str
     ) -> requests.cookies.RequestsCookieJar:
 
-        if signed_token is None or signed_refresh_token is None:
+        if signed_refresh_token is None:
             raise AuthException(
                 401,
                 "token validation failure",
-                f"signed token {signed_token} or/and signed refresh token {signed_refresh_token} are empty",
+                f"signed refresh token {signed_refresh_token} is empty",
             )
 
         uri = AuthClient._compose_logout_url()
-        cookies = {
-            SESSION_COOKIE_NAME: signed_token,
-            REFRESH_SESSION_COOKIE_NAME: signed_refresh_token,
-        }
 
-        response = self._auth_helper.do_get(uri, cookies)
+        response = self._auth_helper.do_get(uri, None, None, None, signed_refresh_token)
         return response.cookies
     
