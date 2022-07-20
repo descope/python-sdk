@@ -167,33 +167,4 @@ class AuthClient:
 
         response = self._auth_helper.do_get(uri, cookies)
         return response.cookies
-
-    @staticmethod
-    def _verify_oauth_provider(oauth_provider: str) -> str:
-        if oauth_provider == "" or oauth_provider is None:
-            return False
-
-        if oauth_provider in OAuthProviders:
-            return True
-        else:
-            return False
-
-    def oauth_start(self, provider: str) -> str:
-        """ """
-        if not self._verify_oauth_provider(provider):
-            raise AuthException(
-                500,
-                "Unknown OAuth provider",
-                f"Unknown OAuth provider: {provider}",
-            )
-
-        uri = EndpointsV1.oauthStart
-        response = self._auth_helper.do_get(uri, None, {"provider": provider}, False)
     
-        if not response.ok:
-            raise AuthException(
-                response.status_code, "OAuth send request failure", response.text
-            )
-
-        redirect_url = response.headers.get("Location", "")
-        return redirect_url
