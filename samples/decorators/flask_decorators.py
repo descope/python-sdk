@@ -53,7 +53,7 @@ def descope_signup_otp_by_email(auth_client):
                 return Response("Bad Request, missing email", 400)
 
             try:
-                auth_client.sign_up_otp(DeliveryMethod.EMAIL, email, user)
+                auth_client.otp.sign_up(DeliveryMethod.EMAIL, email, user)
             except AuthException as e:
                 return Response(f"Failed to signup, err: {e}", 500)
 
@@ -78,7 +78,7 @@ def descope_signin_otp_by_email(auth_client):
                 return Response("Bad Request, missing email", 400)
 
             try:
-                auth_client.sign_in_otp(DeliveryMethod.EMAIL, email)
+                auth_client.otp.sign_in(DeliveryMethod.EMAIL, email)
             except AuthException as e:
                 return Response(f"Failed to signin, err: {e}", 500)
 
@@ -137,7 +137,7 @@ def descope_verify_code_by_email(auth_client):
                 return Response("Unauthorized", 401)
 
             try:
-                jwt_response = auth_client.verify_code(
+                jwt_response = auth_client.otp.verify_code(
                     DeliveryMethod.EMAIL, email, code
                 )
             except AuthException:
@@ -173,7 +173,7 @@ def descope_verify_code_by_phone(auth_client):
                 return Response("Unauthorized", 401)
 
             try:
-                jwt_response = auth_client.verify_code(
+                jwt_response = auth_client.otp.verify_code(
                     DeliveryMethod.PHONE, phone, code
                 )
             except AuthException:
@@ -209,7 +209,7 @@ def descope_verify_code_by_whatsapp(auth_client):
                 return Response("Unauthorized", 401)
 
             try:
-                jwt_response = auth_client.verify_code(
+                jwt_response = auth_client.otp.verify_code(
                     DeliveryMethod.WHATSAPP, phone, code
                 )
             except AuthException:
@@ -245,7 +245,7 @@ def descope_signup_magiclink_by_email(auth_client, uri):
                 return Response("Bad Request, missing email", 400)
 
             try:
-                auth_client.sign_up_magiclink(DeliveryMethod.EMAIL, email, uri, user)
+                auth_client.magiclink.sign_up(DeliveryMethod.EMAIL, email, uri, user)
             except AuthException as e:
                 return Response(f"Failed to signup, err: {e}", 500)
 
@@ -270,7 +270,7 @@ def descope_signin_magiclink_by_email(auth_client, uri):
                 return Response("Bad Request, missing email", 400)
 
             try:
-                auth_client.sign_in_magiclink(DeliveryMethod.EMAIL, email, uri)
+                auth_client.magiclink.sign_in(DeliveryMethod.EMAIL, email, uri)
             except AuthException as e:
                 return Response(f"Failed to signin, err: {e}", 500)
 
@@ -294,7 +294,7 @@ def descope_verify_magiclink_token(auth_client):
                 return Response("Unauthorized", 401)
 
             try:
-                jwt_response = auth_client.verify_magiclink(code)
+                jwt_response = auth_client.magiclink.verify(code)
             except AuthException:
                 return Response("Unauthorized", 401)
 

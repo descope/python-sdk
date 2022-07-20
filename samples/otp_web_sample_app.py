@@ -46,7 +46,7 @@ def signup():
 
     try:
         user = {"name": name, "phone": "", "email": email}
-        auth_client.sign_up_otp(DeliveryMethod.EMAIL, email, user)
+        auth_client.otp.sign_up(DeliveryMethod.EMAIL, email, user)
     except AuthException:
         return Response("Unauthorized", 401)
 
@@ -62,7 +62,7 @@ def signin():
         return Response("Unauthorized, missing email", 401)
 
     try:
-        auth_client.sign_in_otp(DeliveryMethod.EMAIL, email)
+        auth_client.otp.sign_in(DeliveryMethod.EMAIL, email)
     except AuthException:
         return Response("Unauthorized, something went wrong when sending email", 401)
 
@@ -78,7 +78,7 @@ def signuporin():
         return Response("Unauthorized, missing email", 401)
 
     try:
-        auth_client.sign_up_or_in_otp(DeliveryMethod.EMAIL, email)
+        auth_client.otp.sign_up_or_in(DeliveryMethod.EMAIL, email)
     except AuthException:
         return Response("Unauthorized, something went wrong when sending email", 401)
 
@@ -95,7 +95,7 @@ def verify():
         return Response("Unauthorized", 401)
 
     try:
-        jwt_response = auth_client.verify_code(DeliveryMethod.EMAIL, email, code)
+        jwt_response = auth_client.otp.verify_code(DeliveryMethod.EMAIL, email, code)
     except AuthException:
         return Response("Unauthorized", 401)
 
