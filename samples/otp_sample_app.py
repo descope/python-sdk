@@ -16,20 +16,21 @@ logging.basicConfig(level=logging.INFO)
 
 
 def main():
-    identifier = "dummy@dummy.com"
     project_id = ""
     try:
         auth_client = AuthClient(project_id=project_id)
 
+        email = "asaf@descope.com" # input("Please insert email to sign in / sign-up:\n")
+
         logging.info(
             "Going to sign in new user.. expect an email to arrive with the new code.."
         )
-        auth_client.sign_in_otp(method=DeliveryMethod.EMAIL, identifier=identifier)
+        auth_client.sign_in_otp(method=DeliveryMethod.EMAIL, identifier=email)
 
         value = input("Please insert the code you received by email:\n")
         try:
             jwt_response = auth_client.verify_code(
-                method=DeliveryMethod.EMAIL, identifier=identifier, code=value
+                method=DeliveryMethod.EMAIL, identifier=email, code=value
             )
             logging.info("Code is valid")
             session_token = jwt_response["jwts"].get(SESSION_COOKIE_NAME).get("jwt")
