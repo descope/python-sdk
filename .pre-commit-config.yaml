@@ -33,3 +33,10 @@ repos:
   - id: liccheck
     language: system
     args: ["-r./requirements-dev.txt", "-lparanoid"]
+- repo: local
+  hooks:
+    - id: print_statement
+      name: Check that print statement isnt in source code
+      types: [python]
+      entry: 'print'
+      language: pygrep

@@ -31,19 +31,3 @@ class DeliveryMethod(Enum):
 
 
 OAuthProviders = ["facebook", "github", "google", "microsoft", "gitlab", "apple"]
-
-
-class User:
-    def __init__(self, username: str, name: str, phone: str, email: str):
-        self.username = username
-        self.name = name
-        self.phone = phone
-        self.email = email
-
-    def get_data(self):
-        return {
-            "username": self.username,
-            "name": self.name,
-            "phone": self.phone,
-            "email": self.email,
-        }

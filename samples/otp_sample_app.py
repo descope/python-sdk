@@ -22,43 +22,43 @@ def main():
         auth_client = AuthClient(project_id=project_id)
 
         logging.info(
-            "Going to signin new user.. expect an email to arrive with the new code.."
+            "Going to sign in new user.. expect an email to arrive with the new code.."
         )
         auth_client.sign_in_otp(method=DeliveryMethod.EMAIL, identifier=identifier)
 
         value = input("Please insert the code you received by email:\n")
         try:
-            claims, tokens = auth_client.verify_code(
+            jwt_response = auth_client.verify_code(
                 method=DeliveryMethod.EMAIL, identifier=identifier, code=value
             )
             logging.info("Code is valid")
-            session_token = tokens.get(SESSION_COOKIE_NAME, "")
-            refresh_token = tokens.get(REFRESH_SESSION_COOKIE_NAME, "")
-            logging.info(
-                f"session token: {session_token} \n refresh token: {refresh_token} claims: {claims}"
+            session_token = jwt_response["jwts"].get(SESSION_COOKIE_NAME).get("jwt")
+            refresh_token = (
+                jwt_response["jwts"].get(REFRESH_SESSION_COOKIE_NAME).get("jwt")
             )
+            logging.info(f"jwt_response: {jwt_response}")
         except AuthException as e:
             logging.info(f"Invalid code {e}")
             raise
 
         try:
             logging.info("going to validate session..")
-            claims, tokens = auth_client.validate_session_request(
-                session_token, refresh_token
-            )
-            session_token = tokens.get(SESSION_COOKIE_NAME, "")
-            refresh_token = tokens.get(REFRESH_SESSION_COOKIE_NAME, "")
+            claims = auth_client.validate_session_request(session_token, refresh_token)
+
+            session_token = claims.get(SESSION_COOKIE_NAME).get("jwt")
             logging.info("Session is valid and all is OK")
         except AuthException as e:
             logging.info(f"Session is not valid {e}")
 
         try:
             logging.info("refreshing the session token..")
-            new_session_token = auth_client.refresh_token(session_token, refresh_token)
+            claims = auth_client.refresh_token(session_token, refresh_token)
             logging.info(
                 "going to revalidate the session with the newly refreshed token.."
             )
-            claims, tokens = auth_client.validate_session_request(
+
+            new_session_token = claims.get(SESSION_COOKIE_NAME).get("jwt")
+            claims = auth_client.validate_session_request(
                 new_session_token, refresh_token
             )
             logging.info("Session is valid also for the refreshed token.")
