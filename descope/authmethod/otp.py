@@ -1,15 +1,5 @@
-import requests
-import json
-import re
-
-from email_validator import EmailNotValidError, validate_email
-
 from descope.common import (
-    DEFAULT_BASE_URI,
-    DEFAULT_FETCH_PUBLIC_KEY_URI,
-    PHONE_REGEX,
     REFRESH_SESSION_COOKIE_NAME,
-    SESSION_COOKIE_NAME,
     DeliveryMethod,
     EndpointsV1,
 )
@@ -22,50 +12,6 @@ class OTP():
     def __init__(self, auth_helper: AuthHelper):
         self._auth_helper = auth_helper
     
-    @staticmethod
-    def _compose_signin_url(method: DeliveryMethod) -> str:
-        return AuthHelper._compose_url(EndpointsV1.signInAuthOTPPath, method)
-
-    @staticmethod
-    def _compose_signup_url(method: DeliveryMethod) -> str:
-        return AuthHelper._compose_url(EndpointsV1.signUpAuthOTPPath, method)
-
-    @staticmethod
-    def _compose_verify_code_url(method: DeliveryMethod) -> str:
-        return AuthHelper._compose_url(EndpointsV1.verifyCodeAuthPath, method)
-
-    @staticmethod
-    def _compose_signup_body(method: DeliveryMethod, identifier: str, user: dict) -> dict:
-        body = { "externalId": identifier }
-
-        if user is not None:
-            body["user"] = user
-            method_str, val = AuthHelper._get_identifier_by_method(method, user)
-            body[method_str] = val
-        return body
-
-    @staticmethod
-    def _compose_verify_code_body(identifier: str, code: str) -> dict:
-        return {
-            "externalId": identifier,
-            "code": code    
-        }
-
-    @staticmethod
-    def _compose_update_user_email_body(identifier: str, email: str) -> dict:
-        return {
-            "externalId": identifier,
-            "email": email
-        }
-
-    @staticmethod
-    def _compose_update_user_phone_body(identifier: str, phone: str) -> dict:
-        return {
-            "externalId": identifier,
-            "phone": phone
-        }
-
-
     def sign_up(
         self, method: DeliveryMethod, identifier: str, user: dict = None
     ) -> None:
@@ -85,7 +31,7 @@ class OTP():
         AuthException: for any case sign up by otp operation failed
         """
 
-        if not self._auth_helper._verify_delivery_method(method, identifier):
+        if not self._auth_helper.verify_delivery_method(method, identifier):
             raise AuthException(
                 500,
                 "identifier failure",
@@ -113,7 +59,7 @@ class OTP():
         AuthException: for any case sign up by otp operation failed
         """
 
-        if not self._auth_helper._verify_delivery_method(method, identifier):
+        if not self._auth_helper.verify_delivery_method(method, identifier):
             raise AuthException(
                 500,
                 "identifier failure",
@@ -150,7 +96,7 @@ class OTP():
         AuthException: for any case code is not valid or tokens verification failed
         """
 
-        if not self._auth_helper._verify_delivery_method(method, identifier):
+        if not self._auth_helper.verify_delivery_method(method, identifier):
             raise AuthException(
                 500,
                 "identifier failure",
@@ -172,16 +118,10 @@ class OTP():
         if identifier == "":
             raise AuthException(500, "Invalid argument", "Identifier cannot be empty")
 
-        if email == "":
-            raise AuthException(500, "Invalid argument", "email cannot be empty")
-
-        try:
-            validate_email(email)
-        except EmailNotValidError as ex:
-            raise AuthException(500, "Invalid argument", f"Email address is not valid: {ex}")
+        AuthHelper.validate_email(email)
 
         body = OTP._compose_update_user_email_body(identifier, email)
-        uri = f"{DEFAULT_BASE_URI}{EndpointsV1.updateUserEmailOTPPath}"
+        uri = EndpointsV1.updateUserEmailOTPPath
         self._auth_helper.do_post(uri, body, None, refresh_token)
 
 
@@ -189,15 +129,55 @@ class OTP():
         if identifier == "":
             raise AuthException(500, "Invalid argument", "Identifier cannot be empty")
 
-        if phone == "":
-            raise AuthException(500, "Invalid argument", "Phone cannot be empty")
-
-        if not re.match(PHONE_REGEX, phone):
-            raise AuthException(500, "Invalid argument", f"Phone number not valid")
-
-        if method != DeliveryMethod.PHONE and method == DeliveryMethod.WHATSAPP:
-            raise AuthException(500, "Invalid argument", f"Invalid method supplied")
+        AuthHelper.validate_phone(method, phone)
 
         body = OTP._compose_update_user_phone_body(identifier, phone)
-        uri = f"{DEFAULT_BASE_URI}{EndpointsV1.updateUserPhoneOTPPath}"
+        uri = OTP._compose_update_phone_url(method)
         self._auth_helper.do_post(uri, body, None, refresh_token)
+        
+    @staticmethod
+    def _compose_signin_url(method: DeliveryMethod) -> str:
+        return AuthHelper.compose_url(EndpointsV1.signInAuthOTPPath, method)
+
+    @staticmethod
+    def _compose_signup_url(method: DeliveryMethod) -> str:
+        return AuthHelper.compose_url(EndpointsV1.signUpAuthOTPPath, method)
+
+    @staticmethod
+    def _compose_verify_code_url(method: DeliveryMethod) -> str:
+        return AuthHelper.compose_url(EndpointsV1.verifyCodeAuthPath, method)
+
+    @staticmethod
+    def _compose_update_phone_url(method: DeliveryMethod) -> str:
+        return AuthHelper.compose_url(EndpointsV1.updateUserPhoneOTPPath, method)
+    
+    @staticmethod
+    def _compose_signup_body(method: DeliveryMethod, identifier: str, user: dict) -> dict:
+        body = { "externalId": identifier }
+
+        if user is not None:
+            body["user"] = user
+            method_str, val = AuthHelper.get_identifier_by_method(method, user)
+            body[method_str] = val
+        return body
+
+    @staticmethod
+    def _compose_verify_code_body(identifier: str, code: str) -> dict:
+        return {
+            "externalId": identifier,
+            "code": code    
+        }
+
+    @staticmethod
+    def _compose_update_user_email_body(identifier: str, email: str) -> dict:
+        return {
+            "externalId": identifier,
+            "email": email
+        }
+
+    @staticmethod
+    def _compose_update_user_phone_body(identifier: str, phone: str) -> dict:
+        return {
+            "externalId": identifier,
+            "phone": phone
+        }

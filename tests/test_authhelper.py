@@ -106,59 +106,59 @@ class TestAuthClient(unittest.TestCase):
 
     def test_verify_delivery_method(self):
         self.assertEqual(
-            AuthHelper._verify_delivery_method(DeliveryMethod.EMAIL, "dummy@dummy.com"),
+            AuthHelper.verify_delivery_method(DeliveryMethod.EMAIL, "dummy@dummy.com"),
             True,
         )
         self.assertEqual(
-            AuthHelper._verify_delivery_method(DeliveryMethod.EMAIL, "dummy@dummy.com"),
+            AuthHelper.verify_delivery_method(DeliveryMethod.EMAIL, "dummy@dummy.com"),
             True,
         )
         self.assertEqual(
-            AuthHelper._verify_delivery_method(DeliveryMethod.EMAIL, "dummy@dummy.com"),
+            AuthHelper.verify_delivery_method(DeliveryMethod.EMAIL, "dummy@dummy.com"),
             True,
         )
         self.assertEqual(
-            AuthHelper._verify_delivery_method(DeliveryMethod.EMAIL, ""), False
+            AuthHelper.verify_delivery_method(DeliveryMethod.EMAIL, ""), False
         )
         self.assertEqual(
-            AuthHelper._verify_delivery_method(DeliveryMethod.EMAIL, "dummy@dummy"),
+            AuthHelper.verify_delivery_method(DeliveryMethod.EMAIL, "dummy@dummy"),
             False,
         )
 
         self.assertEqual(
-            AuthHelper._verify_delivery_method(DeliveryMethod.PHONE, "111111111111"),
+            AuthHelper.verify_delivery_method(DeliveryMethod.PHONE, "111111111111"),
             True,
         )
         self.assertEqual(
-            AuthHelper._verify_delivery_method(DeliveryMethod.PHONE, "+111111111111"),
+            AuthHelper.verify_delivery_method(DeliveryMethod.PHONE, "+111111111111"),
             True,
         )
         self.assertEqual(
-            AuthHelper._verify_delivery_method(DeliveryMethod.PHONE, "++111111111111"),
+            AuthHelper.verify_delivery_method(DeliveryMethod.PHONE, "++111111111111"),
             False,
         )
         self.assertEqual(
-            AuthHelper._verify_delivery_method(DeliveryMethod.PHONE, "asdsad"), False
+            AuthHelper.verify_delivery_method(DeliveryMethod.PHONE, "asdsad"), False
         )
         self.assertEqual(
-            AuthHelper._verify_delivery_method(DeliveryMethod.PHONE, ""), False
+            AuthHelper.verify_delivery_method(DeliveryMethod.PHONE, ""), False
         )
         self.assertEqual(
-            AuthHelper._verify_delivery_method(
+            AuthHelper.verify_delivery_method(
                 DeliveryMethod.PHONE, "unvalid@phone.number"
             ),
             False,
         )
 
         self.assertEqual(
-            AuthHelper._verify_delivery_method(DeliveryMethod.WHATSAPP, "111111111111"),
+            AuthHelper.verify_delivery_method(DeliveryMethod.WHATSAPP, "111111111111"),
             True,
         )
         self.assertEqual(
-            AuthHelper._verify_delivery_method(DeliveryMethod.WHATSAPP, ""), False
+            AuthHelper.verify_delivery_method(DeliveryMethod.WHATSAPP, ""), False
         )
         self.assertEqual(
-            AuthHelper._verify_delivery_method(
+            AuthHelper.verify_delivery_method(
                 DeliveryMethod.WHATSAPP, "unvalid@phone.number"
             ),
             False,
@@ -168,22 +168,22 @@ class TestAuthClient(unittest.TestCase):
             DUMMY = 4
 
         self.assertEqual(
-            AuthHelper._verify_delivery_method(AAA.DUMMY, "unvalid@phone.number"),
+            AuthHelper.verify_delivery_method(AAA.DUMMY, "unvalid@phone.number"),
             False,
         )
 
     def test_get_identifier_name_by_method(self):
         user = {"email": "dummy@dummy.com", "phone": "11111111"}
         self.assertEqual(
-            AuthHelper._get_identifier_by_method(DeliveryMethod.EMAIL, user),
+            AuthHelper.get_identifier_by_method(DeliveryMethod.EMAIL, user),
             ("email", "dummy@dummy.com"),
         )
         self.assertEqual(
-            AuthHelper._get_identifier_by_method(DeliveryMethod.PHONE, user),
+            AuthHelper.get_identifier_by_method(DeliveryMethod.PHONE, user),
             ("phone", "11111111"),
         )
         self.assertEqual(
-            AuthHelper._get_identifier_by_method(DeliveryMethod.WHATSAPP, user),
+            AuthHelper.get_identifier_by_method(DeliveryMethod.WHATSAPP, user),
             ("whatsapp", "11111111"),
         )
 
@@ -191,7 +191,7 @@ class TestAuthClient(unittest.TestCase):
             DUMMY = 4
 
         self.assertRaises(
-            AuthException, AuthHelper._get_identifier_by_method, AAA.DUMMY, user
+            AuthException, AuthHelper.get_identifier_by_method, AAA.DUMMY, user
         )
 
     def test_compose_refresh_token_url(self):

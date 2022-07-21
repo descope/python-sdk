@@ -79,6 +79,83 @@ class AuthHelper:
         return response
 
     @staticmethod
+    def verify_delivery_method(method: DeliveryMethod, identifier: str) -> bool:
+        if identifier == "" or identifier is None:
+            return False
+
+        if method == DeliveryMethod.EMAIL:
+            try:
+                validate_email(identifier)
+                return True
+            except EmailNotValidError:
+                return False
+        elif method == DeliveryMethod.PHONE:
+            if not re.match(PHONE_REGEX, identifier):
+                return False
+        elif method == DeliveryMethod.WHATSAPP:
+            if not re.match(PHONE_REGEX, identifier):
+                return False
+        else:
+            return False
+
+        return True
+
+    @staticmethod
+    def compose_url(base: str, method: DeliveryMethod) -> str:
+        suffix = ""
+        if method is DeliveryMethod.EMAIL:
+            suffix = "email"
+        elif method is DeliveryMethod.PHONE:
+            suffix = "sms"
+        elif method is DeliveryMethod.WHATSAPP:
+            suffix = "whatsapp"
+        else:
+            raise AuthException(
+                500, "url composing failure", f"Unknown delivery method {method}"
+            )
+
+        return f"{base}/{suffix}"
+
+    @staticmethod
+    def get_identifier_by_method(
+        method: DeliveryMethod, user: dict
+    ) -> Tuple[str, str]:
+        if method is DeliveryMethod.EMAIL:
+            email = user.get("email", "")
+            return "email", email
+        elif method is DeliveryMethod.PHONE:
+            phone = user.get("phone", "")
+            return "phone", phone
+        elif method is DeliveryMethod.WHATSAPP:
+            whatsapp = user.get("phone", "")
+            return ("whatsapp", whatsapp)
+        else:
+            raise AuthException(
+                500, "identifier failure", f"Unknown delivery method {method}"
+            )
+            
+    @staticmethod
+    def validate_email(email: str):
+        if email == "":
+            raise AuthException(500, "Invalid argument", "email cannot be empty")
+
+        try:
+            validate_email(email)
+        except EmailNotValidError as ex:
+            raise AuthException(500, "Invalid argument", f"Email address is not valid: {ex}")
+    
+    @staticmethod
+    def validate_phone(method: DeliveryMethod, phone: str):
+        if phone == "":
+            raise AuthException(500, "Invalid argument", "Phone cannot be empty")
+
+        if not re.match(PHONE_REGEX, phone):
+            raise AuthException(500, "Invalid argument", f"Phone number not valid")
+
+        if method != DeliveryMethod.PHONE and method == DeliveryMethod.WHATSAPP:
+            raise AuthException(500, "Invalid argument", f"Invalid method supplied")
+        
+    @staticmethod
     def _validate_and_load_public_key(public_key) -> Tuple[str, jwt.PyJWK, str]:
         if isinstance(public_key, str):
             try:
@@ -160,62 +237,6 @@ class AuthHelper:
             except Exception:
                 # just continue to the next key
                 pass
-
-    @staticmethod
-    def _verify_delivery_method(method: DeliveryMethod, identifier: str) -> bool:
-        if identifier == "" or identifier is None:
-            return False
-
-        if method == DeliveryMethod.EMAIL:
-            try:
-                validate_email(identifier)
-                return True
-            except EmailNotValidError:
-                return False
-        elif method == DeliveryMethod.PHONE:
-            if not re.match(PHONE_REGEX, identifier):
-                return False
-        elif method == DeliveryMethod.WHATSAPP:
-            if not re.match(PHONE_REGEX, identifier):
-                return False
-        else:
-            return False
-
-        return True
-
-    @staticmethod
-    def _compose_url(base: str, method: DeliveryMethod) -> str:
-        suffix = ""
-        if method is DeliveryMethod.EMAIL:
-            suffix = "email"
-        elif method is DeliveryMethod.PHONE:
-            suffix = "sms"
-        elif method is DeliveryMethod.WHATSAPP:
-            suffix = "whatsapp"
-        else:
-            raise AuthException(
-                500, "url composing failure", f"Unknown delivery method {method}"
-            )
-
-        return f"{base}/{suffix}"
-
-    @staticmethod
-    def _get_identifier_by_method(
-        method: DeliveryMethod, user: dict
-    ) -> Tuple[str, str]:
-        if method is DeliveryMethod.EMAIL:
-            email = user.get("email", "")
-            return "email", email
-        elif method is DeliveryMethod.PHONE:
-            phone = user.get("phone", "")
-            return "phone", phone
-        elif method is DeliveryMethod.WHATSAPP:
-            whatsapp = user.get("phone", "")
-            return ("whatsapp", whatsapp)
-        else:
-            raise AuthException(
-                500, "identifier failure", f"Unknown delivery method {method}"
-            )
 
     def _generate_auth_info(self, response_body, cookie) -> dict:
         tokens = {}

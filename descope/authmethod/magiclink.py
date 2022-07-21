@@ -1,6 +1,4 @@
-import json
 import string
-import requests
 from descope.authhelper import AuthHelper
 
 from descope.common import (
@@ -13,14 +11,14 @@ from descope.exceptions import AuthException
 
 class MagicLink():
     _auth_helper: AuthHelper
-    
+
     def __init__(self, auth_helper: AuthHelper):
         self._auth_helper = auth_helper
 
     def sign_in(
         self, method: DeliveryMethod, identifier: str, uri: str
     ) -> None:
-        if not self._auth_helper._verify_delivery_method(method, identifier):
+        if not self._auth_helper.verify_delivery_method(method, identifier):
             raise AuthException(
                 500,
                 "identifier failure",
@@ -35,7 +33,7 @@ class MagicLink():
     def sign_up(
             self, method: DeliveryMethod, identifier: str, uri: str, user: dict = None
         ) -> None:
-            if not self._auth_helper._verify_delivery_method(method, identifier):
+            if not self._auth_helper.verify_delivery_method(method, identifier):
                 raise AuthException(
                     500,
                     "identifier failure",
@@ -49,7 +47,7 @@ class MagicLink():
     def sign_up_or_in(
         self, method: DeliveryMethod, identifier: str, uri: str
     ) -> None:
-        if not self._auth_helper._verify_delivery_method(method, identifier):
+        if not self._auth_helper.verify_delivery_method(method, identifier):
             raise AuthException(
                 500,
                 "identifier failure",
@@ -65,25 +63,50 @@ class MagicLink():
             body = MagicLink._compose_verify_body(token)
             response = self._auth_helper.do_post(uri, body)
         
-
             resp = response.json()
             jwt_response = self._auth_helper._generate_jwt_response(
                 resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
             )
             return jwt_response
 
+    def update_user_email(self, identifier: str, email: str, refresh_token: str) -> None:
+        if identifier == "":
+            raise AuthException(500, "Invalid argument", "Identifier cannot be empty")
+
+
+        AuthHelper.validate_email(email)
+        
+        body = MagicLink._compose_update_user_email_body(identifier, email)
+        uri = EndpointsV1.updateUserEmailOTPPath
+        self._auth_helper.do_post(uri, body, None, refresh_token)
+
+
+    def update_user_phone(self, method: DeliveryMethod, identifier: str, phone: str, refresh_token: str) -> None:
+        if identifier == "":
+            raise AuthException(500, "Invalid argument", "Identifier cannot be empty")
+        
+        AuthHelper.validate_phone(method, phone)
+
+        body = MagicLink._compose_update_user_phone_body(identifier, phone)
+        uri = EndpointsV1.updateUserPhoneOTPPath
+        self._auth_helper.do_post(uri, body, None, refresh_token)
+    
     @staticmethod
     def _compose_signin_url(method: DeliveryMethod) -> str:
-        return AuthHelper._compose_url(EndpointsV1.signInAuthMagicLinkPath, method)
+        return AuthHelper.compose_url(EndpointsV1.signInAuthMagicLinkPath, method)
 
     @staticmethod
     def _compose_signup_url(method: DeliveryMethod) -> str:
-        return AuthHelper._compose_url(EndpointsV1.signUpAuthMagicLinkPath, method)
+        return AuthHelper.compose_url(EndpointsV1.signUpAuthMagicLinkPath, method)
         
     @staticmethod
     def _compose_sign_up_or_in_url(method: DeliveryMethod) -> str:
-        return AuthHelper._compose_url(EndpointsV1.signUpOrInAuthMagicLinkPath, method)
+        return AuthHelper.compose_url(EndpointsV1.signUpOrInAuthMagicLinkPath, method)
 
+    @staticmethod
+    def _compose_update_phone_url(method: DeliveryMethod) -> str:
+        return AuthHelper.compose_url(EndpointsV1.updateUserPhoneMagicLinkPath, method)
+    
     @staticmethod
     def _compose_signin_body(identifier: string, uri: string, cross_device: bool) -> dict:
         return {
@@ -102,7 +125,7 @@ class MagicLink():
 
         if user is not None:
             body["user"] = user
-            method_str, val = AuthHelper._get_identifier_by_method(method, user)
+            method_str, val = AuthHelper.get_identifier_by_method(method, user)
             body[method_str] = val
         return body
 
@@ -111,3 +134,18 @@ class MagicLink():
         return {
             "token": token,
         }
+        
+    @staticmethod
+    def _compose_update_user_email_body(identifier: str, email: str) -> dict:
+        return {
+            "externalId": identifier,
+            "email": email
+        }
+
+    @staticmethod
+    def _compose_update_user_phone_body(identifier: str, phone: str) -> dict:
+        return {
+            "externalId": identifier,
+            "phone": phone
+        }
+

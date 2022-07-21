@@ -1,35 +1,16 @@
-import base64
-import json
-import os
-import re
-from threading import Lock
 from typing import Tuple
-
-import jwt
-from pytest import param
 import requests
-from email_validator import EmailNotValidError, validate_email
-from jwt.exceptions import ExpiredSignatureError
-from requests.cookies import RequestsCookieJar  # noqa: F401
-from requests.models import Response
-from descope.authhelper import AuthHelper  # noqa: F401
 
+from descope.authhelper import AuthHelper  # noqa: F401
 from descope.authmethod.magiclink import MagicLink  # noqa: F401
 from descope.authmethod.otp import OTP  # noqa: F401
 from descope.authmethod.totp import TOTP  # noqa: F401
 from descope.authmethod.saml import SAML  # noqa: F401
 from descope.authmethod.oauth import OAuth  # noqa: F401
 from descope.authmethod.webauthn import WebauthN  # noqa: F401
-
 from descope.common import (
-    DEFAULT_BASE_URI,
-    DEFAULT_FETCH_PUBLIC_KEY_URI,
-    PHONE_REGEX,
-    REFRESH_SESSION_COOKIE_NAME,
-    SESSION_COOKIE_NAME,
     DeliveryMethod,
     EndpointsV1,
-    OAuthProviders,
 )
 from descope.exceptions import AuthException
 
@@ -77,24 +58,6 @@ class AuthClient:
     @staticmethod
     def _compose_logout_url() -> str:
         return EndpointsV1.logoutPath
-
-    @staticmethod
-    def _get_identifier_by_method(
-        method: DeliveryMethod, user: dict
-    ) -> Tuple[str, str]:
-        if method is DeliveryMethod.EMAIL:
-            email = user.get("email", "")
-            return "email", email
-        elif method is DeliveryMethod.PHONE:
-            phone = user.get("phone", "")
-            return "phone", phone
-        elif method is DeliveryMethod.WHATSAPP:
-            whatsapp = user.get("phone", "")
-            return ("whatsapp", whatsapp)
-        else:
-            raise AuthException(
-                500, "identifier failure", f"Unknown delivery method {method}"
-            )
 
     def validate_session_request(
         self, signed_token: str, signed_refresh_token: str
