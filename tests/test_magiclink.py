@@ -37,6 +37,11 @@ class TestMagicLink(unittest.TestCase):
             MagicLink._compose_sign_up_or_in_url(DeliveryMethod.EMAIL),
             "/v1/auth/sign-up-or-in/magiclink/email",
         )
+        
+        self.assertEqual(
+            MagicLink._compose_update_phone_url(DeliveryMethod.PHONE),
+            "/v1/user/update/phone/magiclink/sms",
+        )
     
 
     def test_compose_body(self):
@@ -62,6 +67,22 @@ class TestMagicLink(unittest.TestCase):
             MagicLink._compose_verify_body("t1"),
             {
                 "token": "t1",
+            },
+        )
+        
+        self.assertEqual(
+            MagicLink._compose_update_user_email_body("id1", "email1"),
+            {
+                "externalId": "id1",
+                "email": "email1"
+            },
+        )
+        
+        self.assertEqual(
+            MagicLink._compose_update_user_phone_body("id1", "+11111111"),
+            {
+                "externalId": "id1",
+                "phone": "+11111111"
             },
         )
     
@@ -210,6 +231,30 @@ class TestMagicLink(unittest.TestCase):
                 REFRESH_SESSION_COOKIE_NAME: valid_jwt_token,
             }
             self.assertIsNotNone(magiclink.verify(token))
+            
+    def test_update_user_email_magiclink(self):
+        magiclink = MagicLink(AuthHelper(self.dummy_project_id, self.public_key_dict))
+
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                magiclink.update_user_email,
+                "id1",
+                "dummy@dummy.com",
+                "refresh_token1"
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(
+                magiclink.update_user_email(
+                "id1",
+                "dummy@dummy.com",
+                "refresh_token1"
+                )
+            )
 
 if __name__ == "__main__":
     unittest.main()
