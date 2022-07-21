@@ -10,23 +10,6 @@ class TOTP():
 
     def __init__(self, auth_helper):
         self._auth_helper = auth_helper
-
-    @staticmethod
-    def _compose_signup_body(identifier: str, user: dict) -> dict:
-        body = { "externalId": identifier }
-        if user is not None:
-            body["user"] = user
-        return body
-
-    @staticmethod
-    def _compose_signin_body(identifier: str, code: str) -> dict:
-        return { "externalId": identifier,
-                 "code": code
-         }
-
-    @staticmethod
-    def _compose_update_user_body(identifier: str) -> dict:
-        return { "externalId": identifier }
     
     def sign_up(
         self, identifier: str, user: dict = None
@@ -42,7 +25,6 @@ class TOTP():
         body = TOTP._compose_signup_body(identifier, user)
         response = self._auth_helper.do_post(uri, body)
 
-        print(response.json())
         return response.json()
         # Response should have these schema:
         # string provisioningURL = 1;
@@ -69,7 +51,6 @@ class TOTP():
         jwt_response = self._auth_helper._generate_jwt_response(
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
         )
-        print(jwt_response)
         return jwt_response
 
     def update_user(self, identifier: str, refresh_token: str) -> None:
@@ -83,7 +64,7 @@ class TOTP():
         if refresh_token is None or refresh_token == "":
             raise AuthException(500, "Invalid argument", "Refresh token cannot be empty")
 
-        uri = EndpointsV1.verifyTOTPPath
+        uri = EndpointsV1.updateTOTPPath
         body = TOTP._compose_update_user_body(identifier)
         response = self._auth_helper.do_post(uri, body, None, refresh_token)
 
@@ -93,3 +74,20 @@ class TOTP():
         # string image = 2;
         # string key = 3;
         # string error = 4;
+        
+    @staticmethod
+    def _compose_signup_body(identifier: str, user: dict) -> dict:
+        body = { "externalId": identifier }
+        if user is not None:
+            body["user"] = user
+        return body
+
+    @staticmethod
+    def _compose_signin_body(identifier: str, code: str) -> dict:
+        return { "externalId": identifier,
+                 "code": code
+         }
+
+    @staticmethod
+    def _compose_update_user_body(identifier: str) -> dict:
+        return { "externalId": identifier }

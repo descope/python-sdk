@@ -66,12 +66,21 @@ class OTP():
                 f"Identifier {identifier} is not valid by delivery method {method}",
             )
 
-        body = {"externalId": identifier}
         uri = OTP._compose_signin_url(method)
+        body = OTP._compose_signin_body(identifier)
         self._auth_helper.do_post(uri, body)
 
     def sign_up_or_in(self, method: DeliveryMethod, identifier: str) -> None:
-        return self.sign_in(method, identifier)
+        if not self._auth_helper.verify_delivery_method(method, identifier):
+            raise AuthException(
+                500,
+                "identifier failure",
+                f"Identifier {identifier} is not valid by delivery method {method}",
+            )
+
+        uri = OTP._compose_sign_up_or_in_url(method)
+        body = OTP._compose_signin_body(identifier)
+        self._auth_helper.do_post(uri, body)
 
     def verify_code(self, method: DeliveryMethod, identifier: str, code: str) -> dict:
         """Verify OTP code sent by the delivery method that chosen
@@ -103,8 +112,8 @@ class OTP():
                 f"Identifier {identifier} is not valid by delivery method {method}",
             )
 
-        body = OTP._compose_verify_code_body(identifier, code)
         uri = OTP._compose_verify_code_url(method)
+        body = OTP._compose_verify_code_body(identifier, code)
         response = self._auth_helper.do_post(uri, body)
 
         resp = response.json()
@@ -120,8 +129,8 @@ class OTP():
 
         AuthHelper.validate_email(email)
 
-        body = OTP._compose_update_user_email_body(identifier, email)
         uri = EndpointsV1.updateUserEmailOTPPath
+        body = OTP._compose_update_user_email_body(identifier, email)
         self._auth_helper.do_post(uri, body, None, refresh_token)
 
 
@@ -131,17 +140,21 @@ class OTP():
 
         AuthHelper.validate_phone(method, phone)
 
-        body = OTP._compose_update_user_phone_body(identifier, phone)
         uri = OTP._compose_update_phone_url(method)
+        body = OTP._compose_update_user_phone_body(identifier, phone)
         self._auth_helper.do_post(uri, body, None, refresh_token)
-        
-    @staticmethod
-    def _compose_signin_url(method: DeliveryMethod) -> str:
-        return AuthHelper.compose_url(EndpointsV1.signInAuthOTPPath, method)
 
     @staticmethod
     def _compose_signup_url(method: DeliveryMethod) -> str:
         return AuthHelper.compose_url(EndpointsV1.signUpAuthOTPPath, method)
+    
+    @staticmethod
+    def _compose_signin_url(method: DeliveryMethod) -> str:
+        return AuthHelper.compose_url(EndpointsV1.signInAuthOTPPath, method)
+    
+    @staticmethod
+    def _compose_sign_up_or_in_url(method: DeliveryMethod) -> str:
+        return AuthHelper.compose_url(EndpointsV1.signUpOrInAuthOTPPath, method)
 
     @staticmethod
     def _compose_verify_code_url(method: DeliveryMethod) -> str:
@@ -160,6 +173,10 @@ class OTP():
             method_str, val = AuthHelper.get_identifier_by_method(method, user)
             body[method_str] = val
         return body
+
+    @staticmethod
+    def _compose_signin_body(identifier: str) -> dict:
+        return { "externalId": identifier }
 
     @staticmethod
     def _compose_verify_code_body(identifier: str, code: str) -> dict:

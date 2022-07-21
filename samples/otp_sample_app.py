@@ -20,11 +20,8 @@ def main():
     try:
         auth_client = AuthClient(project_id=project_id)
 
-        email = "asaf@descope.com" # input("Please insert email to sign in / sign-up:\n")
-
-        logging.info(
-            "Going to sign in new user.. expect an email to arrive with the new code.."
-        )
+        logging.info("Going to sign in using OTP...")
+        email = input("Please insert email to signin:\n")
         auth_client.otp.sign_in(method=DeliveryMethod.EMAIL, identifier=email)
 
         value = input("Please insert the code you received by email:\n")

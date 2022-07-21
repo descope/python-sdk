@@ -23,8 +23,8 @@ def main():
     try:
         auth_client = AuthClient(project_id=project_id)
 
-        logging.info("Going to sign-in / sign-up...")
-        email = "asaf@descope.com" #input("Please insert email to sign in / sign-up:\n")
+        logging.info("Going to signup / signin using Magic Link ...")
+        email = input("Please insert email to signup / signin:\n")
         auth_client.magiclink.sign_up_or_in(
             method=DeliveryMethod.EMAIL,
             identifier=email,

@@ -12,23 +12,35 @@ REDIRECT_LOCATION_COOKIE_NAME = "Location"
 
 
 class EndpointsV1:
-    signInAuthOTPPath = "/v1/auth/signin/otp"
-    signUpAuthOTPPath = "/v1/auth/signup/otp"
-    verifyCodeAuthPath = "/v1/auth/code/verify"
-    updateUserEmailOTPPath = "/v1/user/update/email/otp"
-    updateUserPhoneOTPPath = "/v1/user/update/phone/otp"
-    signInAuthMagicLinkPath = "/v1/auth/signin/magiclink"
-    signUpOrInAuthMagicLinkPath = "/v1/auth/sign-up-or-in/magiclink"
-    signUpAuthMagicLinkPath = "/v1/auth/signup/magiclink"
-    verifyMagicLinkAuthPath = "/v1/auth/magiclink/verify"
-    updateUserEmailMagicLinkPath = "/v1/user/update/email/magiclink"
-    updateUserPhoneMagicLinkPath = "/v1/user/update/phone/magiclink"
-    oauthStart = "/v1/oauth/authorize"
-    signUpAuthTOTPPath = "/v1/auth/signup/totp"
-    verifyTOTPPath = "/v1/auth/verify/totp"
     publicKeyPath = "/v1/keys"
     refreshTokenPath = "/v1/auth/refresh"
     logoutPath = "/v1/auth/logoutall"
+    
+    # opt
+    signUpAuthOTPPath = "/v1/auth/signup/otp"
+    signInAuthOTPPath = "/v1/auth/signin/otp"
+    signUpOrInAuthOTPPath = "/v1/auth/sign-up-or-in/otp"
+    verifyCodeAuthPath = "/v1/auth/code/verify"
+    updateUserEmailOTPPath = "/v1/user/update/email/otp"
+    updateUserPhoneOTPPath = "/v1/user/update/phone/otp"
+    
+    # magiclink
+    signUpAuthMagicLinkPath = "/v1/auth/signup/magiclink"
+    signInAuthMagicLinkPath = "/v1/auth/signin/magiclink"
+    signUpOrInAuthMagicLinkPath = "/v1/auth/sign-up-or-in/magiclink"
+    verifyMagicLinkAuthPath = "/v1/auth/magiclink/verify"
+    updateUserEmailMagicLinkPath = "/v1/user/update/email/magiclink"
+    updateUserPhoneMagicLinkPath = "/v1/user/update/phone/magiclink"
+    
+    # oauth
+    oauthStart = "/v1/oauth/authorize"
+    
+    # totp
+    signUpAuthTOTPPath = "/v1/auth/signup/totp"
+    verifyTOTPPath = "/v1/auth/verify/totp"
+    updateTOTPPath = "/v1/user/update/totp"
+    
+    # webauthn
     signUpAuthWebauthnStart = "/v1/webauthn/signup/start"
     signUpAuthWebauthnFinish = "/v1/webauthn/signup/finish"
     signInAuthWebauthnStart = "/v1/webauthn/signin/start"
