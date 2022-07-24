@@ -51,7 +51,7 @@ class MagicLink():
 
     def get_session(
         self, pending_ref: str
-    ) -> requests.Response:
+    ) -> dict:
         uri = EndpointsV1.getSessionMagicLinkAuthPath
         body = MagicLink._compose_get_session_body(pending_ref)
         response = self._auth_helper.do_post(uri, body)

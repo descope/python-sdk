@@ -36,6 +36,12 @@ class EndpointsV1:
     # oauth
     oauthStart = "/v1/oauth/authorize"
 
+    # saml
+    authSAMLStart = "/v1/auth/saml/authorize"
+    
+    # exchange (saml + oauth)
+    exchangeTokenPath = "/v1/auth/exchange"
+    
     # totp
     signUpAuthTOTPPath = "/v1/auth/signup/totp"
     verifyTOTPPath = "/v1/auth/verify/totp"
@@ -48,9 +54,6 @@ class EndpointsV1:
     signInAuthWebauthnFinish = "/v1/webauthn/signin/finish"
     deviceAddAuthWebauthnStart = "/v1/webauthn/device/add/start"
     deviceAddAuthWebauthnFinish = "/v1/webauthn/device/add/finish"
-
-    # saml
-    authSAMLStart = "/v1/auth/saml/authorize"
 
 
 class DeliveryMethod(Enum):

@@ -52,7 +52,7 @@ class TestOAuth(unittest.TestCase):
 
         # Test failed flows
         self.assertRaises(AuthException, oauth.start, "")
-
+        
         with patch("requests.get") as mock_get:
             mock_get.return_value.ok = False
             self.assertRaises(AuthException, oauth.start, "google")

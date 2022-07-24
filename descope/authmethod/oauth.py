@@ -1,16 +1,14 @@
-
 from descope.authhelper import AuthHelper
 from descope.exceptions import AuthException
 from descope.common import EndpointsV1, OAuthProviders
+from descope.authmethod.exchanger import Exchanger  # noqa: F401
 
 
-class OAuth():
-    _auth_helper:AuthHelper = None
-    
+class OAuth(Exchanger):
     def __init__(self, auth_helper: AuthHelper):
-        self._auth_helper = auth_helper
+        super().__init__(auth_helper)
         
-    def start(self, provider: str) -> str:
+    def start(self, provider: str, return_url: str = "") -> str:
         """ """
         if not self._verify_provider(provider):
             raise AuthException(
@@ -20,15 +18,10 @@ class OAuth():
             )
 
         uri = EndpointsV1.oauthStart
-        response = self._auth_helper.do_get(uri, None, {"provider": provider}, False)
+        params = OAuth._compose_start_params(provider, return_url)
+        response = self._auth_helper.do_get(uri, None, params, False)
     
-        if not response.ok:
-            raise AuthException(
-                response.status_code, "OAuth send request failure", response.text
-            )
-
-        redirect_url = response.headers.get("Location", "")
-        return redirect_url
+        return response.json()["url"]
 
     @staticmethod
     def _verify_provider(oauth_provider: str) -> str:
@@ -39,3 +32,10 @@ class OAuth():
             return True
         else:
             return False
+        
+    @staticmethod
+    def _compose_start_params(provider: str, returnURL: str) -> dict:
+        res = {"provider": provider}
+        if returnURL is not None and returnURL != "":
+            res["redirectURL"] = returnURL
+        return res

@@ -8,6 +8,7 @@ from descope.authmethod.totp import TOTP  # noqa: F401
 from descope.authmethod.saml import SAML  # noqa: F401
 from descope.authmethod.oauth import OAuth  # noqa: F401
 from descope.authmethod.webauthn import WebauthN  # noqa: F401
+from descope.authmethod.exchanger import Exchanger  # noqa: F401
 from descope.common import (
     DeliveryMethod,
     EndpointsV1,
@@ -22,10 +23,11 @@ class AuthClient:
         auth_helper = AuthHelper(project_id, public_key)
         self._auth_helper = auth_helper
         self._magiclink = MagicLink(auth_helper)
-        self._otp = OTP(auth_helper)
-        self._totp = TOTP(auth_helper)
+        exchanger = Exchanger(auth_helper)
         self._oauth = OAuth(auth_helper)
         self._saml = SAML(auth_helper)
+        self._otp = OTP(auth_helper)
+        self._totp = TOTP(auth_helper)
         self._webauthn = WebauthN(auth_helper)
     
     @property
