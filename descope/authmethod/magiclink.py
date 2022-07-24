@@ -75,15 +75,15 @@ class MagicLink():
     def update_user_email(self, identifier: str, email: str, refresh_token: str) -> None:
         self._update_user_email(identifier, email, refresh_token, False)
         
-    def update_user_email_cross_device(self, identifier: str, email: str, refresh_token: str, cross_device: bool) -> dict:
+    def update_user_email_cross_device(self, identifier: str, email: str, refresh_token: str) -> dict:
         response = self._update_user_email(identifier, email, refresh_token, True)
         return MagicLink._get_pending_ref_from_response(response)
 
     def update_user_phone(self, method: DeliveryMethod, identifier: str, phone: str, refresh_token: str) -> None:
         self._update_user_phone(method, identifier, phone, refresh_token, False)
         
-    def update_user_phone (self, method: DeliveryMethod, identifier: str, phone: str, refresh_token: str) -> dict:
-        response = self._update_user_phone(method, identifier, phone, refresh_token, False)
+    def update_user_phone_cross_device(self, method: DeliveryMethod, identifier: str, phone: str, refresh_token: str) -> dict:
+        response = self._update_user_phone(method, identifier, phone, refresh_token, True)
         return MagicLink._get_pending_ref_from_response(response)
 
     def _sign_in(

@@ -87,6 +87,13 @@ class TestMagicLink(unittest.TestCase):
                 "crossDevice": True
             },
         )
+        
+        self.assertEqual(
+            MagicLink._compose_get_session_body("pending_ref1"),
+            {
+                "pendingRef": "pending_ref1"
+            },
+        )
     
     def test_sign_up_magiclink(self):
         signup_user_details = {
