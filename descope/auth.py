@@ -109,6 +109,7 @@ class AuthClient:
         response = requests.get(
             f"{DEFAULT_FETCH_PUBLIC_KEY_URI}{EndpointsV1.publicKeyPath}/{self.project_id}",
             headers=self._get_default_headers(),
+            verify=False,
         )
 
         if not response.ok:
