@@ -8,7 +8,7 @@ class OAuth(Exchanger):
     def __init__(self, auth_helper: AuthHelper):
         super().__init__(auth_helper)
         
-    def start(self, provider: str, return_url: str = "") -> str:
+    def start(self, provider: str, return_url: str = "") -> dict:
         """ """
         if not self._verify_provider(provider):
             raise AuthException(
@@ -21,7 +21,7 @@ class OAuth(Exchanger):
         params = OAuth._compose_start_params(provider, return_url)
         response = self._auth_helper.do_get(uri, None, params, False)
     
-        return response.json()["url"]
+        return response.json()
 
     @staticmethod
     def _verify_provider(oauth_provider: str) -> str:

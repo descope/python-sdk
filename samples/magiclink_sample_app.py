@@ -1,8 +1,6 @@
 import logging
 import os
 import sys
-import contextlib
-from http.client import HTTPConnection
 
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))

@@ -1,4 +1,3 @@
-from typing import Tuple
 import requests
 
 from descope.authhelper import AuthHelper  # noqa: F401
@@ -10,8 +9,7 @@ from descope.authmethod.oauth import OAuth  # noqa: F401
 from descope.authmethod.webauthn import WebauthN  # noqa: F401
 from descope.authmethod.exchanger import Exchanger  # noqa: F401
 from descope.common import (
-    DeliveryMethod,
-    EndpointsV1,
+   EndpointsV1,
 )
 from descope.exceptions import AuthException
 
@@ -54,13 +52,6 @@ class AuthClient:
     def webauthn(self):
         return self._webauthn
 
-
-    
-
-    @staticmethod
-    def _compose_logout_url() -> str:
-        return EndpointsV1.logoutPath
-
     def validate_session_request(
         self, signed_token: str, signed_refresh_token: str
     ) -> dict:
@@ -99,8 +90,9 @@ class AuthClient:
                 f"signed refresh token {signed_refresh_token} is empty",
             )
 
-        uri = AuthClient._compose_logout_url()
+        uri = EndpointsV1.logoutPath
 
         response = self._auth_helper.do_get(uri, None, None, None, signed_refresh_token)
         return response.cookies
+
     
