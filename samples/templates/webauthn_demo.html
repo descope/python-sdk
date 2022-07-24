@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Descope SDK Web Page</title>
+
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #3498db;
+      margin: 0 auto;
+      width: 100%;
+      text-align: center;
+    }
+
+    .box {
+      background: white;
+      width: 300px;
+      border-radius: 6px;
+      margin: 0 auto 0 auto;
+      padding: 10px;
+      border: #2980b9 4px solid;
+      display: flex;
+      flex-direction: column;
+    }
+
+    input {
+      height: 20px;
+      padding: 8px;
+      font-size: 1em;
+      border: 1px solid;
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 5px;
+      width: 125px;
+      color: white;
+    }
+
+    #register {
+      background: #2ecc71;
+    }
+
+    #login {
+      background: #3498db;
+    }
+  </style>
+  <script>
+    /// Actions
+
+    function ensureWebauthn() {
+      if (!window.PublicKeyCredential) {
+        alert("WebAuthn isn't supported by this browser or hostname")
+      } else {
+        console.log('Webauthn is supported')
+      }
+    }
+
+    async function performRegister() {
+      const username = document.getElementById('email');
+      if (!username || !username.value) {
+        alert("Please enter a username")
+        return
+      }
+
+      try {
+        await register(username.value)
+        alert('Register succeeded')
+      } catch (err) {
+        console.error('Register failed', err)
+        alert(`Register failed: ${err}`)
+      }
+    }
+
+    async function performLogin() {
+      const username = document.getElementById('email');
+      if (!username || !username.value) {
+        alert("Please enter a username")
+        return
+      }
+
+      try {
+        await login(username.value)
+        alert('Login succeeded')
+      } catch (err) {
+        console.error('Login failed', err)
+        alert(`Login failed: ${err}`)
+      }
+    }
+
+    /// Operations
+
+    async function register(username) {
+      const user = {
+        externalID: username,
+        displayName: "John Appleseed",
+      }
+
+      const startResponse = await serverPost('webauthn/signup/start', user)
+      console.log('Received register start response', startResponse)
+
+      const credentialOptions = decodeCredentialOptions(startResponse.options)
+      const credential = await navigator.credentials.create({ publicKey: credentialOptions.publicKey })
+      const credentialResponse = encodeCredentialResponse(credential)
+      console.log('Sending credential', credentialResponse)
+
+      const finishResponse = await serverPost('webauthn/signup/finish', {
+        transactionId: startResponse.transactionId,
+        response: credentialResponse,
+      })
+      console.log('Received register finish response', finishResponse)
+    }
+
+    async function login(username) {
+      const startResponse = await serverPost(`webauthn/signin/start?id=${username}`)
+      console.log('Received login start response', startResponse)
+
+      const assertionOptions = decodeAssertionOptions(startResponse.options)
+      const assertion = await navigator.credentials.get({ publicKey: assertionOptions.publicKey })
+      const assertionResponse = encodeAssertionResponse(assertion)
+      console.log('Sending assertion', assertionResponse)
+
+      const finishResponse = await serverPost('webauthn/signin/finish', {
+        transactionId: startResponse.transactionId,
+        response: assertionResponse,
+      })
+      console.log('Received login finish response', finishResponse)
+    }
+
+    /// Serialization
+
+    function decodeCredentialOptions(string) {
+      if (!string) return
+      const options = JSON.parse(string)
+
+      options.publicKey.challenge = decodeBase64Url(options.publicKey.challenge)
+      options.publicKey.user.id = decodeBase64Url(options.publicKey.user.id)
+
+      options.publicKey.excludeCredentials?.forEach((item) => {
+        item.id = decodeBase64Url(item.id)
+      })
+
+      return options
+    }
+
+    function encodeCredentialResponse(credential) {
+      return JSON.stringify({
+        id: credential.id,
+        rawId: encodeBase64Url(credential.rawId),
+        type: credential.type,
+        response: {
+          attestationObject: encodeBase64Url(credential.response.attestationObject),
+          clientDataJSON: encodeBase64Url(credential.response.clientDataJSON),
+        },
+      })
+    }
+
+    function decodeAssertionOptions(string) {
+      const options = JSON.parse(string)
+
+      options.publicKey.challenge = decodeBase64Url(options.publicKey.challenge)
+
+      options.publicKey.allowCredentials?.forEach((item) => {
+        item.id = decodeBase64Url(item.id)
+      })
+
+      return options
+    }
+
+    function encodeAssertionResponse(assertion) {
+      return JSON.stringify({
+        id: assertion.id,
+        rawId: encodeBase64Url(assertion.rawId),
+        type: assertion.type,
+        response: {
+          authenticatorData: encodeBase64Url(assertion.response.authenticatorData),
+          clientDataJSON: encodeBase64Url(assertion.response.clientDataJSON),
+          signature: encodeBase64Url(assertion.response.signature),
+          userHandle: encodeBase64Url(assertion.response.userHandle),
+        },
+      })
+    }
+
+    function decodeBase64Url(value) {
+      return Uint8Array.from(atob(value), c => c.charCodeAt(0)).buffer
+    }
+
+    function encodeBase64Url(value) {
+      return btoa(String.fromCharCode.apply(null, new Uint8Array(value)))
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=/g, "")
+    }
+
+    /// Utils
+
+    async function serverPost(route, params) {
+      const response = await fetch(`https://localhost:443/${route}`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(params)
+      })
+      if (!response.ok) {
+        throw Error(`Server returned status code ${response.status}`)
+      }
+      try {
+        const json = await response.json()
+        return json
+      } catch (error) {
+        console.log(error)
+      }
+    }
+
+    ensureWebauthn()
+  </script>
+
+</head>
+
+<body>
+  <form onsubmit="return false; ">
+    <div class="box">
+      <h1>Webauthn</h1>
+      <input id="email" class="email" type="email" name="email" placeholder="email" value="" required />
+      <div class="actions">
+        <button id="register" onclick="performRegister()">
+          Register
+        </button>
+        <button id="login" onclick="performLogin()">
+          Login
+        </button>
+      </div>
+    </div>
+  </form>
+</body>
+
+</html>
