@@ -28,12 +28,12 @@ class MagicLink():
         
     def sign_up_or_in(
         self, method: DeliveryMethod, identifier: str, uri: str
-    ) -> requests.Response:
+    ) -> dict:
         self._sign_up_or_in(method, identifier, uri, False)
         
     def sign_in_cross_device(
         self, method: DeliveryMethod, identifier: str, uri: str
-    ) -> None:
+    ) -> dict:
         response = self._sign_in(method, identifier, uri, True)
         return MagicLink._get_pending_ref_from_response(response)
     
@@ -45,7 +45,7 @@ class MagicLink():
         
     def sign_up_or_in_cross_device(
         self, method: DeliveryMethod, identifier: str, uri: str
-    ) -> requests.Response:
+    ) -> dict:
         response = self._sign_up_or_in(method, identifier, uri, True)
         return MagicLink._get_pending_ref_from_response(response)
 
@@ -71,6 +71,20 @@ class MagicLink():
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
         )
         return jwt_response
+    
+    def update_user_email(self, identifier: str, email: str, refresh_token: str) -> None:
+        self._update_user_email(identifier, email, refresh_token, False)
+        
+    def update_user_email_cross_device(self, identifier: str, email: str, refresh_token: str, cross_device: bool) -> dict:
+        response = self._update_user_email(identifier, email, refresh_token, True)
+        return MagicLink._get_pending_ref_from_response(response)
+
+    def update_user_phone(self, method: DeliveryMethod, identifier: str, phone: str, refresh_token: str) -> None:
+        self._update_user_phone(method, identifier, phone, refresh_token, False)
+        
+    def update_user_phone (self, method: DeliveryMethod, identifier: str, phone: str, refresh_token: str) -> dict:
+        response = self._update_user_phone(method, identifier, phone, refresh_token, False)
+        return MagicLink._get_pending_ref_from_response(response)
 
     def _sign_in(
         self, method: DeliveryMethod, identifier: str, uri: str, cross_device: bool
@@ -115,26 +129,26 @@ class MagicLink():
         uri = MagicLink._compose_sign_up_or_in_url(method)
         return self._auth_helper.do_post(uri, body)
 
-    def update_user_email(self, identifier: str, email: str, refresh_token: str) -> None:
+    def _update_user_email(self, identifier: str, email: str, refresh_token: str, cross_device: bool) -> requests.Response:
         if identifier == "":
             raise AuthException(500, "Invalid argument", "Identifier cannot be empty")
 
         AuthHelper.validate_email(email)
         
-        body = MagicLink._compose_update_user_email_body(identifier, email)
+        body = MagicLink._compose_update_user_email_body(identifier, email, cross_device)
         uri = EndpointsV1.updateUserEmailOTPPath
-        self._auth_helper.do_post(uri, body, None, refresh_token)
+        return self._auth_helper.do_post(uri, body, None, refresh_token)
 
 
-    def update_user_phone(self, method: DeliveryMethod, identifier: str, phone: str, refresh_token: str) -> None:
+    def _update_user_phone(self, method: DeliveryMethod, identifier: str, phone: str, refresh_token: str, cross_device: bool) -> requests.Response:
         if identifier == "":
             raise AuthException(500, "Invalid argument", "Identifier cannot be empty")
         
         AuthHelper.validate_phone(method, phone)
 
-        body = MagicLink._compose_update_user_phone_body(identifier, phone)
+        body = MagicLink._compose_update_user_phone_body(identifier, phone, cross_device)
         uri = EndpointsV1.updateUserPhoneOTPPath
-        self._auth_helper.do_post(uri, body, None, refresh_token)
+        return self._auth_helper.do_post(uri, body, None, refresh_token)
     
     @staticmethod
     def _compose_signin_url(method: DeliveryMethod) -> str:
@@ -181,17 +195,19 @@ class MagicLink():
         }
         
     @staticmethod
-    def _compose_update_user_email_body(identifier: str, email: str) -> dict:
+    def _compose_update_user_email_body(identifier: str, email: str, cross_device: bool) -> dict:
         return {
             "externalId": identifier,
-            "email": email
+            "email": email,
+            "crossDevice": cross_device
         }
 
     @staticmethod
-    def _compose_update_user_phone_body(identifier: str, phone: str) -> dict:
+    def _compose_update_user_phone_body(identifier: str, phone: str, cross_device: bool) -> dict:
         return {
             "externalId": identifier,
-            "phone": phone
+            "phone": phone,
+            "crossDevice": cross_device
         }
         
     @staticmethod

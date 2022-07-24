@@ -71,18 +71,20 @@ class TestMagicLink(unittest.TestCase):
         )
         
         self.assertEqual(
-            MagicLink._compose_update_user_email_body("id1", "email1"),
+            MagicLink._compose_update_user_email_body("id1", "email1",  True),
             {
                 "externalId": "id1",
-                "email": "email1"
+                "email": "email1",
+                "crossDevice": True
             },
         )
         
         self.assertEqual(
-            MagicLink._compose_update_user_phone_body("id1", "+11111111"),
+            MagicLink._compose_update_user_phone_body("id1", "+11111111", True),
             {
                 "externalId": "id1",
-                "phone": "+11111111"
+                "phone": "+11111111",
+                "crossDevice": True
             },
         )
     
