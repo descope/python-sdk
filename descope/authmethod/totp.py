@@ -18,7 +18,7 @@ class TOTP():
         Docs
         """
 
-        if identifier is None or identifier == "":
+        if not identifier:
             raise AuthException(500, "Invalid argument", "Identifier cannot be empty")
 
         uri = EndpointsV1.signUpAuthTOTPPath
@@ -37,10 +37,10 @@ class TOTP():
         Docs
         """
 
-        if identifier is None or identifier == "":
+        if not identifier:
             raise AuthException(500, "Invalid argument", "Identifier cannot be empty")
 
-        if code is None or code == "":
+        if not code:
             raise AuthException(500, "Invalid argument", "Code cannot be empty")
 
         uri = EndpointsV1.verifyTOTPPath
@@ -58,10 +58,10 @@ class TOTP():
         Docs
         """
 
-        if identifier is None or identifier == "":
+        if not identifier:
             raise AuthException(500, "Invalid argument", "Identifier cannot be empty")
 
-        if refresh_token is None or refresh_token == "":
+        if not refresh_token:
             raise AuthException(500, "Invalid argument", "Refresh token cannot be empty")
 
         uri = EndpointsV1.updateTOTPPath
