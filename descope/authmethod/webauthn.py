@@ -9,7 +9,7 @@ class WebauthN:
     def __init__(self, auth_helper):
         self._auth_helper = auth_helper
 
-    def sign_up_start(self, identifier: str, user: dict = None) -> dict:
+    def sign_up_start(self, identifier: str, user: dict = None, origin: str = None) -> dict:
         """
         Docs
         """
@@ -17,7 +17,7 @@ class WebauthN:
             raise AuthException(500, "Invalid argument", "Identifier cannot be empty")
 
         uri = EndpointsV1.signUpAuthWebauthnStart
-        body = WebauthN._compose_signup_body(identifier, user)
+        body = WebauthN._compose_signup_body(identifier, user, origin)
         response = self._auth_helper.do_post(uri, body)
 
         return response.json()
@@ -44,7 +44,7 @@ class WebauthN:
         )
         return jwt_response
 
-    def sign_in_start(self, identifier: str) -> dict:
+    def sign_in_start(self, identifier: str, origin: str) -> dict:
         """
         Docs
         """
@@ -52,7 +52,7 @@ class WebauthN:
             raise AuthException(500, "Invalid argument", "Identifier cannot be empty")
 
         uri = EndpointsV1.signInAuthWebauthnStart
-        body = WebauthN._compose_signin_body(identifier)
+        body = WebauthN._compose_signin_body(identifier, origin)
         response = self._auth_helper.do_post(uri, body)
 
         return response.json()
@@ -79,7 +79,7 @@ class WebauthN:
         )
         return jwt_response
 
-    def add_device_start(self, identifier: str, refresh_token: str):
+    def add_device_start(self, identifier: str, refresh_token: str, origin: str):
         """
         Docs
         """
@@ -92,7 +92,7 @@ class WebauthN:
             )
 
         uri = EndpointsV1.deviceAddAuthWebauthnStart
-        body = WebauthN._compose_add_device_start_body(identifier)
+        body = WebauthN._compose_add_device_start_body(identifier, origin)
         response = self._auth_helper.do_post(uri, body, None, refresh_token)
 
         return response.json()
@@ -114,24 +114,32 @@ class WebauthN:
         response = self._auth_helper.do_post(uri, body)
 
     @staticmethod
-    def _compose_signup_body(identifier: str, user: dict) -> dict:
+    def _compose_signup_body(identifier: str, user: dict, origin: str) -> dict:
         body = {"user": {"externalId": identifier}}
         if user is not None:
             for key, val in user.items():
                 body["user"][key] = val
+        if origin:
+            body["origin"] = origin
         return body
 
     @staticmethod
-    def _compose_signin_body(identifier: str) -> dict:
-        return {"externalId": identifier}
+    def _compose_signin_body(identifier: str, origin: str) -> dict:
+        body = {"externalId": identifier}
+        if origin:
+            body["origin"] = origin
+        return body
 
     @staticmethod
     def _compose_sign_up_in_finish_body(transactionID: str, response: str) -> dict:
         return {"transactionID": transactionID, "response": response}
 
     @staticmethod
-    def _compose_add_device_start_body(identifier: str) -> dict:
-        return {"externalId": identifier}
+    def _compose_add_device_start_body(identifier: str, origin: str) -> dict:
+        body = {"externalId": identifier}
+        if origin:
+            body["origin"] = origin
+        return body
 
     @staticmethod
     def _compose_add_device_finish_body(transactionID: str, response: str) -> dict:
