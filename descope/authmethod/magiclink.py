@@ -1,4 +1,5 @@
 import string
+import requests
 from descope.authhelper import AuthHelper
 
 from descope.common import (
@@ -18,6 +19,62 @@ class MagicLink():
     def sign_in(
         self, method: DeliveryMethod, identifier: str, uri: str
     ) -> None:
+        self._sign_in(method, identifier, uri, False)
+    
+    def sign_up(
+            self, method: DeliveryMethod, identifier: str, uri: str, user: dict = None
+        ) -> None:
+        self._sign_up(method, identifier, uri, False, user)
+        
+    def sign_up_or_in(
+        self, method: DeliveryMethod, identifier: str, uri: str
+    ) -> requests.Response:
+        self._sign_up_or_in(method, identifier, uri, False)
+        
+    def sign_in_cross_device(
+        self, method: DeliveryMethod, identifier: str, uri: str
+    ) -> None:
+        response = self._sign_in(method, identifier, uri, True)
+        return MagicLink._get_pending_ref_from_response(response)
+    
+    def sign_up_cross_device(
+            self, method: DeliveryMethod, identifier: str, uri: str, user: dict = None
+        ) -> None:
+        response = self._sign_up(method, identifier, uri, True, user)
+        return MagicLink._get_pending_ref_from_response(response)
+        
+    def sign_up_or_in_cross_device(
+        self, method: DeliveryMethod, identifier: str, uri: str
+    ) -> requests.Response:
+        response = self._sign_up_or_in(method, identifier, uri, True)
+        return MagicLink._get_pending_ref_from_response(response)
+
+    def get_session(
+        self, pending_ref: str
+    ) -> requests.Response:
+        uri = EndpointsV1.getSessionMagicLinkAuthPath
+        body = MagicLink._compose_get_session_body(pending_ref)
+        response = self._auth_helper.do_post(uri, body)
+    
+        resp = response.json()
+        jwt_response = self._auth_helper._generate_jwt_response(
+            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
+        )
+        return jwt_response
+
+    def verify(self, token: str) -> dict:
+        uri = EndpointsV1.verifyMagicLinkAuthPath
+        body = MagicLink._compose_verify_body(token)
+        response = self._auth_helper.do_post(uri, body)
+        resp = response.json()
+        jwt_response = self._auth_helper._generate_jwt_response(
+            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
+        )
+        return jwt_response
+
+    def _sign_in(
+        self, method: DeliveryMethod, identifier: str, uri: str, cross_device: bool
+    ) -> requests.Response :
         if not self._auth_helper.verify_delivery_method(method, identifier):
             raise AuthException(
                 500,
@@ -25,14 +82,14 @@ class MagicLink():
                 f"Identifier {identifier} is not valid by delivery method {method}",
             )
 
-        body = MagicLink._compose_signin_body(identifier, uri, False)
+        body = MagicLink._compose_signin_body(identifier, uri, cross_device)
         uri = MagicLink._compose_signin_url(method)
 
-        self._auth_helper.do_post(uri, body)
+        return self._auth_helper.do_post(uri, body)
 
-    def sign_up(
-            self, method: DeliveryMethod, identifier: str, uri: str, user: dict = None
-        ) -> None:
+    def _sign_up(
+            self, method: DeliveryMethod, identifier: str, uri: str, cross_device: bool, user: dict = None
+        ) -> requests.Response:
             if not self._auth_helper.verify_delivery_method(method, identifier):
                 raise AuthException(
                     500,
@@ -40,13 +97,13 @@ class MagicLink():
                     f"Identifier {identifier} is not valid by delivery method {method}",
                 )
 
-            body = MagicLink._compose_signup_body(method, identifier, uri, False, user)
+            body = MagicLink._compose_signup_body(method, identifier, uri, cross_device, user)
             uri = MagicLink._compose_signup_url(method)
-            self._auth_helper.do_post(uri, body)
+            return self._auth_helper.do_post(uri, body)
             
-    def sign_up_or_in(
-        self, method: DeliveryMethod, identifier: str, uri: str
-    ) -> None:
+    def _sign_up_or_in(
+        self, method: DeliveryMethod, identifier: str, uri: str, cross_device: bool
+    ) -> requests.Response:
         if not self._auth_helper.verify_delivery_method(method, identifier):
             raise AuthException(
                 500,
@@ -54,25 +111,13 @@ class MagicLink():
                 f"Identifier {identifier} is not valid by delivery method {method}",
             )
 
-        body = MagicLink._compose_signin_body(identifier, uri, False)
+        body = MagicLink._compose_signin_body(identifier, uri, cross_device)
         uri = MagicLink._compose_sign_up_or_in_url(method)
-        self._auth_helper.do_post(uri, body)
-
-    def verify(self, token: str) -> dict:
-            uri = EndpointsV1.verifyMagicLinkAuthPath
-            body = MagicLink._compose_verify_body(token)
-            response = self._auth_helper.do_post(uri, body)
-        
-            resp = response.json()
-            jwt_response = self._auth_helper._generate_jwt_response(
-                resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
-            )
-            return jwt_response
+        return self._auth_helper.do_post(uri, body)
 
     def update_user_email(self, identifier: str, email: str, refresh_token: str) -> None:
         if identifier == "":
             raise AuthException(500, "Invalid argument", "Identifier cannot be empty")
-
 
         AuthHelper.validate_email(email)
         
@@ -148,4 +193,14 @@ class MagicLink():
             "externalId": identifier,
             "phone": phone
         }
+        
+    @staticmethod
+    def _compose_get_session_body(pending_ref: str) -> dict:
+        return {
+            "pendingRef": pending_ref
+        }
+        
+    @staticmethod
+    def _get_pending_ref_from_response(response: requests.Response) -> dict:
+        return response.json()
 

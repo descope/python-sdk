@@ -29,6 +29,7 @@ class EndpointsV1:
     signInAuthMagicLinkPath = "/v1/auth/signin/magiclink"
     signUpOrInAuthMagicLinkPath = "/v1/auth/sign-up-or-in/magiclink"
     verifyMagicLinkAuthPath = "/v1/auth/magiclink/verify"
+    getSessionMagicLinkAuthPath = "/v1/auth/magiclink/session"
     updateUserEmailMagicLinkPath = "/v1/user/update/email/magiclink"
     updateUserPhoneMagicLinkPath = "/v1/user/update/phone/magiclink"
 
