@@ -1,16 +1,12 @@
-import json
 import unittest
 from copy import deepcopy
-from enum import Enum
 from unittest.mock import patch
 
-from descope import SESSION_COOKIE_NAME, AuthClient, AuthException, DeliveryMethod
-from descope.authhelper import AuthHelper
+from descope import AuthException
+from descope.auth import Auth
+from descope.common import DEFAULT_BASE_URI, EndpointsV1
+
 from descope.authmethod.oauth import OAuth
-from descope.common import DEFAULT_BASE_URI, REFRESH_SESSION_COOKIE_NAME, EndpointsV1
-
-from descope.authmethod.magiclink import MagicLink  # noqa: F401
-
 
 class TestOAuth(unittest.TestCase):
     def setUp(self) -> None:
@@ -48,7 +44,7 @@ class TestOAuth(unittest.TestCase):
         )
 
     def test_oauth_start(self):
-        oauth = OAuth(AuthHelper(self.dummy_project_id, self.public_key_dict))
+        oauth = OAuth(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
         self.assertRaises(AuthException, oauth.start, "")

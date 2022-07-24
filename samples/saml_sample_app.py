@@ -4,7 +4,7 @@ import sys
 
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
-from descope import AuthClient, AuthException  # noqa: E402
+from descope import DescopeClient, AuthException  # noqa: E402
 
 logging.basicConfig(level=logging.INFO)
 
@@ -14,10 +14,10 @@ def main():
     tenant_id = ""
 
     try:
-        auth_client = AuthClient(project_id=project_id)
+        descope_client = DescopeClient(project_id=project_id)
 
         logging.info("Going to login with SAML auth method ...")
-        resp = auth_client.saml.start(tenant_id, "https://www.google.com")
+        resp = descope_client.saml.start(tenant_id, "https://www.google.com")
         logging.info(f"saml response: {resp}")
 
     except AuthException:

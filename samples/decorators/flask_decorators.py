@@ -5,7 +5,7 @@ from functools import wraps
 
 from flask import Response, _request_ctx_stack, redirect, request
 
-from descope.auth import AuthClient
+from descope.descope_client import DescopeClient
 
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
@@ -38,7 +38,7 @@ def set_cookie_on_response(response, data):
     )
 
 
-def descope_signup_otp_by_email(auth_client):
+def descope_signup_otp_by_email(descope_client):
     """
     Signup new user using OTP by email
     """
@@ -53,7 +53,7 @@ def descope_signup_otp_by_email(auth_client):
                 return Response("Bad Request, missing email", 400)
 
             try:
-                auth_client.otp.sign_up(DeliveryMethod.EMAIL, email, user)
+                descope_client.otp.sign_up(DeliveryMethod.EMAIL, email, user)
             except AuthException as e:
                 return Response(f"Failed to signup, err: {e}", 500)
 
@@ -64,7 +64,7 @@ def descope_signup_otp_by_email(auth_client):
     return decorator
 
 
-def descope_signin_otp_by_email(auth_client):
+def descope_signin_otp_by_email(descope_client):
     """
     Signin using OTP by email
     """
@@ -78,7 +78,7 @@ def descope_signin_otp_by_email(auth_client):
                 return Response("Bad Request, missing email", 400)
 
             try:
-                auth_client.otp.sign_in(DeliveryMethod.EMAIL, email)
+                descope_client.otp.sign_in(DeliveryMethod.EMAIL, email)
             except AuthException as e:
                 return Response(f"Failed to signin, err: {e}", 500)
 
@@ -89,7 +89,7 @@ def descope_signin_otp_by_email(auth_client):
     return decorator
 
 
-def descope_validate_auth(auth_client):
+def descope_validate_auth(descope_client):
     """
     Test for valid Access Token
     """
@@ -101,7 +101,7 @@ def descope_validate_auth(auth_client):
             session_token = cookies.get(SESSION_COOKIE_NAME, None)
             refresh_token = cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
             try:
-                claims = auth_client.validate_session_request(
+                claims = descope_client.validate_session_request(
                     session_token, refresh_token
                 )
 
@@ -122,7 +122,7 @@ def descope_validate_auth(auth_client):
     return decorator
 
 
-def descope_verify_code_by_email(auth_client):
+def descope_verify_code_by_email(descope_client):
     """
     Verify code by email decorator
     """
@@ -137,7 +137,7 @@ def descope_verify_code_by_email(auth_client):
                 return Response("Unauthorized", 401)
 
             try:
-                jwt_response = auth_client.otp.verify_code(
+                jwt_response = descope_client.otp.verify_code(
                     DeliveryMethod.EMAIL, email, code
                 )
             except AuthException:
@@ -158,7 +158,7 @@ def descope_verify_code_by_email(auth_client):
     return decorator
 
 
-def descope_verify_code_by_phone(auth_client):
+def descope_verify_code_by_phone(descope_client):
     """
     Verify code by email decorator
     """
@@ -173,7 +173,7 @@ def descope_verify_code_by_phone(auth_client):
                 return Response("Unauthorized", 401)
 
             try:
-                jwt_response = auth_client.otp.verify_code(
+                jwt_response = descope_client.otp.verify_code(
                     DeliveryMethod.PHONE, phone, code
                 )
             except AuthException:
@@ -194,7 +194,7 @@ def descope_verify_code_by_phone(auth_client):
     return decorator
 
 
-def descope_verify_code_by_whatsapp(auth_client):
+def descope_verify_code_by_whatsapp(descope_client):
     """
     Verify code by whatsapp decorator
     """
@@ -209,7 +209,7 @@ def descope_verify_code_by_whatsapp(auth_client):
                 return Response("Unauthorized", 401)
 
             try:
-                jwt_response = auth_client.otp.verify_code(
+                jwt_response = descope_client.otp.verify_code(
                     DeliveryMethod.WHATSAPP, phone, code
                 )
             except AuthException:
@@ -230,7 +230,7 @@ def descope_verify_code_by_whatsapp(auth_client):
     return decorator
 
 
-def descope_signup_magiclink_by_email(auth_client, uri):
+def descope_signup_magiclink_by_email(descope_client, uri):
     """
     Signup new user using magiclink via email
     """
@@ -245,7 +245,7 @@ def descope_signup_magiclink_by_email(auth_client, uri):
                 return Response("Bad Request, missing email", 400)
 
             try:
-                auth_client.magiclink.sign_up(DeliveryMethod.EMAIL, email, uri, user)
+                descope_client.magiclink.sign_up(DeliveryMethod.EMAIL, email, uri, user)
             except AuthException as e:
                 return Response(f"Failed to signup, err: {e}", 500)
 
@@ -256,7 +256,7 @@ def descope_signup_magiclink_by_email(auth_client, uri):
     return decorator
 
 
-def descope_signin_magiclink_by_email(auth_client, uri):
+def descope_signin_magiclink_by_email(descope_client, uri):
     """
     Signin using magiclink via email
     """
@@ -270,7 +270,7 @@ def descope_signin_magiclink_by_email(auth_client, uri):
                 return Response("Bad Request, missing email", 400)
 
             try:
-                auth_client.magiclink.sign_in(DeliveryMethod.EMAIL, email, uri)
+                descope_client.magiclink.sign_in(DeliveryMethod.EMAIL, email, uri)
             except AuthException as e:
                 return Response(f"Failed to signin, err: {e}", 500)
 
@@ -281,7 +281,7 @@ def descope_signin_magiclink_by_email(auth_client, uri):
     return decorator
 
 
-def descope_verify_magiclink_token(auth_client):
+def descope_verify_magiclink_token(descope_client):
     """
     Verify magiclink token
     """
@@ -294,7 +294,7 @@ def descope_verify_magiclink_token(auth_client):
                 return Response("Unauthorized", 401)
 
             try:
-                jwt_response = auth_client.magiclink.verify(code)
+                jwt_response = descope_client.magiclink.verify(code)
             except AuthException:
                 return Response("Unauthorized", 401)
 
@@ -312,7 +312,7 @@ def descope_verify_magiclink_token(auth_client):
     return decorator
 
 
-def descope_logout(auth_client):
+def descope_logout(descope_client):
     """
     Logout
     """
@@ -323,7 +323,7 @@ def descope_logout(auth_client):
             cookies = request.cookies.copy()
             refresh_token = cookies.get(REFRESH_SESSION_COOKIE_NAME)
             try:
-                cookies = auth_client.logout(refresh_token)
+                cookies = descope_client.logout(refresh_token)
             except AuthException as e:
                 return Response(f"Logout failed {e}", e.status_code)
 
@@ -340,7 +340,7 @@ def descope_logout(auth_client):
     return decorator
 
 
-def descope_oauth(auth_client:AuthClient):
+def descope_oauth(descope_client:DescopeClient):
     """
     OAuth login
     """
@@ -351,7 +351,7 @@ def descope_oauth(auth_client:AuthClient):
             try:
                 args = request.args
                 provider = args.get("provider")
-                redirect_url = auth_client.oauth.start(provider)
+                redirect_url = descope_client.oauth.start(provider)
             except AuthException as e:
                 return Response(f"OAuth failed {e}", e.status_code)
 

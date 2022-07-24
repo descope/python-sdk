@@ -33,7 +33,7 @@ Replace any instance of  `<ProjectID>` in the code below with your company's Pro
 * Import and initialize the ExpresSDK for Python client in your source code
 
     ```code Python
-    from descope import DeliveryMethod, User, AuthClient
+    from descope import DeliveryMethod, User, DescopeClient
     ```
 
 ### 1. Customer Sign-up
@@ -42,14 +42,14 @@ In your sign-up route for OTP (for example, `myapp.com/signup`) generate a sign-
 
 ```code Python
 user = User("newusername", "full name", "555-555-1212", "mytestmail@test.com")
-auth_client.sign_up_otp(DeliveryMethod.EMAIL, "mytestmail@test.com, user)
+descope_client.sign_up_otp(DeliveryMethod.EMAIL, "mytestmail@test.com, user)
 ```
 
 ### 2. Customer Sign-in
 In your sign-in route for OTP (for exmaple, `myapp.com/login`) generate a sign-in request send the OTP verification code via the selected OTP delivery method. In the example below an email is sent to "mytestmail@test.com".
 
 ```code Python
-auth_client.sign_in_otp(DeliveryMethod.EMAIL, "mytestemail@test.com")
+descope_client.sign_in_otp(DeliveryMethod.EMAIL, "mytestemail@test.com")
 }
 ```
 ```code Flask Decorator
@@ -75,7 +75,7 @@ Session validation checks to see that the visitor to your website or application
 In the code below the validates the original session tokens and cookies (`session_token`) and validates the tokens and cookies from the client. ValidateSession returns true if the user is authorized, and false if the user is not authorized. In addition, the session will automatically be extended if the user is valid but the sesssion has expired by writing the updated tokens and cookies to the response writer (w).
 
 ```code Python
-claims, tokens = auth_client.validate_session_request('session_token', 'refresh_token')
+claims, tokens = descope_client.validate_session_request('session_token', 'refresh_token')
 ```
 ```code Flask Decorator
 @descope_validate_auth

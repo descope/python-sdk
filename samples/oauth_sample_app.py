@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.join(dir_name, "../"))
 from descope import (  # noqa: E402
     REFRESH_SESSION_COOKIE_NAME,
     SESSION_COOKIE_NAME,
-    AuthClient,
+    DescopeClient,
     AuthException,
 )
 
@@ -16,19 +16,19 @@ logging.basicConfig(level=logging.INFO)
 def main():
     project_id = ""
     try:
-        auth_client = AuthClient(project_id=project_id)
+        descope_client = DescopeClient(project_id=project_id)
 
         logging.info("Going to login with Oauth auth method ...")
-        resp = auth_client.oauth.start("facebook", "www.google.com")
+        resp = descope_client.oauth.start("facebook", "www.google.com")
         logging.info(f"oauth response: {resp}")
         
         code = input("Please insert the code you received by email:\n")
 
         
-        jwt_response = auth_client.oauth.exchange_token(code)
+        jwt_response = descope_client.oauth.exchange_token(code)
         logging.info(f"oauth code valid")
         refresh_token = jwt_response["jwts"].get(REFRESH_SESSION_COOKIE_NAME).get("jwt")
-        auth_client.logout(refresh_token)
+        descope_client.logout(refresh_token)
         logging.info("User logged out")
     
     except AuthException as e:

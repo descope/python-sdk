@@ -1,14 +1,12 @@
-import json
 import unittest
-from copy import deepcopy
 from enum import Enum
 from unittest.mock import patch
 
-from descope import SESSION_COOKIE_NAME, AuthClient, AuthException, DeliveryMethod
-from descope.authhelper import AuthHelper
-from descope.authmethod.saml import SAML
+from descope import AuthException
+from descope.auth import Auth
 from descope.common import DEFAULT_BASE_URI, EndpointsV1
 
+from descope.authmethod.saml import SAML
 
 class TestSAML(unittest.TestCase):
     def setUp(self) -> None:
@@ -32,7 +30,7 @@ class TestSAML(unittest.TestCase):
         )
 
     def test_saml_start(self):
-        saml = SAML(AuthHelper(self.dummy_project_id, self.public_key_dict))
+        saml = SAML(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
         self.assertRaises(AuthException, saml.start, "", "http://dummy.com")
@@ -65,7 +63,6 @@ class TestSAML(unittest.TestCase):
                 allow_redirects=None,
             )
 
-  
-    
+
 if __name__ == "__main__":
     unittest.main()

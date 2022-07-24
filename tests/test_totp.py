@@ -3,10 +3,9 @@ import unittest
 from unittest import mock
 from unittest.mock import patch
 
-from descope import SESSION_COOKIE_NAME, AuthClient, AuthException, DeliveryMethod
-from descope.authhelper import AuthHelper
-from descope.authmethod.oauth import OAuth
-from descope.common import DEFAULT_BASE_URI, REFRESH_SESSION_COOKIE_NAME, EndpointsV1
+from descope import AuthException
+from descope.auth import Auth
+from descope.common import DEFAULT_BASE_URI, EndpointsV1
 
 from descope.authmethod.totp import TOTP  # noqa: F401
 
@@ -32,7 +31,7 @@ class TestTOTP(unittest.TestCase):
             "email": "dummy@dummy.com",
         }
 
-        totp = TOTP(AuthHelper(self.dummy_project_id, self.public_key_dict))
+        totp = TOTP(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
         self.assertRaises(
@@ -68,7 +67,7 @@ class TestTOTP(unittest.TestCase):
             )
 
     def test_sign_in(self):
-        totp = TOTP(AuthHelper(self.dummy_project_id, self.public_key_dict))
+        totp = TOTP(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
         self.assertRaises(AuthException, totp.sign_in_code, None, "1234")
@@ -98,7 +97,7 @@ class TestTOTP(unittest.TestCase):
             )
 
     def test_update_user(self):
-        totp = TOTP(AuthHelper(self.dummy_project_id, self.public_key_dict))
+        totp = TOTP(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
         self.assertRaises(AuthException, totp.update_user, None, "")

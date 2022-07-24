@@ -11,14 +11,14 @@ from decorators.flask_decorators import (  # noqa: E402;
     descope_validate_auth,
 )
 
-from descope import AuthClient  # noqa: E402
+from descope import DescopeClient  # noqa: E402
 
 APP = Flask(__name__)
 
 PROJECT_ID = ""
 
-# init the AuthClient
-auth_client = AuthClient(PROJECT_ID)
+# init the DescopeClient
+descope_client = DescopeClient(PROJECT_ID)
 
 
 class Error(Exception):
@@ -36,21 +36,21 @@ def handle_auth_error(ex):
 
 # This needs authentication
 @APP.route("/api/private")
-@descope_validate_auth(auth_client)
+@descope_validate_auth(descope_client)
 def private():
     response = "This is a private API and you must be authenticated to see this"
     return jsonify(message=response)
 
 
 @APP.route("/api/logout")
-@descope_logout(auth_client)
+@descope_logout(descope_client)
 def logout():
     response = "Logged out"
     return jsonify(message=response)
 
 
 @APP.route("/api/oauth", methods=["GET"])
-@descope_oauth(auth_client)
+@descope_oauth(descope_client)
 def oauth(*args, **kwargs):
     pass
 

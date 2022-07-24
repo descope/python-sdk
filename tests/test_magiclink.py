@@ -1,12 +1,10 @@
 import json
 import unittest
-from copy import deepcopy
-from enum import Enum
 from unittest import mock
 from unittest.mock import patch
 
-from descope import SESSION_COOKIE_NAME, AuthClient, AuthException, DeliveryMethod
-from descope.authhelper import AuthHelper
+from descope import SESSION_COOKIE_NAME, AuthException, DeliveryMethod
+from descope.auth import Auth
 from descope.common import DEFAULT_BASE_URI, REFRESH_SESSION_COOKIE_NAME, EndpointsV1
 
 from descope.authmethod.magiclink import MagicLink  # noqa: F401
@@ -23,7 +21,7 @@ class TestMagicLink(unittest.TestCase):
             "use": "sig",
             "x": "8SMbQQpCQAGAxCdoIz8y9gDw-wXoyoN5ILWpAlBKOcEM1Y7WmRKc1O2cnHggyEVi",
             "y": "N5n5jKZA5Wu7_b4B36KKjJf-VRfJ-XqczfCSYy9GeQLqF-b63idfE0SYaYk9cFqg",
-        }  # {"alg": "ES384", "crv": "P-384", "kid": "2Bt5WLccLUey1Dp7utptZb3Fx9K", "kty": "EC", "use": "sig", "x": "8SMbQQpCQAGAxCdoIz8y9gDw-wXoyoN5ILWpAlBKOcEM1Y7WmRKc1O2cnHggyEVi", "y": "N5n5jKZA5Wu7_b4B36KKjJf-VRfJ-XqczfCSYy9GeQLqF-b63idfE0SYaYk9cFqg"}
+        } 
     
     def test_compose_urls(self):
         self.assertEqual(
@@ -97,7 +95,7 @@ class TestMagicLink(unittest.TestCase):
         )
     
     def test_sign_in(self):
-        magiclink = MagicLink(AuthHelper(self.dummy_project_id, self.public_key_dict))
+        magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
         
         # Test failed flows
         self.assertRaises(
@@ -149,7 +147,7 @@ class TestMagicLink(unittest.TestCase):
             "email": "dummy@dummy.com",
         }
 
-        magiclink = MagicLink(AuthHelper(self.dummy_project_id, self.public_key_dict))
+        magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
         self.assertRaises(
@@ -220,7 +218,7 @@ class TestMagicLink(unittest.TestCase):
             )
 
     def test_sign_up_or_in(self):
-        magiclink = MagicLink(AuthHelper(self.dummy_project_id, self.public_key_dict))
+        magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
         
         # Test failed flows
         self.assertRaises(
@@ -251,7 +249,7 @@ class TestMagicLink(unittest.TestCase):
             )
             
     def test_sign_in_cross_device(self):
-        magiclink = MagicLink(AuthHelper(self.dummy_project_id, self.public_key_dict))
+        magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
         with patch("requests.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
@@ -272,7 +270,7 @@ class TestMagicLink(unittest.TestCase):
 
             
     def test_sign_up_cross_device(self):
-        magiclink = MagicLink(AuthHelper(self.dummy_project_id, self.public_key_dict))
+        magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
         with patch("requests.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
@@ -298,7 +296,7 @@ class TestMagicLink(unittest.TestCase):
             self.assertEqual(res["pendingRef"], "aaaa")
       
     def test_sign_up_or_in_cross_device(self):
-        magiclink = MagicLink(AuthHelper(self.dummy_project_id, self.public_key_dict))
+        magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
         with patch("requests.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
@@ -319,7 +317,7 @@ class TestMagicLink(unittest.TestCase):
     def test_verify(self):
         token = "1234"
 
-        magiclink = MagicLink(AuthHelper(self.dummy_project_id, self.public_key_dict))
+        magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
 
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = False
@@ -340,7 +338,7 @@ class TestMagicLink(unittest.TestCase):
             self.assertIsNotNone(magiclink.verify(token))
            
     def test_get_session(self):
-        magiclink = MagicLink(AuthHelper(self.dummy_project_id, self.public_key_dict))
+        magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
 
         valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkVGVuYW50cyI6eyIiOm51bGx9LCJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwNjc5MjA4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MjA5MDA4NzIwOCwiaWF0IjoxNjU4MDg3MjA4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQzU1dnl4dzBzUkw2RmRNNjhxUnNDRGRST1YifQ.cWP5up4R5xeIl2qoG2NtfLH3Q5nRJVKdz-FDoAXctOQW9g3ceZQi6rZQ-TPBaXMKw68bijN3bLJTqxWW5WHzqRUeopfuzTcMYmC0wP2XGJkrdF6A8D5QW6acSGqglFgu"
         with patch("requests.post") as mock_post:
@@ -352,7 +350,7 @@ class TestMagicLink(unittest.TestCase):
             self.assertIsNotNone(magiclink.get_session("aaaaaa"))
         
     def test_update_user_email(self):
-        magiclink = MagicLink(AuthHelper(self.dummy_project_id, self.public_key_dict))
+        magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
 
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = False
@@ -376,7 +374,7 @@ class TestMagicLink(unittest.TestCase):
             )
     
     def test_update_user_email_cross_device(self):
-        magiclink = MagicLink(AuthHelper(self.dummy_project_id, self.public_key_dict))
+        magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
         with patch("requests.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
@@ -393,7 +391,7 @@ class TestMagicLink(unittest.TestCase):
             )
 
     def test_update_user_phone(self):
-        magiclink = MagicLink(AuthHelper(self.dummy_project_id, self.public_key_dict))
+        magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
 
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = False
@@ -419,7 +417,7 @@ class TestMagicLink(unittest.TestCase):
             )
             
     def test_update_user_phone_cross_device(self):
-        magiclink = MagicLink(AuthHelper(self.dummy_project_id, self.public_key_dict))
+        magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
         with patch("requests.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True

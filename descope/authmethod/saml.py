@@ -1,12 +1,12 @@
-from descope.authhelper import AuthHelper
+from descope.auth import Auth
 from descope.common import EndpointsV1
 from descope.exceptions import AuthException
 from descope.authmethod.exchanger import Exchanger  # noqa: F401
 
 
 class SAML(Exchanger):
-    def __init__(self, auth_helper: AuthHelper):
-        super().__init__(auth_helper)
+    def __init__(self, auth: Auth):
+        super().__init__(auth)
 
     def start(self, tenant: str, return_url: str = None) -> dict:
         """
@@ -20,7 +20,7 @@ class SAML(Exchanger):
 
         uri = EndpointsV1.authSAMLStart
         params = SAML._compose_start_params(tenant, return_url)
-        response = self._auth_helper.do_get(uri, None, params)
+        response = self._auth.do_get(uri, None, params)
 
         return response.json()
     

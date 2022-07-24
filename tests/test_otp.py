@@ -1,13 +1,10 @@
-import json
 import unittest
 from copy import deepcopy
 from enum import Enum
 from unittest.mock import patch
 
-from descope import SESSION_COOKIE_NAME, AuthClient, AuthException, DeliveryMethod
-from descope.authhelper import AuthHelper
-from descope.authmethod.oauth import OAuth
-from descope.common import DEFAULT_BASE_URI, REFRESH_SESSION_COOKIE_NAME, EndpointsV1
+from descope import SESSION_COOKIE_NAME, DescopeClient, AuthException, DeliveryMethod
+from descope.common import REFRESH_SESSION_COOKIE_NAME
 
 from descope.authmethod.otp import OTP  # noqa: F401
 
@@ -61,7 +58,7 @@ class TestOTP(unittest.TestCase):
             "email": "dummy@dummy.com",
         }
 
-        client = AuthClient(self.dummy_project_id, self.public_key_dict)
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
 
         # Test failed flows
         self.assertRaises(
@@ -128,7 +125,7 @@ class TestOTP(unittest.TestCase):
         self.assertRaises(AuthException, OTP._compose_signin_url, Dummy.DUMMY)
 
     def test_sign_in(self):
-        client = AuthClient(self.dummy_project_id, self.public_key_dict)
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
 
         # Test failed flows
         self.assertRaises(
@@ -157,7 +154,7 @@ class TestOTP(unittest.TestCase):
     def test_verify_code(self):
         code = "1234"
 
-        client = AuthClient(self.dummy_project_id, self.public_key_dict)
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
 
         self.assertRaises(
             AuthException, client.otp.verify_code, DeliveryMethod.EMAIL, "dummy@dummy", code

@@ -1,4 +1,4 @@
-from descope.auth import AuthClient
+from descope.descope_client import DescopeClient
 from descope.common import (
     REFRESH_SESSION_COOKIE_NAME,
     SESSION_COOKIE_NAME,

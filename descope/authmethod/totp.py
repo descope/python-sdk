@@ -3,13 +3,13 @@ from descope.common import (
     EndpointsV1,
 )
 from descope.exceptions import AuthException
-from descope.authhelper import AuthHelper
+from descope.auth import Auth
 
 class TOTP():
-    _auth_helper: AuthHelper
+    _auth: Auth
 
-    def __init__(self, auth_helper):
-        self._auth_helper = auth_helper
+    def __init__(self, auth):
+        self._auth = auth
     
     def sign_up(
         self, identifier: str, user: dict = None
@@ -23,7 +23,7 @@ class TOTP():
 
         uri = EndpointsV1.signUpAuthTOTPPath
         body = TOTP._compose_signup_body(identifier, user)
-        response = self._auth_helper.do_post(uri, body)
+        response = self._auth.do_post(uri, body)
 
         return response.json()
         # Response should have these schema:
@@ -45,10 +45,10 @@ class TOTP():
 
         uri = EndpointsV1.verifyTOTPPath
         body = TOTP._compose_signin_body(identifier, code)
-        response = self._auth_helper.do_post(uri, body)
+        response = self._auth.do_post(uri, body)
 
         resp = response.json()
-        jwt_response = self._auth_helper._generate_jwt_response(
+        jwt_response = self._auth._generate_jwt_response(
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
         )
         return jwt_response
@@ -66,7 +66,7 @@ class TOTP():
 
         uri = EndpointsV1.updateTOTPPath
         body = TOTP._compose_update_user_body(identifier)
-        response = self._auth_helper.do_post(uri, body, None, refresh_token)
+        response = self._auth.do_post(uri, body, None, refresh_token)
 
         return response.json()
         # Response should have these schema:

@@ -1,13 +1,13 @@
-from descope.authhelper import AuthHelper
+from descope.auth import Auth
 from descope.common import REFRESH_SESSION_COOKIE_NAME, EndpointsV1
 from descope.exceptions import AuthException
 
 
 class WebauthN:
-    _auth_helper: AuthHelper
+    _auth: Auth
 
-    def __init__(self, auth_helper):
-        self._auth_helper = auth_helper
+    def __init__(self, auth):
+        self._auth = auth
 
     def sign_up_start(self, identifier: str, user: dict = None, origin: str = None) -> dict:
         """
@@ -18,7 +18,7 @@ class WebauthN:
 
         uri = EndpointsV1.signUpAuthWebauthnStart
         body = WebauthN._compose_signup_body(identifier, user, origin)
-        response = self._auth_helper.do_post(uri, body)
+        response = self._auth.do_post(uri, body)
 
         return response.json()
 
@@ -36,10 +36,10 @@ class WebauthN:
 
         uri = EndpointsV1.signUpAuthWebauthnFinish
         body = WebauthN._compose_sign_up_in_finish_body(transactionID, response)
-        response = self._auth_helper.do_post(uri, body)
+        response = self._auth.do_post(uri, body)
 
         resp = response.json()
-        jwt_response = self._auth_helper._generate_jwt_response(
+        jwt_response = self._auth._generate_jwt_response(
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
         )
         return jwt_response
@@ -53,7 +53,7 @@ class WebauthN:
 
         uri = EndpointsV1.signInAuthWebauthnStart
         body = WebauthN._compose_signin_body(identifier, origin)
-        response = self._auth_helper.do_post(uri, body)
+        response = self._auth.do_post(uri, body)
 
         return response.json()
 
@@ -71,10 +71,10 @@ class WebauthN:
 
         uri = EndpointsV1.signInAuthWebauthnFinish
         body = WebauthN._compose_sign_up_in_finish_body(transactionID, response)
-        response = self._auth_helper.do_post(uri, body)
+        response = self._auth.do_post(uri, body)
 
         resp = response.json()
-        jwt_response = self._auth_helper._generate_jwt_response(
+        jwt_response = self._auth._generate_jwt_response(
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
         )
         return jwt_response
@@ -93,7 +93,7 @@ class WebauthN:
 
         uri = EndpointsV1.deviceAddAuthWebauthnStart
         body = WebauthN._compose_add_device_start_body(identifier, origin)
-        response = self._auth_helper.do_post(uri, body, None, refresh_token)
+        response = self._auth.do_post(uri, body, None, refresh_token)
 
         return response.json()
 
@@ -111,7 +111,7 @@ class WebauthN:
 
         uri = EndpointsV1.deviceAddAuthWebauthnFinish
         body = WebauthN._compose_sign_up_in_finish_body(transactionID, response)
-        response = self._auth_helper.do_post(uri, body)
+        response = self._auth.do_post(uri, body)
 
     @staticmethod
     def _compose_signup_body(identifier: str, user: dict, origin: str) -> dict:

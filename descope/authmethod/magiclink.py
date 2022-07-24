@@ -1,6 +1,6 @@
 import string
 import requests
-from descope.authhelper import AuthHelper
+from descope.auth import Auth
 
 from descope.common import (
     DEFAULT_BASE_URI,
@@ -11,10 +11,10 @@ from descope.common import (
 from descope.exceptions import AuthException
 
 class MagicLink():
-    _auth_helper: AuthHelper
+    _auth: Auth
 
-    def __init__(self, auth_helper: AuthHelper):
-        self._auth_helper = auth_helper
+    def __init__(self, auth: Auth):
+        self._auth = auth
 
     def sign_in(
         self, method: DeliveryMethod, identifier: str, uri: str
@@ -54,10 +54,10 @@ class MagicLink():
     ) -> dict:
         uri = EndpointsV1.getSessionMagicLinkAuthPath
         body = MagicLink._compose_get_session_body(pending_ref)
-        response = self._auth_helper.do_post(uri, body)
+        response = self._auth.do_post(uri, body)
     
         resp = response.json()
-        jwt_response = self._auth_helper._generate_jwt_response(
+        jwt_response = self._auth._generate_jwt_response(
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
         )
         return jwt_response
@@ -65,9 +65,9 @@ class MagicLink():
     def verify(self, token: str) -> dict:
         uri = EndpointsV1.verifyMagicLinkAuthPath
         body = MagicLink._compose_verify_body(token)
-        response = self._auth_helper.do_post(uri, body)
+        response = self._auth.do_post(uri, body)
         resp = response.json()
-        jwt_response = self._auth_helper._generate_jwt_response(
+        jwt_response = self._auth._generate_jwt_response(
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
         )
         return jwt_response
@@ -89,7 +89,7 @@ class MagicLink():
     def _sign_in(
         self, method: DeliveryMethod, identifier: str, uri: str, cross_device: bool
     ) -> requests.Response :
-        if not self._auth_helper.verify_delivery_method(method, identifier):
+        if not self._auth.verify_delivery_method(method, identifier):
             raise AuthException(
                 500,
                 "identifier failure",
@@ -99,12 +99,12 @@ class MagicLink():
         body = MagicLink._compose_signin_body(identifier, uri, cross_device)
         uri = MagicLink._compose_signin_url(method)
 
-        return self._auth_helper.do_post(uri, body)
+        return self._auth.do_post(uri, body)
 
     def _sign_up(
             self, method: DeliveryMethod, identifier: str, uri: str, cross_device: bool, user: dict = None
         ) -> requests.Response:
-            if not self._auth_helper.verify_delivery_method(method, identifier):
+            if not self._auth.verify_delivery_method(method, identifier):
                 raise AuthException(
                     500,
                     "identifier failure",
@@ -113,12 +113,12 @@ class MagicLink():
 
             body = MagicLink._compose_signup_body(method, identifier, uri, cross_device, user)
             uri = MagicLink._compose_signup_url(method)
-            return self._auth_helper.do_post(uri, body)
+            return self._auth.do_post(uri, body)
             
     def _sign_up_or_in(
         self, method: DeliveryMethod, identifier: str, uri: str, cross_device: bool
     ) -> requests.Response:
-        if not self._auth_helper.verify_delivery_method(method, identifier):
+        if not self._auth.verify_delivery_method(method, identifier):
             raise AuthException(
                 500,
                 "identifier failure",
@@ -127,44 +127,44 @@ class MagicLink():
 
         body = MagicLink._compose_signin_body(identifier, uri, cross_device)
         uri = MagicLink._compose_sign_up_or_in_url(method)
-        return self._auth_helper.do_post(uri, body)
+        return self._auth.do_post(uri, body)
 
     def _update_user_email(self, identifier: str, email: str, refresh_token: str, cross_device: bool) -> requests.Response:
         if identifier == "":
             raise AuthException(500, "Invalid argument", "Identifier cannot be empty")
 
-        AuthHelper.validate_email(email)
+        Auth.validate_email(email)
         
         body = MagicLink._compose_update_user_email_body(identifier, email, cross_device)
         uri = EndpointsV1.updateUserEmailOTPPath
-        return self._auth_helper.do_post(uri, body, None, refresh_token)
+        return self._auth.do_post(uri, body, None, refresh_token)
 
 
     def _update_user_phone(self, method: DeliveryMethod, identifier: str, phone: str, refresh_token: str, cross_device: bool) -> requests.Response:
         if identifier == "":
             raise AuthException(500, "Invalid argument", "Identifier cannot be empty")
         
-        AuthHelper.validate_phone(method, phone)
+        Auth.validate_phone(method, phone)
 
         body = MagicLink._compose_update_user_phone_body(identifier, phone, cross_device)
         uri = EndpointsV1.updateUserPhoneOTPPath
-        return self._auth_helper.do_post(uri, body, None, refresh_token)
+        return self._auth.do_post(uri, body, None, refresh_token)
     
     @staticmethod
     def _compose_signin_url(method: DeliveryMethod) -> str:
-        return AuthHelper.compose_url(EndpointsV1.signInAuthMagicLinkPath, method)
+        return Auth.compose_url(EndpointsV1.signInAuthMagicLinkPath, method)
 
     @staticmethod
     def _compose_signup_url(method: DeliveryMethod) -> str:
-        return AuthHelper.compose_url(EndpointsV1.signUpAuthMagicLinkPath, method)
+        return Auth.compose_url(EndpointsV1.signUpAuthMagicLinkPath, method)
         
     @staticmethod
     def _compose_sign_up_or_in_url(method: DeliveryMethod) -> str:
-        return AuthHelper.compose_url(EndpointsV1.signUpOrInAuthMagicLinkPath, method)
+        return Auth.compose_url(EndpointsV1.signUpOrInAuthMagicLinkPath, method)
 
     @staticmethod
     def _compose_update_phone_url(method: DeliveryMethod) -> str:
-        return AuthHelper.compose_url(EndpointsV1.updateUserPhoneMagicLinkPath, method)
+        return Auth.compose_url(EndpointsV1.updateUserPhoneMagicLinkPath, method)
     
     @staticmethod
     def _compose_signin_body(identifier: string, uri: string, cross_device: bool) -> dict:
@@ -184,7 +184,7 @@ class MagicLink():
 
         if user is not None:
             body["user"] = user
-            method_str, val = AuthHelper.get_identifier_by_method(method, user)
+            method_str, val = Auth.get_identifier_by_method(method, user)
             body[method_str] = val
         return body
 

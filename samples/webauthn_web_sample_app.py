@@ -5,14 +5,14 @@ from flask import Flask, jsonify, render_template, request
 
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
-from descope import AuthClient  # noqa: E402
+from descope import DescopeClient  # noqa: E402
 
 APP = Flask(__name__)
 
 PROJECT_ID = ""
 
-# init the AuthClient
-auth_client = AuthClient(PROJECT_ID)
+# init the DescopeClient
+descope_client = DescopeClient(PROJECT_ID)
 
 # Note: Use "https://localhost:443 in the browser (and not 127.0.0.1)
 
@@ -39,7 +39,7 @@ def home():
 @APP.route("/webauthn/signup/start", methods=["POST"])
 def webauthn_signup_start():
     data = request.get_json()
-    response = auth_client.webauthn.sign_up_start(
+    response = descope_client.webauthn.sign_up_start(
         data["externalID"], {"name": data["displayName"]}
     )
     return response
@@ -48,7 +48,7 @@ def webauthn_signup_start():
 @APP.route("/webauthn/signup/finish", methods=["POST"])
 def webauthn_signup_finish():
     data = request.get_json()
-    response = auth_client.webauthn.sign_up_finish(
+    response = descope_client.webauthn.sign_up_finish(
         data["transactionId"], data["response"]
     )
     print(response)
@@ -58,14 +58,14 @@ def webauthn_signup_finish():
 @APP.route("/webauthn/signin/start", methods=["POST"])
 def webauthn_signin_start():
     id = request.args.get("id")
-    response = auth_client.webauthn.sign_in_start(id)
+    response = descope_client.webauthn.sign_in_start(id)
     return response
 
 
 @APP.route("/webauthn/signin/finish", methods=["POST"])
 def webauthn_signin_finish():
     data = request.get_json()
-    response = auth_client.webauthn.sign_in_finish(
+    response = descope_client.webauthn.sign_in_finish(
         data["transactionId"], data["response"]
     )
     print(response)

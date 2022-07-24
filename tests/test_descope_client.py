@@ -4,12 +4,10 @@ from copy import deepcopy
 from enum import Enum
 from unittest.mock import patch
 
-from descope import SESSION_COOKIE_NAME, AuthClient, AuthException, DeliveryMethod
-from descope.authhelper import AuthHelper
-from descope.common import DEFAULT_BASE_URI, REFRESH_SESSION_COOKIE_NAME, EndpointsV1
+from descope import SESSION_COOKIE_NAME, DescopeClient, AuthException, DeliveryMethod
+from descope.common import REFRESH_SESSION_COOKIE_NAME
 
-
-class TestAuthClient(unittest.TestCase):
+class TestDescopeClient(unittest.TestCase):
     def setUp(self) -> None:
         self.dummy_project_id = "dummy"
         self.public_key_dict = {
@@ -20,190 +18,37 @@ class TestAuthClient(unittest.TestCase):
             "use": "sig",
             "x": "8SMbQQpCQAGAxCdoIz8y9gDw-wXoyoN5ILWpAlBKOcEM1Y7WmRKc1O2cnHggyEVi",
             "y": "N5n5jKZA5Wu7_b4B36KKjJf-VRfJ-XqczfCSYy9GeQLqF-b63idfE0SYaYk9cFqg",
-        }  # {"alg": "ES384", "crv": "P-384", "kid": "2Bt5WLccLUey1Dp7utptZb3Fx9K", "kty": "EC", "use": "sig", "x": "8SMbQQpCQAGAxCdoIz8y9gDw-wXoyoN5ILWpAlBKOcEM1Y7WmRKc1O2cnHggyEVi", "y": "N5n5jKZA5Wu7_b4B36KKjJf-VRfJ-XqczfCSYy9GeQLqF-b63idfE0SYaYk9cFqg"}
+        } 
         self.public_key_str = json.dumps(self.public_key_dict)
 
-    def test_auth_client(self):
+    def test_descope_client(self):
         self.assertRaises(
-            AuthException, AuthClient, project_id=None, public_key="dummy"
+            AuthException, DescopeClient, project_id=None, public_key="dummy"
         )
-        self.assertRaises(AuthException, AuthClient, project_id="", public_key="dummy")
+        self.assertRaises(AuthException, DescopeClient, project_id="", public_key="dummy")
 
         with patch("os.getenv") as mock_getenv:
             mock_getenv.return_value = ""
             self.assertRaises(
-                AuthException, AuthClient, project_id=None, public_key="dummy"
+                AuthException, DescopeClient, project_id=None, public_key="dummy"
             )
 
         self.assertIsNotNone(
-            AuthException, AuthClient(project_id="dummy", public_key=None)
+            AuthException, DescopeClient(project_id="dummy", public_key=None)
         )
         self.assertIsNotNone(
-            AuthException, AuthClient(project_id="dummy", public_key="")
+            AuthException, DescopeClient(project_id="dummy", public_key="")
         )
         self.assertRaises(
-            AuthException, AuthClient, project_id="dummy", public_key="not dict object"
+            AuthException, DescopeClient, project_id="dummy", public_key="not dict object"
         )
         self.assertIsNotNone(
-            AuthClient(project_id="dummy", public_key=self.public_key_str)
-        )
-
-    def test_validate_and_load_public_key(self):
-        # test invalid json
-        self.assertRaises(
-            AuthException,
-            AuthHelper._validate_and_load_public_key,
-            public_key="invalid json",
-        )
-        # test public key without kid property
-        self.assertRaises(
-            AuthException,
-            AuthHelper._validate_and_load_public_key,
-            public_key={"test": "dummy"},
-        )
-
-        # test not dict object
-        self.assertRaises(
-            AuthException, AuthHelper._validate_and_load_public_key, public_key=555
-        )
-        # test invalid dict
-        self.assertRaises(
-            AuthException,
-            AuthHelper._validate_and_load_public_key,
-            public_key={"kid": "dummy"},
-        )
-
-    def test_fetch_public_key(self):
-        client = AuthClient(self.dummy_project_id, self.public_key_dict)
-        valid_keys_response = """[
-    {
-        "alg": "ES384",
-        "crv": "P-384",
-        "kid": "299psneX92K3vpbqPMRCnbZKb27",
-        "kty": "EC",
-        "use": "sig",
-        "x": "435yhcD0tqH6z5M8kNFYEcEYXjzBQWiOvIOZO17rOatpXj-MbA6CKrktiblT4xMb",
-        "y": "YMf1EIz68z2_RKBys5byWRUXlqNF_BhO5F0SddkaRtiqZ8M6n7ZnKl65JGN0EEGr"
-    }
-]
-        """
-
-        # Test failed flows
-        with patch("requests.get") as mock_get:
-            mock_get.return_value.ok = False
-            self.assertRaises(AuthException, client._auth_helper._fetch_public_keys)
-
-        with patch("requests.get") as mock_get:
-            mock_get.return_value.ok = True
-            mock_get.return_value.text = "invalid json"
-            self.assertRaises(AuthException, client._auth_helper._fetch_public_keys)
-
-        # test success flow
-        with patch("requests.get") as mock_get:
-            mock_get.return_value.ok = True
-            mock_get.return_value.text = valid_keys_response
-            self.assertIsNone(client._auth_helper._fetch_public_keys())
-
-    def test_verify_delivery_method(self):
-        self.assertEqual(
-            AuthHelper.verify_delivery_method(DeliveryMethod.EMAIL, "dummy@dummy.com"),
-            True,
-        )
-        self.assertEqual(
-            AuthHelper.verify_delivery_method(DeliveryMethod.EMAIL, "dummy@dummy.com"),
-            True,
-        )
-        self.assertEqual(
-            AuthHelper.verify_delivery_method(DeliveryMethod.EMAIL, "dummy@dummy.com"),
-            True,
-        )
-        self.assertEqual(
-            AuthHelper.verify_delivery_method(DeliveryMethod.EMAIL, ""), False
-        )
-        self.assertEqual(
-            AuthHelper.verify_delivery_method(DeliveryMethod.EMAIL, "dummy@dummy"),
-            False,
-        )
-
-        self.assertEqual(
-            AuthHelper.verify_delivery_method(DeliveryMethod.PHONE, "111111111111"),
-            True,
-        )
-        self.assertEqual(
-            AuthHelper.verify_delivery_method(DeliveryMethod.PHONE, "+111111111111"),
-            True,
-        )
-        self.assertEqual(
-            AuthHelper.verify_delivery_method(DeliveryMethod.PHONE, "++111111111111"),
-            False,
-        )
-        self.assertEqual(
-            AuthHelper.verify_delivery_method(DeliveryMethod.PHONE, "asdsad"), False
-        )
-        self.assertEqual(
-            AuthHelper.verify_delivery_method(DeliveryMethod.PHONE, ""), False
-        )
-        self.assertEqual(
-            AuthHelper.verify_delivery_method(
-                DeliveryMethod.PHONE, "unvalid@phone.number"
-            ),
-            False,
-        )
-
-        self.assertEqual(
-            AuthHelper.verify_delivery_method(DeliveryMethod.WHATSAPP, "111111111111"),
-            True,
-        )
-        self.assertEqual(
-            AuthHelper.verify_delivery_method(DeliveryMethod.WHATSAPP, ""), False
-        )
-        self.assertEqual(
-            AuthHelper.verify_delivery_method(
-                DeliveryMethod.WHATSAPP, "unvalid@phone.number"
-            ),
-            False,
-        )
-
-        class AAA(Enum):
-            DUMMY = 4
-
-        self.assertEqual(
-            AuthHelper.verify_delivery_method(AAA.DUMMY, "unvalid@phone.number"),
-            False,
-        )
-
-    def test_get_identifier_name_by_method(self):
-        user = {"email": "dummy@dummy.com", "phone": "11111111"}
-        self.assertEqual(
-            AuthHelper.get_identifier_by_method(DeliveryMethod.EMAIL, user),
-            ("email", "dummy@dummy.com"),
-        )
-        self.assertEqual(
-            AuthHelper.get_identifier_by_method(DeliveryMethod.PHONE, user),
-            ("phone", "11111111"),
-        )
-        self.assertEqual(
-            AuthHelper.get_identifier_by_method(DeliveryMethod.WHATSAPP, user),
-            ("whatsapp", "11111111"),
-        )
-
-        class AAA(Enum):
-            DUMMY = 4
-
-        self.assertRaises(
-            AuthException, AuthHelper.get_identifier_by_method, AAA.DUMMY, user
-        )
-
-    def test_compose_refresh_token_url(self):
-        self.assertEqual(
-            AuthHelper._compose_refresh_token_url(),
-            "/v1/auth/refresh",
+            DescopeClient(project_id="dummy", public_key=self.public_key_str)
         )
 
     def test_logout(self):
         dummy_refresh_token = ""
-        dummy_valid_jwt_token = ""
-        client = AuthClient(self.dummy_project_id, self.public_key_dict)
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
 
         self.assertRaises(AuthException, client.logout, None)
 
@@ -222,7 +67,7 @@ class TestAuthClient(unittest.TestCase):
             )    
 
     def test_validate_session(self):
-        client = AuthClient(self.dummy_project_id, self.public_key_dict)
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
 
         dummy_refresh_token = ""
 
@@ -254,7 +99,7 @@ class TestAuthClient(unittest.TestCase):
         )
 
         # Test case where key id cannot be found
-        client2 = AuthClient(self.dummy_project_id, None)
+        client2 = DescopeClient(self.dummy_project_id, None)
         with patch("requests.get") as mock_request:
             fake_key = deepcopy(self.public_key_dict)
             # overwrite the kid (so it will not be found)
@@ -269,7 +114,7 @@ class TestAuthClient(unittest.TestCase):
             )
 
         # Test case where we failed to load key
-        client3 = AuthClient(self.dummy_project_id, None)
+        client3 = DescopeClient(self.dummy_project_id, None)
         with patch("requests.get") as mock_request:
             mock_request.return_value.text = """[{"kid": "dummy_kid"}]"""
             mock_request.return_value.ok = True
@@ -282,7 +127,7 @@ class TestAuthClient(unittest.TestCase):
 
         # Test case where header_alg != key[alg]
         self.public_key_dict["alg"] = "ES521"
-        client4 = AuthClient(self.dummy_project_id, self.public_key_dict)
+        client4 = DescopeClient(self.dummy_project_id, self.public_key_dict)
         with patch("requests.get") as mock_request:
             mock_request.return_value.text = """[{"kid": "dummy_kid"}]"""
             mock_request.return_value.ok = True
@@ -294,7 +139,7 @@ class TestAuthClient(unittest.TestCase):
             )
 
         # Test case where header_alg != key[alg]
-        client4 = AuthClient(self.dummy_project_id, None)
+        client4 = DescopeClient(self.dummy_project_id, None)
         self.assertRaises(
             AuthException,
             client4.validate_session_request,
@@ -324,7 +169,7 @@ class TestAuthClient(unittest.TestCase):
     def test_expired_token(self):
         expired_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg5NzI4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEUyIsImNvb2tpZVBhdGgiOiIvIiwiZXhwIjoxNjU3Nzk4MzI4LCJpYXQiOjE2NTc3OTc3MjgsImlzcyI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInN1YiI6IjJCdEVIa2dPdTAybG1NeHpQSWV4ZE10VXcxTSJ9.i-JoPoYmXl3jeLTARvYnInBiRdTT4uHZ3X3xu_n1dhUb1Qy_gqK7Ru8ErYXeENdfPOe4mjShc_HsVyb5PjE2LMFmb58WR8wixtn0R-u_MqTpuI_422Dk6hMRjTFEVRWu"
         dummy_refresh_token = "dummy refresh token"
-        client = AuthClient(self.dummy_project_id, self.public_key_dict)
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
 
         # Test fail flow
         with patch("requests.get") as mock_request:
@@ -348,7 +193,7 @@ class TestAuthClient(unittest.TestCase):
 
         # Test fail flow
         dummy_session_token = "dummy session token"
-        dummy_client = AuthClient(self.dummy_project_id, self.public_key_dict)
+        dummy_client = DescopeClient(self.dummy_project_id, self.public_key_dict)
         with patch("jwt.get_unverified_header") as mock_jwt_get_unverified_header:
             mock_jwt_get_unverified_header.return_value = {}
             self.assertRaises(
@@ -393,40 +238,26 @@ class TestAuthClient(unittest.TestCase):
                 valid_refresh_token,
             )
 
-    def test_refresh_token(self):
-        expired_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg4MDc4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MTY2MDIxNTI3OCwiaWF0IjoxNjU3Nzk2MDc4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQnRFSGtnT3UwMmxtTXh6UElleGRNdFV3MU0ifQ.oAnvJ7MJvCyL_33oM7YCF12JlQ0m6HWRuteUVAdaswfnD4rHEBmPeuVHGljN6UvOP4_Cf0BBBBB9UHVgm3Fwb-q7zlBbsu_nP1-PRl-F8NJjvBgC5RsAYabtJq7LlQmh"
-        dummy_refresh_token = "dummy refresh token"
-        client = AuthClient(self.dummy_project_id, self.public_key_dict)
-
-        # Test fail flow
-        with patch("requests.get") as mock_request:
-            mock_request.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client._auth_helper.refresh_token,
-                dummy_refresh_token,
-            )
-
     def test_public_key_load(self):
         # Test key without kty property
         invalid_public_key = deepcopy(self.public_key_dict)
         invalid_public_key.pop("kty")
         with self.assertRaises(AuthException) as cm:
-            AuthClient(self.dummy_project_id, invalid_public_key)
+            DescopeClient(self.dummy_project_id, invalid_public_key)
         self.assertEqual(cm.exception.status_code, 400)
 
         # Test key without kid property
         invalid_public_key = deepcopy(self.public_key_dict)
         invalid_public_key.pop("kid")
         with self.assertRaises(AuthException) as cm:
-            AuthClient(self.dummy_project_id, invalid_public_key)
+            DescopeClient(self.dummy_project_id, invalid_public_key)
         self.assertEqual(cm.exception.status_code, 400)
 
         # Test key with unknown algorithm
         invalid_public_key = deepcopy(self.public_key_dict)
         invalid_public_key["alg"] = "unknown algorithm"
         with self.assertRaises(AuthException) as cm:
-            AuthClient(self.dummy_project_id, invalid_public_key)
+            DescopeClient(self.dummy_project_id, invalid_public_key)
         self.assertEqual(cm.exception.status_code, 400)
 
 
