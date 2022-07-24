@@ -9,8 +9,6 @@ import jwt
 import requests
 from email_validator import EmailNotValidError, validate_email
 from jwt.exceptions import ExpiredSignatureError
-from requests.cookies import RequestsCookieJar  # noqa: F401
-from requests.models import Response  # noqa: F401
 
 from descope.common import (
     DEFAULT_BASE_URI,

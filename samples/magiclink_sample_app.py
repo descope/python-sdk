@@ -1,8 +1,6 @@
 import logging
 import os
 import sys
-import contextlib
-from http.client import HTTPConnection
 
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
@@ -24,7 +22,7 @@ def main():
         auth_client = AuthClient(project_id=project_id)
 
         logging.info("Going to signup / signin using Magic Link ...")
-        email = input("Please insert email to signup / signin:\n")
+        email =  "asaf@descope.com" # input("Please insert email to signup / signin:\n")
         auth_client.magiclink.sign_up_or_in(
             method=DeliveryMethod.EMAIL,
             identifier=email,
@@ -72,10 +70,10 @@ def main():
 
         try:
             logging.info(f"going to validate session...{session_token_1}")
-            claims = auth_client.validate_session_request(
+            auth_client.validate_session_request(
                 session_token_1, refresh_token_1
             )
-            logging.info("Session is valid and all is OK", refresh_token_1)
+            logging.info("Session is valid and all is OK")
         except AuthException as e:
             logging.info(f"Session is not valid {e}")
 

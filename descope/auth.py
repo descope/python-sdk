@@ -1,4 +1,3 @@
-from typing import Tuple
 import requests
 
 from descope.authhelper import AuthHelper  # noqa: F401
@@ -8,9 +7,9 @@ from descope.authmethod.totp import TOTP  # noqa: F401
 from descope.authmethod.saml import SAML  # noqa: F401
 from descope.authmethod.oauth import OAuth  # noqa: F401
 from descope.authmethod.webauthn import WebauthN  # noqa: F401
+from descope.authmethod.exchanger import Exchanger  # noqa: F401
 from descope.common import (
-    DeliveryMethod,
-    EndpointsV1,
+   EndpointsV1,
 )
 from descope.exceptions import AuthException
 
@@ -22,10 +21,11 @@ class AuthClient:
         auth_helper = AuthHelper(project_id, public_key)
         self._auth_helper = auth_helper
         self._magiclink = MagicLink(auth_helper)
-        self._otp = OTP(auth_helper)
-        self._totp = TOTP(auth_helper)
+        exchanger = Exchanger(auth_helper)
         self._oauth = OAuth(auth_helper)
         self._saml = SAML(auth_helper)
+        self._otp = OTP(auth_helper)
+        self._totp = TOTP(auth_helper)
         self._webauthn = WebauthN(auth_helper)
     
     @property
@@ -51,13 +51,6 @@ class AuthClient:
     @property
     def webauthn(self):
         return self._webauthn
-
-
-    
-
-    @staticmethod
-    def _compose_logout_url() -> str:
-        return EndpointsV1.logoutPath
 
     def validate_session_request(
         self, signed_token: str, signed_refresh_token: str
@@ -97,8 +90,9 @@ class AuthClient:
                 f"signed refresh token {signed_refresh_token} is empty",
             )
 
-        uri = AuthClient._compose_logout_url()
+        uri = EndpointsV1.logoutPath
 
         response = self._auth_helper.do_get(uri, None, None, None, signed_refresh_token)
         return response.cookies
+
     
