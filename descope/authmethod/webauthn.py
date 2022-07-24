@@ -13,7 +13,7 @@ class WebauthN:
         """
         Docs
         """
-        if identifier is None or identifier == "":
+        if not identifier:
             raise AuthException(500, "Invalid argument", "Identifier cannot be empty")
 
         uri = EndpointsV1.signUpAuthWebauthnStart
@@ -26,12 +26,12 @@ class WebauthN:
         """
         Docs
         """
-        if transactionID is None or transactionID == "":
+        if not transactionID:
             raise AuthException(
                 500, "Invalid argument", "TransactionID cannot be empty"
             )
 
-        if response is None or response == "":
+        if not response:
             raise AuthException(500, "Invalid argument", "Response cannot be empty")
 
         uri = EndpointsV1.signUpAuthWebauthnFinish
@@ -48,7 +48,7 @@ class WebauthN:
         """
         Docs
         """
-        if identifier is None or identifier == "":
+        if not identifier:
             raise AuthException(500, "Invalid argument", "Identifier cannot be empty")
 
         uri = EndpointsV1.signInAuthWebauthnStart
@@ -61,12 +61,12 @@ class WebauthN:
         """
         Docs
         """
-        if transactionID is None or transactionID == "":
+        if not transactionID:
             raise AuthException(
                 500, "Invalid argument", "TransactionID cannot be empty"
             )
 
-        if response is None or response == "":
+        if not response:
             raise AuthException(500, "Invalid argument", "Response cannot be empty")
 
         uri = EndpointsV1.signInAuthWebauthnFinish
@@ -83,10 +83,10 @@ class WebauthN:
         """
         Docs
         """
-        if identifier is None or identifier == "":
+        if not identifier:
             raise AuthException(500, "Invalid argument", "Identifier cannot be empty")
 
-        if refresh_token is None or refresh_token == "":
+        if not refresh_token:
             raise AuthException(
                 500, "Invalid argument", "Refresh token cannot be empty"
             )
@@ -101,12 +101,12 @@ class WebauthN:
         """
         Docs
         """
-        if transactionID is None or transactionID == "":
+        if not transactionID:
             raise AuthException(
                 500, "Invalid argument", "TransactionID cannot be empty"
             )
 
-        if response is None or response == "":
+        if not response:
             raise AuthException(500, "Invalid argument", "Response cannot be empty")
 
         uri = EndpointsV1.deviceAddAuthWebauthnFinish

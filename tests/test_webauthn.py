@@ -1,5 +1,6 @@
 import unittest
 from unittest.mock import patch
+from unittest import mock
 import json
 
 from descope import AuthException
@@ -20,7 +21,6 @@ class TestWebauthN(unittest.TestCase):
             "x": "8SMbQQpCQAGAxCdoIz8y9gDw-wXoyoN5ILWpAlBKOcEM1Y7WmRKc1O2cnHggyEVi",
             "y": "N5n5jKZA5Wu7_b4B36KKjJf-VRfJ-XqczfCSYy9GeQLqF-b63idfE0SYaYk9cFqg",
         }
-        
     
     def test_compose_signup_body(self):
         self.assertEqual(
@@ -60,18 +60,22 @@ class TestWebauthN(unittest.TestCase):
         self.assertRaises(AuthException, webauthn.sign_up_start, "")
         self.assertRaises(AuthException, webauthn.sign_up_start, None)
 
-        with patch("requests.get") as mock_post:
+        with patch("requests.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(AuthException, webauthn.sign_up_start, "dummy@dummy.com")
 
         # Test success flow
+        valid_response = json.loads("""{"transactionId": "2COHI3LIixYhf6Q7EECYt20zyMi", "options": "{'publicKey':{'challenge':'5GOywA7BHL1QceQOfxHKDrasuN8SkbbgXmB5ImVZ+QU=','rp':{'name':'comp6','id':'localhost'},'user':{'name”:”dummy@dummy.com','displayName”:”dummy”,”id':'VTJDT0hJNWlWOHJaZ3VURkpKMzV3bjEydHRkTw=='},'pubKeyCredParams':[{'type':'public-key','alg':-7},{'type':'public-key','alg':-35},{'type':'public-key','alg':-36},{'type':'public-key','alg':-257},{'type':'public-key','alg':-258},{'type':'public-key','alg':-259},{'type':'public-key','alg':-37},{'type':'public-key','alg':-38},{'type':'public-key','alg':-39},{'type':'public-key','alg':-8}],'authenticatorSelection':{'userVerification':'preferred'},'timeout':60000,'attestation':'none'}}"}""")
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(webauthn.sign_up_start("dummy@dummy.com"))
 
         with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
-            webauthn.sign_up_start("dummy@dummy.com")
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.json.return_value = valid_response
+            mock_post.return_value = my_mock_response
+            res = webauthn.sign_up_start("dummy@dummy.com")
             expected_uri = f"{DEFAULT_BASE_URI}{EndpointsV1.signUpAuthWebauthnStart}"
             mock_post.assert_called_with(
                 expected_uri,
@@ -82,6 +86,7 @@ class TestWebauthN(unittest.TestCase):
                 },
                 data=json.dumps({"user": {"externalId": "dummy@dummy.com"}}),
             )
+            self.assertEqual(res, valid_response)
 
     def test_sign_up_finish(self):
         webauthn = WebauthN(AuthHelper(self.dummy_project_id, self.public_key_dict))
@@ -98,25 +103,168 @@ class TestWebauthN(unittest.TestCase):
 
         # Test success flow
         with patch("requests.post") as mock_post:
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.cookies = {}
+            
+            data = json.loads("""{"jwts": ["eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg4MDc4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MTY2MDIxNTI3OCwiaWF0IjoxNjU3Nzk2MDc4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQnRFSGtnT3UwMmxtTXh6UElleGRNdFV3MU0ifQ.oAnvJ7MJvCyL_33oM7YCF12JlQ0m6HWRuteUVAdaswfnD4rHEBmPeuVHGljN6UvOP4_Cf0559o39UHVgm3Fwb-q7zlBbsu_nP1-PRl-F8NJjvBgC5RsAYabtJq7LlQmh"], "user": {"externalIds": ["guyp@descope.com"], "name": "", "email": "guyp@descope.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false}, "firstSeen": false}""")
+            my_mock_response.json.return_value = data
+            mock_post.return_value = my_mock_response
+            expected_uri = f"{DEFAULT_BASE_URI}{EndpointsV1.signUpAuthWebauthnFinish}"
+            webauthn.sign_up_finish("t01", "response01")
+            mock_post.assert_called_with(
+                expected_uri,
+                cookies=None,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": "Basic ZHVtbXk6",
+                },
+                data=json.dumps({"transactionID": "t01", "response": "response01"}),
+            )
+            self.assertIsNotNone(webauthn.sign_up_finish("t01", "response01"))
+            
+    def test_sign_in_start(self):
+        webauthn = WebauthN(AuthHelper(self.dummy_project_id, self.public_key_dict))
+
+        # Test failed flows
+        self.assertRaises(AuthException, webauthn.sign_in_start, "")
+        self.assertRaises(AuthException, webauthn.sign_in_start, None)
+
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(AuthException, webauthn.sign_in_start, "dummy@dummy.com")
+
+        # Test success flow
+        valid_response = json.loads("""{"transactionId": "2COHI3LIixYhf6Q7EECYt20zyMi", "options": "{'publicKey':{'challenge':'5GOywA7BHL1QceQOfxHKDrasuN8SkbbgXmB5ImVZ+QU=','rp':{'name':'comp6','id':'localhost'},'user':{'name”:”dummy@dummy.com','displayName”:”dummy”,”id':'VTJDT0hJNWlWOHJaZ3VURkpKMzV3bjEydHRkTw=='},'pubKeyCredParams':[{'type':'public-key','alg':-7},{'type':'public-key','alg':-35},{'type':'public-key','alg':-36},{'type':'public-key','alg':-257},{'type':'public-key','alg':-258},{'type':'public-key','alg':-259},{'type':'public-key','alg':-37},{'type':'public-key','alg':-38},{'type':'public-key','alg':-39},{'type':'public-key','alg':-8}],'authenticatorSelection':{'userVerification':'preferred'},'timeout':60000,'attestation':'none'}}"}""")
+        with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
-            data = json.loads("""{"error": "", "jwts": {"DS": {"cookieDomain": "", "cookieExpiration": 1660388078, "cookieMaxAge": 2591999, "cookieName": "DS", "cookiePath": "/", "exp": 1657796678, "iat": 1657796078, "jwt": "eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg4MDc4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEUyIsImNvb2tpZVBhdGgiOiIvIiwiZXhwIjoxNjU3Nzk2Njc4LCJpYXQiOjE2NTc3OTYwNzgsImlzcyI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInN1YiI6IjJCdEVIa2dPdTAybG1NeHpQSWV4ZE10VXcxTSJ9.lTUKMIjkrdsfryREYrgz4jMV7M0-JF-Q-KNlI0xZhamYqnSYtvzdwAoYiyWamx22XrN5SZkcmVZ5bsx-g2C0p5VMbnmmxEaxcnsFJHqVAJUYEv5HGQHumN50DYSlLXXg", "projectId": "2Bt5WLccLUey1Dp7utptZb3Fx9K", "userId": "2BtEHkgOu02lmMxzPIexdMtUw1M"}, "DSR": {"cookieDomain": "", "cookieExpiration": 1660388078, "cookieMaxAge": 2591999, "cookieName": "DSR", "cookiePath": "/", "exp": 1660215278, "iat": 1657796078, "jwt": "eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg4MDc4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MTY2MDIxNTI3OCwiaWF0IjoxNjU3Nzk2MDc4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQnRFSGtnT3UwMmxtTXh6UElleGRNdFV3MU0ifQ.oAnvJ7MJvCyL_33oM7YCF12JlQ0m6HWRuteUVAdaswfnD4rHEBmPeuVHGljN6UvOP4_Cf0559o39UHVgm3Fwb-q7zlBbsu_nP1-PRl-F8NJjvBgC5RsAYabtJq7LlQmh", "projectId": "2Bt5WLccLUey1Dp7utptZb3Fx9K", "userId": "2BtEHkgOu02lmMxzPIexdMtUw1M"}}, "user": {"externalID": "guyp@descope.com", "name": "", "email": "guyp@descope.com", "phone": "", "verifiedEmail": True, "verifiedPhone": False}, "firstSeen": False}""")
-            mock_post.return_value.data = data
+            self.assertIsNotNone(webauthn.sign_in_start("dummy@dummy.com"))
+
+        with patch("requests.post") as mock_post:
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.json.return_value = valid_response
+            mock_post.return_value = my_mock_response
+            res = webauthn.sign_in_start("dummy@dummy.com")
+            expected_uri = f"{DEFAULT_BASE_URI}{EndpointsV1.signInAuthWebauthnStart}"
+            mock_post.assert_called_with(
+                expected_uri,
+                cookies=None,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": "Basic ZHVtbXk6",
+                },
+                data=json.dumps({"externalId": "dummy@dummy.com"}),
+            )
+            self.assertEqual(res, valid_response)
+
+    def test_sign_in_finish(self):
+        webauthn = WebauthN(AuthHelper(self.dummy_project_id, self.public_key_dict))
+
+        # Test failed flows
+        self.assertRaises(AuthException, webauthn.sign_in_finish, "", "response01")
+        self.assertRaises(AuthException, webauthn.sign_in_finish, None, "response01")
+        self.assertRaises(AuthException, webauthn.sign_in_finish, "t01", "")
+        self.assertRaises(AuthException, webauthn.sign_in_finish, "t01", None)
+
+        with patch("requests.get") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(AuthException, webauthn.sign_in_finish, "t01", "response01")
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.cookies = {}
+            
+            data = json.loads("""{"jwts": ["eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg4MDc4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MTY2MDIxNTI3OCwiaWF0IjoxNjU3Nzk2MDc4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQnRFSGtnT3UwMmxtTXh6UElleGRNdFV3MU0ifQ.oAnvJ7MJvCyL_33oM7YCF12JlQ0m6HWRuteUVAdaswfnD4rHEBmPeuVHGljN6UvOP4_Cf0559o39UHVgm3Fwb-q7zlBbsu_nP1-PRl-F8NJjvBgC5RsAYabtJq7LlQmh"], "user": {"externalIds": ["guyp@descope.com"], "name": "", "email": "guyp@descope.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false}, "firstSeen": false}""")
+            my_mock_response.json.return_value = data
+            mock_post.return_value = my_mock_response
+            expected_uri = f"{DEFAULT_BASE_URI}{EndpointsV1.signInAuthWebauthnFinish}"
+            webauthn.sign_in_finish("t01", "response01")
+            mock_post.assert_called_with(
+                expected_uri,
+                cookies=None,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": "Basic ZHVtbXk6",
+                },
+                data=json.dumps({"transactionID": "t01", "response": "response01"}),
+            )
             self.assertIsNotNone(webauthn.sign_up_finish("t01", "response01"))
 
-        # with patch("requests.post") as mock_post:
-        #     mock_post.return_value.ok = True
-        #     webauthn.sign_up_start("dummy@dummy.com")
-        #     expected_uri = f"{DEFAULT_BASE_URI}{EndpointsV1.signUpAuthWebauthnStart}"
-        #     mock_post.assert_called_with(
-        #         expected_uri,
-        #         cookies=None,
-        #         headers={
-        #             "Content-Type": "application/json",
-        #             "Authorization": "Basic ZHVtbXk6",
-        #         },
-        #         data=json.dumps({"user": {"externalId": "dummy@dummy.com"}}),
-        #     )
-  
+    def test_add_device_start(self):
+        valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkVGVuYW50cyI6eyIiOm51bGx9LCJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwNjc5MjA4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MjA5MDA4NzIwOCwiaWF0IjoxNjU4MDg3MjA4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQzU1dnl4dzBzUkw2RmRNNjhxUnNDRGRST1YifQ.cWP5up4R5xeIl2qoG2NtfLH3Q5nRJVKdz-FDoAXctOQW9g3ceZQi6rZQ-TPBaXMKw68bijN3bLJTqxWW5WHzqRUeopfuzTcMYmC0wP2XGJkrdF6A8D5QW6acSGqglFgu"
+        webauthn = WebauthN(AuthHelper(self.dummy_project_id, self.public_key_dict))
+
+        # Test failed flows
+        self.assertRaises(AuthException, webauthn.add_device_start, "", "")
+        self.assertRaises(AuthException, webauthn.add_device_start, None, "")
+        self.assertRaises(AuthException, webauthn.add_device_start, "dummy@dummy.com", "")
+        self.assertRaises(AuthException, webauthn.add_device_start, "dummy@dummy.com", None)
+
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(AuthException, webauthn.add_device_start, "dummy@dummy.com", valid_jwt_token)
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNotNone(webauthn.add_device_start("dummy@dummy.com", valid_jwt_token))
+
+        with patch("requests.post") as mock_post:
+            valid_response = json.loads("{}")
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.json.return_value = valid_response
+            mock_post.return_value = my_mock_response
+            res = webauthn.add_device_start("dummy@dummy.com", "asdasd")
+            expected_uri = f"{DEFAULT_BASE_URI}{EndpointsV1.deviceAddAuthWebauthnStart}"
+            mock_post.assert_called_with(
+                expected_uri,
+                cookies=None,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": "Basic ZHVtbXk6YXNkYXNk",
+                },
+                data=json.dumps({"externalId": "dummy@dummy.com"}),
+            )
+            self.assertEqual(res, valid_response)
+
+    def test_add_device_finish(self):
+        webauthn = WebauthN(AuthHelper(self.dummy_project_id, self.public_key_dict))
+
+        # Test failed flows
+        self.assertRaises(AuthException, webauthn.add_device_finish, "", "response01")
+        self.assertRaises(AuthException, webauthn.add_device_finish, None, "response01")
+        self.assertRaises(AuthException, webauthn.add_device_finish, "t01", "")
+        self.assertRaises(AuthException, webauthn.add_device_finish, "t01", None)
+
+        with patch("requests.get") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(AuthException, webauthn.add_device_finish, "t01", "response01")
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.cookies = {}
+            
+            data = json.loads("""{"jwts": ["eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg4MDc4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MTY2MDIxNTI3OCwiaWF0IjoxNjU3Nzk2MDc4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQnRFSGtnT3UwMmxtTXh6UElleGRNdFV3MU0ifQ.oAnvJ7MJvCyL_33oM7YCF12JlQ0m6HWRuteUVAdaswfnD4rHEBmPeuVHGljN6UvOP4_Cf0559o39UHVgm3Fwb-q7zlBbsu_nP1-PRl-F8NJjvBgC5RsAYabtJq7LlQmh"], "user": {"externalIds": ["guyp@descope.com"], "name": "", "email": "guyp@descope.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false}, "firstSeen": false}""")
+            my_mock_response.json.return_value = data
+            mock_post.return_value = my_mock_response
+            expected_uri = f"{DEFAULT_BASE_URI}{EndpointsV1.deviceAddAuthWebauthnFinish}"
+            webauthn.add_device_finish("t01", "response01")
+            mock_post.assert_called_with(
+                expected_uri,
+                cookies=None,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": "Basic ZHVtbXk6",
+                },
+                data=json.dumps({"transactionID": "t01", "response": "response01"}),
+            )
+            self.assertIsNotNone(webauthn.sign_up_finish("t01", "response01"))
     
 if __name__ == "__main__":
     unittest.main()

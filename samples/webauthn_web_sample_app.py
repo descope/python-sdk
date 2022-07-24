@@ -9,7 +9,7 @@ from descope import AuthClient  # noqa: E402
 
 APP = Flask(__name__)
 
-PROJECT_ID = "P2CFXxFt9rFaV7F2bHyi458VLBit"
+PROJECT_ID = ""
 
 # init the AuthClient
 auth_client = AuthClient(PROJECT_ID)
