@@ -26,8 +26,8 @@ class TestSAML(unittest.TestCase):
     
     def test_compose_start_params(self):
         self.assertEqual(
-            SAML._compose_start_params("tenantID", "http://dummy.com"),
-            {"tenantID": "tenantID",
+            SAML._compose_start_params("tenant1", "http://dummy.com"),
+            {"tenant": "tenant1",
             "redirectURL": "http://dummy.com"}
         )
 
@@ -37,21 +37,21 @@ class TestSAML(unittest.TestCase):
         # Test failed flows
         self.assertRaises(AuthException, saml.start, "", "http://dummy.com")
         self.assertRaises(AuthException, saml.start, None, "http://dummy.com")
-        self.assertRaises(AuthException, saml.start, "tenantId", "")
-        self.assertRaises(AuthException, saml.start, "tenantId", None)
+        self.assertRaises(AuthException, saml.start, "tenant1", "")
+        self.assertRaises(AuthException, saml.start, "tenant1", None)
 
         with patch("requests.get") as mock_get:
             mock_get.return_value.ok = False
-            self.assertRaises(AuthException, saml.start, "tenantId", "http://dummy.com")
+            self.assertRaises(AuthException, saml.start, "tenant1", "http://dummy.com")
 
         # Test success flow
         with patch("requests.get") as mock_get:
             mock_get.return_value.ok = True
-            self.assertIsNotNone(saml.start("tenantId", "http://dummy.com"))
+            self.assertIsNotNone(saml.start("tenant1", "http://dummy.com"))
 
         with patch("requests.get") as mock_get:
             mock_get.return_value.ok = True
-            saml.start("tenantId", "http://dummy.com")
+            saml.start("tenant1", "http://dummy.com")
             expected_uri = f"{DEFAULT_BASE_URI}{EndpointsV1.authSAMLStart}"
             mock_get.assert_called_with(
                 expected_uri,
@@ -60,7 +60,7 @@ class TestSAML(unittest.TestCase):
                     "Content-Type": "application/json",
                     "Authorization": "Basic ZHVtbXk6",
                 },
-                params={"tenantID": "tenantId",
+                params={"tenant": "tenant1",
                         "redirectURL": "http://dummy.com"},
                 allow_redirects=None,
             )

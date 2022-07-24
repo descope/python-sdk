@@ -12,6 +12,34 @@ class OTP():
     def __init__(self, auth_helper: AuthHelper):
         self._auth_helper = auth_helper
     
+    def sign_in(self, method: DeliveryMethod, identifier: str) -> None:
+        """
+        Sign in a user by OTP
+
+        Args:
+        method (DeliveryMethod): The OTP method you would like to verify the code
+        sent to you (by the same delivery method)
+
+        identifier (str): The identifier based on the chosen delivery method,
+        For email it should be the email address.
+        For phone it should be the phone number you would like to get the code
+        For whatsapp it should be the phone number you would like to get the code
+
+        Raise:
+        AuthException: for any case sign up by otp operation failed
+        """
+
+        if not self._auth_helper.verify_delivery_method(method, identifier):
+            raise AuthException(
+                500,
+                "identifier failure",
+                f"Identifier {identifier} is not valid by delivery method {method}",
+            )
+
+        uri = OTP._compose_signin_url(method)
+        body = OTP._compose_signin_body(identifier)
+        self._auth_helper.do_post(uri, body)
+
     def sign_up(
         self, method: DeliveryMethod, identifier: str, user: dict = None
     ) -> None:
@@ -40,34 +68,6 @@ class OTP():
 
         uri = OTP._compose_signup_url(method)
         body = OTP._compose_signup_body(method, identifier, user)
-        self._auth_helper.do_post(uri, body)
-
-    def sign_in(self, method: DeliveryMethod, identifier: str) -> None:
-        """
-        Sign in a user by OTP
-
-        Args:
-        method (DeliveryMethod): The OTP method you would like to verify the code
-        sent to you (by the same delivery method)
-
-        identifier (str): The identifier based on the chosen delivery method,
-        For email it should be the email address.
-        For phone it should be the phone number you would like to get the code
-        For whatsapp it should be the phone number you would like to get the code
-
-        Raise:
-        AuthException: for any case sign up by otp operation failed
-        """
-
-        if not self._auth_helper.verify_delivery_method(method, identifier):
-            raise AuthException(
-                500,
-                "identifier failure",
-                f"Identifier {identifier} is not valid by delivery method {method}",
-            )
-
-        uri = OTP._compose_signin_url(method)
-        body = OTP._compose_signin_body(identifier)
         self._auth_helper.do_post(uri, body)
 
     def sign_up_or_in(self, method: DeliveryMethod, identifier: str) -> None:
@@ -122,7 +122,6 @@ class OTP():
         )
         return jwt_response
 
-
     def update_user_email(self, identifier: str, email: str, refresh_token: str) -> None:
         if identifier == "":
             raise AuthException(500, "Invalid argument", "Identifier cannot be empty")
@@ -132,7 +131,6 @@ class OTP():
         uri = EndpointsV1.updateUserEmailOTPPath
         body = OTP._compose_update_user_email_body(identifier, email)
         self._auth_helper.do_post(uri, body, None, refresh_token)
-
 
     def update_user_phone(self, method: DeliveryMethod, identifier: str, phone: str, refresh_token: str) -> None:
         if identifier == "":
