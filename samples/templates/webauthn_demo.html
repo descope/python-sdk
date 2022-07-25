@@ -41,11 +41,31 @@
 
     #register {
       background: #2ecc71;
+      border-color: #27ae60;
+    }
+
+    #register:hover {
+      background: #2CC06B;
     }
 
     #login {
       background: #3498db;
+      border-color: #2980b9;
     }
+
+    #login:hover {
+      background: #3183bb;
+    }
+
+    #add {
+      background: #bf30ca;
+      border-color: #a8259f;
+    }
+
+    #add:hover {
+      background: #ad2dab;
+    }
+
   </style>
   <script>
     /// Actions
@@ -90,6 +110,22 @@
       }
     }
 
+    async function performAddDevice() {
+      const username = document.getElementById('email');
+      if (!username || !username.value) {
+        alert("Please enter a username")
+        return
+      }
+
+      try {
+        await addDevice(username.value)
+        alert('Add device succeeded')
+      } catch (err) {
+        console.error('Add device failed', err)
+        alert(`Device device failed: ${err}`)
+      }
+    }
+
     /// Operations
 
     async function register(username) {
@@ -127,6 +163,22 @@
         response: assertionResponse,
       })
       console.log('Received login finish response', finishResponse)
+    }
+
+    async function addDevice(username) {
+      const startResponse = await serverPost(`webauthn/device/add/start?id=${username}`)
+      console.log('Received add device start response', startResponse)
+
+      const assertionOptions = decodeAssertionOptions(startResponse.options)
+      const assertion = await navigator.credentials.get({ publicKey: assertionOptions.publicKey })
+      const assertionResponse = encodeAssertionResponse(assertion)
+      console.log('Sending assertion', assertionResponse)
+
+      const finishResponse = await serverPost('webauthn/device/add/finish', {
+        transactionId: startResponse.transactionId,
+        response: assertionResponse,
+      })
+      console.log('Received add device finish response', finishResponse)
     }
 
     /// Serialization
@@ -232,6 +284,9 @@
         </button>
         <button id="login" onclick="performLogin()">
           Login
+        </button>
+        <button id="add" onclick="performAddDevice()">
+          Add Decive
         </button>
       </div>
     </div>
