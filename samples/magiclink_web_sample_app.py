@@ -13,15 +13,15 @@ from decorators.flask_decorators import (  # noqa: E402;
 )
 
 from descope import AuthException  # noqa: E402
-from descope import AuthClient, DeliveryMethod  # noqa: E402
+from descope import DeliveryMethod, DescopeClient  # noqa: E402
 
 APP = Flask(__name__)
 
 PROJECT_ID = ""
 URI = "http://127.0.0.1:9000/api/verify_by_decorator"
 
-# init the AuthClient
-auth_client = AuthClient(PROJECT_ID)
+# init the DescopeClient
+descope_client = DescopeClient(PROJECT_ID)
 
 
 class Error(Exception):
@@ -38,7 +38,7 @@ def handle_auth_error(ex):
 
 
 @APP.route("/api/signup", methods=["POST"])
-def signup():
+def sign_up():
     data = request.get_json(force=True)
     email = data.get("email", None)
     user = data.get("user", None)
@@ -47,27 +47,43 @@ def signup():
 
     try:
         usr = {"username": "dummy", "name": "", "phone": "", "email": ""}
-        auth_client.sign_up_magiclink(DeliveryMethod.EMAIL, email, URI, usr)
+        descope_client.magiclink.sign_up(DeliveryMethod.EMAIL, email, URI, usr)
     except AuthException:
         return Response("Unauthorized", 401)
 
-    response = "This is SignUp API handling"
+    response = "This is sign up API handling"
     return jsonify(message=response)
 
 
 @APP.route("/api/signin", methods=["POST"])
-def signin():
+def sign_in():
     data = request.get_json(force=True)
     email = data.get("email", None)
     if not email:
         return Response("Unauthorized, missing email", 401)
 
     try:
-        auth_client.sign_in_magiclink(DeliveryMethod.EMAIL, email, URI)
+        descope_client.magiclink.sign_in(DeliveryMethod.EMAIL, email, URI)
     except AuthException:
         return Response("Unauthorized, something went wrong when sending email", 401)
 
-    response = "This is SignIn API handling"
+    response = "This is sign in API handling"
+    return jsonify(message=response)
+
+
+@APP.route("/api/sign-up-or-in", methods=["POST"])
+def sign_up_or_in():
+    data = request.get_json(force=True)
+    email = data.get("email", None)
+    if not email:
+        return Response("Unauthorized, missing email", 401)
+
+    try:
+        descope_client.magiclink.sign_up_or_in(DeliveryMethod.EMAIL, email, URI)
+    except AuthException:
+        return Response("Unauthorized, something went wrong when sending email", 401)
+
+    response = "This is sign up or in API handling"
     return jsonify(message=response)
 
 
@@ -79,7 +95,7 @@ def verify():
         return Response("Unauthorized", 401)
 
     try:
-        jwt_response = auth_client.verify_magiclink(DeliveryMethod.EMAIL, code)
+        jwt_response = descope_client.magiclink.verify(DeliveryMethod.EMAIL, code)
     except AuthException:
         return Response("Unauthorized", 401)
 
@@ -92,7 +108,7 @@ def verify():
 
 
 @APP.route("/api/verify_by_decorator", methods=["GET"])
-@descope_verify_magiclink_token(auth_client)
+@descope_verify_magiclink_token(descope_client)
 def verify_by_decorator(*args, **kwargs):
     claims = _request_ctx_stack.top.claims
     response = f"This is a code verification API, claims are: {claims}"
@@ -101,14 +117,14 @@ def verify_by_decorator(*args, **kwargs):
 
 # This needs authentication
 @APP.route("/api/private")
-@descope_validate_auth(auth_client)
+@descope_validate_auth(descope_client)
 def private():
     response = "This is a private API and you must be authenticated to see this"
     return jsonify(message=response)
 
 
 @APP.route("/api/logout")
-@descope_logout(auth_client)
+@descope_logout(descope_client)
 def logout():
     response = "Logged out"
     return jsonify(message=response)

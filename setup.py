@@ -7,7 +7,7 @@ setuptools.setup(
     name="descope-auth",
     version="0.0.1",
     author="Descope",
-    author_email="guyp@descope.com",
+    author_email="info@descope.com",
     description="Descope Python SDK package",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -20,7 +20,7 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    packages=["descope"],
+    packages=["descope", "descope.authmethod"],
     python_requires=">=3.6",
     install_requires=["requests", "PyJWT", "cryptography", "email-validator"],
 )

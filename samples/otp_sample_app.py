@@ -7,29 +7,27 @@ sys.path.insert(0, os.path.join(dir_name, "../"))
 from descope import (  # noqa: E402
     REFRESH_SESSION_COOKIE_NAME,
     SESSION_COOKIE_NAME,
-    AuthClient,
     AuthException,
     DeliveryMethod,
+    DescopeClient,
 )
 
 logging.basicConfig(level=logging.INFO)
 
 
 def main():
-    identifier = "dummy@dummy.com"
     project_id = ""
     try:
-        auth_client = AuthClient(project_id=project_id)
+        descope_client = DescopeClient(project_id=project_id)
 
-        logging.info(
-            "Going to sign in new user.. expect an email to arrive with the new code.."
-        )
-        auth_client.sign_in_otp(method=DeliveryMethod.EMAIL, identifier=identifier)
+        logging.info("Going to sign in using OTP...")
+        email = input("Please insert email to signin:\n")
+        descope_client.otp.sign_in(method=DeliveryMethod.EMAIL, identifier=email)
 
         value = input("Please insert the code you received by email:\n")
         try:
-            jwt_response = auth_client.verify_code(
-                method=DeliveryMethod.EMAIL, identifier=identifier, code=value
+            jwt_response = descope_client.otp.verify_code(
+                method=DeliveryMethod.EMAIL, identifier=email, code=value
             )
             logging.info("Code is valid")
             session_token = jwt_response["jwts"].get(SESSION_COOKIE_NAME).get("jwt")
@@ -43,22 +41,22 @@ def main():
 
         try:
             logging.info("going to validate session..")
-            claims = auth_client.validate_session_request(session_token, refresh_token)
-
-            session_token = claims.get(SESSION_COOKIE_NAME).get("jwt")
+            claims = descope_client.validate_session_request(
+                session_token, refresh_token
+            )
             logging.info("Session is valid and all is OK")
         except AuthException as e:
             logging.info(f"Session is not valid {e}")
 
         try:
             logging.info("refreshing the session token..")
-            claims = auth_client.refresh_token(session_token, refresh_token)
+            claims = descope_client._auth._refresh_token(refresh_token)
             logging.info(
                 "going to revalidate the session with the newly refreshed token.."
             )
 
             new_session_token = claims.get(SESSION_COOKIE_NAME).get("jwt")
-            claims = auth_client.validate_session_request(
+            claims = descope_client.validate_session_request(
                 new_session_token, refresh_token
             )
             logging.info("Session is valid also for the refreshed token.")
@@ -66,7 +64,7 @@ def main():
             logging.info(f"Session is not valid for the refreshed token: {e}")
 
         try:
-            auth_client.logout(new_session_token, refresh_token)
+            descope_client.logout(refresh_token)
             logging.info("User logged out")
         except AuthException as e:
             logging.info(f"Failed to logged out user, err: {e}")

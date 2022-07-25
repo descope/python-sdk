@@ -13,14 +13,14 @@ from decorators.flask_decorators import (  # noqa: E402;
 )
 
 from descope import AuthException  # noqa: E402
-from descope import AuthClient, DeliveryMethod  # noqa: E402
+from descope import DeliveryMethod, DescopeClient  # noqa: E402
 
 APP = Flask(__name__)
 
 PROJECT_ID = ""
 
-# init the AuthClient
-auth_client = AuthClient(PROJECT_ID)
+# init the DescopeClient
+descope_client = DescopeClient(PROJECT_ID, base_url="https://localhost:8443")
 
 
 class Error(Exception):
@@ -46,7 +46,7 @@ def signup():
 
     try:
         user = {"name": name, "phone": "", "email": email}
-        auth_client.sign_up_otp(DeliveryMethod.EMAIL, email, user)
+        descope_client.otp.sign_up(DeliveryMethod.EMAIL, email, user)
     except AuthException:
         return Response("Unauthorized", 401)
 
@@ -62,7 +62,7 @@ def signin():
         return Response("Unauthorized, missing email", 401)
 
     try:
-        auth_client.sign_in_otp(DeliveryMethod.EMAIL, email)
+        descope_client.otp.sign_in(DeliveryMethod.EMAIL, email)
     except AuthException:
         return Response("Unauthorized, something went wrong when sending email", 401)
 
@@ -78,7 +78,7 @@ def signuporin():
         return Response("Unauthorized, missing email", 401)
 
     try:
-        auth_client.sign_up_or_in_otp(DeliveryMethod.EMAIL, email)
+        descope_client.otp.sign_up_or_in(DeliveryMethod.EMAIL, email)
     except AuthException:
         return Response("Unauthorized, something went wrong when sending email", 401)
 
@@ -95,7 +95,7 @@ def verify():
         return Response("Unauthorized", 401)
 
     try:
-        jwt_response = auth_client.verify_code(DeliveryMethod.EMAIL, email, code)
+        jwt_response = descope_client.otp.verify_code(DeliveryMethod.EMAIL, email, code)
     except AuthException:
         return Response("Unauthorized", 401)
 
@@ -104,7 +104,7 @@ def verify():
 
 
 @APP.route("/api/verify_by_decorator", methods=["POST"])
-@descope_verify_code_by_email(auth_client)
+@descope_verify_code_by_email(descope_client)
 def verify_by_decorator(*args, **kwargs):
     claims = _request_ctx_stack.top.claims
 
@@ -114,14 +114,14 @@ def verify_by_decorator(*args, **kwargs):
 
 # This needs authentication
 @APP.route("/api/private", methods=["POST"])
-@descope_validate_auth(auth_client)
+@descope_validate_auth(descope_client)
 def private():
     response = "This is a private API and you must be authenticated to see this"
     return jsonify(message=response)
 
 
 @APP.route("/api/logout")
-@descope_logout(auth_client)
+@descope_logout(descope_client)
 def logout():
     response = "Logged out"
     return jsonify(message=response)

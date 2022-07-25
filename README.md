@@ -33,7 +33,7 @@ Replace any instance of  `<ProjectID>` in the code below with your company's Pro
 * Import and initialize the ExpresSDK for Python client in your source code
 
     ```code Python
-    from descope import DeliveryMethod, User, AuthClient
+    from descope import DeliveryMethod, User, DescopeClient
     ```
 
 ### 1. Customer Sign-up
@@ -42,14 +42,14 @@ In your sign-up route for OTP (for example, `myapp.com/signup`) generate a sign-
 
 ```code Python
 user = User("newusername", "full name", "555-555-1212", "mytestmail@test.com")
-auth_client.sign_up_otp(DeliveryMethod.EMAIL, "mytestmail@test.com, user)
+descope_client.sign_up_otp(DeliveryMethod.EMAIL, "mytestmail@test.com, user)
 ```
 
 ### 2. Customer Sign-in
 In your sign-in route for OTP (for exmaple, `myapp.com/login`) generate a sign-in request send the OTP verification code via the selected OTP delivery method. In the example below an email is sent to "mytestmail@test.com".
 
 ```code Python
-auth_client.sign_in_otp(DeliveryMethod.EMAIL, "mytestemail@test.com")
+descope_client.sign_in_otp(DeliveryMethod.EMAIL, "mytestemail@test.com")
 }
 ```
 ```code Flask Decorator
@@ -62,7 +62,7 @@ auth_client.sign_in_otp(DeliveryMethod.EMAIL, "mytestemail@test.com")
 In your verify customer route for OTP (for example, `myapp.com/verify`) verify the OTP from either a customer sign-up or sign-in. The validate_session_request function call will write the necessary tokens and cookies to validate each session interaction.
 
 ```code Python
-claims, tokens = validate_session_request(signed_token: str, signed_refresh_token: str)
+claims, tokens = validate_session_request(session_token: str, refresh_token: str)
 ```
 ```code Flask Decorator
 @descope_verify_code_by_email
@@ -75,7 +75,7 @@ Session validation checks to see that the visitor to your website or application
 In the code below the validates the original session tokens and cookies (`session_token`) and validates the tokens and cookies from the client. ValidateSession returns true if the user is authorized, and false if the user is not authorized. In addition, the session will automatically be extended if the user is valid but the sesssion has expired by writing the updated tokens and cookies to the response writer (w).
 
 ```code Python
-claims, tokens = auth_client.validate_session_request('session_token', 'refresh_token')
+claims, tokens = descope_client.validate_session_request('session_token', 'refresh_token')
 ```
 ```code Flask Decorator
 @descope_validate_auth
@@ -87,7 +87,7 @@ claims, tokens = auth_client.validate_session_request('session_token', 'refresh_
 This is currenly a placeholder section only - to demonstrate how the framework can include addtional SDK flows.
 :::
 
-This section will help you implement user authentication using Magiclinks. etc. etc. The flow for MagicLinks is 
+This section will help you implement user authentication using Magiclinks. etc. etc. The flow for MagicLinks is
 
 ```mermaid
 flowchart LR
@@ -98,15 +98,15 @@ flowchart LR
 
 ### Prerequisites
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc laoreet diam vel dignissim posuere. Vestibulum consectetur ante justo, in pretium ligula sollicitudin ut. 
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc laoreet diam vel dignissim posuere. Vestibulum consectetur ante justo, in pretium ligula sollicitudin ut.
 
 ### 1. do this
 
-Sed porttitor eu metus vitae molestie. Sed sed erat risus. Donec eu tempor leo. In hac habitasse platea dictumst. Etiam ornare non tellus eget ultricies. 
+Sed porttitor eu metus vitae molestie. Sed sed erat risus. Donec eu tempor leo. In hac habitasse platea dictumst. Etiam ornare non tellus eget ultricies.
 
 ### 2. do that
 
-Praesent a eros ut est fermentum egestas. Nulla eget leo diam. Vestibulum nec mi nisi. In finibus est in tellus sodales mattis. Etiam gravida nisl id arcu commodo malesuada. 
+Praesent a eros ut est fermentum egestas. Nulla eget leo diam. Vestibulum nec mi nisi. In finibus est in tellus sodales mattis. Etiam gravida nisl id arcu commodo malesuada.
 
 ## ExpressStart with Oauth
 

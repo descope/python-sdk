@@ -1,3 +1,9 @@
+ERROR_TYPE_INVALID_ARGUMENT = "invalid argument"
+ERROR_TYPE_SERVER_ERROR = "server error"
+ERROR_TYPE_INVALID_PUBLIC_KEY = "invalid public key"
+ERROR_TYPE_INVALID_TOKEN = "invalid token"
+
+
 class AuthException(Exception):
     def __init__(
         self,
