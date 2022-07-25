@@ -4,7 +4,7 @@ from unittest.mock import patch
 from descope import AuthException
 from descope.auth import Auth
 from descope.authmethod.saml import SAML
-from descope.common import DEFAULT_BASE_URI, EndpointsV1
+from descope.common import DEFAULT_BASE_URL, EndpointsV1
 
 
 class TestSAML(unittest.TestCase):
@@ -47,7 +47,7 @@ class TestSAML(unittest.TestCase):
         with patch("requests.get") as mock_get:
             mock_get.return_value.ok = True
             saml.start("tenant1", "http://dummy.com")
-            expected_uri = f"{DEFAULT_BASE_URI}{EndpointsV1.authSAMLStart}"
+            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.authSAMLStart}"
             mock_get.assert_called_with(
                 expected_uri,
                 cookies=None,

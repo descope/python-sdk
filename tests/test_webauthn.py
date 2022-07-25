@@ -6,7 +6,7 @@ from unittest.mock import patch
 from descope import AuthException
 from descope.auth import Auth
 from descope.authmethod.webauthn import WebauthN
-from descope.common import DEFAULT_BASE_URI, EndpointsV1
+from descope.common import DEFAULT_BASE_URL, EndpointsV1
 
 
 class TestWebauthN(unittest.TestCase):
@@ -89,7 +89,7 @@ class TestWebauthN(unittest.TestCase):
             mock_post.return_value = my_mock_response
             res = webauthn.sign_up_start("id1", "https://example.com")
 
-            expected_uri = f"{DEFAULT_BASE_URI}{EndpointsV1.signUpAuthWebauthnStart}"
+            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.signUpAuthWebauthnStart}"
             mock_post.assert_called_with(
                 expected_uri,
                 cookies=None,
@@ -128,7 +128,7 @@ class TestWebauthN(unittest.TestCase):
             )
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
-            expected_uri = f"{DEFAULT_BASE_URI}{EndpointsV1.signUpAuthWebauthnFinish}"
+            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.signUpAuthWebauthnFinish}"
             webauthn.sign_up_finish("t01", "response01")
             mock_post.assert_called_with(
                 expected_uri,
@@ -175,7 +175,7 @@ class TestWebauthN(unittest.TestCase):
             my_mock_response.json.return_value = valid_response
             mock_post.return_value = my_mock_response
             res = webauthn.sign_in_start("id1", "https://example.com")
-            expected_uri = f"{DEFAULT_BASE_URI}{EndpointsV1.signInAuthWebauthnStart}"
+            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.signInAuthWebauthnStart}"
             mock_post.assert_called_with(
                 expected_uri,
                 cookies=None,
@@ -213,7 +213,7 @@ class TestWebauthN(unittest.TestCase):
             )
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
-            expected_uri = f"{DEFAULT_BASE_URI}{EndpointsV1.signInAuthWebauthnFinish}"
+            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.signInAuthWebauthnFinish}"
             webauthn.sign_in_finish("t01", "response01")
             mock_post.assert_called_with(
                 expected_uri,
@@ -280,7 +280,7 @@ class TestWebauthN(unittest.TestCase):
             res = webauthn.add_device_start(
                 "dummy@dummy.com", "asdasd", "https://example.com"
             )
-            expected_uri = f"{DEFAULT_BASE_URI}{EndpointsV1.deviceAddAuthWebauthnStart}"
+            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.deviceAddAuthWebauthnStart}"
             mock_post.assert_called_with(
                 expected_uri,
                 cookies=None,
@@ -320,7 +320,7 @@ class TestWebauthN(unittest.TestCase):
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
             expected_uri = (
-                f"{DEFAULT_BASE_URI}{EndpointsV1.deviceAddAuthWebauthnFinish}"
+                f"{DEFAULT_BASE_URL}{EndpointsV1.deviceAddAuthWebauthnFinish}"
             )
             webauthn.add_device_finish("t01", "response01")
             mock_post.assert_called_with(

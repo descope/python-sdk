@@ -15,8 +15,8 @@ from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 class DescopeClient:
     ALGORITHM_KEY = "alg"
 
-    def __init__(self, project_id: str, public_key: str = None):
-        auth = Auth(project_id, public_key)
+    def __init__(self, project_id: str, public_key: str = None, base_url: str = None):
+        auth = Auth(project_id, public_key, base_url)
         self._auth = auth
         self._magiclink = MagicLink(auth)
         self._oauth = OAuth(auth)
@@ -50,16 +50,16 @@ class DescopeClient:
         return self._webauthn
 
     def validate_session_request(
-        self, signed_token: str, signed_refresh_token: str
+        self, session_token: str, refresh_token: str
     ) -> dict:
         """
         Validate session request by verify the session JWT session token
         and session refresh token in case it expired
 
         Args:
-        signed_token (str): The session JWT token to get its signature verified
+        session_token (str): The session JWT token to get its signature verified
 
-        signed_refresh_token (str): The session refresh JWT token that will be
+        refresh_token (str): The session refresh JWT token that will be
         use to refresh the session token (if expired)
 
         Return value (Tuple[dict, dict]):
@@ -72,19 +72,19 @@ class DescopeClient:
         authorized
         """
         token_claims = self._auth._validate_and_load_tokens(
-            signed_token, signed_refresh_token
+            session_token, refresh_token
         )
         return {token_claims["cookieName"]: token_claims}
 
-    def logout(self, signed_refresh_token: str) -> requests.cookies.RequestsCookieJar:
-        if signed_refresh_token is None:
+    def logout(self, refresh_token: str) -> requests.cookies.RequestsCookieJar:
+        if refresh_token is None:
             raise AuthException(
                 400,
                 ERROR_TYPE_INVALID_ARGUMENT,
-                f"signed refresh token {signed_refresh_token} is empty",
+                f"signed refresh token {refresh_token} is empty",
             )
 
         uri = EndpointsV1.logoutPath
 
-        response = self._auth.do_get(uri, None, None, None, signed_refresh_token)
+        response = self._auth.do_get(uri, None, None, None, refresh_token)
         return response.cookies

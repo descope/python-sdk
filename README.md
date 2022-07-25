@@ -62,7 +62,7 @@ descope_client.sign_in_otp(DeliveryMethod.EMAIL, "mytestemail@test.com")
 In your verify customer route for OTP (for example, `myapp.com/verify`) verify the OTP from either a customer sign-up or sign-in. The validate_session_request function call will write the necessary tokens and cookies to validate each session interaction.
 
 ```code Python
-claims, tokens = validate_session_request(signed_token: str, signed_refresh_token: str)
+claims, tokens = validate_session_request(session_token: str, refresh_token: str)
 ```
 ```code Flask Decorator
 @descope_verify_code_by_email

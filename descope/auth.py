@@ -11,8 +11,7 @@ from email_validator import EmailNotValidError, validate_email
 from jwt.exceptions import ExpiredSignatureError
 
 from descope.common import (
-    DEFAULT_BASE_URI,
-    DEFAULT_FETCH_PUBLIC_KEY_URI,
+    DEFAULT_BASE_URL,
     PHONE_REGEX,
     REFRESH_SESSION_COOKIE_NAME,
     SESSION_COOKIE_NAME,
@@ -31,7 +30,7 @@ from descope.exceptions import (
 class Auth:
     ALGORITHM_KEY = "alg"
 
-    def __init__(self, project_id: str, public_key: str = None):
+    def __init__(self, project_id: str, public_key: str = None, base_uri: str = None):
         self.lock_public_keys = Lock()
         # validate project id
         if not project_id:
@@ -44,6 +43,8 @@ class Auth:
                     "Failed to init AuthHelper object, project should not be empty, remember to set env variable DESCOPE_PROJECT_ID or pass along it to init function",
                 )
         self.project_id = project_id
+
+        self.base_url = base_uri or DEFAULT_BASE_URL
 
         if not public_key:
             public_key = os.getenv("DESCOPE_PUBLIC_KEY", None)
@@ -64,7 +65,7 @@ class Auth:
         pswd: str = None,
     ) -> requests.Response:
         response = requests.get(
-            f"{DEFAULT_BASE_URI}{uri}",
+            f"{self.base_url}{uri}",
             headers=self._get_default_headers(pswd),
             cookies=cookies,
             params=params,
@@ -80,7 +81,7 @@ class Auth:
         self, uri: str, body: dict, cookies=None, pswd: str = None
     ) -> requests.Response:
         response = requests.post(
-            f"{DEFAULT_BASE_URI}{uri}",
+            f"{self.base_url}{uri}",
             headers=self._get_default_headers(pswd),
             data=json.dumps(body),
             cookies=cookies,
@@ -229,9 +230,8 @@ class Auth:
     def _fetch_public_keys(self) -> None:
 
         # This function called under mutex protection so no need to acquire it once again
-
         response = requests.get(
-            f"{DEFAULT_FETCH_PUBLIC_KEY_URI}{EndpointsV1.publicKeyPath}/{self.project_id}",
+            f"{self.base_url}{EndpointsV1.publicKeyPath}/{self.project_id}",
             headers=self._get_default_headers(),
         )
 
@@ -303,9 +303,9 @@ class Auth:
         headers["Authorization"] = f"Basic {base64.b64encode(bytes).decode('ascii')}"
         return headers
 
-    def _refresh_token(self, signed_refresh_token: str) -> dict:
+    def _refresh_token(self, refresh_token: str) -> dict:
         uri = Auth._compose_refresh_token_url()
-        response = self.do_get(uri, None, None, None, signed_refresh_token)
+        response = self.do_get(uri, None, None, None, refresh_token)
 
         resp = response.json()
         auth_info = self._generate_auth_info(
@@ -314,17 +314,17 @@ class Auth:
         return auth_info
 
     def _validate_and_load_tokens(
-        self, signed_token: str, signed_refresh_token: str
+        self, session_token: str, refresh_token: str
     ) -> dict:
-        if not signed_token:
+        if not session_token:
             raise AuthException(
                 500,
                 ERROR_TYPE_INVALID_TOKEN,
-                f"signed token {signed_token} is empty",
+                f"signed token {session_token} is empty",
             )
 
         try:
-            unverified_header = jwt.get_unverified_header(signed_token)
+            unverified_header = jwt.get_unverified_header(session_token)
         except Exception as e:
             raise AuthException(
                 500, ERROR_TYPE_INVALID_TOKEN, f"Failed to parse token header, {e}"
@@ -367,17 +367,17 @@ class Auth:
 
         try:
             claims = jwt.decode(
-                jwt=signed_token, key=copy_key[0].key, algorithms=[alg_header]
+                jwt=session_token, key=copy_key[0].key, algorithms=[alg_header]
             )
 
-            claims["jwt"] = signed_token
+            claims["jwt"] = session_token
             return claims
 
         except ExpiredSignatureError:
             # Session token expired, check that refresh token is valid
             try:
                 jwt.decode(
-                    jwt=signed_refresh_token,
+                    jwt=refresh_token,
                     key=copy_key[0].key,
                     algorithms=[alg_header],
                 )
@@ -387,7 +387,7 @@ class Auth:
                 )
 
             # Refresh token is valid now refresh the session token
-            auth_info = self._refresh_token(signed_refresh_token)
+            auth_info = self._refresh_token(refresh_token)
 
             claims = auth_info[SESSION_COOKIE_NAME]
             return claims

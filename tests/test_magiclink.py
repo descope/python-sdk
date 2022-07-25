@@ -6,7 +6,7 @@ from unittest.mock import patch
 from descope import SESSION_COOKIE_NAME, AuthException, DeliveryMethod
 from descope.auth import Auth
 from descope.authmethod.magiclink import MagicLink  # noqa: F401
-from descope.common import DEFAULT_BASE_URI, REFRESH_SESSION_COOKIE_NAME, EndpointsV1
+from descope.common import DEFAULT_BASE_URL, REFRESH_SESSION_COOKIE_NAME, EndpointsV1
 
 
 class TestMagicLink(unittest.TestCase):
@@ -246,7 +246,7 @@ class TestMagicLink(unittest.TestCase):
                 DeliveryMethod.EMAIL, "dummy@dummy.com", "http://test.me"
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URI}{EndpointsV1.signInAuthMagicLinkPath}/email",
+                f"{DEFAULT_BASE_URL}{EndpointsV1.signInAuthMagicLinkPath}/email",
                 cookies=None,
                 headers={
                     "Content-Type": "application/json",
@@ -277,7 +277,7 @@ class TestMagicLink(unittest.TestCase):
                 {"username": "user1", "email": "dummy@dummy.com"},
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URI}{EndpointsV1.signUpAuthMagicLinkPath}/email",
+                f"{DEFAULT_BASE_URL}{EndpointsV1.signUpAuthMagicLinkPath}/email",
                 cookies=None,
                 headers={
                     "Content-Type": "application/json",
@@ -307,7 +307,7 @@ class TestMagicLink(unittest.TestCase):
                 DeliveryMethod.EMAIL, "dummy@dummy.com", "http://test.me"
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URI}{EndpointsV1.signUpOrInAuthMagicLinkPath}/email",
+                f"{DEFAULT_BASE_URL}{EndpointsV1.signUpOrInAuthMagicLinkPath}/email",
                 cookies=None,
                 headers={
                     "Content-Type": "application/json",

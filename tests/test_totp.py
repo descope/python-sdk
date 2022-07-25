@@ -6,7 +6,7 @@ from unittest.mock import patch
 from descope import AuthException
 from descope.auth import Auth
 from descope.authmethod.totp import TOTP  # noqa: F401
-from descope.common import DEFAULT_BASE_URI, EndpointsV1
+from descope.common import DEFAULT_BASE_URL, EndpointsV1
 
 
 class TestTOTP(unittest.TestCase):
@@ -115,7 +115,7 @@ class TestTOTP(unittest.TestCase):
             my_mock_response.json.return_value = valid_response
             mock_post.return_value = my_mock_response
             res = totp.update_user("dummy@dummy.com", valid_jwt_token)
-            expected_uri = f"{DEFAULT_BASE_URI}{EndpointsV1.updateTOTPPath}"
+            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.updateTOTPPath}"
             mock_post.assert_called_with(
                 expected_uri,
                 cookies=None,

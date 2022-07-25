@@ -4,7 +4,7 @@ from unittest.mock import patch
 from descope import AuthException
 from descope.auth import Auth
 from descope.authmethod.oauth import OAuth
-from descope.common import DEFAULT_BASE_URI, EndpointsV1
+from descope.common import DEFAULT_BASE_URL, EndpointsV1
 
 
 class TestOAuth(unittest.TestCase):
@@ -65,7 +65,7 @@ class TestOAuth(unittest.TestCase):
         with patch("requests.get") as mock_get:
             mock_get.return_value.ok = True
             oauth.start("facebook")
-            expected_uri = f"{DEFAULT_BASE_URI}{EndpointsV1.oauthStart}"
+            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.oauthStart}"
             mock_get.assert_called_with(
                 expected_uri,
                 cookies=None,

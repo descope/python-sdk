@@ -6,7 +6,7 @@ from unittest.mock import patch
 from descope import AuthException
 from descope.auth import Auth
 from descope.authmethod.exchanger import Exchanger
-from descope.common import DEFAULT_BASE_URI, EndpointsV1
+from descope.common import DEFAULT_BASE_URL, EndpointsV1
 
 
 class TestExchanger(unittest.TestCase):
@@ -48,7 +48,7 @@ class TestExchanger(unittest.TestCase):
             mock_get.return_value = my_mock_response
             exchanger.exchange_token("c1")
             mock_get.assert_called_with(
-                f"{DEFAULT_BASE_URI}{EndpointsV1.exchangeTokenPath}",
+                f"{DEFAULT_BASE_URL}{EndpointsV1.exchangeTokenPath}",
                 headers={
                     "Content-Type": "application/json",
                     "Authorization": "Basic ZHVtbXk6",
