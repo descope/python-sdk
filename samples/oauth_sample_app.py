@@ -23,7 +23,7 @@ def main():
         resp = descope_client.oauth.start("facebook", "www.google.com")
         logging.info(f"oauth response: {resp}")
 
-        code = input("Please insert the code you received by email:\n")
+        code = input("Please insert the code you received from redirect URI:\n")
 
         jwt_response = descope_client.oauth.exchange_token(code)
         logging.info(f"oauth code valid")
