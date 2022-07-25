@@ -19,7 +19,13 @@ from descope.common import (
     DeliveryMethod,
     EndpointsV1,
 )
-from descope.exceptions import AuthException
+from descope.exceptions import (
+    ERROR_TYPE_INVALID_ARGUMENT,
+    ERROR_TYPE_INVALID_PUBLIC_KEY,
+    ERROR_TYPE_INVALID_TOKEN,
+    ERROR_TYPE_SERVER_ERROR,
+    AuthException,
+)
 
 
 class Auth:
@@ -28,22 +34,22 @@ class Auth:
     def __init__(self, project_id: str, public_key: str = None):
         self.lock_public_keys = Lock()
         # validate project id
-        if project_id is None or project_id == "":
+        if not project_id:
             # try get the project_id from env
             project_id = os.getenv("DESCOPE_PROJECT_ID", "")
             if project_id == "":
                 raise AuthException(
-                    500,
-                    "Init failure",
-                    "Failed to init AuthHelper object, project should not be empty, remember to set env variable DESCOPE_PROJECT_ID or pass along it to init funcation",
+                    400,
+                    ERROR_TYPE_INVALID_ARGUMENT,
+                    "Failed to init AuthHelper object, project should not be empty, remember to set env variable DESCOPE_PROJECT_ID or pass along it to init function",
                 )
         self.project_id = project_id
 
-        if public_key is None or public_key == "":
+        if not public_key:
             public_key = os.getenv("DESCOPE_PUBLIC_KEY", None)
 
         with self.lock_public_keys:
-            if public_key is None or public_key == "":
+            if not public_key:
                 self.public_keys = {}
             else:
                 kid, pub_key, alg = self._validate_and_load_public_key(public_key)
@@ -65,7 +71,9 @@ class Auth:
             allow_redirects=allow_redirects,
         )
         if not response.ok:
-            raise AuthException(response.status_code, "", response.text)
+            raise AuthException(
+                response.status_code, ERROR_TYPE_SERVER_ERROR, response.text
+            )
         return response
 
     def do_post(
@@ -78,7 +86,9 @@ class Auth:
             cookies=cookies,
         )
         if not response.ok:
-            raise AuthException(response.status_code, "", response.text)
+            raise AuthException(
+                response.status_code, ERROR_TYPE_SERVER_ERROR, response.text
+            )
         return response
 
     @staticmethod
@@ -114,7 +124,7 @@ class Auth:
             suffix = "whatsapp"
         else:
             raise AuthException(
-                500, "url composing failure", f"Unknown delivery method {method}"
+                400, ERROR_TYPE_INVALID_ARGUMENT, f"Unknown delivery method {method}"
             )
 
         return f"{base}/{suffix}"
@@ -132,31 +142,39 @@ class Auth:
             return ("whatsapp", whatsapp)
         else:
             raise AuthException(
-                500, "identifier failure", f"Unknown delivery method {method}"
+                400, ERROR_TYPE_INVALID_ARGUMENT, f"Unknown delivery method {method}"
             )
 
     @staticmethod
     def validate_email(email: str):
         if email == "":
-            raise AuthException(500, "Invalid argument", "email cannot be empty")
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "email cannot be empty"
+            )
 
         try:
             validate_email(email)
         except EmailNotValidError as ex:
             raise AuthException(
-                500, "Invalid argument", f"Email address is not valid: {ex}"
+                400, ERROR_TYPE_INVALID_ARGUMENT, f"Email address is not valid: {ex}"
             )
 
     @staticmethod
     def validate_phone(method: DeliveryMethod, phone: str):
         if phone == "":
-            raise AuthException(500, "Invalid argument", "Phone cannot be empty")
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Phone cannot be empty"
+            )
 
         if not re.match(PHONE_REGEX, phone):
-            raise AuthException(500, "Invalid argument", "Phone number not valid")
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Phone number not valid"
+            )
 
         if method != DeliveryMethod.PHONE and method != DeliveryMethod.WHATSAPP:
-            raise AuthException(500, "Invalid argument", "Invalid method supplied")
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Invalid method supplied"
+            )
 
     @staticmethod
     def _validate_and_load_public_key(public_key) -> Tuple[str, jwt.PyJWK, str]:
@@ -165,31 +183,31 @@ class Auth:
                 public_key = json.loads(public_key)
             except Exception as e:
                 raise AuthException(
-                    400,
-                    "Public key failure",
+                    500,
+                    ERROR_TYPE_INVALID_PUBLIC_KEY,
                     f"Failed to load public key, invalid public key, err: {e}",
                 )
 
         if not isinstance(public_key, dict):
             raise AuthException(
-                400,
-                "Public key failure",
+                500,
+                ERROR_TYPE_INVALID_PUBLIC_KEY,
                 "Failed to load public key, invalid public key (unknown type)",
             )
 
         alg = public_key.get(Auth.ALGORITHM_KEY, None)
         if alg is None:
             raise AuthException(
-                400,
-                "Public key failure",
+                500,
+                ERROR_TYPE_INVALID_PUBLIC_KEY,
                 "Failed to load public key, missing alg property",
             )
 
         kid = public_key.get("kid", None)
         if kid is None:
             raise AuthException(
-                400,
-                "Public key failure",
+                500,
+                ERROR_TYPE_INVALID_PUBLIC_KEY,
                 "Failed to load public key, missing kid property",
             )
         try:
@@ -197,14 +215,14 @@ class Auth:
             return (kid, jwt.PyJWK(public_key), alg)
         except jwt.InvalidKeyError as e:
             raise AuthException(
-                400,
-                "Public key failure",
+                500,
+                ERROR_TYPE_INVALID_PUBLIC_KEY,
                 f"Failed to load public key {e}",
             )
         except jwt.PyJWKError as e:
             raise AuthException(
-                400,
-                "Public key failure",
+                500,
+                ERROR_TYPE_INVALID_PUBLIC_KEY,
                 f"Failed to load public key {e}",
             )
 
@@ -219,7 +237,7 @@ class Auth:
 
         if not response.ok:
             raise AuthException(
-                401, "public key fetching failed", f"err: {response.reason}"
+                response.status_code, ERROR_TYPE_SERVER_ERROR, f"err: {response.reason}"
             )
 
         jwks_data = response.text
@@ -227,7 +245,7 @@ class Auth:
             jwkeys = json.loads(jwks_data)
         except Exception as e:
             raise AuthException(
-                401, "public key fetching failed", f"Failed to load jwks {e}"
+                500, ERROR_TYPE_INVALID_PUBLIC_KEY, f"Failed to load jwks {e}"
             )
 
         # Load all public keys for this project
@@ -298,10 +316,10 @@ class Auth:
     def _validate_and_load_tokens(
         self, signed_token: str, signed_refresh_token: str
     ) -> dict:
-        if signed_token is None:
+        if not signed_token:
             raise AuthException(
-                401,
-                "token validation failure",
+                500,
+                ERROR_TYPE_INVALID_TOKEN,
                 f"signed token {signed_token} is empty",
             )
 
@@ -309,19 +327,19 @@ class Auth:
             unverified_header = jwt.get_unverified_header(signed_token)
         except Exception as e:
             raise AuthException(
-                401, "token validation failure", f"Failed to parse token header, {e}"
+                500, ERROR_TYPE_INVALID_TOKEN, f"Failed to parse token header, {e}"
             )
 
         alg_header = unverified_header.get(Auth.ALGORITHM_KEY, None)
         if alg_header is None or alg_header == "none":
             raise AuthException(
-                401, "token validation failure", "Token header is missing alg property"
+                500, ERROR_TYPE_INVALID_TOKEN, "Token header is missing alg property"
             )
 
         kid = unverified_header.get("kid", None)
         if kid is None:
             raise AuthException(
-                401, "token validation failure", "Token header is missing kid property"
+                500, ERROR_TYPE_INVALID_TOKEN, "Token header is missing kid property"
             )
 
         with self.lock_public_keys:
@@ -331,8 +349,8 @@ class Auth:
             found_key = self.public_keys.get(kid, None)
             if found_key is None:
                 raise AuthException(
-                    401,
-                    "public key validation failed",
+                    500,
+                    ERROR_TYPE_INVALID_PUBLIC_KEY,
                     "Failed to validate public key, public key not found",
                 )
             # save reference to the founded key
@@ -342,8 +360,8 @@ class Auth:
         alg_from_key = copy_key[1]
         if alg_header != alg_from_key:
             raise AuthException(
-                401,
-                "token validation failure",
+                500,
+                ERROR_TYPE_INVALID_PUBLIC_KEY,
                 "header algorithm is not matched key algorithm",
             )
 
@@ -365,7 +383,7 @@ class Auth:
                 )
             except Exception as e:
                 raise AuthException(
-                    401, "token validation failure", f"refresh token is not valid, {e}"
+                    401, ERROR_TYPE_INVALID_TOKEN, f"refresh token is not valid, {e}"
                 )
 
             # Refresh token is valid now refresh the session token
@@ -376,7 +394,7 @@ class Auth:
 
         except Exception as e:
             raise AuthException(
-                401, "token validation failure", f"token is not valid, {e}"
+                500, ERROR_TYPE_INVALID_TOKEN, f"token is not valid, {e}"
             )
 
     @staticmethod

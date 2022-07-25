@@ -40,7 +40,9 @@ def home():
 def webauthn_signup_start():
     data = request.get_json()
     response = descope_client.webauthn.sign_up_start(
-        data["externalID"], "https://localhost", {"name": data["displayName"]},
+        data["externalID"],
+        "https://localhost",
+        {"name": data["displayName"]},
     )
     return response
 

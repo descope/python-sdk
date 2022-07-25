@@ -163,9 +163,12 @@ class TestDescopeClient(unittest.TestCase):
             )
 
     def test_exception_object(self):
-        ex = AuthException(401, "dummy error type", "dummy error message")
-        str_ex = str(ex)  # noqa: F841
-        repr_ex = repr(ex)  # noqa: F841
+        ex = AuthException(401, "dummy-type", "dummy error message")
+        self.assertIsNotNone(str(ex))
+        self.assertIsNotNone(repr(ex))
+        self.assertEqual(ex.status_code, 401)
+        self.assertEqual(ex.error_type, "dummy-type")
+        self.assertEqual(ex.error_message, "dummy error message")
 
     def test_expired_token(self):
         expired_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg5NzI4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEUyIsImNvb2tpZVBhdGgiOiIvIiwiZXhwIjoxNjU3Nzk4MzI4LCJpYXQiOjE2NTc3OTc3MjgsImlzcyI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInN1YiI6IjJCdEVIa2dPdTAybG1NeHpQSWV4ZE10VXcxTSJ9.i-JoPoYmXl3jeLTARvYnInBiRdTT4uHZ3X3xu_n1dhUb1Qy_gqK7Ru8ErYXeENdfPOe4mjShc_HsVyb5PjE2LMFmb58WR8wixtn0R-u_MqTpuI_422Dk6hMRjTFEVRWu"
@@ -245,21 +248,21 @@ class TestDescopeClient(unittest.TestCase):
         invalid_public_key.pop("kty")
         with self.assertRaises(AuthException) as cm:
             DescopeClient(self.dummy_project_id, invalid_public_key)
-        self.assertEqual(cm.exception.status_code, 400)
+        self.assertEqual(cm.exception.status_code, 500)
 
         # Test key without kid property
         invalid_public_key = deepcopy(self.public_key_dict)
         invalid_public_key.pop("kid")
         with self.assertRaises(AuthException) as cm:
             DescopeClient(self.dummy_project_id, invalid_public_key)
-        self.assertEqual(cm.exception.status_code, 400)
+        self.assertEqual(cm.exception.status_code, 500)
 
         # Test key with unknown algorithm
         invalid_public_key = deepcopy(self.public_key_dict)
         invalid_public_key["alg"] = "unknown algorithm"
         with self.assertRaises(AuthException) as cm:
             DescopeClient(self.dummy_project_id, invalid_public_key)
-        self.assertEqual(cm.exception.status_code, 400)
+        self.assertEqual(cm.exception.status_code, 500)
 
     def test_client_properties(self):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)

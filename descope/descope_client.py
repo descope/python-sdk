@@ -9,7 +9,7 @@ from descope.authmethod.saml import SAML  # noqa: F401
 from descope.authmethod.totp import TOTP  # noqa: F401
 from descope.authmethod.webauthn import WebauthN  # noqa: F401
 from descope.common import EndpointsV1
-from descope.exceptions import AuthException
+from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
 class DescopeClient:
@@ -77,11 +77,10 @@ class DescopeClient:
         return {token_claims["cookieName"]: token_claims}
 
     def logout(self, signed_refresh_token: str) -> requests.cookies.RequestsCookieJar:
-
         if signed_refresh_token is None:
             raise AuthException(
-                401,
-                "token validation failure",
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
                 f"signed refresh token {signed_refresh_token} is empty",
             )
 

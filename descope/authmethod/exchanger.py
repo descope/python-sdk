@@ -1,6 +1,6 @@
 from descope.auth import Auth
 from descope.common import REFRESH_SESSION_COOKIE_NAME, EndpointsV1
-from descope.exceptions import AuthException
+from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
 class Exchanger:
@@ -11,10 +11,10 @@ class Exchanger:
 
     def exchange_token(self, code: str) -> dict:
         """ """
-        if not code or code == "":
+        if not code:
             raise AuthException(
                 400,
-                "Empty exchange code",
+                ERROR_TYPE_INVALID_ARGUMENT,
                 "Empty exchange code",
             )
 

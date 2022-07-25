@@ -4,7 +4,7 @@ import requests
 
 from descope.auth import Auth
 from descope.common import REFRESH_SESSION_COOKIE_NAME, DeliveryMethod, EndpointsV1
-from descope.exceptions import AuthException
+from descope.exceptions import ERROR_TYPE_INVALID_PUBLIC_KEY, AuthException
 
 
 class MagicLink:
@@ -92,8 +92,8 @@ class MagicLink:
     ) -> requests.Response:
         if not self._auth.verify_delivery_method(method, identifier):
             raise AuthException(
-                500,
-                "identifier failure",
+                400,
+                ERROR_TYPE_INVALID_PUBLIC_KEY,
                 f"Identifier {identifier} is not valid by delivery method {method}",
             )
 
@@ -112,8 +112,8 @@ class MagicLink:
     ) -> requests.Response:
         if not self._auth.verify_delivery_method(method, identifier):
             raise AuthException(
-                500,
-                "identifier failure",
+                400,
+                ERROR_TYPE_INVALID_PUBLIC_KEY,
                 f"Identifier {identifier} is not valid by delivery method {method}",
             )
 
@@ -128,8 +128,8 @@ class MagicLink:
     ) -> requests.Response:
         if not self._auth.verify_delivery_method(method, identifier):
             raise AuthException(
-                500,
-                "identifier failure",
+                400,
+                ERROR_TYPE_INVALID_PUBLIC_KEY,
                 f"Identifier {identifier} is not valid by delivery method {method}",
             )
 
@@ -140,8 +140,10 @@ class MagicLink:
     def _update_user_email(
         self, identifier: str, email: str, refresh_token: str, cross_device: bool
     ) -> requests.Response:
-        if identifier == "":
-            raise AuthException(500, "Invalid argument", "Identifier cannot be empty")
+        if not identifier:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Identifier cannot be empty"
+            )
 
         Auth.validate_email(email)
 
@@ -159,8 +161,10 @@ class MagicLink:
         refresh_token: str,
         cross_device: bool,
     ) -> requests.Response:
-        if identifier == "":
-            raise AuthException(500, "Invalid argument", "Identifier cannot be empty")
+        if not identifier:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Identifier cannot be empty"
+            )
 
         Auth.validate_phone(method, phone)
 

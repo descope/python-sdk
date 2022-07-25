@@ -1,7 +1,7 @@
 from descope.auth import Auth
 from descope.authmethod.exchanger import Exchanger  # noqa: F401
 from descope.common import EndpointsV1, OAuthProviders
-from descope.exceptions import AuthException
+from descope.exceptions import ERROR_TYPE_INVALID_PUBLIC_KEY, AuthException
 
 
 class OAuth(Exchanger):
@@ -12,8 +12,8 @@ class OAuth(Exchanger):
         """ """
         if not self._verify_provider(provider):
             raise AuthException(
-                500,
-                "Unknown OAuth provider",
+                400,
+                ERROR_TYPE_INVALID_PUBLIC_KEY,
                 f"Unknown OAuth provider: {provider}",
             )
 

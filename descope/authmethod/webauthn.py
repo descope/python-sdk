@@ -1,6 +1,6 @@
 from descope.auth import Auth
 from descope.common import REFRESH_SESSION_COOKIE_NAME, EndpointsV1
-from descope.exceptions import AuthException
+from descope.exceptions import ERROR_TYPE_INVALID_PUBLIC_KEY, AuthException
 
 
 class WebauthN:
@@ -9,17 +9,19 @@ class WebauthN:
     def __init__(self, auth):
         self._auth = auth
 
-    def sign_up_start(
-        self, identifier: str, origin: str, user: dict = None
-    ) -> dict:
+    def sign_up_start(self, identifier: str, origin: str, user: dict = None) -> dict:
         """
         Docs
         """
         if not identifier:
-            raise AuthException(500, "Invalid argument", "Identifier cannot be empty")
-        
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Identifier cannot be empty"
+            )
+
         if not origin:
-            raise AuthException(500, "Invalid argument", "Origin cannot be empty")
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Origin cannot be empty"
+            )
 
         uri = EndpointsV1.signUpAuthWebauthnStart
         body = WebauthN._compose_signup_body(identifier, user, origin)
@@ -33,11 +35,13 @@ class WebauthN:
         """
         if not transactionID:
             raise AuthException(
-                500, "Invalid argument", "TransactionID cannot be empty"
+                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Transaction id cannot be empty"
             )
 
         if not response:
-            raise AuthException(500, "Invalid argument", "Response cannot be empty")
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Response cannot be empty"
+            )
 
         uri = EndpointsV1.signUpAuthWebauthnFinish
         body = WebauthN._compose_sign_up_in_finish_body(transactionID, response)
@@ -54,31 +58,37 @@ class WebauthN:
         Docs
         """
         if not identifier:
-            raise AuthException(500, "Invalid argument", "Identifier cannot be empty")
-        
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Identifier cannot be empty"
+            )
+
         if not origin:
-            raise AuthException(500, "Invalid argument", "Origin cannot be empty")
-        
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Origin cannot be empty"
+            )
+
         uri = EndpointsV1.signInAuthWebauthnStart
         body = WebauthN._compose_signin_body(identifier, origin)
         response = self._auth.do_post(uri, body)
 
         return response.json()
 
-    def sign_in_finish(self, transactionID: str, response: str) -> dict:
+    def sign_in_finish(self, transaction_id: str, response: str) -> dict:
         """
         Docs
         """
-        if not transactionID:
+        if not transaction_id:
             raise AuthException(
-                500, "Invalid argument", "TransactionID cannot be empty"
+                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Transaction id cannot be empty"
             )
 
         if not response:
-            raise AuthException(500, "Invalid argument", "Response cannot be empty")
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Response cannot be empty"
+            )
 
         uri = EndpointsV1.signInAuthWebauthnFinish
-        body = WebauthN._compose_sign_up_in_finish_body(transactionID, response)
+        body = WebauthN._compose_sign_up_in_finish_body(transaction_id, response)
         response = self._auth.do_post(uri, body)
 
         resp = response.json()
@@ -92,11 +102,13 @@ class WebauthN:
         Docs
         """
         if not identifier:
-            raise AuthException(500, "Invalid argument", "Identifier cannot be empty")
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Identifier cannot be empty"
+            )
 
         if not refresh_token:
             raise AuthException(
-                500, "Invalid argument", "Refresh token cannot be empty"
+                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Refresh token cannot be empty"
             )
 
         uri = EndpointsV1.deviceAddAuthWebauthnStart
@@ -105,20 +117,22 @@ class WebauthN:
 
         return response.json()
 
-    def add_device_finish(self, transactionID: str, response: str) -> dict:
+    def add_device_finish(self, transaction_id: str, response: str) -> dict:
         """
         Docs
         """
-        if not transactionID:
+        if not transaction_id:
             raise AuthException(
-                500, "Invalid argument", "TransactionID cannot be empty"
+                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Transaction id cannot be empty"
             )
 
         if not response:
-            raise AuthException(500, "Invalid argument", "Response cannot be empty")
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Response cannot be empty"
+            )
 
         uri = EndpointsV1.deviceAddAuthWebauthnFinish
-        body = WebauthN._compose_sign_up_in_finish_body(transactionID, response)
+        body = WebauthN._compose_sign_up_in_finish_body(transaction_id, response)
         response = self._auth.do_post(uri, body)
 
     @staticmethod
@@ -137,8 +151,8 @@ class WebauthN:
         return body
 
     @staticmethod
-    def _compose_sign_up_in_finish_body(transactionID: str, response: str) -> dict:
-        return {"transactionID": transactionID, "response": response}
+    def _compose_sign_up_in_finish_body(transaction_id: str, response: str) -> dict:
+        return {"transactionId": transaction_id, "response": response}
 
     @staticmethod
     def _compose_add_device_start_body(identifier: str, origin: str) -> dict:
@@ -148,5 +162,5 @@ class WebauthN:
         return body
 
     @staticmethod
-    def _compose_add_device_finish_body(transactionID: str, response: str) -> dict:
-        return {"transactionID": transactionID, "response": response}
+    def _compose_add_device_finish_body(transaction_id: str, response: str) -> dict:
+        return {"transactionId": transaction_id, "response": response}
