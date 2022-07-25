@@ -3,10 +3,9 @@ from copy import deepcopy
 from enum import Enum
 from unittest.mock import patch
 
-from descope import SESSION_COOKIE_NAME, DescopeClient, AuthException, DeliveryMethod
-from descope.common import REFRESH_SESSION_COOKIE_NAME
-
+from descope import SESSION_COOKIE_NAME, AuthException, DeliveryMethod, DescopeClient
 from descope.authmethod.otp import OTP  # noqa: F401
+from descope.common import REFRESH_SESSION_COOKIE_NAME
 
 
 class TestOTP(unittest.TestCase):
@@ -149,15 +148,18 @@ class TestOTP(unittest.TestCase):
             self.assertIsNone(
                 client.otp.sign_in(DeliveryMethod.EMAIL, "dummy@dummy.com")
             )
-    
-    
+
     def test_verify_code(self):
         code = "1234"
 
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)
 
         self.assertRaises(
-            AuthException, client.otp.verify_code, DeliveryMethod.EMAIL, "dummy@dummy", code
+            AuthException,
+            client.otp.verify_code,
+            DeliveryMethod.EMAIL,
+            "dummy@dummy",
+            code,
         )
         self.assertRaises(
             AuthException, client.otp.verify_code, DeliveryMethod.EMAIL, "", code

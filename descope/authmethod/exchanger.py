@@ -1,15 +1,14 @@
-
 from descope.auth import Auth
+from descope.common import REFRESH_SESSION_COOKIE_NAME, EndpointsV1
 from descope.exceptions import AuthException
-from descope.common import EndpointsV1, REFRESH_SESSION_COOKIE_NAME
 
 
-class Exchanger(object):
-    _auth:Auth = None
-    
+class Exchanger:
+    _auth: Auth = None
+
     def __init__(self, auth: Auth):
         self._auth = auth
-        
+
     def exchange_token(self, code: str) -> str:
         """ """
         if not code or code == "":
@@ -27,7 +26,7 @@ class Exchanger(object):
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
         )
         return jwt_response
-        
+
     @staticmethod
     def _compose_exchange_params(code: str) -> dict:
         return {"code": code}

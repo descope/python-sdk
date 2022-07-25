@@ -1,7 +1,7 @@
 from descope.auth import Auth
+from descope.authmethod.exchanger import Exchanger  # noqa: F401
 from descope.common import EndpointsV1
 from descope.exceptions import AuthException
-from descope.authmethod.exchanger import Exchanger  # noqa: F401
 
 
 class SAML(Exchanger):
@@ -23,7 +23,7 @@ class SAML(Exchanger):
         response = self._auth.do_get(uri, None, params)
 
         return response.json()
-    
+
     @staticmethod
     def _compose_start_params(tenant: str, return_url: str) -> dict:
         res = {"tenant": tenant}

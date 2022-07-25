@@ -13,7 +13,7 @@ from decorators.flask_decorators import (  # noqa: E402;
 )
 
 from descope import AuthException  # noqa: E402
-from descope import DescopeClient, DeliveryMethod  # noqa: E402
+from descope import DeliveryMethod, DescopeClient  # noqa: E402
 
 APP = Flask(__name__)
 

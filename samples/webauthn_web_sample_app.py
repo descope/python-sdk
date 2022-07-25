@@ -51,7 +51,6 @@ def webauthn_signup_finish():
     response = descope_client.webauthn.sign_up_finish(
         data["transactionId"], data["response"]
     )
-    print(response)
     return response
 
 
@@ -68,7 +67,6 @@ def webauthn_signin_finish():
     response = descope_client.webauthn.sign_in_finish(
         data["transactionId"], data["response"]
     )
-    print(response)
     return response
 
 

@@ -38,10 +38,10 @@ class EndpointsV1:
 
     # saml
     authSAMLStart = "/v1/auth/saml/authorize"
-    
+
     # exchange (saml + oauth)
     exchangeTokenPath = "/v1/auth/exchange"
-    
+
     # totp
     signUpAuthTOTPPath = "/v1/auth/signup/totp"
     verifyTOTPPath = "/v1/auth/verify/totp"

@@ -7,9 +7,9 @@ sys.path.insert(0, os.path.join(dir_name, "../"))
 from descope import (  # noqa: E402
     REFRESH_SESSION_COOKIE_NAME,
     SESSION_COOKIE_NAME,
-    DescopeClient,
     AuthException,
     DeliveryMethod,
+    DescopeClient,
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -22,7 +22,7 @@ def main():
         descope_client = DescopeClient(project_id=project_id)
 
         logging.info("Going to signup / signin using Magic Link ...")
-        email =  "asaf@descope.com" # input("Please insert email to signup / signin:\n")
+        email = "asaf@descope.com"  # input("Please insert email to signup / signin:\n")
         descope_client.magiclink.sign_up_or_in(
             method=DeliveryMethod.EMAIL,
             identifier=email,
@@ -48,9 +48,7 @@ def main():
         except AuthException as e:
             logging.info(f"Failed to logged after sign-in / sign-up, err: {e}")
 
-        logging.info(
-            "Going to sign in same user again..."
-        )
+        logging.info("Going to sign in same user again...")
         descope_client.magiclink.sign_in(
             method=DeliveryMethod.EMAIL, identifier=email, uri="http://test.me"
         )
@@ -70,15 +68,15 @@ def main():
 
         try:
             logging.info(f"going to validate session...{session_token_1}")
-            descope_client.validate_session_request(
-                session_token_1, refresh_token_1
-            )
+            descope_client.validate_session_request(session_token_1, refresh_token_1)
             logging.info("Session is valid and all is OK")
         except AuthException as e:
             logging.info(f"Session is not valid {e}")
 
         try:
-            logging.info(f"Going to logout at the second time\nrefresh_token: {refresh_token_1}")
+            logging.info(
+                f"Going to logout at the second time\nrefresh_token: {refresh_token_1}"
+            )
             descope_client.logout(refresh_token_1)
             logging.info("User logged out")
         except AuthException as e:

@@ -1,13 +1,13 @@
 from descope.auth import Auth
-from descope.exceptions import AuthException
-from descope.common import EndpointsV1, OAuthProviders
 from descope.authmethod.exchanger import Exchanger  # noqa: F401
+from descope.common import EndpointsV1, OAuthProviders
+from descope.exceptions import AuthException
 
 
 class OAuth(Exchanger):
     def __init__(self, auth: Auth):
         super().__init__(auth)
-        
+
     def start(self, provider: str, return_url: str = "") -> dict:
         """ """
         if not self._verify_provider(provider):
@@ -20,7 +20,7 @@ class OAuth(Exchanger):
         uri = EndpointsV1.oauthStart
         params = OAuth._compose_start_params(provider, return_url)
         response = self._auth.do_get(uri, None, params, False)
-    
+
         return response.json()
 
     @staticmethod
@@ -32,7 +32,7 @@ class OAuth(Exchanger):
             return True
         else:
             return False
-        
+
     @staticmethod
     def _compose_start_params(provider: str, returnURL: str) -> dict:
         res = {"provider": provider}
