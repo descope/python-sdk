@@ -313,9 +313,7 @@ class Auth:
         )
         return auth_info
 
-    def _validate_and_load_tokens(
-        self, session_token: str, refresh_token: str
-    ) -> dict:
+    def _validate_and_load_tokens(self, session_token: str, refresh_token: str) -> dict:
         if not session_token:
             raise AuthException(
                 500,

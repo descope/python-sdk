@@ -49,9 +49,7 @@ class DescopeClient:
     def webauthn(self):
         return self._webauthn
 
-    def validate_session_request(
-        self, session_token: str, refresh_token: str
-    ) -> dict:
+    def validate_session_request(self, session_token: str, refresh_token: str) -> dict:
         """
         Validate session request by verify the session JWT session token
         and session refresh token in case it expired
