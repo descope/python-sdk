@@ -87,7 +87,7 @@ claims, tokens = descope_client.validate_session_request('session_token', 'refre
 This is currenly a placeholder section only - to demonstrate how the framework can include addtional SDK flows.
 :::
 
-This section will help you implement user authentication using Magiclinks. etc. etc. The flow for MagicLinks is 
+This section will help you implement user authentication using Magiclinks. etc. etc. The flow for MagicLinks is
 
 ```mermaid
 flowchart LR
@@ -98,15 +98,15 @@ flowchart LR
 
 ### Prerequisites
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc laoreet diam vel dignissim posuere. Vestibulum consectetur ante justo, in pretium ligula sollicitudin ut. 
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc laoreet diam vel dignissim posuere. Vestibulum consectetur ante justo, in pretium ligula sollicitudin ut.
 
 ### 1. do this
 
-Sed porttitor eu metus vitae molestie. Sed sed erat risus. Donec eu tempor leo. In hac habitasse platea dictumst. Etiam ornare non tellus eget ultricies. 
+Sed porttitor eu metus vitae molestie. Sed sed erat risus. Donec eu tempor leo. In hac habitasse platea dictumst. Etiam ornare non tellus eget ultricies.
 
 ### 2. do that
 
-Praesent a eros ut est fermentum egestas. Nulla eget leo diam. Vestibulum nec mi nisi. In finibus est in tellus sodales mattis. Etiam gravida nisl id arcu commodo malesuada. 
+Praesent a eros ut est fermentum egestas. Nulla eget leo diam. Vestibulum nec mi nisi. In finibus est in tellus sodales mattis. Etiam gravida nisl id arcu commodo malesuada.
 
 ## ExpressStart with Oauth
 

@@ -1,16 +1,14 @@
 import requests
 
 from descope.auth import Auth  # noqa: F401
-from descope.authmethod.magiclink import MagicLink  # noqa: F401
-from descope.authmethod.otp import OTP  # noqa: F401
-from descope.authmethod.totp import TOTP  # noqa: F401
-from descope.authmethod.saml import SAML  # noqa: F401
-from descope.authmethod.oauth import OAuth  # noqa: F401
-from descope.authmethod.webauthn import WebauthN  # noqa: F401
 from descope.authmethod.exchanger import Exchanger  # noqa: F401
-from descope.common import (
-   EndpointsV1,
-)
+from descope.authmethod.magiclink import MagicLink  # noqa: F401
+from descope.authmethod.oauth import OAuth  # noqa: F401
+from descope.authmethod.otp import OTP  # noqa: F401
+from descope.authmethod.saml import SAML  # noqa: F401
+from descope.authmethod.totp import TOTP  # noqa: F401
+from descope.authmethod.webauthn import WebauthN  # noqa: F401
+from descope.common import EndpointsV1
 from descope.exceptions import AuthException
 
 
@@ -26,7 +24,7 @@ class DescopeClient:
         self._otp = OTP(auth)
         self._totp = TOTP(auth)
         self._webauthn = WebauthN(auth)
-    
+
     @property
     def magiclink(self):
         return self._magiclink
@@ -78,9 +76,7 @@ class DescopeClient:
         )
         return {token_claims["cookieName"]: token_claims}
 
-    def logout(
-        self, signed_refresh_token: str
-    ) -> requests.cookies.RequestsCookieJar:
+    def logout(self, signed_refresh_token: str) -> requests.cookies.RequestsCookieJar:
 
         if signed_refresh_token is None:
             raise AuthException(
@@ -93,5 +89,3 @@ class DescopeClient:
 
         response = self._auth.do_get(uri, None, None, None, signed_refresh_token)
         return response.cookies
-
-    

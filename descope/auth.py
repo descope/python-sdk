@@ -4,9 +4,9 @@ import os
 import re
 from threading import Lock
 from typing import Tuple
+
 import jwt
 import requests
-
 from email_validator import EmailNotValidError, validate_email
 from jwt.exceptions import ExpiredSignatureError
 
@@ -14,10 +14,10 @@ from descope.common import (
     DEFAULT_BASE_URI,
     DEFAULT_FETCH_PUBLIC_KEY_URI,
     PHONE_REGEX,
+    REFRESH_SESSION_COOKIE_NAME,
+    SESSION_COOKIE_NAME,
     DeliveryMethod,
     EndpointsV1,
-    SESSION_COOKIE_NAME,
-    REFRESH_SESSION_COOKIE_NAME
 )
 from descope.exceptions import AuthException
 
@@ -49,7 +49,14 @@ class Auth:
                 kid, pub_key, alg = self._validate_and_load_public_key(public_key)
                 self.public_keys = {kid: (pub_key, alg)}
 
-    def do_get(self, uri: str, cookies=None, params=None, allow_redirects=None, pswd: str=None) -> requests.Response:
+    def do_get(
+        self,
+        uri: str,
+        cookies=None,
+        params=None,
+        allow_redirects=None,
+        pswd: str = None,
+    ) -> requests.Response:
         response = requests.get(
             f"{DEFAULT_BASE_URI}{uri}",
             headers=self._get_default_headers(pswd),
@@ -61,7 +68,9 @@ class Auth:
             raise AuthException(response.status_code, "", response.text)
         return response
 
-    def do_post(self, uri: str, body: dict, cookies=None, pswd: str=None) -> requests.Response:
+    def do_post(
+        self, uri: str, body: dict, cookies=None, pswd: str = None
+    ) -> requests.Response:
         response = requests.post(
             f"{DEFAULT_BASE_URI}{uri}",
             headers=self._get_default_headers(pswd),
@@ -111,9 +120,7 @@ class Auth:
         return f"{base}/{suffix}"
 
     @staticmethod
-    def get_identifier_by_method(
-        method: DeliveryMethod, user: dict
-    ) -> Tuple[str, str]:
+    def get_identifier_by_method(method: DeliveryMethod, user: dict) -> Tuple[str, str]:
         if method is DeliveryMethod.EMAIL:
             email = user.get("email", "")
             return "email", email
@@ -127,7 +134,7 @@ class Auth:
             raise AuthException(
                 500, "identifier failure", f"Unknown delivery method {method}"
             )
-            
+
     @staticmethod
     def validate_email(email: str):
         if email == "":
@@ -136,8 +143,10 @@ class Auth:
         try:
             validate_email(email)
         except EmailNotValidError as ex:
-            raise AuthException(500, "Invalid argument", f"Email address is not valid: {ex}")
-    
+            raise AuthException(
+                500, "Invalid argument", f"Email address is not valid: {ex}"
+            )
+
     @staticmethod
     def validate_phone(method: DeliveryMethod, phone: str):
         if phone == "":
@@ -148,7 +157,7 @@ class Auth:
 
         if method != DeliveryMethod.PHONE and method != DeliveryMethod.WHATSAPP:
             raise AuthException(500, "Invalid argument", f"Invalid method supplied")
-        
+
     @staticmethod
     def _validate_and_load_public_key(public_key) -> Tuple[str, jwt.PyJWK, str]:
         if isinstance(public_key, str):
@@ -212,7 +221,7 @@ class Auth:
             raise AuthException(
                 401, "public key fetching failed", f"err: {response.reason}"
             )
-        
+
         jwks_data = response.text
         try:
             jwkeys = json.loads(jwks_data)
@@ -265,7 +274,7 @@ class Auth:
         }
         return jwt_response
 
-    def _get_default_headers(self, pswd: str=None):
+    def _get_default_headers(self, pswd: str = None):
         headers = {}
         headers["Content-Type"] = "application/json"
 
@@ -285,7 +294,7 @@ class Auth:
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
         )
         return auth_info
-    
+
     def _validate_and_load_tokens(
         self, signed_token: str, signed_refresh_token: str
     ) -> dict:
@@ -369,7 +378,7 @@ class Auth:
             raise AuthException(
                 401, "token validation failure", f"token is not valid, {e}"
             )
-    
+
     @staticmethod
     def _compose_refresh_token_url() -> str:
         return EndpointsV1.refreshTokenPath

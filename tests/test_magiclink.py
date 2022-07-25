@@ -5,9 +5,8 @@ from unittest.mock import patch
 
 from descope import SESSION_COOKIE_NAME, AuthException, DeliveryMethod
 from descope.auth import Auth
-from descope.common import DEFAULT_BASE_URI, REFRESH_SESSION_COOKIE_NAME, EndpointsV1
-
 from descope.authmethod.magiclink import MagicLink  # noqa: F401
+from descope.common import DEFAULT_BASE_URI, REFRESH_SESSION_COOKIE_NAME, EndpointsV1
 
 
 class TestMagicLink(unittest.TestCase):
@@ -21,8 +20,8 @@ class TestMagicLink(unittest.TestCase):
             "use": "sig",
             "x": "8SMbQQpCQAGAxCdoIz8y9gDw-wXoyoN5ILWpAlBKOcEM1Y7WmRKc1O2cnHggyEVi",
             "y": "N5n5jKZA5Wu7_b4B36KKjJf-VRfJ-XqczfCSYy9GeQLqF-b63idfE0SYaYk9cFqg",
-        } 
-    
+        }
+
     def test_compose_urls(self):
         self.assertEqual(
             MagicLink._compose_signin_url(DeliveryMethod.PHONE),
@@ -36,30 +35,27 @@ class TestMagicLink(unittest.TestCase):
             MagicLink._compose_sign_up_or_in_url(DeliveryMethod.EMAIL),
             "/v1/auth/sign-up-or-in/magiclink/email",
         )
-        
+
         self.assertEqual(
             MagicLink._compose_update_phone_url(DeliveryMethod.PHONE),
             "/v1/user/update/phone/magiclink/sms",
         )
-    
 
     def test_compose_body(self):
         self.assertEqual(
             MagicLink._compose_signin_body("id1", "uri1", True),
-            {
-                "externalId": "id1",
-                "URI": "uri1",
-                "crossDevice": True
-            },
+            {"externalId": "id1", "URI": "uri1", "crossDevice": True},
         )
         self.assertEqual(
-            MagicLink._compose_signup_body(DeliveryMethod.EMAIL, "id1", "uri1", True, { "email": "email1" }),
+            MagicLink._compose_signup_body(
+                DeliveryMethod.EMAIL, "id1", "uri1", True, {"email": "email1"}
+            ),
             {
                 "externalId": "id1",
                 "URI": "uri1",
                 "crossDevice": True,
-                "user":  { "email": "email1" },
-                "email": "email1"
+                "user": {"email": "email1"},
+                "email": "email1",
             },
         )
         self.assertEqual(
@@ -68,35 +64,25 @@ class TestMagicLink(unittest.TestCase):
                 "token": "t1",
             },
         )
-        
+
         self.assertEqual(
-            MagicLink._compose_update_user_email_body("id1", "email1",  True),
-            {
-                "externalId": "id1",
-                "email": "email1",
-                "crossDevice": True
-            },
+            MagicLink._compose_update_user_email_body("id1", "email1", True),
+            {"externalId": "id1", "email": "email1", "crossDevice": True},
         )
-        
+
         self.assertEqual(
             MagicLink._compose_update_user_phone_body("id1", "+11111111", True),
-            {
-                "externalId": "id1",
-                "phone": "+11111111",
-                "crossDevice": True
-            },
+            {"externalId": "id1", "phone": "+11111111", "crossDevice": True},
         )
-        
+
         self.assertEqual(
             MagicLink._compose_get_session_body("pending_ref1"),
-            {
-                "pendingRef": "pending_ref1"
-            },
+            {"pendingRef": "pending_ref1"},
         )
-    
+
     def test_sign_in(self):
         magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
-        
+
         # Test failed flows
         self.assertRaises(
             AuthException,
@@ -219,7 +205,7 @@ class TestMagicLink(unittest.TestCase):
 
     def test_sign_up_or_in(self):
         magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
-        
+
         # Test failed flows
         self.assertRaises(
             AuthException,
@@ -247,7 +233,7 @@ class TestMagicLink(unittest.TestCase):
                     DeliveryMethod.EMAIL, "dummy@dummy.com", "http://test.me"
                 )
             )
-            
+
     def test_sign_in_cross_device(self):
         magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
         with patch("requests.post") as mock_post:
@@ -256,7 +242,9 @@ class TestMagicLink(unittest.TestCase):
             data = json.loads("""{"pendingRef": "aaaa"}""")
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
-            res = magiclink.sign_in_cross_device(DeliveryMethod.EMAIL, "dummy@dummy.com", "http://test.me")
+            res = magiclink.sign_in_cross_device(
+                DeliveryMethod.EMAIL, "dummy@dummy.com", "http://test.me"
+            )
             mock_post.assert_called_with(
                 f"{DEFAULT_BASE_URI}{EndpointsV1.signInAuthMagicLinkPath}/email",
                 cookies=None,
@@ -264,11 +252,16 @@ class TestMagicLink(unittest.TestCase):
                     "Content-Type": "application/json",
                     "Authorization": "Basic ZHVtbXk6",
                 },
-                data=json.dumps({"externalId": "dummy@dummy.com", "URI":  "http://test.me", "crossDevice": True}),
+                data=json.dumps(
+                    {
+                        "externalId": "dummy@dummy.com",
+                        "URI": "http://test.me",
+                        "crossDevice": True,
+                    }
+                ),
             )
             self.assertEqual(res["pendingRef"], "aaaa")
 
-            
     def test_sign_up_cross_device(self):
         magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
         with patch("requests.post") as mock_post:
@@ -277,7 +270,12 @@ class TestMagicLink(unittest.TestCase):
             data = json.loads("""{"pendingRef": "aaaa"}""")
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
-            res = magiclink.sign_up_cross_device(DeliveryMethod.EMAIL, "dummy@dummy.com", "http://test.me", { "username": "user1", "email": "dummy@dummy.com"})
+            res = magiclink.sign_up_cross_device(
+                DeliveryMethod.EMAIL,
+                "dummy@dummy.com",
+                "http://test.me",
+                {"username": "user1", "email": "dummy@dummy.com"},
+            )
             mock_post.assert_called_with(
                 f"{DEFAULT_BASE_URI}{EndpointsV1.signUpAuthMagicLinkPath}/email",
                 cookies=None,
@@ -285,16 +283,18 @@ class TestMagicLink(unittest.TestCase):
                     "Content-Type": "application/json",
                     "Authorization": "Basic ZHVtbXk6",
                 },
-                data=json.dumps({
-                    "externalId": "dummy@dummy.com",
-                    "URI":  "http://test.me",
-                    "crossDevice": True,
-                    "user": { "username": "user1" , "email": "dummy@dummy.com"},
-                    "email": "dummy@dummy.com"
-                }),
+                data=json.dumps(
+                    {
+                        "externalId": "dummy@dummy.com",
+                        "URI": "http://test.me",
+                        "crossDevice": True,
+                        "user": {"username": "user1", "email": "dummy@dummy.com"},
+                        "email": "dummy@dummy.com",
+                    }
+                ),
             )
             self.assertEqual(res["pendingRef"], "aaaa")
-      
+
     def test_sign_up_or_in_cross_device(self):
         magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
         with patch("requests.post") as mock_post:
@@ -303,7 +303,9 @@ class TestMagicLink(unittest.TestCase):
             data = json.loads("""{"pendingRef": "aaaa"}""")
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
-            magiclink.sign_up_or_in_cross_device(DeliveryMethod.EMAIL, "dummy@dummy.com", "http://test.me")
+            magiclink.sign_up_or_in_cross_device(
+                DeliveryMethod.EMAIL, "dummy@dummy.com", "http://test.me"
+            )
             mock_post.assert_called_with(
                 f"{DEFAULT_BASE_URI}{EndpointsV1.signUpOrInAuthMagicLinkPath}/email",
                 cookies=None,
@@ -311,9 +313,15 @@ class TestMagicLink(unittest.TestCase):
                     "Content-Type": "application/json",
                     "Authorization": "Basic ZHVtbXk6",
                 },
-                data=json.dumps({"externalId": "dummy@dummy.com", "URI":  "http://test.me", "crossDevice": True}),
+                data=json.dumps(
+                    {
+                        "externalId": "dummy@dummy.com",
+                        "URI": "http://test.me",
+                        "crossDevice": True,
+                    }
+                ),
             )
-            
+
     def test_verify(self):
         token = "1234"
 
@@ -336,7 +344,7 @@ class TestMagicLink(unittest.TestCase):
                 REFRESH_SESSION_COOKIE_NAME: valid_jwt_token,
             }
             self.assertIsNotNone(magiclink.verify(token))
-           
+
     def test_get_session(self):
         magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
 
@@ -348,7 +356,7 @@ class TestMagicLink(unittest.TestCase):
                 REFRESH_SESSION_COOKIE_NAME: valid_jwt_token,
             }
             self.assertIsNotNone(magiclink.get_session("aaaaaa"))
-        
+
     def test_update_user_email(self):
         magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
 
@@ -367,20 +375,16 @@ class TestMagicLink(unittest.TestCase):
                 magiclink.update_user_email,
                 "id1",
                 "dummy@dummy.com",
-                "refresh_token1"
+                "refresh_token1",
             )
 
         # Test success flow
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
-                magiclink.update_user_email(
-                "id1",
-                "dummy@dummy.com",
-                "refresh_token1"
-                )
+                magiclink.update_user_email("id1", "dummy@dummy.com", "refresh_token1")
             )
-    
+
     def test_update_user_email_cross_device(self):
         magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
         with patch("requests.post") as mock_post:
@@ -390,13 +394,9 @@ class TestMagicLink(unittest.TestCase):
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
             res = magiclink.update_user_email_cross_device(
-                "id1",
-                "dummy@dummy.com",
-                "refresh_token1"
-                )
-            self.assertEqual(
-                res["pendingRef"], "aaaa"
+                "id1", "dummy@dummy.com", "refresh_token1"
             )
+            self.assertEqual(res["pendingRef"], "aaaa")
 
     def test_update_user_phone(self):
         magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
@@ -417,7 +417,7 @@ class TestMagicLink(unittest.TestCase):
                 DeliveryMethod.EMAIL,
                 "id1",
                 "+11111111",
-                "refresh_token1"
+                "refresh_token1",
             )
 
         # Test success flow
@@ -425,13 +425,10 @@ class TestMagicLink(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNone(
                 magiclink.update_user_phone(
-                DeliveryMethod.PHONE,
-                "id1",
-                "+11111111",
-                "refresh_token1"
+                    DeliveryMethod.PHONE, "id1", "+11111111", "refresh_token1"
                 )
             )
-            
+
     def test_update_user_phone_cross_device(self):
         magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
         with patch("requests.post") as mock_post:
@@ -441,14 +438,10 @@ class TestMagicLink(unittest.TestCase):
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
             res = magiclink.update_user_phone_cross_device(
-                DeliveryMethod.PHONE,
-                "id1",
-                "+11111111",
-                "refresh_token1"
-                )
-            self.assertEqual(
-                res["pendingRef"], "aaaa"
+                DeliveryMethod.PHONE, "id1", "+11111111", "refresh_token1"
             )
+            self.assertEqual(res["pendingRef"], "aaaa")
+
 
 if __name__ == "__main__":
     unittest.main()

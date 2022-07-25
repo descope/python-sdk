@@ -4,8 +4,9 @@ from copy import deepcopy
 from enum import Enum
 from unittest.mock import patch
 
-from descope import SESSION_COOKIE_NAME, DescopeClient, AuthException, DeliveryMethod
+from descope import SESSION_COOKIE_NAME, AuthException, DeliveryMethod, DescopeClient
 from descope.common import REFRESH_SESSION_COOKIE_NAME
+
 
 class TestDescopeClient(unittest.TestCase):
     def setUp(self) -> None:
@@ -18,14 +19,16 @@ class TestDescopeClient(unittest.TestCase):
             "use": "sig",
             "x": "8SMbQQpCQAGAxCdoIz8y9gDw-wXoyoN5ILWpAlBKOcEM1Y7WmRKc1O2cnHggyEVi",
             "y": "N5n5jKZA5Wu7_b4B36KKjJf-VRfJ-XqczfCSYy9GeQLqF-b63idfE0SYaYk9cFqg",
-        } 
+        }
         self.public_key_str = json.dumps(self.public_key_dict)
 
     def test_descope_client(self):
         self.assertRaises(
             AuthException, DescopeClient, project_id=None, public_key="dummy"
         )
-        self.assertRaises(AuthException, DescopeClient, project_id="", public_key="dummy")
+        self.assertRaises(
+            AuthException, DescopeClient, project_id="", public_key="dummy"
+        )
 
         with patch("os.getenv") as mock_getenv:
             mock_getenv.return_value = ""
@@ -40,7 +43,10 @@ class TestDescopeClient(unittest.TestCase):
             AuthException, DescopeClient(project_id="dummy", public_key="")
         )
         self.assertRaises(
-            AuthException, DescopeClient, project_id="dummy", public_key="not dict object"
+            AuthException,
+            DescopeClient,
+            project_id="dummy",
+            public_key="not dict object",
         )
         self.assertIsNotNone(
             DescopeClient(project_id="dummy", public_key=self.public_key_str)
@@ -55,16 +61,12 @@ class TestDescopeClient(unittest.TestCase):
         # Test failed flow
         with patch("requests.get") as mock_get:
             mock_get.return_value.ok = False
-            self.assertRaises(
-                AuthException, client.logout, dummy_refresh_token
-            )
+            self.assertRaises(AuthException, client.logout, dummy_refresh_token)
 
         # Test success flow
         with patch("requests.get") as mock_get:
             mock_get.return_value.ok = True
-            self.assertIsNotNone(
-                client.logout(dummy_refresh_token)
-            )    
+            self.assertIsNotNone(client.logout(dummy_refresh_token))
 
     def test_validate_session(self):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)

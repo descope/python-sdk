@@ -1,19 +1,15 @@
-from descope.common import (
-    REFRESH_SESSION_COOKIE_NAME,
-    EndpointsV1,
-)
-from descope.exceptions import AuthException
 from descope.auth import Auth
+from descope.common import REFRESH_SESSION_COOKIE_NAME, EndpointsV1
+from descope.exceptions import AuthException
 
-class TOTP():
+
+class TOTP:
     _auth: Auth
 
     def __init__(self, auth):
         self._auth = auth
-    
-    def sign_up(
-        self, identifier: str, user: dict = None
-    ) -> dict:
+
+    def sign_up(self, identifier: str, user: dict = None) -> dict:
         """
         Docs
         """
@@ -62,7 +58,9 @@ class TOTP():
             raise AuthException(500, "Invalid argument", "Identifier cannot be empty")
 
         if not refresh_token:
-            raise AuthException(500, "Invalid argument", "Refresh token cannot be empty")
+            raise AuthException(
+                500, "Invalid argument", "Refresh token cannot be empty"
+            )
 
         uri = EndpointsV1.updateTOTPPath
         body = TOTP._compose_update_user_body(identifier)
@@ -74,20 +72,18 @@ class TOTP():
         # string image = 2;
         # string key = 3;
         # string error = 4;
-        
+
     @staticmethod
     def _compose_signup_body(identifier: str, user: dict) -> dict:
-        body = { "externalId": identifier }
+        body = {"externalId": identifier}
         if user is not None:
             body["user"] = user
         return body
 
     @staticmethod
     def _compose_signin_body(identifier: str, code: str) -> dict:
-        return { "externalId": identifier,
-                 "code": code
-         }
+        return {"externalId": identifier, "code": code}
 
     @staticmethod
     def _compose_update_user_body(identifier: str) -> dict:
-        return { "externalId": identifier }
+        return {"externalId": identifier}

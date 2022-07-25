@@ -9,7 +9,9 @@ class WebauthN:
     def __init__(self, auth):
         self._auth = auth
 
-    def sign_up_start(self, identifier: str, user: dict = None, origin: str = None) -> dict:
+    def sign_up_start(
+        self, identifier: str, user: dict = None, origin: str = None
+    ) -> dict:
         """
         Docs
         """

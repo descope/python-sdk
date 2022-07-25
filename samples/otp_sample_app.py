@@ -7,9 +7,9 @@ sys.path.insert(0, os.path.join(dir_name, "../"))
 from descope import (  # noqa: E402
     REFRESH_SESSION_COOKIE_NAME,
     SESSION_COOKIE_NAME,
-    DescopeClient,
     AuthException,
     DeliveryMethod,
+    DescopeClient,
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -41,7 +41,9 @@ def main():
 
         try:
             logging.info("going to validate session..")
-            claims = descope_client.validate_session_request(session_token, refresh_token)
+            claims = descope_client.validate_session_request(
+                session_token, refresh_token
+            )
             logging.info("Session is valid and all is OK")
         except AuthException as e:
             logging.info(f"Session is not valid {e}")

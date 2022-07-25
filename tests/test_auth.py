@@ -4,10 +4,9 @@ from copy import deepcopy
 from enum import Enum
 from unittest.mock import patch
 
-from descope import SESSION_COOKIE_NAME, DeliveryMethod, AuthException
-from descope.common import REFRESH_SESSION_COOKIE_NAME
-
+from descope import SESSION_COOKIE_NAME, AuthException, DeliveryMethod
 from descope.auth import Auth
+from descope.common import REFRESH_SESSION_COOKIE_NAME
 
 
 class TestAuth(unittest.TestCase):
@@ -21,7 +20,7 @@ class TestAuth(unittest.TestCase):
             "use": "sig",
             "x": "8SMbQQpCQAGAxCdoIz8y9gDw-wXoyoN5ILWpAlBKOcEM1Y7WmRKc1O2cnHggyEVi",
             "y": "N5n5jKZA5Wu7_b4B36KKjJf-VRfJ-XqczfCSYy9GeQLqF-b63idfE0SYaYk9cFqg",
-        } 
+        }
         self.public_key_str = json.dumps(self.public_key_dict)
 
     def test_validate_phone(self):
@@ -137,9 +136,7 @@ class TestAuth(unittest.TestCase):
             Auth.verify_delivery_method(DeliveryMethod.EMAIL, "dummy@dummy.com"),
             True,
         )
-        self.assertEqual(
-            Auth.verify_delivery_method(DeliveryMethod.EMAIL, ""), False
-        )
+        self.assertEqual(Auth.verify_delivery_method(DeliveryMethod.EMAIL, ""), False)
         self.assertEqual(
             Auth.verify_delivery_method(DeliveryMethod.EMAIL, "dummy@dummy"),
             False,
@@ -160,13 +157,9 @@ class TestAuth(unittest.TestCase):
         self.assertEqual(
             Auth.verify_delivery_method(DeliveryMethod.PHONE, "asdsad"), False
         )
+        self.assertEqual(Auth.verify_delivery_method(DeliveryMethod.PHONE, ""), False)
         self.assertEqual(
-            Auth.verify_delivery_method(DeliveryMethod.PHONE, ""), False
-        )
-        self.assertEqual(
-            Auth.verify_delivery_method(
-                DeliveryMethod.PHONE, "unvalid@phone.number"
-            ),
+            Auth.verify_delivery_method(DeliveryMethod.PHONE, "unvalid@phone.number"),
             False,
         )
 
@@ -210,9 +203,7 @@ class TestAuth(unittest.TestCase):
         class AAA(Enum):
             DUMMY = 4
 
-        self.assertRaises(
-            AuthException, Auth.get_identifier_by_method, AAA.DUMMY, user
-        )
+        self.assertRaises(AuthException, Auth.get_identifier_by_method, AAA.DUMMY, user)
 
     def test_compose_refresh_token_url(self):
         self.assertEqual(

@@ -13,7 +13,7 @@ from decorators.flask_decorators import (  # noqa: E402;
 )
 
 from descope import AuthException  # noqa: E402
-from descope import DescopeClient, DeliveryMethod  # noqa: E402
+from descope import DeliveryMethod, DescopeClient  # noqa: E402
 
 APP = Flask(__name__)
 
@@ -85,6 +85,7 @@ def sign_up_or_in():
 
     response = "This is sign up or in API handling"
     return jsonify(message=response)
+
 
 @APP.route("/api/verify", methods=["POST"])
 def verify():

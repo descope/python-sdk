@@ -1,17 +1,14 @@
-from descope.common import (
-    REFRESH_SESSION_COOKIE_NAME,
-    DeliveryMethod,
-    EndpointsV1,
-)
-from descope.exceptions import AuthException
 from descope.auth import Auth
+from descope.common import REFRESH_SESSION_COOKIE_NAME, DeliveryMethod, EndpointsV1
+from descope.exceptions import AuthException
 
-class OTP():
+
+class OTP:
     _auth: Auth
 
     def __init__(self, auth: Auth):
         self._auth = auth
-    
+
     def sign_in(self, method: DeliveryMethod, identifier: str) -> None:
         """
         Sign in a user by OTP
@@ -122,7 +119,9 @@ class OTP():
         )
         return jwt_response
 
-    def update_user_email(self, identifier: str, email: str, refresh_token: str) -> None:
+    def update_user_email(
+        self, identifier: str, email: str, refresh_token: str
+    ) -> None:
         if identifier == "":
             raise AuthException(500, "Invalid argument", "Identifier cannot be empty")
 
@@ -132,7 +131,9 @@ class OTP():
         body = OTP._compose_update_user_email_body(identifier, email)
         self._auth.do_post(uri, body, None, refresh_token)
 
-    def update_user_phone(self, method: DeliveryMethod, identifier: str, phone: str, refresh_token: str) -> None:
+    def update_user_phone(
+        self, method: DeliveryMethod, identifier: str, phone: str, refresh_token: str
+    ) -> None:
         if identifier == "":
             raise AuthException(500, "Invalid argument", "Identifier cannot be empty")
 
@@ -145,11 +146,11 @@ class OTP():
     @staticmethod
     def _compose_signup_url(method: DeliveryMethod) -> str:
         return Auth.compose_url(EndpointsV1.signUpAuthOTPPath, method)
-    
+
     @staticmethod
     def _compose_signin_url(method: DeliveryMethod) -> str:
         return Auth.compose_url(EndpointsV1.signInAuthOTPPath, method)
-    
+
     @staticmethod
     def _compose_sign_up_or_in_url(method: DeliveryMethod) -> str:
         return Auth.compose_url(EndpointsV1.signUpOrInAuthOTPPath, method)
@@ -161,10 +162,12 @@ class OTP():
     @staticmethod
     def _compose_update_phone_url(method: DeliveryMethod) -> str:
         return Auth.compose_url(EndpointsV1.updateUserPhoneOTPPath, method)
-    
+
     @staticmethod
-    def _compose_signup_body(method: DeliveryMethod, identifier: str, user: dict) -> dict:
-        body = { "externalId": identifier }
+    def _compose_signup_body(
+        method: DeliveryMethod, identifier: str, user: dict
+    ) -> dict:
+        body = {"externalId": identifier}
 
         if user is not None:
             body["user"] = user
@@ -174,25 +177,16 @@ class OTP():
 
     @staticmethod
     def _compose_signin_body(identifier: str) -> dict:
-        return { "externalId": identifier }
+        return {"externalId": identifier}
 
     @staticmethod
     def _compose_verify_code_body(identifier: str, code: str) -> dict:
-        return {
-            "externalId": identifier,
-            "code": code    
-        }
+        return {"externalId": identifier, "code": code}
 
     @staticmethod
     def _compose_update_user_email_body(identifier: str, email: str) -> dict:
-        return {
-            "externalId": identifier,
-            "email": email
-        }
+        return {"externalId": identifier, "email": email}
 
     @staticmethod
     def _compose_update_user_phone_body(identifier: str, phone: str) -> dict:
-        return {
-            "externalId": identifier,
-            "phone": phone
-        }
+        return {"externalId": identifier, "phone": phone}

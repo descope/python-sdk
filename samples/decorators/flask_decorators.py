@@ -340,7 +340,7 @@ def descope_logout(descope_client):
     return decorator
 
 
-def descope_oauth(descope_client:DescopeClient):
+def descope_oauth(descope_client: DescopeClient):
     """
     OAuth login
     """

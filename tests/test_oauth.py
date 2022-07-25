@@ -4,9 +4,9 @@ from unittest.mock import patch
 
 from descope import AuthException
 from descope.auth import Auth
+from descope.authmethod.oauth import OAuth
 from descope.common import DEFAULT_BASE_URI, EndpointsV1
 
-from descope.authmethod.oauth import OAuth
 
 class TestOAuth(unittest.TestCase):
     def setUp(self) -> None:
@@ -54,7 +54,7 @@ class TestOAuth(unittest.TestCase):
 
         # Test failed flows
         self.assertRaises(AuthException, oauth.start, "")
-        
+
         with patch("requests.get") as mock_get:
             mock_get.return_value.ok = False
             self.assertRaises(AuthException, oauth.start, "google")
@@ -79,7 +79,6 @@ class TestOAuth(unittest.TestCase):
                 allow_redirects=False,
             )
 
-  
-    
+
 if __name__ == "__main__":
     unittest.main()

@@ -1,27 +1,27 @@
 import logging
 import os
 import sys
-from time import sleep
 from threading import Thread
+from time import sleep
 
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
 from descope import (  # noqa: E402
     REFRESH_SESSION_COOKIE_NAME,
     SESSION_COOKIE_NAME,
-    DescopeClient,
     AuthException,
     DeliveryMethod,
+    DescopeClient,
 )
 
 logging.basicConfig(level=logging.INFO)
 
+
 def main():
     project_id = ""
-    
+
     try:
         descope_client = DescopeClient(project_id=project_id)
-
 
         def verify():
             token = input("Please insert the token you received by email:\n")
@@ -31,7 +31,7 @@ def main():
             except AuthException as e:
                 logging.info(f"Invalid code {e}")
                 raise
-            
+
         logging.info("Going to signup / signin using Magic Link ...")
         email = input("Please insert email to signup / signin:\n")
         resp = descope_client.magiclink.sign_up_or_in_cross_device(
@@ -39,15 +39,15 @@ def main():
             identifier=email,
             uri="http://test.me",
         )
-        
+
         pending_ref = resp["pendingRef"]
         done = False
         authenticated = False
-        
+
         # open thread to get input
         new_thread = Thread(target=verify)
         new_thread.start()
-        
+
         i = 0
         while not done:
             try:
@@ -63,12 +63,14 @@ def main():
                     logging.info(f"Failed pending session, err: {e}")
                     authenticated = False
                     done = True
-                    
+
         if jwt_response:
-            refresh_token = jwt_response["jwts"].get(REFRESH_SESSION_COOKIE_NAME).get("jwt")
+            refresh_token = (
+                jwt_response["jwts"].get(REFRESH_SESSION_COOKIE_NAME).get("jwt")
+            )
             descope_client.logout(refresh_token)
             logging.info("User logged out")
-        
+
     except AuthException:
         raise
 

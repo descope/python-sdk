@@ -4,9 +4,9 @@ from unittest.mock import patch
 
 from descope import AuthException
 from descope.auth import Auth
+from descope.authmethod.saml import SAML
 from descope.common import DEFAULT_BASE_URI, EndpointsV1
 
-from descope.authmethod.saml import SAML
 
 class TestSAML(unittest.TestCase):
     def setUp(self) -> None:
@@ -20,13 +20,11 @@ class TestSAML(unittest.TestCase):
             "x": "8SMbQQpCQAGAxCdoIz8y9gDw-wXoyoN5ILWpAlBKOcEM1Y7WmRKc1O2cnHggyEVi",
             "y": "N5n5jKZA5Wu7_b4B36KKjJf-VRfJ-XqczfCSYy9GeQLqF-b63idfE0SYaYk9cFqg",
         }
-        
-    
+
     def test_compose_start_params(self):
         self.assertEqual(
             SAML._compose_start_params("tenant1", "http://dummy.com"),
-            {"tenant": "tenant1",
-            "redirectURL": "http://dummy.com"}
+            {"tenant": "tenant1", "redirectURL": "http://dummy.com"},
         )
 
     def test_saml_start(self):
@@ -58,8 +56,7 @@ class TestSAML(unittest.TestCase):
                     "Content-Type": "application/json",
                     "Authorization": "Basic ZHVtbXk6",
                 },
-                params={"tenant": "tenant1",
-                        "redirectURL": "http://dummy.com"},
+                params={"tenant": "tenant1", "redirectURL": "http://dummy.com"},
                 allow_redirects=None,
             )
 
