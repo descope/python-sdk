@@ -11,16 +11,14 @@ class OTP:
 
     def sign_in(self, method: DeliveryMethod, identifier: str) -> None:
         """
-        Sign in a user by OTP
+        Use to login a user based on the given identifier either email or a phone
+            and choose the selected delivery method for verification.
 
         Args:
         method (DeliveryMethod): The OTP method you would like to verify the code
         sent to you (by the same delivery method)
 
-        identifier (str): The identifier based on the chosen delivery method,
-        For email it should be the email address.
-        For phone it should be the phone number you would like to get the code
-        For whatsapp it should be the phone number you would like to get the code
+        identifier (str): The identifier will be used for validation can be either email or phone
 
         Raise:
         AuthException: for any case sign up by otp operation failed
@@ -41,16 +39,17 @@ class OTP:
         self, method: DeliveryMethod, identifier: str, user: dict = None
     ) -> None:
         """
-        Sign up a new user by OTP
+        Use to create a new user based on the given identifier either email or a phone.
+            choose the selected delivery method for verification.
+            optional to add user metadata for farther user details such as name and more.
 
         Args:
         method (DeliveryMethod): The OTP method you would like to verify the code
         sent to you (by the same delivery method)
 
-        identifier (str): The identifier based on the chosen delivery method,
-        For email it should be the email address.
-        For phone it should be the phone number you would like to get the code
-        For whatsapp it should be the phone number you would like to get the code
+        identifier (str): The identifier will be used for validation can be either email or phone
+
+        user (dict) optional: User metadata in the form of {"name": "", "phone": "", "email": ""}
 
         Raise:
         AuthException: for any case sign up by otp operation failed
@@ -68,6 +67,19 @@ class OTP:
         self._auth.do_post(uri, body)
 
     def sign_up_or_in(self, method: DeliveryMethod, identifier: str) -> None:
+        """
+        Use to login in using identifier, if user does not exists, a new user will be created
+            with the given identifier.
+
+        Args:
+        method (DeliveryMethod): The OTP method you would like to verify the code
+        sent to you (by the same delivery method)
+
+        identifier (str): The identifier will be used for validation can be either email or phone
+
+        Raise:
+        AuthException: for any case sign up by otp operation failed
+        """
         if not self._auth.verify_delivery_method(method, identifier):
             raise AuthException(
                 400,
@@ -80,23 +92,21 @@ class OTP:
         self._auth.do_post(uri, body)
 
     def verify_code(self, method: DeliveryMethod, identifier: str, code: str) -> dict:
-        """Verify OTP code sent by the delivery method that chosen
+        """
+        Use to verify a SignIn/SignUp based on the given identifier either an email or a phone
+            followed by the code used to verify and authenticate the user.
 
         Args:
         method (DeliveryMethod): The OTP method you would like to verify the code
         sent to you (by the same delivery method)
 
-        identifier (str): The identifier based on the chosen delivery method,
-        For email it should be the email address.
-        For phone it should be the phone number you would like to get the code
-        For whatsapp it should be the phone number you would like to get the code
+        identifier (str): The identifier will be used for validation can be either email or phone
 
         code (str): The authorization code you get by the delivery method during signup/signin
 
-        Return value (Tuple[dict, dict]):
-        Return two dicts where the first contains the jwt claims data and
-        second contains the existing signed token (or the new signed
-        token in case the old one expired) and refreshed session token
+        Return value (dict):
+        Return dict of the form {"jwts": [], "user": "", "firstSeen": "", "error": ""}
+        Includes all the jwts tokens (session token, session refresh token) and their claims and user info
 
         Raise:
         AuthException: for any case code is not valid or tokens verification failed
@@ -122,6 +132,19 @@ class OTP:
     def update_user_email(
         self, identifier: str, email: str, refresh_token: str
     ) -> None:
+        """
+        Use to a update email, and verify via OTP
+
+        Args:
+        identifier (str): The identifier will be used for validation can be either email or phone
+
+        email (str): The email address to update for the identifier
+
+        refresh_token (str): The refresh session token (used for verification)
+
+        Raise:
+        AuthException: for any case code is not valid or tokens verification failed
+        """
         if not identifier:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Identifier cannot be empty"
@@ -136,6 +159,23 @@ class OTP:
     def update_user_phone(
         self, method: DeliveryMethod, identifier: str, phone: str, refresh_token: str
     ) -> None:
+        """
+        Use to update phone and validate via OTP allowed methods
+        are phone based methods - whatsapp and SMS
+
+        Args:
+        method (DeliveryMethod): The OTP method you would like to verify the code
+        sent to you (by the same delivery method)
+
+        identifier (str): The identifier will be used for validation can be either email or phone
+
+        phone (str): The phone to update for the identifier
+
+        refresh_token (str): The refresh session token (used for verification)
+
+        Raise:
+        AuthException: for any case code is not valid or tokens verification failed
+        """
         if not identifier:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Identifier cannot be empty"

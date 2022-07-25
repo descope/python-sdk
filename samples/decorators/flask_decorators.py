@@ -323,16 +323,15 @@ def descope_logout(descope_client):
             cookies = request.cookies.copy()
             refresh_token = cookies.get(REFRESH_SESSION_COOKIE_NAME)
             try:
-                cookies = descope_client.logout(refresh_token)
+                descope_client.logout(refresh_token)
             except AuthException as e:
                 return Response(f"Logout failed {e}", e.status_code)
 
             # Execute the original API
             response = f(*args, **kwargs)
 
-            # Copy the new empty cookies (so session will be invalidated)
-            for key, val in cookies.items():
-                response.set_cookie(key, val)
+            # Invalidate all cookies
+            cookies.clear()
             return response
 
         return decorated

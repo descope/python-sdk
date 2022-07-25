@@ -51,8 +51,8 @@ class DescopeClient:
 
     def validate_session_request(self, session_token: str, refresh_token: str) -> dict:
         """
-        Validate session request by verify the session JWT session token
-        and session refresh token in case it expired
+        Use to validate a session of a given request.
+        Should be called before any private API call that requires authorization.
 
         Args:
         session_token (str): The session JWT token to get its signature verified
@@ -60,10 +60,9 @@ class DescopeClient:
         refresh_token (str): The session refresh JWT token that will be
         use to refresh the session token (if expired)
 
-        Return value (Tuple[dict, dict]):
-        Return two dicts where the first contains the jwt claims data and
-        second contains the existing signed token (or the new signed
-        token in case the old one expired) and refreshed session token
+        Return value (dict):
+        Return dict include the session token and session refresh token and
+        relevant claims for each one of them (session token will automatically be refreshed if expired)
 
         Raise:
         AuthException: for any case token is not valid means session is not
@@ -74,7 +73,19 @@ class DescopeClient:
         )
         return {token_claims["cookieName"]: token_claims}
 
-    def logout(self, refresh_token: str) -> requests.cookies.RequestsCookieJar:
+    def logout(self, refresh_token: str) -> requests.Response:
+        """
+        Use to perform logout from all active devices. This will revoke the given token.
+
+        Args:
+        refresh_token (str): The session refresh jwt token.
+
+        Return value (requests.Response): return the response from Descope server
+
+        Raise:
+        AuthException: for any case token is not valid means session is not
+        authorized
+        """
         if refresh_token is None:
             raise AuthException(
                 400,
@@ -83,6 +94,4 @@ class DescopeClient:
             )
 
         uri = EndpointsV1.logoutPath
-
-        response = self._auth.do_get(uri, None, None, None, refresh_token)
-        return response.cookies
+        return self._auth.do_get(uri, None, None, None, refresh_token)
