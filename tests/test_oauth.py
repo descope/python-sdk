@@ -26,8 +26,7 @@ class TestOAuth(unittest.TestCase):
             OAuth._compose_start_params("google", "http://example.com"),
             {"provider": "google", "redirectURL": "http://example.com"},
         )
-        
-    
+
     def test_verify_oauth_providers(self):
         self.assertEqual(
             OAuth._verify_provider(""),

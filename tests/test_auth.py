@@ -4,9 +4,8 @@ from copy import deepcopy
 from enum import Enum
 from unittest.mock import patch
 
-from descope import SESSION_COOKIE_NAME, AuthException, DeliveryMethod
+from descope import AuthException, DeliveryMethod
 from descope.auth import Auth
-from descope.common import REFRESH_SESSION_COOKIE_NAME
 
 
 class TestAuth(unittest.TestCase):
@@ -25,47 +24,33 @@ class TestAuth(unittest.TestCase):
 
     def test_validate_phone(self):
         self.assertRaises(
-            AuthException,
-            Auth.validate_phone,
-            method=DeliveryMethod.PHONE,
-            phone=""
+            AuthException, Auth.validate_phone, method=DeliveryMethod.PHONE, phone=""
         )
 
         self.assertRaises(
             AuthException,
             Auth.validate_phone,
             method=DeliveryMethod.PHONE,
-            phone="asd234234234"
+            phone="asd234234234",
         )
 
         self.assertRaises(
             AuthException,
             Auth.validate_phone,
             method=DeliveryMethod.EMAIL,
-            phone="+1111111"
+            phone="+1111111",
         )
 
         self.assertIsNone(
             Auth.validate_phone(method=DeliveryMethod.WHATSAPP, phone="+1111111")
         )
-        
 
     def test_validate_email(self):
-        self.assertRaises(
-            AuthException,
-            Auth.validate_email,
-            email=""
-        )
+        self.assertRaises(AuthException, Auth.validate_email, email="")
 
-        self.assertRaises(
-            AuthException,
-            Auth.validate_email,
-            email="@dummy.com"
-        )
+        self.assertRaises(AuthException, Auth.validate_email, email="@dummy.com")
 
-        self.assertIsNone(
-            Auth.validate_email(email="dummy@dummy.com")
-        )
+        self.assertIsNone(Auth.validate_email(email="dummy@dummy.com"))
 
     def test_validate_and_load_public_key(self):
         # test invalid json

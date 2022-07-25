@@ -361,12 +361,12 @@ class TestMagicLink(unittest.TestCase):
         magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
 
         self.assertRaises(
-                AuthException,
-                magiclink.update_user_email,
-                "",
-                "dummy@dummy.com",
-                "refresh_token1"
-            )
+            AuthException,
+            magiclink.update_user_email,
+            "",
+            "dummy@dummy.com",
+            "refresh_token1",
+        )
 
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = False
@@ -402,12 +402,13 @@ class TestMagicLink(unittest.TestCase):
         magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
 
         self.assertRaises(
-                AuthException,
-                magiclink.update_user_phone,
-                DeliveryMethod.EMAIL,
-                "",
-                "+11111111",
-                "refresh_token1")
+            AuthException,
+            magiclink.update_user_phone,
+            DeliveryMethod.EMAIL,
+            "",
+            "+11111111",
+            "refresh_token1",
+        )
 
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = False

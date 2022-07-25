@@ -80,13 +80,13 @@ class TestOTP(unittest.TestCase):
     def test_compose_update_user_phone_body(self):
         self.assertEqual(
             OTP._compose_update_user_phone_body("dummy@dummy.com", "+11111111"),
-            { "externalId": "dummy@dummy.com","phone": "+11111111"},
+            {"externalId": "dummy@dummy.com", "phone": "+11111111"},
         )
 
     def test_compose_update_user_email_body(self):
         self.assertEqual(
             OTP._compose_update_user_email_body("dummy@dummy.com", "dummy@dummy.com"),
-            { "externalId": "dummy@dummy.com","email": "dummy@dummy.com"},
+            {"externalId": "dummy@dummy.com", "email": "dummy@dummy.com"},
         )
 
     def test_sign_up(self):
@@ -189,6 +189,30 @@ class TestOTP(unittest.TestCase):
                 client.otp.sign_in(DeliveryMethod.EMAIL, "dummy@dummy.com")
             )
 
+    def test_sign_up_or_in(self):
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
+
+        # Test failed flows
+        self.assertRaises(
+            AuthException, client.otp.sign_up_or_in, DeliveryMethod.EMAIL, ""
+        )
+
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.otp.sign_up_or_in,
+                DeliveryMethod.EMAIL,
+                "dummy@dummy.com",
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(
+                client.otp.sign_up_or_in(DeliveryMethod.EMAIL, "dummy@dummy.com")
+            )
+
     def test_verify_code(self):
         code = "1234"
 
@@ -219,7 +243,6 @@ class TestOTP(unittest.TestCase):
             )
 
         # Test success flow
-        # valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkVGVuYW50cyI6eyIiOm51bGx9LCJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwNjc5MjA4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEUyIsImNvb2tpZVBhdGgiOiIvIiwiZXhwIjoyMDkwMDg3MjA4LCJpYXQiOjE2NTgwODcyMDgsImlzcyI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInN1YiI6IjJDNTV2eXh3MHNSTDZGZE02OHFSc0NEZFJPViJ9.E8f9CHePkAA7JDqerO6cWbAA29MqIBipqMpitR6xsRYl4-Wm4f7DtekV9fJF3SYaftrTuVM0W965tq634_ltzj0rhd7gm6N7AcNVRtdstTQJHuuCDKVJEho-qtv2ZMVX"
         valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkVGVuYW50cyI6eyIiOm51bGx9LCJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwNjc5MjA4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MjA5MDA4NzIwOCwiaWF0IjoxNjU4MDg3MjA4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQzU1dnl4dzBzUkw2RmRNNjhxUnNDRGRST1YifQ.cWP5up4R5xeIl2qoG2NtfLH3Q5nRJVKdz-FDoAXctOQW9g3ceZQi6rZQ-TPBaXMKw68bijN3bLJTqxWW5WHzqRUeopfuzTcMYmC0wP2XGJkrdF6A8D5QW6acSGqglFgu"
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
@@ -229,4 +252,90 @@ class TestOTP(unittest.TestCase):
             }
             self.assertIsNotNone(
                 client.otp.verify_code(DeliveryMethod.EMAIL, "dummy@dummy.com", code)
+            )
+
+    def test_update_user_email(self):
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
+
+        # Test failed flows
+        self.assertRaises(
+            AuthException,
+            client.otp.update_user_email,
+            "",
+            "dummy@dummy.com",
+            "refresh_token1",
+        )
+
+        self.assertRaises(
+            AuthException,
+            client.otp.update_user_email,
+            "id1",
+            "dummy@dummy",
+            "refresh_token1",
+        )
+
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.otp.update_user_email,
+                "id1",
+                "dummy@dummy.com",
+                "refresh_token1",
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(
+                client.otp.update_user_email("id1", "dummy@dummy.com", "refresh_token1")
+            )
+
+    def test_update_user_phone(self):
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
+
+        # Test failed flows
+        self.assertRaises(
+            AuthException,
+            client.otp.update_user_phone,
+            DeliveryMethod.PHONE,
+            "",
+            "+1111111",
+            "refresh_token1",
+        )
+        self.assertRaises(
+            AuthException,
+            client.otp.update_user_phone,
+            DeliveryMethod.PHONE,
+            "id1",
+            "not_a_phone",
+            "refresh_token1",
+        )
+        self.assertRaises(
+            AuthException,
+            client.otp.update_user_phone,
+            DeliveryMethod.EMAIL,
+            "id1",
+            "+1111111",
+            "refresh_token1",
+        )
+
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.otp.update_user_phone,
+                DeliveryMethod.PHONE,
+                "id1",
+                "+1111111",
+                "refresh_token1",
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(
+                client.otp.update_user_phone(
+                    DeliveryMethod.PHONE, "id1", "+1111111", "refresh_token1"
+                )
             )
