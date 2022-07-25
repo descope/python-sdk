@@ -73,7 +73,19 @@ class DescopeClient:
         )
         return {token_claims["cookieName"]: token_claims}
 
-    def logout(self, refresh_token: str) -> requests.cookies.RequestsCookieJar:
+    def logout(self, refresh_token: str) -> requests.Response:
+        """
+        Use to perform logout from all active devices. This will revoke the given token.
+
+        Args:
+        refresh_token (str): The session refresh jwt token.
+
+        Return value (requests.Response): return the response from Descope server
+
+        Raise:
+        AuthException: for any case token is not valid means session is not
+        authorized
+        """
         if refresh_token is None:
             raise AuthException(
                 400,
@@ -82,6 +94,4 @@ class DescopeClient:
             )
 
         uri = EndpointsV1.logoutPath
-
-        response = self._auth.do_get(uri, None, None, None, refresh_token)
-        return response.cookies
+        return self._auth.do_get(uri, None, None, None, refresh_token)
