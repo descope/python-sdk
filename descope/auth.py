@@ -146,7 +146,7 @@ class Auth:
         if not re.match(PHONE_REGEX, phone):
             raise AuthException(500, "Invalid argument", f"Phone number not valid")
 
-        if method != DeliveryMethod.PHONE and method == DeliveryMethod.WHATSAPP:
+        if method != DeliveryMethod.PHONE and method != DeliveryMethod.WHATSAPP:
             raise AuthException(500, "Invalid argument", f"Invalid method supplied")
         
     @staticmethod

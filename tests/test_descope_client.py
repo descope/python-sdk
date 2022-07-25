@@ -260,6 +260,16 @@ class TestDescopeClient(unittest.TestCase):
             DescopeClient(self.dummy_project_id, invalid_public_key)
         self.assertEqual(cm.exception.status_code, 400)
 
+    def test_client_properties(self):
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
+        self.assertIsNotNone(client)
+        self.assertIsNotNone(client.magiclink, "Empty Magiclink object")
+        self.assertIsNotNone(client.otp, "Empty otp object")
+        self.assertIsNotNone(client.totp, "Empty totp object")
+        self.assertIsNotNone(client.oauth, "Empty oauth object")
+        self.assertIsNotNone(client.saml, "Empty saml object")
+        self.assertIsNotNone(client.webauthn, "Empty webauthN object")
+
 
 if __name__ == "__main__":
     unittest.main()

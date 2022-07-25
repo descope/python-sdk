@@ -50,6 +50,46 @@ class TestOTP(unittest.TestCase):
             "/v1/auth/code/verify/whatsapp",
         )
 
+    def test_compose_update_phone_url(self):
+        self.assertEqual(
+            OTP._compose_update_phone_url(DeliveryMethod.EMAIL),
+            "/v1/user/update/phone/otp/email",
+        )
+        self.assertEqual(
+            OTP._compose_update_phone_url(DeliveryMethod.PHONE),
+            "/v1/user/update/phone/otp/sms",
+        )
+        self.assertEqual(
+            OTP._compose_update_phone_url(DeliveryMethod.WHATSAPP),
+            "/v1/user/update/phone/otp/whatsapp",
+        )
+
+    def test_compose_sign_up_or_in_url(self):
+        self.assertEqual(
+            OTP._compose_sign_up_or_in_url(DeliveryMethod.EMAIL),
+            "/v1/auth/sign-up-or-in/otp/email",
+        )
+        self.assertEqual(
+            OTP._compose_sign_up_or_in_url(DeliveryMethod.PHONE),
+            "/v1/auth/sign-up-or-in/otp/sms",
+        )
+        self.assertEqual(
+            OTP._compose_sign_up_or_in_url(DeliveryMethod.WHATSAPP),
+            "/v1/auth/sign-up-or-in/otp/whatsapp",
+        )
+
+    def test_compose_update_user_phone_body(self):
+        self.assertEqual(
+            OTP._compose_update_user_phone_body("dummy@dummy.com", "+11111111"),
+            { "externalId": "dummy@dummy.com","phone": "+11111111"},
+        )
+
+    def test_compose_update_user_email_body(self):
+        self.assertEqual(
+            OTP._compose_update_user_email_body("dummy@dummy.com", "dummy@dummy.com"),
+            { "externalId": "dummy@dummy.com","email": "dummy@dummy.com"},
+        )
+
     def test_sign_up(self):
         signup_user_details = {
             "username": "jhon",

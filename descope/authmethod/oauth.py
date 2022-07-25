@@ -36,6 +36,6 @@ class OAuth(Exchanger):
     @staticmethod
     def _compose_start_params(provider: str, returnURL: str) -> dict:
         res = {"provider": provider}
-        if returnURL is not None and returnURL != "":
+        if returnURL:
             res["redirectURL"] = returnURL
         return res
