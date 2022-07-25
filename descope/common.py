@@ -1,6 +1,6 @@
 from enum import Enum
 
-DEFAULT_BASE_URI = "https://172.17.0.1:8443"
+DEFAULT_BASE_URL = "https://172.17.0.1:8443"
 DEFAULT_FETCH_PUBLIC_KEY_URI = "https://172.17.0.1:8443"  # will use the same base uri as above once gateway will be available
 
 PHONE_REGEX = """^(?:(?:\\(?(?:00|\\+)([1-4]\\d\\d|[1-9]\\d?)\\)?)?[\\-\\.\\ \\\\/]?)?((?:\\(?\\d{1,}\\)?[\\-\\.\\ \\\\/]?){0,})(?:[\\-\\.\\ \\\\/]?(?:#|ext\\.?|extension|x)[\\-\\.\\ \\\\/]?(\\d+))?$"""
