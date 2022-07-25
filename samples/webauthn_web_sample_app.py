@@ -86,10 +86,7 @@ def webauthn_add_device_start():
 @APP.route("/webauthn/device/add/finish", methods=["POST"])
 def webauthn_add_device_finish():
     data = request.get_json()
-    response = descope_client.webauthn.add_device_finish(
-        data["transactionId"], data["response"]
-    )
-    return response
+    descope_client.webauthn.add_device_finish(data["transactionId"], data["response"])
 
 
 if __name__ == "__main__":

@@ -117,7 +117,7 @@ class WebauthN:
 
         return response.json()
 
-    def add_device_finish(self, transaction_id: str, response: str) -> dict:
+    def add_device_finish(self, transaction_id: str, response: str) -> None:
         """
         Docs
         """
@@ -133,7 +133,7 @@ class WebauthN:
 
         uri = EndpointsV1.deviceAddAuthWebauthnFinish
         body = WebauthN._compose_sign_up_in_finish_body(transaction_id, response)
-        response = self._auth.do_post(uri, body)
+        self._auth.do_post(uri, body)
 
     @staticmethod
     def _compose_signup_body(identifier: str, user: dict, origin: str) -> dict:

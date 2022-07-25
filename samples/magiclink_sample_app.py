@@ -22,7 +22,7 @@ def main():
         descope_client = DescopeClient(project_id=project_id)
 
         logging.info("Going to signup / signin using Magic Link ...")
-        email = "asaf@descope.com"  # input("Please insert email to signup / signin:\n")
+        email = input("Please insert email to signup / signin:\n")
         descope_client.magiclink.sign_up_or_in(
             method=DeliveryMethod.EMAIL,
             identifier=email,
