@@ -7,37 +7,32 @@ sys.path.insert(0, os.path.join(dir_name, "../"))
 from descope import (  # noqa: E402
     REFRESH_SESSION_COOKIE_NAME,
     SESSION_COOKIE_NAME,
-    AuthClient,
     AuthException,
     DeliveryMethod,
+    DescopeClient,
 )
 
 logging.basicConfig(level=logging.INFO)
 
 
 def main():
-    identifier = "test@me.com"
     project_id = ""
 
     try:
-        auth_client = AuthClient(project_id=project_id)
+        descope_client = DescopeClient(project_id=project_id)
 
-        logging.info(
-            "Going to signup a new user.. expect an email to arrive with the new link.."
-        )
-        user = {"name": "John", "phone": "+972111111111"}
-        auth_client.sign_up_magiclink(
+        logging.info("Going to signup / signin using Magic Link ...")
+        email = input("Please insert email to signup / signin:\n")
+        descope_client.magiclink.sign_up_or_in(
             method=DeliveryMethod.EMAIL,
-            identifier=identifier,
+            identifier=email,
             uri="http://test.me",
-            user=user,
         )
 
-        value = input("Please insert the code you received by email:\n")
+        token = input("Please insert the token you received by email:\n")
         try:
-            jwt_response = auth_client.verify_magiclink(code=value)
+            jwt_response = descope_client.magiclink.verify(token=token)
             logging.info("Code is valid")
-            session_token = jwt_response["jwts"].get(SESSION_COOKIE_NAME).get("jwt")
             refresh_token = (
                 jwt_response["jwts"].get(REFRESH_SESSION_COOKIE_NAME).get("jwt")
             )
@@ -47,22 +42,20 @@ def main():
             raise
 
         try:
-            logging.info("Going to logout")
-            auth_client.logout(session_token, refresh_token)
-            logging.info("User logged out")
+            logging.info("Going to logout after sign-in / sign-up")
+            descope_client.logout(refresh_token)
+            logging.info("User logged out after sign-in / sign-up")
         except AuthException as e:
-            logging.info(f"Failed to logged out user, err: {e}")
+            logging.info(f"Failed to logged after sign-in / sign-up, err: {e}")
 
-        logging.info(
-            "Going to sign in same user again.. expect another email to arrive with the new link.."
-        )
-        auth_client.sign_in_magiclink(
-            method=DeliveryMethod.EMAIL, identifier=identifier, uri="http://test.me"
+        logging.info("Going to sign in same user again...")
+        descope_client.magiclink.sign_in(
+            method=DeliveryMethod.EMAIL, identifier=email, uri="http://test.me"
         )
 
-        value = input("Please insert the code you received by email:\n")
+        token = input("Please insert the code you received by email:\n")
         try:
-            jwt_response = auth_client.verify_magiclink(code=value)
+            jwt_response = descope_client.magiclink.verify(token=token)
             logging.info("Code is valid")
             session_token_1 = jwt_response["jwts"].get(SESSION_COOKIE_NAME).get("jwt")
             refresh_token_1 = (
@@ -74,18 +67,17 @@ def main():
             raise
 
         try:
-            logging.info("going to validate session..")
-            claims = auth_client.validate_session_request(
-                session_token_1, refresh_token_1
-            )
-            session_token_2 = claims.get(SESSION_COOKIE_NAME).get("jwt")
+            logging.info(f"going to validate session...{session_token_1}")
+            descope_client.validate_session_request(session_token_1, refresh_token_1)
             logging.info("Session is valid and all is OK")
         except AuthException as e:
             logging.info(f"Session is not valid {e}")
 
         try:
-            logging.info("Going to logout")
-            auth_client.logout(session_token_2, refresh_token)
+            logging.info(
+                f"Going to logout at the second time\nrefresh_token: {refresh_token_1}"
+            )
+            descope_client.logout(refresh_token_1)
             logging.info("User logged out")
         except AuthException as e:
             logging.info(f"Failed to logged out user, err: {e}")

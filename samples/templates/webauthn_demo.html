@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Webauthn</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #3498db;
+      margin: 0 auto 0 auto;
+      width: 100%;
+      text-align: center;
+      margin: 20px 0px 20px 0px;
+    }
+
+    p {
+      font-size: 12px;
+      text-decoration: none;
+      color: #ffffff;
+    }
+
+    h1 {
+      font-size: 1.5em;
+      color: #525252;
+    }
+
+    .box {
+      background: white;
+      width: 450px;
+      border-radius: 6px;
+      margin: 0 auto 0 auto;
+      padding: 0px 0px 70px 0px;
+      border: #2980b9 4px solid;
+    }
+
+    .username {
+      background: #ecf0f1;
+      border: #ccc 1px solid;
+      border-bottom: #ccc 2px solid;
+      padding: 8px;
+      width: 400px;
+      color: #606060;
+      margin-top: 10px;
+      font-size: 1em;
+      border-radius: 4px;
+    }
+
+    .button {
+      width: 127px;
+      float: left;
+      padding-top: 12px;
+      padding-bottom: 10px;
+      color: white;
+      border-radius: 4px;
+      border: #27ae60 1px solid;
+      margin-top: 20px;
+      margin-bottom: 20px;
+      margin-left: 16px;
+      font-weight: 800;
+      font-size: 0.8em;
+    }
+
+    #register {
+      background: #2ecc71;
+      border-color: #27ae60;
+    }
+
+    #register:hover {
+      background: #2CC06B;
+    }
+
+    #login {
+      background: #3498db;
+      border-color: #2980b9;
+    }
+
+    #login:hover {
+      background: #3183bb;
+    }
+
+    #add {
+      background: #bf30ca;
+      border-color: #a8259f;
+    }
+
+    #add:hover {
+      background: #ad2dab;
+    }
+  </style>
+
+</head>
+
+<body>
+  <form>
+    <div class="box">
+      <h1>Webauthn</h1>
+      <input class="username" id="username" type="username" name="username" placeholder="username" />
+      <a href="#">
+        <div class="button" id="register">Register</div>
+      </a>
+      <a href="#">
+        <div class="button" id="login">Login</div>
+      </a>
+      <a href="#">
+        <div class="button" id="add">Add</div>
+      </a>
+    </div>
+  </form>
+
+  <script>
+    $(document).ready(() => {
+      $('.box').hide().fadeIn(1000)
+      ensureWebauthn()
+      restoreUsername()
+    })
+
+    $('#register').click((event) => {
+      event.preventDefault()
+      performRegister()
+    })
+
+    $('#login').click((event) => {
+      event.preventDefault()
+      performLogin()
+    })
+
+    $('#add').click((event) => {
+      event.preventDefault()
+      performAdd()
+    })
+
+    /// Actions
+
+    function ensureWebauthn() {
+      if (!window.PublicKeyCredential) {
+        alert("WebAuthn isn't supported by this browser or hostname")
+      } else {
+        console.log('Webauthn is supported')
+      }
+    }
+
+    async function performRegister() {
+      const identifier = ensureUsername()
+      const name = "John Appleseed"
+      try {
+        await register(identifier, name)
+        alert('Register succeeded')
+      } catch (err) {
+        console.error('Register failed', err)
+        alert(`Register failed: ${err}`)
+      }
+    }
+
+    async function performLogin() {
+      const identifier = ensureUsername()
+      try {
+        await login(identifier)
+        alert('Login succeeded')
+      } catch (err) {
+        console.error('Login failed', err)
+        alert(`Login failed: ${err}`)
+      }
+    }
+
+    async function performAdd() {
+      const identifier = ensureUsername()
+      try {
+        await add(identifier)
+        alert('Add device succeeded')
+      } catch (err) {
+        console.error('Add device failed', err)
+        alert(`Add device failed: ${err}`)
+      }
+    }
+
+    /// Operations
+
+    async function register(identifier, name, origin) {
+      const user = {
+        externalId: identifier,
+        name,
+      }
+
+      const startResponse = await serverPost('webauthn/signup/start', {
+        user,
+		    origin: window.location.origin,
+      })
+      console.log('Received register start response', startResponse)
+
+      const createOptions = decodeCreateOptions(startResponse.options)
+      const response = await navigator.credentials.create({ publicKey: createOptions.publicKey })
+      const createResponse = encodeCreateResponse(response)
+      console.log('Sending response', createResponse)
+
+      const finishResponse = await serverPost('webauthn/signup/finish', {
+        transactionId: startResponse.transactionId,
+        response: createResponse,
+      })
+      console.log('Received register finish response', finishResponse)
+    }
+
+    async function login(identifier) {
+      const startResponse = await serverPost('webauthn/signin/start', {
+        externalId: identifier,
+		    origin: window.location.origin,
+      })
+      console.log('Received login start response', startResponse)
+
+      const getOptions = decodeGetOptions(startResponse.options)
+      const response = await navigator.credentials.get({ publicKey: getOptions.publicKey })
+      const getResponse = encodeGetResponse(response)
+      console.log('Sending response', getResponse)
+
+      const finishResponse = await serverPost('webauthn/signin/finish', {
+        transactionId: startResponse.transactionId,
+        response: getResponse,
+      })
+      console.log('Received login finish response', finishResponse)
+    }
+
+    async function add(identifier) {
+      const startResponse = await serverPost('webauthn/device/add/start', {
+        externalId: identifier,
+		origin: window.location.origin,
+      })
+      console.log('Received add device start response', startResponse)
+
+      const createOptions = decodeCreateOptions(startResponse.options)
+      const response = await navigator.credentials.create({ publicKey: createOptions.publicKey })
+      const createResponse = encodeCreateResponse(response)
+      console.log('Sending response', createResponse)
+
+      const finishResponse = await serverPost('webauthn/device/add/finish', {
+        transactionId: startResponse.transactionId,
+        response: createResponse,
+      })
+      console.log('Received add device finish response', finishResponse)
+    }
+
+    /// Serialization
+
+    function decodeCreateOptions(string) {
+      const options = JSON.parse(string)
+
+      options.publicKey.challenge = decodeBase64Url(options.publicKey.challenge)
+      options.publicKey.user.id = decodeBase64Url(options.publicKey.user.id)
+
+      options.publicKey.excludeCredentials?.forEach((item) => {
+        item.id = decodeBase64Url(item.id)
+      })
+
+      return options
+    }
+
+    function encodeCreateResponse(credential) {
+      return JSON.stringify({
+        id: credential.id,
+        rawId: encodeBase64Url(credential.rawId),
+        type: credential.type,
+        response: {
+          attestationObject: encodeBase64Url(credential.response.attestationObject),
+          clientDataJSON: encodeBase64Url(credential.response.clientDataJSON),
+        },
+      })
+    }
+
+    function decodeGetOptions(string) {
+      const options = JSON.parse(string)
+
+      options.publicKey.challenge = decodeBase64Url(options.publicKey.challenge)
+
+      options.publicKey.allowCredentials?.forEach((item) => {
+        item.id = decodeBase64Url(item.id)
+      })
+
+      return options
+    }
+
+    function encodeGetResponse(assertion) {
+      return JSON.stringify({
+        id: assertion.id,
+        rawId: encodeBase64Url(assertion.rawId),
+        type: assertion.type,
+        response: {
+          authenticatorData: encodeBase64Url(assertion.response.authenticatorData),
+          clientDataJSON: encodeBase64Url(assertion.response.clientDataJSON),
+          signature: encodeBase64Url(assertion.response.signature),
+          userHandle: encodeBase64Url(assertion.response.userHandle),
+        },
+      })
+    }
+
+    function decodeBase64Url(value) {
+      return Uint8Array.from(atob(value), c => c.charCodeAt(0)).buffer
+    }
+
+    function encodeBase64Url(value) {
+      return btoa(String.fromCharCode.apply(null, new Uint8Array(value)))
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=/g, "")
+    }
+
+    /// Utils
+
+    function restoreUsername() {
+      const value = localStorage.getItem("username") || "user@descope.com"
+      $("#username").val(value)
+    }
+
+    function ensureUsername() {
+      const username = $("#username").val()
+      if (!username) {
+        alert("Please enter a username")
+        return
+      }
+      localStorage.setItem("username", username)
+      return username
+    }
+
+	async function serverPost(route, params) {
+		const response = await fetch(`https://localhost:443/${route}`, {
+		  method: 'POST',
+		  headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+		  },
+		  body: JSON.stringify(params)
+		})
+		if (!response.ok) {
+		  throw Error(`Server returned status code ${response.status}`)
+		}
+		try {
+		  const json = await response.json()
+		  return json
+		} catch (error) {
+		  console.log(error)
+		}
+	}
+  </script>
+</body>
+
+</html>

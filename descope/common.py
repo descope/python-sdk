@@ -12,16 +12,48 @@ REDIRECT_LOCATION_COOKIE_NAME = "Location"
 
 
 class EndpointsV1:
-    signInAuthOTPPath = "/v1/auth/signin/otp"
-    signUpAuthOTPPath = "/v1/auth/signup/otp"
-    verifyCodeAuthPath = "/v1/auth/code/verify"
-    signInAuthMagicLinkPath = "/v1/auth/signin/magiclink"
-    signUpAuthMagicLinkPath = "/v1/auth/signup/magiclink"
-    verifyMagicLinkAuthPath = "/v1/auth/magiclink/verify"
-    oauthStart = "/v1/oauth/authorize"
     publicKeyPath = "/v1/keys"
     refreshTokenPath = "/v1/auth/refresh"
     logoutPath = "/v1/auth/logoutall"
+
+    # otp
+    signUpAuthOTPPath = "/v1/auth/signup/otp"
+    signInAuthOTPPath = "/v1/auth/signin/otp"
+    signUpOrInAuthOTPPath = "/v1/auth/sign-up-or-in/otp"
+    verifyCodeAuthPath = "/v1/auth/code/verify"
+    updateUserEmailOTPPath = "/v1/user/update/email/otp"
+    updateUserPhoneOTPPath = "/v1/user/update/phone/otp"
+
+    # magiclink
+    signUpAuthMagicLinkPath = "/v1/auth/signup/magiclink"
+    signInAuthMagicLinkPath = "/v1/auth/signin/magiclink"
+    signUpOrInAuthMagicLinkPath = "/v1/auth/sign-up-or-in/magiclink"
+    verifyMagicLinkAuthPath = "/v1/auth/magiclink/verify"
+    getSessionMagicLinkAuthPath = "/v1/auth/magiclink/session"
+    updateUserEmailMagicLinkPath = "/v1/user/update/email/magiclink"
+    updateUserPhoneMagicLinkPath = "/v1/user/update/phone/magiclink"
+
+    # oauth
+    oauthStart = "/v1/oauth/authorize"
+
+    # saml
+    authSAMLStart = "/v1/auth/saml/authorize"
+
+    # exchange (saml + oauth)
+    exchangeTokenPath = "/v1/auth/exchange"
+
+    # totp
+    signUpAuthTOTPPath = "/v1/auth/signup/totp"
+    verifyTOTPPath = "/v1/auth/verify/totp"
+    updateTOTPPath = "/v1/user/update/totp"
+
+    # webauthn
+    signUpAuthWebauthnStart = "/v1/webauthn/signup/start"
+    signUpAuthWebauthnFinish = "/v1/webauthn/signup/finish"
+    signInAuthWebauthnStart = "/v1/webauthn/signin/start"
+    signInAuthWebauthnFinish = "/v1/webauthn/signin/finish"
+    deviceAddAuthWebauthnStart = "/v1/webauthn/device/add/start"
+    deviceAddAuthWebauthnFinish = "/v1/webauthn/device/add/finish"
 
 
 class DeliveryMethod(Enum):
