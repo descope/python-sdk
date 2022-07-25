@@ -10,13 +10,16 @@ class WebauthN:
         self._auth = auth
 
     def sign_up_start(
-        self, identifier: str, user: dict = None, origin: str = None
+        self, identifier: str, origin: str, user: dict = None
     ) -> dict:
         """
         Docs
         """
         if not identifier:
             raise AuthException(500, "Invalid argument", "Identifier cannot be empty")
+        
+        if not origin:
+            raise AuthException(500, "Invalid argument", "Origin cannot be empty")
 
         uri = EndpointsV1.signUpAuthWebauthnStart
         body = WebauthN._compose_signup_body(identifier, user, origin)
@@ -52,7 +55,10 @@ class WebauthN:
         """
         if not identifier:
             raise AuthException(500, "Invalid argument", "Identifier cannot be empty")
-
+        
+        if not origin:
+            raise AuthException(500, "Invalid argument", "Origin cannot be empty")
+        
         uri = EndpointsV1.signInAuthWebauthnStart
         body = WebauthN._compose_signin_body(identifier, origin)
         response = self._auth.do_post(uri, body)
@@ -121,15 +127,13 @@ class WebauthN:
         if user is not None:
             for key, val in user.items():
                 body["user"][key] = val
-        if origin:
-            body["origin"] = origin
+        body["origin"] = origin
         return body
 
     @staticmethod
     def _compose_signin_body(identifier: str, origin: str) -> dict:
         body = {"externalId": identifier}
-        if origin:
-            body["origin"] = origin
+        body["origin"] = origin
         return body
 
     @staticmethod

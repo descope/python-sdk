@@ -63,12 +63,12 @@ class TestWebauthN(unittest.TestCase):
         webauthn = WebauthN(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
-        self.assertRaises(AuthException, webauthn.sign_up_start, "")
-        self.assertRaises(AuthException, webauthn.sign_up_start, None)
+        self.assertRaises(AuthException, webauthn.sign_up_start, "", "https://example.com")
+        self.assertRaises(AuthException, webauthn.sign_up_start, "id1", "")
 
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(AuthException, webauthn.sign_up_start, "dummy@dummy.com")
+            self.assertRaises(AuthException, webauthn.sign_up_start, "id1", "https://example.com")
 
         # Test success flow
         valid_response = json.loads(
@@ -76,14 +76,14 @@ class TestWebauthN(unittest.TestCase):
         )
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
-            self.assertIsNotNone(webauthn.sign_up_start("dummy@dummy.com"))
+            self.assertIsNotNone(webauthn.sign_up_start( "id1", "https://example.com"))
 
         with patch("requests.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
             my_mock_response.json.return_value = valid_response
             mock_post.return_value = my_mock_response
-            res = webauthn.sign_up_start("dummy@dummy.com")
+            res = webauthn.sign_up_start("id1", "https://example.com")
             expected_uri = f"{DEFAULT_BASE_URI}{EndpointsV1.signUpAuthWebauthnStart}"
             mock_post.assert_called_with(
                 expected_uri,
@@ -92,7 +92,7 @@ class TestWebauthN(unittest.TestCase):
                     "Content-Type": "application/json",
                     "Authorization": "Basic ZHVtbXk6",
                 },
-                data=json.dumps({"user": {"externalId": "dummy@dummy.com"}}),
+                data=json.dumps({ "user": {"externalId": "id1"}, "origin":  "https://example.com"}),
             )
             self.assertEqual(res, valid_response)
 
@@ -142,7 +142,7 @@ class TestWebauthN(unittest.TestCase):
             AuthException, webauthn.sign_in_start, "", "https://example.com"
         )
         self.assertRaises(
-            AuthException, webauthn.sign_in_start, None, "https://example.com"
+            AuthException, webauthn.sign_in_start, "id", ""
         )
 
         with patch("requests.post") as mock_post:
@@ -150,7 +150,7 @@ class TestWebauthN(unittest.TestCase):
             self.assertRaises(
                 AuthException,
                 webauthn.sign_in_start,
-                "dummy@dummy.com",
+                "id1",
                 "https://example.com",
             )
 
@@ -169,7 +169,7 @@ class TestWebauthN(unittest.TestCase):
             my_mock_response.ok = True
             my_mock_response.json.return_value = valid_response
             mock_post.return_value = my_mock_response
-            res = webauthn.sign_in_start("dummy@dummy.com", "https://example.com")
+            res = webauthn.sign_in_start( "id1", "https://example.com")
             expected_uri = f"{DEFAULT_BASE_URI}{EndpointsV1.signInAuthWebauthnStart}"
             mock_post.assert_called_with(
                 expected_uri,
@@ -179,7 +179,7 @@ class TestWebauthN(unittest.TestCase):
                     "Authorization": "Basic ZHVtbXk6",
                 },
                 data=json.dumps(
-                    {"externalId": "dummy@dummy.com", "origin": "https://example.com"}
+                    {"externalId": "id1", "origin": "https://example.com"}
                 ),
             )
             self.assertEqual(res, valid_response)
