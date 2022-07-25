@@ -2,8 +2,6 @@ import json
 import logging
 import os
 import sys
-from http.client import HTTPConnection
-from re import T
 
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
@@ -68,7 +66,7 @@ def main():
 
         # validate session
         try:
-            logging.info(f"going to validate session...")
+            logging.info("going to validate session...")
             claims = descope_client.validate_session_request(
                 session_token, refresh_token
             )

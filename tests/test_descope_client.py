@@ -1,10 +1,9 @@
 import json
 import unittest
 from copy import deepcopy
-from enum import Enum
 from unittest.mock import patch
 
-from descope import SESSION_COOKIE_NAME, AuthException, DeliveryMethod, DescopeClient
+from descope import SESSION_COOKIE_NAME, AuthException, DescopeClient
 from descope.common import REFRESH_SESSION_COOKIE_NAME
 
 

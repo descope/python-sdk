@@ -3,12 +3,7 @@ import string
 import requests
 
 from descope.auth import Auth
-from descope.common import (
-    DEFAULT_BASE_URI,
-    REFRESH_SESSION_COOKIE_NAME,
-    DeliveryMethod,
-    EndpointsV1,
-)
+from descope.common import REFRESH_SESSION_COOKIE_NAME, DeliveryMethod, EndpointsV1
 from descope.exceptions import AuthException
 
 

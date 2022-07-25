@@ -1,5 +1,4 @@
 import unittest
-from copy import deepcopy
 from enum import Enum
 from unittest.mock import patch
 

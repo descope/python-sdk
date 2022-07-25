@@ -1,13 +1,9 @@
 import json
 import unittest
-from copy import deepcopy
-from enum import Enum
 from unittest import mock
 from unittest.mock import patch
 
-from pytest import param
-
-from descope import AuthException, DeliveryMethod
+from descope import AuthException
 from descope.auth import Auth
 from descope.authmethod.exchanger import Exchanger
 from descope.common import DEFAULT_BASE_URI, EndpointsV1
@@ -50,7 +46,7 @@ class TestExchanger(unittest.TestCase):
             )
             my_mock_response.json.return_value = data
             mock_get.return_value = my_mock_response
-            response = exchanger.exchange_token("c1")
+            exchanger.exchange_token("c1")
             mock_get.assert_called_with(
                 f"{DEFAULT_BASE_URI}{EndpointsV1.exchangeTokenPath}",
                 headers={

@@ -9,7 +9,7 @@ class Exchanger:
     def __init__(self, auth: Auth):
         self._auth = auth
 
-    def exchange_token(self, code: str) -> str:
+    def exchange_token(self, code: str) -> dict:
         """ """
         if not code or code == "":
             raise AuthException(

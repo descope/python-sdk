@@ -8,7 +8,6 @@ dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
 from descope import (  # noqa: E402
     REFRESH_SESSION_COOKIE_NAME,
-    SESSION_COOKIE_NAME,
     AuthException,
     DeliveryMethod,
     DescopeClient,
@@ -42,7 +41,6 @@ def main():
 
         pending_ref = resp["pendingRef"]
         done = False
-        authenticated = False
 
         # open thread to get input
         new_thread = Thread(target=verify)
@@ -57,11 +55,9 @@ def main():
                 sleep(4)
                 jwt_response = descope_client.magiclink.get_session(pending_ref)
                 done = True
-                authenticated = True
             except AuthException as e:
                 if e.status_code != 401:
                     logging.info(f"Failed pending session, err: {e}")
-                    authenticated = False
                     done = True
 
         if jwt_response:

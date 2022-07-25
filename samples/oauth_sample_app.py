@@ -6,7 +6,6 @@ dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
 from descope import (  # noqa: E402
     REFRESH_SESSION_COOKIE_NAME,
-    SESSION_COOKIE_NAME,
     AuthException,
     DescopeClient,
 )
@@ -26,7 +25,7 @@ def main():
         code = input("Please insert the code you received from redirect URI:\n")
 
         jwt_response = descope_client.oauth.exchange_token(code)
-        logging.info(f"oauth code valid")
+        logging.info("oauth code valid")
         refresh_token = jwt_response["jwts"].get(REFRESH_SESSION_COOKIE_NAME).get("jwt")
         descope_client.logout(refresh_token)
         logging.info("User logged out")

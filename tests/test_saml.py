@@ -1,5 +1,4 @@
 import unittest
-from enum import Enum
 from unittest.mock import patch
 
 from descope import AuthException
