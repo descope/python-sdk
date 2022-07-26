@@ -96,6 +96,7 @@ class Auth:
             headers=self._get_default_headers(pswd),
             data=json.dumps(body),
             cookies=cookies,
+            verify=self.secure,
         )
         if not response.ok:
             raise AuthException(
