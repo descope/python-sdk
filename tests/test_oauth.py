@@ -75,6 +75,7 @@ class TestOAuth(unittest.TestCase):
                 },
                 params={"provider": "facebook"},
                 allow_redirects=False,
+                verify=True,
             )
 
 

@@ -57,6 +57,7 @@ class TestSAML(unittest.TestCase):
                 },
                 params={"tenant": "tenant1", "redirectURL": "http://dummy.com"},
                 allow_redirects=None,
+                verify=True,
             )
 
 

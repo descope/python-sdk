@@ -56,6 +56,7 @@ class TestExchanger(unittest.TestCase):
                 cookies=None,
                 params={"code": "c1"},
                 allow_redirects=False,
+                verify=True,
             )
 
 
