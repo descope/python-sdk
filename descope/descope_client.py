@@ -15,8 +15,8 @@ from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 class DescopeClient:
     ALGORITHM_KEY = "alg"
 
-    def __init__(self, project_id: str, public_key: str = None, base_url: str = None):
-        auth = Auth(project_id, public_key, base_url)
+    def __init__(self, project_id: str, public_key: str = None, base_url: str = None, skip_verify: bool = False):
+        auth = Auth(project_id, public_key, base_url, skip_verify)
         self._auth = auth
         self._magiclink = MagicLink(auth)
         self._oauth = OAuth(auth)

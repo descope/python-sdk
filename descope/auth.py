@@ -30,7 +30,7 @@ from descope.exceptions import (
 class Auth:
     ALGORITHM_KEY = "alg"
 
-    def __init__(self, project_id: str, public_key: str = None, base_uri: str = None):
+    def __init__(self, project_id: str, public_key: str = None, base_uri: str = None, skip_verify = false):
         self.lock_public_keys = Lock()
         # validate project id
         if not project_id:
@@ -44,6 +44,10 @@ class Auth:
                 )
         self.project_id = project_id
 
+        self.secure = True
+        if skip_verify:
+            self.secure = False
+              
         self.base_url = base_uri or DEFAULT_BASE_URL
 
         if not public_key:
@@ -70,7 +74,7 @@ class Auth:
             cookies=cookies,
             params=params,
             allow_redirects=allow_redirects,
-            verify=False,
+            verify=self.secure,
         )
         if not response.ok:
             raise AuthException(
@@ -234,7 +238,7 @@ class Auth:
         response = requests.get(
             f"{self.base_url}{EndpointsV1.publicKeyPath}/{self.project_id}",
             headers=self._get_default_headers(),
-            verify=False,
+            verify=self.secure,
         )
 
         if not response.ok:
