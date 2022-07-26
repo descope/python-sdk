@@ -47,7 +47,7 @@ class Auth:
         self.secure = True
         if skip_verify:
             self.secure = False
-              
+
         self.base_url = base_uri or DEFAULT_BASE_URL
 
         if not public_key:
