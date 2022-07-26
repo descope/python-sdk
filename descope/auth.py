@@ -30,7 +30,7 @@ from descope.exceptions import (
 class Auth:
     ALGORITHM_KEY = "alg"
 
-    def __init__(self, project_id: str, public_key: str = None, base_uri: str = None, skip_verify = false):
+    def __init__(self, project_id: str, public_key: str = None, base_uri: str = None, skip_verify: bool = false):
         self.lock_public_keys = Lock()
         # validate project id
         if not project_id:
