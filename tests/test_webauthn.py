@@ -100,6 +100,7 @@ class TestWebauthN(unittest.TestCase):
                 data=json.dumps(
                     {"user": {"externalId": "id1"}, "origin": "https://example.com"}
                 ),
+                verify=True,
             )
             self.assertEqual(res, valid_response)
 
@@ -138,6 +139,7 @@ class TestWebauthN(unittest.TestCase):
                     "Authorization": "Basic ZHVtbXk6",
                 },
                 data=json.dumps({"transactionId": "t01", "response": "response01"}),
+                verify=True,
             )
             self.assertIsNotNone(webauthn.sign_up_finish("t01", "response01"))
 
@@ -184,8 +186,9 @@ class TestWebauthN(unittest.TestCase):
                     "Authorization": "Basic ZHVtbXk6",
                 },
                 data=json.dumps({"externalId": "id1", "origin": "https://example.com"}),
+                verify=True,
             )
-            self.assertEqual(res, valid_response)
+            self.assertEqual(res, valid_response),
 
     def test_sign_in_finish(self):
         webauthn = WebauthN(Auth(self.dummy_project_id, self.public_key_dict))
@@ -223,6 +226,7 @@ class TestWebauthN(unittest.TestCase):
                     "Authorization": "Basic ZHVtbXk6",
                 },
                 data=json.dumps({"transactionId": "t01", "response": "response01"}),
+                verify=True,
             )
             self.assertIsNotNone(webauthn.sign_up_finish("t01", "response01"))
 
@@ -291,6 +295,7 @@ class TestWebauthN(unittest.TestCase):
                 data=json.dumps(
                     {"externalId": "dummy@dummy.com", "origin": "https://example.com"}
                 ),
+                verify=True,
             )
             self.assertEqual(res, valid_response)
 
@@ -331,6 +336,7 @@ class TestWebauthN(unittest.TestCase):
                     "Authorization": "Basic ZHVtbXk6",
                 },
                 data=json.dumps({"transactionId": "t01", "response": "response01"}),
+                verify=True,
             )
             self.assertIsNotNone(webauthn.sign_up_finish("t01", "response01"))
 

@@ -259,6 +259,7 @@ class TestMagicLink(unittest.TestCase):
                         "crossDevice": True,
                     }
                 ),
+                verify=True,
             )
             self.assertEqual(res["pendingRef"], "aaaa")
 
@@ -292,6 +293,7 @@ class TestMagicLink(unittest.TestCase):
                         "email": "dummy@dummy.com",
                     }
                 ),
+                verify=True,
             )
             self.assertEqual(res["pendingRef"], "aaaa")
 
@@ -304,7 +306,9 @@ class TestMagicLink(unittest.TestCase):
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
             magiclink.sign_up_or_in_cross_device(
-                DeliveryMethod.EMAIL, "dummy@dummy.com", "http://test.me"
+                DeliveryMethod.EMAIL,
+                "dummy@dummy.com",
+                "http://test.me",
             )
             mock_post.assert_called_with(
                 f"{DEFAULT_BASE_URL}{EndpointsV1.signUpOrInAuthMagicLinkPath}/email",
@@ -320,6 +324,7 @@ class TestMagicLink(unittest.TestCase):
                         "crossDevice": True,
                     }
                 ),
+                verify=True,
             )
 
     def test_verify(self):
