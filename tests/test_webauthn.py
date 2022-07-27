@@ -92,7 +92,6 @@ class TestWebauthN(unittest.TestCase):
             expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.signUpAuthWebauthnStart}"
             mock_post.assert_called_with(
                 expected_uri,
-                cookies=None,
                 headers={
                     "Content-Type": "application/json",
                     "Authorization": "Basic ZHVtbXk6",
@@ -133,7 +132,6 @@ class TestWebauthN(unittest.TestCase):
             webauthn.sign_up_finish("t01", "response01")
             mock_post.assert_called_with(
                 expected_uri,
-                cookies=None,
                 headers={
                     "Content-Type": "application/json",
                     "Authorization": "Basic ZHVtbXk6",
@@ -180,7 +178,6 @@ class TestWebauthN(unittest.TestCase):
             expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.signInAuthWebauthnStart}"
             mock_post.assert_called_with(
                 expected_uri,
-                cookies=None,
                 headers={
                     "Content-Type": "application/json",
                     "Authorization": "Basic ZHVtbXk6",
@@ -220,7 +217,6 @@ class TestWebauthN(unittest.TestCase):
             webauthn.sign_in_finish("t01", "response01")
             mock_post.assert_called_with(
                 expected_uri,
-                cookies=None,
                 headers={
                     "Content-Type": "application/json",
                     "Authorization": "Basic ZHVtbXk6",
@@ -287,7 +283,6 @@ class TestWebauthN(unittest.TestCase):
             expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.deviceAddAuthWebauthnStart}"
             mock_post.assert_called_with(
                 expected_uri,
-                cookies=None,
                 headers={
                     "Content-Type": "application/json",
                     "Authorization": "Basic ZHVtbXk6YXNkYXNk",
@@ -330,7 +325,6 @@ class TestWebauthN(unittest.TestCase):
             webauthn.add_device_finish("t01", "response01")
             mock_post.assert_called_with(
                 expected_uri,
-                cookies=None,
                 headers={
                     "Content-Type": "application/json",
                     "Authorization": "Basic ZHVtbXk6",

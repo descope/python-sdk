@@ -50,7 +50,6 @@ class TestSAML(unittest.TestCase):
             expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.authSAMLStart}"
             mock_get.assert_called_with(
                 expected_uri,
-                cookies=None,
                 headers={
                     "Content-Type": "application/json",
                     "Authorization": "Basic ZHVtbXk6",

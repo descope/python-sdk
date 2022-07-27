@@ -24,7 +24,7 @@ class SAML(Exchanger):
 
         uri = EndpointsV1.authSAMLStart
         params = SAML._compose_start_params(tenant, return_url)
-        response = self._auth.do_get(uri, None, params)
+        response = self._auth.do_get(uri, params)
 
         return response.json()
 

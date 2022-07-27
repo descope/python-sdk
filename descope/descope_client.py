@@ -100,4 +100,4 @@ class DescopeClient:
             )
 
         uri = EndpointsV1.logoutPath
-        return self._auth.do_get(uri, None, None, None, refresh_token)
+        return self._auth.do_get(uri, None, None, refresh_token)
