@@ -53,7 +53,6 @@ class TestExchanger(unittest.TestCase):
                     "Content-Type": "application/json",
                     "Authorization": "Basic ZHVtbXk6",
                 },
-                cookies=None,
                 params={"code": "c1"},
                 allow_redirects=False,
             )
