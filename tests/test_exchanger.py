@@ -55,6 +55,7 @@ class TestExchanger(unittest.TestCase):
                 },
                 params={"code": "c1"},
                 allow_redirects=False,
+                verify=True,
             )
 
 

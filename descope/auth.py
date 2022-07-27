@@ -30,7 +30,13 @@ from descope.exceptions import (
 class Auth:
     ALGORITHM_KEY = "alg"
 
-    def __init__(self, project_id: str, public_key: str = None, base_uri: str = None):
+    def __init__(
+        self,
+        project_id: str,
+        public_key: str = None,
+        base_uri: str = None,
+        skip_verify: bool = False,
+    ):
         self.lock_public_keys = Lock()
         # validate project id
         if not project_id:
@@ -43,6 +49,10 @@ class Auth:
                     "Failed to init AuthHelper object, project should not be empty, remember to set env variable DESCOPE_PROJECT_ID or pass along it to init function",
                 )
         self.project_id = project_id
+
+        self.secure = True
+        if skip_verify:
+            self.secure = False
 
         self.base_url = base_uri or DEFAULT_BASE_URL
 
@@ -68,6 +78,7 @@ class Auth:
             headers=self._get_default_headers(pswd),
             params=params,
             allow_redirects=allow_redirects,
+            verify=self.secure,
         )
         if not response.ok:
             raise AuthException(
@@ -80,6 +91,7 @@ class Auth:
             f"{self.base_url}{uri}",
             headers=self._get_default_headers(pswd),
             data=json.dumps(body),
+            verify=self.secure,
         )
         if not response.ok:
             raise AuthException(
@@ -228,6 +240,7 @@ class Auth:
         response = requests.get(
             f"{self.base_url}{EndpointsV1.publicKeyPath}/{self.project_id}",
             headers=self._get_default_headers(),
+            verify=self.secure,
         )
 
         if not response.ok:

@@ -20,7 +20,9 @@ APP = Flask(__name__)
 PROJECT_ID = ""
 
 # init the DescopeClient
-descope_client = DescopeClient(PROJECT_ID, base_url="https://localhost:8443")
+descope_client = DescopeClient(
+    PROJECT_ID, base_url="https://172.17.0.1:8443", skip_verify=True
+)
 
 
 class Error(Exception):
