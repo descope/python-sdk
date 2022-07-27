@@ -94,12 +94,12 @@ def verify():
     email = data.get("email", None)
     code = data.get("code", None)
     if not code or not email:
-        return Response("Unauthorized 1", 401)
+        return Response("Unauthorized", 401)
 
     try:
         jwt_response = descope_client.otp.verify_code(DeliveryMethod.EMAIL, email, code)
     except AuthException:
-        return Response("Unauthorized 2", 401)
+        return Response("Unauthorized", 401)
 
     response = Response(json.dumps(jwt_response), 200)
     return response
