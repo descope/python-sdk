@@ -19,7 +19,7 @@ class OAuth(Exchanger):
 
         uri = EndpointsV1.oauthStart
         params = OAuth._compose_start_params(provider, return_url)
-        response = self._auth.do_get(uri, None, params, False)
+        response = self._auth.do_get(uri, params, False)
 
         return response.json()
 

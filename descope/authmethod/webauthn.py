@@ -113,7 +113,7 @@ class WebauthN:
 
         uri = EndpointsV1.deviceAddAuthWebauthnStart
         body = WebauthN._compose_add_device_start_body(identifier, origin)
-        response = self._auth.do_post(uri, body, None, refresh_token)
+        response = self._auth.do_post(uri, body, refresh_token)
 
         return response.json()
 
