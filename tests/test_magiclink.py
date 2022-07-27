@@ -247,7 +247,6 @@ class TestMagicLink(unittest.TestCase):
             )
             mock_post.assert_called_with(
                 f"{DEFAULT_BASE_URL}{EndpointsV1.signInAuthMagicLinkPath}/email",
-                cookies=None,
                 headers={
                     "Content-Type": "application/json",
                     "Authorization": "Basic ZHVtbXk6",
@@ -278,7 +277,6 @@ class TestMagicLink(unittest.TestCase):
             )
             mock_post.assert_called_with(
                 f"{DEFAULT_BASE_URL}{EndpointsV1.signUpAuthMagicLinkPath}/email",
-                cookies=None,
                 headers={
                     "Content-Type": "application/json",
                     "Authorization": "Basic ZHVtbXk6",
@@ -308,7 +306,6 @@ class TestMagicLink(unittest.TestCase):
             )
             mock_post.assert_called_with(
                 f"{DEFAULT_BASE_URL}{EndpointsV1.signUpOrInAuthMagicLinkPath}/email",
-                cookies=None,
                 headers={
                     "Content-Type": "application/json",
                     "Authorization": "Basic ZHVtbXk6",

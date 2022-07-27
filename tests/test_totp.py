@@ -118,7 +118,6 @@ class TestTOTP(unittest.TestCase):
             expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.updateTOTPPath}"
             mock_post.assert_called_with(
                 expected_uri,
-                cookies=None,
                 headers={
                     "Content-Type": "application/json",
                     "Authorization": "Basic ZHVtbXk6ZXlKaGJHY2lPaUpGVXpNNE5DSXNJbXRwWkNJNklqSkNkRFZYVEdOalRGVmxlVEZFY0RkMWRIQjBXbUl6Um5nNVN5SXNJblI1Y0NJNklrcFhWQ0o5LmV5SmhkWFJvYjNKcGVtVmtWR1Z1WVc1MGN5STZleUlpT201MWJHeDlMQ0pqYjI5cmFXVkViMjFoYVc0aU9pSWlMQ0pqYjI5cmFXVkZlSEJwY21GMGFXOXVJam94TmpZd05qYzVNakE0TENKamIyOXJhV1ZOWVhoQloyVWlPakkxT1RFNU9Ua3NJbU52YjJ0cFpVNWhiV1VpT2lKRVUxSWlMQ0pqYjI5cmFXVlFZWFJvSWpvaUx5SXNJbVY0Y0NJNk1qQTVNREE0TnpJd09Dd2lhV0YwSWpveE5qVTRNRGczTWpBNExDSnBjM01pT2lJeVFuUTFWMHhqWTB4VlpYa3hSSEEzZFhSd2RGcGlNMFo0T1VzaUxDSnpkV0lpT2lJeVF6VTFkbmw0ZHpCelVrdzJSbVJOTmpoeFVuTkRSR1JTVDFZaWZRLmNXUDV1cDRSNXhlSWwycW9HMk50ZkxIM1E1blJKVktkei1GRG9BWGN0T1FXOWczY2VaUWk2clpRLVRQQmFYTUt3NjhiaWpOM2JMSlRxeFdXNVdIenFSVWVvcGZ1elRjTVltQzB3UDJYR0prcmRGNkE4RDVRVzZhY1NHcWdsRmd1",

@@ -59,7 +59,6 @@ class Auth:
     def do_get(
         self,
         uri: str,
-        cookies=None,
         params=None,
         allow_redirects=None,
         pswd: str = None,
@@ -67,7 +66,6 @@ class Auth:
         response = requests.get(
             f"{self.base_url}{uri}",
             headers=self._get_default_headers(pswd),
-            cookies=cookies,
             params=params,
             allow_redirects=allow_redirects,
         )
@@ -77,14 +75,11 @@ class Auth:
             )
         return response
 
-    def do_post(
-        self, uri: str, body: dict, cookies=None, pswd: str = None
-    ) -> requests.Response:
+    def do_post(self, uri: str, body: dict, pswd: str = None) -> requests.Response:
         response = requests.post(
             f"{self.base_url}{uri}",
             headers=self._get_default_headers(pswd),
             data=json.dumps(body),
-            cookies=cookies,
         )
         if not response.ok:
             raise AuthException(
@@ -305,7 +300,7 @@ class Auth:
 
     def _refresh_token(self, refresh_token: str) -> dict:
         uri = Auth._compose_refresh_token_url()
-        response = self.do_get(uri, None, None, None, refresh_token)
+        response = self.do_get(uri, None, None, refresh_token)
 
         resp = response.json()
         auth_info = self._generate_auth_info(

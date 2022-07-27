@@ -72,7 +72,7 @@ class TOTP:
 
         uri = EndpointsV1.updateTOTPPath
         body = TOTP._compose_update_user_body(identifier)
-        response = self._auth.do_post(uri, body, None, refresh_token)
+        response = self._auth.do_post(uri, body, refresh_token)
 
         return response.json()
         # Response should have these schema:

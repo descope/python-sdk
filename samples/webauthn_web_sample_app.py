@@ -87,6 +87,7 @@ def webauthn_add_device_start():
 def webauthn_add_device_finish():
     data = request.get_json()
     descope_client.webauthn.add_device_finish(data["transactionId"], data["response"])
+    return jsonify("{}")
 
 
 if __name__ == "__main__":

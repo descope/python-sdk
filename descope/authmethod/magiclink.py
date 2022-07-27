@@ -151,7 +151,7 @@ class MagicLink:
             identifier, email, cross_device
         )
         uri = EndpointsV1.updateUserEmailOTPPath
-        return self._auth.do_post(uri, body, None, refresh_token)
+        return self._auth.do_post(uri, body, refresh_token)
 
     def _update_user_phone(
         self,
@@ -172,7 +172,7 @@ class MagicLink:
             identifier, phone, cross_device
         )
         uri = EndpointsV1.updateUserPhoneOTPPath
-        return self._auth.do_post(uri, body, None, refresh_token)
+        return self._auth.do_post(uri, body, refresh_token)
 
     @staticmethod
     def _compose_signin_url(method: DeliveryMethod) -> str:
