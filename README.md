@@ -131,3 +131,4 @@ python -m pytest tests/*
 ## License
 
 The Descope ExpresSDK for Python is licensed for use under the terms and conditions of the [MIT license Agreement](https://github.com/descope/python-sdk/blob/main/LICENSE).
+
