@@ -3,7 +3,7 @@ name: Python package
 on: [push]
 
 env:
-  EXAMPLE_IMAGE_NAME: ghcr.io/descope/py-example:0.1
+  EXAMPLE_IMAGE_NAME: ghcr.io/descope/py-example:0.1.1
 
 jobs:
   build:
@@ -58,7 +58,6 @@ jobs:
   pkg:
     runs-on: ubuntu-latest
     needs: build
-    if: ${{ github.ref == 'refs/heads/main' }}
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
