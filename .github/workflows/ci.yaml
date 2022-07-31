@@ -3,7 +3,7 @@ name: Python package
 on: [push]
 
 env:
-  EXAMPLE_IMAGE_NAME: ghcr.io/descope/py-example:0.1
+  EXAMPLE_IMAGE_NAME: ghcr.io/descope/py-example:0.1.1
 
 jobs:
   build:

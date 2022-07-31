@@ -38,7 +38,7 @@ def handle_auth_error(ex):
     return response
 
 
-@APP.route("/api/signup", methods=["POST"])
+@APP.route("/otp/signup", methods=["POST"])
 def signup():
     data = request.get_json(force=True)
     email = data.get("email", None)
@@ -88,7 +88,7 @@ def signuporin():
     return jsonify(message=response)
 
 
-@APP.route("/api/verify", methods=["POST"])
+@APP.route("/otp/verify", methods=["POST"])
 def verify():
     data = request.get_json(force=True)
     email = data.get("email", None)
