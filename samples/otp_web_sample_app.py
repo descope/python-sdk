@@ -21,11 +21,11 @@ PROJECT_ID = ""
 
 # init the DescopeClient
 descope_client = DescopeClient(
-    PROJECT_ID, base_url="https://172.17.0.1:8443", skip_verify=True
+    PROJECT_ID, base_url="http://127.0.0.1:8000", skip_verify=True
 )
 
 
-def set_cookie_on_response(response, data):
+def set_cookie_on_response(response: Response, data):
     cookie_domain = data.get("cookieDomain", "")
     if cookie_domain == "":
         cookie_domain = None
@@ -122,13 +122,13 @@ def verify():
     except AuthException:
         return Response("Unauthorized", 401)
 
-    claims = jwt_response["jwts"]
+    data = jwt_response["jwts"]
     response = Response(
         f"This is Verify code API handling, info example: {json.dumps(jwt_response)}",
         200,
     )
-    for _, data in claims.items():
-        set_cookie_on_response(response, data)
+    for _, cookieData in data.items():
+        set_cookie_on_response(response, cookieData)
 
     return response
 
@@ -140,15 +140,15 @@ def private():
     session_token = cookies.get(SESSION_COOKIE_NAME, None)
     refresh_token = cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
     try:
-        claims = descope_client.validate_session_request(session_token, refresh_token)
+        data = descope_client.validate_session_request(session_token, refresh_token)
     except AuthException:
         return Response("Access denied", 401)
 
     response = Response(
         "This is a private API and you must be authenticated to see this", 200
     )
-    for _, data in claims.items():
-        set_cookie_on_response(response, data)
+    for _, cookieData in data.items():
+        set_cookie_on_response(response, cookieData)
     return response
 
 
