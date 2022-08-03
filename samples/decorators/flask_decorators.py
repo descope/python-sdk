@@ -358,7 +358,7 @@ def descope_oauth(descope_client: DescopeClient):
             # (ignore return value as anyway we redirect)
             f(*args, **kwargs)
 
-            return redirect(redirect_url, 302)
+            return redirect(redirect_url["url"], 302)
 
         return decorated
 

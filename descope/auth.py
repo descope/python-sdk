@@ -34,7 +34,6 @@ class Auth:
         self,
         project_id: str,
         public_key: str = None,
-        base_uri: str = None,
         skip_verify: bool = False,
     ):
         self.lock_public_keys = Lock()
@@ -54,7 +53,7 @@ class Auth:
         if skip_verify:
             self.secure = False
 
-        self.base_url = base_uri or DEFAULT_BASE_URL
+        self.base_url = os.getenv("DESCOPE_BASE_URI", None) or DEFAULT_BASE_URL
 
         if not public_key:
             public_key = os.getenv("DESCOPE_PUBLIC_KEY", None)
