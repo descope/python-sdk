@@ -71,8 +71,7 @@ def signup():
     except AuthException:
         return Response("Unauthorized", 401)
 
-    response = Response("This is SignUp API handling", 200)
-    return response
+    return Response("This is SignUp API handling", 200)
 
 
 @APP.route("/api/signin", methods=["POST"])
@@ -87,8 +86,7 @@ def signin():
     except AuthException:
         return Response("Unauthorized, something went wrong when sending email", 401)
 
-    response = Response("This is SignIn API handling", 200)
-    return response
+    return Response("This is SignIn API handling", 200)
 
 
 @APP.route("/api/signuporin", methods=["POST"])
@@ -103,8 +101,7 @@ def signuporin():
     except AuthException:
         return Response("Unauthorized, something went wrong when sending email", 401)
 
-    response = Response("This is SignUpOrIn API handling", 200)
-    return response
+    return Response("This is SignUpOrIn API handling", 200)
 
 
 @APP.route("/otp/verify", methods=["POST"])
