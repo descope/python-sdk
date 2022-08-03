@@ -21,7 +21,7 @@ PROJECT_ID = ""
 
 # init the DescopeClient
 descope_client = DescopeClient(
-    PROJECT_ID, base_url="http://127.0.0.1:8000", skip_verify=True
+    PROJECT_ID, base_url="https://172.17.0.1:8443", skip_verify=True
 )
 
 
