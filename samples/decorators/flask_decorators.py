@@ -350,7 +350,9 @@ def descope_oauth(descope_client: DescopeClient):
             try:
                 args = request.args
                 provider = args.get("provider")
-                redirect_url = descope_client.oauth.start(provider)
+                redirect_url = descope_client.oauth.start(
+                    provider, "http://localhost:9001/"
+                )
             except AuthException as e:
                 return Response(f"OAuth failed {e}", e.status_code)
 
@@ -358,7 +360,7 @@ def descope_oauth(descope_client: DescopeClient):
             # (ignore return value as anyway we redirect)
             f(*args, **kwargs)
 
-            return redirect(redirect_url, 302)
+            return redirect(redirect_url["url"], 302)
 
         return decorated
 

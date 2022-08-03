@@ -1,19 +1,19 @@
+import datetime
 import json
 import os
 import sys
 
-from flask import Flask, Response, _request_ctx_stack, jsonify, request
+from flask import Flask, Response, jsonify, request
 
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
-from decorators.flask_decorators import (  # noqa: E402;
-    descope_logout,
-    descope_validate_auth,
-    descope_verify_code_by_email,
+from descope import (  # noqa: E402
+    REFRESH_SESSION_COOKIE_NAME,
+    SESSION_COOKIE_NAME,
+    AuthException,
+    DeliveryMethod,
+    DescopeClient,
 )
-
-from descope import AuthException  # noqa: E402
-from descope import DeliveryMethod, DescopeClient  # noqa: E402
 
 APP = Flask(__name__)
 
@@ -23,6 +23,27 @@ PROJECT_ID = ""
 descope_client = DescopeClient(
     PROJECT_ID, base_url="https://172.17.0.1:8443", skip_verify=True
 )
+
+
+def set_cookie_on_response(response, data):
+    cookie_domain = data.get("cookieDomain", "")
+    if cookie_domain == "":
+        cookie_domain = None
+
+    current_time = datetime.datetime.now()
+    expire_time = current_time + datetime.timedelta(days=30)
+
+    return response.set_cookie(
+        key=data.get("cookieName", ""),
+        value=data.get("jwt", ""),
+        max_age=data.get("cookieMaxAge", int(expire_time.timestamp())),
+        expires=data.get("cookieExpiration", expire_time),
+        path=data.get("cookiePath", ""),
+        domain=cookie_domain,
+        secure=False,  # True
+        httponly=True,
+        samesite="None",  # "Strict", "Lax", "None"
+    )
 
 
 class Error(Exception):
@@ -52,8 +73,8 @@ def signup():
     except AuthException:
         return Response("Unauthorized", 401)
 
-    response = "This is SignUp API handling"
-    return jsonify(message=response)
+    response = Response("This is SignUp API handling", 200)
+    return response
 
 
 @APP.route("/api/signin", methods=["POST"])
@@ -68,8 +89,8 @@ def signin():
     except AuthException:
         return Response("Unauthorized, something went wrong when sending email", 401)
 
-    response = "This is SignIn API handling"
-    return jsonify(message=response)
+    response = Response("This is SignIn API handling", 200)
+    return response
 
 
 @APP.route("/api/signuporin", methods=["POST"])
@@ -84,8 +105,8 @@ def signuporin():
     except AuthException:
         return Response("Unauthorized, something went wrong when sending email", 401)
 
-    response = "This is SignUpOrIn API handling"
-    return jsonify(message=response)
+    response = Response("This is SignUpOrIn API handling", 200)
+    return response
 
 
 @APP.route("/otp/verify", methods=["POST"])
@@ -101,32 +122,49 @@ def verify():
     except AuthException:
         return Response("Unauthorized", 401)
 
-    response = Response(json.dumps(jwt_response), 200)
+    claims = jwt_response["jwts"]
+    response = Response(
+        f"This is Verify code API handling, info example: {json.dumps(jwt_response)}",
+        200,
+    )
+    for _, data in claims.items():
+        set_cookie_on_response(response, data)
+
     return response
-
-
-@APP.route("/api/verify_by_decorator", methods=["POST"])
-@descope_verify_code_by_email(descope_client)
-def verify_by_decorator(*args, **kwargs):
-    claims = _request_ctx_stack.top.claims
-
-    response = f"This is a code verification API, claims are: {claims}"
-    return jsonify(message=response)
 
 
 # This needs authentication
 @APP.route("/api/private", methods=["POST"])
-@descope_validate_auth(descope_client)
 def private():
-    response = "This is a private API and you must be authenticated to see this"
-    return jsonify(message=response)
+    cookies = request.cookies.copy()
+    session_token = cookies.get(SESSION_COOKIE_NAME, None)
+    refresh_token = cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
+    try:
+        claims = descope_client.validate_session_request(session_token, refresh_token)
+    except AuthException:
+        return Response("Access denied", 401)
+
+    response = Response(
+        "This is a private API and you must be authenticated to see this", 200
+    )
+    for _, data in claims.items():
+        set_cookie_on_response(response, data)
+    return response
 
 
 @APP.route("/api/logout")
-@descope_logout(descope_client)
 def logout():
-    response = "Logged out"
-    return jsonify(message=response)
+    cookies = request.cookies.copy()
+    refresh_token = cookies.get(REFRESH_SESSION_COOKIE_NAME)
+    try:
+        descope_client.logout(refresh_token)
+    except AuthException as e:
+        return Response(f"Logout failed {e}", e.status_code)
+
+    response = Response("This is Logout API handling", 200)
+    response.delete_cookie(SESSION_COOKIE_NAME)
+    response.delete_cookie(REFRESH_SESSION_COOKIE_NAME)
+    return response
 
 
 # This doesn't need authentication
