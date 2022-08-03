@@ -20,9 +20,7 @@ APP = Flask(__name__)
 PROJECT_ID = ""
 
 # init the DescopeClient
-descope_client = DescopeClient(
-    PROJECT_ID, base_url="https://172.17.0.1:8443", skip_verify=True
-)
+descope_client = DescopeClient(PROJECT_ID, skip_verify=True)
 
 
 def set_cookie_on_response(response: Response, data):
