@@ -23,8 +23,8 @@ PROJECT_ID = ""
 descope_client = DescopeClient(PROJECT_ID, skip_verify=True)
 
 
-def set_cookie_on_response(response: Response, data):
-    cookie_domain = data.get("cookieDomain", "")
+def set_cookie_on_response(response: Response, cookieAttributes, data):
+    cookie_domain = cookieAttributes.get("cookieDomain", "")
     if cookie_domain == "":
         cookie_domain = None
 
@@ -32,11 +32,11 @@ def set_cookie_on_response(response: Response, data):
     expire_time = current_time + datetime.timedelta(days=30)
 
     return response.set_cookie(
-        key=data.get("cookieName", ""),
+        key=data.get("drn", ""),
         value=data.get("jwt", ""),
-        max_age=data.get("cookieMaxAge", int(expire_time.timestamp())),
-        expires=data.get("cookieExpiration", expire_time),
-        path=data.get("cookiePath", ""),
+        max_age=cookieAttributes.get("cookieMaxAge", int(expire_time.timestamp())),
+        expires=cookieAttributes.get("cookieExpiration", expire_time),
+        path=cookieAttributes.get("cookiePath", ""),
         domain=cookie_domain,
         secure=False,  # True
         httponly=True,
@@ -116,14 +116,14 @@ def verify():
         jwt_response = descope_client.otp.verify_code(DeliveryMethod.EMAIL, email, code)
     except AuthException:
         return Response("Unauthorized", 401)
-
     data = jwt_response["jwts"]
     response = Response(
         f"This is Verify code API handling, info example: {json.dumps(jwt_response)}",
         200,
     )
-    for _, cookieData in data.items():
-        set_cookie_on_response(response, cookieData)
+
+    set_cookie_on_response(response, data, data.get("DS"))
+    set_cookie_on_response(response, data, data.get("DSR"))
 
     return response
 
@@ -142,8 +142,10 @@ def private():
     response = Response(
         "This is a private API and you must be authenticated to see this", 200
     )
-    for _, cookieData in data.items():
-        set_cookie_on_response(response, cookieData)
+
+    set_cookie_on_response(response, data, data.get("DS"))
+    set_cookie_on_response(response, data, data.get("DSR"))
+
     return response
 
 
