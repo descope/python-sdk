@@ -76,7 +76,7 @@ class DescopeClient:
         token_claims = self._auth._validate_and_load_tokens(
             session_token, refresh_token
         )
-        return {token_claims["cookieName"]: token_claims}
+        return {token_claims["drn"]: token_claims}
 
     def logout(self, refresh_token: str) -> requests.Response:
         """

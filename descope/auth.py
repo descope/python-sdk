@@ -13,7 +13,6 @@ from jwt.exceptions import ExpiredSignatureError
 from descope.common import (
     DEFAULT_BASE_URL,
     PHONE_REGEX,
-    REFRESH_SESSION_COOKIE_NAME,
     SESSION_COOKIE_NAME,
     DeliveryMethod,
     EndpointsV1,
@@ -265,17 +264,27 @@ class Auth:
                 # just continue to the next key
                 pass
 
+    def _extractToken(self, jwt) -> dict:
+        if not jwt:
+            return None
+        token_claims = self._validate_and_load_tokens(jwt, None)
+        token_claims["projectId"] = token_claims.pop(
+            "iss"
+        )  # replace the key name from iss->projectId
+        token_claims["userId"] = token_claims.pop(
+            "sub"
+        )  # replace the key name from sub->userId
+        return token_claims
+
     def _generate_auth_info(self, response_body, cookie) -> dict:
         tokens = {}
-        for token in response_body["jwts"]:
-            token_claims = self._validate_and_load_tokens(token, None)
-            token_claims["projectId"] = token_claims.pop(
-                "iss"
-            )  # replace the key name from iss->projectId
-            token_claims["userId"] = token_claims.pop(
-                "sub"
-            )  # replace the key name from sub->userId
-            tokens[token_claims["cookieName"]] = token_claims
+        rt = response_body.get("refreshJwt", "")
+        rtoken = self._extractToken(rt)
+        if rtoken is not None:
+            tokens[rtoken["drn"]] = rtoken
+        stoken = self._extractToken(response_body.get("sessionJwt", ""))
+        if stoken is not None:
+            tokens[stoken["drn"]] = stoken
 
         if cookie:
             token_claims = self._validate_and_load_tokens(cookie, None)
@@ -285,7 +294,13 @@ class Auth:
             token_claims["userId"] = token_claims.pop(
                 "sub"
             )  # replace the key name from sub->userId
-            tokens[token_claims["cookieName"]] = token_claims
+            tokens[token_claims["drn"]] = token_claims
+
+        # collect all cookie attributed from response
+        tokens["cookieDomain"] = response_body.get("cookieDomain", "")
+        tokens["cookiePath"] = response_body.get("cookiePath", "/")
+        tokens["cookieMaxAge"] = response_body.get("cookieMaxAge", 0)
+        tokens["cookieExpiration"] = response_body.get("cookieExpiration", 0)
 
         return tokens
 
@@ -315,9 +330,7 @@ class Auth:
         response = self.do_get(uri, None, None, refresh_token)
 
         resp = response.json()
-        auth_info = self._generate_auth_info(
-            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
-        )
+        auth_info = self._generate_auth_info(resp, None)
         return auth_info
 
     def _validate_and_load_tokens(self, session_token: str, refresh_token: str) -> dict:
