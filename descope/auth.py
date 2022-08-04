@@ -266,6 +266,8 @@ class Auth:
                 pass
 
     def _extractToken(self, jwt) -> dict:
+        if not jwt:
+            return None
         token_claims = self._validate_and_load_tokens(jwt, None)
         token_claims["projectId"] = token_claims.pop(
             "iss"
@@ -277,10 +279,12 @@ class Auth:
 
     def _generate_auth_info(self, response_body, cookie) -> dict:
         tokens = {}
-        rtoken = self._extractToken(response_body["refreshJwt"])
-        tokens[rtoken["drn"]] = rtoken
-        stoken = self._extractToken(response_body["sessionJwt"])
-        tokens[stoken["drn"]] = stoken
+        rtoken = self._extractToken(response_body.get("refreshJwt", ""))
+        if rtoken is not None:
+            tokens[rtoken["drn"]] = rtoken
+        stoken = self._extractToken(response_body.get("sessionJwt", ""))
+        if stoken is not None:
+            tokens[stoken["drn"]] = stoken
 
         if cookie:
             token_claims = self._validate_and_load_tokens(cookie, None)
