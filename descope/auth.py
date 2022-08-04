@@ -265,17 +265,22 @@ class Auth:
                 # just continue to the next key
                 pass
 
+    def _extractToken(self, jwt) -> dict:
+        token_claims = self._validate_and_load_tokens(jwt, None)
+        token_claims["projectId"] = token_claims.pop(
+            "iss"
+        )  # replace the key name from iss->projectId
+        token_claims["userId"] = token_claims.pop(
+            "sub"
+        )  # replace the key name from sub->userId
+        return token_claims
+
     def _generate_auth_info(self, response_body, cookie) -> dict:
         tokens = {}
-        for token in response_body["jwts"]:
-            token_claims = self._validate_and_load_tokens(token, None)
-            token_claims["projectId"] = token_claims.pop(
-                "iss"
-            )  # replace the key name from iss->projectId
-            token_claims["userId"] = token_claims.pop(
-                "sub"
-            )  # replace the key name from sub->userId
-            tokens[token_claims["cookieName"]] = token_claims
+        rtoken = self._extractToken(response_body["refreshJwt"])
+        tokens[rtoken["drn"]] = rtoken
+        stoken = self._extractToken(response_body["sessionJwt"])
+        tokens[stoken["drn"]] = stoken
 
         if cookie:
             token_claims = self._validate_and_load_tokens(cookie, None)
@@ -285,7 +290,13 @@ class Auth:
             token_claims["userId"] = token_claims.pop(
                 "sub"
             )  # replace the key name from sub->userId
-            tokens[token_claims["cookieName"]] = token_claims
+            tokens[token_claims["drn"]] = token_claims
+
+        # collect all cookie attributed from response
+        tokens["cookieDomain"] = response_body["cookieDomain"]
+        tokens["cookiePath"] = response_body["cookiePath"]
+        tokens["cookieMaxAge"] = response_body["cookieMaxAge"]
+        tokens["cookieExpiration"] = response_body["cookieExpiration"]
 
         return tokens
 
