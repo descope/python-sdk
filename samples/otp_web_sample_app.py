@@ -144,7 +144,6 @@ def private():
     )
 
     set_cookie_on_response(response, data, data.get("DS"))
-    set_cookie_on_response(response, data, data.get("DSR"))
 
     return response
 
