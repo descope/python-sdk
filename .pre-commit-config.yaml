@@ -2,7 +2,7 @@ exclude: 'docs/'
 
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.0.1
+  rev: v4.3.0
   hooks:
   - id: check-yaml
   - id: debug-statements
@@ -14,21 +14,21 @@ repos:
   - id: isort
     args: ["--profile", "black"]
 - repo: https://github.com/psf/black
-  rev: 22.3.0
+  rev: 22.6.0
   hooks:
     - id: black
       language_version: python3
 - repo: https://github.com/asottile/pyupgrade
-  rev: v2.31.1
+  rev: v2.37.3
   hooks:
     - id: pyupgrade
       args: [--py37-plus]
 - repo: https://gitlab.com/pycqa/flake8
-  rev: 4.0.1
+  rev: 3.9.2
   hooks:
     - id: flake8
 - repo: https://github.com/dhatim/python-license-check
-  rev: master
+  rev: 0.7.2
   hooks:
   - id: liccheck
     language: system

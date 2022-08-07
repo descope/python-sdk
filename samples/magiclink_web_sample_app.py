@@ -6,6 +6,7 @@ from flask import Flask, Response, _request_ctx_stack, jsonify, request
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
 from decorators.flask_decorators import (  # noqa: E402;
+    COOKIE_DATA_NAME,
     REFRESH_SESSION_TOKEN_NAME,
     SESSION_TOKEN_NAME,
     descope_logout,
@@ -104,10 +105,12 @@ def verify():
     response = Response("Token verified", 200)
 
     set_cookie_on_response(
-        response, jwt_response[SESSION_TOKEN_NAME], jwt_response["cookieData"]
+        response, jwt_response[SESSION_TOKEN_NAME], jwt_response[COOKIE_DATA_NAME]
     )
     set_cookie_on_response(
-        response, jwt_response[REFRESH_SESSION_TOKEN_NAME], jwt_response["cookieData"]
+        response,
+        jwt_response[REFRESH_SESSION_TOKEN_NAME],
+        jwt_response[COOKIE_DATA_NAME],
     )
 
     return response

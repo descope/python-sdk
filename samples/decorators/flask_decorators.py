@@ -11,6 +11,7 @@ dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
 from descope import AuthException  # noqa: E402
 from descope import (  # noqa: E402
+    COOKIE_DATA_NAME,
     REFRESH_SESSION_COOKIE_NAME,
     REFRESH_SESSION_TOKEN_NAME,
     SESSION_COOKIE_NAME,
@@ -114,11 +115,11 @@ def descope_validate_auth(descope_client):
             _request_ctx_stack.top.claims = jwt_response
             response = f(*args, **kwargs)
 
-            if jwt_response.get("cookieData", None):
+            if jwt_response.get(COOKIE_DATA_NAME, None):
                 set_cookie_on_response(
                     response,
                     jwt_response[SESSION_TOKEN_NAME],
-                    jwt_response["cookieData"],
+                    jwt_response[COOKIE_DATA_NAME],
                 )
             return response
 
@@ -153,12 +154,14 @@ def descope_verify_code_by_email(descope_client):
             response = f(*args, **kwargs)
 
             set_cookie_on_response(
-                response, jwt_response[SESSION_TOKEN_NAME], jwt_response["cookieData"]
+                response,
+                jwt_response[SESSION_TOKEN_NAME],
+                jwt_response[COOKIE_DATA_NAME],
             )
             set_cookie_on_response(
                 response,
                 jwt_response[REFRESH_SESSION_TOKEN_NAME],
-                jwt_response["cookieData"],
+                jwt_response[COOKIE_DATA_NAME],
             )
 
             return response
@@ -194,12 +197,14 @@ def descope_verify_code_by_phone(descope_client):
             response = f(*args, **kwargs)
 
             set_cookie_on_response(
-                response, jwt_response[SESSION_TOKEN_NAME], jwt_response["cookieData"]
+                response,
+                jwt_response[SESSION_TOKEN_NAME],
+                jwt_response[COOKIE_DATA_NAME],
             )
             set_cookie_on_response(
                 response,
                 jwt_response[REFRESH_SESSION_TOKEN_NAME],
-                jwt_response["cookieData"],
+                jwt_response[COOKIE_DATA_NAME],
             )
 
             return response
@@ -235,12 +240,14 @@ def descope_verify_code_by_whatsapp(descope_client):
             response = f(*args, **kwargs)
 
             set_cookie_on_response(
-                response, jwt_response[SESSION_TOKEN_NAME], jwt_response["cookieData"]
+                response,
+                jwt_response[SESSION_TOKEN_NAME],
+                jwt_response[COOKIE_DATA_NAME],
             )
             set_cookie_on_response(
                 response,
                 jwt_response[REFRESH_SESSION_TOKEN_NAME],
-                jwt_response["cookieData"],
+                jwt_response[COOKIE_DATA_NAME],
             )
 
             return response
@@ -323,12 +330,14 @@ def descope_verify_magiclink_token(descope_client):
             response = f(*args, **kwargs)
 
             set_cookie_on_response(
-                response, jwt_response[SESSION_TOKEN_NAME], jwt_response["cookieData"]
+                response,
+                jwt_response[SESSION_TOKEN_NAME],
+                jwt_response[COOKIE_DATA_NAME],
             )
             set_cookie_on_response(
                 response,
                 jwt_response[REFRESH_SESSION_TOKEN_NAME],
-                jwt_response["cookieData"],
+                jwt_response[COOKIE_DATA_NAME],
             )
             return response
 

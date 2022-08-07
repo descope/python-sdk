@@ -8,6 +8,7 @@ from flask import Flask, Response, jsonify, request
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
 from descope import (  # noqa: E402
+    COOKIE_DATA_NAME,
     REFRESH_SESSION_COOKIE_NAME,
     REFRESH_SESSION_TOKEN_NAME,
     SESSION_COOKIE_NAME,
@@ -125,10 +126,12 @@ def verify():
     )
 
     set_cookie_on_response(
-        response, jwt_response[SESSION_TOKEN_NAME], jwt_response["cookieData"]
+        response, jwt_response[SESSION_TOKEN_NAME], jwt_response[COOKIE_DATA_NAME]
     )
     set_cookie_on_response(
-        response, jwt_response[REFRESH_SESSION_TOKEN_NAME], jwt_response["cookieData"]
+        response,
+        jwt_response[REFRESH_SESSION_TOKEN_NAME],
+        jwt_response[COOKIE_DATA_NAME],
     )
 
     return response
@@ -151,9 +154,9 @@ def private():
         "This is a private API and you must be authenticated to see this", 200
     )
 
-    if jwt_response.get("cookieData", None):
+    if jwt_response.get(COOKIE_DATA_NAME, None):
         set_cookie_on_response(
-            response, jwt_response[SESSION_TOKEN_NAME], jwt_response["cookieData"]
+            response, jwt_response[SESSION_TOKEN_NAME], jwt_response[COOKIE_DATA_NAME]
         )
 
     return response
