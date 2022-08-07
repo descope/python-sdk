@@ -5,6 +5,7 @@ from unittest import mock
 from unittest.mock import patch
 
 from descope import SESSION_COOKIE_NAME, AuthException, DescopeClient
+from descope.common import SESSION_TOKEN_NAME
 
 
 class TestDescopeClient(unittest.TestCase):
@@ -256,7 +257,7 @@ class TestDescopeClient(unittest.TestCase):
             mock_request.return_value.cookies = {}
             resp = client.validate_session_request(expired_token, valid_refresh_token)
 
-            new_session_token_from_request = resp[SESSION_COOKIE_NAME]["jwt"]
+            new_session_token_from_request = resp[SESSION_TOKEN_NAME]["jwt"]
             self.assertEqual(
                 new_session_token_from_request,
                 new_session_token,

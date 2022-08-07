@@ -5,8 +5,8 @@ import sys
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
 from descope import (  # noqa: E402
-    REFRESH_SESSION_COOKIE_NAME,
-    SESSION_COOKIE_NAME,
+    REFRESH_SESSION_TOKEN_NAME,
+    SESSION_TOKEN_NAME,
     AuthException,
     DeliveryMethod,
     DescopeClient,
@@ -33,9 +33,7 @@ def main():
         try:
             jwt_response = descope_client.magiclink.verify(token=token)
             logging.info("Code is valid")
-            refresh_token = (
-                jwt_response["jwts"].get(REFRESH_SESSION_COOKIE_NAME).get("jwt")
-            )
+            refresh_token = jwt_response.get(REFRESH_SESSION_TOKEN_NAME).get("jwt")
             logging.info(f"jwt_response: {jwt_response}")
         except AuthException as e:
             logging.info(f"Invalid code {e}")
@@ -57,10 +55,8 @@ def main():
         try:
             jwt_response = descope_client.magiclink.verify(token=token)
             logging.info("Code is valid")
-            session_token_1 = jwt_response["jwts"].get(SESSION_COOKIE_NAME).get("jwt")
-            refresh_token_1 = (
-                jwt_response["jwts"].get(REFRESH_SESSION_COOKIE_NAME).get("jwt")
-            )
+            session_token_1 = jwt_response.get(SESSION_TOKEN_NAME).get("jwt")
+            refresh_token_1 = jwt_response.get(REFRESH_SESSION_TOKEN_NAME).get("jwt")
             logging.info(f"jwt_response: {jwt_response}")
         except AuthException as e:
             logging.info(f"Invalid code {e}")

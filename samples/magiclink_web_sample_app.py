@@ -6,6 +6,8 @@ from flask import Flask, Response, _request_ctx_stack, jsonify, request
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
 from decorators.flask_decorators import (  # noqa: E402;
+    REFRESH_SESSION_TOKEN_NAME,
+    SESSION_TOKEN_NAME,
     descope_logout,
     descope_validate_auth,
     descope_verify_magiclink_token,
@@ -100,9 +102,13 @@ def verify():
         return Response("Unauthorized", 401)
 
     response = Response("Token verified", 200)
-    tokens = jwt_response["jwts"]
-    for _, data in tokens.items():
-        set_cookie_on_response(response, data)
+
+    set_cookie_on_response(
+        response, jwt_response[SESSION_TOKEN_NAME], jwt_response["cookieData"]
+    )
+    set_cookie_on_response(
+        response, jwt_response[REFRESH_SESSION_TOKEN_NAME], jwt_response["cookieData"]
+    )
 
     return response
 

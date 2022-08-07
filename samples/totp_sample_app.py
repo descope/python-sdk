@@ -6,8 +6,8 @@ import sys
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
 from descope import (  # noqa: E402
-    REFRESH_SESSION_COOKIE_NAME,
-    SESSION_COOKIE_NAME,
+    REFRESH_SESSION_TOKEN_NAME,
+    SESSION_TOKEN_NAME,
     AuthException,
     DeliveryMethod,
     DescopeClient,
@@ -44,9 +44,7 @@ def main():
                 jwt_response = descope_client.otp.verify_code(
                     DeliveryMethod.EMAIL, email, code
                 )
-                refresh_token = (
-                    jwt_response["jwts"].get(REFRESH_SESSION_COOKIE_NAME).get("jwt")
-                )
+                refresh_token = jwt_response.get(REFRESH_SESSION_TOKEN_NAME).get("jwt")
                 totp_info = descope_client.totp.update_user(email, refresh_token)
                 logging.info("=== use this info in Authenticator app ===")
                 logging.info(json.dumps(totp_info, indent=2, sort_keys=True))
@@ -61,16 +59,16 @@ def main():
 
         logging.info("Code is valid")
 
-        session_token = jwt_response["jwts"].get(SESSION_COOKIE_NAME).get("jwt")
-        refresh_token = jwt_response["jwts"].get(REFRESH_SESSION_COOKIE_NAME).get("jwt")
+        session_token = jwt_response.get(SESSION_TOKEN_NAME).get("jwt")
+        refresh_token = jwt_response.get(REFRESH_SESSION_TOKEN_NAME).get("jwt")
 
         # validate session
         try:
             logging.info("going to validate session...")
-            claims = descope_client.validate_session_request(
+            jwt_response = descope_client.validate_session_request(
                 session_token, refresh_token
             )
-            logging.info(f"Session is valid and all is OK, claims: {claims}")
+            logging.info(f"Session is valid and all is OK, claims: {jwt_response}")
         except AuthException as e:
             logging.info(f"Session is not valid {e}")
 

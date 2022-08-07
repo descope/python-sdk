@@ -12,13 +12,15 @@ sys.path.insert(0, os.path.join(dir_name, "../"))
 from descope import AuthException  # noqa: E402
 from descope import (  # noqa: E402
     REFRESH_SESSION_COOKIE_NAME,
+    REFRESH_SESSION_TOKEN_NAME,
     SESSION_COOKIE_NAME,
+    SESSION_TOKEN_NAME,
     DeliveryMethod,
 )
 
 
-def set_cookie_on_response(response, data):
-    cookie_domain = data.get("cookieDomain", "")
+def set_cookie_on_response(response: Response, token: dict, cookieData: dict):
+    cookie_domain = cookieData.get("domain", "")
     if cookie_domain == "":
         cookie_domain = None
 
@@ -26,11 +28,11 @@ def set_cookie_on_response(response, data):
     expire_time = current_time + datetime.timedelta(days=30)
 
     return response.set_cookie(
-        key=data.get("cookieName", ""),
-        value=data.get("jwt", ""),
-        max_age=data.get("cookieMaxAge", int(expire_time.timestamp())),
-        expires=data.get("cookieExpiration", expire_time),
-        path=data.get("cookiePath", ""),
+        key=token.get("drn", ""),
+        value=token.get("jwt", ""),
+        max_age=cookieData.get("maxAge", int(expire_time.timestamp())),
+        expires=cookieData.get("exp", expire_time),
+        path=cookieData.get("path", "/"),
         domain=cookie_domain,
         secure=False,  # True
         httponly=True,
@@ -101,7 +103,7 @@ def descope_validate_auth(descope_client):
             session_token = cookies.get(SESSION_COOKIE_NAME, None)
             refresh_token = cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
             try:
-                claims = descope_client.validate_session_request(
+                jwt_response = descope_client.validate_session_request(
                     session_token, refresh_token
                 )
 
@@ -109,12 +111,15 @@ def descope_validate_auth(descope_client):
                 return Response("Access denied", 401)
 
             # Save the claims on the context execute the original API
-            _request_ctx_stack.top.claims = claims
+            _request_ctx_stack.top.claims = jwt_response
             response = f(*args, **kwargs)
 
-            tokens = claims
-            for _, data in tokens.items():
-                set_cookie_on_response(response, data)
+            if jwt_response.get("cookieData", None):
+                set_cookie_on_response(
+                    response,
+                    jwt_response[SESSION_TOKEN_NAME],
+                    jwt_response["cookieData"],
+                )
             return response
 
         return decorated
@@ -147,9 +152,14 @@ def descope_verify_code_by_email(descope_client):
             _request_ctx_stack.top.claims = jwt_response
             response = f(*args, **kwargs)
 
-            tokens = jwt_response["jwts"]
-            for _, data in tokens.items():
-                set_cookie_on_response(response, data)
+            set_cookie_on_response(
+                response, jwt_response[SESSION_TOKEN_NAME], jwt_response["cookieData"]
+            )
+            set_cookie_on_response(
+                response,
+                jwt_response[REFRESH_SESSION_TOKEN_NAME],
+                jwt_response["cookieData"],
+            )
 
             return response
 
@@ -183,9 +193,14 @@ def descope_verify_code_by_phone(descope_client):
             _request_ctx_stack.top.claims = jwt_response
             response = f(*args, **kwargs)
 
-            tokens = jwt_response["jwts"]
-            for _, data in tokens.items():
-                set_cookie_on_response(response, data)
+            set_cookie_on_response(
+                response, jwt_response[SESSION_TOKEN_NAME], jwt_response["cookieData"]
+            )
+            set_cookie_on_response(
+                response,
+                jwt_response[REFRESH_SESSION_TOKEN_NAME],
+                jwt_response["cookieData"],
+            )
 
             return response
 
@@ -219,9 +234,14 @@ def descope_verify_code_by_whatsapp(descope_client):
             _request_ctx_stack.top.claims = jwt_response
             response = f(*args, **kwargs)
 
-            tokens = jwt_response["jwts"]
-            for _, data in tokens.items():
-                set_cookie_on_response(response, data)
+            set_cookie_on_response(
+                response, jwt_response[SESSION_TOKEN_NAME], jwt_response["cookieData"]
+            )
+            set_cookie_on_response(
+                response,
+                jwt_response[REFRESH_SESSION_TOKEN_NAME],
+                jwt_response["cookieData"],
+            )
 
             return response
 
@@ -302,9 +322,14 @@ def descope_verify_magiclink_token(descope_client):
             _request_ctx_stack.top.claims = jwt_response
             response = f(*args, **kwargs)
 
-            tokens = jwt_response["jwts"]
-            for _, data in tokens.items():
-                set_cookie_on_response(response, data)
+            set_cookie_on_response(
+                response, jwt_response[SESSION_TOKEN_NAME], jwt_response["cookieData"]
+            )
+            set_cookie_on_response(
+                response,
+                jwt_response[REFRESH_SESSION_TOKEN_NAME],
+                jwt_response["cookieData"],
+            )
             return response
 
         return decorated

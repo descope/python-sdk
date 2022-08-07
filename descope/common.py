@@ -8,6 +8,9 @@ PHONE_REGEX = """^(?:(?:\\(?(?:00|\\+)([1-4]\\d\\d|[1-9]\\d?)\\)?)?[\\-\\.\\ \\\
 SESSION_COOKIE_NAME = "DS"
 REFRESH_SESSION_COOKIE_NAME = "DSR"
 
+SESSION_TOKEN_NAME = "sessionToken"
+REFRESH_SESSION_TOKEN_NAME = "refreshSessionToken"
+
 REDIRECT_LOCATION_COOKIE_NAME = "Location"
 
 

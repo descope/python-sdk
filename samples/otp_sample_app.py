@@ -5,8 +5,8 @@ import sys
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
 from descope import (  # noqa: E402
-    REFRESH_SESSION_COOKIE_NAME,
-    SESSION_COOKIE_NAME,
+    REFRESH_SESSION_TOKEN_NAME,
+    SESSION_TOKEN_NAME,
     AuthException,
     DeliveryMethod,
     DescopeClient,
@@ -30,10 +30,8 @@ def main():
                 method=DeliveryMethod.EMAIL, identifier=email, code=value
             )
             logging.info("Code is valid")
-            session_token = jwt_response["jwts"].get(SESSION_COOKIE_NAME).get("jwt")
-            refresh_token = (
-                jwt_response["jwts"].get(REFRESH_SESSION_COOKIE_NAME).get("jwt")
-            )
+            session_token = jwt_response[SESSION_TOKEN_NAME].get("jwt")
+            refresh_token = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("jwt")
             logging.info(f"jwt_response: {jwt_response}")
         except AuthException as e:
             logging.info(f"Invalid code {e}")
@@ -41,9 +39,7 @@ def main():
 
         try:
             logging.info("going to validate session..")
-            claims = descope_client.validate_session_request(
-                session_token, refresh_token
-            )
+            descope_client.validate_session_request(session_token, refresh_token)
             logging.info("Session is valid and all is OK")
         except AuthException as e:
             logging.info(f"Session is not valid {e}")
@@ -55,10 +51,8 @@ def main():
                 "going to revalidate the session with the newly refreshed token.."
             )
 
-            new_session_token = claims.get(SESSION_COOKIE_NAME).get("jwt")
-            claims = descope_client.validate_session_request(
-                new_session_token, refresh_token
-            )
+            new_session_token = claims.get(SESSION_TOKEN_NAME).get("jwt")
+            descope_client.validate_session_request(new_session_token, refresh_token)
             logging.info("Session is valid also for the refreshed token.")
         except AuthException as e:
             logging.info(f"Session is not valid for the refreshed token: {e}")
