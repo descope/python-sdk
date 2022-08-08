@@ -8,7 +8,7 @@ from descope.authmethod.otp import OTP  # noqa: F401
 from descope.authmethod.saml import SAML  # noqa: F401
 from descope.authmethod.totp import TOTP  # noqa: F401
 from descope.authmethod.webauthn import WebauthN  # noqa: F401
-from descope.common import EndpointsV1
+from descope.common import SESSION_TOKEN_NAME, EndpointsV1
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
@@ -73,10 +73,18 @@ class DescopeClient:
         AuthException: for any case token is not valid means session is not
         authorized
         """
-        token_claims = self._auth._validate_and_load_tokens(
+        res = self._auth._validate_and_load_tokens(
             session_token, refresh_token
-        )
-        return {token_claims["drn"]: token_claims}
+        )  # return jwt_response dict
+
+        # Check if we had to refresh the session token and got a new one
+        if res.get(SESSION_TOKEN_NAME, None) and session_token != res.get(
+            SESSION_TOKEN_NAME
+        ).get("jwt"):
+            return res
+        else:
+            # In such case we return only the data related to the session token
+            return {SESSION_TOKEN_NAME: res}
 
     def logout(self, refresh_token: str) -> requests.Response:
         """

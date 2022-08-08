@@ -7,7 +7,7 @@ from time import sleep
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
 from descope import (  # noqa: E402
-    REFRESH_SESSION_COOKIE_NAME,
+    REFRESH_SESSION_TOKEN_NAME,
     AuthException,
     DeliveryMethod,
     DescopeClient,
@@ -61,9 +61,7 @@ def main():
                     done = True
 
         if jwt_response:
-            refresh_token = (
-                jwt_response["jwts"].get(REFRESH_SESSION_COOKIE_NAME).get("jwt")
-            )
+            refresh_token = jwt_response.get(REFRESH_SESSION_TOKEN_NAME).get("jwt")
             descope_client.logout(refresh_token)
             logging.info("User logged out")
 

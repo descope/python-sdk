@@ -11,9 +11,11 @@ from email_validator import EmailNotValidError, validate_email
 from jwt.exceptions import ExpiredSignatureError
 
 from descope.common import (
+    COOKIE_DATA_NAME,
     DEFAULT_BASE_URL,
     PHONE_REGEX,
-    SESSION_COOKIE_NAME,
+    REFRESH_SESSION_TOKEN_NAME,
+    SESSION_TOKEN_NAME,
     DeliveryMethod,
     EndpointsV1,
 )
@@ -264,54 +266,48 @@ class Auth:
                 # just continue to the next key
                 pass
 
-    def _extractToken(self, jwt) -> dict:
-        if not jwt:
-            return None
-        token_claims = self._validate_and_load_tokens(jwt, None)
-        token_claims["projectId"] = token_claims.pop(
-            "iss"
-        )  # replace the key name from iss->projectId
-        token_claims["userId"] = token_claims.pop(
-            "sub"
-        )  # replace the key name from sub->userId
-        return token_claims
+    def _generate_auth_info(self, response_body: dict, refresh_cookie: str) -> dict:
+        jwt_response = {}
+        st_jwt = response_body.get("sessionJwt", "")
+        if st_jwt:
+            jwt_response[SESSION_TOKEN_NAME] = self._validate_and_load_tokens(
+                st_jwt, None
+            )
+        rt_jwt = response_body.get("refreshJwt", "")
+        if rt_jwt:
+            jwt_response[REFRESH_SESSION_TOKEN_NAME] = self._validate_and_load_tokens(
+                rt_jwt, None
+            )
 
-    def _generate_auth_info(self, response_body, cookie) -> dict:
-        tokens = {}
-        rt = response_body.get("refreshJwt", "")
-        rtoken = self._extractToken(rt)
-        if rtoken is not None:
-            tokens[rtoken["drn"]] = rtoken
-        stoken = self._extractToken(response_body.get("sessionJwt", ""))
-        if stoken is not None:
-            tokens[stoken["drn"]] = stoken
+        if refresh_cookie:
+            jwt_response[REFRESH_SESSION_TOKEN_NAME] = self._validate_and_load_tokens(
+                refresh_cookie, None
+            )
 
-        if cookie:
-            token_claims = self._validate_and_load_tokens(cookie, None)
-            token_claims["projectId"] = token_claims.pop(
-                "iss"
-            )  # replace the key name from iss->projectId
-            token_claims["userId"] = token_claims.pop(
-                "sub"
-            )  # replace the key name from sub->userId
-            tokens[token_claims["drn"]] = token_claims
-
-        # collect all cookie attributed from response
-        tokens["cookieDomain"] = response_body.get("cookieDomain", "")
-        tokens["cookiePath"] = response_body.get("cookiePath", "/")
-        tokens["cookieMaxAge"] = response_body.get("cookieMaxAge", 0)
-        tokens["cookieExpiration"] = response_body.get("cookieExpiration", 0)
-
-        return tokens
-
-    def _generate_jwt_response(self, response_body, cookie) -> dict:
-        tokens = self._generate_auth_info(response_body, cookie)
-        jwt_response = {
-            "error": response_body.get("error", ""),
-            "jwts": tokens,
-            "user": response_body.get("user", ""),
-            "firstSeen": response_body.get("firstSeen", True),
+        jwt_response[COOKIE_DATA_NAME] = {
+            "exp": response_body.get("cookieExpiration", 0),
+            "maxAge": response_body.get("cookieMaxAge", 0),
+            "domain": response_body.get("cookieDomain", ""),
+            "path": response_body.get("cookiePath", "/"),
         }
+
+        return jwt_response
+
+    def generate_jwt_response(self, response_body: dict, refresh_cookie: str) -> dict:
+        jwt_response = self._generate_auth_info(response_body, refresh_cookie)
+
+        projectId = jwt_response.get(SESSION_TOKEN_NAME, {}).get(
+            "iss", None
+        ) or jwt_response.get(REFRESH_SESSION_TOKEN_NAME, {}).get("iss", None)
+        user_id = jwt_response.get(SESSION_TOKEN_NAME, {}).get(
+            "sub", None
+        ) or jwt_response.get(REFRESH_SESSION_TOKEN_NAME, {}).get("sub", None)
+
+        jwt_response["tenants"] = response_body.get("tenants", {})
+        jwt_response["projectId"] = projectId
+        jwt_response["userId"] = user_id
+        jwt_response["user"] = response_body.get("user", {})
+        jwt_response["firstSeen"] = response_body.get("firstSeen", True)
         return jwt_response
 
     def _get_default_headers(self, pswd: str = None):
@@ -405,10 +401,7 @@ class Auth:
                 )
 
             # Refresh token is valid now refresh the session token
-            auth_info = self._refresh_token(refresh_token)
-
-            claims = auth_info[SESSION_COOKIE_NAME]
-            return claims
+            return self._refresh_token(refresh_token)  # return jwt_response dict
 
         except Exception as e:
             raise AuthException(
