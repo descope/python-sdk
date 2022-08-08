@@ -77,7 +77,7 @@ def signup():
     return Response("This is SignUp API handling", 200)
 
 
-@APP.route("/api/signin", methods=["POST"])
+@APP.route("/otp/signin", methods=["POST"])
 def signin():
     data = request.get_json(force=True)
     email = data.get("email", None)
