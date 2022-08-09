@@ -19,7 +19,7 @@ Decorators shown in the code below are valid for Python Flask.
 
 ### Prerequisites
 
-Replace any instance of  `<ProjectID>` in the code below with your company's Project ID, which can be found in the [Descope console](link).
+Replace any instance of  `<ProjectID>` in the code below with your company's Project ID, which can be found in the [Descope console](https://app.descope.com).
 
 * Run the following code in your project:
 
