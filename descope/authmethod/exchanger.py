@@ -15,7 +15,7 @@ class Exchanger:
             raise AuthException(
                 400,
                 ERROR_TYPE_INVALID_ARGUMENT,
-                "Empty exchange code",
+                "exchange code is empty",
             )
 
         uri = EndpointsV1.exchangeTokenPath

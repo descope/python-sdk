@@ -11,24 +11,37 @@ class OTP:
 
     def sign_in(self, method: DeliveryMethod, identifier: str) -> None:
         """
-        Use to login a user based on the given identifier either email or a phone
-            and choose the selected delivery method for verification.
-
+            ???Guy - 
+                 1. where do we explain why Descoper would choose sign_in, sign_up, or sign_up_or_in
+                 2. Since delivermethod can be phone, email, or whatsapp, I made the relevant texts generic
+                 3. confirming that I understand something correctly, 
+                      "identifier" can currently be email, phone, or email. And is how the end-user identifies]d themselves to Descope, 
+                      "DeliveryMethod" can be any of the 3 listed above, but it can differ from "identifier"
+                    e.g. end-user enters phone # for identifictaion, thus identifier=972-54-450=9-0206, but they may only have access to 
+                    email, so want to use email as DeliveryMethod. 
+            ???
+    
+        Login (sign-in) an existing user with the uniqeu identifier you provide. (See 'sign_up' function for an explanation of the 
+            identifier field.) Provide the DeliveryMethod required for this user. If the identifier value cannot be used for the DeliverMethod
+            selected (for example, 'identifier = 4567445km' and 'DeliveryMethod = email') then you must provide the uses here the user is identified by their unique identifier. (see sign-up or sign-in) you have provided when signing up this user. the specified DeliveryMethod for OTP verification. The DeliveryMethod can be different
+            from the identifier. For example, an end-user can be identified by their phone number, but use email as their OTP
+            DelieryMethod for this verification. 
+            
+        
         Args:
-        method (DeliveryMethod): The OTP method you would like to verify the code
-        sent to you (by the same delivery method)
-
-        identifier (str): The identifier will be used for validation can be either email or phone
+        method (DeliveryMethod): The method to use for delivering the OTP verification code to the user, for example
+            email, SMS, or WhatsApp
+        identifier (str): The identifier of the user being validated for example phone or email
 
         Raise:
-        AuthException: for any case sign up by otp operation failed
+        AuthException: raised if OTP operation fails
         """
 
         if not self._auth.verify_delivery_method(method, identifier):
             raise AuthException(
                 400,
                 ERROR_TYPE_INVALID_PUBLIC_KEY,
-                f"Identifier {identifier} is not valid by delivery method {method}",
+                f"Identifier {identifier} does not support delivery method {method}",
             )
 
         uri = OTP._compose_signin_url(method)
@@ -39,17 +52,15 @@ class OTP:
         self, method: DeliveryMethod, identifier: str, user: dict = None
     ) -> None:
         """
-        Use to create a new user based on the given identifier either email or a phone.
-            choose the selected delivery method for verification.
-            optional to add user metadata for farther user details such as name and more.
+        Create (sign-up) a new user using their email or phone number. Choose a default delivery method for OTP 
+            verification, for exmaple email, SMS, or WhatsApp.
+            (optional) Include additional user metadata that you wish to preserve.
 
         Args:
-        method (DeliveryMethod): The OTP method you would like to verify the code
-        sent to you (by the same delivery method)
-
-        identifier (str): The identifier will be used for validation can be either email or phone
-
-        user (dict) optional: User metadata in the form of {"name": "", "phone": "", "email": ""}
+        method (DeliveryMethod): The method to use for delivering the OTP verification code, for example phone or email
+        identifier (str): The identifier of the user being validated
+        user (dict) optional: Preserver additional user metadata in the form of {"name": "", "phone": "", "email": ""}
+            ???Guy - Can i make up fiels (lastname, firstname, haircolor, etc.)???
 
         Raise:
         AuthException: for any case sign up by otp operation failed
@@ -59,7 +70,7 @@ class OTP:
             raise AuthException(
                 400,
                 ERROR_TYPE_INVALID_PUBLIC_KEY,
-                f"Identifier {identifier} is not valid by delivery method {method}",
+                f"Identifier {identifier} is does not support delivery method {method}",
             )
 
         uri = OTP._compose_signup_url(method)
@@ -84,7 +95,7 @@ class OTP:
             raise AuthException(
                 400,
                 ERROR_TYPE_INVALID_PUBLIC_KEY,
-                f"Identifier {identifier} is not valid by delivery method {method}",
+                f"Identifier {identifier} does not support delivery method {method}",
             )
 
         uri = OTP._compose_sign_up_or_in_url(method)
@@ -116,7 +127,7 @@ class OTP:
             raise AuthException(
                 400,
                 ERROR_TYPE_INVALID_PUBLIC_KEY,
-                f"Identifier {identifier} is not valid by delivery method {method}",
+                f"Identifier {identifier} does not support delivery method {method}",
             )
 
         uri = OTP._compose_verify_code_url(method)

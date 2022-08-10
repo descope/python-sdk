@@ -94,7 +94,7 @@ class MagicLink:
             raise AuthException(
                 400,
                 ERROR_TYPE_INVALID_PUBLIC_KEY,
-                f"Identifier {identifier} is not valid by delivery method {method}",
+                f"Identifier {identifier} does not support delivery method {method}",
             )
 
         body = MagicLink._compose_signin_body(identifier, uri, cross_device)
@@ -114,7 +114,7 @@ class MagicLink:
             raise AuthException(
                 400,
                 ERROR_TYPE_INVALID_PUBLIC_KEY,
-                f"Identifier {identifier} is not valid by delivery method {method}",
+                f"Identifier {identifier} does not support delivery method {method}",
             )
 
         body = MagicLink._compose_signup_body(
@@ -130,7 +130,7 @@ class MagicLink:
             raise AuthException(
                 400,
                 ERROR_TYPE_INVALID_PUBLIC_KEY,
-                f"Identifier {identifier} is not valid by delivery method {method}",
+                f"Identifier {identifier} does not support delivery method {method}",
             )
 
         body = MagicLink._compose_signin_body(identifier, uri, cross_device)
