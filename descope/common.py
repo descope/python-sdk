@@ -1,7 +1,6 @@
 from enum import Enum
 
-DEFAULT_BASE_URL = "https://descope.com"  # "http://127.0.0.1:8191"
-DEFAULT_FETCH_PUBLIC_KEY_URI = "http://127.0.0.1:8152"
+DEFAULT_BASE_URL = "https://api.descope.com"
 
 PHONE_REGEX = """^(?:(?:\\(?(?:00|\\+)([1-4]\\d\\d|[1-9]\\d?)\\)?)?[\\-\\.\\ \\\\/]?)?((?:\\(?\\d{1,}\\)?[\\-\\.\\ \\\\/]?){0,})(?:[\\-\\.\\ \\\\/]?(?:#|ext\\.?|extension|x)[\\-\\.\\ \\\\/]?(\\d+))?$"""
 
