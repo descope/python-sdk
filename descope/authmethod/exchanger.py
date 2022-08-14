@@ -10,7 +10,6 @@ class Exchanger:
         self._auth = auth
 
     def exchange_token(self, code: str) -> dict:
-        """ """
         if not code:
             raise AuthException(
                 400,

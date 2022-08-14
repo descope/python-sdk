@@ -57,21 +57,19 @@ class DescopeClient:
     def validate_session_request(self, session_token: str, refresh_token: str) -> dict:
         """
         Validate the session for a given request. If the user is authenticated but the 
-            session has expired, the session will automatically be refreshed.
-        Call this function every time you make a private API call that requires authorization 
-            of a user. 
+            session has expired, the session token will automatically be refreshed.
+        Call this function every time you make a private API call that requires an authorized 
+            user. 
 
         Args:
         session_token (str): The session token, which contains the signature that will be validated
         refresh_token (str): The refresh token that will be used to refresh the session token, if needed
 
         Return value (dict):
-        Return dict include the session token and session refresh token and
-        relevant claims for each one of them (session token will automatically be refreshed if expired)
+        Return dict includes the session token, refresh token, and all JWT claims
 
         Raise:
-        AuthException: Exception is raised if session is not authorized ??Guy - does this mean user is not authorized/valid? or
-            user must revlaidrevalidate themselves??
+        AuthException: Exception is raised if session is not authorized or another error occurs
         """
         res = self._auth._validate_and_load_tokens(
             session_token, refresh_token
@@ -88,20 +86,16 @@ class DescopeClient:
 
     def logout(self, refresh_token: str) -> requests.Response:
         """
-        Logout user from all active devices and revoke the refresh_token. 
-             ???guy - whay happens to the session_token. I assume it become invalidated???
+        Logout user from all active devices and revoke the refresh_token. After calling this function,
+            you must invalidate or remove any cookies you have created.
 
         Args:
         refresh_token (str): The refresh token
 
-        Return value (requests.Response): return the response from Descope server
-             ???guy - as in "successfully logged out" or the such? is there a listing of possible
-             values, or is this what the REST API returns. In whihch case, how do we point Descoper to
-             that list???
+        Return value (requests.Response): returns the response from the Descope server
 
         Raise:
-        AuthException: for any case token is not valid means session is not
-        authorized
+        AuthException: Exception is raised if session is not authorized or another error occurs
         """
         if refresh_token is None:
             raise AuthException(

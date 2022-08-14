@@ -29,6 +29,9 @@ from descope.exceptions import (
 
 """
     ???guy - is there a way to move all strings to a wsring section, so that reused strings will never be different. amd makes it easier to make them sound the same ???
+    * "Unknown delivery method:"
+    * "Unable to load public key."
+    * "Unable to parse token header."
 """
 
 class Auth:
@@ -160,7 +163,7 @@ class Auth:
     def validate_email(email: str):
         if email == "":
             raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "email address field cannot be empty"
+                400, ERROR_TYPE_INVALID_ARGUMENT, "email address argument cannot be empty"
             )
 
         try:
@@ -174,17 +177,17 @@ class Auth:
     def validate_phone(method: DeliveryMethod, phone: str):
         if phone == "":
             raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "Phone number field cannot be empty"
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Phone number argument cannot be empty"
             )
 
         if not re.match(PHONE_REGEX, phone):
             raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "Invalid phone number"     '''??? why not include incorrect phone # like you did with the email address '''
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Invalid phone number"
             )
 
         if method != DeliveryMethod.PHONE and method != DeliveryMethod.WHATSAPP:
             raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "Invalid delivery method"    '''??? why not include incorrect delivery method  like you did with the email address '''
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Invalid delivery method"
             )
 
     @staticmethod
@@ -228,7 +231,7 @@ class Auth:
             raise AuthException(
                 500,
                 ERROR_TYPE_INVALID_PUBLIC_KEY,
-                f"Unable to load public key {e}",
+                f"Unable to load public key. Error: {e}",
             )
         except jwt.PyJWKError as e:
             raise AuthException(
@@ -248,7 +251,7 @@ class Auth:
 
         if not response.ok:
             raise AuthException(
-                response.status_code, ERROR_TYPE_SERVER_ERROR, f"err: {response.reason}"
+                response.status_code, ERROR_TYPE_SERVER_ERROR, f"Error: {response.reason}"
             )
 
         jwks_data = response.text
@@ -256,7 +259,7 @@ class Auth:
             jwkeys = json.loads(jwks_data)
         except Exception as e:
             raise AuthException(
-                500, ERROR_TYPE_INVALID_PUBLIC_KEY, f"Unable to load jwks {e}"
+                500, ERROR_TYPE_INVALID_PUBLIC_KEY, f"Unable to load jwks. Error: {e}"
             )
 
         # Load all public keys for this project
@@ -344,7 +347,7 @@ class Auth:
             unverified_header = jwt.get_unverified_header(session_token)
         except Exception as e:
             raise AuthException(
-                500, ERROR_TYPE_INVALID_TOKEN, f"Unable to parse token header: {e}"
+                500, ERROR_TYPE_INVALID_TOKEN, f"Unable to parse token header. Error: {e}"
             )
 
         alg_header = unverified_header.get(Auth.ALGORITHM_KEY, None)
@@ -379,7 +382,7 @@ class Auth:
             raise AuthException(
                 500,
                 ERROR_TYPE_INVALID_PUBLIC_KEY,
-                "header algorithm is not matched key algorithm", '''???Guy - I'm not understanding this error '''
+                "Algorithm signature in JWT header does not match the algorithm signature in the public key",
             )
 
         try:
