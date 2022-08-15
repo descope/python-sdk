@@ -11,8 +11,8 @@ class OTP:
 
     def sign_in(self, method: DeliveryMethod, identifier: str) -> None:
         """
-        Sign in (log in) an existing user with the unique identifier you provide. (See 'sign_up' function for an explanation of the 
-            identifier field.) Provide the DeliveryMethod required for this user. If the identifier value cannot be used for the 
+        Sign in (log in) an existing user with the unique identifier you provide. (See 'sign_up' function for an explanation of the
+            identifier field.) Provide the DeliveryMethod required for this user. If the identifier value cannot be used for the
             DeliverMethod selected (for example, 'identifier = 4567qq445km' and 'DeliveryMethod = email')
 
         Args:
@@ -39,7 +39,7 @@ class OTP:
         self, method: DeliveryMethod, identifier: str, user: dict = None
     ) -> None:
         """
-        Sign up (create) a new user using their email or phone number. Choose a delivery method for OTP 
+        Sign up (create) a new user using their email or phone number. Choose a delivery method for OTP
             verification, for example email, SMS, or WhatsApp.
             (optional) Include additional user metadata that you wish to preserve.
 
@@ -66,9 +66,9 @@ class OTP:
 
     def sign_up_or_in(self, method: DeliveryMethod, identifier: str) -> None:
         """
-        Sign_up_or_in lets you handle both sign up and sign in with a single call. Sign-up_or_in will first determine if 
-            identifier is a new or existing end user. If identifier is new, a new end user user will be created and then 
-            authenticated using the OTP DeliveryMethod specififed. If identifier exists, the end user will be authenticated 
+        Sign_up_or_in lets you handle both sign up and sign in with a single call. Sign-up_or_in will first determine if
+            identifier is a new or existing end user. If identifier is new, a new end user user will be created and then
+            authenticated using the OTP DeliveryMethod specififed. If identifier exists, the end user will be authenticated
             using the OTP DelieryMethod specified.
 
         Args:
