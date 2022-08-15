@@ -86,8 +86,10 @@ def signin():
 
     try:
         descope_client.otp.sign_in(DeliveryMethod.EMAIL, email)
-    except AuthException:
-        return Response("Unauthorized, something went wrong when sending email", 401)
+    except AuthException as ex:
+        return Response(
+            f"Unauthorized, something went wrong when sending email {ex}", 401
+        )
 
     return Response("This is SignIn API handling", 200)
 

@@ -109,54 +109,83 @@ class TestAuth(unittest.TestCase):
 
     def test_verify_delivery_method(self):
         self.assertEqual(
-            Auth.verify_delivery_method(DeliveryMethod.EMAIL, "dummy@dummy.com"),
-            True,
-        )
-        self.assertEqual(
-            Auth.verify_delivery_method(DeliveryMethod.EMAIL, "dummy@dummy.com"),
-            True,
-        )
-        self.assertEqual(
-            Auth.verify_delivery_method(DeliveryMethod.EMAIL, "dummy@dummy.com"),
-            True,
-        )
-        self.assertEqual(Auth.verify_delivery_method(DeliveryMethod.EMAIL, ""), False)
-        self.assertEqual(
-            Auth.verify_delivery_method(DeliveryMethod.EMAIL, "dummy@dummy"),
+            Auth.verify_delivery_method(DeliveryMethod.EMAIL, "dummy@dummy.com", None),
             False,
         )
 
         self.assertEqual(
-            Auth.verify_delivery_method(DeliveryMethod.PHONE, "111111111111"),
+            Auth.verify_delivery_method(
+                DeliveryMethod.EMAIL, "dummy@dummy.com", {"phone": ""}
+            ),
             True,
-        )
-        self.assertEqual(
-            Auth.verify_delivery_method(DeliveryMethod.PHONE, "+111111111111"),
-            True,
-        )
-        self.assertEqual(
-            Auth.verify_delivery_method(DeliveryMethod.PHONE, "++111111111111"),
-            False,
-        )
-        self.assertEqual(
-            Auth.verify_delivery_method(DeliveryMethod.PHONE, "asdsad"), False
-        )
-        self.assertEqual(Auth.verify_delivery_method(DeliveryMethod.PHONE, ""), False)
-        self.assertEqual(
-            Auth.verify_delivery_method(DeliveryMethod.PHONE, "unvalid@phone.number"),
-            False,
-        )
-
-        self.assertEqual(
-            Auth.verify_delivery_method(DeliveryMethod.WHATSAPP, "111111111111"),
-            True,
-        )
-        self.assertEqual(
-            Auth.verify_delivery_method(DeliveryMethod.WHATSAPP, ""), False
         )
         self.assertEqual(
             Auth.verify_delivery_method(
-                DeliveryMethod.WHATSAPP, "unvalid@phone.number"
+                DeliveryMethod.EMAIL, "dummy@dummy.com", {"phone": ""}
+            ),
+            True,
+        )
+        self.assertEqual(
+            Auth.verify_delivery_method(
+                DeliveryMethod.EMAIL, "dummy@dummy.com", {"phone": ""}
+            ),
+            True,
+        )
+        self.assertEqual(
+            Auth.verify_delivery_method(DeliveryMethod.EMAIL, "", {"phone": ""}), False
+        )
+        self.assertEqual(
+            Auth.verify_delivery_method(
+                DeliveryMethod.EMAIL, "dummy@dummy", {"phone": ""}
+            ),
+            False,
+        )
+
+        self.assertEqual(
+            Auth.verify_delivery_method(
+                DeliveryMethod.PHONE, "111111111111", {"email": ""}
+            ),
+            True,
+        )
+        self.assertEqual(
+            Auth.verify_delivery_method(
+                DeliveryMethod.PHONE, "+111111111111", {"email": ""}
+            ),
+            True,
+        )
+        self.assertEqual(
+            Auth.verify_delivery_method(
+                DeliveryMethod.PHONE, "++111111111111", {"email": ""}
+            ),
+            False,
+        )
+        self.assertEqual(
+            Auth.verify_delivery_method(DeliveryMethod.PHONE, "asdsad", {"email": ""}),
+            False,
+        )
+        self.assertEqual(
+            Auth.verify_delivery_method(DeliveryMethod.PHONE, "", {"email": ""}), False
+        )
+        self.assertEqual(
+            Auth.verify_delivery_method(
+                DeliveryMethod.PHONE, "unvalid@phone.number", {"email": ""}
+            ),
+            False,
+        )
+
+        self.assertEqual(
+            Auth.verify_delivery_method(
+                DeliveryMethod.WHATSAPP, "111111111111", {"email": ""}
+            ),
+            True,
+        )
+        self.assertEqual(
+            Auth.verify_delivery_method(DeliveryMethod.WHATSAPP, "", {"email": ""}),
+            False,
+        )
+        self.assertEqual(
+            Auth.verify_delivery_method(
+                DeliveryMethod.WHATSAPP, "unvalid@phone.number", {"email": ""}
             ),
             False,
         )
@@ -165,7 +194,9 @@ class TestAuth(unittest.TestCase):
             DUMMY = 4
 
         self.assertEqual(
-            Auth.verify_delivery_method(AAA.DUMMY, "unvalid@phone.number"),
+            Auth.verify_delivery_method(
+                AAA.DUMMY, "unvalid@phone.number", {"phone": ""}
+            ),
             False,
         )
 

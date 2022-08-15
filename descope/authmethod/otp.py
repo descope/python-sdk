@@ -1,6 +1,6 @@
 from descope.auth import Auth
 from descope.common import REFRESH_SESSION_COOKIE_NAME, DeliveryMethod, EndpointsV1
-from descope.exceptions import ERROR_TYPE_INVALID_PUBLIC_KEY, AuthException
+from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
 class OTP:
@@ -23,12 +23,9 @@ class OTP:
         Raise:
         AuthException: for any case sign up by otp operation failed
         """
-
-        if not self._auth.verify_delivery_method(method, identifier):
+        if not identifier:
             raise AuthException(
-                400,
-                ERROR_TYPE_INVALID_PUBLIC_KEY,
-                f"Identifier {identifier} is not valid by delivery method {method}",
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
             )
 
         uri = OTP._compose_signin_url(method)
@@ -55,10 +52,10 @@ class OTP:
         AuthException: for any case sign up by otp operation failed
         """
 
-        if not self._auth.verify_delivery_method(method, identifier):
+        if not self._auth.verify_delivery_method(method, identifier, user):
             raise AuthException(
                 400,
-                ERROR_TYPE_INVALID_PUBLIC_KEY,
+                ERROR_TYPE_INVALID_ARGUMENT,
                 f"Identifier {identifier} is not valid by delivery method {method}",
             )
 
@@ -80,11 +77,9 @@ class OTP:
         Raise:
         AuthException: for any case sign up by otp operation failed
         """
-        if not self._auth.verify_delivery_method(method, identifier):
+        if not identifier:
             raise AuthException(
-                400,
-                ERROR_TYPE_INVALID_PUBLIC_KEY,
-                f"Identifier {identifier} is not valid by delivery method {method}",
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
             )
 
         uri = OTP._compose_sign_up_or_in_url(method)
@@ -111,12 +106,9 @@ class OTP:
         Raise:
         AuthException: for any case code is not valid or tokens verification failed
         """
-
-        if not self._auth.verify_delivery_method(method, identifier):
+        if not identifier:
             raise AuthException(
-                400,
-                ERROR_TYPE_INVALID_PUBLIC_KEY,
-                f"Identifier {identifier} is not valid by delivery method {method}",
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
             )
 
         uri = OTP._compose_verify_code_url(method)
@@ -147,7 +139,7 @@ class OTP:
         """
         if not identifier:
             raise AuthException(
-                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Identifier cannot be empty"
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
             )
 
         Auth.validate_email(email)
@@ -178,7 +170,7 @@ class OTP:
         """
         if not identifier:
             raise AuthException(
-                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Identifier cannot be empty"
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
             )
 
         Auth.validate_phone(method, phone)

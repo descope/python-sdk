@@ -1,6 +1,6 @@
 from descope.auth import Auth
 from descope.common import REFRESH_SESSION_COOKIE_NAME, EndpointsV1
-from descope.exceptions import ERROR_TYPE_INVALID_PUBLIC_KEY, AuthException
+from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
 class WebauthN:
@@ -15,12 +15,12 @@ class WebauthN:
         """
         if not identifier:
             raise AuthException(
-                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Identifier cannot be empty"
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
             )
 
         if not origin:
             raise AuthException(
-                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Origin cannot be empty"
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Origin cannot be empty"
             )
 
         uri = EndpointsV1.signUpAuthWebauthnStart
@@ -35,12 +35,12 @@ class WebauthN:
         """
         if not transactionID:
             raise AuthException(
-                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Transaction id cannot be empty"
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Transaction id cannot be empty"
             )
 
         if not response:
             raise AuthException(
-                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Response cannot be empty"
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Response cannot be empty"
             )
 
         uri = EndpointsV1.signUpAuthWebauthnFinish
@@ -59,12 +59,12 @@ class WebauthN:
         """
         if not identifier:
             raise AuthException(
-                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Identifier cannot be empty"
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
             )
 
         if not origin:
             raise AuthException(
-                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Origin cannot be empty"
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Origin cannot be empty"
             )
 
         uri = EndpointsV1.signInAuthWebauthnStart
@@ -79,12 +79,12 @@ class WebauthN:
         """
         if not transaction_id:
             raise AuthException(
-                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Transaction id cannot be empty"
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Transaction id cannot be empty"
             )
 
         if not response:
             raise AuthException(
-                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Response cannot be empty"
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Response cannot be empty"
             )
 
         uri = EndpointsV1.signInAuthWebauthnFinish
@@ -103,12 +103,12 @@ class WebauthN:
         """
         if not identifier:
             raise AuthException(
-                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Identifier cannot be empty"
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
             )
 
         if not refresh_token:
             raise AuthException(
-                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Refresh token cannot be empty"
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Refresh token cannot be empty"
             )
 
         uri = EndpointsV1.deviceAddAuthWebauthnStart
@@ -123,12 +123,12 @@ class WebauthN:
         """
         if not transaction_id:
             raise AuthException(
-                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Transaction id cannot be empty"
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Transaction id cannot be empty"
             )
 
         if not response:
             raise AuthException(
-                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Response cannot be empty"
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Response cannot be empty"
             )
 
         uri = EndpointsV1.deviceAddAuthWebauthnFinish

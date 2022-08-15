@@ -1,7 +1,7 @@
 from descope.auth import Auth
 from descope.authmethod.exchanger import Exchanger  # noqa: F401
 from descope.common import EndpointsV1
-from descope.exceptions import ERROR_TYPE_INVALID_PUBLIC_KEY, AuthException
+from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
 class SAML(Exchanger):
@@ -14,12 +14,12 @@ class SAML(Exchanger):
         """
         if not tenant:
             raise AuthException(
-                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Tenant cannot be empty"
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Tenant cannot be empty"
             )
 
         if not return_url:
             raise AuthException(
-                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Return url cannot be empty"
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Return url cannot be empty"
             )
 
         uri = EndpointsV1.authSAMLStart

@@ -1,6 +1,6 @@
 from descope.auth import Auth
 from descope.common import REFRESH_SESSION_COOKIE_NAME, EndpointsV1
-from descope.exceptions import ERROR_TYPE_INVALID_PUBLIC_KEY, AuthException
+from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
 class TOTP:
@@ -16,7 +16,7 @@ class TOTP:
 
         if not identifier:
             raise AuthException(
-                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Identifier cannot be empty"
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
             )
 
         uri = EndpointsV1.signUpAuthTOTPPath
@@ -37,12 +37,12 @@ class TOTP:
 
         if not identifier:
             raise AuthException(
-                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Identifier cannot be empty"
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
             )
 
         if not code:
             raise AuthException(
-                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Code cannot be empty"
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Code cannot be empty"
             )
 
         uri = EndpointsV1.verifyTOTPPath
@@ -62,12 +62,12 @@ class TOTP:
 
         if not identifier:
             raise AuthException(
-                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Identifier cannot be empty"
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
             )
 
         if not refresh_token:
             raise AuthException(
-                400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Refresh token cannot be empty"
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Refresh token cannot be empty"
             )
 
         uri = EndpointsV1.updateTOTPPath
