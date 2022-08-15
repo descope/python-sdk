@@ -157,7 +157,9 @@ class Auth:
     def validate_email(email: str):
         if email == "":
             raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "email address argument cannot be empty"
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                "email address argument cannot be empty",
             )
 
         try:
@@ -171,7 +173,9 @@ class Auth:
     def validate_phone(method: DeliveryMethod, phone: str):
         if phone == "":
             raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "Phone number argument cannot be empty"
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                "Phone number argument cannot be empty",
             )
 
         if not re.match(PHONE_REGEX, phone):
@@ -245,7 +249,9 @@ class Auth:
 
         if not response.ok:
             raise AuthException(
-                response.status_code, ERROR_TYPE_SERVER_ERROR, f"Error: {response.reason}"
+                response.status_code,
+                ERROR_TYPE_SERVER_ERROR,
+                f"Error: {response.reason}",
             )
 
         jwks_data = response.text
@@ -341,7 +347,9 @@ class Auth:
             unverified_header = jwt.get_unverified_header(session_token)
         except Exception as e:
             raise AuthException(
-                500, ERROR_TYPE_INVALID_TOKEN, f"Unable to parse token header. Error: {e}"
+                500,
+                ERROR_TYPE_INVALID_TOKEN,
+                f"Unable to parse token header. Error: {e}",
             )
 
         alg_header = unverified_header.get(Auth.ALGORITHM_KEY, None)
@@ -404,9 +412,7 @@ class Auth:
             return self._refresh_token(refresh_token)  # return jwt_response dict
 
         except Exception as e:
-            raise AuthException(
-                500, ERROR_TYPE_INVALID_TOKEN, f"Invalid token: {e}"
-            )
+            raise AuthException(500, ERROR_TYPE_INVALID_TOKEN, f"Invalid token: {e}")
 
     @staticmethod
     def _compose_refresh_token_url() -> str:
