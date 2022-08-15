@@ -11,24 +11,24 @@ class OTP:
 
     def sign_in(self, method: DeliveryMethod, identifier: str) -> None:
         """
-        Use to login a user based on the given identifier either email or a phone
-            and choose the selected delivery method for verification.
+        Sign in (log in) an existing user with the unique identifier you provide. (See 'sign_up' function for an explanation of the
+            identifier field.) Provide the DeliveryMethod required for this user. If the identifier value cannot be used for the
+            DeliverMethod selected (for example, 'identifier = 4567qq445km' and 'DeliveryMethod = email')
 
         Args:
-        method (DeliveryMethod): The OTP method you would like to verify the code
-        sent to you (by the same delivery method)
-
-        identifier (str): The identifier will be used for validation can be either email or phone
+        method (DeliveryMethod): The method to use for delivering the OTP verification code to the user, for example
+            email, SMS, or WhatsApp
+        identifier (str): The identifier of the user being validated for example phone or email
 
         Raise:
-        AuthException: for any case sign up by otp operation failed
+        AuthException: raised if sign-in operation fails
         """
 
         if not self._auth.verify_delivery_method(method, identifier):
             raise AuthException(
                 400,
                 ERROR_TYPE_INVALID_PUBLIC_KEY,
-                f"Identifier {identifier} is not valid by delivery method {method}",
+                f"Identifier {identifier} does not support delivery method {method}",
             )
 
         uri = OTP._compose_signin_url(method)
@@ -39,27 +39,25 @@ class OTP:
         self, method: DeliveryMethod, identifier: str, user: dict = None
     ) -> None:
         """
-        Use to create a new user based on the given identifier either email or a phone.
-            choose the selected delivery method for verification.
-            optional to add user metadata for farther user details such as name and more.
+        Sign up (create) a new user using their email or phone number. Choose a delivery method for OTP
+            verification, for example email, SMS, or WhatsApp.
+            (optional) Include additional user metadata that you wish to preserve.
 
         Args:
-        method (DeliveryMethod): The OTP method you would like to verify the code
-        sent to you (by the same delivery method)
-
-        identifier (str): The identifier will be used for validation can be either email or phone
-
-        user (dict) optional: User metadata in the form of {"name": "", "phone": "", "email": ""}
+        method (DeliveryMethod): The method to use for delivering the OTP verification code, for example phone or email
+        identifier (str): The identifier of the user being validated
+        user (dict) optional: Preserve additional user metadata in the form of
+             {"name": "Joe Person", "phone": "2125551212", "email": "joe@somecompany.com"}
 
         Raise:
-        AuthException: for any case sign up by otp operation failed
+        AuthException: raised if sign-up operation fails
         """
 
         if not self._auth.verify_delivery_method(method, identifier):
             raise AuthException(
                 400,
                 ERROR_TYPE_INVALID_PUBLIC_KEY,
-                f"Identifier {identifier} is not valid by delivery method {method}",
+                f"Identifier {identifier} is does not support delivery method {method}",
             )
 
         uri = OTP._compose_signup_url(method)
@@ -68,23 +66,23 @@ class OTP:
 
     def sign_up_or_in(self, method: DeliveryMethod, identifier: str) -> None:
         """
-        Use to login in using identifier, if user does not exists, a new user will be created
-            with the given identifier.
+        Sign_up_or_in lets you handle both sign up and sign in with a single call. Sign-up_or_in will first determine if
+            identifier is a new or existing end user. If identifier is new, a new end user user will be created and then
+            authenticated using the OTP DeliveryMethod specififed. If identifier exists, the end user will be authenticated
+            using the OTP DelieryMethod specified.
 
         Args:
-        method (DeliveryMethod): The OTP method you would like to verify the code
-        sent to you (by the same delivery method)
-
-        identifier (str): The identifier will be used for validation can be either email or phone
+        method (DeliveryMethod): The method to use for delivering the OTP verification code, for example phone or email
+        identifier (str): The identifier of the user being validated
 
         Raise:
-        AuthException: for any case sign up by otp operation failed
+        AuthException: raised if either the sign_up or sign_in operation fails
         """
         if not self._auth.verify_delivery_method(method, identifier):
             raise AuthException(
                 400,
                 ERROR_TYPE_INVALID_PUBLIC_KEY,
-                f"Identifier {identifier} is not valid by delivery method {method}",
+                f"Identifier {identifier} does not support delivery method {method}",
             )
 
         uri = OTP._compose_sign_up_or_in_url(method)
@@ -93,30 +91,28 @@ class OTP:
 
     def verify_code(self, method: DeliveryMethod, identifier: str, code: str) -> dict:
         """
-        Use to verify a SignIn/SignUp based on the given identifier either an email or a phone
-            followed by the code used to verify and authenticate the user.
+        Verify the valdity of an OTP code entered by an end user during sign_in or sign_up.
+        (This function is not needed if you are using the sign_up_or_in function.
 
         Args:
-        method (DeliveryMethod): The OTP method you would like to verify the code
-        sent to you (by the same delivery method)
-
-        identifier (str): The identifier will be used for validation can be either email or phone
-
-        code (str): The authorization code you get by the delivery method during signup/signin
+        method (DeliveryMethod): The method to use for delivering the OTP verification code, for example phone or email
+        identifier (str): The identifier of the user being validated
+        code (str): The authorization code enter by the end user during signup/signin
 
         Return value (dict):
-        Return dict of the form {"jwts": [], "user": "", "firstSeen": "", "error": ""}
-        Includes all the jwts tokens (session token, session refresh token) and their claims and user info
+        Return dict in the format
+             {"jwts": [], "user": "", "firstSeen": "", "error": ""}
+        Includes all the jwts tokens (session token, refresh token), token claims, and user information
 
         Raise:
-        AuthException: for any case code is not valid or tokens verification failed
+        AuthException: raised if the OTP code is not valid or if token verification failed
         """
 
         if not self._auth.verify_delivery_method(method, identifier):
             raise AuthException(
                 400,
                 ERROR_TYPE_INVALID_PUBLIC_KEY,
-                f"Identifier {identifier} is not valid by delivery method {method}",
+                f"Identifier {identifier} does not support delivery method {method}",
             )
 
         uri = OTP._compose_verify_code_url(method)
@@ -133,18 +129,17 @@ class OTP:
         self, identifier: str, email: str, refresh_token: str
     ) -> None:
         """
-        Use to a update email, and verify via OTP
+        Update the email address of an end user, after verifying the authenticity of the end user using OTP.
 
         Args:
-        identifier (str): The identifier will be used for validation can be either email or phone
-
-        email (str): The email address to update for the identifier
-
-        refresh_token (str): The refresh session token (used for verification)
+        identifier (str): The identifier of the user who's information is being updated
+        email (str): The new email address. If an email address already exists for this end user, it will be overwritten
+        refresh_token (str): The session's refresh token (used for verification)
 
         Raise:
-        AuthException: for any case code is not valid or tokens verification failed
+        AuthException: raised if OTP verification fails or if token verification fails
         """
+
         if not identifier:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Identifier cannot be empty"
@@ -160,22 +155,18 @@ class OTP:
         self, method: DeliveryMethod, identifier: str, phone: str, refresh_token: str
     ) -> None:
         """
-        Use to update phone and validate via OTP allowed methods
-        are phone based methods - whatsapp and SMS
+        Update the phone number of an existing end user, after verifying the authenticity of the end user using OTP.
 
         Args:
-        method (DeliveryMethod): The OTP method you would like to verify the code
-        sent to you (by the same delivery method)
-
-        identifier (str): The identifier will be used for validation can be either email or phone
-
-        phone (str): The phone to update for the identifier
-
-        refresh_token (str): The refresh session token (used for verification)
+        method (DeliveryMethod): The method to use for delivering the OTP verification code, for example phone or email
+        identifier (str): The identifier of the user who's information is being updated
+        phone (str): The new phone number. If a phone number already exists for this end user, it will be overwritten
+        refresh_token (str): The session's refresh token (used for OTP verification)
 
         Raise:
-        AuthException: for any case code is not valid or tokens verification failed
+        AuthException: raised if OTP verification fails or if token verification fails
         """
+
         if not identifier:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Identifier cannot be empty"

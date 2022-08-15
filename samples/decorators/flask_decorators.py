@@ -43,7 +43,7 @@ def set_cookie_on_response(response: Response, token: dict, cookieData: dict):
 
 def descope_signup_otp_by_email(descope_client):
     """
-    Signup new user using OTP by email
+    Sign-up new user, using email to verify the OTP
     """
 
     def decorator(f):
@@ -53,12 +53,12 @@ def descope_signup_otp_by_email(descope_client):
             email = data.get("email", None)
             user = data.get("user", None)
             if not email or email == "":
-                return Response("Bad Request, missing email", 400)
+                return Response("Invalid Request, missing email", 400)
 
             try:
                 descope_client.otp.sign_up(DeliveryMethod.EMAIL, email, user)
             except AuthException as e:
-                return Response(f"Failed to signup, err: {e}", 500)
+                return Response(f"Unable to sign-up user, err: {e}", 500)
 
             return f(*args, **kwargs)
 
@@ -69,7 +69,7 @@ def descope_signup_otp_by_email(descope_client):
 
 def descope_signin_otp_by_email(descope_client):
     """
-    Signin using OTP by email
+    Sign-in existing user, using email to verify OTP
     """
 
     def decorator(f):
@@ -78,12 +78,12 @@ def descope_signin_otp_by_email(descope_client):
             data = request.get_json(force=True)
             email = data.get("email", None)
             if not email:
-                return Response("Bad Request, missing email", 400)
+                return Response("Invalid Request, missing email", 400)
 
             try:
                 descope_client.otp.sign_in(DeliveryMethod.EMAIL, email)
             except AuthException as e:
-                return Response(f"Failed to signin, err: {e}", 500)
+                return Response(f"Unable to sign-in, err: {e}", 500)
 
             return f(*args, **kwargs)
 
@@ -94,7 +94,7 @@ def descope_signin_otp_by_email(descope_client):
 
 def descope_validate_auth(descope_client):
     """
-    Test for valid Access Token
+    Test if Access Token is valid
     """
 
     def decorator(f):
