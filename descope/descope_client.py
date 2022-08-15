@@ -56,10 +56,10 @@ class DescopeClient:
 
     def validate_session_request(self, session_token: str, refresh_token: str) -> dict:
         """
-        Validate the session for a given request. If the user is authenticated but the 
+        Validate the session for a given request. If the user is authenticated but the
             session has expired, the session token will automatically be refreshed.
-        Call this function every time you make a private API call that requires an authorized 
-            user. 
+        Call this function every time you make a private API call that requires an authorized
+            user.
 
         Args:
         session_token (str): The session token, which contains the signature that will be validated

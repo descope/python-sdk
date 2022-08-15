@@ -27,13 +27,6 @@ from descope.exceptions import (
     AuthException,
 )
 
-"""
-    ???guy - is there a way to move all strings to a wsring section, so that reused strings will never be different. amd makes it easier to make them sound the same ???
-    * "Unknown delivery method:"
-    * "Unable to load public key."
-    * "Unable to parse token header."
-"""
-
 class Auth:
     ALGORITHM_KEY = "alg"
 
