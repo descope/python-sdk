@@ -11,22 +11,11 @@ class OTP:
 
     def sign_in(self, method: DeliveryMethod, identifier: str) -> None:
         """
-    \             3. confirming that I understand something correctly, 
-                      "identifier" can currently be email, phone, or email. And is how the end-user identifies]d themselves to Descope, 
-                      "DeliveryMethod" can be any of the 3 listed above, but it can differ from "identifier"
-                    e.g. end-user enters phone # for identifictaion, thus identifier=972-54-450=9-0206, but they may only have access to 
-                    email, so want to use email as DeliveryMethod. 
-            ???
-    
-        Sign in (log in) an existing user with the uniqeu identifier you provide. (See 'sign_up' function for an explanation of the 
-            identifier field.) Provide the DeliveryMethod required for this user. If the identifier value cannot be used for the DeliverMethod
-            selected (for example, 'identifier = 4567qq445km' and 'DeliveryMethod = email') then you must provide the uses
-            
-             here the user is identified by their unique identifier. (see sign-up or sign-in) you have provided when signing up this user. the specified DeliveryMethod for OTP verification. The DeliveryMethod can be different
-            from the identifier. For example, an end-user can be identified by their phone number, but use email as their OTP
-            DelieryMethod for this verification. 
-            
-        
+        Sign in (log in) an existing user with the unique identifier you provide. (See 'sign_up' function for an explanation of the 
+            identifier field.) Provide the DeliveryMethod required for this user. If the identifier value cannot be used for the 
+            DeliverMethod selected (for example, 'identifier = 4567qq445km' and 'DeliveryMethod = email') ???Guy - 
+            not sure what to do hjere ...???
+
         Args:
         method (DeliveryMethod): The method to use for delivering the OTP verification code to the user, for example
             email, SMS, or WhatsApp

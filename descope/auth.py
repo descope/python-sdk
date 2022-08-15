@@ -27,6 +27,7 @@ from descope.exceptions import (
     AuthException,
 )
 
+
 class Auth:
     ALGORITHM_KEY = "alg"
 
