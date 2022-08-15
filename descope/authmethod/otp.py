@@ -145,6 +145,7 @@ class OTP:
         Raise:
         AuthException: raised if OTP verification fails or if token verification fails
         """
+
         if not identifier:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Identifier cannot be empty"
@@ -158,8 +159,9 @@ class OTP:
 
     def update_user_phone(
         self, method: DeliveryMethod, identifier: str, phone: str, refresh_token: str
-    ) -> None:   '''???Guy - the order of the arguments differs from update_email - maybe make them the same? also, why fdoes this function have DelvieryMethod, but not some of the other ones? '''
+    ) -> None:
         """
+        ???Guy - the order of the arguments differs from update_email - maybe make them the same? also, why does this function have DeliveryMethod, but not some of the other ones?
         Update the phone number of an existing end user, after verifying the authenticity of the end user using OTP.
 
         Args:
@@ -171,6 +173,7 @@ class OTP:
         Raise:
         AuthException: raised if OTP verification fails or if token verification fails
         """
+
         if not identifier:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_PUBLIC_KEY, "Identifier cannot be empty"
