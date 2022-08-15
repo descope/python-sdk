@@ -13,8 +13,7 @@ class OTP:
         """
         Sign in (log in) an existing user with the unique identifier you provide. (See 'sign_up' function for an explanation of the 
             identifier field.) Provide the DeliveryMethod required for this user. If the identifier value cannot be used for the 
-            DeliverMethod selected (for example, 'identifier = 4567qq445km' and 'DeliveryMethod = email') ???Guy - 
-            not sure what to do hjere ...???
+            DeliverMethod selected (for example, 'identifier = 4567qq445km' and 'DeliveryMethod = email')
 
         Args:
         method (DeliveryMethod): The method to use for delivering the OTP verification code to the user, for example
@@ -67,11 +66,6 @@ class OTP:
 
     def sign_up_or_in(self, method: DeliveryMethod, identifier: str) -> None:
         """
-
-        ???Guy - why doesn';'t this call hacve doct as an arguemnt? If it is acting as sign-in, wouldn't it need it? Or, at 
-            a minimum, require a secondary call to sign-up in case the identifier is neither a phone number or email. 
-        ????
-
         Sign_up_or_in lets you handle both sign up and sign in with a single call. Sign-up_or_in will first determine if 
             identifier is a new or existing end user. If identifier is new, a new end user user will be created and then 
             authenticated using the OTP DeliveryMethod specififed. If identifier exists, the end user will be authenticated 
@@ -98,7 +92,7 @@ class OTP:
     def verify_code(self, method: DeliveryMethod, identifier: str, code: str) -> dict:
         """
         Verify the valdity of an OTP code entered by an end user during sign_in or sign_up.
-        (This function is not needed is using sign_up_or_in. ???Guy - is this correct???
+        (This function is not needed if you are using the sign_up_or_in function.
 
         Args:
         method (DeliveryMethod): The method to use for delivering the OTP verification code, for example phone or email
@@ -161,7 +155,6 @@ class OTP:
         self, method: DeliveryMethod, identifier: str, phone: str, refresh_token: str
     ) -> None:
         """
-        ???Guy - the order of the arguments differs from update_email - maybe make them the same? also, why does this function have DeliveryMethod, but not some of the other ones?
         Update the phone number of an existing end user, after verifying the authenticity of the end user using OTP.
 
         Args:
