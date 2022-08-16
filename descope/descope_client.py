@@ -17,7 +17,7 @@ class DescopeClient:
 
     def __init__(
         self,
-        project_id: str,
+        project_id: str = None,
         public_key: str = None,
         skip_verify: bool = False,
     ):
@@ -106,3 +106,6 @@ class DescopeClient:
 
         uri = EndpointsV1.logoutPath
         return self._auth.do_get(uri, None, None, refresh_token)
+
+    def refresh_token(self, refresh_token: str) -> dict:
+        return self._auth.refresh_token(refresh_token)

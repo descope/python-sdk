@@ -46,7 +46,7 @@ def main():
 
         try:
             logging.info("refreshing the session token..")
-            claims = descope_client._auth.refresh_token(refresh_token)
+            claims = descope_client.refresh_token(refresh_token)
             logging.info(
                 "going to revalidate the session with the newly refreshed token.."
             )
