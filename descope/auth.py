@@ -33,7 +33,7 @@ class Auth:
 
     def __init__(
         self,
-        project_id: str,
+        project_id: str = None,
         public_key: str = None,
         skip_verify: bool = False,
     ):
@@ -188,6 +188,14 @@ class Auth:
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Invalid delivery method"
             )
 
+    def refresh_token(self, refresh_token: str) -> dict:
+        uri = Auth._compose_refresh_token_url()
+        response = self.do_get(uri, None, None, refresh_token)
+
+        resp = response.json()
+        auth_info = self._generate_auth_info(resp, refresh_token)
+        return auth_info
+
     @staticmethod
     def _validate_and_load_public_key(public_key) -> Tuple[str, jwt.PyJWK, str]:
         if isinstance(public_key, str):
@@ -326,14 +334,6 @@ class Auth:
             bytes = f"{self.project_id}:".encode("ascii")
         headers["Authorization"] = f"Basic {base64.b64encode(bytes).decode('ascii')}"
         return headers
-
-    def refresh_token(self, refresh_token: str) -> dict:
-        uri = Auth._compose_refresh_token_url()
-        response = self.do_get(uri, None, None, refresh_token)
-
-        resp = response.json()
-        auth_info = self._generate_auth_info(resp, refresh_token)
-        return auth_info
 
     def _validate_and_load_tokens(self, session_token: str, refresh_token: str) -> dict:
         if not session_token:
