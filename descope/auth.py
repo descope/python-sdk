@@ -1,4 +1,3 @@
-import base64
 import json
 import os
 import re
@@ -339,11 +338,10 @@ class Auth:
         headers = {}
         headers["Content-Type"] = "application/json"
 
+        bearer = self.project_id
         if pswd:
-            bytes = f"{self.project_id}:{pswd}".encode("ascii")
-        else:
-            bytes = f"{self.project_id}:".encode("ascii")
-        headers["Authorization"] = f"Basic {base64.b64encode(bytes).decode('ascii')}"
+            bearer = f"{self.project_id}:{pswd}"
+        headers["Authorization"] = f"Bearer {bearer}"
         return headers
 
     def _validate_and_load_tokens(self, session_token: str, refresh_token: str) -> dict:

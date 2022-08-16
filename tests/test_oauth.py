@@ -70,7 +70,7 @@ class TestOAuth(unittest.TestCase):
                 expected_uri,
                 headers={
                     "Content-Type": "application/json",
-                    "Authorization": "Basic ZHVtbXk6",
+                    "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params={"provider": "facebook"},
                 allow_redirects=False,
