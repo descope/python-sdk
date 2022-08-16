@@ -100,21 +100,32 @@ class Auth:
         return response
 
     @staticmethod
-    def verify_delivery_method(method: DeliveryMethod, identifier: str) -> bool:
-        if identifier == "" or identifier is None:
+    def verify_delivery_method(
+        method: DeliveryMethod, identifier: str, user: dict
+    ) -> bool:
+        if not identifier:
+            return False
+
+        if not user or not isinstance(user, dict):
             return False
 
         if method == DeliveryMethod.EMAIL:
+            if not user.get("email", None):
+                user["email"] = identifier
             try:
-                validate_email(identifier)
+                validate_email(user["email"])
                 return True
             except EmailNotValidError:
                 return False
         elif method == DeliveryMethod.PHONE:
-            if not re.match(PHONE_REGEX, identifier):
+            if not user.get("phone", None):
+                user["phone"] = identifier
+            if not re.match(PHONE_REGEX, user["phone"]):
                 return False
         elif method == DeliveryMethod.WHATSAPP:
-            if not re.match(PHONE_REGEX, identifier):
+            if not user.get("phone", None):
+                user["phone"] = identifier
+            if not re.match(PHONE_REGEX, user["phone"]):
                 return False
         else:
             return False
