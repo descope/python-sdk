@@ -51,7 +51,7 @@ class TestExchanger(unittest.TestCase):
                 f"{DEFAULT_BASE_URL}{EndpointsV1.exchangeTokenPath}",
                 headers={
                     "Content-Type": "application/json",
-                    "Authorization": "Basic ZHVtbXk6",
+                    "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params={"code": "c1"},
                 allow_redirects=False,

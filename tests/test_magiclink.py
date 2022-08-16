@@ -249,7 +249,7 @@ class TestMagicLink(unittest.TestCase):
                 f"{DEFAULT_BASE_URL}{EndpointsV1.signInAuthMagicLinkPath}/email",
                 headers={
                     "Content-Type": "application/json",
-                    "Authorization": "Basic ZHVtbXk6",
+                    "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 data=json.dumps(
                     {
@@ -280,7 +280,7 @@ class TestMagicLink(unittest.TestCase):
                 f"{DEFAULT_BASE_URL}{EndpointsV1.signUpAuthMagicLinkPath}/email",
                 headers={
                     "Content-Type": "application/json",
-                    "Authorization": "Basic ZHVtbXk6",
+                    "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 data=json.dumps(
                     {
@@ -312,7 +312,7 @@ class TestMagicLink(unittest.TestCase):
                 f"{DEFAULT_BASE_URL}{EndpointsV1.signUpOrInAuthMagicLinkPath}/email",
                 headers={
                     "Content-Type": "application/json",
-                    "Authorization": "Basic ZHVtbXk6",
+                    "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 data=json.dumps(
                     {

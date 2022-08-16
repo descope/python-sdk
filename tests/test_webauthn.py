@@ -94,7 +94,7 @@ class TestWebauthN(unittest.TestCase):
                 expected_uri,
                 headers={
                     "Content-Type": "application/json",
-                    "Authorization": "Basic ZHVtbXk6",
+                    "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 data=json.dumps(
                     {"user": {"externalId": "id1"}, "origin": "https://example.com"}
@@ -142,7 +142,7 @@ class TestWebauthN(unittest.TestCase):
                 expected_uri,
                 headers={
                     "Content-Type": "application/json",
-                    "Authorization": "Basic ZHVtbXk6",
+                    "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 data=json.dumps({"transactionId": "t01", "response": "response01"}),
                 verify=True,
@@ -188,7 +188,7 @@ class TestWebauthN(unittest.TestCase):
                 expected_uri,
                 headers={
                     "Content-Type": "application/json",
-                    "Authorization": "Basic ZHVtbXk6",
+                    "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 data=json.dumps({"externalId": "id1", "origin": "https://example.com"}),
                 verify=True,
@@ -227,7 +227,7 @@ class TestWebauthN(unittest.TestCase):
                 expected_uri,
                 headers={
                     "Content-Type": "application/json",
-                    "Authorization": "Basic ZHVtbXk6",
+                    "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 data=json.dumps({"transactionId": "t01", "response": "response01"}),
                 verify=True,
@@ -293,7 +293,7 @@ class TestWebauthN(unittest.TestCase):
                 expected_uri,
                 headers={
                     "Content-Type": "application/json",
-                    "Authorization": "Basic ZHVtbXk6YXNkYXNk",
+                    "Authorization": f"Bearer {self.dummy_project_id}:asdasd",
                 },
                 data=json.dumps(
                     {"externalId": "dummy@dummy.com", "origin": "https://example.com"}
@@ -335,7 +335,7 @@ class TestWebauthN(unittest.TestCase):
                 expected_uri,
                 headers={
                     "Content-Type": "application/json",
-                    "Authorization": "Basic ZHVtbXk6",
+                    "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 data=json.dumps({"transactionId": "t01", "response": "response01"}),
                 verify=True,

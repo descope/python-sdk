@@ -52,7 +52,7 @@ class TestSAML(unittest.TestCase):
                 expected_uri,
                 headers={
                     "Content-Type": "application/json",
-                    "Authorization": "Basic ZHVtbXk6",
+                    "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params={"tenant": "tenant1", "redirectURL": "http://dummy.com"},
                 allow_redirects=None,
