@@ -204,7 +204,7 @@ class TestAuth(unittest.TestCase):
             mock_request.return_value.ok = False
             self.assertRaises(
                 AuthException,
-                auth._refresh_token,
+                auth.refresh_token,
                 dummy_refresh_token,
             )
 

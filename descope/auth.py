@@ -272,7 +272,7 @@ class Auth:
                 # just continue to the next key
                 pass
 
-    def _generate_auth_info(self, response_body: dict, refresh_cookie: str) -> dict:
+    def _generate_auth_info(self, response_body: dict, refresh_token: str) -> dict:
         jwt_response = {}
         st_jwt = response_body.get("sessionJwt", "")
         if st_jwt:
@@ -285,9 +285,9 @@ class Auth:
                 rt_jwt, None
             )
 
-        if refresh_cookie:
+        if refresh_token:
             jwt_response[REFRESH_SESSION_TOKEN_NAME] = self._validate_and_load_tokens(
-                refresh_cookie, None
+                refresh_token, None
             )
 
         jwt_response[COOKIE_DATA_NAME] = {
@@ -327,12 +327,12 @@ class Auth:
         headers["Authorization"] = f"Basic {base64.b64encode(bytes).decode('ascii')}"
         return headers
 
-    def _refresh_token(self, refresh_token: str) -> dict:
+    def refresh_token(self, refresh_token: str) -> dict:
         uri = Auth._compose_refresh_token_url()
         response = self.do_get(uri, None, None, refresh_token)
 
         resp = response.json()
-        auth_info = self._generate_auth_info(resp, None)
+        auth_info = self._generate_auth_info(resp, refresh_token)
         return auth_info
 
     def _validate_and_load_tokens(self, session_token: str, refresh_token: str) -> dict:
@@ -409,7 +409,7 @@ class Auth:
                 )
 
             # Refresh token is valid now refresh the session token
-            return self._refresh_token(refresh_token)  # return jwt_response dict
+            return self.refresh_token(refresh_token)  # return jwt_response dict
 
         except Exception as e:
             raise AuthException(500, ERROR_TYPE_INVALID_TOKEN, f"Invalid token: {e}")
