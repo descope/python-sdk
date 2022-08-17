@@ -117,11 +117,12 @@ descope_client.otp.update_user_email(identifier, "mytestemail@test.com", jwt_res
 
 ### Unified Sign-up/Sign-in
 
-Call the `sign_up_or_in` function to implement a unified method for users to both sign-up and sign-in. The minimum amnout of information required by this function is a DeliverMethod and the matching phone numer or email, as shown in the code below. If the phone/email is new, Descope will verify and then add the new user to your users list. If the phone/email exisys in your user list, the sign-in process will continue as usual with the phone.email as the identifier.
+Call the `sign_up_or_in` function to implement a unified method for users to both sign-up and sign-in. This function can be used when you only want to prompt for a phone or email from your user. If the phone/email is new, Descope will verify and then add the new user to your users list. If the phone/email exists in your user list, the sign-in process will continue as usual.
+
+The phone or email will be used as the identifier.
 
 ```python
-user = {"email": "mytestmail@test.com"}
-descope_client.otp.sign_up_or_in(DeliveryMethod.EMAIL, "mytestmail@test.com, user)
+descope_client.otp.sign_up_or_in(DeliveryMethod.EMAIL, "mytestmail@test.com")
 ```
 
 Use DeliveryMethod.PHONE (for text message) or DeliveryMethod.WHATSAPP (for Whatspp message), replacing the second argument with a valid phone number.

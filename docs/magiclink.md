@@ -191,6 +191,27 @@ Call the `update_user_emil` function to add OTP verification by email for a user
 descope_client.magiclink.update_user_email(identifier, "mytestemail@test.com", jwt_response[REFRESH_SESSION_TOKEN_NAME]["jwt"])
 ```
 
+### Unified Sign-up/Sign-in
+
+Call the `sign_up_or_in` function to implement a unified method for users to both sign-up and sign-in. This function can be used when you only want to prompt for a phone or email from your user. If the phone/email is new, Descope will verify and then add the new user to your users list. If the phone/email exists in your user list, the sign-in process will continue as usual.
+
+The phone or email will be used as the identifier.
+
+* if cross device is enabled
+
+    ```python
+    verify_uri = "http://auth.yourcompany.com/api/verify_magiclink"
+    descope_client.magiclink.sign_up_or_in_cross_device(DeliveryMethod.EMAIL, "mytestmail@test.com", verify_uri)
+    ```
+* if cross device is not enabled
+
+    ```python
+    verify_uri = "http://auth.yourcompany.com/api/verify_magiclink"
+    descope_client.magiclink.sign_up_or_in(DeliveryMethod.EMAIL, "mytestmail@test.com", verify_uri)
+    ```
+
+Use DeliveryMethod.PHONE (for text message) or DeliveryMethod.WHATSAPP (for Whatspp message), replacing the second argument with a valid phone number.
+
 ### Logout All Sessions
 
 Logout all sessions for a user.
