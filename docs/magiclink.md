@@ -104,9 +104,9 @@ while not done:
         sleep(4)
         done = True
     except AuthException as e:
-        if e.status_code != 401:   
+        if e.status_code == 401:   
             # user is not authorized
-        done = True
+            done = True
 ```
 
 ### 4. Session Validation
