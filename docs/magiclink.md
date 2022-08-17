@@ -2,11 +2,11 @@
 
 A magic link is a one-time-use link sent to your user during the authentication process. Magic links can be sent to a user's email address or to their mobile phone as a text or WhatsApp message.
 
-Magic links can be implemented to work "cross device", which lets a user sign-in/sign-on using one device and use a different device for magic link verification. Once the magic link is clicked, the user's session will be redirected to your desired page.  For example, a user can sign in from a laptop using a browser and click the magic link received on WhatsApp on their cell phone. As soon as the user clicks the magic link on their cell phone, the browser session on their laptop will be redirected to the desired web page. Enabling cross device for magic links is a project setting in the [Descope console](https://app.descope.com).
+Magic links can be implemented to work "cross device", which lets a user sign-up/sign-in using one device while using a different device for magic link verification. As soon as the magic link is clicked, the user's session will be redirected to your desired page. For example, a user can sign in from a laptop using a browser and click the magic link received on WhatsApp on their cell phone. As soon as the user clicks the magic link on their cell phone, the browser session on their laptop will be redirected to your desired web page. Enabling cross device for magic links is a project setting in the [Descope console](https://app.descope.com).
 
 ## Overview
 
-A typical method for implementing implement magic links involves two tasks - user onboading and session management:
+A typical method for implementing magic links requires two groups of tasks - user onboarding and session management:
 
 ```mermaid
 flowchart LR
@@ -23,20 +23,22 @@ end
 verify --> redirect
 ```
 
-* User Onboarding
+* *User Onboarding*
 
     Step 1: (for new **user sign-up** only) Prompt user to enter their information, which must include an email or phone number that will be used for verification. Send that data to Descope using the `sign_up` function. The user will be sent the magic link by Descope, which you will verify in Step 3.
 
     Step 2: (for existing **user sign-in** only) Prompt user to enter their identity (typically an email address or phone number). Send that data to Descope using the `sign_in` function. The user will be sent the magic link by Descope, which you will verify in Step 3.
 
     Step 3: Verify the magic link using the `verify_code` function. Once the magic link is verified, the function will return a dict (`jwt_response` in the code sample) containing all the information you need to maintain an on-going verified online session with your user.
-* Session Management
+* *Session Management*
 
     Step 4: Validate the user session prior to implementing any business logic, to ensure your session is with an authenticated user and the ongoing session is still valid.
 
 ### Sample Code
 
-See our [sample code for magic link](../samples/magiclink_cross_device_sample_app.py).
+For an in-depth explanation of the variables and dictionaries used by the sample code below, see the [SDK Dictionaries and Variables document](./deepdive.md).
+
+For a complete sample code implmentation of magic links, see [sample code for magic link](../samples/magiclink_cross_device_sample_app.py).
 
 ## Install and configure the SDK
 
@@ -66,7 +68,7 @@ descope_client = DescopeClient()
 
 Call the `sign_up_cross_device` function from your sign-up route for magic links. In this example, the magic link will be sent by email to "mytestmail@test.com". `verify_uri` is the endpoint you implement to verify magic link tokens (in step 3). `ref_token` is a pointer to the current session, so you can redirect the user the magic link is verified (in step 3).
 
-```code Python
+```Python
 user = {"username": "joe", "full name": "Joe Person", "phone": "212-555-1212", "email": "mytestmail@test.com"}
 verify_uri = "http://auth.yourcompany.com/api/verify_magiclink"
 ref_token = descope_client.magiclink.sign_up_cross_device(DeliveryMethod.EMAIL, "mytestmail@test.com, verify_uri, user)
@@ -78,7 +80,7 @@ Use DeliveryMethod.PHONE to send the magic link as a text message, or DeliveryMe
 
 Call the `sign-in_cross_device` function from your sign-in route for magic links. In this example, the verification will be sent by email to "mytestmail@test.com". `verify_uri` is the endpoint you implement to verify magic link tokens (step 3)
 
-```code Python
+```Python
 verify_uri = "http://auth.yourcompany.com/api/verify_magiclink"
 ref_token = descope_client.magiclink.sign_in_cross_device(DeliveryMethod.EMAIL, "mytestemail@test.com", verify_uri)
 ```
@@ -91,7 +93,7 @@ Call the `verify` function from your verify magic link endpoint. The function ca
 
 `get_session(token)` is then called repeatedly until the user clicks the magic link URL they received.
 
-```code Python
+```Python
 # run this in a separate process/thread
 descope_client.magiclink.verify(token)
 
@@ -111,7 +113,7 @@ while not done:
 
 Call the `validate_session_request` function from all endpoints that require an authenticated and validated user, immediately before the code that implements your business logic.
 
-```code Python
+```Python
 jwt_response = descope_client.validate_session_request(jwt_response[SESSION_TOKEN_NAME]["jwt"], jwt_response[REFRESH_SESSION_TOKEN_NAME]["jwt"])
 ```
 
@@ -125,7 +127,7 @@ See [deep dive](./deepdive.md) for an explanation of the vairables and dictinoai
 
 Add the following to your source code.
 
-```code
+```Python
 from descope import DeliveryMethod, DescopeClient
 descope_client = DescopeClient()
 ```
@@ -134,7 +136,7 @@ descope_client = DescopeClient()
 
 Call the `sign_up` function from your sign-up route for magic link. In this example, the magic link will be sent by email to "mytestmail@test.com".  `verify_uri` is the endpoint you implement to verify magic link tokens (in step 3).
 
-```code Python
+```Python
 user = {"username": "joe", "full name": "Joe Person", "phone": "212-555-1212", "email": "mytestmail@test.com"}
 verify_uri = "http://auth.yourcompany.com/api/verify_magiclink"
 descope_client.magiclink.sign_up(DeliveryMethod.EMAIL, "mytestmail@test.com, verify_uri, user)
@@ -146,7 +148,7 @@ Use DeliveryMethod.PHONE to send the magic link as a text message, or DeliveryMe
 
 Call the `sign-in` function from your sign-in route for magic links. In this example, the magic link will be sent by email to "mytestmail@test.com". `verify_uri` is the endpoint you implement to verify magic link tokens (in step 3).
 
-```code Python
+```Python
 verify_uri = "http://auth.yourcompany.com/api/verify_magiclink"
 descope_client.magiclink.sign_in(DeliveryMethod.EMAIL, "mytestemail@test.com", verify_uri)
 ```
@@ -157,7 +159,7 @@ Use DeliveryMethod.PHONE (for text message) or DeliveryMethod.WHATSAPP (for What
 
 Call the `verify` function from your verify magic link endpoint. The function call will write all the the necessary JWT tokens and claims, and user information to `jwt_response` dictionary. The jwt_response is needed for session validation in step 4. 'token' is the URL parameter wctaining the token, for example http://auth.yourcompany.com/api/verify_magiclink?t=token.
 
-```code Python
+```Python
 jwt_response = descope_client.magiclink.verify(token) 
 ```
 
@@ -165,13 +167,11 @@ jwt_response = descope_client.magiclink.verify(token)
 
 Call the `validate_session_request` function from all endpoints that require an authenticated and validated user, immediately before the code that implements your business logic.
 
-```code Python
+```Python
 jwt_response = descope_client.validate_session_request(jwt_response[SESSION_TOKEN_NAME]["jwt"], jwt_response[REFRESH_SESSION_TOKEN_NAME]["jwt"])
 ```
 
 ## Additional SDK Functions
-
-JEFF/GUY - NEED TO ADD CROSS-DEVICE FOR THESE.
 
 ### Update Phone Number
 
@@ -183,7 +183,7 @@ descope_client.magiclink.update_user_phone(DeliveryMethod.PHONE, identifier, "21
 
 Use DeliveryMethod.WHATSAPP (for Whatspp message).
 
-### Update user email
+### Update Email
 
 Call the `update_user_emil` function to add OTP verification by email for a user who only has OTP verification by phone. You must always validate the user session before making changes to user information. ???GUY is this really needed ???
 
@@ -191,7 +191,7 @@ Call the `update_user_emil` function to add OTP verification by email for a user
 descope_client.magiclink.update_user_email(identifier, "mytestemail@test.com", jwt_response[REFRESH_SESSION_TOKEN_NAME]["jwt"])
 ```
 
-### logout all user sessions
+### Logout All Sessions
 
 Logout all sessions for a user.
 

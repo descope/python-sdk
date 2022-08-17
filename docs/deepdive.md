@@ -1,6 +1,6 @@
-# SDK Structures, Variables
+# SDK Dictionaries and Variables
 
-This section describes how Descope implemented the Python SDK and the variables and dictionires used throughout our code samples. It is not required reading, but it will help if you need addtional details about how the code is designed.
+This section describes how Descope implements the SDK and the variables and dictionires used throughout our code samples. It is not required reading, however it can help you understand underlying details about how the SDK is designed is designed to work.
 
 ## user (dictionary)
 
