@@ -101,7 +101,6 @@ The SDK implements these additional functions.
 Call the `update_user_phone` function to add OTP verification phone for a user who only has OTP verification by email.
 
 ```python
-''' update the phone number '''
 descope_client.otp.update_user_phone(DeliveryMethod.PHONE, identifier, "212-555-1212", jwt_response[REFRESH_SESSION_TOKEN_NAME]["jwt"])
 ```
 
