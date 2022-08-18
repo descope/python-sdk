@@ -93,12 +93,12 @@ def sign_up_or_in():
 @APP.route("/api/verify", methods=["POST"])
 def verify():
     data = request.get_json(force=True)
-    code = data.get("code", None)
-    if not code:
+    token = data.get("token", None)
+    if not token:
         return Response("Unauthorized", 401)
 
     try:
-        jwt_response = descope_client.magiclink.verify(DeliveryMethod.EMAIL, code)
+        jwt_response = descope_client.magiclink.verify(token)
     except AuthException:
         return Response("Unauthorized", 401)
 
