@@ -32,11 +32,11 @@ def main():
         token = input("Please insert the token you received by email:\n")
         try:
             jwt_response = descope_client.magiclink.verify(token=token)
-            logging.info("Code is valid")
+            logging.info("Token is valid")
             refresh_token = jwt_response.get(REFRESH_SESSION_TOKEN_NAME).get("jwt")
             logging.info(f"jwt_response: {jwt_response}")
         except AuthException as e:
-            logging.info(f"Invalid code {e}")
+            logging.info(f"Invalid Token {e}")
             raise
 
         try:
@@ -51,15 +51,15 @@ def main():
             method=DeliveryMethod.EMAIL, identifier=email, uri="http://test.me"
         )
 
-        token = input("Please insert the code you received by email:\n")
+        token = input("Please insert the Token you received by email:\n")
         try:
             jwt_response = descope_client.magiclink.verify(token=token)
-            logging.info("Code is valid")
+            logging.info("Token is valid")
             session_token_1 = jwt_response.get(SESSION_TOKEN_NAME).get("jwt")
             refresh_token_1 = jwt_response.get(REFRESH_SESSION_TOKEN_NAME).get("jwt")
             logging.info(f"jwt_response: {jwt_response}")
         except AuthException as e:
-            logging.info(f"Invalid code {e}")
+            logging.info(f"Invalid Token {e}")
             raise
 
         try:

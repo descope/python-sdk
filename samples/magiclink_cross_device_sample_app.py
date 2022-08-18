@@ -26,9 +26,9 @@ def main():
             token = input("Please insert the token you received by email:\n")
             try:
                 descope_client.magiclink.verify(token=token)
-                logging.info("Code is valid")
+                logging.info("Token is valid")
             except AuthException as e:
-                logging.info(f"Invalid code {e}")
+                logging.info(f"Invalid Token {e}")
                 raise
 
         logging.info("Going to signup / signin using Magic Link ...")
