@@ -97,7 +97,7 @@ class WebauthN:
         )
         return jwt_response
 
-    def add_device_start(self, identifier: str, refresh_token: str, origin: str):
+    def update_start(self, identifier: str, refresh_token: str, origin: str):
         """
         Docs
         """
@@ -111,13 +111,13 @@ class WebauthN:
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Refresh token cannot be empty"
             )
 
-        uri = EndpointsV1.deviceAddAuthWebauthnStart
-        body = WebauthN._compose_add_device_start_body(identifier, origin)
+        uri = EndpointsV1.updateAuthWebauthnStart
+        body = WebauthN._compose_update_start_body(identifier, origin)
         response = self._auth.do_post(uri, body, refresh_token)
 
         return response.json()
 
-    def add_device_finish(self, transaction_id: str, response: str) -> None:
+    def update_finish(self, transaction_id: str, response: str) -> None:
         """
         Docs
         """
@@ -131,8 +131,8 @@ class WebauthN:
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Response cannot be empty"
             )
 
-        uri = EndpointsV1.deviceAddAuthWebauthnFinish
-        body = WebauthN._compose_sign_up_in_finish_body(transaction_id, response)
+        uri = EndpointsV1.updateAuthWebauthnFinish
+        body = WebauthN._compose_update_finish_body(transaction_id, response)
         self._auth.do_post(uri, body)
 
     @staticmethod
@@ -155,12 +155,12 @@ class WebauthN:
         return {"transactionId": transaction_id, "response": response}
 
     @staticmethod
-    def _compose_add_device_start_body(identifier: str, origin: str) -> dict:
+    def _compose_update_start_body(identifier: str, origin: str) -> dict:
         body = {"externalId": identifier}
         if origin:
             body["origin"] = origin
         return body
 
     @staticmethod
-    def _compose_add_device_finish_body(transaction_id: str, response: str) -> dict:
+    def _compose_update_finish_body(transaction_id: str, response: str) -> dict:
         return {"transactionId": transaction_id, "response": response}

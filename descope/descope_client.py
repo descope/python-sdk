@@ -1,7 +1,6 @@
 import requests
 
 from descope.auth import Auth  # noqa: F401
-from descope.authmethod.exchanger import Exchanger  # noqa: F401
 from descope.authmethod.magiclink import MagicLink  # noqa: F401
 from descope.authmethod.oauth import OAuth  # noqa: F401
 from descope.authmethod.otp import OTP  # noqa: F401

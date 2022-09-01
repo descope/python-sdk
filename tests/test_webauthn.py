@@ -45,17 +45,17 @@ class TestWebauthN(unittest.TestCase):
             {"externalId": "dummy@dummy.com", "origin": "https://example.com"},
         )
 
-    def test_compose_add_device_start_body(self):
+    def test_compose_update_start_body(self):
         self.assertEqual(
-            WebauthN._compose_add_device_start_body(
+            WebauthN._compose_update_start_body(
                 "dummy@dummy.com", "https://example.com"
             ),
             {"externalId": "dummy@dummy.com", "origin": "https://example.com"},
         )
 
-    def test_compose_add_device_finish_body(self):
+    def test_compose_update_finish_body(self):
         self.assertEqual(
-            WebauthN._compose_add_device_finish_body("t01", "response01"),
+            WebauthN._compose_update_finish_body("t01", "response01"),
             {"transactionId": "t01", "response": "response01"},
         )
 
@@ -234,27 +234,27 @@ class TestWebauthN(unittest.TestCase):
             )
             self.assertIsNotNone(webauthn.sign_up_finish("t01", "response01"))
 
-    def test_add_device_start(self):
+    def test_update_start(self):
         valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkVGVuYW50cyI6eyIiOm51bGx9LCJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwNjc5MjA4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MjA5MDA4NzIwOCwiaWF0IjoxNjU4MDg3MjA4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQzU1dnl4dzBzUkw2RmRNNjhxUnNDRGRST1YifQ.cWP5up4R5xeIl2qoG2NtfLH3Q5nRJVKdz-FDoAXctOQW9g3ceZQi6rZQ-TPBaXMKw68bijN3bLJTqxWW5WHzqRUeopfuzTcMYmC0wP2XGJkrdF6A8D5QW6acSGqglFgu"
         webauthn = WebauthN(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
         self.assertRaises(
-            AuthException, webauthn.add_device_start, "", "", "https://example.com"
+            AuthException, webauthn.update_start, "", "", "https://example.com"
         )
         self.assertRaises(
-            AuthException, webauthn.add_device_start, None, "", "https://example.com"
+            AuthException, webauthn.update_start, None, "", "https://example.com"
         )
         self.assertRaises(
             AuthException,
-            webauthn.add_device_start,
+            webauthn.update_start,
             "dummy@dummy.com",
             "",
             "https://example.com",
         )
         self.assertRaises(
             AuthException,
-            webauthn.add_device_start,
+            webauthn.update_start,
             "dummy@dummy.com",
             None,
             "https://example.com",
@@ -264,7 +264,7 @@ class TestWebauthN(unittest.TestCase):
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
-                webauthn.add_device_start,
+                webauthn.update_start,
                 "dummy@dummy.com",
                 valid_jwt_token,
                 "https://example.com",
@@ -274,7 +274,7 @@ class TestWebauthN(unittest.TestCase):
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(
-                webauthn.add_device_start(
+                webauthn.update_start(
                     "dummy@dummy.com", valid_jwt_token, "https://example.com"
                 )
             )
@@ -285,10 +285,10 @@ class TestWebauthN(unittest.TestCase):
             my_mock_response.ok = True
             my_mock_response.json.return_value = valid_response
             mock_post.return_value = my_mock_response
-            res = webauthn.add_device_start(
+            res = webauthn.update_start(
                 "dummy@dummy.com", "asdasd", "https://example.com"
             )
-            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.deviceAddAuthWebauthnStart}"
+            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.updateAuthWebauthnStart}"
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
@@ -302,19 +302,19 @@ class TestWebauthN(unittest.TestCase):
             )
             self.assertEqual(res, valid_response)
 
-    def test_add_device_finish(self):
+    def test_update_finish(self):
         webauthn = WebauthN(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
-        self.assertRaises(AuthException, webauthn.add_device_finish, "", "response01")
-        self.assertRaises(AuthException, webauthn.add_device_finish, None, "response01")
-        self.assertRaises(AuthException, webauthn.add_device_finish, "t01", "")
-        self.assertRaises(AuthException, webauthn.add_device_finish, "t01", None)
+        self.assertRaises(AuthException, webauthn.update_finish, "", "response01")
+        self.assertRaises(AuthException, webauthn.update_finish, None, "response01")
+        self.assertRaises(AuthException, webauthn.update_finish, "t01", "")
+        self.assertRaises(AuthException, webauthn.update_finish, "t01", None)
 
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
-                AuthException, webauthn.add_device_finish, "t01", "response01"
+                AuthException, webauthn.update_finish, "t01", "response01"
             )
 
         # Test success flow
@@ -327,10 +327,8 @@ class TestWebauthN(unittest.TestCase):
             )
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
-            expected_uri = (
-                f"{DEFAULT_BASE_URL}{EndpointsV1.deviceAddAuthWebauthnFinish}"
-            )
-            webauthn.add_device_finish("t01", "response01")
+            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.updateAuthWebauthnFinish}"
+            webauthn.update_finish("t01", "response01")
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
