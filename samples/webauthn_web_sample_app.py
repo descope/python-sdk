@@ -74,19 +74,19 @@ def webauthn_signin_finish():
 
 
 @APP.route("/webauthn/device/add/start", methods=["POST"])
-def webauthn_add_device_start():
+def webauthn_update_start():
     data = request.get_json()
     refresh_token = request.cookies.get("DSR")
-    response = descope_client.webauthn.add_device_start(
+    response = descope_client.webauthn.update_start(
         data["externalId"], refresh_token, data["origin"]
     )
     return response
 
 
 @APP.route("/webauthn/device/add/finish", methods=["POST"])
-def webauthn_add_device_finish():
+def webauthn_update_finish():
     data = request.get_json()
-    descope_client.webauthn.add_device_finish(data["transactionId"], data["response"])
+    descope_client.webauthn.update_finish(data["transactionId"], data["response"])
     return jsonify("{}")
 
 

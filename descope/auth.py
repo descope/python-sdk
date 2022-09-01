@@ -13,6 +13,7 @@ from descope.common import (
     COOKIE_DATA_NAME,
     DEFAULT_BASE_URL,
     PHONE_REGEX,
+    REFRESH_SESSION_COOKIE_NAME,
     REFRESH_SESSION_TOKEN_NAME,
     SESSION_TOKEN_NAME,
     DeliveryMethod,
@@ -97,6 +98,26 @@ class Auth:
                 response.status_code, ERROR_TYPE_SERVER_ERROR, response.text
             )
         return response
+
+    def exchange_token(self, uri, code: str) -> dict:
+        if not code:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                "exchange code is empty",
+            )
+
+        params = Auth._compose_exchange_params(code)
+        response = self.do_get(uri, params, False)
+        resp = response.json()
+        jwt_response = self.generate_jwt_response(
+            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
+        )
+        return jwt_response
+
+    @staticmethod
+    def _compose_exchange_params(code: str) -> dict:
+        return {"code": code}
 
     @staticmethod
     def verify_delivery_method(

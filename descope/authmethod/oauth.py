@@ -1,12 +1,13 @@
 from descope.auth import Auth
-from descope.authmethod.exchanger import Exchanger  # noqa: F401
 from descope.common import EndpointsV1, OAuthProviders
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
-class OAuth(Exchanger):
+class OAuth:
+    _auth: Auth
+
     def __init__(self, auth: Auth):
-        super().__init__(auth)
+        self._auth = auth
 
     def start(self, provider: str, return_url: str = "") -> dict:
         """ """
@@ -22,6 +23,10 @@ class OAuth(Exchanger):
         response = self._auth.do_get(uri, params, False)
 
         return response.json()
+
+    def exchange_token(self, code: str) -> dict:
+        uri = EndpointsV1.oauthExchangeTokenPath
+        return self._auth.exchange_token(uri, code)
 
     @staticmethod
     def _verify_provider(oauth_provider: str) -> str:
