@@ -116,10 +116,6 @@ class Auth:
         return jwt_response
 
     @staticmethod
-    def _compose_exchange_params(code: str) -> dict:
-        return {"code": code}
-
-    @staticmethod
     def verify_delivery_method(
         method: DeliveryMethod, identifier: str, user: dict
     ) -> bool:
@@ -226,6 +222,10 @@ class Auth:
         resp = response.json()
         auth_info = self._generate_auth_info(resp, refresh_token)
         return auth_info
+
+    @staticmethod
+    def _compose_exchange_params(code: str) -> dict:
+        return {"code": code}
 
     @staticmethod
     def _validate_and_load_public_key(public_key) -> Tuple[str, jwt.PyJWK, str]:
