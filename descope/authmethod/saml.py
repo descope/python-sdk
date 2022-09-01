@@ -1,5 +1,4 @@
 from descope.auth import Auth
-from descope.authmethod.exchanger import Exchanger  # noqa: F401
 from descope.common import EndpointsV1
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
