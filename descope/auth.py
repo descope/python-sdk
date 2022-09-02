@@ -317,7 +317,9 @@ class Auth:
             jwt_response[SESSION_TOKEN_NAME] = self._validate_token(st_jwt)
         rt_jwt = response_body.get("refreshJwt", "")
         if refresh_token:
-            jwt_response[REFRESH_SESSION_TOKEN_NAME] = self._validate_token(refresh_token)
+            jwt_response[REFRESH_SESSION_TOKEN_NAME] = self._validate_token(
+                refresh_token
+            )
         elif rt_jwt:
             jwt_response[REFRESH_SESSION_TOKEN_NAME] = self._validate_token(rt_jwt)
 
@@ -429,13 +431,21 @@ class Auth:
                     try:
                         self._validate_token(refresh_token)
                     except Exception as e:
-                        raise AuthException(401, ERROR_TYPE_INVALID_TOKEN, f"Invalid refresh token: {e}")
+                        raise AuthException(
+                            401, ERROR_TYPE_INVALID_TOKEN, f"Invalid refresh token: {e}"
+                        )
                 else:
-                    raise AuthException(401, ERROR_TYPE_INVALID_TOKEN, "Session token expired and no refresh token provided")
+                    raise AuthException(
+                        401,
+                        ERROR_TYPE_INVALID_TOKEN,
+                        "Session token expired and no refresh token provided",
+                    )
                 # Refresh token is valid now refresh the session token
                 return self.refresh_token(refresh_token)  # return jwt_response dict
             except Exception as e:
-                raise AuthException(500, ERROR_TYPE_INVALID_TOKEN, f"Invalid token: {e}")
+                raise AuthException(
+                    500, ERROR_TYPE_INVALID_TOKEN, f"Invalid token: {e}"
+                )
 
         # If we got here, we did not have a session token so only do the refresh
         try:
