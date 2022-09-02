@@ -20,43 +20,42 @@ class EndpointsV1:
     logoutPath = "/v1/auth/logoutall"
 
     # otp
-    signUpAuthOTPPath = "/v1/auth/signup/otp"
-    signInAuthOTPPath = "/v1/auth/signin/otp"
-    signUpOrInAuthOTPPath = "/v1/auth/sign-up-or-in/otp"
-    verifyCodeAuthPath = "/v1/auth/code/verify"
-    updateUserEmailOTPPath = "/v1/user/update/email/otp"
-    updateUserPhoneOTPPath = "/v1/user/update/phone/otp"
+    signUpAuthOTPPath = "/v1/auth/otp/signup"
+    signInAuthOTPPath = "/v1/auth/otp/signin"
+    signUpOrInAuthOTPPath = "/v1/auth/otp/signup-in"
+    verifyCodeAuthPath = "/v1/auth/otp/verify"
+    updateUserEmailOTPPath = "/v1/auth/otp/update/email"
+    updateUserPhoneOTPPath = "/v1/auth/otp/update/phone"
 
     # magiclink
-    signUpAuthMagicLinkPath = "/v1/auth/signup/magiclink"
-    signInAuthMagicLinkPath = "/v1/auth/signin/magiclink"
-    signUpOrInAuthMagicLinkPath = "/v1/auth/sign-up-or-in/magiclink"
+    signUpAuthMagicLinkPath = "/v1/auth/magiclink/signup"
+    signInAuthMagicLinkPath = "/v1/auth/magiclink/signin"
+    signUpOrInAuthMagicLinkPath = "/v1/auth/magiclink/signup-in"
     verifyMagicLinkAuthPath = "/v1/auth/magiclink/verify"
-    getSessionMagicLinkAuthPath = "/v1/auth/magiclink/session"
-    updateUserEmailMagicLinkPath = "/v1/user/update/email/magiclink"
-    updateUserPhoneMagicLinkPath = "/v1/user/update/phone/magiclink"
+    getSessionMagicLinkAuthPath = "/v1/auth/magiclink/pending-session"
+    updateUserEmailMagicLinkPath = "/v1/auth/magiclink/update/email"
+    updateUserPhoneMagicLinkPath = "/v1/auth/magiclink/update/phone"
 
     # oauth
-    oauthStart = "/v1/oauth/authorize"
+    oauthStart = "/v1/auth/oauth/authorize"
+    oauthExchangeTokenPath = "/v1/auth/oauth/exchange"
 
     # saml
     authSAMLStart = "/v1/auth/saml/authorize"
-
-    # exchange (saml + oauth)
-    exchangeTokenPath = "/v1/auth/exchange"
+    samlExchangeTokenPath = "/v1/auth/saml/exchange"
 
     # totp
-    signUpAuthTOTPPath = "/v1/auth/signup/totp"
-    verifyTOTPPath = "/v1/auth/verify/totp"
-    updateTOTPPath = "/v1/user/update/totp"
+    signUpAuthTOTPPath = "/v1/auth/totp/signup"
+    verifyTOTPPath = "/v1/auth/totp/verify"
+    updateTOTPPath = "/v1/auth/totp/update"
 
     # webauthn
-    signUpAuthWebauthnStart = "/v1/webauthn/signup/start"
-    signUpAuthWebauthnFinish = "/v1/webauthn/signup/finish"
-    signInAuthWebauthnStart = "/v1/webauthn/signin/start"
-    signInAuthWebauthnFinish = "/v1/webauthn/signin/finish"
-    deviceAddAuthWebauthnStart = "/v1/webauthn/device/add/start"
-    deviceAddAuthWebauthnFinish = "/v1/webauthn/device/add/finish"
+    signUpAuthWebauthnStart = "/v1/auth/webauthn/signup/start"
+    signUpAuthWebauthnFinish = "/v1/auth/webauthn/signup/finish"
+    signInAuthWebauthnStart = "/v1/auth/webauthn/signin/start"
+    signInAuthWebauthnFinish = "/v1/auth/webauthn/signin/finish"
+    updateAuthWebauthnStart = "/v1/auth/webauthn/update/start"
+    updateAuthWebauthnFinish = "/v1/auth/webauthn/update/finish"
 
 
 class DeliveryMethod(Enum):

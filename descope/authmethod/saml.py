@@ -1,12 +1,13 @@
 from descope.auth import Auth
-from descope.authmethod.exchanger import Exchanger  # noqa: F401
 from descope.common import EndpointsV1
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
-class SAML(Exchanger):
+class SAML:
+    _auth: Auth
+
     def __init__(self, auth: Auth):
-        super().__init__(auth)
+        self._auth = auth
 
     def start(self, tenant: str, return_url: str = None) -> dict:
         """
@@ -27,6 +28,10 @@ class SAML(Exchanger):
         response = self._auth.do_get(uri, params)
 
         return response.json()
+
+    def exchange_token(self, code: str) -> dict:
+        uri = EndpointsV1.samlExchangeTokenPath
+        return self._auth.exchange_token(uri, code)
 
     @staticmethod
     def _compose_start_params(tenant: str, return_url: str) -> dict:

@@ -24,57 +24,57 @@ class TestOTP(unittest.TestCase):
     def test_compose_signin_url(self):
         self.assertEqual(
             OTP._compose_signin_url(DeliveryMethod.EMAIL),
-            "/v1/auth/signin/otp/email",
+            "/v1/auth/otp/signin/email",
         )
         self.assertEqual(
             OTP._compose_signin_url(DeliveryMethod.PHONE),
-            "/v1/auth/signin/otp/sms",
+            "/v1/auth/otp/signin/sms",
         )
         self.assertEqual(
             OTP._compose_signin_url(DeliveryMethod.WHATSAPP),
-            "/v1/auth/signin/otp/whatsapp",
+            "/v1/auth/otp/signin/whatsapp",
         )
 
     def test_compose_verify_code_url(self):
         self.assertEqual(
             OTP._compose_verify_code_url(DeliveryMethod.EMAIL),
-            "/v1/auth/code/verify/email",
+            "/v1/auth/otp/verify/email",
         )
         self.assertEqual(
             OTP._compose_verify_code_url(DeliveryMethod.PHONE),
-            "/v1/auth/code/verify/sms",
+            "/v1/auth/otp/verify/sms",
         )
         self.assertEqual(
             OTP._compose_verify_code_url(DeliveryMethod.WHATSAPP),
-            "/v1/auth/code/verify/whatsapp",
+            "/v1/auth/otp/verify/whatsapp",
         )
 
     def test_compose_update_phone_url(self):
         self.assertEqual(
             OTP._compose_update_phone_url(DeliveryMethod.EMAIL),
-            "/v1/user/update/phone/otp/email",
+            "/v1/auth/otp/update/phone/email",
         )
         self.assertEqual(
             OTP._compose_update_phone_url(DeliveryMethod.PHONE),
-            "/v1/user/update/phone/otp/sms",
+            "/v1/auth/otp/update/phone/sms",
         )
         self.assertEqual(
             OTP._compose_update_phone_url(DeliveryMethod.WHATSAPP),
-            "/v1/user/update/phone/otp/whatsapp",
+            "/v1/auth/otp/update/phone/whatsapp",
         )
 
     def test_compose_sign_up_or_in_url(self):
         self.assertEqual(
             OTP._compose_sign_up_or_in_url(DeliveryMethod.EMAIL),
-            "/v1/auth/sign-up-or-in/otp/email",
+            "/v1/auth/otp/signup-in/email",
         )
         self.assertEqual(
             OTP._compose_sign_up_or_in_url(DeliveryMethod.PHONE),
-            "/v1/auth/sign-up-or-in/otp/sms",
+            "/v1/auth/otp/signup-in/sms",
         )
         self.assertEqual(
             OTP._compose_sign_up_or_in_url(DeliveryMethod.WHATSAPP),
-            "/v1/auth/sign-up-or-in/otp/whatsapp",
+            "/v1/auth/otp/signup-in/whatsapp",
         )
 
     def test_compose_update_user_phone_body(self):

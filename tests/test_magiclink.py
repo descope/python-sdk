@@ -25,20 +25,20 @@ class TestMagicLink(unittest.TestCase):
     def test_compose_urls(self):
         self.assertEqual(
             MagicLink._compose_signin_url(DeliveryMethod.PHONE),
-            "/v1/auth/signin/magiclink/sms",
+            "/v1/auth/magiclink/signin/sms",
         )
         self.assertEqual(
             MagicLink._compose_signup_url(DeliveryMethod.WHATSAPP),
-            "/v1/auth/signup/magiclink/whatsapp",
+            "/v1/auth/magiclink/signup/whatsapp",
         )
         self.assertEqual(
             MagicLink._compose_sign_up_or_in_url(DeliveryMethod.EMAIL),
-            "/v1/auth/sign-up-or-in/magiclink/email",
+            "/v1/auth/magiclink/signup-in/email",
         )
 
         self.assertEqual(
             MagicLink._compose_update_phone_url(DeliveryMethod.PHONE),
-            "/v1/user/update/phone/magiclink/sms",
+            "/v1/auth/magiclink/update/phone/sms",
         )
 
     def test_compose_body(self):
