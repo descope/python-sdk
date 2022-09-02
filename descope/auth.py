@@ -363,7 +363,7 @@ class Auth:
             raise AuthException(
                 500,
                 ERROR_TYPE_INVALID_TOKEN,
-                f"Token validation received empty token",
+                "Token validation received empty token",
             )
         try:
             unverified_header = jwt.get_unverified_header(token)
@@ -411,7 +411,6 @@ class Auth:
         claims = jwt.decode(jwt=token, key=copy_key[0].key, algorithms=[alg_header])
         claims["jwt"] = token
         return claims
-        
 
     def _validate_and_load_tokens(self, session_token: str, refresh_token: str) -> dict:
         if not session_token and not refresh_token:
@@ -447,7 +446,6 @@ class Auth:
             )
         # Refresh token is valid now refresh the session token
         return self.refresh_token(refresh_token)  # return jwt_response dict
-
 
     @staticmethod
     def _compose_refresh_token_url() -> str:
