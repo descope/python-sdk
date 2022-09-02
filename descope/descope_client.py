@@ -58,6 +58,7 @@ class DescopeClient:
         """
         Validate the session for a given request. If the user is authenticated but the
             session has expired, the session token will automatically be refreshed.
+        Either the session_token or the refresh_token must be provided.
         Call this function every time you make a private API call that requires an authorized
             user.
 
@@ -76,9 +77,8 @@ class DescopeClient:
         )  # return jwt_response dict
 
         # Check if we had to refresh the session token and got a new one
-        if res.get(SESSION_TOKEN_NAME, None) and session_token != res.get(
-            SESSION_TOKEN_NAME
-        ).get("jwt"):
+        if res.get(SESSION_TOKEN_NAME, None) and \
+            session_token != res.get(SESSION_TOKEN_NAME).get("jwt"):
             return res
         else:
             # In such case we return only the data related to the session token
