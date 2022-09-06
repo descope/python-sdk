@@ -57,6 +57,7 @@ class DescopeClient:
         """
         Validate the session for a given request. If the user is authenticated but the
             session has expired, the session token will automatically be refreshed.
+        Either the session_token or the refresh_token must be provided.
         Call this function every time you make a private API call that requires an authorized
             user.
 
