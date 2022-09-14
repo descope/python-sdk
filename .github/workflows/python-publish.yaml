@@ -21,7 +21,7 @@ jobs:
       - name: Build
         uses: descope/.github/.github/actions/python/poetry/build@main
       - name: Publish
-        uses: descope/.github/.github/actions/python/pypi@main
+        uses: descope/.github/.github/actions/python/poetry/publish@main
         with:
-          test: yes
+          test: true
           token: ${{ secrets.PYPI_TEST_TOKEN }}
