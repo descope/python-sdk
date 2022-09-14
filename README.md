@@ -11,13 +11,13 @@ Replace any instance of `<ProjectID>` in the code below with your company's Proj
 Run the following code in your project. These commands will add the Descope ExpresSDK for Python as a project dependency, and set the `DESCOPE_PROJECT_ID` variable to a valid \<ProjectID\>.
 
 ```code
-pip install Descope-Auth
+pip install descope
 export DESCOPE_PROJECT_ID=<ProjectID>
 ```
 
 ## What do you want to implement?
 
-Click one of the following links to open the documentation for that specific functionality.  
+Click one of the following links to open the documentation for that specific functionality.
 
 - [x] [One time passwords (OTP)](./docs/otp.md)
 - [x] [Magic Links](./docs/magiclink.md)

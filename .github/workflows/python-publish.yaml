@@ -1,0 +1,27 @@
+name: Python Publish
+
+on:
+  release:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: read # to detect changes files
+
+jobs:
+  pypi:
+    name: Pypi
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup
+        uses: descope/.github/.github/actions/python/poetry/setup@main
+      - name: Autobump version
+        run: |
+          poetry version $(git describe --tags --abbrev=0)
+      - name: Build
+        uses: descope/.github/.github/actions/python/poetry/build@main
+      - name: Publish
+        uses: descope/.github/.github/actions/python/poetry/publish@main
+        with:
+          test: true
+          token: ${{ secrets.PYPI_TEST_TOKEN }}
