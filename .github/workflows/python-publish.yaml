@@ -23,4 +23,5 @@ jobs:
       - name: Publish
         uses: descope/.github/.github/actions/python/pypi@main
         with:
-          token: ${{ secrets.PYPI_TOKEN }}
+          test: yes
+          token: ${{ secrets.PYPI_TEST_TOKEN }}
