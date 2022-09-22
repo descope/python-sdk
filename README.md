@@ -19,8 +19,8 @@ export DESCOPE_PROJECT_ID=<ProjectID>
 
 Click one of the following links to open the documentation for that specific functionality.
 
-- [x] [One time passwords (OTP)](./docs/otp.md)
-- [x] [Magic Links](./docs/magiclink.md)
+- [x] [One time passwords (OTP)](https://github.com/descope/python-sdk/blob/main/docs/otp.md)
+- [x] [Magic Links](https://github.com/descope/python-sdk/blob/main/docs/magiclink.md)
 
 ## License
 
