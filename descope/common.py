@@ -18,6 +18,7 @@ class EndpointsV1:
     publicKeyPath = "/v1/keys"
     refreshTokenPath = "/v1/auth/refresh"
     logoutPath = "/v1/auth/logoutall"
+    mePath = "/v1/auth/me"
 
     # otp
     signUpAuthOTPPath = "/v1/auth/otp/signup"
