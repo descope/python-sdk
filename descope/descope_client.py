@@ -115,7 +115,8 @@ class DescopeClient:
         Args:
         refresh_token (str): The refresh token
 
-        Return value (requests.Response): returns the response from the Descope server
+        Return value (dict): returns the user details from the server
+            (email:str, name:str, phone:str, externalIds[str], verifiedEmail:bool, verifiedPhone:bool)
 
         Raise:
         AuthException: Exception is raised if session is not authorized or another error occurs
@@ -139,7 +140,7 @@ class DescopeClient:
         Args:
         refresh_token (str): The refresh token
 
-        Return value (requests.Response): returns the response from the Descope server
+        Return value (dict): returns the session token from the server
 
         Raise:
         AuthException: Exception is raised if session is not authorized or another error occurs
