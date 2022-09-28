@@ -132,7 +132,6 @@ class DescopeClient:
         response = self._auth.do_get(uri, None, None, refresh_token)
         return response.json()
 
-
     def refresh_token(self, refresh_token: str) -> dict:
         """
         Return a new session token for the given refresh token

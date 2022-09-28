@@ -83,7 +83,9 @@ class TestDescopeClient(unittest.TestCase):
         with patch("requests.get") as mock_get:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
-            data = json.loads("""{"name": "Testy McTester", "email": "testy@tester.com"}""")
+            data = json.loads(
+                """{"name": "Testy McTester", "email": "testy@tester.com"}"""
+            )
             my_mock_response.json.return_value = data
             mock_get.return_value = my_mock_response
             user_response = client.me(dummy_refresh_token)
