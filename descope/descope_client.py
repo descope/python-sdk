@@ -107,5 +107,41 @@ class DescopeClient:
         uri = EndpointsV1.logoutPath
         return self._auth.do_get(uri, None, None, refresh_token)
 
+    def me(self, refresh_token: str) -> dict:
+        """
+        Retrieve user details for the refresh token. The returned data includes email, name, phone,
+            list of externalIds and boolean flags for verifiedEmail, verifiedPhone.
+
+        Args:
+        refresh_token (str): The refresh token
+
+        Return value (dict): returns the user details from the server
+            (email:str, name:str, phone:str, externalIds[str], verifiedEmail:bool, verifiedPhone:bool)
+
+        Raise:
+        AuthException: Exception is raised if session is not authorized or another error occurs
+        """
+        if refresh_token is None:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                f"signed refresh token {refresh_token} is empty",
+            )
+
+        uri = EndpointsV1.mePath
+        response = self._auth.do_get(uri, None, None, refresh_token)
+        return response.json()
+
     def refresh_token(self, refresh_token: str) -> dict:
+        """
+        Return a new session token for the given refresh token
+
+        Args:
+        refresh_token (str): The refresh token
+
+        Return value (dict): returns the session token from the server
+
+        Raise:
+        AuthException: Exception is raised if session is not authorized or another error occurs
+        """
         return self._auth.refresh_token(refresh_token)

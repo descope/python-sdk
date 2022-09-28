@@ -68,6 +68,30 @@ class TestDescopeClient(unittest.TestCase):
             mock_get.return_value.ok = True
             self.assertIsNotNone(client.logout(dummy_refresh_token))
 
+    def test_me(self):
+        dummy_refresh_token = ""
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
+
+        self.assertRaises(AuthException, client.me, None)
+
+        # Test failed flow
+        with patch("requests.get") as mock_get:
+            mock_get.return_value.ok = False
+            self.assertRaises(AuthException, client.me, dummy_refresh_token)
+
+        # Test success flow
+        with patch("requests.get") as mock_get:
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            data = json.loads(
+                """{"name": "Testy McTester", "email": "testy@tester.com"}"""
+            )
+            my_mock_response.json.return_value = data
+            mock_get.return_value = my_mock_response
+            user_response = client.me(dummy_refresh_token)
+            self.assertIsNotNone(user_response)
+            self.assertEqual(data["name"], user_response["name"])
+
     def test_validate_session(self):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)
 
