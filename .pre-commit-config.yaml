@@ -28,29 +28,12 @@ repos:
     rev: 3.9.2
     hooks:
       - id: flake8
-  - repo: https://github.com/dhatim/python-license-check
-    rev: 0.7.2
-    hooks:
-      - id: liccheck
-        language: system
-        args: ["-r./requirements-dev.txt", "-lparanoid"]
   - repo: https://github.com/python-poetry/poetry
-    rev: 1.2.0 # add version here
+    rev: 1.2.1 # add version here
     hooks:
       - id: poetry-check
       - id: poetry-lock
       - id: poetry-export
-        args: ["-f", "requirements.txt", "-o", "requirements.txt"]
-      - id: poetry-export
-        args:
-          [
-            "-f",
-            "requirements.txt",
-            "-o",
-            "requirements-dev.txt",
-            "--only",
-            "dev",
-          ]
   - repo: local
     hooks:
       - id: print_statement
@@ -58,3 +41,13 @@ repos:
         types: [python]
         entry: "print"
         language: pygrep
+  - repo: https://github.com/dhatim/python-license-check
+    rev: 0.7.2
+    hooks:
+      - id: liccheck
+        language: system
+        args: ["-r./requirements.txt", "-lparanoid"]
+  - repo: https://github.com/pre-commit/pre-commit
+    rev: v2.20.0
+    hooks:
+      - id: validate_manifest
