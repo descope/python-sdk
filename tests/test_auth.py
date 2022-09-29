@@ -239,6 +239,19 @@ class TestAuth(unittest.TestCase):
                 dummy_refresh_token,
             )
 
+    def test_exchange_access_key(self):
+        dummy_access_key = "dummy access key"
+        auth = Auth(self.dummy_project_id, self.public_key_dict)
+
+        # Test fail flow
+        with patch("requests.get") as mock_request:
+            mock_request.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                auth.exchange_access_key,
+                dummy_access_key,
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
