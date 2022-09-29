@@ -20,6 +20,9 @@ class EndpointsV1:
     logoutPath = "/v1/auth/logoutall"
     mePath = "/v1/auth/me"
 
+    # accesskey
+    exchangeAuthAccessKeyPath = "/v1/auth/accesskey/exchange"
+
     # otp
     signUpAuthOTPPath = "/v1/auth/otp/signup"
     signInAuthOTPPath = "/v1/auth/otp/signin"

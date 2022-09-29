@@ -222,6 +222,17 @@ class Auth:
         resp = response.json()
         return self._generate_auth_info(resp, refresh_token)
 
+    def exchange_access_key(self, access_key: str) -> dict:
+        uri = Auth._compose_exchange_access_key_url()
+        server_response = self.do_get(uri, None, None, access_key)
+        json = server_response.json()
+        result = {
+            SESSION_TOKEN_NAME: self._validate_token(json.get("sessionJwt", "")),
+            "keyId": json.get("keyId", ""),
+            "exp": json.get("expiration", 0),
+        }
+        return result
+
     @staticmethod
     def _compose_exchange_params(code: str) -> dict:
         return {"code": code}
@@ -460,3 +471,7 @@ class Auth:
     @staticmethod
     def _compose_refresh_token_url() -> str:
         return EndpointsV1.refreshTokenPath
+
+    @staticmethod
+    def _compose_exchange_access_key_url() -> str:
+        return EndpointsV1.exchangeAuthAccessKeyPath

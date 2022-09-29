@@ -145,3 +145,23 @@ class DescopeClient:
         AuthException: Exception is raised if session is not authorized or another error occurs
         """
         return self._auth.refresh_token(refresh_token)
+
+    def exchange_access_key(self, access_key: str) -> dict:
+        """
+        Return a new session token for the given access key
+
+        Args:
+        access_key (str): The access key
+
+        Return value (dict): returns the session token from the server together with the expiry and key id
+            (sessionToken:dict, keyId:str, expiration:int)
+
+        Raise:
+        AuthException: Exception is raised if access key is not valid or another error occurs
+        """
+        if not access_key:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Access key cannot be empty"
+            )
+
+        return self._auth.exchange_access_key(access_key)
