@@ -159,4 +159,9 @@ class DescopeClient:
         Raise:
         AuthException: Exception is raised if access key is not valid or another error occurs
         """
+        if not access_key:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Access key cannot be empty"
+            )
+
         return self._auth.exchange_access_key(access_key)
