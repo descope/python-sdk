@@ -323,6 +323,27 @@ class Auth:
         elif rt_jwt:
             jwt_response[REFRESH_SESSION_TOKEN_NAME] = self._validate_token(rt_jwt)
 
+        if jwt_response.get(SESSION_TOKEN_NAME, None):
+            jwt_response["permissions"] = jwt_response.get(SESSION_TOKEN_NAME).get(
+                "permissions", []
+            )
+            jwt_response["roles"] = jwt_response.get(SESSION_TOKEN_NAME).get(
+                "roles", []
+            )
+            jwt_response["tenants"] = jwt_response.get(SESSION_TOKEN_NAME).get(
+                "tenants", {}
+            )
+        elif jwt_response.get(REFRESH_SESSION_TOKEN_NAME, None):
+            jwt_response["permissions"] = jwt_response.get(
+                REFRESH_SESSION_TOKEN_NAME
+            ).get("permissions", [])
+            jwt_response["roles"] = jwt_response.get(REFRESH_SESSION_TOKEN_NAME).get(
+                "roles", []
+            )
+            jwt_response["tenants"] = jwt_response.get(REFRESH_SESSION_TOKEN_NAME).get(
+                "tenants", {}
+            )
+
         jwt_response[COOKIE_DATA_NAME] = {
             "exp": response_body.get("cookieExpiration", 0),
             "maxAge": response_body.get("cookieMaxAge", 0),
@@ -342,7 +363,6 @@ class Auth:
             "sub", None
         ) or jwt_response.get(REFRESH_SESSION_TOKEN_NAME, {}).get("sub", None)
 
-        jwt_response["tenants"] = response_body.get("tenants", {})
         jwt_response["projectId"] = projectId
         jwt_response["userId"] = user_id
         jwt_response["user"] = response_body.get("user", {})

@@ -92,7 +92,7 @@ def descope_signin_otp_by_email(descope_client):
     return decorator
 
 
-def descope_validate_auth(descope_client):
+def descope_validate_auth(descope_client, permissions=[], tenant=""):
     """
     Test if Access Token is valid
     """
@@ -110,6 +110,19 @@ def descope_validate_auth(descope_client):
 
             except AuthException:
                 return Response("Access denied", 401)
+
+            if permissions:
+                if tenant:
+                    valid_permissions = descope_client.validate_tenant_permissions(
+                        jwt_response, permissions
+                    )
+                else:
+                    valid_permissions = descope_client.validate_permissions(
+                        jwt_response, permissions
+                    )
+
+                if not valid_permissions:
+                    return Response("Access denied", 401)
 
             # Save the claims on the context execute the original API
             _request_ctx_stack.top.claims = jwt_response
