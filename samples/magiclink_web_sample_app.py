@@ -126,7 +126,7 @@ def verify_by_decorator(*args, **kwargs):
 
 # This needs authentication
 @APP.route("/api/private")
-@descope_validate_auth(descope_client)
+@descope_validate_auth(descope_client, permissions=["Perm 1"])
 def private():
     response = "This is a private API and you must be authenticated to see this"
     return jsonify(message=response)

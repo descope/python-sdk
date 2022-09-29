@@ -338,6 +338,70 @@ class TestDescopeClient(unittest.TestCase):
         self.assertIsNotNone(client.saml, "Empty saml object")
         self.assertIsNotNone(client.webauthn, "Empty webauthN object")
 
+    def test_validate_permissions(self):
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
+        jwt_response = {}
+        self.assertFalse(client.validate_permissions(jwt_response, ["Perm 1"]))
+
+        jwt_response = {"permissions": []}
+        self.assertFalse(client.validate_permissions(jwt_response, ["Perm 1"]))
+        self.assertTrue(client.validate_permissions(jwt_response, []))
+
+        jwt_response = {"permissions": ["Perm 1"]}
+        self.assertTrue(client.validate_permissions(jwt_response, "Perm 1"))
+        self.assertTrue(client.validate_permissions(jwt_response, ["Perm 1"]))
+        self.assertFalse(client.validate_permissions(jwt_response, ["Perm 2"]))
+
+        # Tenant level
+        jwt_response = {"tenants": {}}
+        self.assertFalse(
+            client.validate_tenant_permissions(jwt_response, "t1", ["Perm 2"])
+        )
+
+        jwt_response = {"tenants": {"t1": {}}}
+        self.assertFalse(
+            client.validate_tenant_permissions(jwt_response, "t1", ["Perm 2"])
+        )
+
+        jwt_response = {"tenants": {"t1": {"roles": "Perm 1"}}}
+        self.assertTrue(
+            client.validate_tenant_permissions(jwt_response, "t1", ["Perm 1"])
+        )
+        self.assertFalse(
+            client.validate_tenant_permissions(jwt_response, "t1", ["Perm 2"])
+        )
+        self.assertFalse(
+            client.validate_tenant_permissions(jwt_response, "t1", ["Perm 1", "Perm 2"])
+        )
+
+    def test_validate_roles(self):
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
+        jwt_response = {}
+        self.assertFalse(client.validate_roles(jwt_response, ["Role 1"]))
+
+        jwt_response = {"roles": []}
+        self.assertFalse(client.validate_roles(jwt_response, ["Role 1"]))
+        self.assertTrue(client.validate_roles(jwt_response, []))
+
+        jwt_response = {"roles": ["Role 1"]}
+        self.assertTrue(client.validate_roles(jwt_response, "Role 1"))
+        self.assertTrue(client.validate_roles(jwt_response, ["Role 1"]))
+        self.assertFalse(client.validate_roles(jwt_response, ["Role 2"]))
+
+        # Tenant level
+        jwt_response = {"tenants": {}}
+        self.assertFalse(client.validate_tenant_roles(jwt_response, "t1", ["Perm 2"]))
+
+        jwt_response = {"tenants": {"t1": {}}}
+        self.assertFalse(client.validate_tenant_roles(jwt_response, "t1", ["Perm 2"]))
+
+        jwt_response = {"tenants": {"t1": {"roles": "Perm 1"}}}
+        self.assertTrue(client.validate_tenant_roles(jwt_response, "t1", ["Perm 1"]))
+        self.assertFalse(client.validate_tenant_roles(jwt_response, "t1", ["Perm 2"]))
+        self.assertFalse(
+            client.validate_tenant_roles(jwt_response, "t1", ["Perm 1", "Perm 2"])
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
