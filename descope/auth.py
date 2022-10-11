@@ -220,7 +220,6 @@ class Auth:
         response = self.do_get(uri, None, None, refresh_token)
 
         resp = response.json()
-        # return self._generate_auth_info(resp, refresh_token)
         return self.generate_jwt_response(resp, refresh_token)
 
     def exchange_access_key(self, access_key: str) -> dict:
@@ -323,6 +322,7 @@ class Auth:
                 pass
 
     def adjust_properties(self, jwt_response: dict):
+        # Save permissions, roles and tenants info from Session token or from refresh token on the json top level
         if jwt_response.get(SESSION_TOKEN_NAME, None):
             jwt_response["permissions"] = jwt_response.get(SESSION_TOKEN_NAME).get(
                 "permissions", []
@@ -344,9 +344,12 @@ class Auth:
                 "tenants", {}
             )
 
+        # Save the projectID also in the dict top level
         jwt_response["projectId"] = jwt_response.get(SESSION_TOKEN_NAME, {}).get(
             "iss", None
         ) or jwt_response.get(REFRESH_SESSION_TOKEN_NAME, {}).get("iss", None)
+
+        # Save the userID also in the dict top level
         jwt_response["userId"] = jwt_response.get(SESSION_TOKEN_NAME, {}).get(
             "sub", None
         ) or jwt_response.get(REFRESH_SESSION_TOKEN_NAME, {}).get("sub", None)
