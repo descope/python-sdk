@@ -219,7 +219,7 @@ class DescopeClient:
             )
 
         uri = EndpointsV1.mePath
-        response = self._auth.do_get(uri, None, None, refresh_token)
+        response = self._auth.do_post(uri, {}, refresh_token)
         return response.json()
 
     def refresh_token(self, refresh_token: str) -> dict:
