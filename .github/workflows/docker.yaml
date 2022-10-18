@@ -4,7 +4,7 @@ on:
   push:
 
 env:
-  image_name: ${{ github.repository }}
+  image_name: descope/py-example
 
 permissions:
   contents: read
