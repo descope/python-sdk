@@ -172,11 +172,11 @@ class DescopeClient:
             return res
         else:
             # In such case we return only the data related to the session token
-            return {SESSION_TOKEN_NAME: res}
+            return self._auth.adjust_properties({SESSION_TOKEN_NAME: res})
 
     def logout(self, refresh_token: str) -> requests.Response:
         """
-        Logout user from all active devices and revoke the refresh_token. After calling this function,
+        Logout user from all active sessions and revoke the refresh_token. After calling this function,
             you must invalidate or remove any cookies you have created.
 
         Args:
@@ -195,7 +195,7 @@ class DescopeClient:
             )
 
         uri = EndpointsV1.logoutPath
-        return self._auth.do_get(uri, None, None, refresh_token)
+        return self._auth.do_post(uri, {}, refresh_token)
 
     def me(self, refresh_token: str) -> dict:
         """
