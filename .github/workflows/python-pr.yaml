@@ -1,7 +1,7 @@
 name: Python
 
 on:
-  pull_request:
+  push:
 
 env:
   image_name: ${{ github.repository }}
