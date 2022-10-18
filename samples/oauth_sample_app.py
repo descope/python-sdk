@@ -19,7 +19,7 @@ def main():
         descope_client = DescopeClient(project_id=project_id)
 
         logging.info("Going to login with Oauth auth method ...")
-        resp = descope_client.oauth.start("facebook", "www.google.com")
+        resp = descope_client.oauth.start("facebook", "https://www.google.com")
         logging.info(f"oauth response: {resp}")
 
         code = input("Please insert the code you received from redirect URI:\n")
