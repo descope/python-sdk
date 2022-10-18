@@ -220,7 +220,7 @@ class Auth:
         response = self.do_get(uri, None, None, refresh_token)
 
         resp = response.json()
-        return self._generate_auth_info(resp, refresh_token)
+        return self.generate_jwt_response(resp, refresh_token)
 
     def exchange_access_key(self, access_key: str) -> dict:
         uri = Auth._compose_exchange_access_key_url()
@@ -321,19 +321,8 @@ class Auth:
                 # just continue to the next key
                 pass
 
-    def _generate_auth_info(self, response_body: dict, refresh_token: str) -> dict:
-        jwt_response = {}
-        st_jwt = response_body.get("sessionJwt", "")
-        if st_jwt:
-            jwt_response[SESSION_TOKEN_NAME] = self._validate_token(st_jwt)
-        rt_jwt = response_body.get("refreshJwt", "")
-        if refresh_token:
-            jwt_response[REFRESH_SESSION_TOKEN_NAME] = self._validate_token(
-                refresh_token
-            )
-        elif rt_jwt:
-            jwt_response[REFRESH_SESSION_TOKEN_NAME] = self._validate_token(rt_jwt)
-
+    def adjust_properties(self, jwt_response: dict):
+        # Save permissions, roles and tenants info from Session token or from refresh token on the json top level
         if jwt_response.get(SESSION_TOKEN_NAME, None):
             jwt_response["permissions"] = jwt_response.get(SESSION_TOKEN_NAME).get(
                 "permissions", []
@@ -355,6 +344,33 @@ class Auth:
                 "tenants", {}
             )
 
+        # Save the projectID also in the dict top level
+        jwt_response["projectId"] = jwt_response.get(SESSION_TOKEN_NAME, {}).get(
+            "iss", None
+        ) or jwt_response.get(REFRESH_SESSION_TOKEN_NAME, {}).get("iss", None)
+
+        # Save the userID also in the dict top level
+        jwt_response["userId"] = jwt_response.get(SESSION_TOKEN_NAME, {}).get(
+            "sub", None
+        ) or jwt_response.get(REFRESH_SESSION_TOKEN_NAME, {}).get("sub", None)
+
+        return jwt_response
+
+    def _generate_auth_info(self, response_body: dict, refresh_token: str) -> dict:
+        jwt_response = {}
+        st_jwt = response_body.get("sessionJwt", "")
+        if st_jwt:
+            jwt_response[SESSION_TOKEN_NAME] = self._validate_token(st_jwt)
+        rt_jwt = response_body.get("refreshJwt", "")
+        if refresh_token:
+            jwt_response[REFRESH_SESSION_TOKEN_NAME] = self._validate_token(
+                refresh_token
+            )
+        elif rt_jwt:
+            jwt_response[REFRESH_SESSION_TOKEN_NAME] = self._validate_token(rt_jwt)
+
+        jwt_response = self.adjust_properties(jwt_response)
+
         jwt_response[COOKIE_DATA_NAME] = {
             "exp": response_body.get("cookieExpiration", 0),
             "maxAge": response_body.get("cookieMaxAge", 0),
@@ -367,15 +383,6 @@ class Auth:
     def generate_jwt_response(self, response_body: dict, refresh_cookie: str) -> dict:
         jwt_response = self._generate_auth_info(response_body, refresh_cookie)
 
-        projectId = jwt_response.get(SESSION_TOKEN_NAME, {}).get(
-            "iss", None
-        ) or jwt_response.get(REFRESH_SESSION_TOKEN_NAME, {}).get("iss", None)
-        user_id = jwt_response.get(SESSION_TOKEN_NAME, {}).get(
-            "sub", None
-        ) or jwt_response.get(REFRESH_SESSION_TOKEN_NAME, {}).get("sub", None)
-
-        jwt_response["projectId"] = projectId
-        jwt_response["userId"] = user_id
         jwt_response["user"] = response_body.get("user", {})
         jwt_response["firstSeen"] = response_body.get("firstSeen", True)
         return jwt_response

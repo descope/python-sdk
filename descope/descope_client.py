@@ -172,7 +172,7 @@ class DescopeClient:
             return res
         else:
             # In such case we return only the data related to the session token
-            return {SESSION_TOKEN_NAME: res}
+            return self._auth.adjust_properties({SESSION_TOKEN_NAME: res})
 
     def logout(self, refresh_token: str) -> requests.Response:
         """
