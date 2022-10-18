@@ -1,0 +1,30 @@
+name: Docker
+
+on:
+  push:
+
+env:
+  image_name: ${{ github.repository }}
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  pkg:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Docker Login
+        uses: descope/.github/.github/actions/docker/login@main
+        with:
+          ghcr_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker Build
+        uses: descope/.github/.github/actions/docker/build@main
+        with:
+          push: true
+          image-name: |
+            ghcr.io/${{ env.image_name }}

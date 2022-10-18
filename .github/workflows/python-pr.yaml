@@ -1,14 +1,10 @@
 name: Python
 
 on:
-  push:
-
-env:
-  image_name: ${{ github.repository }}
+  pull_request:
 
 permissions:
   contents: read
-  packages: write
   pull-requests: write
 
 jobs:
@@ -47,21 +43,3 @@ jobs:
           echo "Coverage Tests - ${{ steps.coverageComment.outputs.tests }}"
           echo "Coverage Time - ${{ steps.coverageComment.outputs.time }}"
           echo "Not Success Test Info - ${{ steps.coverageComment.outputs.notSuccessTestInfo }}"
-
-  pkg:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Docker Login
-        uses: descope/.github/.github/actions/docker/login@main
-        with:
-          ghcr_token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Docker Build
-        uses: descope/.github/.github/actions/docker/build@main
-        with:
-          push: true
-          image-name: |
-            ghcr.io/${{ env.image_name }}
