@@ -107,8 +107,8 @@ class Auth:
                 "exchange code is empty",
             )
 
-        params = Auth._compose_exchange_params(code)
-        response = self.do_get(uri, params, False)
+        body = Auth._compose_exchange_body(code)
+        response = self.do_post(uri, body)
         resp = response.json()
         jwt_response = self.generate_jwt_response(
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
@@ -234,7 +234,7 @@ class Auth:
         return result
 
     @staticmethod
-    def _compose_exchange_params(code: str) -> dict:
+    def _compose_exchange_body(code: str) -> dict:
         return {"code": code}
 
     @staticmethod
