@@ -217,14 +217,14 @@ class Auth:
 
     def refresh_token(self, refresh_token: str) -> dict:
         uri = Auth._compose_refresh_token_url()
-        response = self.do_get(uri, None, None, refresh_token)
+        response = self.do_post(uri, {}, refresh_token)
 
         resp = response.json()
         return self.generate_jwt_response(resp, refresh_token)
 
     def exchange_access_key(self, access_key: str) -> dict:
         uri = Auth._compose_exchange_access_key_url()
-        server_response = self.do_get(uri, None, None, access_key)
+        server_response = self.do_post(uri, {}, access_key)
         json = server_response.json()
         result = {
             SESSION_TOKEN_NAME: self._validate_token(json.get("sessionJwt", "")),
