@@ -341,7 +341,7 @@ class TestDescopeClient(unittest.TestCase):
     def test_validate_permissions(self):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)
         jwt_response = {}
-        self.assertFalse(client.validate_permissions(jwt_response, ["Perm 1"]))
+        self.assertTrue(client.validate_permissions(jwt_response, ["Perm 1"]))
 
         jwt_response = {"permissions": []}
         self.assertFalse(client.validate_permissions(jwt_response, ["Perm 1"]))
