@@ -59,13 +59,13 @@ class TestDescopeClient(unittest.TestCase):
         self.assertRaises(AuthException, client.logout, None)
 
         # Test failed flow
-        with patch("requests.get") as mock_get:
-            mock_get.return_value.ok = False
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
             self.assertRaises(AuthException, client.logout, dummy_refresh_token)
 
         # Test success flow
-        with patch("requests.get") as mock_get:
-            mock_get.return_value.ok = True
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
             self.assertIsNotNone(client.logout(dummy_refresh_token))
 
     def test_me(self):
@@ -363,7 +363,7 @@ class TestDescopeClient(unittest.TestCase):
             client.validate_tenant_permissions(jwt_response, "t1", ["Perm 2"])
         )
 
-        jwt_response = {"tenants": {"t1": {"roles": "Perm 1"}}}
+        jwt_response = {"tenants": {"t1": {"permissions": "Perm 1"}}}
         self.assertTrue(
             client.validate_tenant_permissions(jwt_response, "t1", ["Perm 1"])
         )
@@ -395,11 +395,11 @@ class TestDescopeClient(unittest.TestCase):
         jwt_response = {"tenants": {"t1": {}}}
         self.assertFalse(client.validate_tenant_roles(jwt_response, "t1", ["Perm 2"]))
 
-        jwt_response = {"tenants": {"t1": {"roles": "Perm 1"}}}
-        self.assertTrue(client.validate_tenant_roles(jwt_response, "t1", ["Perm 1"]))
-        self.assertFalse(client.validate_tenant_roles(jwt_response, "t1", ["Perm 2"]))
+        jwt_response = {"tenants": {"t1": {"roles": "Role 1"}}}
+        self.assertTrue(client.validate_tenant_roles(jwt_response, "t1", ["Role 1"]))
+        self.assertFalse(client.validate_tenant_roles(jwt_response, "t1", ["Role 2"]))
         self.assertFalse(
-            client.validate_tenant_roles(jwt_response, "t1", ["Perm 1", "Perm 2"])
+            client.validate_tenant_roles(jwt_response, "t1", ["Role 1", "Role 2"])
         )
 
 
