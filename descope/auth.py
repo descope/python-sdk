@@ -91,6 +91,7 @@ class Auth:
             f"{self.base_url}{uri}",
             headers=self._get_default_headers(pswd),
             data=json.dumps(body),
+            allow_redirects=False,
             verify=self.secure,
         )
         if not response.ok:
@@ -129,7 +130,7 @@ class Auth:
             if not user.get("email", None):
                 user["email"] = identifier
             try:
-                validate_email(user["email"])
+                validate_email(email=user["email"], check_deliverability=False)
                 return True
             except EmailNotValidError:
                 return False
@@ -190,7 +191,7 @@ class Auth:
             )
 
         try:
-            validate_email(email)
+            validate_email(email=email, check_deliverability=False)
         except EmailNotValidError as ex:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, f"Invalid email address: {ex}"

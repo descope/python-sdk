@@ -80,7 +80,7 @@ class TestOAuth(unittest.TestCase):
             )
 
     def test_compose_exchange_params(self):
-        self.assertEqual(Auth._compose_exchange_params("c1"), {"code": "c1"})
+        self.assertEqual(Auth._compose_exchange_body("c1"), {"code": "c1"})
 
     def test_exchange_token(self):
         oauth = OAuth(Auth(self.dummy_project_id, self.public_key_dict))

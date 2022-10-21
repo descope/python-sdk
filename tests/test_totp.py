@@ -123,6 +123,7 @@ class TestTOTP(unittest.TestCase):
                     "Authorization": f"Bearer {self.dummy_project_id}:{valid_jwt_token}",
                 },
                 data=json.dumps({"externalId": "dummy@dummy.com"}),
+                allow_redirects=False,
                 verify=True,
             )
             self.assertEqual(res, valid_response)

@@ -1,3 +1,5 @@
+from typing import List
+
 import requests
 
 from descope.auth import Auth  # noqa: F401
@@ -53,21 +55,21 @@ class DescopeClient:
     def webauthn(self):
         return self._webauthn
 
-    def validate_permissions(self, jwt_response: dict, permissions: list[str]) -> bool:
+    def validate_permissions(self, jwt_response: dict, permissions: List[str]) -> bool:
         """
         Validate that a jwt_response has been granted the specified permissions.
             For a multi-tenant environment use validate_tenant_permissions function
 
         Args:
         jwt_response (dict): The jwt_response object which includes all JWT claims information
-        permissions (list[str]): List of permissions to validate for this jwt_response
+        permissions (List[str]): List of permissions to validate for this jwt_response
 
         Return value (bool): returns true if all permissions granted; false if at least one permission not granted
         """
         return self.validate_tenant_permissions(jwt_response, "", permissions)
 
     def validate_tenant_permissions(
-        self, jwt_response: dict, tenant: str, permissions: list[str]
+        self, jwt_response: dict, tenant: str, permissions: List[str]
     ) -> bool:
         """
         Validate that a jwt_response has been granted the specified permissions on the specified tenant.
@@ -76,7 +78,7 @@ class DescopeClient:
         Args:
         jwt_response (dict): The jwt_response object which includes all JWT claims information
         tenant (str): TenantId
-        permissions (list[str]): List of permissions to validate for this jwt_response
+        permissions (List[str]): List of permissions to validate for this jwt_response
 
         Return value (bool): returns true if all permissions granted; false if at least one permission not granted
         """
@@ -99,21 +101,21 @@ class DescopeClient:
                 return False
         return True
 
-    def validate_roles(self, jwt_response: dict, roles: list[str]) -> bool:
+    def validate_roles(self, jwt_response: dict, roles: List[str]) -> bool:
         """
         Validate that a jwt_response has been granted the specified roles.
             For a multi-tenant environment use validate_tenant_roles function
 
         Args:
         jwt_response (dict): The jwt_response object which includes all JWT claims information
-        roles (list[str]): List of roles to validate for this jwt_response
+        roles (List[str]): List of roles to validate for this jwt_response
 
         Return value (bool): returns true if all roles granted; false if at least one role not granted
         """
         return self.validate_tenant_roles(jwt_response, "", roles)
 
     def validate_tenant_roles(
-        self, jwt_response: dict, tenant: str, roles: list[str]
+        self, jwt_response: dict, tenant: str, roles: List[str]
     ) -> bool:
         """
         Validate that a jwt_response has been granted the specified roles on the specified tenant.
@@ -122,7 +124,7 @@ class DescopeClient:
         Args:
         jwt_response (dict): The jwt_response object which includes all JWT claims information
         tenant (str): TenantId
-        roles (list[str]): List of roles to validate for this jwt_response
+        roles (List[str]): List of roles to validate for this jwt_response
 
         Return value (bool): returns true if all roles granted; false if at least one role not granted
         """
