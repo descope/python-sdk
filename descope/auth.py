@@ -91,6 +91,7 @@ class Auth:
             f"{self.base_url}{uri}",
             headers=self._get_default_headers(pswd),
             data=json.dumps(body),
+            allow_redirects=False,
             verify=self.secure,
         )
         if not response.ok:

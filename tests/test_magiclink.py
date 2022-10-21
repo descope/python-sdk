@@ -258,6 +258,7 @@ class TestMagicLink(unittest.TestCase):
                         "crossDevice": True,
                     }
                 ),
+                allow_redirects=False,
                 verify=True,
             )
             self.assertEqual(res["pendingRef"], "aaaa")
@@ -291,6 +292,7 @@ class TestMagicLink(unittest.TestCase):
                         "email": "dummy@dummy.com",
                     }
                 ),
+                allow_redirects=False,
                 verify=True,
             )
             self.assertEqual(res["pendingRef"], "aaaa")
@@ -321,6 +323,7 @@ class TestMagicLink(unittest.TestCase):
                         "crossDevice": True,
                     }
                 ),
+                allow_redirects=False,
                 verify=True,
             )
 
