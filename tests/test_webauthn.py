@@ -99,6 +99,7 @@ class TestWebauthN(unittest.TestCase):
                 data=json.dumps(
                     {"user": {"externalId": "id1"}, "origin": "https://example.com"}
                 ),
+                allow_redirects=False,
                 verify=True,
             )
             self.assertEqual(res, valid_response)
@@ -145,6 +146,7 @@ class TestWebauthN(unittest.TestCase):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 data=json.dumps({"transactionId": "t01", "response": "response01"}),
+                allow_redirects=False,
                 verify=True,
             )
             self.assertIsNotNone(webauthn.sign_up_finish("t01", "response01"))
@@ -191,6 +193,7 @@ class TestWebauthN(unittest.TestCase):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 data=json.dumps({"externalId": "id1", "origin": "https://example.com"}),
+                allow_redirects=False,
                 verify=True,
             )
             self.assertEqual(res, valid_response),
@@ -230,6 +233,7 @@ class TestWebauthN(unittest.TestCase):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 data=json.dumps({"transactionId": "t01", "response": "response01"}),
+                allow_redirects=False,
                 verify=True,
             )
             self.assertIsNotNone(webauthn.sign_up_finish("t01", "response01"))
@@ -298,6 +302,7 @@ class TestWebauthN(unittest.TestCase):
                 data=json.dumps(
                     {"externalId": "dummy@dummy.com", "origin": "https://example.com"}
                 ),
+                allow_redirects=False,
                 verify=True,
             )
             self.assertEqual(res, valid_response)
@@ -336,6 +341,7 @@ class TestWebauthN(unittest.TestCase):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 data=json.dumps({"transactionId": "t01", "response": "response01"}),
+                allow_redirects=False,
                 verify=True,
             )
             self.assertIsNotNone(webauthn.sign_up_finish("t01", "response01"))

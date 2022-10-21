@@ -231,7 +231,7 @@ class TestAuth(unittest.TestCase):
         auth = Auth(self.dummy_project_id, self.public_key_dict)
 
         # Test fail flow
-        with patch("requests.get") as mock_request:
+        with patch("requests.post") as mock_request:
             mock_request.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -244,7 +244,7 @@ class TestAuth(unittest.TestCase):
         auth = Auth(self.dummy_project_id, self.public_key_dict)
 
         # Test fail flow
-        with patch("requests.get") as mock_request:
+        with patch("requests.post") as mock_request:
             mock_request.return_value.ok = False
             self.assertRaises(
                 AuthException,

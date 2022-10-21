@@ -91,6 +91,7 @@ class Auth:
             f"{self.base_url}{uri}",
             headers=self._get_default_headers(pswd),
             data=json.dumps(body),
+            allow_redirects=False,
             verify=self.secure,
         )
         if not response.ok:
@@ -107,8 +108,8 @@ class Auth:
                 "exchange code is empty",
             )
 
-        params = Auth._compose_exchange_params(code)
-        response = self.do_get(uri, params, False)
+        body = Auth._compose_exchange_body(code)
+        response = self.do_post(uri, body)
         resp = response.json()
         jwt_response = self.generate_jwt_response(
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
@@ -129,7 +130,7 @@ class Auth:
             if not user.get("email", None):
                 user["email"] = identifier
             try:
-                validate_email(user["email"])
+                validate_email(email=user["email"], check_deliverability=False)
                 return True
             except EmailNotValidError:
                 return False
@@ -190,7 +191,7 @@ class Auth:
             )
 
         try:
-            validate_email(email)
+            validate_email(email=email, check_deliverability=False)
         except EmailNotValidError as ex:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, f"Invalid email address: {ex}"
@@ -217,14 +218,14 @@ class Auth:
 
     def refresh_token(self, refresh_token: str) -> dict:
         uri = Auth._compose_refresh_token_url()
-        response = self.do_get(uri, None, None, refresh_token)
+        response = self.do_post(uri, {}, refresh_token)
 
         resp = response.json()
         return self.generate_jwt_response(resp, refresh_token)
 
     def exchange_access_key(self, access_key: str) -> dict:
         uri = Auth._compose_exchange_access_key_url()
-        server_response = self.do_get(uri, None, None, access_key)
+        server_response = self.do_post(uri, {}, access_key)
         json = server_response.json()
         result = {
             SESSION_TOKEN_NAME: self._validate_token(json.get("sessionJwt", "")),
@@ -234,7 +235,7 @@ class Auth:
         return result
 
     @staticmethod
-    def _compose_exchange_params(code: str) -> dict:
+    def _compose_exchange_body(code: str) -> dict:
         return {"code": code}
 
     @staticmethod
