@@ -19,16 +19,15 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Build coverage file
+      - name: Run tests
         run: |
-          poetry run pytest --junitxml=/tmp/pytest.xml --cov-report=term-missing:skip-covered --cov=descope tests/ | tee /tmp/pytest-coverage.txt
+          poetry run pytest --junitxml=/tmp/pytest.xml --cov-report=term-missing:skip-covered --cov=descope tests/ --cov-report=xml:/tmp/cov.xml
 
-      - name: Pytest coverage comment
+      - name: Post Pytest coverage comment
         id: coverageComment
         uses: MishaKav/pytest-coverage-comment@main
         with:
-          pytest-coverage-path: /tmp/pytest-coverage.txt
-          junitxml-path: /tmp/pytest.xml
+          pytest-xml-coverage-path: /tmp/cov.xml
           create-new-comment: false
 
       - name: Coverage
