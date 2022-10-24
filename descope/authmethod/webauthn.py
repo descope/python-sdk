@@ -1,5 +1,5 @@
 from descope.auth import Auth
-from descope.common import REFRESH_SESSION_COOKIE_NAME, EndpointsV1
+from descope.common import REFRESH_SESSION_COOKIE_NAME, EndpointsV1, LoginOptions
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
@@ -29,7 +29,13 @@ class WebauthN:
 
         return response.json()
 
-    def sign_up_finish(self, transactionID: str, response: str) -> dict:
+    def sign_up_finish(
+        self,
+        transactionID: str,
+        response: str,
+        loginOptions: LoginOptions = None,
+        refreshToken: str = None,
+    ) -> dict:
         """
         Docs
         """
@@ -44,8 +50,10 @@ class WebauthN:
             )
 
         uri = EndpointsV1.signUpAuthWebauthnFinish
-        body = WebauthN._compose_sign_up_in_finish_body(transactionID, response)
-        response = self._auth.do_post(uri, body)
+        body = WebauthN._compose_sign_up_in_finish_body(
+            transactionID, response, loginOptions
+        )
+        response = self._auth.do_post(uri, body, refreshToken)
 
         resp = response.json()
         jwt_response = self._auth.generate_jwt_response(
@@ -73,7 +81,13 @@ class WebauthN:
 
         return response.json()
 
-    def sign_in_finish(self, transaction_id: str, response: str) -> dict:
+    def sign_in_finish(
+        self,
+        transaction_id: str,
+        response: str,
+        loginOptions: LoginOptions = None,
+        refreshToken: str = None,
+    ) -> dict:
         """
         Docs
         """
@@ -88,8 +102,10 @@ class WebauthN:
             )
 
         uri = EndpointsV1.signInAuthWebauthnFinish
-        body = WebauthN._compose_sign_up_in_finish_body(transaction_id, response)
-        response = self._auth.do_post(uri, body)
+        body = WebauthN._compose_sign_up_in_finish_body(
+            transaction_id, response, loginOptions
+        )
+        response = self._auth.do_post(uri, body, refreshToken)
 
         resp = response.json()
         jwt_response = self._auth.generate_jwt_response(
@@ -151,8 +167,14 @@ class WebauthN:
         return body
 
     @staticmethod
-    def _compose_sign_up_in_finish_body(transaction_id: str, response: str) -> dict:
-        return {"transactionId": transaction_id, "response": response}
+    def _compose_sign_up_in_finish_body(
+        transaction_id: str, response: str, loginOptions: LoginOptions = None
+    ) -> dict:
+        return {
+            "transactionId": transaction_id,
+            "response": response,
+            "loginOptions": loginOptions.__dict__ if loginOptions else {},
+        }
 
     @staticmethod
     def _compose_update_start_body(identifier: str, origin: str) -> dict:

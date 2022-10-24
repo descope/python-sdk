@@ -3,7 +3,12 @@ import string
 import requests
 
 from descope.auth import Auth
-from descope.common import REFRESH_SESSION_COOKIE_NAME, DeliveryMethod, EndpointsV1
+from descope.common import (
+    REFRESH_SESSION_COOKIE_NAME,
+    DeliveryMethod,
+    EndpointsV1,
+    LoginOptions,
+)
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
@@ -42,10 +47,15 @@ class MagicLink:
         response = self._sign_up_or_in(method, identifier, uri, True)
         return MagicLink._get_pending_ref_from_response(response)
 
-    def get_session(self, pending_ref: str) -> dict:
+    def get_session(
+        self,
+        pending_ref: str,
+        loginOptions: LoginOptions = None,
+        refreshToken: str = None,
+    ) -> dict:
         uri = EndpointsV1.getSessionMagicLinkAuthPath
-        body = MagicLink._compose_get_session_body(pending_ref)
-        response = self._auth.do_post(uri, body)
+        body = MagicLink._compose_get_session_body(pending_ref, loginOptions)
+        response = self._auth.do_post(uri, body, refreshToken)
 
         resp = response.json()
         jwt_response = self._auth.generate_jwt_response(
@@ -53,10 +63,12 @@ class MagicLink:
         )
         return jwt_response
 
-    def verify(self, token: str) -> dict:
+    def verify(
+        self, token: str, loginOptions: LoginOptions = None, refreshToken: str = None
+    ) -> dict:
         uri = EndpointsV1.verifyMagicLinkAuthPath
-        body = MagicLink._compose_verify_body(token)
-        response = self._auth.do_post(uri, body)
+        body = MagicLink._compose_verify_body(token, loginOptions)
+        response = self._auth.do_post(uri, body, refreshToken)
         resp = response.json()
         jwt_response = self._auth.generate_jwt_response(
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
@@ -215,9 +227,10 @@ class MagicLink:
         return body
 
     @staticmethod
-    def _compose_verify_body(token: string) -> dict:
+    def _compose_verify_body(token: string, loginOptions: LoginOptions = None) -> dict:
         return {
             "token": token,
+            "loginOptions": loginOptions.__dict__ if loginOptions else {},
         }
 
     @staticmethod
@@ -233,8 +246,13 @@ class MagicLink:
         return {"externalId": identifier, "phone": phone, "crossDevice": cross_device}
 
     @staticmethod
-    def _compose_get_session_body(pending_ref: str) -> dict:
-        return {"pendingRef": pending_ref}
+    def _compose_get_session_body(
+        pending_ref: str, loginOptions: LoginOptions = None
+    ) -> dict:
+        return {
+            "pendingRef": pending_ref,
+            "loginOptions": loginOptions.__dict__ if loginOptions else {},
+        }
 
     @staticmethod
     def _get_pending_ref_from_response(response: requests.Response) -> dict:

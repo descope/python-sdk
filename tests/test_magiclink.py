@@ -6,7 +6,12 @@ from unittest.mock import patch
 from descope import SESSION_COOKIE_NAME, AuthException, DeliveryMethod
 from descope.auth import Auth
 from descope.authmethod.magiclink import MagicLink  # noqa: F401
-from descope.common import DEFAULT_BASE_URL, REFRESH_SESSION_COOKIE_NAME, EndpointsV1
+from descope.common import (
+    DEFAULT_BASE_URL,
+    REFRESH_SESSION_COOKIE_NAME,
+    EndpointsV1,
+    LoginOptions,
+)
 
 
 class TestMagicLink(unittest.TestCase):
@@ -60,9 +65,7 @@ class TestMagicLink(unittest.TestCase):
         )
         self.assertEqual(
             MagicLink._compose_verify_body("t1"),
-            {
-                "token": "t1",
-            },
+            {"token": "t1", "loginOptions": {}},
         )
 
         self.assertEqual(
@@ -77,7 +80,16 @@ class TestMagicLink(unittest.TestCase):
 
         self.assertEqual(
             MagicLink._compose_get_session_body("pending_ref1"),
-            {"pendingRef": "pending_ref1"},
+            {"pendingRef": "pending_ref1", "loginOptions": {}},
+        )
+
+        lo = LoginOptions(True)
+        self.assertEqual(
+            MagicLink._compose_get_session_body("pending_ref1", lo),
+            {
+                "pendingRef": "pending_ref1",
+                "loginOptions": {"stepup": True, "customClaims": None},
+            },
         )
 
     def test_sign_in(self):

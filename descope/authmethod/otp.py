@@ -1,5 +1,10 @@
 from descope.auth import Auth
-from descope.common import REFRESH_SESSION_COOKIE_NAME, DeliveryMethod, EndpointsV1
+from descope.common import (
+    REFRESH_SESSION_COOKIE_NAME,
+    DeliveryMethod,
+    EndpointsV1,
+    LoginOptions,
+)
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
@@ -84,7 +89,14 @@ class OTP:
         body = OTP._compose_signin_body(identifier)
         self._auth.do_post(uri, body)
 
-    def verify_code(self, method: DeliveryMethod, identifier: str, code: str) -> dict:
+    def verify_code(
+        self,
+        method: DeliveryMethod,
+        identifier: str,
+        code: str,
+        loginOptions: LoginOptions = None,
+        refreshToken: str = None,
+    ) -> dict:
         """
         Verify the valdity of an OTP code entered by an end user during sign_in or sign_up.
         (This function is not needed if you are using the sign_up_or_in function.
@@ -108,8 +120,8 @@ class OTP:
             )
 
         uri = OTP._compose_verify_code_url(method)
-        body = OTP._compose_verify_code_body(identifier, code)
-        response = self._auth.do_post(uri, body)
+        body = OTP._compose_verify_code_body(identifier, code, loginOptions)
+        response = self._auth.do_post(uri, body, refreshToken)
 
         resp = response.json()
         jwt_response = self._auth.generate_jwt_response(
@@ -207,8 +219,14 @@ class OTP:
         return {"externalId": identifier}
 
     @staticmethod
-    def _compose_verify_code_body(identifier: str, code: str) -> dict:
-        return {"externalId": identifier, "code": code}
+    def _compose_verify_code_body(
+        identifier: str, code: str, loginOptions: LoginOptions = None
+    ) -> dict:
+        return {
+            "externalId": identifier,
+            "code": code,
+            "loginOptions": loginOptions.__dict__ if loginOptions else {},
+        }
 
     @staticmethod
     def _compose_update_user_email_body(identifier: str, email: str) -> dict:

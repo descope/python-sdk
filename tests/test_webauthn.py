@@ -6,7 +6,7 @@ from unittest.mock import patch
 from descope import AuthException
 from descope.auth import Auth
 from descope.authmethod.webauthn import WebauthN
-from descope.common import DEFAULT_BASE_URL, EndpointsV1
+from descope.common import DEFAULT_BASE_URL, EndpointsV1, LoginOptions
 
 
 class TestWebauthN(unittest.TestCase):
@@ -36,7 +36,7 @@ class TestWebauthN(unittest.TestCase):
     def test_compose_sign_up_in_finish_body(self):
         self.assertEqual(
             WebauthN._compose_sign_up_in_finish_body("t01", "response01"),
-            {"transactionId": "t01", "response": "response01"},
+            {"transactionId": "t01", "response": "response01", "loginOptions": {}},
         )
 
     def test_compose_signin_body(self):
@@ -138,14 +138,20 @@ class TestWebauthN(unittest.TestCase):
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
             expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.signUpAuthWebauthnFinish}"
-            webauthn.sign_up_finish("t01", "response01")
+            webauthn.sign_up_finish("t01", "response01", LoginOptions(True))
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
-                data=json.dumps({"transactionId": "t01", "response": "response01"}),
+                data=json.dumps(
+                    {
+                        "transactionId": "t01",
+                        "response": "response01",
+                        "loginOptions": LoginOptions(True).__dict__,
+                    }
+                ),
                 allow_redirects=False,
                 verify=True,
             )
@@ -225,14 +231,22 @@ class TestWebauthN(unittest.TestCase):
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
             expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.signInAuthWebauthnFinish}"
-            webauthn.sign_in_finish("t01", "response01")
+            webauthn.sign_in_finish(
+                "t01", "response01", LoginOptions(True, {"k1": "v1"})
+            )
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
-                data=json.dumps({"transactionId": "t01", "response": "response01"}),
+                data=json.dumps(
+                    {
+                        "transactionId": "t01",
+                        "response": "response01",
+                        "loginOptions": {"stepup": True, "customClaims": {"k1": "v1"}},
+                    }
+                ),
                 allow_redirects=False,
                 verify=True,
             )
