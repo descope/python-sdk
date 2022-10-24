@@ -6,7 +6,7 @@ from unittest.mock import patch
 from descope import AuthException
 from descope.auth import Auth
 from descope.authmethod.oauth import OAuth
-from descope.common import DEFAULT_BASE_URL, EndpointsV1
+from descope.common import DEFAULT_BASE_URL, EndpointsV1, LoginOptions
 
 
 class TestOAuth(unittest.TestCase):
@@ -80,7 +80,9 @@ class TestOAuth(unittest.TestCase):
             )
 
     def test_compose_exchange_params(self):
-        self.assertEqual(Auth._compose_exchange_body("c1"), {"code": "c1"})
+        self.assertEqual(
+            Auth._compose_exchange_body("c1"), {"code": "c1", "loginOptions": {}}
+        )
 
     def test_exchange_token(self):
         oauth = OAuth(Auth(self.dummy_project_id, self.public_key_dict))
@@ -103,14 +105,23 @@ class TestOAuth(unittest.TestCase):
             )
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
-            oauth.exchange_token("c1")
+            oauth.exchange_token(
+                "c1", LoginOptions(stepup=True, customClaims={"k1": "v1"})
+            )
             mock_post.assert_called_with(
                 f"{DEFAULT_BASE_URL}{EndpointsV1.oauthExchangeTokenPath}",
                 headers={
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
-                data=json.dumps({"code": "c1"}),
+                data=json.dumps(
+                    {
+                        "code": "c1",
+                        "loginOptions": LoginOptions(
+                            stepup=True, customClaims={"k1": "v1"}
+                        ).__dict__,
+                    }
+                ),
                 allow_redirects=False,
                 verify=True,
             )

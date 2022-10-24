@@ -69,3 +69,9 @@ class DeliveryMethod(Enum):
 
 
 OAuthProviders = ["facebook", "github", "google", "microsoft", "gitlab", "apple"]
+
+
+class LoginOptions:
+    def __init__(self, stepup: bool = False, customClaims: dict = None):
+        self.stepup = stepup
+        self.customClaims = customClaims

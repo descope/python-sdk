@@ -1,5 +1,5 @@
 from descope.auth import Auth
-from descope.common import EndpointsV1
+from descope.common import EndpointsV1, LoginOptions
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
@@ -29,9 +29,11 @@ class SAML:
 
         return response.json()
 
-    def exchange_token(self, code: str) -> dict:
+    def exchange_token(
+        self, code: str, loginOptions: LoginOptions = None, refreshToken: str = None
+    ) -> dict:
         uri = EndpointsV1.samlExchangeTokenPath
-        return self._auth.exchange_token(uri, code)
+        return self._auth.exchange_token(uri, code, loginOptions, refreshToken)
 
     @staticmethod
     def _compose_start_params(tenant: str, return_url: str) -> dict:

@@ -1,5 +1,5 @@
 from descope.auth import Auth
-from descope.common import EndpointsV1, OAuthProviders
+from descope.common import EndpointsV1, LoginOptions, OAuthProviders
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
@@ -24,9 +24,11 @@ class OAuth:
 
         return response.json()
 
-    def exchange_token(self, code: str) -> dict:
+    def exchange_token(
+        self, code: str, loginOptions: LoginOptions = None, refreshToken: str = None
+    ) -> dict:
         uri = EndpointsV1.oauthExchangeTokenPath
-        return self._auth.exchange_token(uri, code)
+        return self._auth.exchange_token(uri, code, loginOptions, refreshToken)
 
     @staticmethod
     def _verify_provider(oauth_provider: str) -> str:
