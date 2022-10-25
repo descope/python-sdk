@@ -46,17 +46,17 @@ class TestSAML(unittest.TestCase):
             mock_get.return_value.ok = True
             self.assertIsNotNone(saml.start("tenant1", "http://dummy.com"))
 
-        with patch("requests.get") as mock_get:
-            mock_get.return_value.ok = True
+        with patch("requests.get") as mock_post:
+            mock_post.return_value.ok = True
             saml.start("tenant1", "http://dummy.com")
             expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.authSAMLStart}"
-            mock_get.assert_called_with(
+            mock_post.assert_called_with(
                 expected_uri,
                 headers={
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
-                params={"tenant": "tenant1", "redirectURL": "http://dummy.com"},
+                data=json.dumps({"tenant": "tenant1", "redirectURL": "http://dummy.com"}),
                 allow_redirects=None,
                 verify=True,
             )
