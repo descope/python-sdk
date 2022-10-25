@@ -56,7 +56,9 @@ class TestSAML(unittest.TestCase):
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
-                data=json.dumps({"tenant": "tenant1", "redirectURL": "http://dummy.com"}),
+                data=json.dumps(
+                    {"tenant": "tenant1", "redirectURL": "http://dummy.com"}
+                ),
                 allow_redirects=False,
                 verify=True,
             )
