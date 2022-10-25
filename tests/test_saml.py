@@ -22,9 +22,9 @@ class TestSAML(unittest.TestCase):
             "y": "N5n5jKZA5Wu7_b4B36KKjJf-VRfJ-XqczfCSYy9GeQLqF-b63idfE0SYaYk9cFqg",
         }
 
-    def test_compose_start_params(self):
+    def test_compose_start_body(self):
         self.assertEqual(
-            SAML._compose_start_params("tenant1", "http://dummy.com"),
+            SAML._compose_start_body("tenant1", "http://dummy.com"),
             {"tenant": "tenant1", "redirectURL": "http://dummy.com"},
         )
 
@@ -37,16 +37,16 @@ class TestSAML(unittest.TestCase):
         self.assertRaises(AuthException, saml.start, "tenant1", "")
         self.assertRaises(AuthException, saml.start, "tenant1", None)
 
-        with patch("requests.get") as mock_get:
-            mock_get.return_value.ok = False
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
             self.assertRaises(AuthException, saml.start, "tenant1", "http://dummy.com")
 
         # Test success flow
-        with patch("requests.get") as mock_get:
-            mock_get.return_value.ok = True
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
             self.assertIsNotNone(saml.start("tenant1", "http://dummy.com"))
 
-        with patch("requests.get") as mock_post:
+        with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             saml.start("tenant1", "http://dummy.com")
             expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.authSAMLStart}"
@@ -57,7 +57,7 @@ class TestSAML(unittest.TestCase):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 data=json.dumps({"tenant": "tenant1", "redirectURL": "http://dummy.com"}),
-                allow_redirects=None,
+                allow_redirects=False,
                 verify=True,
             )
 
