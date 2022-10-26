@@ -19,8 +19,8 @@ class OAuth:
             )
 
         uri = EndpointsV1.oauthStart
-        params = OAuth._compose_start_params(provider, return_url)
-        response = self._auth.do_get(uri, params, False)
+        body = OAuth._compose_start_body(provider, return_url)
+        response = self._auth.do_post(uri, body)
 
         return response.json()
 
@@ -41,7 +41,7 @@ class OAuth:
             return False
 
     @staticmethod
-    def _compose_start_params(provider: str, returnURL: str) -> dict:
+    def _compose_start_body(provider: str, returnURL: str) -> dict:
         res = {"provider": provider}
         if returnURL:
             res["redirectURL"] = returnURL
