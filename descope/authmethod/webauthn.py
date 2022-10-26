@@ -53,7 +53,7 @@ class WebauthN:
         body = WebauthN._compose_sign_up_in_finish_body(
             transactionID, response, loginOptions
         )
-        response = self._auth.do_post(uri, body, refreshToken)
+        response = self._auth.do_post(uri, body, None, refreshToken)
 
         resp = response.json()
         jwt_response = self._auth.generate_jwt_response(
@@ -105,7 +105,7 @@ class WebauthN:
         body = WebauthN._compose_sign_up_in_finish_body(
             transaction_id, response, loginOptions
         )
-        response = self._auth.do_post(uri, body, refreshToken)
+        response = self._auth.do_post(uri, body, None, refreshToken)
 
         resp = response.json()
         jwt_response = self._auth.generate_jwt_response(
@@ -129,7 +129,7 @@ class WebauthN:
 
         uri = EndpointsV1.updateAuthWebauthnStart
         body = WebauthN._compose_update_start_body(identifier, origin)
-        response = self._auth.do_post(uri, body, refresh_token)
+        response = self._auth.do_post(uri, body, None, refresh_token)
 
         return response.json()
 

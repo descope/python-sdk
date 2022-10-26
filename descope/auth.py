@@ -87,13 +87,16 @@ class Auth:
             )
         return response
 
-    def do_post(self, uri: str, body: dict, pswd: str = None) -> requests.Response:
+    def do_post(
+        self, uri: str, body: dict, params=None, pswd: str = None
+    ) -> requests.Response:
         response = requests.post(
             f"{self.base_url}{uri}",
             headers=self._get_default_headers(pswd),
             data=json.dumps(body),
             allow_redirects=False,
             verify=self.secure,
+            params=params,
         )
         if not response.ok:
             raise AuthException(
@@ -116,7 +119,7 @@ class Auth:
             )
 
         body = Auth._compose_exchange_body(code, loginOptions)
-        response = self.do_post(uri, body, refreshToken)
+        response = self.do_post(uri, body, None, refreshToken)
         resp = response.json()
         jwt_response = self.generate_jwt_response(
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
@@ -225,14 +228,14 @@ class Auth:
 
     def refresh_token(self, refresh_token: str) -> dict:
         uri = Auth._compose_refresh_token_url()
-        response = self.do_post(uri, {}, refresh_token)
+        response = self.do_post(uri, {}, None, refresh_token)
 
         resp = response.json()
         return self.generate_jwt_response(resp, refresh_token)
 
     def exchange_access_key(self, access_key: str) -> dict:
         uri = Auth._compose_exchange_access_key_url()
-        server_response = self.do_post(uri, {}, access_key)
+        server_response = self.do_post(uri, {}, None, access_key)
         json = server_response.json()
         result = {
             SESSION_TOKEN_NAME: self._validate_token(json.get("sessionJwt", "")),

@@ -53,7 +53,7 @@ class TOTP:
 
         uri = EndpointsV1.verifyTOTPPath
         body = TOTP._compose_signin_body(identifier, code, loginOptions)
-        response = self._auth.do_post(uri, body, refreshToken)
+        response = self._auth.do_post(uri, body, None, refreshToken)
 
         resp = response.json()
         jwt_response = self._auth.generate_jwt_response(
@@ -78,7 +78,7 @@ class TOTP:
 
         uri = EndpointsV1.updateTOTPPath
         body = TOTP._compose_update_user_body(identifier)
-        response = self._auth.do_post(uri, body, refresh_token)
+        response = self._auth.do_post(uri, body, None, refresh_token)
 
         return response.json()
         # Response should have these schema:

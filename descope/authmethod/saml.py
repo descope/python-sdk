@@ -24,8 +24,8 @@ class SAML:
             )
 
         uri = EndpointsV1.authSAMLStart
-        body = SAML._compose_start_body(tenant, return_url)
-        response = self._auth.do_post(uri, body)
+        params = SAML._compose_start_params(tenant, return_url)
+        response = self._auth.do_post(uri, {}, params)
 
         return response.json()
 
@@ -36,7 +36,7 @@ class SAML:
         return self._auth.exchange_token(uri, code, loginOptions, refreshToken)
 
     @staticmethod
-    def _compose_start_body(tenant: str, return_url: str) -> dict:
+    def _compose_start_params(tenant: str, return_url: str) -> dict:
         res = {"tenant": tenant}
         if return_url is not None and return_url != "":
             res["redirectURL"] = return_url
