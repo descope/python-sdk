@@ -96,6 +96,7 @@ class TestWebauthN(unittest.TestCase):
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
+                params=None,
                 data=json.dumps(
                     {"user": {"externalId": "id1"}, "origin": "https://example.com"}
                 ),
@@ -145,6 +146,7 @@ class TestWebauthN(unittest.TestCase):
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
+                params=None,
                 data=json.dumps(
                     {
                         "transactionId": "t01",
@@ -198,6 +200,7 @@ class TestWebauthN(unittest.TestCase):
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
+                params=None,
                 data=json.dumps({"externalId": "id1", "origin": "https://example.com"}),
                 allow_redirects=False,
                 verify=True,
@@ -240,6 +243,7 @@ class TestWebauthN(unittest.TestCase):
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
+                params=None,
                 data=json.dumps(
                     {
                         "transactionId": "t01",
@@ -313,6 +317,7 @@ class TestWebauthN(unittest.TestCase):
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {self.dummy_project_id}:asdasd",
                 },
+                params=None,
                 data=json.dumps(
                     {"externalId": "dummy@dummy.com", "origin": "https://example.com"}
                 ),
@@ -354,6 +359,7 @@ class TestWebauthN(unittest.TestCase):
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
+                params=None,
                 data=json.dumps({"transactionId": "t01", "response": "response01"}),
                 allow_redirects=False,
                 verify=True,

@@ -121,7 +121,7 @@ class OTP:
 
         uri = OTP._compose_verify_code_url(method)
         body = OTP._compose_verify_code_body(identifier, code, loginOptions)
-        response = self._auth.do_post(uri, body, refreshToken)
+        response = self._auth.do_post(uri, body, None, refreshToken)
 
         resp = response.json()
         jwt_response = self._auth.generate_jwt_response(
@@ -153,7 +153,7 @@ class OTP:
 
         uri = EndpointsV1.updateUserEmailOTPPath
         body = OTP._compose_update_user_email_body(identifier, email)
-        self._auth.do_post(uri, body, refresh_token)
+        self._auth.do_post(uri, body, None, refresh_token)
 
     def update_user_phone(
         self, method: DeliveryMethod, identifier: str, phone: str, refresh_token: str
@@ -180,7 +180,7 @@ class OTP:
 
         uri = OTP._compose_update_phone_url(method)
         body = OTP._compose_update_user_phone_body(identifier, phone)
-        self._auth.do_post(uri, body, refresh_token)
+        self._auth.do_post(uri, body, None, refresh_token)
 
     @staticmethod
     def _compose_signup_url(method: DeliveryMethod) -> str:

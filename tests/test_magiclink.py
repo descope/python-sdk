@@ -263,6 +263,7 @@ class TestMagicLink(unittest.TestCase):
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
+                params=None,
                 data=json.dumps(
                     {
                         "externalId": "dummy@dummy.com",
@@ -295,6 +296,7 @@ class TestMagicLink(unittest.TestCase):
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
+                params=None,
                 data=json.dumps(
                     {
                         "externalId": "dummy@dummy.com",
@@ -328,6 +330,7 @@ class TestMagicLink(unittest.TestCase):
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
+                params=None,
                 data=json.dumps(
                     {
                         "externalId": "dummy@dummy.com",

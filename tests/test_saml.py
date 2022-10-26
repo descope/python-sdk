@@ -22,9 +22,9 @@ class TestSAML(unittest.TestCase):
             "y": "N5n5jKZA5Wu7_b4B36KKjJf-VRfJ-XqczfCSYy9GeQLqF-b63idfE0SYaYk9cFqg",
         }
 
-    def test_compose_start_body(self):
+    def test_compose_start_params(self):
         self.assertEqual(
-            SAML._compose_start_body("tenant1", "http://dummy.com"),
+            SAML._compose_start_params("tenant1", "http://dummy.com"),
             {"tenant": "tenant1", "redirectURL": "http://dummy.com"},
         )
 
@@ -56,9 +56,8 @@ class TestSAML(unittest.TestCase):
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
-                data=json.dumps(
-                    {"tenant": "tenant1", "redirectURL": "http://dummy.com"}
-                ),
+                params={"tenant": "tenant1", "redirectURL": "http://dummy.com"},
+                data=json.dumps({}),
                 allow_redirects=False,
                 verify=True,
             )
@@ -96,6 +95,7 @@ class TestSAML(unittest.TestCase):
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
+                params=None,
                 data=json.dumps({"code": "c1", "loginOptions": {}}),
                 allow_redirects=False,
                 verify=True,

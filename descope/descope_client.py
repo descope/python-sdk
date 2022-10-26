@@ -197,7 +197,7 @@ class DescopeClient:
             )
 
         uri = EndpointsV1.logoutPath
-        return self._auth.do_post(uri, {}, refresh_token)
+        return self._auth.do_post(uri, {}, None, refresh_token)
 
     def me(self, refresh_token: str) -> dict:
         """

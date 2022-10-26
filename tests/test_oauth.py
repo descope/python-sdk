@@ -24,7 +24,7 @@ class TestOAuth(unittest.TestCase):
 
     def test_compose_start_params(self):
         self.assertEqual(
-            OAuth._compose_start_body("google", "http://example.com"),
+            OAuth._compose_start_params("google", "http://example.com"),
             {"provider": "google", "redirectURL": "http://example.com"},
         )
 
@@ -74,7 +74,8 @@ class TestOAuth(unittest.TestCase):
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
-                data=json.dumps({"provider": "facebook"}),
+                params={"provider": "facebook"},
+                data=json.dumps({}),
                 allow_redirects=False,
                 verify=True,
             )
@@ -114,6 +115,7 @@ class TestOAuth(unittest.TestCase):
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
+                params=None,
                 data=json.dumps(
                     {
                         "code": "c1",

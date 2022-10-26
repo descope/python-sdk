@@ -122,6 +122,7 @@ class TestTOTP(unittest.TestCase):
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {self.dummy_project_id}:{valid_jwt_token}",
                 },
+                params=None,
                 data=json.dumps({"externalId": "dummy@dummy.com"}),
                 allow_redirects=False,
                 verify=True,

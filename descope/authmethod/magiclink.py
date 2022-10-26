@@ -55,7 +55,7 @@ class MagicLink:
     ) -> dict:
         uri = EndpointsV1.getSessionMagicLinkAuthPath
         body = MagicLink._compose_get_session_body(pending_ref, loginOptions)
-        response = self._auth.do_post(uri, body, refreshToken)
+        response = self._auth.do_post(uri, body, None, refreshToken)
 
         resp = response.json()
         jwt_response = self._auth.generate_jwt_response(
@@ -68,7 +68,7 @@ class MagicLink:
     ) -> dict:
         uri = EndpointsV1.verifyMagicLinkAuthPath
         body = MagicLink._compose_verify_body(token, loginOptions)
-        response = self._auth.do_post(uri, body, refreshToken)
+        response = self._auth.do_post(uri, body, None, refreshToken)
         resp = response.json()
         jwt_response = self._auth.generate_jwt_response(
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
@@ -112,7 +112,7 @@ class MagicLink:
         body = MagicLink._compose_signin_body(identifier, uri, cross_device)
         uri = MagicLink._compose_signin_url(method)
 
-        return self._auth.do_post(uri, body)
+        return self._auth.do_post(uri, body, None)
 
     def _sign_up(
         self,
@@ -133,7 +133,7 @@ class MagicLink:
             method, identifier, uri, cross_device, user
         )
         uri = MagicLink._compose_signup_url(method)
-        return self._auth.do_post(uri, body)
+        return self._auth.do_post(uri, body, None)
 
     def _sign_up_or_in(
         self, method: DeliveryMethod, identifier: str, uri: str, cross_device: bool
@@ -141,7 +141,7 @@ class MagicLink:
 
         body = MagicLink._compose_signin_body(identifier, uri, cross_device)
         uri = MagicLink._compose_sign_up_or_in_url(method)
-        return self._auth.do_post(uri, body)
+        return self._auth.do_post(uri, body, None)
 
     def _update_user_email(
         self, identifier: str, email: str, refresh_token: str, cross_device: bool
@@ -157,7 +157,7 @@ class MagicLink:
             identifier, email, cross_device
         )
         uri = EndpointsV1.updateUserEmailOTPPath
-        return self._auth.do_post(uri, body, refresh_token)
+        return self._auth.do_post(uri, body, None, refresh_token)
 
     def _update_user_phone(
         self,
@@ -178,7 +178,7 @@ class MagicLink:
             identifier, phone, cross_device
         )
         uri = EndpointsV1.updateUserPhoneOTPPath
-        return self._auth.do_post(uri, body, refresh_token)
+        return self._auth.do_post(uri, body, None, refresh_token)
 
     @staticmethod
     def _compose_signin_url(method: DeliveryMethod) -> str:
