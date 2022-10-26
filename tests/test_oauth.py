@@ -24,7 +24,7 @@ class TestOAuth(unittest.TestCase):
 
     def test_compose_start_params(self):
         self.assertEqual(
-            OAuth._compose_start_params("google", "http://example.com"),
+            OAuth._compose_start_body("google", "http://example.com"),
             {"provider": "google", "redirectURL": "http://example.com"},
         )
 
@@ -55,26 +55,26 @@ class TestOAuth(unittest.TestCase):
         # Test failed flows
         self.assertRaises(AuthException, oauth.start, "")
 
-        with patch("requests.get") as mock_get:
-            mock_get.return_value.ok = False
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
             self.assertRaises(AuthException, oauth.start, "google")
 
         # Test success flow
-        with patch("requests.get") as mock_get:
-            mock_get.return_value.ok = True
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
             self.assertIsNotNone(oauth.start("google"))
 
-        with patch("requests.get") as mock_get:
-            mock_get.return_value.ok = True
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
             oauth.start("facebook")
             expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.oauthStart}"
-            mock_get.assert_called_with(
+            mock_post.assert_called_with(
                 expected_uri,
                 headers={
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
-                params={"provider": "facebook"},
+                data=json.dumps({"provider": "facebook"}),
                 allow_redirects=False,
                 verify=True,
             )
