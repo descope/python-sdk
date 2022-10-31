@@ -3,6 +3,8 @@ import unittest
 from unittest import mock
 from unittest.mock import patch
 
+import common
+
 from descope import SESSION_COOKIE_NAME, AuthException, DeliveryMethod
 from descope.auth import Auth
 from descope.authmethod.magiclink import MagicLink  # noqa: F401
@@ -260,7 +262,7 @@ class TestMagicLink(unittest.TestCase):
             mock_post.assert_called_with(
                 f"{DEFAULT_BASE_URL}{EndpointsV1.signInAuthMagicLinkPath}/email",
                 headers={
-                    "Content-Type": "application/json",
+                    **common.defaultHeaders,
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
@@ -293,7 +295,7 @@ class TestMagicLink(unittest.TestCase):
             mock_post.assert_called_with(
                 f"{DEFAULT_BASE_URL}{EndpointsV1.signUpAuthMagicLinkPath}/email",
                 headers={
-                    "Content-Type": "application/json",
+                    **common.defaultHeaders,
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
@@ -327,7 +329,7 @@ class TestMagicLink(unittest.TestCase):
             mock_post.assert_called_with(
                 f"{DEFAULT_BASE_URL}{EndpointsV1.signUpOrInAuthMagicLinkPath}/email",
                 headers={
-                    "Content-Type": "application/json",
+                    **common.defaultHeaders,
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,

@@ -1,10 +1,12 @@
 import json
 import os
+import platform
 import re
 from threading import Lock
 from typing import Tuple
 
 import jwt
+import pkg_resources
 import requests
 from email_validator import EmailNotValidError, validate_email
 from jwt.exceptions import ExpiredSignatureError
@@ -404,6 +406,16 @@ class Auth:
     def _get_default_headers(self, pswd: str = None):
         headers = {}
         headers["Content-Type"] = "application/json"
+
+        headers["x-descope-sdk-name"] = "python"
+
+        try:
+            headers["x-descope-sdk-python-version"] = platform.python_version()
+            headers["x-descope-sdk-version"] = pkg_resources.get_distribution(
+                "descope"
+            ).version
+        except Exception:
+            pass
 
         bearer = self.project_id
         if pswd:

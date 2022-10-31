@@ -3,6 +3,8 @@ import unittest
 from unittest import mock
 from unittest.mock import patch
 
+import common
+
 from descope import AuthException
 from descope.auth import Auth
 from descope.authmethod.webauthn import WebauthN
@@ -93,7 +95,7 @@ class TestWebauthN(unittest.TestCase):
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
-                    "Content-Type": "application/json",
+                    **common.defaultHeaders,
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
@@ -143,7 +145,7 @@ class TestWebauthN(unittest.TestCase):
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
-                    "Content-Type": "application/json",
+                    **common.defaultHeaders,
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
@@ -197,7 +199,7 @@ class TestWebauthN(unittest.TestCase):
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
-                    "Content-Type": "application/json",
+                    **common.defaultHeaders,
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
@@ -240,7 +242,7 @@ class TestWebauthN(unittest.TestCase):
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
-                    "Content-Type": "application/json",
+                    **common.defaultHeaders,
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
@@ -314,7 +316,7 @@ class TestWebauthN(unittest.TestCase):
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
-                    "Content-Type": "application/json",
+                    **common.defaultHeaders,
                     "Authorization": f"Bearer {self.dummy_project_id}:asdasd",
                 },
                 params=None,
@@ -356,7 +358,7 @@ class TestWebauthN(unittest.TestCase):
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
-                    "Content-Type": "application/json",
+                    **common.defaultHeaders,
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,

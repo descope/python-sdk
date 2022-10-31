@@ -3,6 +3,8 @@ import unittest
 from unittest import mock
 from unittest.mock import patch
 
+import common
+
 from descope import AuthException
 from descope.auth import Auth
 from descope.authmethod.saml import SAML
@@ -53,7 +55,7 @@ class TestSAML(unittest.TestCase):
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
-                    "Content-Type": "application/json",
+                    **common.defaultHeaders,
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params={"tenant": "tenant1", "redirectURL": "http://dummy.com"},
@@ -92,7 +94,7 @@ class TestSAML(unittest.TestCase):
             mock_post.assert_called_with(
                 f"{DEFAULT_BASE_URL}{EndpointsV1.samlExchangeTokenPath}",
                 headers={
-                    "Content-Type": "application/json",
+                    **common.defaultHeaders,
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
