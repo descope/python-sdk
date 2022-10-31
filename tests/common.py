@@ -1,6 +1,10 @@
+import platform
+
+import pkg_resources
+
 defaultHeaders = {
     "Content-Type": "application/json",
     "x-descope-sdk-name": "python",
-    "x-descope-sdk-python-version": "3.10.8",
-    "x-descope-sdk-version": "0.0.dev3",
+    "x-descope-sdk-python-version": platform.python_version(),
+    "x-descope-sdk-version": pkg_resources.get_distribution("descope").version,
 }
