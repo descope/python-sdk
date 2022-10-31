@@ -414,7 +414,7 @@ class Auth:
             headers["x-descope-sdk-version"] = pkg_resources.get_distribution(
                 "descope"
             ).version
-        except:
+        except Exception:
             pass
 
         bearer = self.project_id
