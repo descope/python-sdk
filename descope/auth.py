@@ -20,7 +20,6 @@ from descope.common import (
     SESSION_TOKEN_NAME,
     DeliveryMethod,
     EndpointsV1,
-    LoginOptions,
 )
 from descope.exceptions import (
     ERROR_TYPE_INVALID_ARGUMENT,
@@ -106,13 +105,7 @@ class Auth:
             )
         return response
 
-    def exchange_token(
-        self,
-        uri,
-        code: str,
-        loginOptions: LoginOptions = None,
-        refreshToken: str = None,
-    ) -> dict:
+    def exchange_token(self, uri, code: str) -> dict:
         if not code:
             raise AuthException(
                 400,
@@ -120,8 +113,8 @@ class Auth:
                 "exchange code is empty",
             )
 
-        body = Auth._compose_exchange_body(code, loginOptions)
-        response = self.do_post(uri, body, None, refreshToken)
+        body = Auth._compose_exchange_body(code)
+        response = self.do_post(uri, body, None)
         resp = response.json()
         jwt_response = self.generate_jwt_response(
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
@@ -247,11 +240,8 @@ class Auth:
         return result
 
     @staticmethod
-    def _compose_exchange_body(code: str, loginOptions: LoginOptions = None) -> dict:
-        return {
-            "code": code,
-            "loginOptions": loginOptions.__dict__ if loginOptions else {},
-        }
+    def _compose_exchange_body(code: str) -> dict:
+        return {"code": code}
 
     @staticmethod
     def _validate_and_load_public_key(public_key) -> Tuple[str, jwt.PyJWK, str]:

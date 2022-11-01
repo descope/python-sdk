@@ -14,7 +14,13 @@ class OTP:
     def __init__(self, auth: Auth):
         self._auth = auth
 
-    def sign_in(self, method: DeliveryMethod, identifier: str) -> None:
+    def sign_in(
+        self,
+        method: DeliveryMethod,
+        identifier: str,
+        loginOptions: LoginOptions = None,
+        refreshToken: str = None,
+    ) -> None:
         """
         Sign in (log in) an existing user with the unique identifier you provide. (See 'sign_up' function for an explanation of the
             identifier field.) Provide the DeliveryMethod required for this user. If the identifier value cannot be used for the
@@ -34,8 +40,8 @@ class OTP:
             )
 
         uri = OTP._compose_signin_url(method)
-        body = OTP._compose_signin_body(identifier)
-        self._auth.do_post(uri, body)
+        body = OTP._compose_signin_body(identifier, loginOptions)
+        self._auth.do_post(uri, body, refreshToken)
 
     def sign_up(
         self, method: DeliveryMethod, identifier: str, user: dict = None
@@ -89,14 +95,7 @@ class OTP:
         body = OTP._compose_signin_body(identifier)
         self._auth.do_post(uri, body)
 
-    def verify_code(
-        self,
-        method: DeliveryMethod,
-        identifier: str,
-        code: str,
-        loginOptions: LoginOptions = None,
-        refreshToken: str = None,
-    ) -> dict:
+    def verify_code(self, method: DeliveryMethod, identifier: str, code: str) -> dict:
         """
         Verify the valdity of an OTP code entered by an end user during sign_in or sign_up.
         (This function is not needed if you are using the sign_up_or_in function.
@@ -120,8 +119,8 @@ class OTP:
             )
 
         uri = OTP._compose_verify_code_url(method)
-        body = OTP._compose_verify_code_body(identifier, code, loginOptions)
-        response = self._auth.do_post(uri, body, None, refreshToken)
+        body = OTP._compose_verify_code_body(identifier, code)
+        response = self._auth.do_post(uri, body, None)
 
         resp = response.json()
         jwt_response = self._auth.generate_jwt_response(
@@ -215,18 +214,17 @@ class OTP:
         return body
 
     @staticmethod
-    def _compose_signin_body(identifier: str) -> dict:
-        return {"externalId": identifier}
-
-    @staticmethod
-    def _compose_verify_code_body(
-        identifier: str, code: str, loginOptions: LoginOptions = None
+    def _compose_signin_body(
+        identifier: str, loginOptions: LoginOptions = None
     ) -> dict:
         return {
             "externalId": identifier,
-            "code": code,
             "loginOptions": loginOptions.__dict__ if loginOptions else {},
         }
+
+    @staticmethod
+    def _compose_verify_code_body(identifier: str, code: str) -> dict:
+        return {"externalId": identifier, "code": code}
 
     @staticmethod
     def _compose_update_user_email_body(identifier: str, email: str) -> dict:

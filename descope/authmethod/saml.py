@@ -9,7 +9,13 @@ class SAML:
     def __init__(self, auth: Auth):
         self._auth = auth
 
-    def start(self, tenant: str, return_url: str = None) -> dict:
+    def start(
+        self,
+        tenant: str,
+        return_url: str = None,
+        loginOptions: LoginOptions = None,
+        refreshToken: str = None,
+    ) -> dict:
         """
         Docs
         """
@@ -25,15 +31,15 @@ class SAML:
 
         uri = EndpointsV1.authSAMLStart
         params = SAML._compose_start_params(tenant, return_url)
-        response = self._auth.do_post(uri, {}, params)
+        response = self._auth.do_post(
+            uri, loginOptions.__dict__ if loginOptions else {}, params, refreshToken
+        )
 
         return response.json()
 
-    def exchange_token(
-        self, code: str, loginOptions: LoginOptions = None, refreshToken: str = None
-    ) -> dict:
+    def exchange_token(self, code: str) -> dict:
         uri = EndpointsV1.samlExchangeTokenPath
-        return self._auth.exchange_token(uri, code, loginOptions, refreshToken)
+        return self._auth.exchange_token(uri, code)
 
     @staticmethod
     def _compose_start_params(tenant: str, return_url: str) -> dict:
