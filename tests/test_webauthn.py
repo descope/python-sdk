@@ -38,13 +38,17 @@ class TestWebauthN(unittest.TestCase):
     def test_compose_sign_up_in_finish_body(self):
         self.assertEqual(
             WebauthN._compose_sign_up_in_finish_body("t01", "response01"),
-            {"transactionId": "t01", "response": "response01", "loginOptions": {}},
+            {"transactionId": "t01", "response": "response01"},
         )
 
     def test_compose_signin_body(self):
         self.assertEqual(
             WebauthN._compose_signin_body("dummy@dummy.com", "https://example.com"),
-            {"externalId": "dummy@dummy.com", "origin": "https://example.com"},
+            {
+                "externalId": "dummy@dummy.com",
+                "origin": "https://example.com",
+                "loginOptions": {},
+            },
         )
 
     def test_compose_update_start_body(self):
@@ -141,7 +145,7 @@ class TestWebauthN(unittest.TestCase):
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
             expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.signUpAuthWebauthnFinish}"
-            webauthn.sign_up_finish("t01", "response01", LoginOptions(True))
+            webauthn.sign_up_finish("t01", "response01")
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
@@ -149,13 +153,7 @@ class TestWebauthN(unittest.TestCase):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "transactionId": "t01",
-                        "response": "response01",
-                        "loginOptions": LoginOptions(True).__dict__,
-                    }
-                ),
+                data=json.dumps({"transactionId": "t01", "response": "response01"}),
                 allow_redirects=False,
                 verify=True,
             )
@@ -203,11 +201,72 @@ class TestWebauthN(unittest.TestCase):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
-                data=json.dumps({"externalId": "id1", "origin": "https://example.com"}),
+                data=json.dumps(
+                    {
+                        "externalId": "id1",
+                        "origin": "https://example.com",
+                        "loginOptions": {},
+                    }
+                ),
                 allow_redirects=False,
                 verify=True,
             )
-            self.assertEqual(res, valid_response),
+            self.assertEqual(res, valid_response)
+
+    def test_sign_in_start_with_login_options(self):
+        webauthn = WebauthN(Auth(self.dummy_project_id, self.public_key_dict))
+
+        # Test failed flows
+        self.assertRaises(
+            AuthException, webauthn.sign_in_start, "", "https://example.com"
+        )
+        self.assertRaises(AuthException, webauthn.sign_in_start, "id", "")
+
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                webauthn.sign_in_start,
+                "id1",
+                "https://example.com",
+            )
+
+        # Test success flow
+        valid_response = json.loads(
+            """{"transactionId": "2COHI3LIixYhf6Q7EECYt20zyMi", "options": "{'publicKey':{'challenge':'5GOywA7BHL1QceQOfxHKDrasuN8SkbbgXmB5ImVZ+QU=','rp':{'name':'comp6','id':'localhost'},'user':{'name”:”dummy@dummy.com','displayName”:”dummy”,”id':'VTJDT0hJNWlWOHJaZ3VURkpKMzV3bjEydHRkTw=='},'pubKeyCredParams':[{'type':'public-key','alg':-7},{'type':'public-key','alg':-35},{'type':'public-key','alg':-36},{'type':'public-key','alg':-257},{'type':'public-key','alg':-258},{'type':'public-key','alg':-259},{'type':'public-key','alg':-37},{'type':'public-key','alg':-38},{'type':'public-key','alg':-39},{'type':'public-key','alg':-8}],'authenticatorSelection':{'userVerification':'preferred'},'timeout':60000,'attestation':'none'}}"}"""
+        )
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNotNone(
+                webauthn.sign_in_start("dummy@dummy.com", "https://example.com")
+            )
+
+        with patch("requests.post") as mock_post:
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.json.return_value = valid_response
+            mock_post.return_value = my_mock_response
+            lo = LoginOptions(True, {"k1": "v1"})
+            res = webauthn.sign_in_start("id1", "https://example.com", lo, "refresh")
+            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.signInAuthWebauthnStart}"
+            mock_post.assert_called_with(
+                expected_uri,
+                headers={
+                    **common.defaultHeaders,
+                    "Authorization": f"Bearer {self.dummy_project_id}:refresh",
+                },
+                params=None,
+                data=json.dumps(
+                    {
+                        "externalId": "id1",
+                        "origin": "https://example.com",
+                        "loginOptions": {"stepup": True, "customClaims": {"k1": "v1"}},
+                    }
+                ),
+                allow_redirects=False,
+                verify=True,
+            )
+            self.assertEqual(res, valid_response)
 
     def test_sign_in_finish(self):
         webauthn = WebauthN(Auth(self.dummy_project_id, self.public_key_dict))
@@ -236,9 +295,8 @@ class TestWebauthN(unittest.TestCase):
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
             expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.signInAuthWebauthnFinish}"
-            webauthn.sign_in_finish(
-                "t01", "response01", LoginOptions(True, {"k1": "v1"})
-            )
+            webauthn.sign_in_finish("t01", "response01")
+
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
@@ -246,13 +304,7 @@ class TestWebauthN(unittest.TestCase):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "transactionId": "t01",
-                        "response": "response01",
-                        "loginOptions": {"stepup": True, "customClaims": {"k1": "v1"}},
-                    }
-                ),
+                data=json.dumps({"transactionId": "t01", "response": "response01"}),
                 allow_redirects=False,
                 verify=True,
             )

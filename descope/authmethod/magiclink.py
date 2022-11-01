@@ -44,7 +44,9 @@ class MagicLink:
         loginOptions: LoginOptions = None,
         refreshToken: str = None,
     ) -> dict:
-        response = self._sign_in(method, identifier, uri, True)
+        response = self._sign_in(
+            method, identifier, uri, True, loginOptions, refreshToken
+        )
         return MagicLink._get_pending_ref_from_response(response)
 
     def sign_up_cross_device(
@@ -70,12 +72,10 @@ class MagicLink:
         )
         return jwt_response
 
-    def verify(
-        self, token: str, loginOptions: LoginOptions = None, refreshToken: str = None
-    ) -> dict:
+    def verify(self, token: str) -> dict:
         uri = EndpointsV1.verifyMagicLinkAuthPath
-        body = MagicLink._compose_verify_body(token, loginOptions)
-        response = self._auth.do_post(uri, body, None, refreshToken)
+        body = MagicLink._compose_verify_body(token)
+        response = self._auth.do_post(uri, body, None)
         resp = response.json()
         jwt_response = self._auth.generate_jwt_response(
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)

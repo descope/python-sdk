@@ -51,8 +51,25 @@ class TestMagicLink(unittest.TestCase):
     def test_compose_body(self):
         self.assertEqual(
             MagicLink._compose_signin_body("id1", "uri1", True),
-            {"externalId": "id1", "URI": "uri1", "crossDevice": True},
+            {
+                "externalId": "id1",
+                "URI": "uri1",
+                "crossDevice": True,
+                "loginOptions": {},
+            },
         )
+
+        lo = LoginOptions(stepup=True, customClaims={"k1": "v1"})
+        self.assertEqual(
+            MagicLink._compose_signin_body("id1", "uri1", True, lo),
+            {
+                "externalId": "id1",
+                "URI": "uri1",
+                "crossDevice": True,
+                "loginOptions": {"stepup": True, "customClaims": {"k1": "v1"}},
+            },
+        )
+
         self.assertEqual(
             MagicLink._compose_signup_body(
                 DeliveryMethod.EMAIL, "id1", "uri1", True, {"email": "email1"}
@@ -67,7 +84,7 @@ class TestMagicLink(unittest.TestCase):
         )
         self.assertEqual(
             MagicLink._compose_verify_body("t1"),
-            {"token": "t1", "loginOptions": {}},
+            {"token": "t1"},
         )
 
         self.assertEqual(
@@ -82,16 +99,12 @@ class TestMagicLink(unittest.TestCase):
 
         self.assertEqual(
             MagicLink._compose_get_session_body("pending_ref1"),
-            {"pendingRef": "pending_ref1", "loginOptions": {}},
+            {"pendingRef": "pending_ref1"},
         )
 
-        lo = LoginOptions(True)
         self.assertEqual(
-            MagicLink._compose_get_session_body("pending_ref1", lo),
-            {
-                "pendingRef": "pending_ref1",
-                "loginOptions": {"stepup": True, "customClaims": None},
-            },
+            MagicLink._compose_get_session_body("pending_ref1"),
+            {"pendingRef": "pending_ref1"},
         )
 
     def test_sign_in(self):
@@ -271,12 +284,44 @@ class TestMagicLink(unittest.TestCase):
                         "externalId": "dummy@dummy.com",
                         "URI": "http://test.me",
                         "crossDevice": True,
+                        "loginOptions": {},
                     }
                 ),
                 allow_redirects=False,
                 verify=True,
             )
             self.assertEqual(res["pendingRef"], "aaaa")
+
+    def test_sign_in_cross_device_with_login_options(self):
+        magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
+        with patch("requests.post") as mock_post:
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            data = json.loads("""{"pendingRef": "aaaa"}""")
+            my_mock_response.json.return_value = data
+            mock_post.return_value = my_mock_response
+            lo = LoginOptions(stepup=True, customClaims={"k1": "v1"})
+            magiclink.sign_in_cross_device(
+                DeliveryMethod.EMAIL, "dummy@dummy.com", "http://test.me", lo, "refresh"
+            )
+            mock_post.assert_called_with(
+                f"{DEFAULT_BASE_URL}{EndpointsV1.signInAuthMagicLinkPath}/email",
+                headers={
+                    **common.defaultHeaders,
+                    "Authorization": f"Bearer {self.dummy_project_id}:refresh",
+                },
+                params=None,
+                data=json.dumps(
+                    {
+                        "externalId": "dummy@dummy.com",
+                        "URI": "http://test.me",
+                        "crossDevice": True,
+                        "loginOptions": {"stepup": True, "customClaims": {"k1": "v1"}},
+                    }
+                ),
+                allow_redirects=False,
+                verify=True,
+            )
 
     def test_sign_up_cross_device(self):
         magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
@@ -338,6 +383,7 @@ class TestMagicLink(unittest.TestCase):
                         "externalId": "dummy@dummy.com",
                         "URI": "http://test.me",
                         "crossDevice": True,
+                        "loginOptions": {},
                     }
                 ),
                 allow_redirects=False,

@@ -82,10 +82,40 @@ class TestOAuth(unittest.TestCase):
                 verify=True,
             )
 
+    def test_oauth_start_with_login_options(self):
+        oauth = OAuth(Auth(self.dummy_project_id, self.public_key_dict))
+
+        # Test failed flows
+        self.assertRaises(AuthException, oauth.start, "")
+
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(AuthException, oauth.start, "google")
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNotNone(oauth.start("google"))
+
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            lo = LoginOptions(stepup=True, customClaims={"k1": "v1"})
+            oauth.start("facebook", loginOptions=lo, refreshToken="refresh")
+            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.oauthStart}"
+            mock_post.assert_called_with(
+                expected_uri,
+                headers={
+                    **common.defaultHeaders,
+                    "Authorization": f"Bearer {self.dummy_project_id}:refresh",
+                },
+                params={"provider": "facebook"},
+                data=json.dumps({"stepup": True, "customClaims": {"k1": "v1"}}),
+                allow_redirects=False,
+                verify=True,
+            )
+
     def test_compose_exchange_params(self):
-        self.assertEqual(
-            Auth._compose_exchange_body("c1"), {"code": "c1", "loginOptions": {}}
-        )
+        self.assertEqual(Auth._compose_exchange_body("c1"), {"code": "c1"})
 
     def test_exchange_token(self):
         oauth = OAuth(Auth(self.dummy_project_id, self.public_key_dict))
@@ -108,9 +138,7 @@ class TestOAuth(unittest.TestCase):
             )
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
-            oauth.exchange_token(
-                "c1", LoginOptions(stepup=True, customClaims={"k1": "v1"})
-            )
+            oauth.exchange_token("c1")
             mock_post.assert_called_with(
                 f"{DEFAULT_BASE_URL}{EndpointsV1.oauthExchangeTokenPath}",
                 headers={
@@ -118,14 +146,7 @@ class TestOAuth(unittest.TestCase):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "code": "c1",
-                        "loginOptions": LoginOptions(
-                            stepup=True, customClaims={"k1": "v1"}
-                        ).__dict__,
-                    }
-                ),
+                data=json.dumps({"code": "c1"}),
                 allow_redirects=False,
                 verify=True,
             )

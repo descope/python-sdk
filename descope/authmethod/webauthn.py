@@ -75,7 +75,7 @@ class WebauthN:
 
         uri = EndpointsV1.signInAuthWebauthnStart
         body = WebauthN._compose_signin_body(identifier, origin, loginOptions)
-        response = self._auth.do_post(uri, body, refreshToken)
+        response = self._auth.do_post(uri, body, pswd=refreshToken)
 
         return response.json()
 
