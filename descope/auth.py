@@ -232,12 +232,7 @@ class Auth:
         uri = Auth._compose_exchange_access_key_url()
         server_response = self.do_post(uri, {}, None, access_key)
         json = server_response.json()
-        result = {
-            SESSION_TOKEN_NAME: self._validate_token(json.get("sessionJwt", "")),
-            "keyId": json.get("keyId", ""),
-            "exp": json.get("expiration", 0),
-        }
-        return result
+        return self._generate_auth_info(json, None, False)
 
     @staticmethod
     def _compose_exchange_body(code: str) -> dict:
@@ -327,7 +322,7 @@ class Auth:
                 # just continue to the next key
                 pass
 
-    def adjust_properties(self, jwt_response: dict):
+    def adjust_properties(self, jwt_response: dict, user_jwt: bool):
         # Save permissions, roles and tenants info from Session token or from refresh token on the json top level
         if jwt_response.get(SESSION_TOKEN_NAME, None):
             jwt_response["permissions"] = jwt_response.get(SESSION_TOKEN_NAME).get(
@@ -355,14 +350,20 @@ class Auth:
             "iss", None
         ) or jwt_response.get(REFRESH_SESSION_TOKEN_NAME, {}).get("iss", None)
 
-        # Save the userID also in the dict top level
-        jwt_response["userId"] = jwt_response.get(SESSION_TOKEN_NAME, {}).get(
-            "sub", None
-        ) or jwt_response.get(REFRESH_SESSION_TOKEN_NAME, {}).get("sub", None)
+        if user_jwt:
+            # Save the userID also in the dict top level
+            jwt_response["userId"] = jwt_response.get(SESSION_TOKEN_NAME, {}).get(
+                "sub", None
+            ) or jwt_response.get(REFRESH_SESSION_TOKEN_NAME, {}).get("sub", None)
+        else:
+            # Save the AccessKeyID also in the dict top level
+            jwt_response["keyId"] = jwt_response.get(SESSION_TOKEN_NAME, {}).get(
+                "sub", None
+            )
 
         return jwt_response
 
-    def _generate_auth_info(self, response_body: dict, refresh_token: str) -> dict:
+    def _generate_auth_info(self, response_body: dict, refresh_token: str, user_jwt: bool) -> dict:
         jwt_response = {}
         st_jwt = response_body.get("sessionJwt", "")
         if st_jwt:
@@ -375,19 +376,20 @@ class Auth:
         elif rt_jwt:
             jwt_response[REFRESH_SESSION_TOKEN_NAME] = self._validate_token(rt_jwt)
 
-        jwt_response = self.adjust_properties(jwt_response)
+        jwt_response = self.adjust_properties(jwt_response, user_jwt)
 
-        jwt_response[COOKIE_DATA_NAME] = {
-            "exp": response_body.get("cookieExpiration", 0),
-            "maxAge": response_body.get("cookieMaxAge", 0),
-            "domain": response_body.get("cookieDomain", ""),
-            "path": response_body.get("cookiePath", "/"),
-        }
+        if user_jwt:
+            jwt_response[COOKIE_DATA_NAME] = {
+                "exp": response_body.get("cookieExpiration", 0),
+                "maxAge": response_body.get("cookieMaxAge", 0),
+                "domain": response_body.get("cookieDomain", ""),
+                "path": response_body.get("cookiePath", "/"),
+            }
 
         return jwt_response
 
     def generate_jwt_response(self, response_body: dict, refresh_cookie: str) -> dict:
-        jwt_response = self._generate_auth_info(response_body, refresh_cookie)
+        jwt_response = self._generate_auth_info(response_body, refresh_cookie, True)
 
         jwt_response["user"] = response_body.get("user", {})
         jwt_response["firstSeen"] = response_body.get("firstSeen", True)
