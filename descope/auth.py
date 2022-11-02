@@ -363,7 +363,9 @@ class Auth:
 
         return jwt_response
 
-    def _generate_auth_info(self, response_body: dict, refresh_token: str, user_jwt: bool) -> dict:
+    def _generate_auth_info(
+        self, response_body: dict, refresh_token: str, user_jwt: bool
+    ) -> dict:
         jwt_response = {}
         st_jwt = response_body.get("sessionJwt", "")
         if st_jwt:
