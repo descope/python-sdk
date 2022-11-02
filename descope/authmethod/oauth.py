@@ -9,7 +9,13 @@ class OAuth:
     def __init__(self, auth: Auth):
         self._auth = auth
 
-    def start(self, provider: str, return_url: str = "") -> dict:
+    def start(
+        self,
+        provider: str,
+        return_url: str = "",
+        loginOptions: LoginOptions = None,
+        refreshToken: str = None,
+    ) -> dict:
         """ """
         if not self._verify_provider(provider):
             raise AuthException(
@@ -20,15 +26,15 @@ class OAuth:
 
         uri = EndpointsV1.oauthStart
         params = OAuth._compose_start_params(provider, return_url)
-        response = self._auth.do_post(uri, {}, params)
+        response = self._auth.do_post(
+            uri, loginOptions.__dict__ if loginOptions else {}, params, refreshToken
+        )
 
         return response.json()
 
-    def exchange_token(
-        self, code: str, loginOptions: LoginOptions = None, refreshToken: str = None
-    ) -> dict:
+    def exchange_token(self, code: str) -> dict:
         uri = EndpointsV1.oauthExchangeTokenPath
-        return self._auth.exchange_token(uri, code, loginOptions, refreshToken)
+        return self._auth.exchange_token(uri, code)
 
     @staticmethod
     def _verify_provider(oauth_provider: str) -> str:

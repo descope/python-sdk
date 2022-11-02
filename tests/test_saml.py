@@ -8,7 +8,7 @@ import common
 from descope import AuthException
 from descope.auth import Auth
 from descope.authmethod.saml import SAML
-from descope.common import DEFAULT_BASE_URL, EndpointsV1
+from descope.common import DEFAULT_BASE_URL, EndpointsV1, LoginOptions
 
 
 class TestSAML(unittest.TestCase):
@@ -64,10 +64,43 @@ class TestSAML(unittest.TestCase):
                 verify=True,
             )
 
+    def test_saml_start_with_login_options(self):
+        saml = SAML(Auth(self.dummy_project_id, self.public_key_dict))
+
+        # Test failed flows
+        self.assertRaises(AuthException, saml.start, "", "http://dummy.com")
+        self.assertRaises(AuthException, saml.start, None, "http://dummy.com")
+        self.assertRaises(AuthException, saml.start, "tenant1", "")
+        self.assertRaises(AuthException, saml.start, "tenant1", None)
+
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(AuthException, saml.start, "tenant1", "http://dummy.com")
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNotNone(saml.start("tenant1", "http://dummy.com"))
+
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            lo = LoginOptions(stepup=True, customClaims={"k1": "v1"})
+            saml.start("tenant1", "http://dummy.com", lo, "refresh")
+            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.authSAMLStart}"
+            mock_post.assert_called_with(
+                expected_uri,
+                headers={
+                    **common.defaultHeaders,
+                    "Authorization": f"Bearer {self.dummy_project_id}:refresh",
+                },
+                params={"tenant": "tenant1", "redirectURL": "http://dummy.com"},
+                data=json.dumps({"stepup": True, "customClaims": {"k1": "v1"}}),
+                allow_redirects=False,
+                verify=True,
+            )
+
     def test_compose_exchange_params(self):
-        self.assertEqual(
-            Auth._compose_exchange_body("c1"), {"code": "c1", "loginOptions": {}}
-        )
+        self.assertEqual(Auth._compose_exchange_body("c1"), {"code": "c1"})
 
     def test_exchange_token(self):
         saml = SAML(Auth(self.dummy_project_id, self.public_key_dict))
@@ -98,7 +131,7 @@ class TestSAML(unittest.TestCase):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
-                data=json.dumps({"code": "c1", "loginOptions": {}}),
+                data=json.dumps({"code": "c1"}),
                 allow_redirects=False,
                 verify=True,
             )
