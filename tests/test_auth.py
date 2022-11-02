@@ -1,6 +1,7 @@
 import json
 import unittest
 from enum import Enum
+from unittest import mock
 from unittest.mock import patch
 
 from descope import AuthException, DeliveryMethod
@@ -13,11 +14,11 @@ class TestAuth(unittest.TestCase):
         self.public_key_dict = {
             "alg": "ES384",
             "crv": "P-384",
-            "kid": "2Bt5WLccLUey1Dp7utptZb3Fx9K",
+            "kid": "P2CtzUhdqpIF2ys9gg7ms06UvtC4",
             "kty": "EC",
             "use": "sig",
-            "x": "8SMbQQpCQAGAxCdoIz8y9gDw-wXoyoN5ILWpAlBKOcEM1Y7WmRKc1O2cnHggyEVi",
-            "y": "N5n5jKZA5Wu7_b4B36KKjJf-VRfJ-XqczfCSYy9GeQLqF-b63idfE0SYaYk9cFqg",
+            "x": "pX1l7nT2turcK5_Cdzos8SKIhpLh1Wy9jmKAVyMFiOCURoj-WQX1J0OUQqMsQO0s",
+            "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
         }
         self.public_key_str = json.dumps(self.public_key_dict)
 
@@ -251,6 +252,18 @@ class TestAuth(unittest.TestCase):
                 auth.exchange_access_key,
                 dummy_access_key,
             )
+
+        # Test success flow
+        valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3R6VWhkcXBJRjJ5czlnZzdtczA2VXZ0QzQiLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0Mzc1OTYsImlhdCI6MTY1OTYzNzU5NiwiaXNzIjoiUDJDdHpVaGRxcElGMnlzOWdnN21zMDZVdnRDNCIsInN1YiI6IlUyQ3UwajBXUHczWU9pUElTSmI1Mkwwd1VWTWcifQ.WLnlHugvzZtrV9OzBB7SjpCLNRvKF3ImFpVyIN5orkrjO2iyAKg_Rb4XHk9sXGC1aW8puYzLbhE1Jv3kk2hDcKggfE8OaRNRm8byhGFZHnvPJwcP_Ya-aRmfAvCLcKOL"
+        with patch("requests.post") as mock_post:
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            data = {"sessionJwt": valid_jwt_token}
+            my_mock_response.json.return_value = data
+            mock_post.return_value = my_mock_response
+            jwt_response = auth.exchange_access_key(dummy_access_key)
+            self.assertEqual(jwt_response["keyId"], "U2Cu0j0WPw3YOiPISJb52L0wUVMg")
+            self.assertEqual(jwt_response["projectId"], "P2CtzUhdqpIF2ys9gg7ms06UvtC4")
 
 
 if __name__ == "__main__":

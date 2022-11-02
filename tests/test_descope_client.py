@@ -402,6 +402,12 @@ class TestDescopeClient(unittest.TestCase):
             client.validate_tenant_roles(jwt_response, "t1", ["Role 1", "Role 2"])
         )
 
+    def test_exchange_access_key_empty_param(self):
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
+        with self.assertRaises(AuthException) as cm:
+            client.exchange_access_key("")
+        self.assertEqual(cm.exception.status_code, 400)
+
 
 if __name__ == "__main__":
     unittest.main()
