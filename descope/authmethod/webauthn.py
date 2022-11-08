@@ -24,7 +24,7 @@ class WebauthN:
             )
 
         uri = EndpointsV1.signUpAuthWebauthnStart
-        body = WebauthN._compose_signup_body(identifier, user, origin)
+        body = WebauthN._compose_sign_up_start_body(identifier, user, origin)
         response = self._auth.do_post(uri, body)
 
         return response.json()
@@ -74,7 +74,7 @@ class WebauthN:
             )
 
         uri = EndpointsV1.signInAuthWebauthnStart
-        body = WebauthN._compose_signin_body(identifier, origin, loginOptions)
+        body = WebauthN._compose_sign_in_start_body(identifier, origin, loginOptions)
         response = self._auth.do_post(uri, body, pswd=refreshToken)
 
         return response.json()
@@ -102,6 +102,30 @@ class WebauthN:
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
         )
         return jwt_response
+
+    def sign_up_or_in_start(
+        self,
+        identifier: str,
+        origin: str,
+    ) -> dict:
+        """
+        Docs
+        """
+        if not identifier:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
+            )
+
+        if not origin:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Origin cannot be empty"
+            )
+
+        uri = EndpointsV1.signUpOrInAuthWebauthnStart
+        body = WebauthN._compose_sign_up_or_in_start_body(identifier, origin)
+        response = self._auth.do_post(uri, body)
+
+        return response.json()
 
     def update_start(self, identifier: str, refresh_token: str, origin: str):
         """
@@ -142,7 +166,7 @@ class WebauthN:
         self._auth.do_post(uri, body)
 
     @staticmethod
-    def _compose_signup_body(identifier: str, user: dict, origin: str) -> dict:
+    def _compose_sign_up_start_body(identifier: str, user: dict, origin: str) -> dict:
         body = {"user": {"externalId": identifier}}
         if user is not None:
             for key, val in user.items():
@@ -151,13 +175,22 @@ class WebauthN:
         return body
 
     @staticmethod
-    def _compose_signin_body(
+    def _compose_sign_in_start_body(
         identifier: str, origin: str, loginOptions: LoginOptions = None
     ) -> dict:
         return {
             "externalId": identifier,
             "origin": origin,
             "loginOptions": loginOptions.__dict__ if loginOptions else {},
+        }
+
+    @staticmethod
+    def _compose_sign_up_or_in_start_body(
+        identifier: str, origin: str
+    ) -> dict:
+        return {
+            "externalId": identifier,
+            "origin": origin,
         }
 
     @staticmethod
