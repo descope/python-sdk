@@ -26,7 +26,7 @@ class TestWebauthN(unittest.TestCase):
 
     def test_compose_signup_body(self):
         self.assertEqual(
-            WebauthN._compose_signup_body(
+            WebauthN._compose_sign_up_start_body(
                 "dummy@dummy.com", {"name": "dummy"}, "https://example.com"
             ),
             {
@@ -43,11 +43,24 @@ class TestWebauthN(unittest.TestCase):
 
     def test_compose_signin_body(self):
         self.assertEqual(
-            WebauthN._compose_signin_body("dummy@dummy.com", "https://example.com"),
+            WebauthN._compose_sign_in_start_body(
+                "dummy@dummy.com", "https://example.com"
+            ),
             {
                 "externalId": "dummy@dummy.com",
                 "origin": "https://example.com",
                 "loginOptions": {},
+            },
+        )
+
+    def test_compose_signup_or_in_body(self):
+        self.assertEqual(
+            WebauthN._compose_sign_up_or_in_start_body(
+                "dummy@dummy.com", "https://example.com"
+            ),
+            {
+                "externalId": "dummy@dummy.com",
+                "origin": "https://example.com",
             },
         )
 
@@ -309,6 +322,61 @@ class TestWebauthN(unittest.TestCase):
                 verify=True,
             )
             self.assertIsNotNone(webauthn.sign_up_finish("t01", "response01"))
+
+    def test_sign_up_or_in_start(self):
+        webauthn = WebauthN(Auth(self.dummy_project_id, self.public_key_dict))
+
+        # Test failed flows
+        self.assertRaises(
+            AuthException, webauthn.sign_up_or_in_start, "", "https://example.com"
+        )
+        self.assertRaises(AuthException, webauthn.sign_up_or_in_start, "id", "")
+
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                webauthn.sign_up_or_in_start,
+                "id1",
+                "https://example.com",
+            )
+
+        # Test success flow
+        valid_response = json.loads(
+            """{"create": true, "transactionId": "2COHI3LIixYhf6Q7EECYt20zyMi", "options": "{'publicKey':{'challenge':'5GOywA7BHL1QceQOfxHKDrasuN8SkbbgXmB5ImVZ+QU=','rp':{'name':'comp6','id':'localhost'},'user':{'name”:”dummy@dummy.com','displayName”:”dummy”,”id':'VTJDT0hJNWlWOHJaZ3VURkpKMzV3bjEydHRkTw=='},'pubKeyCredParams':[{'type':'public-key','alg':-7},{'type':'public-key','alg':-35},{'type':'public-key','alg':-36},{'type':'public-key','alg':-257},{'type':'public-key','alg':-258},{'type':'public-key','alg':-259},{'type':'public-key','alg':-37},{'type':'public-key','alg':-38},{'type':'public-key','alg':-39},{'type':'public-key','alg':-8}],'authenticatorSelection':{'userVerification':'preferred'},'timeout':60000,'attestation':'none'}}"}"""
+        )
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNotNone(
+                webauthn.sign_up_or_in_start("dummy@dummy.com", "https://example.com")
+            )
+
+        with patch("requests.post") as mock_post:
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.json.return_value = valid_response
+            mock_post.return_value = my_mock_response
+            res = webauthn.sign_up_or_in_start("id1", "https://example.com")
+            expected_uri = (
+                f"{DEFAULT_BASE_URL}{EndpointsV1.signUpOrInAuthWebauthnStart}"
+            )
+            mock_post.assert_called_with(
+                expected_uri,
+                headers={
+                    **common.defaultHeaders,
+                    "Authorization": f"Bearer {self.dummy_project_id}",
+                },
+                params=None,
+                data=json.dumps(
+                    {
+                        "externalId": "id1",
+                        "origin": "https://example.com",
+                    }
+                ),
+                allow_redirects=False,
+                verify=True,
+            )
+            self.assertEqual(res, valid_response)
 
     def test_update_start(self):
         valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkVGVuYW50cyI6eyIiOm51bGx9LCJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwNjc5MjA4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MjA5MDA4NzIwOCwiaWF0IjoxNjU4MDg3MjA4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQzU1dnl4dzBzUkw2RmRNNjhxUnNDRGRST1YifQ.cWP5up4R5xeIl2qoG2NtfLH3Q5nRJVKdz-FDoAXctOQW9g3ceZQi6rZQ-TPBaXMKw68bijN3bLJTqxWW5WHzqRUeopfuzTcMYmC0wP2XGJkrdF6A8D5QW6acSGqglFgu"

@@ -58,6 +58,7 @@ class EndpointsV1:
     signUpAuthWebauthnFinish = "/v1/auth/webauthn/signup/finish"
     signInAuthWebauthnStart = "/v1/auth/webauthn/signin/start"
     signInAuthWebauthnFinish = "/v1/auth/webauthn/signin/finish"
+    signUpOrInAuthWebauthnStart = "/v1/auth/webauthn/signup-in/start"
     updateAuthWebauthnStart = "/v1/auth/webauthn/update/start"
     updateAuthWebauthnFinish = "/v1/auth/webauthn/update/finish"
 
