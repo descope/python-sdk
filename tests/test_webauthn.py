@@ -43,7 +43,9 @@ class TestWebauthN(unittest.TestCase):
 
     def test_compose_signin_body(self):
         self.assertEqual(
-            WebauthN._compose_sign_in_start_body("dummy@dummy.com", "https://example.com"),
+            WebauthN._compose_sign_in_start_body(
+                "dummy@dummy.com", "https://example.com"
+            ),
             {
                 "externalId": "dummy@dummy.com",
                 "origin": "https://example.com",
@@ -53,7 +55,9 @@ class TestWebauthN(unittest.TestCase):
 
     def test_compose_signup_or_in_body(self):
         self.assertEqual(
-            WebauthN._compose_sign_up_or_in_start_body("dummy@dummy.com", "https://example.com"),
+            WebauthN._compose_sign_up_or_in_start_body(
+                "dummy@dummy.com", "https://example.com"
+            ),
             {
                 "externalId": "dummy@dummy.com",
                 "origin": "https://example.com",

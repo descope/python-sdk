@@ -185,9 +185,7 @@ class WebauthN:
         }
 
     @staticmethod
-    def _compose_sign_up_or_in_start_body(
-        identifier: str, origin: str
-    ) -> dict:
+    def _compose_sign_up_or_in_start_body(identifier: str, origin: str) -> dict:
         return {
             "externalId": identifier,
             "origin": origin,
