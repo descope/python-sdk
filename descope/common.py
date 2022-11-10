@@ -17,7 +17,8 @@ REDIRECT_LOCATION_COOKIE_NAME = "Location"
 class EndpointsV1:
     publicKeyPath = "/v1/keys"
     refreshTokenPath = "/v1/auth/refresh"
-    logoutPath = "/v1/auth/logoutall"
+    logoutPath = "/v1/auth/logout"
+    logoutAllPath = "/v1/auth/logoutall"
     mePath = "/v1/auth/me"
 
     # accesskey
