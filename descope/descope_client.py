@@ -178,7 +178,7 @@ class DescopeClient:
 
     def logout(self, refresh_token: str) -> requests.Response:
         """
-        Logout user from all active sessions and revoke the refresh_token. After calling this function,
+        Logout user from current session and revoke the refresh_token. After calling this function,
             you must invalidate or remove any cookies you have created.
 
         Args:
@@ -197,6 +197,29 @@ class DescopeClient:
             )
 
         uri = EndpointsV1.logoutPath
+        return self._auth.do_post(uri, {}, None, refresh_token)
+
+    def logout_all(self, refresh_token: str) -> requests.Response:
+        """
+        Logout user from all active sessions and revoke the refresh_token. After calling this function,
+            you must invalidate or remove any cookies you have created.
+
+        Args:
+        refresh_token (str): The refresh token
+
+        Return value (requests.Response): returns the response from the Descope server
+
+        Raise:
+        AuthException: Exception is raised if session is not authorized or another error occurs
+        """
+        if refresh_token is None:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                f"signed refresh token {refresh_token} is empty",
+            )
+
+        uri = EndpointsV1.logoutAllPath
         return self._auth.do_post(uri, {}, None, refresh_token)
 
     def me(self, refresh_token: str) -> dict:
