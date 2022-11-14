@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from descope import SESSION_COOKIE_NAME, AuthException, DeliveryMethod, DescopeClient
 from descope.authmethod.otp import OTP  # noqa: F401
-from descope.common import REFRESH_SESSION_COOKIE_NAME
+from descope.common import REFRESH_SESSION_COOKIE_NAME, LoginOptions
 
 
 class TestOTP(unittest.TestCase):
@@ -187,6 +187,13 @@ class TestOTP(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.otp.sign_in(DeliveryMethod.EMAIL, "dummy@dummy.com")
+            )
+            self.assertRaises(
+                AuthException,
+                client.otp.sign_in,
+                DeliveryMethod.EMAIL,
+                "exid",
+                LoginOptions(mfa=True),
             )
 
     def test_sign_up_or_in(self):

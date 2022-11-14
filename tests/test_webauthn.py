@@ -199,6 +199,13 @@ class TestWebauthN(unittest.TestCase):
             self.assertIsNotNone(
                 webauthn.sign_in_start("dummy@dummy.com", "https://example.com")
             )
+            self.assertRaises(
+                AuthException,
+                webauthn.sign_in_start,
+                "id",
+                "origin",
+                LoginOptions(mfa=True),
+            )
 
         with patch("requests.post") as mock_post:
             my_mock_response = mock.Mock()
@@ -259,7 +266,7 @@ class TestWebauthN(unittest.TestCase):
             my_mock_response.ok = True
             my_mock_response.json.return_value = valid_response
             mock_post.return_value = my_mock_response
-            lo = LoginOptions(True, {"k1": "v1"})
+            lo = LoginOptions(stepup=True, customClaims={"k1": "v1"})
             res = webauthn.sign_in_start("id1", "https://example.com", lo, "refresh")
             expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.signInAuthWebauthnStart}"
             mock_post.assert_called_with(
@@ -273,7 +280,11 @@ class TestWebauthN(unittest.TestCase):
                     {
                         "externalId": "id1",
                         "origin": "https://example.com",
-                        "loginOptions": {"stepup": True, "customClaims": {"k1": "v1"}},
+                        "loginOptions": {
+                            "stepup": True,
+                            "customClaims": {"k1": "v1"},
+                            "mfa": False,
+                        },
                     }
                 ),
                 allow_redirects=False,

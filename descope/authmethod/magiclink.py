@@ -122,6 +122,17 @@ class MagicLink:
                 "Identifier is empty",
             )
 
+        if (
+            loginOptions is not None
+            and (loginOptions.mfa or loginOptions.stepup)
+            and refreshToken is None
+        ):
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                "Missing refresh token for stepup/mfa",
+            )
+
         body = MagicLink._compose_signin_body(
             identifier, uri, cross_device, loginOptions
         )

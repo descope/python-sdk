@@ -51,6 +51,17 @@ class TOTP:
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Code cannot be empty"
             )
 
+        if (
+            loginOptions is not None
+            and (loginOptions.mfa or loginOptions.stepup)
+            and refreshToken is None
+        ):
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                "Missing refresh token for stepup/mfa",
+            )
+
         uri = EndpointsV1.verifyTOTPPath
         body = TOTP._compose_signin_body(identifier, code, loginOptions)
         response = self._auth.do_post(uri, body, None, refreshToken)

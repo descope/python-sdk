@@ -73,6 +73,17 @@ class WebauthN:
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Origin cannot be empty"
             )
 
+        if (
+            loginOptions is not None
+            and (loginOptions.mfa or loginOptions.stepup)
+            and refreshToken is None
+        ):
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                "Missing refresh token for stepup/mfa",
+            )
+
         uri = EndpointsV1.signInAuthWebauthnStart
         body = WebauthN._compose_sign_in_start_body(identifier, origin, loginOptions)
         response = self._auth.do_post(uri, body, pswd=refreshToken)

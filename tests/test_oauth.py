@@ -41,16 +41,6 @@ class TestOAuth(unittest.TestCase):
             False,
         )
 
-        self.assertEqual(
-            OAuth._verify_provider("unknown provider"),
-            False,
-        )
-
-        self.assertEqual(
-            OAuth._verify_provider("google"),
-            True,
-        )
-
     def test_oauth_start(self):
         oauth = OAuth(Auth(self.dummy_project_id, self.public_key_dict))
 
@@ -65,6 +55,14 @@ class TestOAuth(unittest.TestCase):
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(oauth.start("google"))
+
+            self.assertRaises(
+                AuthException,
+                oauth.start,
+                "facebook",
+                "http://test.me",
+                LoginOptions(mfa=True),
+            )
 
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
@@ -109,7 +107,9 @@ class TestOAuth(unittest.TestCase):
                     "Authorization": f"Bearer {self.dummy_project_id}:refresh",
                 },
                 params={"provider": "facebook"},
-                data=json.dumps({"stepup": True, "customClaims": {"k1": "v1"}}),
+                data=json.dumps(
+                    {"stepup": True, "customClaims": {"k1": "v1"}, "mfa": False}
+                ),
                 allow_redirects=False,
                 verify=True,
             )

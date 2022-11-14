@@ -29,6 +29,17 @@ class SAML:
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Return url cannot be empty"
             )
 
+        if (
+            loginOptions is not None
+            and (loginOptions.mfa or loginOptions.stepup)
+            and refreshToken is None
+        ):
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                "Missing refresh token for stepup/mfa",
+            )
+
         uri = EndpointsV1.authSAMLStart
         params = SAML._compose_start_params(tenant, return_url)
         response = self._auth.do_post(

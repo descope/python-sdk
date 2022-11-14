@@ -73,6 +73,9 @@ OAuthProviders = ["facebook", "github", "google", "microsoft", "gitlab", "apple"
 
 
 class LoginOptions:
-    def __init__(self, stepup: bool = False, customClaims: dict = None):
+    def __init__(
+        self, stepup: bool = False, mfa: bool = False, customClaims: dict = None
+    ):
         self.stepup = stepup
         self.customClaims = customClaims
+        self.mfa = mfa

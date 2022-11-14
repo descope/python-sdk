@@ -24,6 +24,17 @@ class OAuth:
                 f"Unknown OAuth provider: {provider}",
             )
 
+        if (
+            loginOptions is not None
+            and (loginOptions.mfa or loginOptions.stepup)
+            and refreshToken is None
+        ):
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                "Missing refresh token for stepup/mfa",
+            )
+
         uri = EndpointsV1.oauthStart
         params = OAuth._compose_start_params(provider, return_url)
         response = self._auth.do_post(
@@ -40,11 +51,7 @@ class OAuth:
     def _verify_provider(oauth_provider: str) -> str:
         if oauth_provider == "" or oauth_provider is None:
             return False
-
-        if oauth_provider in OAuthProviders:
-            return True
-        else:
-            return False
+        return True
 
     @staticmethod
     def _compose_start_params(provider: str, returnURL: str) -> dict:
