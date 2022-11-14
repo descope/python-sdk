@@ -1,5 +1,10 @@
 from descope.auth import Auth
-from descope.common import REFRESH_SESSION_COOKIE_NAME, EndpointsV1, LoginOptions
+from descope.common import (
+    REFRESH_SESSION_COOKIE_NAME,
+    EndpointsV1,
+    LoginOptions,
+    validateRefreshTokenProvided,
+)
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
@@ -73,16 +78,7 @@ class WebauthN:
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Origin cannot be empty"
             )
 
-        if (
-            loginOptions is not None
-            and (loginOptions.mfa or loginOptions.stepup)
-            and refreshToken is None
-        ):
-            raise AuthException(
-                400,
-                ERROR_TYPE_INVALID_ARGUMENT,
-                "Missing refresh token for stepup/mfa",
-            )
+        validateRefreshTokenProvided(loginOptions, refreshToken)
 
         uri = EndpointsV1.signInAuthWebauthnStart
         body = WebauthN._compose_sign_in_start_body(identifier, origin, loginOptions)

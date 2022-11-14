@@ -1,5 +1,5 @@
 from descope.auth import Auth
-from descope.common import EndpointsV1, LoginOptions
+from descope.common import EndpointsV1, LoginOptions, validateRefreshTokenProvided
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
@@ -29,16 +29,7 @@ class SAML:
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Return url cannot be empty"
             )
 
-        if (
-            loginOptions is not None
-            and (loginOptions.mfa or loginOptions.stepup)
-            and refreshToken is None
-        ):
-            raise AuthException(
-                400,
-                ERROR_TYPE_INVALID_ARGUMENT,
-                "Missing refresh token for stepup/mfa",
-            )
+        validateRefreshTokenProvided(loginOptions, refreshToken)
 
         uri = EndpointsV1.authSAMLStart
         params = SAML._compose_start_params(tenant, return_url)

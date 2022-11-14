@@ -1,5 +1,5 @@
 from descope.auth import Auth
-from descope.common import EndpointsV1, LoginOptions, OAuthProviders
+from descope.common import EndpointsV1, LoginOptions, validateRefreshTokenProvided
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
@@ -24,16 +24,7 @@ class OAuth:
                 f"Unknown OAuth provider: {provider}",
             )
 
-        if (
-            loginOptions is not None
-            and (loginOptions.mfa or loginOptions.stepup)
-            and refreshToken is None
-        ):
-            raise AuthException(
-                400,
-                ERROR_TYPE_INVALID_ARGUMENT,
-                "Missing refresh token for stepup/mfa",
-            )
+        validateRefreshTokenProvided(loginOptions, refreshToken)
 
         uri = EndpointsV1.oauthStart
         params = OAuth._compose_start_params(provider, return_url)

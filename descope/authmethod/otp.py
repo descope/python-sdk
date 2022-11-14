@@ -4,6 +4,7 @@ from descope.common import (
     DeliveryMethod,
     EndpointsV1,
     LoginOptions,
+    validateRefreshTokenProvided,
 )
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
@@ -39,16 +40,7 @@ class OTP:
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
             )
 
-        if (
-            loginOptions is not None
-            and (loginOptions.mfa or loginOptions.stepup)
-            and refreshToken is None
-        ):
-            raise AuthException(
-                400,
-                ERROR_TYPE_INVALID_ARGUMENT,
-                "Missing refresh token for stepup/mfa",
-            )
+        validateRefreshTokenProvided(loginOptions, refreshToken)
 
         uri = OTP._compose_signin_url(method)
         body = OTP._compose_signin_body(identifier, loginOptions)
