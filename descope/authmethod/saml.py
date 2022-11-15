@@ -1,5 +1,5 @@
 from descope.auth import Auth
-from descope.common import EndpointsV1, LoginOptions
+from descope.common import EndpointsV1, LoginOptions, validateRefreshTokenProvided
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
@@ -28,6 +28,8 @@ class SAML:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Return url cannot be empty"
             )
+
+        validateRefreshTokenProvided(loginOptions, refreshToken)
 
         uri = EndpointsV1.authSAMLStart
         params = SAML._compose_start_params(tenant, return_url)

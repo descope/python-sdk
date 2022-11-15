@@ -1,5 +1,10 @@
 from descope.auth import Auth
-from descope.common import REFRESH_SESSION_COOKIE_NAME, EndpointsV1, LoginOptions
+from descope.common import (
+    REFRESH_SESSION_COOKIE_NAME,
+    EndpointsV1,
+    LoginOptions,
+    validateRefreshTokenProvided,
+)
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
@@ -50,6 +55,8 @@ class TOTP:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Code cannot be empty"
             )
+
+        validateRefreshTokenProvided(loginOptions, refreshToken)
 
         uri = EndpointsV1.verifyTOTPPath
         body = TOTP._compose_signin_body(identifier, code, loginOptions)

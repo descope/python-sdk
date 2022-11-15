@@ -1,5 +1,5 @@
 from descope.auth import Auth
-from descope.common import EndpointsV1, LoginOptions, OAuthProviders
+from descope.common import EndpointsV1, LoginOptions, validateRefreshTokenProvided
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
@@ -24,6 +24,8 @@ class OAuth:
                 f"Unknown OAuth provider: {provider}",
             )
 
+        validateRefreshTokenProvided(loginOptions, refreshToken)
+
         uri = EndpointsV1.oauthStart
         params = OAuth._compose_start_params(provider, return_url)
         response = self._auth.do_post(
@@ -40,11 +42,7 @@ class OAuth:
     def _verify_provider(oauth_provider: str) -> str:
         if oauth_provider == "" or oauth_provider is None:
             return False
-
-        if oauth_provider in OAuthProviders:
-            return True
-        else:
-            return False
+        return True
 
     @staticmethod
     def _compose_start_params(provider: str, returnURL: str) -> dict:

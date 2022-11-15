@@ -8,6 +8,7 @@ from descope.common import (
     DeliveryMethod,
     EndpointsV1,
     LoginOptions,
+    validateRefreshTokenProvided,
 )
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
@@ -121,6 +122,8 @@ class MagicLink:
                 ERROR_TYPE_INVALID_ARGUMENT,
                 "Identifier is empty",
             )
+
+        validateRefreshTokenProvided(loginOptions, refreshToken)
 
         body = MagicLink._compose_signin_body(
             identifier, uri, cross_device, loginOptions

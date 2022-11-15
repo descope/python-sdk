@@ -8,7 +8,7 @@ import common
 from descope import AuthException
 from descope.auth import Auth
 from descope.authmethod.totp import TOTP  # noqa: F401
-from descope.common import DEFAULT_BASE_URL, EndpointsV1
+from descope.common import DEFAULT_BASE_URL, EndpointsV1, LoginOptions
 
 
 class TestTOTP(unittest.TestCase):
@@ -89,6 +89,13 @@ class TestTOTP(unittest.TestCase):
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
             self.assertIsNotNone(totp.sign_in_code("dummy@dummy.com", "1234"))
+            self.assertRaises(
+                AuthException,
+                totp.sign_in_code,
+                "dummy@dummy.com",
+                "code",
+                LoginOptions(mfa=True),
+            )
 
     def test_update_user(self):
         totp = TOTP(Auth(self.dummy_project_id, self.public_key_dict))

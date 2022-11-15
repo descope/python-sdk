@@ -1,5 +1,7 @@
 from enum import Enum
 
+from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
+
 DEFAULT_BASE_URL = "https://api.descope.com"
 
 PHONE_REGEX = """^(?:(?:\\(?(?:00|\\+)([1-4]\\d\\d|[1-9]\\d?)\\)?)?[\\-\\.\\ \\\\/]?)?((?:\\(?\\d{1,}\\)?[\\-\\.\\ \\\\/]?){0,})(?:[\\-\\.\\ \\\\/]?(?:#|ext\\.?|extension|x)[\\-\\.\\ \\\\/]?(\\d+))?$"""
@@ -70,10 +72,25 @@ class DeliveryMethod(Enum):
     EMAIL = 3
 
 
-OAuthProviders = ["facebook", "github", "google", "microsoft", "gitlab", "apple"]
-
-
 class LoginOptions:
-    def __init__(self, stepup: bool = False, customClaims: dict = None):
+    def __init__(
+        self, stepup: bool = False, mfa: bool = False, customClaims: dict = None
+    ):
         self.stepup = stepup
         self.customClaims = customClaims
+        self.mfa = mfa
+
+
+def validateRefreshTokenProvided(
+    loginOptions: LoginOptions = None, refreshToken: str = None
+):
+    refreshRequired = loginOptions is not None and (
+        loginOptions.mfa or loginOptions.stepup
+    )
+    refreshMissing = refreshToken is None or refreshToken == ""
+    if refreshRequired and refreshMissing:
+        raise AuthException(
+            400,
+            ERROR_TYPE_INVALID_ARGUMENT,
+            "Missing refresh token for stepup/mfa",
+        )

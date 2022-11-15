@@ -66,7 +66,11 @@ class TestMagicLink(unittest.TestCase):
                 "externalId": "id1",
                 "URI": "uri1",
                 "crossDevice": True,
-                "loginOptions": {"stepup": True, "customClaims": {"k1": "v1"}},
+                "loginOptions": {
+                    "stepup": True,
+                    "mfa": False,
+                    "customClaims": {"k1": "v1"},
+                },
             },
         )
 
@@ -150,6 +154,15 @@ class TestMagicLink(unittest.TestCase):
                 magiclink.sign_in(
                     DeliveryMethod.EMAIL, "dummy@dummy.com", "http://test.me"
                 )
+            )
+
+            self.assertRaises(
+                AuthException,
+                magiclink.sign_in,
+                DeliveryMethod.EMAIL,
+                "exid",
+                "http://test.me",
+                LoginOptions(mfa=True),
             )
 
     def test_sign_up(self):
@@ -316,7 +329,11 @@ class TestMagicLink(unittest.TestCase):
                         "externalId": "dummy@dummy.com",
                         "URI": "http://test.me",
                         "crossDevice": True,
-                        "loginOptions": {"stepup": True, "customClaims": {"k1": "v1"}},
+                        "loginOptions": {
+                            "stepup": True,
+                            "customClaims": {"k1": "v1"},
+                            "mfa": False,
+                        },
                     }
                 ),
                 allow_redirects=False,

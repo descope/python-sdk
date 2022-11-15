@@ -4,6 +4,7 @@ from descope.common import (
     DeliveryMethod,
     EndpointsV1,
     LoginOptions,
+    validateRefreshTokenProvided,
 )
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
@@ -38,6 +39,8 @@ class OTP:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
             )
+
+        validateRefreshTokenProvided(loginOptions, refreshToken)
 
         uri = OTP._compose_signin_url(method)
         body = OTP._compose_signin_body(identifier, loginOptions)

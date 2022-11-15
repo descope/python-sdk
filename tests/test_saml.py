@@ -63,6 +63,13 @@ class TestSAML(unittest.TestCase):
                 allow_redirects=False,
                 verify=True,
             )
+            self.assertRaises(
+                AuthException,
+                saml.start,
+                "tenant",
+                "http://dummy.com",
+                LoginOptions(mfa=True),
+            )
 
     def test_saml_start_with_login_options(self):
         saml = SAML(Auth(self.dummy_project_id, self.public_key_dict))
@@ -94,7 +101,9 @@ class TestSAML(unittest.TestCase):
                     "Authorization": f"Bearer {self.dummy_project_id}:refresh",
                 },
                 params={"tenant": "tenant1", "redirectURL": "http://dummy.com"},
-                data=json.dumps({"stepup": True, "customClaims": {"k1": "v1"}}),
+                data=json.dumps(
+                    {"stepup": True, "customClaims": {"k1": "v1"}, "mfa": False}
+                ),
                 allow_redirects=False,
                 verify=True,
             )

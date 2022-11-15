@@ -1,5 +1,10 @@
 from descope.auth import Auth
-from descope.common import REFRESH_SESSION_COOKIE_NAME, EndpointsV1, LoginOptions
+from descope.common import (
+    REFRESH_SESSION_COOKIE_NAME,
+    EndpointsV1,
+    LoginOptions,
+    validateRefreshTokenProvided,
+)
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
@@ -72,6 +77,8 @@ class WebauthN:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Origin cannot be empty"
             )
+
+        validateRefreshTokenProvided(loginOptions, refreshToken)
 
         uri = EndpointsV1.signInAuthWebauthnStart
         body = WebauthN._compose_sign_in_start_body(identifier, origin, loginOptions)
