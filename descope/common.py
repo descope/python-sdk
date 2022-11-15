@@ -81,9 +81,14 @@ class LoginOptions:
         self.mfa = mfa
 
 
-def validateRefreshTokenProvided(loginOptions: LoginOptions = None, refreshToken: str = None):
-    if (loginOptions is not None and (loginOptions.mfa or loginOptions.stepup) and
-            refreshToken is None or refreshToken == ""):
+def validateRefreshTokenProvided(
+    loginOptions: LoginOptions = None, refreshToken: str = None
+):
+    refreshRequired = loginOptions is not None and (
+        loginOptions.mfa or loginOptions.stepup
+    )
+    refreshMissing = refreshToken is None or refreshToken == ""
+    if refreshRequired and refreshMissing:
         raise AuthException(
             400,
             ERROR_TYPE_INVALID_ARGUMENT,
