@@ -311,7 +311,7 @@ i18n = ["Babel (>=2.7)"]
 
 [[package]]
 name = "liccheck"
-version = "0.7.2"
+version = "0.7.3"
 description = "Check python packages from requirement.txt and report issues"
 category = "dev"
 optional = false
@@ -661,7 +661,7 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "fc3ce612bf0c93ae20d8167f758e03d1659e4dae872f37e29109ec206a0af541"
+content-hash = "567a9d0ec4a9b94b15c82d774f62ff67c518e1b40692c78cefa67bccc4d2b371"
 
 [metadata.files]
 attrs = [
@@ -918,8 +918,8 @@ Jinja2 = [
     {file = "Jinja2-3.1.2.tar.gz", hash = "sha256:31351a702a408a9e7595a8fc6150fc3f43bb6bf7e319770cbc0db9df9437e852"},
 ]
 liccheck = [
-    {file = "liccheck-0.7.2-py2.py3-none-any.whl", hash = "sha256:a50d212b943d119f61d822080e0b7bcefbae4c3b7cc7b54b47b465c191bfc8aa"},
-    {file = "liccheck-0.7.2.tar.gz", hash = "sha256:1961ee9bd9ae72c21f79da6db3a2048536f0912f4c5fde0f0c062d65ea5fbf0a"},
+    {file = "liccheck-0.7.3-py2.py3-none-any.whl", hash = "sha256:3e7185ed89700cfde85e566f9d92b84222618e05126503848f00c81849135e5e"},
+    {file = "liccheck-0.7.3.tar.gz", hash = "sha256:aeda7ef23705619146080a3056ba54d63ee0164807005119f94ab25ab34cd1b2"},
 ]
 MarkupSafe = [
     {file = "MarkupSafe-2.1.1-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:86b1f75c4e7c2ac2ccdaec2b9022845dbb81880ca318bb7a0a01fbf7813e3812"},
