@@ -3,6 +3,7 @@ from typing import List
 import requests
 
 from descope.auth import Auth  # noqa: F401
+from descope.mgmt import MGMT  # noqa: F401
 from descope.authmethod.magiclink import MagicLink  # noqa: F401
 from descope.authmethod.oauth import OAuth  # noqa: F401
 from descope.authmethod.otp import OTP  # noqa: F401
@@ -24,12 +25,17 @@ class DescopeClient:
     ):
         auth = Auth(project_id, public_key, skip_verify)
         self._auth = auth
+        self._mgmt = MGMT(auth)
         self._magiclink = MagicLink(auth)
         self._oauth = OAuth(auth)
         self._saml = SAML(auth)
         self._otp = OTP(auth)
         self._totp = TOTP(auth)
         self._webauthn = WebauthN(auth)
+
+    @property
+    def mgmt(self):
+        return self._mgmt
 
     @property
     def magiclink(self):
