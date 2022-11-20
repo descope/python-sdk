@@ -1,0 +1,121 @@
+import json
+import unittest
+from unittest import mock
+from unittest.mock import patch
+
+from descope import AuthException, DescopeClient
+from descope.common import REFRESH_SESSION_COOKIE_NAME, LoginOptions
+
+
+class TestUser(unittest.TestCase):
+    def setUp(self) -> None:
+        self.dummy_project_id = "dummy"
+        self.public_key_dict = {
+            "alg": "ES384",
+            "crv": "P-384",
+            "kid": "P2CtzUhdqpIF2ys9gg7ms06UvtC4",
+            "kty": "EC",
+            "use": "sig",
+            "x": "pX1l7nT2turcK5_Cdzos8SKIhpLh1Wy9jmKAVyMFiOCURoj-WQX1J0OUQqMsQO0s",
+            "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
+        }
+
+    def test_create(self):
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
+
+        # Test failed flows
+        self.assertRaises(
+            AuthException,
+            client.mgmt.user.create,
+            "",
+            "valid-identifier",
+        )
+        self.assertRaises(
+            AuthException,
+            client.mgmt.user.create,
+            "valid-key",
+            "",
+        )
+
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.user.create,
+                "valid-key",
+                "valid-identifier",
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(
+                client.mgmt.user.create("key", "identifier", display_name="name")
+            )
+
+    def test_update(self):
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
+
+        # Test failed flows
+        self.assertRaises(
+            AuthException,
+            client.mgmt.user.update,
+            "",
+            "valid-identifier",
+        )
+        self.assertRaises(
+            AuthException,
+            client.mgmt.user.update,
+            "valid-key",
+            "",
+        )
+
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.user.update,
+                "valid-key",
+                "valid-identifier",
+                "email@something.com",
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(
+                client.mgmt.user.update("key", "identifier", display_name="new-name", role_names=["domain.com"])
+            )
+
+    def test_delete(self):
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
+
+        # Test failed flows
+        self.assertRaises(
+            AuthException,
+            client.mgmt.user.delete,
+            "",
+            "valid-id",
+        )
+        self.assertRaises(
+            AuthException,
+            client.mgmt.user.delete,
+            "valid-key",
+            "",
+        )
+
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.user.delete,
+                "valid-key",
+                "valid-id",
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(
+                client.mgmt.user.delete("key", "t1")
+            )

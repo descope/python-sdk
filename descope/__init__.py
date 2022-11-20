@@ -8,3 +8,4 @@ from descope.common import (
 )
 from descope.descope_client import DescopeClient
 from descope.exceptions import AuthException
+from descope.management.user import UserTenants
