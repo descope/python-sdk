@@ -1,6 +1,7 @@
 from descope.auth import Auth
 from descope.management.tenant import Tenant  # noqa: F401
 from descope.management.user import User  # noqa: F401
+from descope.management.sso_settings import SSOSettings  # noqa: F401
 
 
 class MGMT:
@@ -10,6 +11,7 @@ class MGMT:
         self._auth = auth
         self._tenant = Tenant(auth)
         self._user = User(auth)
+        self._sso = SSOSettings(auth)
 
     @property
     def tenant(self):
@@ -18,3 +20,7 @@ class MGMT:
     @property
     def user(self):
         return self._user
+
+    @property
+    def sso(self):
+        return self._sso

@@ -4,7 +4,6 @@ from unittest import mock
 from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
-from descope.common import REFRESH_SESSION_COOKIE_NAME, LoginOptions
 
 
 class TestTenant(unittest.TestCase):
@@ -24,19 +23,6 @@ class TestTenant(unittest.TestCase):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)
 
         # Test failed flows
-        self.assertRaises(
-            AuthException,
-            client.mgmt.tenant.create,
-            "",
-            "valid-name",
-        )
-        self.assertRaises(
-            AuthException,
-            client.mgmt.tenant.create,
-            "valid-key",
-            "",
-        )
-
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
@@ -59,21 +45,6 @@ class TestTenant(unittest.TestCase):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)
 
         # Test failed flows
-        self.assertRaises(
-            AuthException,
-            client.mgmt.tenant.update,
-            "",
-            "valid-id",
-            "valid-name",
-        )
-        self.assertRaises(
-            AuthException,
-            client.mgmt.tenant.update,
-            "valid-key",
-            "",
-            "valid-name",
-        )
-
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
@@ -95,19 +66,6 @@ class TestTenant(unittest.TestCase):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)
 
         # Test failed flows
-        self.assertRaises(
-            AuthException,
-            client.mgmt.tenant.delete,
-            "",
-            "valid-id",
-        )
-        self.assertRaises(
-            AuthException,
-            client.mgmt.tenant.delete,
-            "valid-key",
-            "",
-        )
-
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(

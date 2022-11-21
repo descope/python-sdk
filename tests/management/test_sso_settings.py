@@ -1,10 +1,10 @@
 import unittest
 from unittest.mock import patch
 
-from descope import AuthException, DescopeClient
+from descope import AuthException, DescopeClient, RoleMapping
 
 
-class TestUser(unittest.TestCase):
+class TestSSOSettings(unittest.TestCase):
     def setUp(self) -> None:
         self.dummy_project_id = "dummy"
         self.public_key_dict = {
@@ -17,7 +17,7 @@ class TestUser(unittest.TestCase):
             "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
         }
 
-    def test_create(self):
+    def test_configure(self):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)
 
         # Test failed flows
@@ -25,19 +25,32 @@ class TestUser(unittest.TestCase):
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
-                client.mgmt.user.create,
+                client.mgmt.sso.configure,
                 "valid-key",
-                "valid-identifier",
+                "tenant-id",
+                True,
+                "https://idp.com",
+                "entity-id",
+                "cert",
+                "https://redirect.com",
             )
 
         # Test success flow
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
-                client.mgmt.user.create("key", "identifier", display_name="name")
+                client.mgmt.sso.configure(
+                    "valid-key",
+                    "tenant-id",
+                    True,
+                    "https://idp.com",
+                    "entity-id",
+                    "cert",
+                    "https://redirect.com",
+                )
             )
 
-    def test_update(self):
+    def test_configure_via_metadata(self):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)
 
         # Test failed flows
@@ -45,20 +58,26 @@ class TestUser(unittest.TestCase):
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
-                client.mgmt.user.update,
+                client.mgmt.sso.configure_via_metadata,
                 "valid-key",
-                "valid-identifier",
-                "email@something.com",
+                "tenant-id",
+                True,
+                "https://idp-meta.com",
             )
 
         # Test success flow
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
-                client.mgmt.user.update("key", "identifier", display_name="new-name", role_names=["domain.com"])
+                client.mgmt.sso.configure_via_metadata(
+                    "valid-key",
+                    "tenant-id",
+                    True,
+                    "https://idp-meta.com",
+                )
             )
 
-    def test_delete(self):
+    def test_role_mapping(self):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)
 
         # Test failed flows
@@ -66,14 +85,19 @@ class TestUser(unittest.TestCase):
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
-                client.mgmt.user.delete,
+                client.mgmt.sso.map_roles,
                 "valid-key",
-                "valid-id",
+                "tenant-id",
+                [RoleMapping(["a", "b"], "role")],
             )
 
         # Test success flow
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
-                client.mgmt.user.delete("key", "t1")
+                client.mgmt.sso.map_roles(
+                    "valid-key",
+                    "tenant-id",
+                    [RoleMapping(["a", "b"], "role")],
+                )
             )
