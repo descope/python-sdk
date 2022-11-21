@@ -79,8 +79,8 @@ class OTP:
         """
         Sign_up_or_in lets you handle both sign up and sign in with a single call. Sign-up_or_in will first determine if
             identifier is a new or existing end user. If identifier is new, a new end user user will be created and then
-            authenticated using the OTP DeliveryMethod specififed. If identifier exists, the end user will be authenticated
-            using the OTP DelieryMethod specified.
+            authenticated using the OTP DeliveryMethod specified. If identifier exists, the end user will be authenticated
+            using the OTP DeliveryMethod specified.
 
         Args:
         method (DeliveryMethod): The method to use for delivering the OTP verification code, for example phone or email
@@ -100,7 +100,7 @@ class OTP:
 
     def verify_code(self, method: DeliveryMethod, identifier: str, code: str) -> dict:
         """
-        Verify the valdity of an OTP code entered by an end user during sign_in or sign_up.
+        Verify the validity of an OTP code entered by an end user during sign_in or sign_up.
         (This function is not needed if you are using the sign_up_or_in function.
 
         Args:
