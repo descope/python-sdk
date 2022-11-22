@@ -3,7 +3,6 @@ from typing import List
 import requests
 
 from descope.auth import Auth  # noqa: F401
-from descope.mgmt import MGMT  # noqa: F401
 from descope.authmethod.magiclink import MagicLink  # noqa: F401
 from descope.authmethod.oauth import OAuth  # noqa: F401
 from descope.authmethod.otp import OTP  # noqa: F401
@@ -12,6 +11,7 @@ from descope.authmethod.totp import TOTP  # noqa: F401
 from descope.authmethod.webauthn import WebauthN  # noqa: F401
 from descope.common import SESSION_TOKEN_NAME, EndpointsV1
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
+from descope.mgmt import MGMT  # noqa: F401
 
 
 class DescopeClient:
