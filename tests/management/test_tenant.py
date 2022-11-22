@@ -78,6 +78,4 @@ class TestTenant(unittest.TestCase):
         # Test success flow
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
-            self.assertIsNone(
-                client.mgmt.tenant.delete("key", "t1")
-            )
+            self.assertIsNone(client.mgmt.tenant.delete("key", "t1"))

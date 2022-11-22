@@ -5,11 +5,10 @@ from descope.management.common import MgmtV1
 
 
 class RoleMapping:
-    def __init__(
-        self, groups: List[str], role_name: str
-    ):
+    def __init__(self, groups: List[str], role_name: str):
         self.groups = groups
         self.role_name = role_name
+
 
 class SSOSettings:
     _auth: Auth
@@ -44,7 +43,9 @@ class SSOSettings:
         """
         self._auth.do_post(
             MgmtV1.ssoConfigurePath,
-            _compose_configure_body(tenant_id, enabled, idp_url, entity_id, idp_cert, redirect_url),
+            _compose_configure_body(
+                tenant_id, enabled, idp_url, entity_id, idp_cert, redirect_url
+            ),
             pswd=mgmt_key,
         )
 
@@ -72,7 +73,7 @@ class SSOSettings:
             _compose_metadata_body(tenant_id, enabled, idp_metadata_url),
             pswd=mgmt_key,
         )
-      
+
     def map_roles(
         self,
         mgmt_key: str,
@@ -96,12 +97,12 @@ class SSOSettings:
             pswd=mgmt_key,
         )
 
+
 class UserTenants:
-    def __init__(
-        self, tenant_id: str, role_names: List[str]
-    ):
+    def __init__(self, tenant_id: str, role_names: List[str]):
         self.tenant_id = tenant_id
         self.role_names = role_names
+
 
 @staticmethod
 def _compose_configure_body(
@@ -121,6 +122,7 @@ def _compose_configure_body(
         "redirectURL": redirect_url,
     }
 
+
 @staticmethod
 def _compose_metadata_body(
     tenant_id: str,
@@ -133,6 +135,7 @@ def _compose_metadata_body(
         "idpMetadataURL": idp_metadata_url,
     }
 
+
 @staticmethod
 def _compose_role_mapping_body(
     tenant_id: str,
@@ -142,6 +145,7 @@ def _compose_role_mapping_body(
         "tenantId": tenant_id,
         "roleMapping": _role_mapping_to_dict(role_mapping),
     }
+
 
 @staticmethod
 def _role_mapping_to_dict(role_mapping: List[RoleMapping]) -> list:

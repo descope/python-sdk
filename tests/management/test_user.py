@@ -55,7 +55,12 @@ class TestUser(unittest.TestCase):
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
-                client.mgmt.user.update("key", "identifier", display_name="new-name", role_names=["domain.com"])
+                client.mgmt.user.update(
+                    "key",
+                    "identifier",
+                    display_name="new-name",
+                    role_names=["domain.com"],
+                )
             )
 
     def test_delete(self):
@@ -74,6 +79,4 @@ class TestUser(unittest.TestCase):
         # Test success flow
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
-            self.assertIsNone(
-                client.mgmt.user.delete("key", "t1")
-            )
+            self.assertIsNone(client.mgmt.user.delete("key", "t1"))

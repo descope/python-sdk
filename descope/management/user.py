@@ -5,11 +5,10 @@ from descope.management.common import MgmtV1
 
 
 class UserTenants:
-    def __init__(
-        self, tenant_id: str, role_names: List[str]
-    ):
+    def __init__(self, tenant_id: str, role_names: List[str]):
         self.tenant_id = tenant_id
         self.role_names = role_names
+
 
 class User:
     _auth: Auth
@@ -25,7 +24,7 @@ class User:
         phone_number: str = None,
         display_name: str = None,
         role_names: List[str] = None,
-        user_tenants: List[UserTenants] = None
+        user_tenants: List[UserTenants] = None,
     ) -> dict:
         """
         Create a new user. User's can have any number of optional fields, including email, phone number and authorization.
@@ -44,7 +43,9 @@ class User:
         """
         self._auth.do_post(
             MgmtV1.userCreatePath,
-            _compose_create_update_body(identifier, email, phone_number, display_name, role_names, user_tenants),
+            _compose_create_update_body(
+                identifier, email, phone_number, display_name, role_names, user_tenants
+            ),
             pswd=mgmt_key,
         )
 
@@ -56,7 +57,7 @@ class User:
         phone_number: str = None,
         display_name: str = None,
         role_names: List[str] = None,
-        user_tenants: List[UserTenants] = None
+        user_tenants: List[UserTenants] = None,
     ):
         """
         Update an existing user with the given various fields. IMPORTANT: All parameters are used as overrides
@@ -76,10 +77,12 @@ class User:
         """
         self._auth.do_post(
             MgmtV1.userUpdatePath,
-            _compose_create_update_body(identifier, email, phone_number, display_name, role_names, user_tenants),
+            _compose_create_update_body(
+                identifier, email, phone_number, display_name, role_names, user_tenants
+            ),
             pswd=mgmt_key,
         )
-      
+
     def delete(
         self,
         mgmt_key: str,
@@ -101,12 +104,12 @@ class User:
             pswd=mgmt_key,
         )
 
+
 class UserTenants:
-    def __init__(
-        self, tenant_id: str, role_names: List[str]
-    ):
+    def __init__(self, tenant_id: str, role_names: List[str]):
         self.tenant_id = tenant_id
         self.role_names = role_names
+
 
 @staticmethod
 def _compose_create_update_body(
@@ -123,8 +126,9 @@ def _compose_create_update_body(
         "phoneNumber": phone_number,
         "displayName": display_name,
         "roleNames": role_names,
-        "userTenants": _user_tenants_to_dict(user_tenants)
+        "userTenants": _user_tenants_to_dict(user_tenants),
     }
+
 
 @staticmethod
 def _user_tenants_to_dict(user_tenants: List[UserTenants]) -> list:
