@@ -34,7 +34,7 @@ class Tenant:
         uri = MgmtV1.tenantCreatePath
         response = self._auth.do_post(
             uri,
-            _compose_create_update_body(name, id, self_provisioning_domains),
+            Tenant._compose_create_update_body(name, id, self_provisioning_domains),
             pswd=mgmt_key,
         )
         return response.json()
@@ -63,7 +63,7 @@ class Tenant:
         uri = MgmtV1.tenantUpdatePath
         self._auth.do_post(
             uri,
-            _compose_create_update_body(name, id, self_provisioning_domains),
+            Tenant._compose_create_update_body(name, id, self_provisioning_domains),
             pswd=mgmt_key,
         )
 
@@ -85,13 +85,12 @@ class Tenant:
         uri = MgmtV1.tenantDeletePath
         self._auth.do_post(uri, {"id": id}, pswd=mgmt_key)
 
-
-@staticmethod
-def _compose_create_update_body(
-    name: str, id: str, self_provisioning_domains: List[str]
-) -> dict:
-    return {
-        "name": name,
-        "id": id,
-        "selfProvisioningDomains": self_provisioning_domains,
-    }
+    @staticmethod
+    def _compose_create_update_body(
+        name: str, id: str, self_provisioning_domains: List[str]
+    ) -> dict:
+        return {
+            "name": name,
+            "id": id,
+            "selfProvisioningDomains": self_provisioning_domains,
+        }

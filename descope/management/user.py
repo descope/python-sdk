@@ -43,7 +43,7 @@ class User:
         """
         self._auth.do_post(
             MgmtV1.userCreatePath,
-            _compose_create_update_body(
+            User._compose_create_update_body(
                 identifier, email, phone_number, display_name, role_names, user_tenants
             ),
             pswd=mgmt_key,
@@ -77,7 +77,7 @@ class User:
         """
         self._auth.do_post(
             MgmtV1.userUpdatePath,
-            _compose_create_update_body(
+            User._compose_create_update_body(
                 identifier, email, phone_number, display_name, role_names, user_tenants
             ),
             pswd=mgmt_key,
@@ -104,43 +104,41 @@ class User:
             pswd=mgmt_key,
         )
 
+    @staticmethod
+    def _compose_create_update_body(
+        identifier: str,
+        email: str,
+        phone_number: str,
+        display_name: str,
+        role_names: List[str],
+        user_tenants: List[UserTenants],
+    ) -> dict:
+        return {
+            "identifier": identifier,
+            "email": email,
+            "phoneNumber": phone_number,
+            "displayName": display_name,
+            "roleNames": role_names,
+            "userTenants": User._user_tenants_to_dict(user_tenants),
+        }
+
+    @staticmethod
+    def _user_tenants_to_dict(user_tenants: List[UserTenants]) -> list:
+        if not user_tenants:
+            return None
+
+        user_tenant_list = []
+        for user_tenant in user_tenants:
+            user_tenant_list.append(
+                {
+                    "tenantId": user_tenant.tenant_id,
+                    "roleNames": user_tenant.role_names,
+                }
+            )
+        return user_tenant_list
+
 
 class UserTenants:
     def __init__(self, tenant_id: str, role_names: List[str]):
         self.tenant_id = tenant_id
         self.role_names = role_names
-
-
-@staticmethod
-def _compose_create_update_body(
-    identifier: str,
-    email: str,
-    phone_number: str,
-    display_name: str,
-    role_names: List[str],
-    user_tenants: List[UserTenants],
-) -> dict:
-    return {
-        "identifier": identifier,
-        "email": email,
-        "phoneNumber": phone_number,
-        "displayName": display_name,
-        "roleNames": role_names,
-        "userTenants": _user_tenants_to_dict(user_tenants),
-    }
-
-
-@staticmethod
-def _user_tenants_to_dict(user_tenants: List[UserTenants]) -> list:
-    if not user_tenants:
-        return None
-
-    user_tenant_list = []
-    for user_tenant in user_tenants:
-        user_tenant_list.append(
-            {
-                "tenantId": user_tenant.tenant_id,
-                "roleNames": user_tenant.role_names,
-            }
-        )
-    return user_tenant_list
