@@ -32,7 +32,7 @@ class SSOSettings:
         Args:
         mgmt_key (str): A management key generated in the Descope console. All management functions require it.
         tenant_id (str): The tenant ID to be configured
-        enabled (str): Is SSO enabled
+        enabled (bool): Is SSO enabled
         idp_url (str): The URL for the identity provider.
         entity_id (str): The entity ID (in the IDP).
         idp_cert (str): The certificate provided by the IDP.
@@ -62,7 +62,7 @@ class SSOSettings:
         Args:
         mgmt_key (str): A management key generated in the Descope console. All management functions require it.
         tenant_id (str): The tenant ID to be configured
-        enabled (str): Is SSO enabled
+        enabled (bool): Is SSO enabled
         idp_metadata_url (str): The URL to fetch SSO settings from.
 
         Raise:
