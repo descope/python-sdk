@@ -50,8 +50,8 @@ class Tenant:
 
         Args:
         mgmt_key (str): A management key generated in the Descope console. All management functions require it.
-        name (str): The tenant's name
-        id (str): Optional tenant ID.
+        id (str): The ID of the tenant to update.
+        name (str): Updated tenant's name
         self_provisioning_domains (List[str]): An optional list of domain that are associated with this tenant.
             Users authenticating from these domains will be associated with this tenant.
 

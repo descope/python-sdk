@@ -59,12 +59,12 @@ class User:
         user_tenants: List[UserTenants] = None
     ):
         """
-        Update an existing user with the given name and domains. IMPORTANT: All parameters are used as overrides
+        Update an existing user with the given various fields. IMPORTANT: All parameters are used as overrides
         to the existing user. Use carefully.
 
         Args:
         mgmt_key (str): A management key generated in the Descope console. All management functions require it.
-        identifier (str): user identifier.
+        identifier (str): The identifier of the user to update.
         email (str): Optional user email address.
         phone_number (str): Optional user phone number.
         display_name (str): Optional user display name.
