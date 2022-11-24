@@ -5,7 +5,7 @@ from descope.management.common import MgmtV1
 
 
 class UserTenants:
-    def __init__(self, tenant_id: str, role_names: List[str]):
+    def __init__(self, tenant_id: str, role_names: List[str] = []):
         self.tenant_id = tenant_id
         self.role_names = role_names
 
@@ -23,11 +23,11 @@ class User:
         email: str = None,
         phone_number: str = None,
         display_name: str = None,
-        role_names: List[str] = None,
-        user_tenants: List[UserTenants] = None,
+        role_names: List[str] = [],
+        user_tenants: List[UserTenants] = [],
     ) -> dict:
         """
-        Create a new user. User's can have any number of optional fields, including email, phone number and authorization.
+        Create a new user. Users can have any number of optional fields, including email, phone number and authorization.
 
         Args:
         mgmt_key (str): A management key generated in the Descope console. All management functions require it.
@@ -35,8 +35,10 @@ class User:
         email (str): Optional user email address.
         phone_number (str): Optional user phone number.
         display_name (str): Optional user display name.
-        role_names (List[str]): An optional list of the user's roles without tenant association.
-        user_tenants (List[str]): An optional list of the user's roles per tenant.
+        role_names (List[str]): An optional list of the user's roles without tenant association. These roles are
+            mutually exclusive with the `user_tenant` roles, which take precedence over them.
+        user_tenants (List[UserTenants]): An optional list of the user's tenants, and optionally, their roles per tenant. These roles are
+            mutually exclusive with the general `role_names`, and take precedence over them.
 
         Raise:
         AuthException: raised if creation operation fails
@@ -56,12 +58,12 @@ class User:
         email: str = None,
         phone_number: str = None,
         display_name: str = None,
-        role_names: List[str] = None,
-        user_tenants: List[UserTenants] = None,
+        role_names: List[str] = [],
+        user_tenants: List[UserTenants] = [],
     ):
         """
         Update an existing user with the given various fields. IMPORTANT: All parameters are used as overrides
-        to the existing user. Use carefully.
+        to the existing user. Empty fields will override populated fields. Use carefully.
 
         Args:
         mgmt_key (str): A management key generated in the Descope console. All management functions require it.
@@ -69,8 +71,10 @@ class User:
         email (str): Optional user email address.
         phone_number (str): Optional user phone number.
         display_name (str): Optional user display name.
-        role_names (List[str]): An optional list of the user's roles without tenant association.
-        user_tenants (List[str]): An optional list of the user's roles per tenant.
+        role_names (List[str]): An optional list of the user's roles without tenant association. These roles are
+            mutually exclusive with the `user_tenant` roles, which take precedence over the general roles.
+        user_tenants (List[UserTenants]): An optional list of the user's tenants, and optionally, their roles per tenant. These roles are
+            mutually exclusive with the general `role_names`, and take precedence over them.
 
         Raise:
         AuthException: raised if creation operation fails
@@ -124,21 +128,13 @@ class User:
 
     @staticmethod
     def _user_tenants_to_dict(user_tenants: List[UserTenants]) -> list:
-        if not user_tenants:
-            return None
-
         user_tenant_list = []
-        for user_tenant in user_tenants:
-            user_tenant_list.append(
-                {
-                    "tenantId": user_tenant.tenant_id,
-                    "roleNames": user_tenant.role_names,
-                }
-            )
+        if user_tenants:
+            for user_tenant in user_tenants:
+                user_tenant_list.append(
+                    {
+                        "tenantId": user_tenant.tenant_id,
+                        "roleNames": user_tenant.role_names,
+                    }
+                )
         return user_tenant_list
-
-
-class UserTenants:
-    def __init__(self, tenant_id: str, role_names: List[str]):
-        self.tenant_id = tenant_id
-        self.role_names = role_names

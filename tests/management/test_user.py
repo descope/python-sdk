@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 
-from descope import AuthException, DescopeClient
+from descope import AuthException, DescopeClient, UserTenants
 
 
 class TestUser(unittest.TestCase):
@@ -34,7 +34,16 @@ class TestUser(unittest.TestCase):
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
-                client.mgmt.user.create("key", "identifier", display_name="name")
+                client.mgmt.user.create(
+                    mgmt_key="key",
+                    identifier="name@mail.com",
+                    email="name@mail.com",
+                    display_name="Name",
+                    user_tenants=[
+                        UserTenants("tenant1"),
+                        UserTenants("tenant2", ["role1", "role2"]),
+                    ],
+                )
             )
 
     def test_update(self):

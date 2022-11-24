@@ -15,7 +15,7 @@ class Tenant:
         mgmt_key: str,
         name: str,
         id: str = None,
-        self_provisioning_domains: List[str] = None,
+        self_provisioning_domains: List[str] = [],
     ) -> dict:
         """
         Create a new tenant with the given name. Tenant IDs are provisioned automatically, but can be provided
@@ -43,17 +43,17 @@ class Tenant:
         self,
         mgmt_key: str,
         id: str,
-        name: str = None,
-        self_provisioning_domains: List[str] = None,
+        name: str,
+        self_provisioning_domains: List[str] = [],
     ):
         """
         Update an existing tenant with the given name and domains. IMPORTANT: All parameters are used as overrides
-        to the existing tenant. Use carefully.
+        to the existing tenant. Empty fields will override populated fields. Use carefully.
 
         Args:
         mgmt_key (str): A management key generated in the Descope console. All management functions require it.
         id (str): The ID of the tenant to update.
-        name (str): Updated tenant's name
+        name (str): Updated tenant name
         self_provisioning_domains (List[str]): An optional list of domain that are associated with this tenant.
             Users authenticating from these domains will be associated with this tenant.
 

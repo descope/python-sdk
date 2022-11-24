@@ -28,7 +28,6 @@ class TestSSOSettings(unittest.TestCase):
                 client.mgmt.sso.configure,
                 "valid-key",
                 "tenant-id",
-                True,
                 "https://idp.com",
                 "entity-id",
                 "cert",
@@ -42,11 +41,23 @@ class TestSSOSettings(unittest.TestCase):
                 client.mgmt.sso.configure(
                     "valid-key",
                     "tenant-id",
-                    True,
                     "https://idp.com",
                     "entity-id",
                     "cert",
                     "https://redirect.com",
+                )
+            )
+
+        # Redirect is optional
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(
+                client.mgmt.sso.configure(
+                    "valid-key",
+                    "tenant-id",
+                    "https://idp.com",
+                    "entity-id",
+                    "cert",
                 )
             )
 
@@ -61,7 +72,6 @@ class TestSSOSettings(unittest.TestCase):
                 client.mgmt.sso.configure_via_metadata,
                 "valid-key",
                 "tenant-id",
-                True,
                 "https://idp-meta.com",
             )
 
@@ -72,7 +82,6 @@ class TestSSOSettings(unittest.TestCase):
                 client.mgmt.sso.configure_via_metadata(
                     "valid-key",
                     "tenant-id",
-                    True,
                     "https://idp-meta.com",
                 )
             )
