@@ -15,7 +15,9 @@ def main():
     tenant_id = ""
 
     try:
-        descope_client = DescopeClient(project_id=project_id, management_key=management_key)
+        descope_client = DescopeClient(
+            project_id=project_id, management_key=management_key
+        )
         idp_url = ""
         entity_id = ""
         idp_cert = ""
