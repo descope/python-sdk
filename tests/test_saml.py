@@ -118,8 +118,8 @@ class TestSAML(unittest.TestCase):
         self.assertRaises(AuthException, saml.exchange_token, "")
         self.assertRaises(AuthException, saml.exchange_token, None)
 
-        with patch("requests.post") as mock_get:
-            mock_get.return_value.ok = False
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
             self.assertRaises(AuthException, saml.exchange_token, "c1")
 
         # Test success flow
