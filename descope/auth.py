@@ -346,9 +346,12 @@ class Auth:
             )
 
         # Save the projectID also in the dict top level
-        jwt_response["projectId"] = jwt_response.get(SESSION_TOKEN_NAME, {}).get(
+        issuer = jwt_response.get(SESSION_TOKEN_NAME, {}).get(
             "iss", None
-        ) or jwt_response.get(REFRESH_SESSION_TOKEN_NAME, {}).get("iss", None)
+        ) or jwt_response.get(REFRESH_SESSION_TOKEN_NAME, {}).get("iss", "")
+        jwt_response["projectId"] = issuer.rsplit("/")[
+            -1
+        ]  # support both url issuer and project ID issuer
 
         if user_jwt:
             # Save the userID also in the dict top level

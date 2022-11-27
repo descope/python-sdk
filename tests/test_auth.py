@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from descope import AuthException, DeliveryMethod
 from descope.auth import Auth
+from descope.common import REFRESH_SESSION_TOKEN_NAME, SESSION_TOKEN_NAME
 
 
 class TestAuth(unittest.TestCase):
@@ -264,6 +265,88 @@ class TestAuth(unittest.TestCase):
             jwt_response = auth.exchange_access_key(dummy_access_key)
             self.assertEqual(jwt_response["keyId"], "U2Cu0j0WPw3YOiPISJb52L0wUVMg")
             self.assertEqual(jwt_response["projectId"], "P2CtzUhdqpIF2ys9gg7ms06UvtC4")
+
+    def test_adjust_properties(self):
+        self.assertEqual(
+            Auth.adjust_properties(self, jwt_response={}, user_jwt={}),
+            {"keyId": None, "projectId": ""},
+        )
+
+        jwt_response = {
+            SESSION_TOKEN_NAME: {
+                "permissions": ["perm1"],
+                "roles": ["role1"],
+                "tenants": {"bla1": "bla1"},
+                "iss": "123456",
+                "sub": "user-id",
+            },
+            REFRESH_SESSION_TOKEN_NAME: {
+                "permissions": ["perm2"],
+                "roles": ["role2"],
+                "tenants": {"bla2": "bla2"},
+            },
+        }
+
+        self.assertEqual(
+            Auth.adjust_properties(self, jwt_response=jwt_response, user_jwt=True),
+            {
+                "permissions": ["perm1"],
+                "projectId": "123456",
+                "refreshSessionToken": {
+                    "permissions": ["perm2"],
+                    "roles": ["role2"],
+                    "tenants": {"bla2": "bla2"},
+                },
+                "roles": ["role1"],
+                "sessionToken": {
+                    "iss": "123456",
+                    "permissions": ["perm1"],
+                    "roles": ["role1"],
+                    "sub": "user-id",
+                    "tenants": {"bla1": "bla1"},
+                },
+                "tenants": {"bla1": "bla1"},
+                "userId": "user-id",
+            },
+        )
+
+        jwt_response = {
+            SESSION_TOKEN_NAME: {
+                "permissions": ["perm1"],
+                "roles": ["role1"],
+                "tenants": {"bla1": "bla1"},
+                "sub": "user-id",
+            },
+            REFRESH_SESSION_TOKEN_NAME: {
+                "permissions": ["perm2"],
+                "roles": ["role2"],
+                "tenants": {"bla2": "bla2"},
+                "iss": "https://descope.com/bla/123456",
+            },
+        }
+
+        self.assertEqual(
+            Auth.adjust_properties(self, jwt_response=jwt_response, user_jwt=False),
+            {
+                "permissions": ["perm1"],
+                "projectId": "123456",
+                "refreshSessionToken": {
+                    "iss": "https://descope.com/bla/123456",
+                    "permissions": ["perm2"],
+                    "roles": ["role2"],
+                    "tenants": {"bla2": "bla2"},
+                },
+                "roles": ["role1"],
+                "sessionToken": {
+                    "permissions": ["perm1"],
+                    "roles": ["role1"],
+                    "sub": "user-id",
+                    "tenants": {"bla1": "bla1"},
+                },
+                "tenants": {"bla1": "bla1"},
+                "keyId": "user-id",
+            },
+        )
 
 
 if __name__ == "__main__":
