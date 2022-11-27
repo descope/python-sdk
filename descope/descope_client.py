@@ -22,8 +22,9 @@ class DescopeClient:
         project_id: str = None,
         public_key: str = None,
         skip_verify: bool = False,
+        management_key: str = None,
     ):
-        auth = Auth(project_id, public_key, skip_verify)
+        auth = Auth(project_id, public_key, skip_verify, management_key)
         self._auth = auth
         self._mgmt = MGMT(auth)
         self._magiclink = MagicLink(auth)

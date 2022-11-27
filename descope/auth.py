@@ -38,6 +38,7 @@ class Auth:
         project_id: str = None,
         public_key: str = None,
         skip_verify: bool = False,
+        management_key: str = None,
     ):
         self.lock_public_keys = Lock()
         # validate project id
@@ -57,6 +58,10 @@ class Auth:
             self.secure = False
 
         self.base_url = os.getenv("DESCOPE_BASE_URI", None) or DEFAULT_BASE_URL
+
+        if not management_key:
+            management_key = os.getenv("DESCOPE_MANAGEMENT_KEY", None)
+        self.management_key = management_key
 
         if not public_key:
             public_key = os.getenv("DESCOPE_PUBLIC_KEY", None)

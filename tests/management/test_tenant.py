@@ -9,6 +9,7 @@ from descope import AuthException, DescopeClient
 class TestTenant(unittest.TestCase):
     def setUp(self) -> None:
         self.dummy_project_id = "dummy"
+        self.dummy_management_key = "key"
         self.public_key_dict = {
             "alg": "ES384",
             "crv": "P-384",
@@ -20,7 +21,7 @@ class TestTenant(unittest.TestCase):
         }
 
     def test_create(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False, self.dummy_management_key)
 
         # Test failed flows
         with patch("requests.post") as mock_post:
@@ -28,7 +29,6 @@ class TestTenant(unittest.TestCase):
             self.assertRaises(
                 AuthException,
                 client.mgmt.tenant.create,
-                "valid-key",
                 "valid-name",
             )
 
@@ -38,11 +38,11 @@ class TestTenant(unittest.TestCase):
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"id": "t1"}""")
             mock_post.return_value = network_resp
-            resp = client.mgmt.tenant.create("key", "name", "t1", ["domain.com"])
+            resp = client.mgmt.tenant.create("name", "t1", ["domain.com"])
             self.assertEqual(resp["id"], "t1")
 
     def test_update(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False, self.dummy_management_key)
 
         # Test failed flows
         with patch("requests.post") as mock_post:
@@ -50,7 +50,6 @@ class TestTenant(unittest.TestCase):
             self.assertRaises(
                 AuthException,
                 client.mgmt.tenant.update,
-                "valid-key",
                 "valid-id",
                 "valid-name",
             )
@@ -59,11 +58,11 @@ class TestTenant(unittest.TestCase):
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
-                client.mgmt.tenant.update("key", "t1", "new-name", ["domain.com"])
+                client.mgmt.tenant.update("t1", "new-name", ["domain.com"])
             )
 
     def test_delete(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False, self.dummy_management_key)
 
         # Test failed flows
         with patch("requests.post") as mock_post:
@@ -71,11 +70,10 @@ class TestTenant(unittest.TestCase):
             self.assertRaises(
                 AuthException,
                 client.mgmt.tenant.delete,
-                "valid-key",
                 "valid-id",
             )
 
         # Test success flow
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
-            self.assertIsNone(client.mgmt.tenant.delete("key", "t1"))
+            self.assertIsNone(client.mgmt.tenant.delete("t1"))

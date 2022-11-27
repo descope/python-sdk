@@ -18,7 +18,6 @@ class SSOSettings:
 
     def configure(
         self,
-        mgmt_key: str,
         tenant_id: str,
         idp_url: str,
         entity_id: str,
@@ -29,7 +28,6 @@ class SSOSettings:
         Configure SSO setting for a tenant manually. Alternatively, `configure_via_metadata` can be used instead.
 
         Args:
-        mgmt_key (str): A management key generated in the Descope console. All management functions require it.
         tenant_id (str): The tenant ID to be configured
         idp_url (str): The URL for the identity provider.
         entity_id (str): The entity ID (in the IDP).
@@ -44,12 +42,11 @@ class SSOSettings:
             SSOSettings._compose_configure_body(
                 tenant_id, idp_url, entity_id, idp_cert, redirect_url
             ),
-            pswd=mgmt_key,
+            pswd=self._auth.management_key,
         )
 
     def configure_via_metadata(
         self,
-        mgmt_key: str,
         tenant_id: str,
         idp_metadata_url: str,
     ):
@@ -57,7 +54,6 @@ class SSOSettings:
         Configure SSO setting for am IDP metadata URL. Alternatively, `configure` can be used instead.
 
         Args:
-        mgmt_key (str): A management key generated in the Descope console. All management functions require it.
         tenant_id (str): The tenant ID to be configured
         enabled (bool): Is SSO enabled
         idp_metadata_url (str): The URL to fetch SSO settings from.
@@ -68,12 +64,11 @@ class SSOSettings:
         self._auth.do_post(
             MgmtV1.ssoMetadataPath,
             SSOSettings._compose_metadata_body(tenant_id, idp_metadata_url),
-            pswd=mgmt_key,
+            pswd=self._auth.management_key,
         )
 
     def map_roles(
         self,
-        mgmt_key: str,
         tenant_id: str,
         role_mappings: List[RoleMapping],
     ):
@@ -81,7 +76,6 @@ class SSOSettings:
         Configure SSO role mapping from the IDP groups to the Descope roles.
 
         Args:
-        mgmt_key (str): A management key generated in the Descope console. All management functions require it.
         tenant_id (str): The tenant ID to be configured
         role_mappings (List[RoleMapping]): A mapping between IDP groups and Descope roles.
 
@@ -91,7 +85,7 @@ class SSOSettings:
         self._auth.do_post(
             MgmtV1.ssoRoleMappingPath,
             SSOSettings._compose_role_mapping_body(tenant_id, role_mappings),
-            pswd=mgmt_key,
+            pswd=self._auth.management_key,
         )
 
     @staticmethod

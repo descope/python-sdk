@@ -18,7 +18,6 @@ class User:
 
     def create(
         self,
-        mgmt_key: str,
         identifier: str,
         email: str = None,
         phone_number: str = None,
@@ -30,7 +29,6 @@ class User:
         Create a new user. Users can have any number of optional fields, including email, phone number and authorization.
 
         Args:
-        mgmt_key (str): A management key generated in the Descope console. All management functions require it.
         identifier (str): user identifier.
         email (str): Optional user email address.
         phone_number (str): Optional user phone number.
@@ -48,12 +46,11 @@ class User:
             User._compose_create_update_body(
                 identifier, email, phone_number, display_name, role_names, user_tenants
             ),
-            pswd=mgmt_key,
+            pswd=self._auth.management_key,
         )
 
     def update(
         self,
-        mgmt_key: str,
         identifier: str,
         email: str = None,
         phone_number: str = None,
@@ -66,7 +63,6 @@ class User:
         to the existing user. Empty fields will override populated fields. Use carefully.
 
         Args:
-        mgmt_key (str): A management key generated in the Descope console. All management functions require it.
         identifier (str): The identifier of the user to update.
         email (str): Optional user email address.
         phone_number (str): Optional user phone number.
@@ -84,19 +80,17 @@ class User:
             User._compose_create_update_body(
                 identifier, email, phone_number, display_name, role_names, user_tenants
             ),
-            pswd=mgmt_key,
+            pswd=self._auth.management_key,
         )
 
     def delete(
         self,
-        mgmt_key: str,
         identifier: str,
     ):
         """
         Delete an existing user. IMPORTANT: This action is irreversible. Use carefully.
 
         Args:
-        mgmt_key (str): A management key generated in the Descope console. All management functions require it.
         identifier (str): The identifier of the user that's to be deleted.
 
         Raise:
@@ -105,7 +99,7 @@ class User:
         self._auth.do_post(
             MgmtV1.userDeletePath,
             {"identifier": identifier},
-            pswd=mgmt_key,
+            pswd=self._auth.management_key,
         )
 
     @staticmethod
