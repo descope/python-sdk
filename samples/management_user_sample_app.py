@@ -11,15 +11,17 @@ logging.basicConfig(level=logging.INFO)
 
 def main():
     project_id = ""
-    mgmt_key = ""
+    management_key = ""
 
     try:
-        descope_client = DescopeClient(project_id=project_id)
+        descope_client = DescopeClient(
+            project_id=project_id, management_key=management_key
+        )
         user_identifier = "des@copeland.com"
 
         try:
             logging.info("Going to create a new user")
-            descope_client.mgmt.user.create(mgmt_key, user_identifier)
+            descope_client.mgmt.user.create(user_identifier)
 
         except AuthException as e:
             logging.info(f"User creation failed {e}")
@@ -29,7 +31,7 @@ def main():
             # update overrides all fields, must provide the entire entity
             # we mean to update.
             descope_client.mgmt.user.update(
-                mgmt_key, user_identifier, display_name="Desmond Copeland"
+                user_identifier, display_name="Desmond Copeland"
             )
 
         except AuthException as e:
@@ -37,7 +39,7 @@ def main():
 
         try:
             logging.info("Deleting newly created tenant")
-            descope_client.mgmt.user.delete(mgmt_key, user_identifier)
+            descope_client.mgmt.user.delete(user_identifier)
 
         except AuthException as e:
             logging.info(f"User deletion failed {e}")
