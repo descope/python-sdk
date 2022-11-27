@@ -119,20 +119,6 @@ class TestMagicLink(unittest.TestCase):
             AuthException,
             magiclink.sign_in,
             DeliveryMethod.EMAIL,
-            "dummy@dummy",
-            "http://test.me",
-        )
-        self.assertRaises(
-            AuthException,
-            magiclink.sign_in,
-            DeliveryMethod.EMAIL,
-            "",
-            "http://test.me",
-        )
-        self.assertRaises(
-            AuthException,
-            magiclink.sign_in,
-            DeliveryMethod.EMAIL,
             None,
             "http://test.me",
         )
@@ -176,22 +162,6 @@ class TestMagicLink(unittest.TestCase):
         magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
-        self.assertRaises(
-            AuthException,
-            magiclink.sign_up,
-            DeliveryMethod.EMAIL,
-            "dummy@dummy",
-            "http://test.me",
-            signup_user_details,
-        )
-        self.assertRaises(
-            AuthException,
-            magiclink.sign_up,
-            DeliveryMethod.EMAIL,
-            "",
-            "http://test.me",
-            signup_user_details,
-        )
         self.assertRaises(
             AuthException,
             magiclink.sign_up,
@@ -247,13 +217,6 @@ class TestMagicLink(unittest.TestCase):
         magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
-        self.assertRaises(
-            AuthException,
-            magiclink.sign_up_or_in,
-            DeliveryMethod.EMAIL,
-            "dummy@dummy",
-            "http://test.me",
-        )
 
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = False
