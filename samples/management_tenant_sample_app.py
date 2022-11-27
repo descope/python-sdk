@@ -11,15 +11,15 @@ logging.basicConfig(level=logging.INFO)
 
 def main():
     project_id = ""
-    mgmt_key = ""
+    management_key = ""
 
     try:
-        descope_client = DescopeClient(project_id=project_id)
+        descope_client = DescopeClient(project_id=project_id, management_key=management_key)
         tenant_id = ""
 
         try:
             logging.info("Going to create a new tenant")
-            resp = descope_client.mgmt.tenant.create(mgmt_key, "My First Tenant")
+            resp = descope_client.mgmt.tenant.create("My First Tenant")
             tenant_id = resp["id"]
             logging.info(f"Tenant creation response: {resp}")
 
@@ -31,7 +31,7 @@ def main():
             # update overrides all fields, must provide the entire entity
             # we mean to update.
             descope_client.mgmt.tenant.update(
-                mgmt_key, tenant_id, "My First Tenant", ["mydomain.com"]
+                tenant_id, "My First Tenant", ["mydomain.com"]
             )
 
         except AuthException as e:
@@ -39,7 +39,7 @@ def main():
 
         try:
             logging.info("Deleting newly created tenant")
-            descope_client.mgmt.tenant.delete(mgmt_key, tenant_id)
+            descope_client.mgmt.tenant.delete(tenant_id)
 
         except AuthException as e:
             logging.info(f"Tenant deletion failed {e}")
