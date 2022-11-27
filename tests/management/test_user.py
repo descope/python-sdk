@@ -19,7 +19,12 @@ class TestUser(unittest.TestCase):
         }
 
     def test_create(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False, self.dummy_management_key)
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
 
         # Test failed flows
         with patch("requests.post") as mock_post:
@@ -46,7 +51,12 @@ class TestUser(unittest.TestCase):
             )
 
     def test_update(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False, self.dummy_management_key)
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
 
         # Test failed flows
         with patch("requests.post") as mock_post:
@@ -70,7 +80,12 @@ class TestUser(unittest.TestCase):
             )
 
     def test_delete(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False, self.dummy_management_key)
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
 
         # Test failed flows
         with patch("requests.post") as mock_post:

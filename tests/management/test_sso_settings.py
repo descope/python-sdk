@@ -19,7 +19,12 @@ class TestSSOSettings(unittest.TestCase):
         }
 
     def test_configure(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False, self.dummy_management_key)
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
 
         # Test failed flows
         with patch("requests.post") as mock_post:
@@ -60,7 +65,12 @@ class TestSSOSettings(unittest.TestCase):
             )
 
     def test_configure_via_metadata(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False, self.dummy_management_key)
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
 
         # Test failed flows
         with patch("requests.post") as mock_post:
@@ -83,7 +93,12 @@ class TestSSOSettings(unittest.TestCase):
             )
 
     def test_role_mapping(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False, self.dummy_management_key)
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
 
         # Test failed flows
         with patch("requests.post") as mock_post:
