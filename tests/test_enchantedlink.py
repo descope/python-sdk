@@ -93,6 +93,13 @@ class TestEnchantedLink(unittest.TestCase):
         with patch("requests.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
+            # Test failed flows
+            self.assertRaises(
+                AuthException,
+                enchantedlink.sign_in,
+                "",
+                "http://test.me",
+            )
             data = json.loads("""{"pendingRef": "aaaa","identifier":"24"}""")
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
@@ -154,6 +161,16 @@ class TestEnchantedLink(unittest.TestCase):
         with patch("requests.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
+
+            # Test failed flows
+            self.assertRaises(
+                AuthException,
+                enchantedlink.sign_up,
+                "",
+                "http://test.me",
+                {"name": "john"},
+            )
+
             data = json.loads("""{"pendingRef": "aaaa"}""")
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
@@ -258,6 +275,14 @@ class TestEnchantedLink(unittest.TestCase):
         with patch("requests.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
+            # Test failed flows
+            self.assertRaises(
+                AuthException,
+                enchantedlink.update_user_email,
+                "",
+                "dummy@dummy.com",
+                "refresh_token1",
+            )
             data = json.loads("""{"pendingRef": "aaaa"}""")
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
