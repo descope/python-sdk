@@ -7,6 +7,7 @@ from descope import AuthException, DescopeClient, UserTenants
 class TestUser(unittest.TestCase):
     def setUp(self) -> None:
         self.dummy_project_id = "dummy"
+        self.dummy_management_key = "key"
         self.public_key_dict = {
             "alg": "ES384",
             "crv": "P-384",
@@ -18,7 +19,12 @@ class TestUser(unittest.TestCase):
         }
 
     def test_create(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
 
         # Test failed flows
         with patch("requests.post") as mock_post:
@@ -26,7 +32,6 @@ class TestUser(unittest.TestCase):
             self.assertRaises(
                 AuthException,
                 client.mgmt.user.create,
-                "valid-key",
                 "valid-identifier",
             )
 
@@ -35,7 +40,6 @@ class TestUser(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.user.create(
-                    mgmt_key="key",
                     identifier="name@mail.com",
                     email="name@mail.com",
                     display_name="Name",
@@ -47,7 +51,12 @@ class TestUser(unittest.TestCase):
             )
 
     def test_update(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
 
         # Test failed flows
         with patch("requests.post") as mock_post:
@@ -55,7 +64,6 @@ class TestUser(unittest.TestCase):
             self.assertRaises(
                 AuthException,
                 client.mgmt.user.update,
-                "valid-key",
                 "valid-identifier",
                 "email@something.com",
             )
@@ -65,7 +73,6 @@ class TestUser(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.user.update(
-                    "key",
                     "identifier",
                     display_name="new-name",
                     role_names=["domain.com"],
@@ -73,7 +80,12 @@ class TestUser(unittest.TestCase):
             )
 
     def test_delete(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
 
         # Test failed flows
         with patch("requests.post") as mock_post:
@@ -81,11 +93,10 @@ class TestUser(unittest.TestCase):
             self.assertRaises(
                 AuthException,
                 client.mgmt.user.delete,
-                "valid-key",
                 "valid-id",
             )
 
         # Test success flow
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
-            self.assertIsNone(client.mgmt.user.delete("key", "t1"))
+            self.assertIsNone(client.mgmt.user.delete("t1"))

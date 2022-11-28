@@ -11,11 +11,13 @@ logging.basicConfig(level=logging.INFO)
 
 def main():
     project_id = ""
-    mgmt_key = ""
+    management_key = ""
     tenant_id = ""
 
     try:
-        descope_client = DescopeClient(project_id=project_id)
+        descope_client = DescopeClient(
+            project_id=project_id, management_key=management_key
+        )
         idp_url = ""
         entity_id = ""
         idp_cert = ""
@@ -25,7 +27,6 @@ def main():
         try:
             logging.info("Configure SSO for tenant")
             descope_client.mgmt.sso.configure(
-                mgmt_key,
                 tenant_id,
                 idp_url=idp_url,
                 entity_id=entity_id,
@@ -38,7 +39,6 @@ def main():
         try:
             logging.info("Configure SSO for tenant via metadata")
             descope_client.mgmt.sso.configure_via_metadata(
-                mgmt_key,
                 tenant_id,
                 idp_metadata_url=idp_metadata_url,
             )
@@ -49,7 +49,6 @@ def main():
         try:
             logging.info("Update tenant role mappings")
             descope_client.mgmt.sso.map_roles(
-                mgmt_key,
                 tenant_id,
                 role_mappings == role_mappings,
             )

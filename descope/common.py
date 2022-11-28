@@ -47,6 +47,14 @@ class EndpointsV1:
     updateUserEmailMagicLinkPath = "/v1/auth/magiclink/update/email"
     updateUserPhoneMagicLinkPath = "/v1/auth/magiclink/update/phone"
 
+    # enchantedlink
+    signUpAuthEnchantedLinkPath = "/v1/auth/enchantedlink/signup"
+    signInAuthEnchantedLinkPath = "/v1/auth/enchantedlink/signin"
+    signUpOrInAuthEnchantedLinkPath = "/v1/auth/enchantedlink/signup-in"
+    verifyEnchantedLinkAuthPath = "/v1/auth/enchantedlink/verify"
+    getSessionEnchantedLinkAuthPath = "/v1/auth/enchantedlink/pending-session"
+    updateUserEmailEnchantedLinkPath = "/v1/auth/enchantedlink/update/email"
+
     # oauth
     oauthStart = "/v1/auth/oauth/authorize"
     oauthExchangeTokenPath = "/v1/auth/oauth/exchange"
