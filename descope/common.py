@@ -1,8 +1,12 @@
+import sys
 from enum import Enum
 
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
-DEFAULT_BASE_URL = "https://api.descope.com"
+if "unittest" in sys.modules:
+    DEFAULT_BASE_URL = "http://127.0.0.1"
+else:
+    DEFAULT_BASE_URL = "https://api.descope.com"  # pragma: no cover
 
 PHONE_REGEX = """^(?:(?:\\(?(?:00|\\+)([1-4]\\d\\d|[1-9]\\d?)\\)?)?[\\-\\.\\ \\\\/]?)?((?:\\(?\\d{1,}\\)?[\\-\\.\\ \\\\/]?){0,})(?:[\\-\\.\\ \\\\/]?(?:#|ext\\.?|extension|x)[\\-\\.\\ \\\\/]?(\\d+))?$"""
 

@@ -90,6 +90,12 @@ class TestOTP(unittest.TestCase):
         )
 
     def test_sign_up(self):
+        invalid_signup_user_details = {
+            "username": "jhon",
+            "name": "john",
+            "phone": "972525555555",
+            "email": "dummy@dummy",
+        }
         signup_user_details = {
             "username": "jhon",
             "name": "john",
@@ -105,21 +111,23 @@ class TestOTP(unittest.TestCase):
             client.otp.sign_up,
             DeliveryMethod.EMAIL,
             "dummy@dummy",
-            signup_user_details,
+            invalid_signup_user_details,
         )
+        invalid_signup_user_details["email"] = "dummy@dummy.com"  # set valid mail
+        invalid_signup_user_details["phone"] = "aaaaaaaa"  # set invalid phone
         self.assertRaises(
             AuthException,
             client.otp.sign_up,
             DeliveryMethod.EMAIL,
             "",
-            signup_user_details,
+            invalid_signup_user_details,
         )
         self.assertRaises(
             AuthException,
             client.otp.sign_up,
-            DeliveryMethod.EMAIL,
-            None,
-            signup_user_details,
+            DeliveryMethod.PHONE,
+            "dummy@dummy.com",
+            invalid_signup_user_details,
         )
 
         with patch("requests.post") as mock_post:
@@ -167,9 +175,6 @@ class TestOTP(unittest.TestCase):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)
 
         # Test failed flows
-        self.assertRaises(
-            AuthException, client.otp.sign_in, DeliveryMethod.EMAIL, "dummy@dummy"
-        )
         self.assertRaises(AuthException, client.otp.sign_in, DeliveryMethod.EMAIL, "")
         self.assertRaises(AuthException, client.otp.sign_in, DeliveryMethod.EMAIL, None)
 
@@ -225,13 +230,6 @@ class TestOTP(unittest.TestCase):
 
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)
 
-        self.assertRaises(
-            AuthException,
-            client.otp.verify_code,
-            DeliveryMethod.EMAIL,
-            "dummy@dummy",
-            code,
-        )
         self.assertRaises(
             AuthException, client.otp.verify_code, DeliveryMethod.EMAIL, "", code
         )
