@@ -52,6 +52,10 @@ class TestDescopeClient(unittest.TestCase):
             DescopeClient(project_id="dummy", public_key=self.public_key_str)
         )
 
+    def test_mgmt(self):
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
+        self.assertRaises(AuthException, lambda: client.mgmt)
+
     def test_logout(self):
         dummy_refresh_token = ""
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)
