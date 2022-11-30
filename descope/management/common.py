@@ -14,4 +14,7 @@ class MgmtV1:
     # sso
     ssoConfigurePath = "/v1/mgmt/sso/settings"
     ssoMetadataPath = "/v1/mgmt/sso/metadata"
+    ssoMappingPath = "/v1/mgmt/sso/mapping"
+
+    # deprecated
     ssoRoleMappingPath = "/v1/mgmt/sso/roles"
