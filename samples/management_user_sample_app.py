@@ -28,16 +28,18 @@ def main():
 
         try:
             logging.info("Searching for created user")
-            user_info = descope_client.mgmt.user.load(user_identifier)
-            logging.info(f"Load: found user {user_info}")
+            user_resp = descope_client.mgmt.user.load(user_identifier)
+            user = user_resp["user"]
+            logging.info(f"Load: found user {user}")
 
         except AuthException as e:
             logging.info(f"User load failed {e}")
 
         try:
             logging.info("Searching all users created user")
-            all_users = descope_client.mgmt.user.searchAllUsers()
-            for user in all_users["users"]:
+            users_resp = descope_client.mgmt.user.searchAllUsers()
+            users = users_resp["users"]
+            for user in users:
                 logging.info(f"Search Found user {user}")
 
         except AuthException as e:

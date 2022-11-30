@@ -124,10 +124,11 @@ class TestUser(unittest.TestCase):
         with patch("requests.get") as mock_get:
             network_resp = mock.Mock()
             network_resp.ok = True
-            network_resp.json.return_value = json.loads("""{"id": "u1"}""")
+            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_get.return_value = network_resp
             resp = client.mgmt.user.load("valid-id")
-            self.assertEqual(resp["id"], "u1")
+            user = resp["user"]
+            self.assertEqual(user["id"], "u1")
 
     def test_search_all_users(self):
         client = DescopeClient(

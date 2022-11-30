@@ -113,6 +113,8 @@ class User:
         identifier (str): The identifier of the user to be loaded.
 
         Return value (dict):
+        Return dict in the format
+             {"user": []}
         User information dictionary
 
         Raise:
