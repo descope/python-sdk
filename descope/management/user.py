@@ -24,7 +24,7 @@ class User:
         display_name: str = None,
         role_names: List[str] = [],
         user_tenants: List[UserTenants] = [],
-    ) -> dict:
+    ) -> None:
         """
         Create a new user. Users can have any number of optional fields, including email, phone number and authorization.
 
@@ -101,6 +101,60 @@ class User:
             {"identifier": identifier},
             pswd=self._auth.management_key,
         )
+
+    def load(
+        self,
+        identifier: str,
+    ) -> dict:
+        """
+        Load an existing user.
+
+        Args:
+        identifier (str): The identifier of the user to be loaded.
+
+        Return value (dict):
+        Return dict in the format
+             {"user": []}
+        User information dictionary
+
+        Raise:
+        AuthException: raised if load operation fails
+        """
+        response = self._auth.do_get(
+            MgmtV1.userLoadPath,
+            {"identifier": identifier},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    def searchAllUsers(
+        self,
+        tenant_ids: List[str] = [],
+        role_names: List[str] = [],
+        limit: int = 0,
+    ) -> dict:
+        """
+        Search all users.
+
+        Args:
+        tenant_ids (List[str]): Optional list of tenant IDs to filter by
+        role_names (List[str]): Optional list of role names to filter by
+        limit (int): Optional limit of the number of users returned. Leave empty for default.
+
+        Return value (dict):
+        Return dict in the format
+             {"users": []}
+        "users" contains a list of all of the found users and their information
+
+        Raise:
+        AuthException: raised if search operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.usersSearchPath,
+            {"tenantIds": tenant_ids, "roleNames": role_names, "limit": limit},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
 
     @staticmethod
     def _compose_create_update_body(

@@ -27,6 +27,25 @@ def main():
             logging.info(f"User creation failed {e}")
 
         try:
+            logging.info("Searching for created user")
+            user_resp = descope_client.mgmt.user.load(user_identifier)
+            user = user_resp["user"]
+            logging.info(f"Load: found user {user}")
+
+        except AuthException as e:
+            logging.info(f"User load failed {e}")
+
+        try:
+            logging.info("Searching all users created user")
+            users_resp = descope_client.mgmt.user.searchAllUsers()
+            users = users_resp["users"]
+            for user in users:
+                logging.info(f"Search Found user {user}")
+
+        except AuthException as e:
+            logging.info(f"User load failed {e}")
+
+        try:
             logging.info("Updating newly created user")
             # update overrides all fields, must provide the entire entity
             # we mean to update.
@@ -38,7 +57,7 @@ def main():
             logging.info(f"User update failed {e}")
 
         try:
-            logging.info("Deleting newly created tenant")
+            logging.info("Deleting newly created user")
             descope_client.mgmt.user.delete(user_identifier)
 
         except AuthException as e:

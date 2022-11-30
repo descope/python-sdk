@@ -1,4 +1,6 @@
+import json
 import unittest
+from unittest import mock
 from unittest.mock import patch
 
 from descope import AuthException, DescopeClient, UserTenants
@@ -100,3 +102,62 @@ class TestUser(unittest.TestCase):
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.user.delete("t1"))
+
+    def test_load(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flows
+        with patch("requests.get") as mock_get:
+            mock_get.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.user.load,
+                "valid-id",
+            )
+
+        # Test success flow
+        with patch("requests.get") as mock_get:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
+            mock_get.return_value = network_resp
+            resp = client.mgmt.user.load("valid-id")
+            user = resp["user"]
+            self.assertEqual(user["id"], "u1")
+
+    def test_search_all_users(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.user.searchAllUsers,
+                ["t1, t2"],
+                ["r1", "r2"],
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads(
+                """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
+            )
+            mock_post.return_value = network_resp
+            resp = client.mgmt.user.searchAllUsers(["t1, t2"], ["r1", "r2"])
+            users = resp["users"]
+            self.assertEqual(len(users), 2)
+            self.assertEqual(users[0]["id"], "u1")
+            self.assertEqual(users[1]["id"], "u2")

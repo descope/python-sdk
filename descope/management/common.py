@@ -8,6 +8,8 @@ class MgmtV1:
     userCreatePath = "/v1/mgmt/user/create"
     userUpdatePath = "/v1/mgmt/user/update"
     userDeletePath = "/v1/mgmt/user/delete"
+    userLoadPath = "/v1/mgmt/user"
+    usersSearchPath = "/v1/mgmt/user/search"
 
     # sso
     ssoConfigurePath = "/v1/mgmt/sso/settings"
