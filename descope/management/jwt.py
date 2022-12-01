@@ -1,5 +1,3 @@
-from typing import List
-
 from descope.auth import Auth
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 from descope.management.common import MgmtV1
