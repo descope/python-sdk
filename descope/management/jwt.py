@@ -9,12 +9,12 @@ class JWT:
     def __init__(self, auth: Auth):
         self._auth = auth
 
-    def updateJWT(self, jwt: str, customClaims: dict) -> dict:
+    def updateJWT(self, token: str, customClaims: dict) -> str:
         """
         Given a valid JWT, update it with custom claims, and update its authz claims as well
 
         Args:
-        jwt (str): valid jwt.
+        token (str): valid jwt.
         customClaims (dict): Custom claims to add to JWT, system claims will be filtered out
 
         Return value (str): the newly updated JWT
@@ -22,15 +22,15 @@ class JWT:
         Raise:
         AuthException: raised if update failed
         """
-        if not jwt:
+        if not token:
             raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "jwt cannot be empty")
         response = self._auth.do_post(
             MgmtV1.updateJwt,
-            JWT._compose_update_jwt_body(jwt, customClaims),
+            JWT._compose_update_jwt_body(token, customClaims),
             pswd=self._auth.management_key,
         )
         return response.json().get("jwt", "")
 
     @staticmethod
-    def _compose_update_jwt_body(jwt: str, customClaims: dict) -> dict:
-        return {"jwt": jwt, "customClaims": customClaims}
+    def _compose_update_jwt_body(token: str, customClaims: dict) -> dict:
+        return {"jwt": token, "customClaims": customClaims}
