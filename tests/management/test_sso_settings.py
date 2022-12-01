@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 
-from descope import AuthException, DescopeClient, RoleMapping
+from descope import AttributeMapping, AuthException, DescopeClient, RoleMapping
 
 
 class TestSSOSettings(unittest.TestCase):
@@ -91,6 +91,38 @@ class TestSSOSettings(unittest.TestCase):
                     "https://idp-meta.com",
                 )
             )
+
+    def test_mapping(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.sso.mapping,
+                "tenant-id",
+                [RoleMapping(["a", "b"], "role")],
+                AttributeMapping(username="UName"),
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(
+                client.mgmt.sso.mapping(
+                    "tenant-id",
+                    [RoleMapping(["a", "b"], "role")],
+                    AttributeMapping(username="UName"),
+                )
+            )
+
+    # DEPRECATED
 
     def test_role_mapping(self):
         client = DescopeClient(
