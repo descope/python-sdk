@@ -3,7 +3,11 @@ import unittest
 from unittest import mock
 from unittest.mock import patch
 
+import common
+
 from descope import AuthException, DescopeClient
+from descope.common import DEFAULT_BASE_URL
+from descope.management.common import MgmtV1
 
 
 class TestTenant(unittest.TestCase):
@@ -45,6 +49,23 @@ class TestTenant(unittest.TestCase):
             mock_post.return_value = network_resp
             resp = client.mgmt.tenant.create("name", "t1", ["domain.com"])
             self.assertEqual(resp["id"], "t1")
+            mock_post.assert_called_with(
+                f"{DEFAULT_BASE_URL}{MgmtV1.tenantCreatePath}",
+                headers={
+                    **common.defaultHeaders,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                data=json.dumps(
+                    {
+                        "name": "name",
+                        "id": "t1",
+                        "selfProvisioningDomains": ["domain.com"],
+                    }
+                ),
+                allow_redirects=False,
+                verify=True,
+            )
 
     def test_update(self):
         client = DescopeClient(
@@ -70,6 +91,23 @@ class TestTenant(unittest.TestCase):
             self.assertIsNone(
                 client.mgmt.tenant.update("t1", "new-name", ["domain.com"])
             )
+            mock_post.assert_called_with(
+                f"{DEFAULT_BASE_URL}{MgmtV1.tenantUpdatePath}",
+                headers={
+                    **common.defaultHeaders,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                data=json.dumps(
+                    {
+                        "name": "new-name",
+                        "id": "t1",
+                        "selfProvisioningDomains": ["domain.com"],
+                    }
+                ),
+                allow_redirects=False,
+                verify=True,
+            )
 
     def test_delete(self):
         client = DescopeClient(
@@ -92,3 +130,18 @@ class TestTenant(unittest.TestCase):
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.tenant.delete("t1"))
+            mock_post.assert_called_with(
+                f"{DEFAULT_BASE_URL}{MgmtV1.tenantDeletePath}",
+                headers={
+                    **common.defaultHeaders,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                data=json.dumps(
+                    {
+                        "id": "t1",
+                    }
+                ),
+                allow_redirects=False,
+                verify=True,
+            )
