@@ -121,33 +121,3 @@ class TestSSOSettings(unittest.TestCase):
                     AttributeMapping(name="UName"),
                 )
             )
-
-    # DEPRECATED
-
-    def test_role_mapping(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
-
-        # Test failed flows
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.sso.map_roles,
-                "tenant-id",
-                [RoleMapping(["a", "b"], "role")],
-            )
-
-        # Test success flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
-                client.mgmt.sso.map_roles(
-                    "tenant-id",
-                    [RoleMapping(["a", "b"], "role")],
-                )
-            )

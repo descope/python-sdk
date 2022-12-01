@@ -170,37 +170,3 @@ class SSOSettings:
             "phoneNumber": attribute_mapping.phone_number,
             "group": attribute_mapping.group,
         }
-
-    # DEPRECATED
-
-    def map_roles(
-        self,
-        tenant_id: str,
-        role_mappings: List[RoleMapping],
-    ):
-        """
-        DEPRECATED: User the 'mapping' function instead.
-        Configure SSO role mapping from the IDP groups to the Descope roles.
-
-        Args:
-        tenant_id (str): The tenant ID to be configured
-        role_mappings (List[RoleMapping]): A mapping between IDP groups and Descope roles.
-
-        Raise:
-        AuthException: raised if configuration operation fails
-        """
-        self._auth.do_post(
-            MgmtV1.ssoRoleMappingPath,
-            SSOSettings._compose_role_mapping_body(tenant_id, role_mappings),
-            pswd=self._auth.management_key,
-        )
-
-    @staticmethod
-    def _compose_role_mapping_body(
-        tenant_id: str,
-        role_mapping: List[RoleMapping],
-    ) -> dict:
-        return {
-            "tenantId": tenant_id,
-            "roleMapping": SSOSettings._role_mapping_to_dict(role_mapping),
-        }
