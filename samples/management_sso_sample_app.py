@@ -4,7 +4,12 @@ import sys
 
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
-from descope import AuthException, DescopeClient, RoleMapping  # noqa: E402
+from descope import (  # noqa: E402
+    AttributeMapping,
+    AuthException,
+    DescopeClient,
+    RoleMapping,
+)
 
 logging.basicConfig(level=logging.INFO)
 
@@ -22,7 +27,8 @@ def main():
         entity_id = ""
         idp_cert = ""
         idp_metadata_url = ""
-        role_mappings = [RoleMapping([], "Tenant Admin")]
+        role_mappings = [RoleMapping(["a"], "Tenant Admin")]
+        attribute_mapping = AttributeMapping(name="MyName")
 
         try:
             logging.info("Configure SSO for tenant")
@@ -48,9 +54,10 @@ def main():
 
         try:
             logging.info("Update tenant role mappings")
-            descope_client.mgmt.sso.map_roles(
+            descope_client.mgmt.sso.mapping(
                 tenant_id,
-                role_mappings == role_mappings,
+                role_mappings=role_mappings,
+                attribute_mapping=attribute_mapping,
             )
 
         except AuthException as e:
