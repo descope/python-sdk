@@ -3,11 +3,10 @@ import unittest
 from unittest import mock
 from unittest.mock import patch
 
-import common
-
 from descope import AuthException, DescopeClient
 from descope.common import DEFAULT_BASE_URL
 from descope.management.common import MgmtV1
+from tests import common
 
 
 class TestUser(unittest.TestCase):
