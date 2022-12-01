@@ -24,7 +24,7 @@ class User:
         display_name: str = None,
         role_names: List[str] = [],
         user_tenants: List[UserTenants] = [],
-    ) -> None:
+    ) -> dict:
         """
         Create a new user. Users can have any number of optional fields, including email, phone number and authorization.
 
@@ -38,16 +38,22 @@ class User:
         user_tenants (List[UserTenants]): An optional list of the user's tenants, and optionally, their roles per tenant. These roles are
             mutually exclusive with the general `role_names`, and take precedence over them.
 
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the created user information.
+
         Raise:
         AuthException: raised if creation operation fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.userCreatePath,
             User._compose_create_update_body(
                 identifier, email, phone_number, display_name, role_names, user_tenants
             ),
             pswd=self._auth.management_key,
         )
+        return response.json()
 
     def update(
         self,
@@ -114,8 +120,8 @@ class User:
 
         Return value (dict):
         Return dict in the format
-             {"user": []}
-        User information dictionary
+             {"user": {}}
+        Containing the loaded user information.
 
         Raise:
         AuthException: raised if load operation fails

@@ -43,18 +43,21 @@ class TestUser(unittest.TestCase):
 
         # Test success flow
         with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
-                client.mgmt.user.create(
-                    identifier="name@mail.com",
-                    email="name@mail.com",
-                    display_name="Name",
-                    user_tenants=[
-                        UserTenants("tenant1"),
-                        UserTenants("tenant2", ["role1", "role2"]),
-                    ],
-                )
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
+            mock_post.return_value = network_resp
+            resp = client.mgmt.user.create(
+                identifier="name@mail.com",
+                email="name@mail.com",
+                display_name="Name",
+                user_tenants=[
+                    UserTenants("tenant1"),
+                    UserTenants("tenant2", ["role1", "role2"]),
+                ],
             )
+            user = resp["user"]
+            self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
                 f"{DEFAULT_BASE_URL}{MgmtV1.userCreatePath}",
                 headers={
