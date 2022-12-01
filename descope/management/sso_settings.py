@@ -5,12 +5,16 @@ from descope.management.common import MgmtV1
 
 
 class RoleMapping:
+    """Map IDP group names to the Descope role name"""
+
     def __init__(self, groups: List[str], role_name: str):
         self.groups = groups
         self.role_name = role_name
 
 
 class AttributeMapping:
+    """Map Descope user attributes to IDP user attributes"""
+
     def __init__(
         self,
         name: str = None,
@@ -95,7 +99,7 @@ class SSOSettings:
         Args:
         tenant_id (str): The tenant ID to be configured
         role_mappings (List[RoleMapping]): A mapping between IDP groups and Descope roles.
-        attribute_mapping: A mapping between IDP user attributes and descope attributes.
+        attribute_mapping (AttributeMapping): A mapping between IDP user attributes and descope attributes.
 
         Raise:
         AuthException: raised if configuration operation fails
