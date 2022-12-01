@@ -108,7 +108,7 @@ class TestSSOSettings(unittest.TestCase):
                 client.mgmt.sso.mapping,
                 "tenant-id",
                 [RoleMapping(["a", "b"], "role")],
-                AttributeMapping(username="UName"),
+                AttributeMapping(name="UName"),
             )
 
         # Test success flow
@@ -118,7 +118,7 @@ class TestSSOSettings(unittest.TestCase):
                 client.mgmt.sso.mapping(
                     "tenant-id",
                     [RoleMapping(["a", "b"], "role")],
-                    AttributeMapping(username="UName"),
+                    AttributeMapping(name="UName"),
                 )
             )
 

@@ -19,13 +19,11 @@ class AttributeMapping:
         self,
         name: str = None,
         email: str = None,
-        username: str = None,
         phone_number: str = None,
         group: str = None,
     ):
         self.name = name
         self.email = email
-        self.username = username
         self.phone_number = phone_number
         self.group = group
 
@@ -169,7 +167,6 @@ class SSOSettings:
         return {
             "name": attribute_mapping.name,
             "email": attribute_mapping.email,
-            "username": attribute_mapping.username,
             "phoneNumber": attribute_mapping.phone_number,
             "group": attribute_mapping.group,
         }
