@@ -1,7 +1,12 @@
+import json
 import unittest
 from unittest.mock import patch
 
+import common
+
 from descope import AttributeMapping, AuthException, DescopeClient, RoleMapping
+from descope.common import DEFAULT_BASE_URL
+from descope.management.common import MgmtV1
 
 
 class TestSSOSettings(unittest.TestCase):
@@ -51,6 +56,25 @@ class TestSSOSettings(unittest.TestCase):
                     "https://redirect.com",
                 )
             )
+            mock_post.assert_called_with(
+                f"{DEFAULT_BASE_URL}{MgmtV1.ssoConfigurePath}",
+                headers={
+                    **common.defaultHeaders,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                data=json.dumps(
+                    {
+                        "tenantId": "tenant-id",
+                        "idpURL": "https://idp.com",
+                        "entityId": "entity-id",
+                        "idpCert": "cert",
+                        "redirectURL": "https://redirect.com",
+                    }
+                ),
+                allow_redirects=False,
+                verify=True,
+            )
 
         # Redirect is optional
         with patch("requests.post") as mock_post:
@@ -62,6 +86,25 @@ class TestSSOSettings(unittest.TestCase):
                     "entity-id",
                     "cert",
                 )
+            )
+            mock_post.assert_called_with(
+                f"{DEFAULT_BASE_URL}{MgmtV1.ssoConfigurePath}",
+                headers={
+                    **common.defaultHeaders,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                data=json.dumps(
+                    {
+                        "tenantId": "tenant-id",
+                        "idpURL": "https://idp.com",
+                        "entityId": "entity-id",
+                        "idpCert": "cert",
+                        "redirectURL": None,
+                    }
+                ),
+                allow_redirects=False,
+                verify=True,
             )
 
     def test_configure_via_metadata(self):
@@ -91,6 +134,22 @@ class TestSSOSettings(unittest.TestCase):
                     "https://idp-meta.com",
                 )
             )
+            mock_post.assert_called_with(
+                f"{DEFAULT_BASE_URL}{MgmtV1.ssoMetadataPath}",
+                headers={
+                    **common.defaultHeaders,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                data=json.dumps(
+                    {
+                        "tenantId": "tenant-id",
+                        "idpMetadataURL": "https://idp-meta.com",
+                    }
+                ),
+                allow_redirects=False,
+                verify=True,
+            )
 
     def test_mapping(self):
         client = DescopeClient(
@@ -108,7 +167,7 @@ class TestSSOSettings(unittest.TestCase):
                 client.mgmt.sso.mapping,
                 "tenant-id",
                 [RoleMapping(["a", "b"], "role")],
-                AttributeMapping(username="UName"),
+                AttributeMapping(name="UName"),
             )
 
         # Test success flow
@@ -118,36 +177,28 @@ class TestSSOSettings(unittest.TestCase):
                 client.mgmt.sso.mapping(
                     "tenant-id",
                     [RoleMapping(["a", "b"], "role")],
-                    AttributeMapping(username="UName"),
+                    AttributeMapping(name="UName"),
                 )
             )
-
-    # DEPRECATED
-
-    def test_role_mapping(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
-
-        # Test failed flows
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.sso.map_roles,
-                "tenant-id",
-                [RoleMapping(["a", "b"], "role")],
-            )
-
-        # Test success flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
-                client.mgmt.sso.map_roles(
-                    "tenant-id",
-                    [RoleMapping(["a", "b"], "role")],
-                )
+            mock_post.assert_called_with(
+                f"{DEFAULT_BASE_URL}{MgmtV1.ssoMappingPath}",
+                headers={
+                    **common.defaultHeaders,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                data=json.dumps(
+                    {
+                        "tenantId": "tenant-id",
+                        "roleMappings": [{"groups": ["a", "b"], "roleName": "role"}],
+                        "attributeMapping": {
+                            "name": "UName",
+                            "email": None,
+                            "phoneNumber": None,
+                            "group": None,
+                        },
+                    }
+                ),
+                allow_redirects=False,
+                verify=True,
             )
