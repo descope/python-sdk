@@ -42,6 +42,10 @@ class MagicLink:
     def sign_up(
         self, method: DeliveryMethod, identifier: str, uri: str, user: dict = None
     ) -> None:
+
+        if not user:
+            user = {}
+
         if not self._auth.verify_delivery_method(method, identifier, user):
             raise AuthException(
                 400,

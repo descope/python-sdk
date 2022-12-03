@@ -3,10 +3,17 @@ import unittest
 from unittest import mock
 from unittest.mock import patch
 
+import common
+
 from descope import SESSION_COOKIE_NAME, AuthException, DeliveryMethod
 from descope.auth import Auth
 from descope.authmethod.magiclink import MagicLink  # noqa: F401
-from descope.common import REFRESH_SESSION_COOKIE_NAME, LoginOptions
+from descope.common import (
+    DEFAULT_BASE_URL,
+    REFRESH_SESSION_COOKIE_NAME,
+    EndpointsV1,
+    LoginOptions,
+)
 
 
 class TestMagicLink(unittest.TestCase):
@@ -191,6 +198,59 @@ class TestMagicLink(unittest.TestCase):
                     "http://test.me",
                     signup_user_details,
                 )
+            )
+            mock_post.assert_called_with(
+                f"{DEFAULT_BASE_URL}{EndpointsV1.signUpAuthMagicLinkPath}/email",
+                headers={
+                    **common.defaultHeaders,
+                    "Authorization": f"Bearer {self.dummy_project_id}",
+                },
+                data=json.dumps(
+                    {
+                        "externalId": "dummy@dummy.com",
+                        "URI": "http://test.me",
+                        "user": {
+                            "username": "",
+                            "name": "john",
+                            "phone": "972525555555",
+                            "email": "dummy@dummy.com",
+                        },
+                        "email": "dummy@dummy.com",
+                    }
+                ),
+                allow_redirects=False,
+                verify=True,
+                params=None,
+            )
+
+        # Test user is None so using the identifier as default
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(
+                magiclink.sign_up(
+                    DeliveryMethod.EMAIL,
+                    "dummy@dummy.com",
+                    "http://test.me",
+                    None,
+                )
+            )
+            mock_post.assert_called_with(
+                f"{DEFAULT_BASE_URL}{EndpointsV1.signUpAuthMagicLinkPath}/email",
+                headers={
+                    **common.defaultHeaders,
+                    "Authorization": f"Bearer {self.dummy_project_id}",
+                },
+                data=json.dumps(
+                    {
+                        "externalId": "dummy@dummy.com",
+                        "URI": "http://test.me",
+                        "user": {"email": "dummy@dummy.com"},
+                        "email": "dummy@dummy.com",
+                    }
+                ),
+                allow_redirects=False,
+                verify=True,
+                params=None,
             )
 
     def test_sign_up_or_in(self):

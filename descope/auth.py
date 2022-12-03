@@ -133,7 +133,7 @@ class Auth:
         if not identifier:
             return False
 
-        if not user or not isinstance(user, dict):
+        if not isinstance(user, dict):
             return False
 
         if method == DeliveryMethod.EMAIL:

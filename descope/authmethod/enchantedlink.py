@@ -42,6 +42,9 @@ class EnchantedLink:
         return EnchantedLink._get_pending_ref_from_response(response)
 
     def sign_up(self, identifier: str, uri: str, user: dict = None) -> None:
+        if not user:
+            user = {}
+
         if not self._auth.verify_delivery_method(
             DeliveryMethod.EMAIL, identifier, user
         ):
