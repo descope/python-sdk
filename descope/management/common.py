@@ -15,3 +15,6 @@ class MgmtV1:
     ssoConfigurePath = "/v1/mgmt/sso/settings"
     ssoMetadataPath = "/v1/mgmt/sso/metadata"
     ssoMappingPath = "/v1/mgmt/sso/mapping"
+
+    # jwt
+    updateJwt = "/v1/mgmt/jwt/update"
