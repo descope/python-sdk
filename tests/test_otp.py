@@ -1,11 +1,19 @@
+import json
 import unittest
 from enum import Enum
 from unittest import mock
 from unittest.mock import patch
 
+import common
+
 from descope import SESSION_COOKIE_NAME, AuthException, DeliveryMethod, DescopeClient
 from descope.authmethod.otp import OTP  # noqa: F401
-from descope.common import REFRESH_SESSION_COOKIE_NAME, LoginOptions
+from descope.common import (
+    DEFAULT_BASE_URL,
+    REFRESH_SESSION_COOKIE_NAME,
+    EndpointsV1,
+    LoginOptions,
+)
 
 
 class TestOTP(unittest.TestCase):
@@ -149,7 +157,7 @@ class TestOTP(unittest.TestCase):
                 )
             )
 
-        # Test flow where username not set and we used the identifier as default
+        # Test flow where username set as empty and we used the identifier as default
         signup_user_details = {
             "username": "",
             "name": "john",
@@ -163,6 +171,52 @@ class TestOTP(unittest.TestCase):
                 client.otp.sign_up(
                     DeliveryMethod.EMAIL, "dummy@dummy.com", signup_user_details
                 )
+            )
+            mock_post.assert_called_with(
+                f"{DEFAULT_BASE_URL}{EndpointsV1.signUpAuthOTPPath}/email",
+                headers={
+                    **common.defaultHeaders,
+                    "Authorization": f"Bearer {self.dummy_project_id}",
+                },
+                params=None,
+                data=json.dumps(
+                    {
+                        "externalId": "dummy@dummy.com",
+                        "user": {
+                            "username": "",
+                            "name": "john",
+                            "phone": "972525555555",
+                            "email": "dummy@dummy.com",
+                        },
+                        "email": "dummy@dummy.com",
+                    }
+                ),
+                allow_redirects=False,
+                verify=True,
+            )
+
+        # Test user is None so using the identifier as default
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(
+                client.otp.sign_up(DeliveryMethod.EMAIL, "dummy@dummy.com", None)
+            )
+            mock_post.assert_called_with(
+                f"{DEFAULT_BASE_URL}{EndpointsV1.signUpAuthOTPPath}/email",
+                headers={
+                    **common.defaultHeaders,
+                    "Authorization": f"Bearer {self.dummy_project_id}",
+                },
+                params=None,
+                data=json.dumps(
+                    {
+                        "externalId": "dummy@dummy.com",
+                        "user": {"email": "dummy@dummy.com"},
+                        "email": "dummy@dummy.com",
+                    }
+                ),
+                allow_redirects=False,
+                verify=True,
             )
 
         # test undefined enum value

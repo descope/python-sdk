@@ -199,6 +199,36 @@ class TestEnchantedLink(unittest.TestCase):
             )
             self.assertEqual(res["pendingRef"], "aaaa")
 
+        # Test user is None so using the identifier as default
+        with patch("requests.post") as mock_post:
+            data = json.loads("""{"pendingRef": "aaaa"}""")
+            my_mock_response.json.return_value = data
+            mock_post.return_value = my_mock_response
+            res = enchantedlink.sign_up(
+                "dummy@dummy.com",
+                "http://test.me",
+                None,
+            )
+            mock_post.assert_called_with(
+                f"{DEFAULT_BASE_URL}{EndpointsV1.signUpAuthEnchantedLinkPath}/email",
+                headers={
+                    **common.defaultHeaders,
+                    "Authorization": f"Bearer {self.dummy_project_id}",
+                },
+                params=None,
+                data=json.dumps(
+                    {
+                        "externalId": "dummy@dummy.com",
+                        "URI": "http://test.me",
+                        "user": {"email": "dummy@dummy.com"},
+                        "email": "dummy@dummy.com",
+                    }
+                ),
+                allow_redirects=False,
+                verify=True,
+            )
+            self.assertEqual(res["pendingRef"], "aaaa")
+
     def test_sign_up_or_in(self):
         enchantedlink = EnchantedLink(Auth(self.dummy_project_id, self.public_key_dict))
         with patch("requests.post") as mock_post:

@@ -28,6 +28,9 @@ class WebauthN:
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Origin cannot be empty"
             )
 
+        if not user:
+            user = {}
+
         uri = EndpointsV1.signUpAuthWebauthnStart
         body = WebauthN._compose_sign_up_start_body(identifier, user, origin)
         response = self._auth.do_post(uri, body)

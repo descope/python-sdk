@@ -64,6 +64,9 @@ class OTP:
         AuthException: raised if sign-up operation fails
         """
 
+        if not user:
+            user = {}
+
         if not self._auth.verify_delivery_method(method, identifier, user):
             raise AuthException(
                 400,
