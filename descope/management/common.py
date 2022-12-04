@@ -16,8 +16,5 @@ class MgmtV1:
     ssoMetadataPath = "/v1/mgmt/sso/metadata"
     ssoMappingPath = "/v1/mgmt/sso/mapping"
 
-    # deprecated
-    ssoRoleMappingPath = "/v1/mgmt/sso/roles"
-
     # jwt
     updateJwt = "/v1/mgmt/jwt/update"
