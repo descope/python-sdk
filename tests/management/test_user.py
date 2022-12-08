@@ -218,7 +218,7 @@ class TestUser(unittest.TestCase):
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
-                client.mgmt.user.searchAllUsers,
+                client.mgmt.user.search_all_users,
                 ["t1, t2"],
                 ["r1", "r2"],
             )
@@ -231,7 +231,7 @@ class TestUser(unittest.TestCase):
                 """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
             )
             mock_post.return_value = network_resp
-            resp = client.mgmt.user.searchAllUsers(["t1, t2"], ["r1", "r2"])
+            resp = client.mgmt.user.search_all_users(["t1, t2"], ["r1", "r2"])
             users = resp["users"]
             self.assertEqual(len(users), 2)
             self.assertEqual(users[0]["id"], "u1")

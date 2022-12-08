@@ -44,7 +44,7 @@ class User:
         Containing the created user information.
 
         Raise:
-        AuthException: raised if creation operation fails
+        AuthException: raised if update operation fails
         """
         response = self._auth.do_post(
             MgmtV1.userCreatePath,
@@ -97,7 +97,7 @@ class User:
         Delete an existing user. IMPORTANT: This action is irreversible. Use carefully.
 
         Args:
-        identifier (str): The identifier of the user that's to be deleted.
+        identifier (str): The identifier of the user to be deleted.
 
         Raise:
         AuthException: raised if creation operation fails
@@ -133,7 +133,7 @@ class User:
         )
         return response.json()
 
-    def searchAllUsers(
+    def search_all_users(
         self,
         tenant_ids: List[str] = [],
         role_names: List[str] = [],
