@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import common
 
-from descope import AuthException, DescopeClient, UserTenants
+from descope import AuthException, DescopeClient
 from descope.common import DEFAULT_BASE_URL
 from descope.management.common import MgmtV1
 
