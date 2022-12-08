@@ -27,7 +27,7 @@ def main():
             logging.info(f"Permission creation failed {e}")
 
         try:
-            logging.info("Searching all permissions created permission")
+            logging.info("Loading all permissions")
             permissions_resp = descope_client.mgmt.permission.load_all()
             permissions = permissions_resp["permissions"]
             for permission in permissions:

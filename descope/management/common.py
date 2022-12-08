@@ -24,3 +24,9 @@ class MgmtV1:
     permissionUpdatePath = "/v1/mgmt/permission/update"
     permissionDeletePath = "/v1/mgmt/permission/delete"
     permissionLoadAllPath = "/v1/mgmt/permission/all"
+
+    # role
+    roleCreatePath = "/v1/mgmt/role/create"
+    roleUpdatePath = "/v1/mgmt/role/update"
+    roleDeletePath = "/v1/mgmt/role/delete"
+    roleLoadAllPath = "/v1/mgmt/role/all"
