@@ -14,7 +14,7 @@ class Permission:
         description: str = None,
     ):
         """
-        Create a new role.
+        Create a new permission.
 
         Args:
         name (str): permission name.
