@@ -18,3 +18,9 @@ class MgmtV1:
 
     # jwt
     updateJwt = "/v1/mgmt/jwt/update"
+
+    # permission
+    permissionCreatePath = "/v1/mgmt/permission/create"
+    permissionUpdatePath = "/v1/mgmt/permission/update"
+    permissionDeletePath = "/v1/mgmt/permission/delete"
+    permissionLoadAllPath = "/v1/mgmt/permission/all"
