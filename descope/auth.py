@@ -311,7 +311,8 @@ class Auth:
 
         jwks_data = response.text
         try:
-            jwkeys = json.loads(jwks_data)
+            jwkeysWrapper = json.loads(jwks_data)
+            jwkeys = jwkeysWrapper["keys"]
         except Exception as e:
             raise AuthException(
                 500, ERROR_TYPE_INVALID_PUBLIC_KEY, f"Unable to load jwks. Error: {e}"
