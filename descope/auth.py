@@ -20,6 +20,7 @@ from descope.common import (
     SESSION_TOKEN_NAME,
     DeliveryMethod,
     EndpointsV1,
+    EndpointsV2,
 )
 from descope.exceptions import (
     ERROR_TYPE_INVALID_ARGUMENT,
@@ -297,7 +298,7 @@ class Auth:
 
         # This function called under mutex protection so no need to acquire it once again
         response = requests.get(
-            f"{self.base_url}{EndpointsV1.publicKeyPath}/{self.project_id}",
+            f"{self.base_url}{EndpointsV2.publicKeyPath}/{self.project_id}",
             headers=self._get_default_headers(),
             verify=self.secure,
         )
