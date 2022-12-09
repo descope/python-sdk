@@ -80,7 +80,7 @@ class TestAuth(unittest.TestCase):
 
     def test_fetch_public_key(self):
         auth = Auth(self.dummy_project_id, self.public_key_dict)
-        valid_keys_response = """[
+        valid_keys_response = """{"keys":[
     {
         "alg": "ES384",
         "crv": "P-384",
@@ -90,7 +90,7 @@ class TestAuth(unittest.TestCase):
         "x": "435yhcD0tqH6z5M8kNFYEcEYXjzBQWiOvIOZO17rOatpXj-MbA6CKrktiblT4xMb",
         "y": "YMf1EIz68z2_RKBys5byWRUXlqNF_BhO5F0SddkaRtiqZ8M6n7ZnKl65JGN0EEGr"
     }
-]
+]}
         """
 
         # Test failed flows

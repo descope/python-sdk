@@ -21,7 +21,6 @@ REDIRECT_LOCATION_COOKIE_NAME = "Location"
 
 
 class EndpointsV1:
-    publicKeyPath = "/v1/keys"
     refreshTokenPath = "/v1/auth/refresh"
     logoutPath = "/v1/auth/logout"
     logoutAllPath = "/v1/auth/logoutall"
@@ -76,6 +75,10 @@ class EndpointsV1:
     signUpOrInAuthWebauthnStart = "/v1/auth/webauthn/signup-in/start"
     updateAuthWebauthnStart = "/v1/auth/webauthn/update/start"
     updateAuthWebauthnFinish = "/v1/auth/webauthn/update/finish"
+
+
+class EndpointsV2:
+    publicKeyPath = "/v2/keys"
 
 
 class DeliveryMethod(Enum):
