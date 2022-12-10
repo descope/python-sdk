@@ -100,7 +100,7 @@ class TestEnchantedLink(unittest.TestCase):
                 "",
                 "http://test.me",
             )
-            data = json.loads("""{"pendingRef": "aaaa","identifier":"24"}""")
+            data = json.loads("""{"pendingRef": "aaaa","linkId":"24"}""")
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
             res = enchantedlink.sign_in("dummy@dummy.com", "http://test.me")
@@ -122,14 +122,14 @@ class TestEnchantedLink(unittest.TestCase):
                 verify=True,
             )
             self.assertEqual(res["pendingRef"], "aaaa")
-            self.assertEqual(res["identifier"], "24")
+            self.assertEqual(res["linkId"], "24")
 
     def test_sign_in_with_login_options(self):
         enchantedlink = EnchantedLink(Auth(self.dummy_project_id, self.public_key_dict))
         with patch("requests.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
-            data = json.loads("""{"pendingRef": "aaaa", "identifier":"24"}""")
+            data = json.loads("""{"pendingRef": "aaaa", "linkId":"24"}""")
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
             lo = LoginOptions(stepup=True, customClaims={"k1": "v1"})
