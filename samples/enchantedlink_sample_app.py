@@ -37,7 +37,7 @@ def main():
             uri="http://test.me",
         )
 
-        linkIdentifier = resp["identifier"]
+        linkIdentifier = resp["linkId"]
         logging.info(f"Please click the link with the identifier {linkIdentifier}")
         pending_ref = resp["pendingRef"]
 
