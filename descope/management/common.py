@@ -3,6 +3,7 @@ class MgmtV1:
     tenantCreatePath = "/v1/mgmt/tenant/create"
     tenantUpdatePath = "/v1/mgmt/tenant/update"
     tenantDeletePath = "/v1/mgmt/tenant/delete"
+    tenantLoadAllPath = "/v1/mgmt/tenant/all"
 
     # user
     userCreatePath = "/v1/mgmt/user/create"
