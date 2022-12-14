@@ -145,3 +145,47 @@ class TestTenant(unittest.TestCase):
                 allow_redirects=False,
                 verify=True,
             )
+
+    def test_load_all(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flows
+        with patch("requests.get") as mock_get:
+            mock_get.return_value.ok = False
+            self.assertRaises(AuthException, client.mgmt.tenant.load_all)
+
+        # Test success flow
+        with patch("requests.get") as mock_get:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads(
+                """
+                {
+                    "tenants": [
+                        {"id": "t1", "name": "tenant1", "selfProvisioningDomains": ["domain1.com"]},
+                        {"id": "t2", "name": "tenant2", "selfProvisioningDomains": ["domain1.com"]}
+                    ]
+                }
+                """
+            )
+            mock_get.return_value = network_resp
+            resp = client.mgmt.tenant.load_all()
+            tenants = resp["tenants"]
+            self.assertEqual(len(tenants), 2)
+            self.assertEqual(tenants[0]["name"], "tenant1")
+            self.assertEqual(tenants[1]["name"], "tenant2")
+            mock_get.assert_called_with(
+                f"{DEFAULT_BASE_URL}{MgmtV1.tenantLoadAllPath}",
+                headers={
+                    **common.defaultHeaders,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                allow_redirects=None,
+                verify=True,
+            )

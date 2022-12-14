@@ -29,6 +29,16 @@ def main():
             logging.info(f"Tenant creation failed {e}")
 
         try:
+            logging.info("Loading all tenants")
+            tenants_resp = descope_client.mgmt.tenant.load_all()
+            tenants = tenants_resp["tenants"]
+            for tenant in tenants:
+                logging.info(f"Search Found tenant {tenant}")
+
+        except AuthException as e:
+            logging.info(f"Permission load failed {e}")
+
+        try:
             logging.info("Updating newly created tenant")
             # update overrides all fields, must provide the entire entity
             # we mean to update.

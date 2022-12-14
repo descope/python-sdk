@@ -79,6 +79,26 @@ class Tenant:
         uri = MgmtV1.tenantDeletePath
         self._auth.do_post(uri, {"id": id}, pswd=self._auth.management_key)
 
+    def load_all(
+        self,
+    ) -> dict:
+        """
+        Load all tenants.
+
+        Return value (dict):
+        Return dict in the format
+             {"tenants": [{"id": <id>, "name": <name>, "selfProvisioningDomains": []}]}
+        Containing the loaded tenant information.
+
+        Raise:
+        AuthException: raised if load operation fails
+        """
+        response = self._auth.do_get(
+            MgmtV1.tenantLoadAllPath,
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
     @staticmethod
     def _compose_create_update_body(
         name: str, id: str, self_provisioning_domains: List[str]
