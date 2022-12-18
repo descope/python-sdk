@@ -5,7 +5,7 @@ for a backend written in python. You can read more on the [Descope Website](http
 
 ## Requirements
 
-The SDK supports Python 3.6 and above.
+The SDK supports Python 3.7 and above.
 
 ## Installing the SDK
 
@@ -15,7 +15,7 @@ Install the package with:
 pip install descope
 ```
 
-## Usage
+## Setup
 
 A Descope `Project ID` is required to initialize the SDK. Find it on the
 [project page in the Descope Console](https://app.descope.com/settings/project).
@@ -30,11 +30,7 @@ descope_client = DescopeClient()
 descope_client = DescopeClient(project_id="<Project ID>")
 ```
 
-## Code Samples
-
-You can find various usage samples in the [samples folder](https://github.com/descope/python-sdk/blob/main/samples).
-
-## API
+## Usage
 
 Here are some examples how to manage and authenticate users:
 
@@ -59,6 +55,32 @@ The user will receive a code using the selected delivery method. Verify that cod
 jwt_response = descope_client.otp.verify_code(
     method=DeliveryMethod.EMAIL, identifier=email, code=value
 )
+```
+
+The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)
+
+### Magic Link
+
+Send a user a Magic Link using your preferred delivery method (_email, SMS, Whatsapp message_).
+The Magic Link will redirect the user to page where the its token needs to be verified.
+This redirection can be configured in code, or generally in the [Descope Console](https://app.descope.com/settings/authentication/magiclink)
+
+The user can either `sign up`, `sign in` or `sign up or in`
+
+```python
+from descope import DeliveryMethod
+
+descope_client.magiclink.sign_up_or_in(
+    method=DeliveryMethod.EMAIL,
+    identifier="desmond@descope.com",
+    uri="http://myapp.com/verify-magic-link", # Set redirect URI here or via console
+)
+```
+
+To verify a magic link, your redirect page must call the validation function on the token (`t`) parameter (`https://your-redirect-address.com/verify?t=<token>`):
+
+```python
+jwt_response = descope_client.magiclink.verify(token=token)
 ```
 
 The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)
@@ -96,21 +118,179 @@ descope_client = DescopeClient()
 descope_client = DescopeClient(project_id="<Project ID>", management_key="<Management Key>")
 ```
 
-### Manage Authorization
+### Manage Tenants
 
-You can create, update, delete or load roles and permissions.
+You can create, update, delete or load tenants:
 
 ```Python
-# Create a new permission
-permission_name = "New Permission"
-descope_client.mgmt.permission.create(permission_name, "User allowed to perform some action")
-
-#Create a role using that permission
-descope_client.mgmt.role.create(
-    "New Role", "Users belonging to some group", permission_names=[permission_name]
+# You can optionally set your own ID when creating a tenant
+descope_client.mgmt.tenant.create(
+    name="My First Tenant",
+    id="my-custom-id", # This is optional. If omitted
+    self_provisioning_domains=["domain.com"],
 )
 
+# Update will override all fields as is. Use carefully.
+descope_client.mgmt.tenant.update(
+    id="my-custom-id",
+    name="My First Tenant",
+    self_provisioning_domains=["domain.com", "another-domain.com"],
+)
+
+# Tenant deletion cannot be undone. Use carefully.
+descope_client.mgmt.tenant.delete("my-custom-id")
+
+# Load all tenants
+tenants_resp = descope_client.mgmt.tenant.load_all()
+tenants = tenants_resp["tenants"]
+    for tenant in tenants:
+        # Do something
 ```
+
+### Manage Users
+
+You can create, update, delete or load users, as well as search according to filters:
+
+```Python
+# A user must have an identifier, other fields are optional.
+# Roles should be set directly if no tenants exist, otherwise set
+# on a per-tenant basis.
+descope_client.mgmt.user.create(
+    identifier="desmond@descope.com",
+    email="desmond@descope.com",
+    display_name="Desmond Copeland",
+    user_tenants=[
+        UserTenant("my-tenant-id", ["role-name1"]),
+    ],
+)
+
+# Update will override all fields as is. Use carefully.
+descope_client.mgmt.user.update(
+    identifier="desmond@descope.com",
+    email="desmond@descope.com",
+    display_name="Desmond Copeland",
+    user_tenants=[
+        UserTenant("my-tenant-id", ["role-name1", "role-name2"]),
+    ],
+)
+
+# Tenant deletion cannot be undone. Use carefully.
+descope_client.mgmt.user.delete("desmond@descope.com")
+
+# Load specific user
+user_resp = descope_client.mgmt.user.load("desmond@descope.com")
+user = user_resp["user"]
+
+# Search all users, optionally according to tenant and/or role filter
+users_resp = descope_client.mgmt.tenant.search_all(tenant_ids=["my-tenant-id"])
+users = users_resp["users"]
+    for user in users:
+        # Do something
+```
+
+### Manage SSO Setting
+
+You can manage SSO settings and map SSO group roles and user attributes.
+
+```Python
+# You can configure SSO settings manually by setting the required fields directly
+descope_client.mgmt.sso.configure(
+    tenant_id, # Which tenant this configuration is for
+    idp_url="https://idp.com",
+    entity_id="my-idp-entity-id",
+    idp_cert="1231232132131", # Send the cert contents only, with the "start prefix" and "end suffix"
+)
+
+# Alternatively, configure using an SSO metadata URL
+descope_client.mgmt.sso.configure_via_metadata(
+    tenant_id, # Which tenant this configuration is for
+    idp_metadata_url="https://idp.com/my-idp-metadata",
+)
+
+# Map IDP groups to Descope roles, or map user attributes.
+# This function overrides any previous mapping (even when empty). Use carefully.
+descope_client.mgmt.sso.mapping(
+    tenant_id, # Which tenant this mapping is for
+    role_mappings = [RoleMapping(["IDP_ADMIN"], "Tenant Admin")],
+    attribute_mapping=AttributeMapping(name="IDP_NAME", phone_number="IDP_PHONE"),
+)
+```
+
+### Manage Permissions
+
+You can create, update, delete or load permissions:
+
+```Python
+# You can optionally set a description for a permission.
+descope_client.mgmt.permission.create(
+    name="My Permission",
+    description="Optional description to briefly explain what this permission allows.",
+)
+
+# Update will override all fields as is. Use carefully.
+descope_client.mgmt.permission.update(
+    name="My Permission",
+    new_name="My Updated Permission"
+    description="A revised description",
+)
+
+# Permission deletion cannot be undone. Use carefully.
+descope_client.mgmt.permission.delete("My Updated Permission")
+
+# Load all permissions
+permissions_resp = descope_client.mgmt.permission.load_all()
+permissions = permissions_resp["permissions"]
+    for permission in permissions:
+        # Do something
+```
+
+### Manage Roles
+
+You can create, update, delete or load roles:
+
+```Python
+# You can optionally set a description and associated permission for a roles.
+descope_client.mgmt.role.create(
+    name="My Role",
+    description="Optional description to briefly explain what this role allows.",
+    permission_names=["My Updated Permission"],
+)
+
+# Update will override all fields as is. Use carefully.
+descope_client.mgmt.role.update(
+    name="My Role",
+    new_name="My Updated Role"
+    description="A revised description",
+    permission_names=["My Updated Permission", "Another Permission"],
+)
+
+# Role deletion cannot be undone. Use carefully.
+descope_client.mgmt.role.delete("My Updated Role")
+
+# Load all roles
+roles_resp = descope_client.mgmt.role.load_all()
+roles = roles_resp["roles"]
+    for role in roles:
+        # Do something
+```
+
+### Manage JWTs
+
+You can add custom claims to a valid JWT.
+
+```python
+updated_jwt = client.mgmt.jwt.updateJWT(
+    jwt: "original-jwt",
+    custom_claims: {
+        "custom-key1": "custom-value1",
+        "custom-key2": "custom-value2",
+    },
+)
+```
+
+## Code Samples
+
+You can find various usage samples in the [samples folder](https://github.com/descope/python-sdk/blob/main/samples).
 
 ## Learn More
 
