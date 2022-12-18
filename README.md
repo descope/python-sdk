@@ -36,7 +36,7 @@ Here are some examples how to manage and authenticate users:
 
 ### OTP Authentication
 
-Send a user a one-time password (OTP) using your preferred delivery method (_email, SMS, Whatsapp message_). An email address or phone number must be provided accordingly.
+Send a user a one-time password (OTP) using your preferred delivery method (_email / SMS_). An email address or phone number must be provided accordingly.
 
 The user can either `sign up`, `sign in` or `sign up or in`
 
@@ -55,13 +55,15 @@ The user will receive a code using the selected delivery method. Verify that cod
 jwt_response = descope_client.otp.verify_code(
     method=DeliveryMethod.EMAIL, identifier=email, code=value
 )
+session_token = jwt_response[SESSION_TOKEN_NAME].get("jwt")
+refresh_token = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("jwt")
 ```
 
 The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)
 
 ### Magic Link
 
-Send a user a Magic Link using your preferred delivery method (_email, SMS, Whatsapp message_).
+Send a user a Magic Link using your preferred delivery method (_email / SMS_).
 The Magic Link will redirect the user to page where the its token needs to be verified.
 This redirection can be configured in code, or generally in the [Descope Console](https://app.descope.com/settings/authentication/magiclink)
 
@@ -81,6 +83,8 @@ To verify a magic link, your redirect page must call the validation function on 
 
 ```python
 jwt_response = descope_client.magiclink.verify(token=token)
+session_token = jwt_response[SESSION_TOKEN_NAME].get("jwt")
+refresh_token = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("jwt")
 ```
 
 The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)
@@ -91,11 +95,18 @@ Every secure request performed between your client and server needs to be valida
 the session and refresh tokens with every request, and they are validated using:
 
 ```python
-descope_client.validate_session_request(session_token, refresh_token)
+jwt_response = descope_client.validate_session_request(session_token, refresh_token)
 ```
 
-Usually, the tokens can be passed via HTTP headers or via a cookie. The implementation can
-defer according to your framework of choice. See our [samples](#code-samples) for a few examples.
+This function will validate the session and also refresh it in the event it has expired.
+It returns the same response as is returned when users first sign up / log in,
+containing the session and refresh tokens, as well as all of the JWT claims.
+Make sure to return the tokens from the response to the client, or updated the cookie if you're using it.
+
+The `refresh_token` is optional here to validate a session, but is required to refresh the session in the event it has expired.
+
+Usually, the tokens can be passed in and out via HTTP headers or via a cookie.
+The implementation can defer according to your framework of choice. See our [samples](#code-samples) for a few examples.
 
 ## Management API
 
@@ -192,13 +203,22 @@ users = users_resp["users"]
 
 You can manage SSO settings and map SSO group roles and user attributes.
 
+Note: When sending certificates, send only the contents without the start prefix
+and and suffix
+
+```
+-----BEGIN CERTIFICATE-----
+<Send only what's here>
+-----END CERTIFICATE-----
+```
+
 ```Python
 # You can configure SSO settings manually by setting the required fields directly
 descope_client.mgmt.sso.configure(
     tenant_id, # Which tenant this configuration is for
     idp_url="https://idp.com",
     entity_id="my-idp-entity-id",
-    idp_cert="1231232132131", # Send the cert contents only, with the "start prefix" and "end suffix"
+    idp_cert="1231232132131",
 )
 
 # Alternatively, configure using an SSO metadata URL
