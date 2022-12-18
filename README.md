@@ -203,23 +203,24 @@ users = users_resp["users"]
 
 You can manage SSO settings and map SSO group roles and user attributes.
 
-Note: When sending certificates, send only the contents without the start prefix
-and and suffix
-
-```
------BEGIN CERTIFICATE-----
-<Send only what's here>
------END CERTIFICATE-----
-```
-
 ```Python
 # You can configure SSO settings manually by setting the required fields directly
 descope_client.mgmt.sso.configure(
     tenant_id, # Which tenant this configuration is for
     idp_url="https://idp.com",
     entity_id="my-idp-entity-id",
-    idp_cert="1231232132131",
+    idp_cert="<your-cert-here>",
 )
+
+Certificates should have a similar structure to:
+
+```
+
+-----BEGIN CERTIFICATE-----
+Certifcate contents
+-----END CERTIFICATE-----
+
+```
 
 # Alternatively, configure using an SSO metadata URL
 descope_client.mgmt.sso.configure_via_metadata(
