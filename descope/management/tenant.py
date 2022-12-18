@@ -26,6 +26,10 @@ class Tenant:
         self_provisioning_domains (List[str]): An optional list of domain that are associated with this tenant.
             Users authenticating from these domains will be associated with this tenant.
 
+        Return value (dict):
+        Return dict in the format
+             {"id": <id>}
+
         Raise:
         AuthException: raised if creation operation fails
         """

@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import common
 
-from descope import AuthException, DescopeClient, UserTenants
+from descope import AuthException, DescopeClient, UserTenant
 from descope.common import DEFAULT_BASE_URL
 from descope.management.common import MgmtV1
 
@@ -52,8 +52,8 @@ class TestUser(unittest.TestCase):
                 email="name@mail.com",
                 display_name="Name",
                 user_tenants=[
-                    UserTenants("tenant1"),
-                    UserTenants("tenant2", ["role1", "role2"]),
+                    UserTenant("tenant1"),
+                    UserTenant("tenant2", ["role1", "role2"]),
                 ],
             )
             user = resp["user"]
