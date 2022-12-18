@@ -4,7 +4,7 @@ from descope.auth import Auth
 from descope.management.common import MgmtV1
 
 
-class UserTenants:
+class UserTenant:
     def __init__(self, tenant_id: str, role_names: List[str] = []):
         self.tenant_id = tenant_id
         self.role_names = role_names
@@ -23,7 +23,7 @@ class User:
         phone_number: str = None,
         display_name: str = None,
         role_names: List[str] = [],
-        user_tenants: List[UserTenants] = [],
+        user_tenants: List[UserTenant] = [],
     ) -> dict:
         """
         Create a new user. Users can have any number of optional fields, including email, phone number and authorization.
@@ -62,7 +62,7 @@ class User:
         phone_number: str = None,
         display_name: str = None,
         role_names: List[str] = [],
-        user_tenants: List[UserTenants] = [],
+        user_tenants: List[UserTenant] = [],
     ):
         """
         Update an existing user with the given various fields. IMPORTANT: All parameters are used as overrides
@@ -169,7 +169,7 @@ class User:
         phone_number: str,
         display_name: str,
         role_names: List[str],
-        user_tenants: List[UserTenants],
+        user_tenants: List[UserTenant],
     ) -> dict:
         return {
             "identifier": identifier,
@@ -181,7 +181,7 @@ class User:
         }
 
     @staticmethod
-    def _user_tenants_to_dict(user_tenants: List[UserTenants]) -> list:
+    def _user_tenants_to_dict(user_tenants: List[UserTenant]) -> list:
         user_tenant_list = []
         if user_tenants:
             for user_tenant in user_tenants:
