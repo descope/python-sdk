@@ -89,6 +89,145 @@ refresh_token = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("jwt")
 
 The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)
 
+### Enchanted Link
+
+Send an email containing three numbered links to a user.
+This method is similar to [Magic Link](#magic-link) but differs in two major ways:
+
+- The user must choose the correct link according to a number that's
+  displayed on the web page they're trying to log into
+- This supports cross-device clicking, meaning the user can try to log in on one device,
+  like a computer, while clicking the link on another device, for instance a mobile phone.
+
+The Enchanted Link will redirect the user to page where the its token needs to be verified.
+This redirection can be configured in code, or generally in the [Descope Console](https://app.descope.com/settings/authentication/enchantedlink)
+
+The user can either `sign up`, `sign in` or `sign up or in`
+
+```python
+resp = descope_client.enchantedlink.sign_up_or_in(
+    identifier=email,
+    uri="http://myapp.com/verify-magic-link", # Set redirect URI here or via console
+)
+link_identifier = resp["linkId"] # Show the user which link they should press in their email
+pending_ref = resp["pendingRef"] # Used to poll for a valid session
+```
+
+After sending the link, you must poll to receive a valid session using the `pending_ref` from
+the previous step. A valid session will be returned only after the user clicks the right link.
+
+```python
+i = 0
+while not done and i < max_tries:
+    try:
+        i = i + 1
+        sleep(4)
+        jwt_response = descope_client.enchantedlink.get_session(pending_ref)
+        done = True
+    except AuthException as e: # Poll while still receiving 401 Unauthorized
+        if e.status_code != 401: # Other failures means something's wrong, abort
+            logging.info(f"Failed pending session, err: {e}")
+            done = True
+
+if jwt_response:
+    session_token = jwt_response[SESSION_TOKEN_NAME].get("jwt")
+    refresh_token = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("jwt")
+```
+
+To verify a magic link, your redirect page must call the validation function on the token (`t`) parameter (`https://your-redirect-address.com/verify?t=<token>`). There's no other function to that
+page:
+
+```python
+try:
+    descope_client.enchantedlink.verify(token=token)
+    # Token is valid
+except AuthException as e:
+    # Token is invalid
+```
+
+The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)
+
+### OAuth
+
+Users can authenticate using their social logins, using the OAuth protocol. Configure your OAuth settings on the [Descope console](https://app.descope.com/settings/authentication/social). To start a flow call:
+
+```python
+
+descope_client.oauth.start(
+    provider="google", # Choose an oauth provider out of the supported providers
+    return_url="https://my-app.com/handle-oauth", # Can be configured in the console instead of here
+)
+```
+
+The user will authenticate with the authentication provider, and will be redirected back to the redirect URL, with an appended `code` HTTP URL parameter. Exchange it to validate the user:
+
+```python
+jwt_response = descope_client.oauth.exchange_token(code)
+session_token = jwt_response[SESSION_TOKEN_NAME].get("jwt")
+refresh_token = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("jwt")
+```
+
+The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)
+
+### SSO/SAML
+
+Users can authenticate to specific tenant using SAML or Single Sign On. Configure your SSO/SAML settings on the [Descope console](https://app.descope.com/settings/authentication/sso). To start a flow call:
+
+```python
+
+descope_client.saml.start(
+    tenant="my-tenant-ID", # Choose which tenant to log into
+    return_url="https://my-app.com/handle-saml", # Can be configured in the console instead of here
+)
+```
+
+The user will authenticate with the authentication provider configured for that tenant, and will be redirected back to the redirect URL, with an appended `code` HTTP URL parameter. Exchange it to validate the user:
+
+```python
+jwt_response = descope_client.saml.exchange_token(code)
+session_token = jwt_response[SESSION_TOKEN_NAME].get("jwt")
+refresh_token = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("jwt")
+```
+
+The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)
+
+### TOTP Authentication
+
+The user can authenticate using authenticator apps that. Sign up like you would using any other authentication method. The sign response will contain a QR code `image` that can be displayed to the
+user to scan using their authenticator app, are insert the `key` manually.
+
+Existing users can add TOTP using the `update` function.
+
+```python
+from descope import DeliveryMethod
+
+# Every user must have an identifier. All other user information is optional
+email = "desmond@descope.com"
+user = {"name": "Desmond Copeland", "phone": "212-555-1234", "email": email}
+totp_response = descope_client.totp.sign_up(method=DeliveryMethod.EMAIL, identifier=email, user=user)
+
+# Use one of the provided options to have the user add their credentials to the authenticator
+provisioning_url = totp_response["provisioningURL"]
+image = totp_response["image"]
+key = totp_response["key"]
+```
+
+There has 3 different ways to allow the user to save their credentials in
+their authenticator app, either by clicking the provisioning URL, scanning the QR
+image or inserting the key manually. After that, signing in is done using the code
+the app produces.
+
+```python
+jwt_response = descope_client.totp.sign_in_code(
+    identifier=email,
+    code=code, # Code from authenticator app
+)
+session_token = jwt_response[SESSION_TOKEN_NAME].get("jwt")
+refresh_token = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("jwt")
+```
+
+The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)
+
 ### Session Validation
 
 Every secure request performed between your client and server needs to be validated. The client sends
@@ -212,16 +351,6 @@ descope_client.mgmt.sso.configure(
     idp_cert="<your-cert-here>",
 )
 
-Certificates should have a similar structure to:
-
-```
-
------BEGIN CERTIFICATE-----
-Certifcate contents
------END CERTIFICATE-----
-
-```
-
 # Alternatively, configure using an SSO metadata URL
 descope_client.mgmt.sso.configure_via_metadata(
     tenant_id, # Which tenant this configuration is for
@@ -235,6 +364,15 @@ descope_client.mgmt.sso.mapping(
     role_mappings = [RoleMapping(["IDP_ADMIN"], "Tenant Admin")],
     attribute_mapping=AttributeMapping(name="IDP_NAME", phone_number="IDP_PHONE"),
 )
+```
+
+Note: Certificates should have a similar structure to:
+
+```
+-----BEGIN CERTIFICATE-----
+Certifcate contents
+-----END CERTIFICATE-----
+
 ```
 
 ### Manage Permissions

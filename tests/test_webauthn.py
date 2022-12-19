@@ -7,7 +7,7 @@ import common
 
 from descope import AuthException
 from descope.auth import Auth
-from descope.authmethod.webauthn import WebauthN
+from descope.authmethod.webauthn import WebAuthn
 from descope.common import DEFAULT_BASE_URL, EndpointsV1, LoginOptions
 
 
@@ -26,7 +26,7 @@ class TestWebauthN(unittest.TestCase):
 
     def test_compose_signup_body(self):
         self.assertEqual(
-            WebauthN._compose_sign_up_start_body(
+            WebAuthn._compose_sign_up_start_body(
                 "dummy@dummy.com", {"name": "dummy"}, "https://example.com"
             ),
             {
@@ -37,13 +37,13 @@ class TestWebauthN(unittest.TestCase):
 
     def test_compose_sign_up_in_finish_body(self):
         self.assertEqual(
-            WebauthN._compose_sign_up_in_finish_body("t01", "response01"),
+            WebAuthn._compose_sign_up_in_finish_body("t01", "response01"),
             {"transactionId": "t01", "response": "response01"},
         )
 
     def test_compose_signin_body(self):
         self.assertEqual(
-            WebauthN._compose_sign_in_start_body(
+            WebAuthn._compose_sign_in_start_body(
                 "dummy@dummy.com", "https://example.com"
             ),
             {
@@ -55,7 +55,7 @@ class TestWebauthN(unittest.TestCase):
 
     def test_compose_signup_or_in_body(self):
         self.assertEqual(
-            WebauthN._compose_sign_up_or_in_start_body(
+            WebAuthn._compose_sign_up_or_in_start_body(
                 "dummy@dummy.com", "https://example.com"
             ),
             {
@@ -66,7 +66,7 @@ class TestWebauthN(unittest.TestCase):
 
     def test_compose_update_start_body(self):
         self.assertEqual(
-            WebauthN._compose_update_start_body(
+            WebAuthn._compose_update_start_body(
                 "dummy@dummy.com", "https://example.com"
             ),
             {"externalId": "dummy@dummy.com", "origin": "https://example.com"},
@@ -74,12 +74,12 @@ class TestWebauthN(unittest.TestCase):
 
     def test_compose_update_finish_body(self):
         self.assertEqual(
-            WebauthN._compose_update_finish_body("t01", "response01"),
+            WebAuthn._compose_update_finish_body("t01", "response01"),
             {"transactionId": "t01", "response": "response01"},
         )
 
     def test_sign_up_start(self):
-        webauthn = WebauthN(Auth(self.dummy_project_id, self.public_key_dict))
+        webauthn = WebAuthn(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
         self.assertRaises(
@@ -125,7 +125,7 @@ class TestWebauthN(unittest.TestCase):
             self.assertEqual(res, valid_response)
 
     def test_sign_up_finish(self):
-        webauthn = WebauthN(Auth(self.dummy_project_id, self.public_key_dict))
+        webauthn = WebAuthn(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
         self.assertRaises(AuthException, webauthn.sign_up_finish, "", "response01")
@@ -173,7 +173,7 @@ class TestWebauthN(unittest.TestCase):
             self.assertIsNotNone(webauthn.sign_up_finish("t01", "response01"))
 
     def test_sign_in_start(self):
-        webauthn = WebauthN(Auth(self.dummy_project_id, self.public_key_dict))
+        webauthn = WebAuthn(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
         self.assertRaises(
@@ -234,7 +234,7 @@ class TestWebauthN(unittest.TestCase):
             self.assertEqual(res, valid_response)
 
     def test_sign_in_start_with_login_options(self):
-        webauthn = WebauthN(Auth(self.dummy_project_id, self.public_key_dict))
+        webauthn = WebAuthn(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
         self.assertRaises(
@@ -293,7 +293,7 @@ class TestWebauthN(unittest.TestCase):
             self.assertEqual(res, valid_response)
 
     def test_sign_in_finish(self):
-        webauthn = WebauthN(Auth(self.dummy_project_id, self.public_key_dict))
+        webauthn = WebAuthn(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
         self.assertRaises(AuthException, webauthn.sign_in_finish, "", "response01")
@@ -335,7 +335,7 @@ class TestWebauthN(unittest.TestCase):
             self.assertIsNotNone(webauthn.sign_up_finish("t01", "response01"))
 
     def test_sign_up_or_in_start(self):
-        webauthn = WebauthN(Auth(self.dummy_project_id, self.public_key_dict))
+        webauthn = WebAuthn(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
         self.assertRaises(
@@ -391,7 +391,7 @@ class TestWebauthN(unittest.TestCase):
 
     def test_update_start(self):
         valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkVGVuYW50cyI6eyIiOm51bGx9LCJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwNjc5MjA4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MjA5MDA4NzIwOCwiaWF0IjoxNjU4MDg3MjA4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQzU1dnl4dzBzUkw2RmRNNjhxUnNDRGRST1YifQ.cWP5up4R5xeIl2qoG2NtfLH3Q5nRJVKdz-FDoAXctOQW9g3ceZQi6rZQ-TPBaXMKw68bijN3bLJTqxWW5WHzqRUeopfuzTcMYmC0wP2XGJkrdF6A8D5QW6acSGqglFgu"
-        webauthn = WebauthN(Auth(self.dummy_project_id, self.public_key_dict))
+        webauthn = WebAuthn(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
         self.assertRaises(
@@ -460,7 +460,7 @@ class TestWebauthN(unittest.TestCase):
             self.assertEqual(res, valid_response)
 
     def test_update_finish(self):
-        webauthn = WebauthN(Auth(self.dummy_project_id, self.public_key_dict))
+        webauthn = WebAuthn(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
         self.assertRaises(AuthException, webauthn.update_finish, "", "response01")
