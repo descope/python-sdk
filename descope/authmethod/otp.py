@@ -141,7 +141,7 @@ class OTP:
         Update the email address of an end user, after verifying the authenticity of the end user using OTP.
 
         Args:
-        identifier (str): The identifier of the user who's information is being updated
+        identifier (str): The identifier of the user whose information is being updated
         email (str): The new email address. If an email address already exists for this end user, it will be overwritten
         refresh_token (str): The session's refresh token (used for verification)
 
@@ -168,7 +168,7 @@ class OTP:
 
         Args:
         method (DeliveryMethod): The method to use for delivering the OTP verification code, for example phone or email
-        identifier (str): The identifier of the user who's information is being updated
+        identifier (str): The identifier of the user whose information is being updated
         phone (str): The new phone number. If a phone number already exists for this end user, it will be overwritten
         refresh_token (str): The session's refresh token (used for OTP verification)
 

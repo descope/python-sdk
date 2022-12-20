@@ -8,7 +8,7 @@ from descope.common import (
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
-class WebauthN:
+class WebAuthn:
     _auth: Auth
 
     def __init__(self, auth):
@@ -32,7 +32,7 @@ class WebauthN:
             user = {}
 
         uri = EndpointsV1.signUpAuthWebauthnStart
-        body = WebauthN._compose_sign_up_start_body(identifier, user, origin)
+        body = WebAuthn._compose_sign_up_start_body(identifier, user, origin)
         response = self._auth.do_post(uri, body)
 
         return response.json()
@@ -52,7 +52,7 @@ class WebauthN:
             )
 
         uri = EndpointsV1.signUpAuthWebauthnFinish
-        body = WebauthN._compose_sign_up_in_finish_body(transactionID, response)
+        body = WebAuthn._compose_sign_up_in_finish_body(transactionID, response)
         response = self._auth.do_post(uri, body, None, "")
 
         resp = response.json()
@@ -84,7 +84,7 @@ class WebauthN:
         validateRefreshTokenProvided(loginOptions, refreshToken)
 
         uri = EndpointsV1.signInAuthWebauthnStart
-        body = WebauthN._compose_sign_in_start_body(identifier, origin, loginOptions)
+        body = WebAuthn._compose_sign_in_start_body(identifier, origin, loginOptions)
         response = self._auth.do_post(uri, body, pswd=refreshToken)
 
         return response.json()
@@ -104,7 +104,7 @@ class WebauthN:
             )
 
         uri = EndpointsV1.signInAuthWebauthnFinish
-        body = WebauthN._compose_sign_up_in_finish_body(transaction_id, response)
+        body = WebAuthn._compose_sign_up_in_finish_body(transaction_id, response)
         response = self._auth.do_post(uri, body, None)
 
         resp = response.json()
@@ -132,7 +132,7 @@ class WebauthN:
             )
 
         uri = EndpointsV1.signUpOrInAuthWebauthnStart
-        body = WebauthN._compose_sign_up_or_in_start_body(identifier, origin)
+        body = WebAuthn._compose_sign_up_or_in_start_body(identifier, origin)
         response = self._auth.do_post(uri, body)
 
         return response.json()
@@ -152,7 +152,7 @@ class WebauthN:
             )
 
         uri = EndpointsV1.updateAuthWebauthnStart
-        body = WebauthN._compose_update_start_body(identifier, origin)
+        body = WebAuthn._compose_update_start_body(identifier, origin)
         response = self._auth.do_post(uri, body, None, refresh_token)
 
         return response.json()
@@ -172,7 +172,7 @@ class WebauthN:
             )
 
         uri = EndpointsV1.updateAuthWebauthnFinish
-        body = WebauthN._compose_update_finish_body(transaction_id, response)
+        body = WebAuthn._compose_update_finish_body(transaction_id, response)
         self._auth.do_post(uri, body)
 
     @staticmethod

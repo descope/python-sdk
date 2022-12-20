@@ -36,7 +36,7 @@ def main():
                 "Do you need to register an authenticator to an existing account? (yes/y):\n"
             )
             if register == "yes" or register == "y":
-                logging.info("Please sing in via OTP...")
+                logging.info("Please sign in via OTP...")
                 descope_client.otp.sign_up_or_in(DeliveryMethod.EMAIL, email)
 
                 code = input("Please insert the code you received by email:\n")

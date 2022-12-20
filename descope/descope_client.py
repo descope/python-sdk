@@ -9,7 +9,7 @@ from descope.authmethod.oauth import OAuth  # noqa: F401
 from descope.authmethod.otp import OTP  # noqa: F401
 from descope.authmethod.saml import SAML  # noqa: F401
 from descope.authmethod.totp import TOTP  # noqa: F401
-from descope.authmethod.webauthn import WebauthN  # noqa: F401
+from descope.authmethod.webauthn import WebAuthn  # noqa: F401
 from descope.common import SESSION_TOKEN_NAME, EndpointsV1
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 from descope.mgmt import MGMT  # noqa: F401
@@ -34,7 +34,7 @@ class DescopeClient:
         self._saml = SAML(auth)
         self._otp = OTP(auth)
         self._totp = TOTP(auth)
-        self._webauthn = WebauthN(auth)
+        self._webauthn = WebAuthn(auth)
 
     @property
     def mgmt(self):
