@@ -251,6 +251,51 @@ The `refresh_token` is optional here to validate a session, but is required to r
 Usually, the tokens can be passed in and out via HTTP headers or via a cookie.
 The implementation can defer according to your framework of choice. See our [samples](#code-samples) for a few examples.
 
+If Roles & Permissions are used, validate them immediately after validating the session. See the [next section](#roles--permission-validation)
+for more information.
+
+### Roles & Permission Validation
+
+When using Roles & Permission, it's important to validate the user has the required
+authorization immediately after making sure the session is valid. Taking the `jwt_response`
+received by the [session validation](#session-validation), call the following functions:
+
+For multi-tenant uses:
+
+```python
+# You can validate specific permissions
+valid_permissions = descope_client.validate_tenant_permissions(
+    jwt_response, "my-tenant-ID", ["Permission to validate"]
+)
+if not valid_permissions:
+    # Deny access
+
+# Or validate roles directly
+valid_roles = descope_client.validate_tenant_roles(
+    jwt_response, "my-tenant-ID", ["Role to validate"]
+)
+if not valid_roles:
+    # Deny access
+```
+
+When not using tenants use:
+
+```python
+# You can validate specific permissions
+valid_permissions = descope_client.validate_permissions(
+    jwt_response, ["Permission to validate"]
+)
+if not valid_permissions:
+    # Deny access
+
+# Or validate roles directly
+valid_roles = descope_client.validate_roles(
+    jwt_response, ["Role to validate"]
+)
+if not valid_roles:
+    # Deny access
+```
+
 ## Management API
 
 It is very common for some form of management or automation to be required. These can be performed
