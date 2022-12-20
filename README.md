@@ -197,8 +197,11 @@ The session and refresh JWTs should be returned to the caller, and passed with e
 
 ### TOTP Authentication
 
-The user can authenticate using authenticator apps that. Sign up like you would using any other authentication method. The sign response will contain a QR code `image` that can be displayed to the
-user to scan using their authenticator app, are insert the `key` manually.
+The user can authenticate using an authenticator app, such as Google Authenticator.
+Sign up like you would using any other authentication method. The sign up response
+will then contain a QR code `image` that can be displayed to the user to scan using
+their mobile device camera app, or the user can enter the `key` manually or click
+on the link provided by the `provisioning_url`.
 
 Existing users can add TOTP using the `update` function.
 
