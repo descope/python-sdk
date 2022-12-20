@@ -175,7 +175,7 @@ The session and refresh JWTs should be returned to the caller, and passed with e
 
 ### SSO/SAML
 
-Users can authenticate to specific tenant using SAML or Single Sign On. Configure your SSO/SAML settings on the [Descope console](https://app.descope.com/settings/authentication/sso). To start a flow call:
+Users can authenticate to a specific tenant using SAML or Single Sign On. Configure your SSO/SAML settings on the [Descope console](https://app.descope.com/settings/authentication/sso). To start a flow call:
 
 ```python
 
