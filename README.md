@@ -104,7 +104,7 @@ This method is similar to [Magic Link](#magic-link) but differs in two major way
   like a computer, while clicking the link on another device, for instance a mobile phone.
 
 The Enchanted Link will redirect the user to page where the its token needs to be verified.
-This redirection can be configured in code, or generally in the [Descope Console](https://app.descope.com/settings/authentication/enchantedlink)
+This redirection can be configured in code per request, or set globally in the [Descope Console](https://app.descope.com/settings/authentication/enchantedlink).
 
 The user can either `sign up`, `sign in` or `sign up or in`
 
