@@ -91,11 +91,15 @@ The session and refresh JWTs should be returned to the caller, and passed with e
 
 ### Enchanted Link
 
-Send an email containing three numbered links to a user.
+Using the Enchanted Link APIs allow enables users to sign in by clicking a link
+delivered to their email address. The email will include 3 different links,
+and the user will have to click the right one, based on the 2-digit number that is
+displayed when initiating the authentication process.
+
 This method is similar to [Magic Link](#magic-link) but differs in two major ways:
 
-- The user must choose the correct link according to a number that's
-  displayed on the web page they're trying to log into
+- The user must choose the correct link out of the three, instead of having just one
+  single link.
 - This supports cross-device clicking, meaning the user can try to log in on one device,
   like a computer, while clicking the link on another device, for instance a mobile phone.
 
