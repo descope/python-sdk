@@ -216,8 +216,8 @@ image = totp_response["image"]
 key = totp_response["key"]
 ```
 
-There has 3 different ways to allow the user to save their credentials in
-their authenticator app, either by clicking the provisioning URL, scanning the QR
+There are 3 different ways to allow the user to save their credentials in
+their authenticator app - either by clicking the provisioning URL, scanning the QR
 image or inserting the key manually. After that, signing in is done using the code
 the app produces.
 
