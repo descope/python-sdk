@@ -138,8 +138,7 @@ if jwt_response:
     refresh_token = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("jwt")
 ```
 
-To verify a magic link, your redirect page must call the validation function on the token (`t`) parameter (`https://your-redirect-address.com/verify?t=<token>`). There's no other function to that
-page:
+To verify a magic link, your redirect page must call the validation function on the token (`t`) parameter (`https://your-redirect-address.com/verify?t=<token>`). Once the token is verified, the session polling will a valid `jwt_response`.
 
 ```python
 try:
