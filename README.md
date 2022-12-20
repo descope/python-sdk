@@ -91,7 +91,7 @@ The session and refresh JWTs should be returned to the caller, and passed with e
 
 ### Enchanted Link
 
-Using the Enchanted Link APIs allow enables users to sign in by clicking a link
+Using the Enchanted Link APIs enables users to sign in by clicking a link
 delivered to their email address. The email will include 3 different links,
 and the user will have to click the right one, based on the 2-digit number that is
 displayed when initiating the authentication process.
