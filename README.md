@@ -111,7 +111,7 @@ The user can either `sign up`, `sign in` or `sign up or in`
 ```python
 resp = descope_client.enchantedlink.sign_up_or_in(
     identifier=email,
-    uri="http://myapp.com/verify-magic-link", # Set redirect URI here or via console
+    uri="http://myapp.com/verify-enchanted-link", # Set redirect URI here or via console
 )
 link_identifier = resp["linkId"] # Show the user which link they should press in their email
 pending_ref = resp["pendingRef"] # Used to poll for a valid session
