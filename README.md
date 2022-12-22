@@ -423,7 +423,6 @@ Note: Certificates should have a similar structure to:
 -----BEGIN CERTIFICATE-----
 Certifcate contents
 -----END CERTIFICATE-----
-
 ```
 
 ### Manage Permissions
