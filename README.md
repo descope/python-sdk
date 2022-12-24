@@ -26,7 +26,7 @@ from descope import DescopeClient
 # Initialized after setting the DESCOPE_PROJECT_ID env var
 descope_client = DescopeClient()
 
-# ** Or directely **
+# ** Or directly **
 descope_client = DescopeClient(project_id="<Project ID>")
 ```
 
@@ -111,7 +111,7 @@ The user can either `sign up`, `sign in` or `sign up or in`
 ```python
 resp = descope_client.enchantedlink.sign_up_or_in(
     identifier=email,
-    uri="http://myapp.com/verify-magic-link", # Set redirect URI here or via console
+    uri="http://myapp.com/verify-enchanted-link", # Set redirect URI here or via console
 )
 link_identifier = resp["linkId"] # Show the user which link they should press in their email
 pending_ref = resp["pendingRef"] # Used to poll for a valid session
@@ -138,7 +138,7 @@ if jwt_response:
     refresh_token = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("jwt")
 ```
 
-To verify a magic link, your redirect page must call the validation function on the token (`t`) parameter (`https://your-redirect-address.com/verify?t=<token>`). Once the token is verified, the session polling will a valid `jwt_response`.
+To verify an enchanted link, your redirect page must call the validation function on the token (`t`) parameter (`https://your-redirect-address.com/verify?t=<token>`). Once the token is verified, the session polling will receive a valid `jwt_response`.
 
 ```python
 try:
@@ -315,7 +315,7 @@ from descope import DescopeClient
 # Initialized after setting the DESCOPE_PROJECT_ID and the DESCOPE_MANAGEMENT_KEY env vars
 descope_client = DescopeClient()
 
-# ** Or directely **
+# ** Or directly **
 descope_client = DescopeClient(project_id="<Project ID>", management_key="<Management Key>")
 ```
 
@@ -383,7 +383,7 @@ user_resp = descope_client.mgmt.user.load("desmond@descope.com")
 user = user_resp["user"]
 
 # Search all users, optionally according to tenant and/or role filter
-users_resp = descope_client.mgmt.tenant.search_all(tenant_ids=["my-tenant-id"])
+users_resp = descope_client.mgmt.user.search_all(tenant_ids=["my-tenant-id"])
 users = users_resp["users"]
     for user in users:
         # Do something
@@ -423,7 +423,6 @@ Note: Certificates should have a similar structure to:
 -----BEGIN CERTIFICATE-----
 Certifcate contents
 -----END CERTIFICATE-----
-
 ```
 
 ### Manage Permissions
