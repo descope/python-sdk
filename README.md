@@ -382,6 +382,10 @@ descope_client.mgmt.user.delete("desmond@descope.com")
 user_resp = descope_client.mgmt.user.load("desmond@descope.com")
 user = user_resp["user"]
 
+# If needed, users can be loaded using the JWT subject as well
+user_resp = descope_client.mgmt.user.load_by_jwt_subject("<jwt-subject>")
+user = user_resp["user"]
+
 # Search all users, optionally according to tenant and/or role filter
 users_resp = descope_client.mgmt.user.search_all(tenant_ids=["my-tenant-id"])
 users = users_resp["users"]

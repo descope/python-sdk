@@ -133,6 +133,32 @@ class User:
         )
         return response.json()
 
+    def load_by_jwt_subject(
+        self,
+        jwt_subject: str,
+    ) -> dict:
+        """
+        Load an existing user by JWT subject.
+        The JWT subject can be found on the user's JWT.
+
+        Args:
+        jwt_subject (str): The JWT subject from the user's JWT.
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the loaded user information.
+
+        Raise:
+        AuthException: raised if load operation fails
+        """
+        response = self._auth.do_get(
+            MgmtV1.userLoadPath,
+            {"jwtSubject": jwt_subject},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
     def search_all_users(
         self,
         tenant_ids: List[str] = [],

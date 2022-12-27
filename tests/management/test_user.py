@@ -205,6 +205,43 @@ class TestUser(unittest.TestCase):
                 verify=True,
             )
 
+    def test_load_by_jwt_subject(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flows
+        with patch("requests.get") as mock_get:
+            mock_get.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.user.load_by_jwt_subject,
+                "jwt-subject",
+            )
+
+        # Test success flow
+        with patch("requests.get") as mock_get:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
+            mock_get.return_value = network_resp
+            resp = client.mgmt.user.load_by_jwt_subject("jwt-subject")
+            user = resp["user"]
+            self.assertEqual(user["id"], "u1")
+            mock_get.assert_called_with(
+                f"{DEFAULT_BASE_URL}{MgmtV1.userLoadPath}",
+                headers={
+                    **common.defaultHeaders,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params={"jwtSubject": "jwt-subject"},
+                allow_redirects=None,
+                verify=True,
+            )
+
     def test_search_all_users(self):
         client = DescopeClient(
             self.dummy_project_id,
