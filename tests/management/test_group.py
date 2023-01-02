@@ -95,8 +95,8 @@ class TestGroup(unittest.TestCase):
                 data=json.dumps(
                     {
                         "tenantId": "someTenantId",
-                        "externalIds": ["three", "four"],
-                        "userIds": ["one", "two"],
+                        "identifiers": ["three", "four"],
+                        "jwtSubjects": ["one", "two"],
                     }
                 ),
                 allow_redirects=False,

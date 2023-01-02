@@ -87,8 +87,8 @@ class Group:
             MgmtV1.groupLoadAllForMemberPath,
             {
                 "tenantId": tenant_id,
-                "externalIds": identifiers,
-                "userIds": jwt_subjects,
+                "identifiers": identifiers,
+                "jwtSubjects": jwt_subjects,
             },
             pswd=self._auth.management_key,
         )
