@@ -487,6 +487,38 @@ roles = roles_resp["roles"]
         # Do something
 ```
 
+### Query SSO Groups
+
+You can query SSO groups:
+
+```Python
+# Load all groups for a given tenant id
+groups_resp = descope_client.mgmt.group.load_all_groups(
+    tenant_id="tenant-id",
+)
+
+# Load all groups for the given user's jwt subjects (can be found in the user's JWT)
+groups_resp = descope_client.mgmt.group.load_all_groups_for_members(
+    tenant_id="tenant-id",
+    jwt_subjects=["jwt-subject-1", "jwt-subject-2"],
+)
+
+# Load all groups for the given user's identifiers (used for sign-in)
+groups_resp = descope_client.mgmt.group.load_all_groups_for_members(
+    tenant_id="tenant-id",
+    identifiers=["identifier-1", "identifier-2"],
+)
+
+# Load all group's members by the given group id
+groups_resp = descope_client.mgmt.group.load_all_group_members(
+    tenant_id="tenant-id",
+    group_id="group-id,
+)
+
+for group in groups_resp:
+    # Do something
+```
+
 ### Manage JWTs
 
 You can add custom claims to a valid JWT.

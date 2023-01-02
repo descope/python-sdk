@@ -1,4 +1,5 @@
 from descope.auth import Auth
+from descope.management.group import Group  # noqa: F401
 from descope.management.jwt import JWT  # noqa: F401
 from descope.management.permission import Permission  # noqa: F401
 from descope.management.role import Role  # noqa: F401
@@ -18,6 +19,7 @@ class MGMT:
         self._jwt = JWT(auth)
         self._permission = Permission(auth)
         self._role = Role(auth)
+        self._group = Group(auth)
 
     @property
     def tenant(self):
@@ -42,3 +44,7 @@ class MGMT:
     @property
     def role(self):
         return self._role
+
+    @property
+    def group(self):
+        return self._group

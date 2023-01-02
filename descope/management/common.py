@@ -31,3 +31,8 @@ class MgmtV1:
     roleUpdatePath = "/v1/mgmt/role/update"
     roleDeletePath = "/v1/mgmt/role/delete"
     roleLoadAllPath = "/v1/mgmt/role/all"
+
+    # group
+    groupLoadAllPath = "/v1/mgmt/group/all"
+    groupLoadAllForMemberPath = "/v1/mgmt/group/member/all"
+    groupLoadAllGroupMembersPath = "/v1/mgmt/group/members"
