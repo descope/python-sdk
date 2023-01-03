@@ -1,13 +1,11 @@
 from typing import List
 
 from descope.auth import Auth
-from descope.management.common import MgmtV1
-
-
-class UserTenant:
-    def __init__(self, tenant_id: str, role_names: List[str] = []):
-        self.tenant_id = tenant_id
-        self.role_names = role_names
+from descope.management.common import (
+    AssociatedTenant,
+    MgmtV1,
+    associated_tenants_to_dict,
+)
 
 
 class User:
@@ -23,7 +21,7 @@ class User:
         phone_number: str = None,
         display_name: str = None,
         role_names: List[str] = [],
-        user_tenants: List[UserTenant] = [],
+        user_tenants: List[AssociatedTenant] = [],
     ) -> dict:
         """
         Create a new user. Users can have any number of optional fields, including email, phone number and authorization.
@@ -35,7 +33,7 @@ class User:
         display_name (str): Optional user display name.
         role_names (List[str]): An optional list of the user's roles without tenant association. These roles are
             mutually exclusive with the `user_tenant` roles, which take precedence over them.
-        user_tenants (List[UserTenants]): An optional list of the user's tenants, and optionally, their roles per tenant. These roles are
+        user_tenants (List[AssociatedTenant]): An optional list of the user's tenants, and optionally, their roles per tenant. These roles are
             mutually exclusive with the general `role_names`, and take precedence over them.
 
         Return value (dict):
@@ -62,7 +60,7 @@ class User:
         phone_number: str = None,
         display_name: str = None,
         role_names: List[str] = [],
-        user_tenants: List[UserTenant] = [],
+        user_tenants: List[AssociatedTenant] = [],
     ):
         """
         Update an existing user with the given various fields. IMPORTANT: All parameters are used as overrides
@@ -75,7 +73,7 @@ class User:
         display_name (str): Optional user display name.
         role_names (List[str]): An optional list of the user's roles without tenant association. These roles are
             mutually exclusive with the `user_tenant` roles, which take precedence over the general roles.
-        user_tenants (List[UserTenants]): An optional list of the user's tenants, and optionally, their roles per tenant. These roles are
+        user_tenants (List[AssociatedTenant]): An optional list of the user's tenants, and optionally, their roles per tenant. These roles are
             mutually exclusive with the general `role_names`, and take precedence over them.
 
         Raise:
@@ -195,7 +193,7 @@ class User:
         phone_number: str,
         display_name: str,
         role_names: List[str],
-        user_tenants: List[UserTenant],
+        user_tenants: List[AssociatedTenant],
     ) -> dict:
         return {
             "identifier": identifier,
@@ -203,18 +201,5 @@ class User:
             "phoneNumber": phone_number,
             "displayName": display_name,
             "roleNames": role_names,
-            "userTenants": User._user_tenants_to_dict(user_tenants),
+            "userTenants": associated_tenants_to_dict(user_tenants),
         }
-
-    @staticmethod
-    def _user_tenants_to_dict(user_tenants: List[UserTenant]) -> list:
-        user_tenant_list = []
-        if user_tenants:
-            for user_tenant in user_tenants:
-                user_tenant_list.append(
-                    {
-                        "tenantId": user_tenant.tenant_id,
-                        "roleNames": user_tenant.role_names,
-                    }
-                )
-        return user_tenant_list

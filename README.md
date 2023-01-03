@@ -361,7 +361,7 @@ descope_client.mgmt.user.create(
     email="desmond@descope.com",
     display_name="Desmond Copeland",
     user_tenants=[
-        UserTenant("my-tenant-id", ["role-name1"]),
+        AssociatedTenant("my-tenant-id", ["role-name1"]),
     ],
 )
 
@@ -371,7 +371,7 @@ descope_client.mgmt.user.update(
     email="desmond@descope.com",
     display_name="Desmond Copeland",
     user_tenants=[
-        UserTenant("my-tenant-id", ["role-name1", "role-name2"]),
+        AssociatedTenant("my-tenant-id", ["role-name1", "role-name2"]),
     ],
 )
 
