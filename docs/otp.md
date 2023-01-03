@@ -33,7 +33,7 @@ end
 
 For an in-depth explanation of the variables and dictionaries used by the sample code below, see the [SDK Dictionaries and Variables document](./deepdive.md).
 
-For a complete sample code implmentation of OTP, see [sample code for OTP.](../samples/otp_web_sample_app.py).
+For a complete sample code implementation of OTP, see [sample code for OTP.](../samples/otp_web_sample_app.py).
 
 ## Install the SDK
 
@@ -74,7 +74,7 @@ Call the `sign-in` function from your sign-in route for OTP. In this example, th
 descope_client.otp.sign_in(DeliveryMethod.EMAIL, "mytestemail@test.com")
 ```
 
-Use DeliveryMethod.PHONE (for text message) or DeliveryMethod.WHATSAPP (for Whatspp message), replacing the second argument with a valid phone number.
+Use DeliveryMethod.PHONE (for text message) or DeliveryMethod.WHATSAPP (for WhatsApp message), replacing the second argument with a valid phone number.
 
 ### 3. User Verification
 
@@ -104,7 +104,7 @@ Call the `update_user_phone` function to add OTP verification phone for a user w
 descope_client.otp.update_user_phone(DeliveryMethod.PHONE, identifier, "212-555-1212", jwt_response[REFRESH_SESSION_TOKEN_NAME]["jwt"])
 ```
 
-Use DeliveryMethod.PHONE (for text message) or DeliveryMethod.WHATSAPP (for Whatspp message), replacing the second argument with a valid phone number.
+Use DeliveryMethod.PHONE (for text message) or DeliveryMethod.WHATSAPP (for WhatsApp message), replacing the second argument with a valid phone number.
 
 ### Update Email
 
@@ -124,7 +124,7 @@ The phone or email will be used as the identifier.
 descope_client.otp.sign_up_or_in(DeliveryMethod.EMAIL, "mytestmail@test.com")
 ```
 
-Use DeliveryMethod.PHONE (for text message) or DeliveryMethod.WHATSAPP (for Whatspp message), replacing the second argument with a valid phone number.
+Use DeliveryMethod.PHONE (for text message) or DeliveryMethod.WHATSAPP (for WhatsApp message), replacing the second argument with a valid phone number.
 
 ### Logout All Sessions
 
