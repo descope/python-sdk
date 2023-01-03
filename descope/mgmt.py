@@ -1,4 +1,5 @@
 from descope.auth import Auth
+from descope.management.access_key import AccessKey  # noqa: F401
 from descope.management.group import Group  # noqa: F401
 from descope.management.jwt import JWT  # noqa: F401
 from descope.management.permission import Permission  # noqa: F401
@@ -15,6 +16,7 @@ class MGMT:
         self._auth = auth
         self._tenant = Tenant(auth)
         self._user = User(auth)
+        self._access_key = AccessKey(auth)
         self._sso = SSOSettings(auth)
         self._jwt = JWT(auth)
         self._permission = Permission(auth)
@@ -28,6 +30,10 @@ class MGMT:
     @property
     def user(self):
         return self._user
+
+    @property
+    def access_key(self):
+        return self._access_key
 
     @property
     def sso(self):

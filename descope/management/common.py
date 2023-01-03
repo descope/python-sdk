@@ -15,6 +15,15 @@ class MgmtV1:
     userLoadPath = "/v1/mgmt/user"
     usersSearchPath = "/v1/mgmt/user/search"
 
+    # access key
+    accessKeyCreatePath = "/v1/mgmt/accesskey/create"
+    accessKeyLoadPath = "/v1/mgmt/accesskey"
+    accessKeysSearchPath = "/v1/mgmt/accesskey/search"
+    accessKeyUpdatePath = "/v1/mgmt/accesskey/update"
+    accessKeyDeactivatePath = "/v1/mgmt/accesskey/deactivate"
+    accessKeyActivatePath = "/v1/mgmt/accesskey/activate"
+    accessKeyDeletePath = "/v1/mgmt/accesskey/delete"
+
     # sso
     ssoConfigurePath = "/v1/mgmt/sso/settings"
     ssoMetadataPath = "/v1/mgmt/sso/metadata"
