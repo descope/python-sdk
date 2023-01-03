@@ -60,8 +60,8 @@ class Group:
 
         Args:
         tenant_id (str): Tenant ID to load groups from.
-        jwt_subjects (List[str]): List of JWT subjects, with the format of "U2J5ES9S8TkvCgOvcrkpzUgVTEBM" (example), which can be found on the user's JWT.
-        identifiers (List[str]): List of identifiers, identifier is the actual user identifier used for sign in.
+        jwt_subjects (List[str]): Optional List of JWT subjects, with the format of "U2J5ES9S8TkvCgOvcrkpzUgVTEBM" (example), which can be found on the user's JWT.
+        identifiers (List[str]): Optional List of identifiers, identifier is the actual user identifier used for sign in.
 
         Return value (dict):
         Return dict in the format
