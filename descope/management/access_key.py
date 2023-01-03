@@ -36,9 +36,9 @@ class AccessKey:
         Return dict in the format
             {
                 "key": {},
-                "hash": {}
+                "cleartext": {}
             }
-        Containing the created access key information and its hash. The key hash will only be returned on creation.
+        Containing the created access key information and its cleartext. The key cleartext will only be returned on creation.
         Make sure to save it securely.
 
         Raise:

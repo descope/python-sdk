@@ -409,7 +409,7 @@ create_resp = descope_client.mgmt.access_key.create(
     ],
 )
 key = create_resp["key"]
-hash = create_resp["hash"] # make sure to save the returned hash securely. It will not be returned again.
+cleartext = create_resp["cleartext"] # make sure to save the returned cleartext securely. It will not be returned again.
 
 # Load a specific access key
 access_key_resp = descope_client.mgmt.access_key.load("key-id")

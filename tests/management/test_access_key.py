@@ -46,7 +46,7 @@ class TestAccessKey(unittest.TestCase):
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads(
-                """{"key": {"id": "ak1"}, "hash": "abc"}"""
+                """{"key": {"id": "ak1"}, "cleartext": "abc"}"""
             )
             mock_post.return_value = network_resp
             resp = client.mgmt.access_key.create(
