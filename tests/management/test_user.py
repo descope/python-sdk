@@ -242,7 +242,7 @@ class TestUser(unittest.TestCase):
                 verify=True,
             )
 
-    def test_search_all_users(self):
+    def test_search_all(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -255,7 +255,7 @@ class TestUser(unittest.TestCase):
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
-                client.mgmt.user.search_all_users,
+                client.mgmt.user.search_all,
                 ["t1, t2"],
                 ["r1", "r2"],
             )
@@ -268,7 +268,7 @@ class TestUser(unittest.TestCase):
                 """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
             )
             mock_post.return_value = network_resp
-            resp = client.mgmt.user.search_all_users(["t1, t2"], ["r1", "r2"])
+            resp = client.mgmt.user.search_all(["t1, t2"], ["r1", "r2"])
             users = resp["users"]
             self.assertEqual(len(users), 2)
             self.assertEqual(users[0]["id"], "u1")

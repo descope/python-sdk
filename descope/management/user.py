@@ -157,7 +157,7 @@ class User:
         )
         return response.json()
 
-    def search_all_users(
+    def search_all(
         self,
         tenant_ids: List[str] = [],
         role_names: List[str] = [],
