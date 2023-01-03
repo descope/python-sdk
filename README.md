@@ -361,7 +361,7 @@ descope_client.mgmt.user.create(
     email="desmond@descope.com",
     display_name="Desmond Copeland",
     user_tenants=[
-        UserTenant("my-tenant-id", ["role-name1"]),
+        AssociatedTenant("my-tenant-id", ["role-name1"]),
     ],
 )
 
@@ -371,11 +371,11 @@ descope_client.mgmt.user.update(
     email="desmond@descope.com",
     display_name="Desmond Copeland",
     user_tenants=[
-        UserTenant("my-tenant-id", ["role-name1", "role-name2"]),
+        AssociatedTenant("my-tenant-id", ["role-name1", "role-name2"]),
     ],
 )
 
-# Tenant deletion cannot be undone. Use carefully.
+# User deletion cannot be undone. Use carefully.
 descope_client.mgmt.user.delete("desmond@descope.com")
 
 # Load specific user
@@ -391,6 +391,50 @@ users_resp = descope_client.mgmt.user.search_all(tenant_ids=["my-tenant-id"])
 users = users_resp["users"]
     for user in users:
         # Do something
+```
+
+### Manage Access Keys
+
+You can create, update, delete or load access keys, as well as search according to filters:
+
+```Python
+# An access key must have a name and expiration, other fields are optional.
+# Roles should be set directly if no tenants exist, otherwise set
+# on a per-tenant basis.
+create_resp = descope_client.mgmt.access_key.create(
+    name="name",
+    expired_time=1677844931,
+    key_tenants=[
+        AssociatedTenant("my-tenant-id", ["role-name1"]),
+    ],
+)
+key = create_resp["key"]
+cleartext = create_resp["cleartext"] # make sure to save the returned cleartext securely. It will not be returned again.
+
+# Load a specific access key
+access_key_resp = descope_client.mgmt.access_key.load("key-id")
+access_key = access_key_resp["key"]
+
+# Search all access keys, optionally according to a tenant filter
+keys_resp = descope_client.mgmt.access_key.search_all(tenant_ids=["my-tenant-id"])
+keys = keys_resp["keys"]
+    for key in keys:
+        # Do something
+
+# Update will override all fields as is. Use carefully.
+descope_client.mgmt.access_key.update(
+    id="key-id",
+    name="new name",
+)
+
+# Access keys can be deactivated to prevent usage. This can be undone using "activate".
+descope_client.mgmt.access_key.deactivate("key-id")
+
+# Disabled access keys can be activated once again.
+descope_client.mgmt.access_key.activate("key-id")
+
+# Access key deletion cannot be undone. Use carefully.
+descope_client.mgmt.access_key.delete("key-id")
 ```
 
 ### Manage SSO Setting

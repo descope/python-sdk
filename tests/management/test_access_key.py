@@ -10,7 +10,7 @@ from descope.common import DEFAULT_BASE_URL
 from descope.management.common import MgmtV1
 
 
-class TestUser(unittest.TestCase):
+class TestAccessKey(unittest.TestCase):
     def setUp(self) -> None:
         self.dummy_project_id = "dummy"
         self.dummy_management_key = "key"
@@ -37,29 +37,30 @@ class TestUser(unittest.TestCase):
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
-                client.mgmt.user.create,
-                "valid-identifier",
+                client.mgmt.access_key.create,
+                "key-name",
             )
 
         # Test success flow
         with patch("requests.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
+            network_resp.json.return_value = json.loads(
+                """{"key": {"id": "ak1"}, "cleartext": "abc"}"""
+            )
             mock_post.return_value = network_resp
-            resp = client.mgmt.user.create(
-                identifier="name@mail.com",
-                email="name@mail.com",
-                display_name="Name",
-                user_tenants=[
+            resp = client.mgmt.access_key.create(
+                name="key-name",
+                expire_time=123456789,
+                key_tenants=[
                     AssociatedTenant("tenant1"),
                     AssociatedTenant("tenant2", ["role1", "role2"]),
                 ],
             )
-            user = resp["user"]
-            self.assertEqual(user["id"], "u1")
+            accessKey = resp["key"]
+            self.assertEqual(accessKey["id"], "ak1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.userCreatePath}",
+                f"{DEFAULT_BASE_URL}{MgmtV1.accessKeyCreatePath}",
                 headers={
                     **common.defaultHeaders,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -67,101 +68,13 @@ class TestUser(unittest.TestCase):
                 params=None,
                 data=json.dumps(
                     {
-                        "identifier": "name@mail.com",
-                        "email": "name@mail.com",
-                        "phoneNumber": None,
-                        "displayName": "Name",
+                        "name": "key-name",
+                        "expireTime": 123456789,
                         "roleNames": [],
-                        "userTenants": [
+                        "keyTenants": [
                             {"tenantId": "tenant1", "roleNames": []},
                             {"tenantId": "tenant2", "roleNames": ["role1", "role2"]},
                         ],
-                    }
-                ),
-                allow_redirects=False,
-                verify=True,
-            )
-
-    def test_update(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
-
-        # Test failed flows
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.user.update,
-                "valid-identifier",
-                "email@something.com",
-            )
-
-        # Test success flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
-                client.mgmt.user.update(
-                    "identifier",
-                    display_name="new-name",
-                    role_names=["domain.com"],
-                )
-            )
-            mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.userUpdatePath}",
-                headers={
-                    **common.defaultHeaders,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                },
-                params=None,
-                data=json.dumps(
-                    {
-                        "identifier": "identifier",
-                        "email": None,
-                        "phoneNumber": None,
-                        "displayName": "new-name",
-                        "roleNames": ["domain.com"],
-                        "userTenants": [],
-                    }
-                ),
-                allow_redirects=False,
-                verify=True,
-            )
-
-    def test_delete(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
-
-        # Test failed flows
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.user.delete,
-                "valid-id",
-            )
-
-        # Test success flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(client.mgmt.user.delete("u1"))
-            mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.userDeletePath}",
-                headers={
-                    **common.defaultHeaders,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                },
-                params=None,
-                data=json.dumps(
-                    {
-                        "identifier": "u1",
                     }
                 ),
                 allow_redirects=False,
@@ -181,68 +94,31 @@ class TestUser(unittest.TestCase):
             mock_get.return_value.ok = False
             self.assertRaises(
                 AuthException,
-                client.mgmt.user.load,
-                "valid-id",
+                client.mgmt.access_key.load,
+                "key-id",
             )
 
         # Test success flow
         with patch("requests.get") as mock_get:
             network_resp = mock.Mock()
             network_resp.ok = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
+            network_resp.json.return_value = json.loads("""{"key": {"id": "ak1"}}""")
             mock_get.return_value = network_resp
-            resp = client.mgmt.user.load("valid-id")
-            user = resp["user"]
-            self.assertEqual(user["id"], "u1")
+            resp = client.mgmt.access_key.load("key-id")
+            accessKey = resp["key"]
+            self.assertEqual(accessKey["id"], "ak1")
             mock_get.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.userLoadPath}",
+                f"{DEFAULT_BASE_URL}{MgmtV1.accessKeyLoadPath}",
                 headers={
                     **common.defaultHeaders,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
-                params={"identifier": "valid-id"},
+                params={"id": "key-id"},
                 allow_redirects=None,
                 verify=True,
             )
 
-    def test_load_by_jwt_subject(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
-
-        # Test failed flows
-        with patch("requests.get") as mock_get:
-            mock_get.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.user.load_by_jwt_subject,
-                "jwt-subject",
-            )
-
-        # Test success flow
-        with patch("requests.get") as mock_get:
-            network_resp = mock.Mock()
-            network_resp.ok = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
-            mock_get.return_value = network_resp
-            resp = client.mgmt.user.load_by_jwt_subject("jwt-subject")
-            user = resp["user"]
-            self.assertEqual(user["id"], "u1")
-            mock_get.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.userLoadPath}",
-                headers={
-                    **common.defaultHeaders,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                },
-                params={"jwtSubject": "jwt-subject"},
-                allow_redirects=None,
-                verify=True,
-            )
-
-    def test_search_all(self):
+    def test_search_all_users(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -255,9 +131,8 @@ class TestUser(unittest.TestCase):
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
-                client.mgmt.user.search_all,
+                client.mgmt.access_key.search_all_access_keys,
                 ["t1, t2"],
-                ["r1", "r2"],
             )
 
         # Test success flow
@@ -265,16 +140,16 @@ class TestUser(unittest.TestCase):
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads(
-                """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
+                """{"keys": [{"id": "ak1"}, {"id": "ak2"}]}"""
             )
             mock_post.return_value = network_resp
-            resp = client.mgmt.user.search_all(["t1, t2"], ["r1", "r2"])
-            users = resp["users"]
-            self.assertEqual(len(users), 2)
-            self.assertEqual(users[0]["id"], "u1")
-            self.assertEqual(users[1]["id"], "u2")
+            resp = client.mgmt.access_key.search_all_access_keys(["t1, t2"])
+            keys = resp["keys"]
+            self.assertEqual(len(keys), 2)
+            self.assertEqual(keys[0]["id"], "ak1")
+            self.assertEqual(keys[1]["id"], "ak2")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.usersSearchPath}",
+                f"{DEFAULT_BASE_URL}{MgmtV1.accessKeysSearchPath}",
                 headers={
                     **common.defaultHeaders,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -283,8 +158,161 @@ class TestUser(unittest.TestCase):
                 data=json.dumps(
                     {
                         "tenantIds": ["t1, t2"],
-                        "roleNames": ["r1", "r2"],
-                        "limit": 0,
+                    }
+                ),
+                allow_redirects=False,
+                verify=True,
+            )
+
+    def test_update(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.access_key.update,
+                "key-id",
+                "new-name",
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(
+                client.mgmt.access_key.update(
+                    "key-id",
+                    name="new-name",
+                )
+            )
+            mock_post.assert_called_with(
+                f"{DEFAULT_BASE_URL}{MgmtV1.accessKeyUpdatePath}",
+                headers={
+                    **common.defaultHeaders,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                data=json.dumps(
+                    {
+                        "id": "key-id",
+                        "name": "new-name",
+                    }
+                ),
+                allow_redirects=False,
+                verify=True,
+            )
+
+    def test_deactivate(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.access_key.deactivate,
+                "key-id",
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(client.mgmt.access_key.deactivate("ak1"))
+            mock_post.assert_called_with(
+                f"{DEFAULT_BASE_URL}{MgmtV1.accessKeyDeactivatePath}",
+                headers={
+                    **common.defaultHeaders,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                data=json.dumps(
+                    {
+                        "id": "ak1",
+                    }
+                ),
+                allow_redirects=False,
+                verify=True,
+            )
+
+    def test_activate(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.access_key.activate,
+                "key-id",
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(client.mgmt.access_key.activate("ak1"))
+            mock_post.assert_called_with(
+                f"{DEFAULT_BASE_URL}{MgmtV1.accessKeyActivatePath}",
+                headers={
+                    **common.defaultHeaders,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                data=json.dumps(
+                    {
+                        "id": "ak1",
+                    }
+                ),
+                allow_redirects=False,
+                verify=True,
+            )
+
+    def test_delete(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.access_key.delete,
+                "key-id",
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(client.mgmt.access_key.delete("ak1"))
+            mock_post.assert_called_with(
+                f"{DEFAULT_BASE_URL}{MgmtV1.accessKeyDeletePath}",
+                headers={
+                    **common.defaultHeaders,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                data=json.dumps(
+                    {
+                        "id": "ak1",
                     }
                 ),
                 allow_redirects=False,

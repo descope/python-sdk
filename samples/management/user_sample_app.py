@@ -37,7 +37,7 @@ def main():
 
         try:
             logging.info("Searching all users created user")
-            users_resp = descope_client.mgmt.user.search_all_users()
+            users_resp = descope_client.mgmt.user.search_all()
             users = users_resp["users"]
             for user in users:
                 logging.info(f"Search Found user {user}")
