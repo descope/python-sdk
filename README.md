@@ -382,8 +382,8 @@ descope_client.mgmt.user.delete("desmond@descope.com")
 user_resp = descope_client.mgmt.user.load("desmond@descope.com")
 user = user_resp["user"]
 
-# If needed, users can be loaded using the JWT subject as well
-user_resp = descope_client.mgmt.user.load_by_jwt_subject("<jwt-subject>")
+# If needed, users can be loaded using the user ID as well
+user_resp = descope_client.mgmt.user.load_by_user_id("<user-id>")
 user = user_resp["user"]
 
 # Search all users, optionally according to tenant and/or role filter
@@ -541,10 +541,10 @@ groups_resp = descope_client.mgmt.group.load_all_groups(
     tenant_id="tenant-id",
 )
 
-# Load all groups for the given user's jwt subjects (can be found in the user's JWT)
+# Load all groups for the given user IDs (can be found in the user's JWT)
 groups_resp = descope_client.mgmt.group.load_all_groups_for_members(
     tenant_id="tenant-id",
-    jwt_subjects=["jwt-subject-1", "jwt-subject-2"],
+    user_ids=["user-id-1", "user-id-2"],
 )
 
 # Load all groups for the given user's identifiers (used for sign-in)
