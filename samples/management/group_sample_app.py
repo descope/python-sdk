@@ -25,7 +25,7 @@ def main():
             for group in groups_resp:
                 logging.info(f"Search Found group {group}")
             identifier = groups_resp[0]["members"][0]["identifier"]
-            jwt_subject = groups_resp[0]["members"][0]["jwtSubject"]
+            user_id = groups_resp[0]["members"][0]["userId"]
             group_id = groups_resp[0]["id"]
         except AuthException as e:
             logging.info(f"Groups load failed {e}")
@@ -42,10 +42,10 @@ def main():
             logging.info(f"Groups load failed {e}")
 
         try:
-            logging.info("Going to load all groups for members - using jwt subject")
+            logging.info("Going to load all groups for members - using user IDs")
             groups_resp = descope_client.mgmt.group.load_all_groups_for_members(
                 tenant_id=tenant_id,
-                jwt_subjects=[jwt_subject],
+                user_ids=[user_id],
             )
             for group in groups_resp:
                 logging.info(f"Search Found group {group}")

@@ -96,7 +96,7 @@ class TestGroup(unittest.TestCase):
                     {
                         "tenantId": "someTenantId",
                         "identifiers": ["three", "four"],
-                        "jwtSubjects": ["one", "two"],
+                        "userIds": ["one", "two"],
                     }
                 ),
                 allow_redirects=False,

@@ -29,7 +29,7 @@ class Group:
                     "members":[
                         {
                             "identifier": <identifier>,
-                            "jwtSubject": <jwtSubject>,
+                            "userId": <userId>,
                             "display": <display name>
                         }
                     ]
@@ -52,15 +52,15 @@ class Group:
     def load_all_groups_for_members(
         self,
         tenant_id: str,
-        jwt_subjects: List[str] = [],
+        user_ids: List[str] = [],
         identifiers: List[str] = [],
     ) -> dict:
         """
-        Load all groups for the provided user JWT subjects or identifiers.
+        Load all groups for the provided user IDs or identifiers.
 
         Args:
         tenant_id (str): Tenant ID to load groups from.
-        jwt_subjects (List[str]): Optional List of JWT subjects, with the format of "U2J5ES9S8TkvCgOvcrkpzUgVTEBM" (example), which can be found on the user's JWT.
+        user_ids (List[str]): Optional List of user IDs, with the format of "U2J5ES9S8TkvCgOvcrkpzUgVTEBM" (example), which can be found on the user's JWT.
         identifiers (List[str]): Optional List of identifiers, identifier is the actual user identifier used for sign in.
 
         Return value (dict):
@@ -72,7 +72,7 @@ class Group:
                     "members":[
                         {
                             "identifier": <identifier>,
-                            "jwtSubject": <jwtSubject>,
+                            "userId": <userId>,
                             "display": <display name>
                         }
                     ]
@@ -88,7 +88,7 @@ class Group:
             {
                 "tenantId": tenant_id,
                 "identifiers": identifiers,
-                "jwtSubjects": jwt_subjects,
+                "userIds": user_ids,
             },
             pswd=self._auth.management_key,
         )
@@ -115,7 +115,7 @@ class Group:
                     "members":[
                         {
                             "identifier": <identifier>,
-                            "jwtSubject": <jwtSubject>,
+                            "userId": <userId>,
                             "display": <display name>
                         }
                     ]

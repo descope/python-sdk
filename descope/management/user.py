@@ -131,16 +131,16 @@ class User:
         )
         return response.json()
 
-    def load_by_jwt_subject(
+    def load_by_user_id(
         self,
-        jwt_subject: str,
+        user_id: str,
     ) -> dict:
         """
-        Load an existing user by JWT subject.
-        The JWT subject can be found on the user's JWT.
+        Load an existing user by user ID.
+        The user ID can be found on the user's JWT.
 
         Args:
-        jwt_subject (str): The JWT subject from the user's JWT.
+        user_id (str): The user ID from the user's JWT.
 
         Return value (dict):
         Return dict in the format
@@ -152,7 +152,7 @@ class User:
         """
         response = self._auth.do_get(
             MgmtV1.userLoadPath,
-            {"jwtSubject": jwt_subject},
+            {"userId": user_id},
             pswd=self._auth.management_key,
         )
         return response.json()
