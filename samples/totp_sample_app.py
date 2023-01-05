@@ -23,7 +23,7 @@ def main():
         descope_client = DescopeClient(project_id=project_id)
 
         logging.info("Going to sign in using TOTP ...")
-        email = input("Please insert your identifier:\n")
+        email = input("Please insert your login ID:\n")
 
         signup = input("Do you want to sign up via TOTP? (yes/y):\n")
         if signup == "yes" or signup == "y":
@@ -53,7 +53,7 @@ def main():
         code = input("Please insert code from Authenticator:\n")
 
         jwt_response = descope_client.totp.sign_in_code(
-            identifier=email,
+            login_id=email,
             code=code,
         )
 

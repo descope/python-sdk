@@ -17,18 +17,18 @@ def main():
         descope_client = DescopeClient(
             project_id=project_id, management_key=management_key
         )
-        user_identifier = "des@copeland.com"
+        user_login_id = "des@copeland.com"
 
         try:
             logging.info("Going to create a new user")
-            descope_client.mgmt.user.create(user_identifier)
+            descope_client.mgmt.user.create(user_login_id)
 
         except AuthException as e:
             logging.info(f"User creation failed {e}")
 
         try:
             logging.info("Searching for created user")
-            user_resp = descope_client.mgmt.user.load(user_identifier)
+            user_resp = descope_client.mgmt.user.load(user_login_id)
             user = user_resp["user"]
             logging.info(f"Load: found user {user}")
 
@@ -50,7 +50,7 @@ def main():
             # update overrides all fields, must provide the entire entity
             # we mean to update.
             descope_client.mgmt.user.update(
-                user_identifier, display_name="Desmond Copeland"
+                user_login_id, display_name="Desmond Copeland"
             )
 
         except AuthException as e:
@@ -58,7 +58,7 @@ def main():
 
         try:
             logging.info("Deleting newly created user")
-            descope_client.mgmt.user.delete(user_identifier)
+            descope_client.mgmt.user.delete(user_login_id)
 
         except AuthException as e:
             logging.info(f"User deletion failed {e}")

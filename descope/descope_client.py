@@ -242,13 +242,13 @@ class DescopeClient:
     def me(self, refresh_token: str) -> dict:
         """
         Retrieve user details for the refresh token. The returned data includes email, name, phone,
-            list of externalIds and boolean flags for verifiedEmail, verifiedPhone.
+            list of loginIds and boolean flags for verifiedEmail, verifiedPhone.
 
         Args:
         refresh_token (str): The refresh token
 
         Return value (dict): returns the user details from the server
-            (email:str, name:str, phone:str, externalIds[str], verifiedEmail:bool, verifiedPhone:bool)
+            (email:str, name:str, phone:str, loginIds[str], verifiedEmail:bool, verifiedPhone:bool)
 
         Raise:
         AuthException: Exception is raised if session is not authorized or another error occurs

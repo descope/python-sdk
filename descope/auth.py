@@ -129,9 +129,9 @@ class Auth:
 
     @staticmethod
     def verify_delivery_method(
-        method: DeliveryMethod, identifier: str, user: dict
+        method: DeliveryMethod, loginId: str, user: dict
     ) -> bool:
-        if not identifier:
+        if not loginId:
             return False
 
         if not isinstance(user, dict):
@@ -139,7 +139,7 @@ class Auth:
 
         if method == DeliveryMethod.EMAIL:
             if not user.get("email", None):
-                user["email"] = identifier
+                user["email"] = loginId
             try:
                 validate_email(email=user["email"], check_deliverability=False)
                 return True
@@ -147,12 +147,12 @@ class Auth:
                 return False
         elif method == DeliveryMethod.PHONE:
             if not user.get("phone", None):
-                user["phone"] = identifier
+                user["phone"] = loginId
             if not re.match(PHONE_REGEX, user["phone"]):
                 return False
         elif method == DeliveryMethod.WHATSAPP:
             if not user.get("phone", None):
-                user["phone"] = identifier
+                user["phone"] = loginId
             if not re.match(PHONE_REGEX, user["phone"]):
                 return False
         else:
@@ -177,7 +177,7 @@ class Auth:
         return f"{base}/{suffix}"
 
     @staticmethod
-    def get_identifier_by_method(method: DeliveryMethod, user: dict) -> Tuple[str, str]:
+    def get_login_id_by_method(method: DeliveryMethod, user: dict) -> Tuple[str, str]:
         if method is DeliveryMethod.EMAIL:
             email = user.get("email", "")
             return "email", email

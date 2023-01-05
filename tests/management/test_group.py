@@ -95,7 +95,7 @@ class TestGroup(unittest.TestCase):
                 data=json.dumps(
                     {
                         "tenantId": "someTenantId",
-                        "identifiers": ["three", "four"],
+                        "loginIds": ["three", "four"],
                         "userIds": ["one", "two"],
                     }
                 ),

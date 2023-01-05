@@ -14,11 +14,11 @@ class WebAuthn:
     def __init__(self, auth):
         self._auth = auth
 
-    def sign_up_start(self, identifier: str, origin: str, user: dict = None) -> dict:
+    def sign_up_start(self, login_id: str, origin: str, user: dict = None) -> dict:
         """
         Docs
         """
-        if not identifier:
+        if not login_id:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
             )
@@ -32,7 +32,7 @@ class WebAuthn:
             user = {}
 
         uri = EndpointsV1.signUpAuthWebauthnStart
-        body = WebAuthn._compose_sign_up_start_body(identifier, user, origin)
+        body = WebAuthn._compose_sign_up_start_body(login_id, user, origin)
         response = self._auth.do_post(uri, body)
 
         return response.json()
@@ -63,7 +63,7 @@ class WebAuthn:
 
     def sign_in_start(
         self,
-        identifier: str,
+        login_id: str,
         origin: str,
         loginOptions: LoginOptions = None,
         refreshToken: str = None,
@@ -71,7 +71,7 @@ class WebAuthn:
         """
         Docs
         """
-        if not identifier:
+        if not login_id:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
             )
@@ -84,7 +84,7 @@ class WebAuthn:
         validateRefreshTokenProvided(loginOptions, refreshToken)
 
         uri = EndpointsV1.signInAuthWebauthnStart
-        body = WebAuthn._compose_sign_in_start_body(identifier, origin, loginOptions)
+        body = WebAuthn._compose_sign_in_start_body(login_id, origin, loginOptions)
         response = self._auth.do_post(uri, body, pswd=refreshToken)
 
         return response.json()
@@ -115,13 +115,13 @@ class WebAuthn:
 
     def sign_up_or_in_start(
         self,
-        identifier: str,
+        login_id: str,
         origin: str,
     ) -> dict:
         """
         Docs
         """
-        if not identifier:
+        if not login_id:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
             )
@@ -132,16 +132,16 @@ class WebAuthn:
             )
 
         uri = EndpointsV1.signUpOrInAuthWebauthnStart
-        body = WebAuthn._compose_sign_up_or_in_start_body(identifier, origin)
+        body = WebAuthn._compose_sign_up_or_in_start_body(login_id, origin)
         response = self._auth.do_post(uri, body)
 
         return response.json()
 
-    def update_start(self, identifier: str, refresh_token: str, origin: str):
+    def update_start(self, login_id: str, refresh_token: str, origin: str):
         """
         Docs
         """
-        if not identifier:
+        if not login_id:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
             )
@@ -152,7 +152,7 @@ class WebAuthn:
             )
 
         uri = EndpointsV1.updateAuthWebauthnStart
-        body = WebAuthn._compose_update_start_body(identifier, origin)
+        body = WebAuthn._compose_update_start_body(login_id, origin)
         response = self._auth.do_post(uri, body, None, refresh_token)
 
         return response.json()
@@ -176,8 +176,8 @@ class WebAuthn:
         self._auth.do_post(uri, body)
 
     @staticmethod
-    def _compose_sign_up_start_body(identifier: str, user: dict, origin: str) -> dict:
-        body = {"user": {"externalId": identifier}}
+    def _compose_sign_up_start_body(login_id: str, user: dict, origin: str) -> dict:
+        body = {"user": {"loginId": login_id}}
         if user is not None:
             for key, val in user.items():
                 body["user"][key] = val
@@ -186,18 +186,18 @@ class WebAuthn:
 
     @staticmethod
     def _compose_sign_in_start_body(
-        identifier: str, origin: str, loginOptions: LoginOptions = None
+        login_id: str, origin: str, loginOptions: LoginOptions = None
     ) -> dict:
         return {
-            "externalId": identifier,
+            "loginId": login_id,
             "origin": origin,
             "loginOptions": loginOptions.__dict__ if loginOptions else {},
         }
 
     @staticmethod
-    def _compose_sign_up_or_in_start_body(identifier: str, origin: str) -> dict:
+    def _compose_sign_up_or_in_start_body(login_id: str, origin: str) -> dict:
         return {
-            "externalId": identifier,
+            "loginId": login_id,
             "origin": origin,
         }
 
@@ -206,8 +206,8 @@ class WebAuthn:
         return {"transactionId": transaction_id, "response": response}
 
     @staticmethod
-    def _compose_update_start_body(identifier: str, origin: str) -> dict:
-        body = {"externalId": identifier}
+    def _compose_update_start_body(login_id: str, origin: str) -> dict:
+        body = {"loginId": login_id}
         if origin:
             body["origin"] = origin
         return body

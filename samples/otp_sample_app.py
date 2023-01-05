@@ -22,12 +22,12 @@ def main():
 
         logging.info("Going to sign in using OTP...")
         email = input("Please insert email to signin:\n")
-        descope_client.otp.sign_in(method=DeliveryMethod.EMAIL, identifier=email)
+        descope_client.otp.sign_in(method=DeliveryMethod.EMAIL, login_id=email)
 
         value = input("Please insert the code you received by email:\n")
         try:
             jwt_response = descope_client.otp.verify_code(
-                method=DeliveryMethod.EMAIL, identifier=email, code=value
+                method=DeliveryMethod.EMAIL, login_id=email, code=value
             )
             logging.info("Code is valid")
             session_token = jwt_response[SESSION_TOKEN_NAME].get("jwt")

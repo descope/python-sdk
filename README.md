@@ -43,17 +43,17 @@ The user can either `sign up`, `sign in` or `sign up or in`
 ```python
 from descope import DeliveryMethod
 
-# Every user must have an identifier. All other user information is optional
+# Every user must have an login ID. All other user information is optional
 email = "desmond@descope.com"
 user = {"name": "Desmond Copeland", "phone": "212-555-1234", "email": email}
-descope_client.otp.sign_up(method=DeliveryMethod.EMAIL, identifier=email, user=user)
+descope_client.otp.sign_up(method=DeliveryMethod.EMAIL, login_id=email, user=user)
 ```
 
 The user will receive a code using the selected delivery method. Verify that code using:
 
 ```python
 jwt_response = descope_client.otp.verify_code(
-    method=DeliveryMethod.EMAIL, identifier=email, code=value
+    method=DeliveryMethod.EMAIL, login_id=email, code=value
 )
 session_token = jwt_response[SESSION_TOKEN_NAME].get("jwt")
 refresh_token = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("jwt")
@@ -74,7 +74,7 @@ from descope import DeliveryMethod
 
 descope_client.magiclink.sign_up_or_in(
     method=DeliveryMethod.EMAIL,
-    identifier="desmond@descope.com",
+    login_id="desmond@descope.com",
     uri="http://myapp.com/verify-magic-link", # Set redirect URI here or via console
 )
 ```
@@ -110,7 +110,7 @@ The user can either `sign up`, `sign in` or `sign up or in`
 
 ```python
 resp = descope_client.enchantedlink.sign_up_or_in(
-    identifier=email,
+    login_id=email,
     uri="http://myapp.com/verify-enchanted-link", # Set redirect URI here or via console
 )
 link_identifier = resp["linkId"] # Show the user which link they should press in their email
@@ -207,10 +207,10 @@ Existing users can add TOTP using the `update` function.
 ```python
 from descope import DeliveryMethod
 
-# Every user must have an identifier. All other user information is optional
+# Every user must have an login ID. All other user information is optional
 email = "desmond@descope.com"
 user = {"name": "Desmond Copeland", "phone": "212-555-1234", "email": email}
-totp_response = descope_client.totp.sign_up(method=DeliveryMethod.EMAIL, identifier=email, user=user)
+totp_response = descope_client.totp.sign_up(method=DeliveryMethod.EMAIL, login_id=email, user=user)
 
 # Use one of the provided options to have the user add their credentials to the authenticator
 provisioning_url = totp_response["provisioningURL"]
@@ -225,7 +225,7 @@ the app produces.
 
 ```python
 jwt_response = descope_client.totp.sign_in_code(
-    identifier=email,
+    login_id=email,
     code=code, # Code from authenticator app
 )
 session_token = jwt_response[SESSION_TOKEN_NAME].get("jwt")
@@ -353,11 +353,11 @@ tenants = tenants_resp["tenants"]
 You can create, update, delete or load users, as well as search according to filters:
 
 ```Python
-# A user must have an identifier, other fields are optional.
+# A user must have an login ID, other fields are optional.
 # Roles should be set directly if no tenants exist, otherwise set
 # on a per-tenant basis.
 descope_client.mgmt.user.create(
-    identifier="desmond@descope.com",
+    login_id="desmond@descope.com",
     email="desmond@descope.com",
     display_name="Desmond Copeland",
     user_tenants=[
@@ -367,7 +367,7 @@ descope_client.mgmt.user.create(
 
 # Update will override all fields as is. Use carefully.
 descope_client.mgmt.user.update(
-    identifier="desmond@descope.com",
+    login_id="desmond@descope.com",
     email="desmond@descope.com",
     display_name="Desmond Copeland",
     user_tenants=[
@@ -547,10 +547,10 @@ groups_resp = descope_client.mgmt.group.load_all_groups_for_members(
     user_ids=["user-id-1", "user-id-2"],
 )
 
-# Load all groups for the given user's identifiers (used for sign-in)
+# Load all groups for the given user's login IDs (used for sign-in)
 groups_resp = descope_client.mgmt.group.load_all_groups_for_members(
     tenant_id="tenant-id",
-    identifiers=["identifier-1", "identifier-2"],
+    login_ids=["login-id-1", "login-id-2"],
 )
 
 # Load all group's members by the given group id

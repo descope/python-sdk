@@ -24,17 +24,17 @@ def main():
             groups_resp = descope_client.mgmt.group.load_all_groups(tenant_id=tenant_id)
             for group in groups_resp:
                 logging.info(f"Search Found group {group}")
-            identifier = groups_resp[0]["members"][0]["identifier"]
+            login_id = groups_resp[0]["members"][0]["loginId"]
             user_id = groups_resp[0]["members"][0]["userId"]
             group_id = groups_resp[0]["id"]
         except AuthException as e:
             logging.info(f"Groups load failed {e}")
 
         try:
-            logging.info("Going to load all groups for members - using identifier")
+            logging.info("Going to load all groups for members - using login ID")
             groups_resp = descope_client.mgmt.group.load_all_groups_for_members(
                 tenant_id=tenant_id,
-                identifiers=[identifier],
+                login_ids=[login_id],
             )
             for group in groups_resp:
                 logging.info(f"Search Found group {group}")

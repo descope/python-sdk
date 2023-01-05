@@ -14,13 +14,13 @@ class TOTP:
     def __init__(self, auth):
         self._auth = auth
 
-    def sign_up(self, identifier: str, user: dict = None) -> dict:
+    def sign_up(self, login_id: str, user: dict = None) -> dict:
         """
         Sign up (create) a new user using their email or phone number.
             (optional) Include additional user metadata that you wish to save.
 
         Args:
-        identifier (str): The identifier of the user being validated
+        login_id (str): The login ID of the user being validated
         user (dict) optional: Preserve additional user metadata in the form of
              {"name": "Desmond Copeland", "phone": "2125551212", "email": "des@cope.com"}
 
@@ -35,20 +35,20 @@ class TOTP:
         AuthException: raised if sign-up operation fails
         """
 
-        if not identifier:
+        if not login_id:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
             )
 
         uri = EndpointsV1.signUpAuthTOTPPath
-        body = TOTP._compose_signup_body(identifier, user)
+        body = TOTP._compose_signup_body(login_id, user)
         response = self._auth.do_post(uri, body)
 
         return response.json()
 
     def sign_in_code(
         self,
-        identifier: str,
+        login_id: str,
         code: str,
         login_options: LoginOptions = None,
         refresh_token: str = None,
@@ -57,7 +57,7 @@ class TOTP:
         Sign in by verifying the validity of a TOTP code entered by an end user.
 
         Args:
-        identifier (str): The identifier of the user being validated
+        login_id (str): The login ID of the user being validated
         code (str): The authenticator app code provided by the end user
         login_options (LoginOptions): Optional advanced controls over login parameters
         refresh_token: Optional refresh token is needed for specific login options
@@ -71,7 +71,7 @@ class TOTP:
         AuthException: raised if the TOTP code is not valid or if code verification failed
         """
 
-        if not identifier:
+        if not login_id:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
             )
@@ -84,7 +84,7 @@ class TOTP:
         validateRefreshTokenProvided(login_options, refresh_token)
 
         uri = EndpointsV1.verifyTOTPPath
-        body = TOTP._compose_signin_body(identifier, code, login_options)
+        body = TOTP._compose_signin_body(login_id, code, login_options)
         response = self._auth.do_post(uri, body, None, refresh_token)
 
         resp = response.json()
@@ -93,12 +93,12 @@ class TOTP:
         )
         return jwt_response
 
-    def update_user(self, identifier: str, refresh_token: str) -> None:
+    def update_user(self, login_id: str, refresh_token: str) -> None:
         """
         Add TOTP to an existing logged in user using their refresh token.
 
         Args:
-        identifier (str): The identifier of the user whose information is being updated
+        login_id (str): The login ID of the user whose information is being updated
         refresh_token (str): The session's refresh token (used for verification)
 
         Return value (dict):
@@ -112,7 +112,7 @@ class TOTP:
         AuthException: raised if refresh token is invalid or update operation fails
         """
 
-        if not identifier:
+        if not login_id:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
             )
@@ -123,28 +123,28 @@ class TOTP:
             )
 
         uri = EndpointsV1.updateTOTPPath
-        body = TOTP._compose_update_user_body(identifier)
+        body = TOTP._compose_update_user_body(login_id)
         response = self._auth.do_post(uri, body, None, refresh_token)
 
         return response.json()
 
     @staticmethod
-    def _compose_signup_body(identifier: str, user: dict) -> dict:
-        body = {"externalId": identifier}
+    def _compose_signup_body(login_id: str, user: dict) -> dict:
+        body = {"loginId": login_id}
         if user is not None:
             body["user"] = user
         return body
 
     @staticmethod
     def _compose_signin_body(
-        identifier: str, code: str, loginOptions: LoginOptions = None
+        login_id: str, code: str, loginOptions: LoginOptions = None
     ) -> dict:
         return {
-            "externalId": identifier,
+            "loginId": login_id,
             "code": code,
             "loginOptions": loginOptions.__dict__ if loginOptions else {},
         }
 
     @staticmethod
-    def _compose_update_user_body(identifier: str) -> dict:
-        return {"externalId": identifier}
+    def _compose_update_user_body(login_id: str) -> dict:
+        return {"loginId": login_id}
