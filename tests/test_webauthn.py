@@ -30,7 +30,7 @@ class TestWebauthN(unittest.TestCase):
                 "dummy@dummy.com", {"name": "dummy"}, "https://example.com"
             ),
             {
-                "user": {"externalId": "dummy@dummy.com", "name": "dummy"},
+                "user": {"loginId": "dummy@dummy.com", "name": "dummy"},
                 "origin": "https://example.com",
             },
         )
@@ -47,7 +47,7 @@ class TestWebauthN(unittest.TestCase):
                 "dummy@dummy.com", "https://example.com"
             ),
             {
-                "externalId": "dummy@dummy.com",
+                "loginId": "dummy@dummy.com",
                 "origin": "https://example.com",
                 "loginOptions": {},
             },
@@ -59,7 +59,7 @@ class TestWebauthN(unittest.TestCase):
                 "dummy@dummy.com", "https://example.com"
             ),
             {
-                "externalId": "dummy@dummy.com",
+                "loginId": "dummy@dummy.com",
                 "origin": "https://example.com",
             },
         )
@@ -69,7 +69,7 @@ class TestWebauthN(unittest.TestCase):
             WebAuthn._compose_update_start_body(
                 "dummy@dummy.com", "https://example.com"
             ),
-            {"externalId": "dummy@dummy.com", "origin": "https://example.com"},
+            {"loginId": "dummy@dummy.com", "origin": "https://example.com"},
         )
 
     def test_compose_update_finish_body(self):
@@ -117,7 +117,7 @@ class TestWebauthN(unittest.TestCase):
                 },
                 params=None,
                 data=json.dumps(
-                    {"user": {"externalId": "id1"}, "origin": "https://example.com"}
+                    {"user": {"loginId": "id1"}, "origin": "https://example.com"}
                 ),
                 allow_redirects=False,
                 verify=True,
@@ -146,7 +146,7 @@ class TestWebauthN(unittest.TestCase):
             my_mock_response.cookies = {}
             data = json.loads(
                 """{"refreshJwt": "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3R6VWhkcXBJRjJ5czlnZzdtczA2VXZ0QzQiLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0Mzc1OTYsImlhdCI6MTY1OTYzNzU5NiwiaXNzIjoiUDJDdHpVaGRxcElGMnlzOWdnN21zMDZVdnRDNCIsInN1YiI6IlUyQ3UwajBXUHczWU9pUElTSmI1Mkwwd1VWTWcifQ.WLnlHugvzZtrV9OzBB7SjpCLNRvKF3ImFpVyIN5orkrjO2iyAKg_Rb4XHk9sXGC1aW8puYzLbhE1Jv3kk2hDcKggfE8OaRNRm8byhGFZHnvPJwcP_Ya-aRmfAvCLcKOL",
-                 "user": {"externalIds": ["guyp@descope.com"], "name": "", "email": "guyp@descope.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false},
+                 "user": {"loginIds": ["guyp@descope.com"], "name": "", "email": "guyp@descope.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false},
                   "firstSeen": false,
                   "cookieDomain": "test",
                   "cookiePath": "/",
@@ -223,7 +223,7 @@ class TestWebauthN(unittest.TestCase):
                 params=None,
                 data=json.dumps(
                     {
-                        "externalId": "id1",
+                        "loginId": "id1",
                         "origin": "https://example.com",
                         "loginOptions": {},
                     }
@@ -278,7 +278,7 @@ class TestWebauthN(unittest.TestCase):
                 params=None,
                 data=json.dumps(
                     {
-                        "externalId": "id1",
+                        "loginId": "id1",
                         "origin": "https://example.com",
                         "loginOptions": {
                             "stepup": True,
@@ -314,7 +314,7 @@ class TestWebauthN(unittest.TestCase):
             my_mock_response.cookies = {}
 
             data = json.loads(
-                """{"refreshJwt": "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3R6VWhkcXBJRjJ5czlnZzdtczA2VXZ0QzQiLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0Mzc1OTYsImlhdCI6MTY1OTYzNzU5NiwiaXNzIjoiUDJDdHpVaGRxcElGMnlzOWdnN21zMDZVdnRDNCIsInN1YiI6IlUyQ3UwajBXUHczWU9pUElTSmI1Mkwwd1VWTWcifQ.WLnlHugvzZtrV9OzBB7SjpCLNRvKF3ImFpVyIN5orkrjO2iyAKg_Rb4XHk9sXGC1aW8puYzLbhE1Jv3kk2hDcKggfE8OaRNRm8byhGFZHnvPJwcP_Ya-aRmfAvCLcKOL", "user": {"externalIds": ["guyp@descope.com"], "name": "", "email": "guyp@descope.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false}, "firstSeen": false}"""
+                """{"refreshJwt": "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3R6VWhkcXBJRjJ5czlnZzdtczA2VXZ0QzQiLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0Mzc1OTYsImlhdCI6MTY1OTYzNzU5NiwiaXNzIjoiUDJDdHpVaGRxcElGMnlzOWdnN21zMDZVdnRDNCIsInN1YiI6IlUyQ3UwajBXUHczWU9pUElTSmI1Mkwwd1VWTWcifQ.WLnlHugvzZtrV9OzBB7SjpCLNRvKF3ImFpVyIN5orkrjO2iyAKg_Rb4XHk9sXGC1aW8puYzLbhE1Jv3kk2hDcKggfE8OaRNRm8byhGFZHnvPJwcP_Ya-aRmfAvCLcKOL", "user": {"loginIds": ["guyp@descope.com"], "name": "", "email": "guyp@descope.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false}, "firstSeen": false}"""
             )
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
@@ -380,7 +380,7 @@ class TestWebauthN(unittest.TestCase):
                 params=None,
                 data=json.dumps(
                     {
-                        "externalId": "id1",
+                        "loginId": "id1",
                         "origin": "https://example.com",
                     }
                 ),
@@ -452,7 +452,7 @@ class TestWebauthN(unittest.TestCase):
                 },
                 params=None,
                 data=json.dumps(
-                    {"externalId": "dummy@dummy.com", "origin": "https://example.com"}
+                    {"loginId": "dummy@dummy.com", "origin": "https://example.com"}
                 ),
                 allow_redirects=False,
                 verify=True,
@@ -480,7 +480,7 @@ class TestWebauthN(unittest.TestCase):
             my_mock_response.ok = True
             my_mock_response.cookies = {}
             data = json.loads(
-                """{"refreshJwt": "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3R6VWhkcXBJRjJ5czlnZzdtczA2VXZ0QzQiLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0Mzc1OTYsImlhdCI6MTY1OTYzNzU5NiwiaXNzIjoiUDJDdHpVaGRxcElGMnlzOWdnN21zMDZVdnRDNCIsInN1YiI6IlUyQ3UwajBXUHczWU9pUElTSmI1Mkwwd1VWTWcifQ.WLnlHugvzZtrV9OzBB7SjpCLNRvKF3ImFpVyIN5orkrjO2iyAKg_Rb4XHk9sXGC1aW8puYzLbhE1Jv3kk2hDcKggfE8OaRNRm8byhGFZHnvPJwcP_Ya-aRmfAvCLcKOL", "user": {"externalIds": ["guyp@descope.com"], "name": "", "email": "guyp@descope.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false}, "firstSeen": false}"""
+                """{"refreshJwt": "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3R6VWhkcXBJRjJ5czlnZzdtczA2VXZ0QzQiLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0Mzc1OTYsImlhdCI6MTY1OTYzNzU5NiwiaXNzIjoiUDJDdHpVaGRxcElGMnlzOWdnN21zMDZVdnRDNCIsInN1YiI6IlUyQ3UwajBXUHczWU9pUElTSmI1Mkwwd1VWTWcifQ.WLnlHugvzZtrV9OzBB7SjpCLNRvKF3ImFpVyIN5orkrjO2iyAKg_Rb4XHk9sXGC1aW8puYzLbhE1Jv3kk2hDcKggfE8OaRNRm8byhGFZHnvPJwcP_Ya-aRmfAvCLcKOL", "user": {"loginIds": ["guyp@descope.com"], "name": "", "email": "guyp@descope.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false}, "firstSeen": false}"""
             )
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response

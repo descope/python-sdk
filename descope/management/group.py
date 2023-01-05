@@ -28,7 +28,7 @@ class Group:
                     "display": <display name>,
                     "members":[
                         {
-                            "identifier": <identifier>,
+                            "loginId": <loginId>,
                             "userId": <userId>,
                             "display": <display name>
                         }
@@ -53,15 +53,15 @@ class Group:
         self,
         tenant_id: str,
         user_ids: List[str] = [],
-        identifiers: List[str] = [],
+        login_ids: List[str] = [],
     ) -> dict:
         """
-        Load all groups for the provided user IDs or identifiers.
+        Load all groups for the provided user IDs or login IDs.
 
         Args:
         tenant_id (str): Tenant ID to load groups from.
         user_ids (List[str]): Optional List of user IDs, with the format of "U2J5ES9S8TkvCgOvcrkpzUgVTEBM" (example), which can be found on the user's JWT.
-        identifiers (List[str]): Optional List of identifiers, identifier is the actual user identifier used for sign in.
+        login_ids (List[str]): Optional List of login IDs, how the users identify when logging in.
 
         Return value (dict):
         Return dict in the format
@@ -71,7 +71,7 @@ class Group:
                     "display": <display name>,
                     "members":[
                         {
-                            "identifier": <identifier>,
+                            "loginId": <loginId>,
                             "userId": <userId>,
                             "display": <display name>
                         }
@@ -87,7 +87,7 @@ class Group:
             MgmtV1.groupLoadAllForMemberPath,
             {
                 "tenantId": tenant_id,
-                "identifiers": identifiers,
+                "loginIds": login_ids,
                 "userIds": user_ids,
             },
             pswd=self._auth.management_key,
@@ -114,7 +114,7 @@ class Group:
                     "display": <display name>,
                     "members":[
                         {
-                            "identifier": <identifier>,
+                            "loginId": <loginId>,
                             "userId": <userId>,
                             "display": <display name>
                         }

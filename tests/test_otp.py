@@ -88,13 +88,13 @@ class TestOTP(unittest.TestCase):
     def test_compose_update_user_phone_body(self):
         self.assertEqual(
             OTP._compose_update_user_phone_body("dummy@dummy.com", "+11111111"),
-            {"externalId": "dummy@dummy.com", "phone": "+11111111"},
+            {"loginId": "dummy@dummy.com", "phone": "+11111111"},
         )
 
     def test_compose_update_user_email_body(self):
         self.assertEqual(
             OTP._compose_update_user_email_body("dummy@dummy.com", "dummy@dummy.com"),
-            {"externalId": "dummy@dummy.com", "email": "dummy@dummy.com"},
+            {"loginId": "dummy@dummy.com", "email": "dummy@dummy.com"},
         )
 
     def test_sign_up(self):
@@ -157,7 +157,7 @@ class TestOTP(unittest.TestCase):
                 )
             )
 
-        # Test flow where username set as empty and we used the identifier as default
+        # Test flow where username set as empty and we used the login_id as default
         signup_user_details = {
             "username": "",
             "name": "john",
@@ -181,7 +181,7 @@ class TestOTP(unittest.TestCase):
                 params=None,
                 data=json.dumps(
                     {
-                        "externalId": "dummy@dummy.com",
+                        "loginId": "dummy@dummy.com",
                         "user": {
                             "username": "",
                             "name": "john",
@@ -195,7 +195,7 @@ class TestOTP(unittest.TestCase):
                 verify=True,
             )
 
-        # Test user is None so using the identifier as default
+        # Test user is None so using the login_id as default
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
@@ -210,7 +210,7 @@ class TestOTP(unittest.TestCase):
                 params=None,
                 data=json.dumps(
                     {
-                        "externalId": "dummy@dummy.com",
+                        "loginId": "dummy@dummy.com",
                         "user": {"email": "dummy@dummy.com"},
                         "email": "dummy@dummy.com",
                     }

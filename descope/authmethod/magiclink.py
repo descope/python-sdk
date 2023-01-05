@@ -20,12 +20,12 @@ class MagicLink:
     def sign_in(
         self,
         method: DeliveryMethod,
-        identifier: str,
+        login_id: str,
         uri: str,
         loginOptions: LoginOptions = None,
         refreshToken: str = None,
     ) -> None:
-        if not identifier:
+        if not login_id:
             raise AuthException(
                 400,
                 ERROR_TYPE_INVALID_ARGUMENT,
@@ -34,31 +34,31 @@ class MagicLink:
 
         validateRefreshTokenProvided(loginOptions, refreshToken)
 
-        body = MagicLink._compose_signin_body(identifier, uri, loginOptions)
+        body = MagicLink._compose_signin_body(login_id, uri, loginOptions)
         uri = MagicLink._compose_signin_url(method)
 
         self._auth.do_post(uri, body, None, refreshToken)
 
     def sign_up(
-        self, method: DeliveryMethod, identifier: str, uri: str, user: dict = None
+        self, method: DeliveryMethod, login_id: str, uri: str, user: dict = None
     ) -> None:
 
         if not user:
             user = {}
 
-        if not self._auth.verify_delivery_method(method, identifier, user):
+        if not self._auth.verify_delivery_method(method, login_id, user):
             raise AuthException(
                 400,
                 ERROR_TYPE_INVALID_ARGUMENT,
-                f"Identifier {identifier} is not valid by delivery method {method}",
+                f"Login ID {login_id} is not valid by delivery method {method}",
             )
 
-        body = MagicLink._compose_signup_body(method, identifier, uri, user)
+        body = MagicLink._compose_signup_body(method, login_id, uri, user)
         uri = MagicLink._compose_signup_url(method)
         self._auth.do_post(uri, body, None)
 
-    def sign_up_or_in(self, method: DeliveryMethod, identifier: str, uri: str) -> None:
-        body = MagicLink._compose_signin_body(identifier, uri)
+    def sign_up_or_in(self, method: DeliveryMethod, login_id: str, uri: str) -> None:
+        body = MagicLink._compose_signin_body(login_id, uri)
         uri = MagicLink._compose_sign_up_or_in_url(method)
         self._auth.do_post(uri, body, None)
 
@@ -72,31 +72,29 @@ class MagicLink:
         )
         return jwt_response
 
-    def update_user_email(
-        self, identifier: str, email: str, refresh_token: str
-    ) -> None:
-        if not identifier:
+    def update_user_email(self, login_id: str, email: str, refresh_token: str) -> None:
+        if not login_id:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
             )
 
         Auth.validate_email(email)
 
-        body = MagicLink._compose_update_user_email_body(identifier, email)
+        body = MagicLink._compose_update_user_email_body(login_id, email)
         uri = EndpointsV1.updateUserEmailOTPPath
         self._auth.do_post(uri, body, None, refresh_token)
 
     def update_user_phone(
-        self, method: DeliveryMethod, identifier: str, phone: str, refresh_token: str
+        self, method: DeliveryMethod, login_id: str, phone: str, refresh_token: str
     ) -> None:
-        if not identifier:
+        if not login_id:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
             )
 
         Auth.validate_phone(method, phone)
 
-        body = MagicLink._compose_update_user_phone_body(identifier, phone)
+        body = MagicLink._compose_update_user_phone_body(login_id, phone)
         uri = EndpointsV1.updateUserPhoneOTPPath
         self._auth.do_post(uri, body, None, refresh_token)
 
@@ -118,12 +116,12 @@ class MagicLink:
 
     @staticmethod
     def _compose_signin_body(
-        identifier: string,
+        login_id: string,
         uri: string,
         loginOptions: LoginOptions = None,
     ) -> dict:
         return {
-            "externalId": identifier,
+            "loginId": login_id,
             "URI": uri,
             "loginOptions": loginOptions.__dict__ if loginOptions else {},
         }
@@ -131,15 +129,15 @@ class MagicLink:
     @staticmethod
     def _compose_signup_body(
         method: DeliveryMethod,
-        identifier: string,
+        login_id: string,
         uri: string,
         user: dict = None,
     ) -> dict:
-        body = {"externalId": identifier, "URI": uri}
+        body = {"loginId": login_id, "URI": uri}
 
         if user is not None:
             body["user"] = user
-            method_str, val = Auth.get_identifier_by_method(method, user)
+            method_str, val = Auth.get_login_id_by_method(method, user)
             body[method_str] = val
         return body
 
@@ -148,9 +146,9 @@ class MagicLink:
         return {"token": token}
 
     @staticmethod
-    def _compose_update_user_email_body(identifier: str, email: str) -> dict:
-        return {"externalId": identifier, "email": email}
+    def _compose_update_user_email_body(login_id: str, email: str) -> dict:
+        return {"loginId": login_id, "email": email}
 
     @staticmethod
-    def _compose_update_user_phone_body(identifier: str, phone: str) -> dict:
-        return {"externalId": identifier, "phone": phone}
+    def _compose_update_user_phone_body(login_id: str, phone: str) -> dict:
+        return {"loginId": login_id, "phone": phone}

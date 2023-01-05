@@ -52,7 +52,7 @@ class TestMagicLink(unittest.TestCase):
         self.assertEqual(
             MagicLink._compose_signin_body("id1", "uri1"),
             {
-                "externalId": "id1",
+                "loginId": "id1",
                 "URI": "uri1",
                 "loginOptions": {},
             },
@@ -62,7 +62,7 @@ class TestMagicLink(unittest.TestCase):
         self.assertEqual(
             MagicLink._compose_signin_body("id1", "uri1", lo),
             {
-                "externalId": "id1",
+                "loginId": "id1",
                 "URI": "uri1",
                 "loginOptions": {
                     "stepup": True,
@@ -77,7 +77,7 @@ class TestMagicLink(unittest.TestCase):
                 DeliveryMethod.EMAIL, "id1", "uri1", {"email": "email1"}
             ),
             {
-                "externalId": "id1",
+                "loginId": "id1",
                 "URI": "uri1",
                 "user": {"email": "email1"},
                 "email": "email1",
@@ -90,12 +90,12 @@ class TestMagicLink(unittest.TestCase):
 
         self.assertEqual(
             MagicLink._compose_update_user_email_body("id1", "email1"),
-            {"externalId": "id1", "email": "email1"},
+            {"loginId": "id1", "email": "email1"},
         )
 
         self.assertEqual(
             MagicLink._compose_update_user_phone_body("id1", "+11111111"),
-            {"externalId": "id1", "phone": "+11111111"},
+            {"loginId": "id1", "phone": "+11111111"},
         )
 
     def test_sign_in(self):
@@ -181,7 +181,7 @@ class TestMagicLink(unittest.TestCase):
                 )
             )
 
-        # Test flow where username not set and we used the identifier as default
+        # Test flow where username not set and we used the login_id as default
         signup_user_details = {
             "username": "",
             "name": "john",
@@ -207,7 +207,7 @@ class TestMagicLink(unittest.TestCase):
                 },
                 data=json.dumps(
                     {
-                        "externalId": "dummy@dummy.com",
+                        "loginId": "dummy@dummy.com",
                         "URI": "http://test.me",
                         "user": {
                             "username": "",
@@ -223,7 +223,7 @@ class TestMagicLink(unittest.TestCase):
                 params=None,
             )
 
-        # Test user is None so using the identifier as default
+        # Test user is None so using the login_id as default
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
@@ -242,7 +242,7 @@ class TestMagicLink(unittest.TestCase):
                 },
                 data=json.dumps(
                     {
-                        "externalId": "dummy@dummy.com",
+                        "loginId": "dummy@dummy.com",
                         "URI": "http://test.me",
                         "user": {"email": "dummy@dummy.com"},
                         "email": "dummy@dummy.com",

@@ -41,7 +41,7 @@ def webauthn_signup_start():
     data = request.get_json()
     user = data["user"]
     response = descope_client.webauthn.sign_up_start(
-        user["externalId"],
+        user["loginId"],
         data["origin"],
         user,
     )
@@ -60,7 +60,7 @@ def webauthn_signup_finish():
 @APP.route("/webauthn/signin/start", methods=["POST"])
 def webauthn_signin_start():
     data = request.get_json()
-    response = descope_client.webauthn.sign_in_start(data["externalId"], data["origin"])
+    response = descope_client.webauthn.sign_in_start(data["loginId"], data["origin"])
     return response
 
 
@@ -78,7 +78,7 @@ def webauthn_update_start():
     data = request.get_json()
     refresh_token = request.cookies.get("DSR")
     response = descope_client.webauthn.update_start(
-        data["externalId"], refresh_token, data["origin"]
+        data["loginId"], refresh_token, data["origin"]
     )
     return response
 

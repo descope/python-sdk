@@ -33,7 +33,7 @@ def main():
         logging.info("Going to signup / signin using Enchanted Link ...")
         email = input("Please insert email to signup / signin:\n")
         resp = descope_client.enchantedlink.sign_up_or_in(
-            identifier=email,
+            login_id=email,
             uri="http://test.me",
         )
 

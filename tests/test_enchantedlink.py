@@ -39,7 +39,7 @@ class TestEnchantedLink(unittest.TestCase):
         self.assertEqual(
             EnchantedLink._compose_signin_body("id1", "uri1"),
             {
-                "externalId": "id1",
+                "loginId": "id1",
                 "URI": "uri1",
                 "loginOptions": {},
             },
@@ -49,7 +49,7 @@ class TestEnchantedLink(unittest.TestCase):
         self.assertEqual(
             EnchantedLink._compose_signin_body("id1", "uri1", lo),
             {
-                "externalId": "id1",
+                "loginId": "id1",
                 "URI": "uri1",
                 "loginOptions": {
                     "stepup": True,
@@ -62,7 +62,7 @@ class TestEnchantedLink(unittest.TestCase):
         self.assertEqual(
             EnchantedLink._compose_signup_body("id1", "uri1", {"email": "email1"}),
             {
-                "externalId": "id1",
+                "loginId": "id1",
                 "URI": "uri1",
                 "user": {"email": "email1"},
                 "email": "email1",
@@ -75,7 +75,7 @@ class TestEnchantedLink(unittest.TestCase):
 
         self.assertEqual(
             EnchantedLink._compose_update_user_email_body("id1", "email1"),
-            {"externalId": "id1", "email": "email1"},
+            {"loginId": "id1", "email": "email1"},
         )
 
         self.assertEqual(
@@ -113,7 +113,7 @@ class TestEnchantedLink(unittest.TestCase):
                 params=None,
                 data=json.dumps(
                     {
-                        "externalId": "dummy@dummy.com",
+                        "loginId": "dummy@dummy.com",
                         "URI": "http://test.me",
                         "loginOptions": {},
                     }
@@ -143,7 +143,7 @@ class TestEnchantedLink(unittest.TestCase):
                 params=None,
                 data=json.dumps(
                     {
-                        "externalId": "dummy@dummy.com",
+                        "loginId": "dummy@dummy.com",
                         "URI": "http://test.me",
                         "loginOptions": {
                             "stepup": True,
@@ -188,7 +188,7 @@ class TestEnchantedLink(unittest.TestCase):
                 params=None,
                 data=json.dumps(
                     {
-                        "externalId": "dummy@dummy.com",
+                        "loginId": "dummy@dummy.com",
                         "URI": "http://test.me",
                         "user": {"username": "user1", "email": "dummy@dummy.com"},
                         "email": "dummy@dummy.com",
@@ -199,7 +199,7 @@ class TestEnchantedLink(unittest.TestCase):
             )
             self.assertEqual(res["pendingRef"], "aaaa")
 
-        # Test user is None so using the identifier as default
+        # Test user is None so using the login_id as default
         with patch("requests.post") as mock_post:
             data = json.loads("""{"pendingRef": "aaaa"}""")
             my_mock_response.json.return_value = data
@@ -218,7 +218,7 @@ class TestEnchantedLink(unittest.TestCase):
                 params=None,
                 data=json.dumps(
                     {
-                        "externalId": "dummy@dummy.com",
+                        "loginId": "dummy@dummy.com",
                         "URI": "http://test.me",
                         "user": {"email": "dummy@dummy.com"},
                         "email": "dummy@dummy.com",
@@ -250,7 +250,7 @@ class TestEnchantedLink(unittest.TestCase):
                 params=None,
                 data=json.dumps(
                     {
-                        "externalId": "dummy@dummy.com",
+                        "loginId": "dummy@dummy.com",
                         "URI": "http://test.me",
                         "loginOptions": {},
                     }

@@ -38,7 +38,7 @@ class TestUser(unittest.TestCase):
             self.assertRaises(
                 AuthException,
                 client.mgmt.user.create,
-                "valid-identifier",
+                "valid-id",
             )
 
         # Test success flow
@@ -48,7 +48,7 @@ class TestUser(unittest.TestCase):
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_post.return_value = network_resp
             resp = client.mgmt.user.create(
-                identifier="name@mail.com",
+                login_id="name@mail.com",
                 email="name@mail.com",
                 display_name="Name",
                 user_tenants=[
@@ -67,7 +67,7 @@ class TestUser(unittest.TestCase):
                 params=None,
                 data=json.dumps(
                     {
-                        "identifier": "name@mail.com",
+                        "loginId": "name@mail.com",
                         "email": "name@mail.com",
                         "phoneNumber": None,
                         "displayName": "Name",
@@ -96,7 +96,7 @@ class TestUser(unittest.TestCase):
             self.assertRaises(
                 AuthException,
                 client.mgmt.user.update,
-                "valid-identifier",
+                "valid-id",
                 "email@something.com",
             )
 
@@ -105,7 +105,7 @@ class TestUser(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.user.update(
-                    "identifier",
+                    "id",
                     display_name="new-name",
                     role_names=["domain.com"],
                 )
@@ -119,7 +119,7 @@ class TestUser(unittest.TestCase):
                 params=None,
                 data=json.dumps(
                     {
-                        "identifier": "identifier",
+                        "loginId": "id",
                         "email": None,
                         "phoneNumber": None,
                         "displayName": "new-name",
@@ -161,7 +161,7 @@ class TestUser(unittest.TestCase):
                 params=None,
                 data=json.dumps(
                     {
-                        "identifier": "u1",
+                        "loginId": "u1",
                     }
                 ),
                 allow_redirects=False,
@@ -200,7 +200,7 @@ class TestUser(unittest.TestCase):
                     **common.defaultHeaders,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
-                params={"identifier": "valid-id"},
+                params={"loginId": "valid-id"},
                 allow_redirects=None,
                 verify=True,
             )

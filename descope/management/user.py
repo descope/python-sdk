@@ -16,7 +16,7 @@ class User:
 
     def create(
         self,
-        identifier: str,
+        login_id: str,
         email: str = None,
         phone_number: str = None,
         display_name: str = None,
@@ -27,7 +27,7 @@ class User:
         Create a new user. Users can have any number of optional fields, including email, phone number and authorization.
 
         Args:
-        identifier (str): user identifier.
+        login_id (str): user login ID.
         email (str): Optional user email address.
         phone_number (str): Optional user phone number.
         display_name (str): Optional user display name.
@@ -47,7 +47,7 @@ class User:
         response = self._auth.do_post(
             MgmtV1.userCreatePath,
             User._compose_create_update_body(
-                identifier, email, phone_number, display_name, role_names, user_tenants
+                login_id, email, phone_number, display_name, role_names, user_tenants
             ),
             pswd=self._auth.management_key,
         )
@@ -55,7 +55,7 @@ class User:
 
     def update(
         self,
-        identifier: str,
+        login_id: str,
         email: str = None,
         phone_number: str = None,
         display_name: str = None,
@@ -67,7 +67,7 @@ class User:
         to the existing user. Empty fields will override populated fields. Use carefully.
 
         Args:
-        identifier (str): The identifier of the user to update.
+        login_id (str): The login ID of the user to update.
         email (str): Optional user email address.
         phone_number (str): Optional user phone number.
         display_name (str): Optional user display name.
@@ -82,39 +82,39 @@ class User:
         self._auth.do_post(
             MgmtV1.userUpdatePath,
             User._compose_create_update_body(
-                identifier, email, phone_number, display_name, role_names, user_tenants
+                login_id, email, phone_number, display_name, role_names, user_tenants
             ),
             pswd=self._auth.management_key,
         )
 
     def delete(
         self,
-        identifier: str,
+        login_id: str,
     ):
         """
         Delete an existing user. IMPORTANT: This action is irreversible. Use carefully.
 
         Args:
-        identifier (str): The identifier of the user to be deleted.
+        login_id (str): The login ID of the user to be deleted.
 
         Raise:
         AuthException: raised if creation operation fails
         """
         self._auth.do_post(
             MgmtV1.userDeletePath,
-            {"identifier": identifier},
+            {"loginId": login_id},
             pswd=self._auth.management_key,
         )
 
     def load(
         self,
-        identifier: str,
+        login_id: str,
     ) -> dict:
         """
         Load an existing user.
 
         Args:
-        identifier (str): The identifier of the user to be loaded.
+        login_id (str): The login ID of the user to be loaded.
 
         Return value (dict):
         Return dict in the format
@@ -126,7 +126,7 @@ class User:
         """
         response = self._auth.do_get(
             MgmtV1.userLoadPath,
-            {"identifier": identifier},
+            {"loginId": login_id},
             pswd=self._auth.management_key,
         )
         return response.json()
@@ -188,7 +188,7 @@ class User:
 
     @staticmethod
     def _compose_create_update_body(
-        identifier: str,
+        login_id: str,
         email: str,
         phone_number: str,
         display_name: str,
@@ -196,7 +196,7 @@ class User:
         user_tenants: List[AssociatedTenant],
     ) -> dict:
         return {
-            "identifier": identifier,
+            "loginId": login_id,
             "email": email,
             "phoneNumber": phone_number,
             "displayName": display_name,

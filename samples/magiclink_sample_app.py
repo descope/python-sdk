@@ -25,7 +25,7 @@ def main():
         email = input("Please insert email to signup / signin:\n")
         descope_client.magiclink.sign_up_or_in(
             method=DeliveryMethod.EMAIL,
-            identifier=email,
+            login_id=email,
             uri="http://test.me",
         )
 
@@ -48,7 +48,7 @@ def main():
 
         logging.info("Going to sign in same user again...")
         descope_client.magiclink.sign_in(
-            method=DeliveryMethod.EMAIL, identifier=email, uri="http://test.me"
+            method=DeliveryMethod.EMAIL, login_id=email, uri="http://test.me"
         )
 
         token = input("Please insert the Token you received by email:\n")

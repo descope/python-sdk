@@ -143,10 +143,10 @@
     }
 
     async function performRegister() {
-      const identifier = ensureUsername()
+      const loginId = ensureUsername()
       const name = "John Appleseed"
       try {
-        await register(identifier, name)
+        await register(loginId, name)
         alert('Register succeeded')
       } catch (err) {
         console.error('Register failed', err)
@@ -155,9 +155,9 @@
     }
 
     async function performLogin() {
-      const identifier = ensureUsername()
+      const loginId = ensureUsername()
       try {
-        await login(identifier)
+        await login(loginId)
         alert('Login succeeded')
       } catch (err) {
         console.error('Login failed', err)
@@ -166,9 +166,9 @@
     }
 
     async function performAdd() {
-      const identifier = ensureUsername()
+      const loginId = ensureUsername()
       try {
-        await add(identifier)
+        await add(loginId)
         alert('Add device succeeded')
       } catch (err) {
         console.error('Add device failed', err)
@@ -178,9 +178,9 @@
 
     /// Operations
 
-    async function register(identifier, name, origin) {
+    async function register(loginId, name, origin) {
       const user = {
-        externalId: identifier,
+        loginId,
         name,
       }
 
@@ -202,9 +202,9 @@
       console.log('Received register finish response', finishResponse)
     }
 
-    async function login(identifier) {
+    async function login(loginId) {
       const startResponse = await serverPost('webauthn/signin/start', {
-        externalId: identifier,
+        loginId,
 		    origin: window.location.origin,
       })
       console.log('Received login start response', startResponse)
@@ -221,9 +221,9 @@
       console.log('Received login finish response', finishResponse)
     }
 
-    async function add(identifier) {
+    async function add(loginId) {
       const startResponse = await serverPost('webauthn/device/add/start', {
-        externalId: identifier,
+        loginId,
 		origin: window.location.origin,
       })
       console.log('Received add device start response', startResponse)

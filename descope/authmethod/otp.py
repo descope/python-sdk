@@ -18,24 +18,24 @@ class OTP:
     def sign_in(
         self,
         method: DeliveryMethod,
-        identifier: str,
+        login_id: str,
         loginOptions: LoginOptions = None,
         refreshToken: str = None,
     ) -> None:
         """
-        Sign in (log in) an existing user with the unique identifier you provide. (See 'sign_up' function for an explanation of the
-            identifier field.) Provide the DeliveryMethod required for this user. If the identifier value cannot be used for the
-            DeliverMethod selected (for example, 'identifier = 4567qq445km' and 'DeliveryMethod = email')
+        Sign in (log in) an existing user with the unique login_id you provide. (See 'sign_up' function for an explanation of the
+            login_id field.) Provide the DeliveryMethod required for this user. If the login_id value cannot be used for the
+            DeliverMethod selected (for example, 'login_id = 4567qq445km' and 'DeliveryMethod = email')
 
         Args:
         method (DeliveryMethod): The method to use for delivering the OTP verification code to the user, for example
             email, SMS, or WhatsApp
-        identifier (str): The identifier of the user being validated for example phone or email
+        login_id (str): The login ID of the user being validated for example phone or email
 
         Raise:
         AuthException: raised if sign-in operation fails
         """
-        if not identifier:
+        if not login_id:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
             )
@@ -43,12 +43,10 @@ class OTP:
         validateRefreshTokenProvided(loginOptions, refreshToken)
 
         uri = OTP._compose_signin_url(method)
-        body = OTP._compose_signin_body(identifier, loginOptions)
+        body = OTP._compose_signin_body(login_id, loginOptions)
         self._auth.do_post(uri, body, refreshToken)
 
-    def sign_up(
-        self, method: DeliveryMethod, identifier: str, user: dict = None
-    ) -> None:
+    def sign_up(self, method: DeliveryMethod, login_id: str, user: dict = None) -> None:
         """
         Sign up (create) a new user using their email or phone number. Choose a delivery method for OTP
             verification, for example email, SMS, or WhatsApp.
@@ -56,7 +54,7 @@ class OTP:
 
         Args:
         method (DeliveryMethod): The method to use for delivering the OTP verification code, for example phone or email
-        identifier (str): The identifier of the user being validated
+        login_id (str): The login ID of the user being validated
         user (dict) optional: Preserve additional user metadata in the form of
              {"name": "Joe Person", "phone": "2125551212", "email": "joe@somecompany.com"}
 
@@ -67,48 +65,48 @@ class OTP:
         if not user:
             user = {}
 
-        if not self._auth.verify_delivery_method(method, identifier, user):
+        if not self._auth.verify_delivery_method(method, login_id, user):
             raise AuthException(
                 400,
                 ERROR_TYPE_INVALID_ARGUMENT,
-                f"Identifier {identifier} is not valid by delivery method {method}",
+                f"Login ID {login_id} is not valid by delivery method {method}",
             )
 
         uri = OTP._compose_signup_url(method)
-        body = OTP._compose_signup_body(method, identifier, user)
+        body = OTP._compose_signup_body(method, login_id, user)
         self._auth.do_post(uri, body)
 
-    def sign_up_or_in(self, method: DeliveryMethod, identifier: str) -> None:
+    def sign_up_or_in(self, method: DeliveryMethod, login_id: str) -> None:
         """
         Sign_up_or_in lets you handle both sign up and sign in with a single call. Sign-up_or_in will first determine if
-            identifier is a new or existing end user. If identifier is new, a new end user user will be created and then
-            authenticated using the OTP DeliveryMethod specified. If identifier exists, the end user will be authenticated
+            login_id is a new or existing end user. If login_id is new, a new end user user will be created and then
+            authenticated using the OTP DeliveryMethod specified. If login_id exists, the end user will be authenticated
             using the OTP DeliveryMethod specified.
 
         Args:
         method (DeliveryMethod): The method to use for delivering the OTP verification code, for example phone or email
-        identifier (str): The identifier of the user being validated
+        login_id (str): The Login ID of the user being validated
 
         Raise:
         AuthException: raised if either the sign_up or sign_in operation fails
         """
-        if not identifier:
+        if not login_id:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
             )
 
         uri = OTP._compose_sign_up_or_in_url(method)
-        body = OTP._compose_signin_body(identifier)
+        body = OTP._compose_signin_body(login_id)
         self._auth.do_post(uri, body)
 
-    def verify_code(self, method: DeliveryMethod, identifier: str, code: str) -> dict:
+    def verify_code(self, method: DeliveryMethod, login_id: str, code: str) -> dict:
         """
         Verify the validity of an OTP code entered by an end user during sign_in or sign_up.
         (This function is not needed if you are using the sign_up_or_in function.
 
         Args:
         method (DeliveryMethod): The method to use for delivering the OTP verification code, for example phone or email
-        identifier (str): The identifier of the user being validated
+        login_id (str): The Login ID of the user being validated
         code (str): The authorization code enter by the end user during signup/signin
 
         Return value (dict):
@@ -119,13 +117,13 @@ class OTP:
         Raise:
         AuthException: raised if the OTP code is not valid or if token verification failed
         """
-        if not identifier:
+        if not login_id:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
             )
 
         uri = OTP._compose_verify_code_url(method)
-        body = OTP._compose_verify_code_body(identifier, code)
+        body = OTP._compose_verify_code_body(login_id, code)
         response = self._auth.do_post(uri, body, None)
 
         resp = response.json()
@@ -134,14 +132,12 @@ class OTP:
         )
         return jwt_response
 
-    def update_user_email(
-        self, identifier: str, email: str, refresh_token: str
-    ) -> None:
+    def update_user_email(self, login_id: str, email: str, refresh_token: str) -> None:
         """
         Update the email address of an end user, after verifying the authenticity of the end user using OTP.
 
         Args:
-        identifier (str): The identifier of the user whose information is being updated
+        login_id (str): The login ID of the user whose information is being updated
         email (str): The new email address. If an email address already exists for this end user, it will be overwritten
         refresh_token (str): The session's refresh token (used for verification)
 
@@ -149,7 +145,7 @@ class OTP:
         AuthException: raised if OTP verification fails or if token verification fails
         """
 
-        if not identifier:
+        if not login_id:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
             )
@@ -157,18 +153,18 @@ class OTP:
         Auth.validate_email(email)
 
         uri = EndpointsV1.updateUserEmailOTPPath
-        body = OTP._compose_update_user_email_body(identifier, email)
+        body = OTP._compose_update_user_email_body(login_id, email)
         self._auth.do_post(uri, body, None, refresh_token)
 
     def update_user_phone(
-        self, method: DeliveryMethod, identifier: str, phone: str, refresh_token: str
+        self, method: DeliveryMethod, login_id: str, phone: str, refresh_token: str
     ) -> None:
         """
         Update the phone number of an existing end user, after verifying the authenticity of the end user using OTP.
 
         Args:
         method (DeliveryMethod): The method to use for delivering the OTP verification code, for example phone or email
-        identifier (str): The identifier of the user whose information is being updated
+        login_id (str): The login ID of the user whose information is being updated
         phone (str): The new phone number. If a phone number already exists for this end user, it will be overwritten
         refresh_token (str): The session's refresh token (used for OTP verification)
 
@@ -176,7 +172,7 @@ class OTP:
         AuthException: raised if OTP verification fails or if token verification fails
         """
 
-        if not identifier:
+        if not login_id:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
             )
@@ -184,7 +180,7 @@ class OTP:
         Auth.validate_phone(method, phone)
 
         uri = OTP._compose_update_phone_url(method)
-        body = OTP._compose_update_user_phone_body(identifier, phone)
+        body = OTP._compose_update_user_phone_body(login_id, phone)
         self._auth.do_post(uri, body, None, refresh_token)
 
     @staticmethod
@@ -208,34 +204,30 @@ class OTP:
         return Auth.compose_url(EndpointsV1.updateUserPhoneOTPPath, method)
 
     @staticmethod
-    def _compose_signup_body(
-        method: DeliveryMethod, identifier: str, user: dict
-    ) -> dict:
-        body = {"externalId": identifier}
+    def _compose_signup_body(method: DeliveryMethod, login_id: str, user: dict) -> dict:
+        body = {"loginId": login_id}
 
         if user is not None:
             body["user"] = user
-            method_str, val = Auth.get_identifier_by_method(method, user)
+            method_str, val = Auth.get_login_id_by_method(method, user)
             body[method_str] = val
         return body
 
     @staticmethod
-    def _compose_signin_body(
-        identifier: str, loginOptions: LoginOptions = None
-    ) -> dict:
+    def _compose_signin_body(login_id: str, loginOptions: LoginOptions = None) -> dict:
         return {
-            "externalId": identifier,
+            "loginId": login_id,
             "loginOptions": loginOptions.__dict__ if loginOptions else {},
         }
 
     @staticmethod
-    def _compose_verify_code_body(identifier: str, code: str) -> dict:
-        return {"externalId": identifier, "code": code}
+    def _compose_verify_code_body(login_id: str, code: str) -> dict:
+        return {"loginId": login_id, "code": code}
 
     @staticmethod
-    def _compose_update_user_email_body(identifier: str, email: str) -> dict:
-        return {"externalId": identifier, "email": email}
+    def _compose_update_user_email_body(login_id: str, email: str) -> dict:
+        return {"loginId": login_id, "email": email}
 
     @staticmethod
-    def _compose_update_user_phone_body(identifier: str, phone: str) -> dict:
-        return {"externalId": identifier, "phone": phone}
+    def _compose_update_user_phone_body(login_id: str, phone: str) -> dict:
+        return {"loginId": login_id, "phone": phone}

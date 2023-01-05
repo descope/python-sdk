@@ -202,25 +202,25 @@ class TestAuth(unittest.TestCase):
             False,
         )
 
-    def test_get_identifier_name_by_method(self):
+    def test_get_login_id_name_by_method(self):
         user = {"email": "dummy@dummy.com", "phone": "11111111"}
         self.assertEqual(
-            Auth.get_identifier_by_method(DeliveryMethod.EMAIL, user),
+            Auth.get_login_id_by_method(DeliveryMethod.EMAIL, user),
             ("email", "dummy@dummy.com"),
         )
         self.assertEqual(
-            Auth.get_identifier_by_method(DeliveryMethod.PHONE, user),
+            Auth.get_login_id_by_method(DeliveryMethod.PHONE, user),
             ("phone", "11111111"),
         )
         self.assertEqual(
-            Auth.get_identifier_by_method(DeliveryMethod.WHATSAPP, user),
+            Auth.get_login_id_by_method(DeliveryMethod.WHATSAPP, user),
             ("whatsapp", "11111111"),
         )
 
         class AAA(Enum):
             DUMMY = 4
 
-        self.assertRaises(AuthException, Auth.get_identifier_by_method, AAA.DUMMY, user)
+        self.assertRaises(AuthException, Auth.get_login_id_by_method, AAA.DUMMY, user)
 
     def test_compose_refresh_token_url(self):
         self.assertEqual(

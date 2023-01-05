@@ -22,12 +22,12 @@ def main():
         descope_client = DescopeClient(project_id=project_id)
         logging.info("Going to sign in using OTP...")
         email = input("Please insert email to signin:\n")
-        descope_client.otp.sign_up_or_in(method=DeliveryMethod.EMAIL, identifier=email)
+        descope_client.otp.sign_up_or_in(method=DeliveryMethod.EMAIL, login_id=email)
 
         value = input("Please insert the code you received by email:\n")
         try:
             jwt_response = descope_client.otp.verify_code(
-                method=DeliveryMethod.EMAIL, identifier=email, code=value
+                method=DeliveryMethod.EMAIL, login_id=email, code=value
             )
             logging.info("Code is valid")
             session_token = jwt_response[SESSION_TOKEN_NAME].get("jwt")
@@ -37,25 +37,25 @@ def main():
             phone = input("Please insert phone to add to your account:\n")
             descope_client.otp.update_user_phone(
                 method=DeliveryMethod.PHONE,
-                identifier=email,
+                login_id=email,
                 phone=phone,
                 refresh_token=refresh_token,
             )
             value = input("Please insert the code you received by sms:\n")
             jwt_response = descope_client.otp.verify_code(
-                method=DeliveryMethod.PHONE, identifier=email, code=value
+                method=DeliveryMethod.PHONE, login_id=email, code=value
             )
             logging.info("Code is valid")
             session_token = jwt_response[SESSION_TOKEN_NAME].get("jwt")
             refresh_token = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("jwt")
 
             # Now start all over again, and do a stepup flow with given email and phone
-            descope_client.otp.sign_in(method=DeliveryMethod.EMAIL, identifier=email)
+            descope_client.otp.sign_in(method=DeliveryMethod.EMAIL, login_id=email)
             value = input(
                 "Please insert the code you received by email to start stepup flow:\n"
             )
             jwt_response = descope_client.otp.verify_code(
-                method=DeliveryMethod.EMAIL, identifier=email, code=value
+                method=DeliveryMethod.EMAIL, login_id=email, code=value
             )
             logging.info("Initial login is valid, lets continue to the stepup")
             session_token = jwt_response[SESSION_TOKEN_NAME].get("jwt")
@@ -63,7 +63,7 @@ def main():
 
             descope_client.otp.sign_in(
                 method=DeliveryMethod.PHONE,
-                identifier=email,
+                login_id=email,
                 loginOptions=common.LoginOptions(True, {"k1": "v1"}),
                 refreshToken=refresh_token,
             )
@@ -71,7 +71,7 @@ def main():
                 "Please insert the code you received by sms to complete stepup:\n"
             )
             jwt_response = descope_client.otp.verify_code(
-                method=DeliveryMethod.PHONE, identifier=email, code=value
+                method=DeliveryMethod.PHONE, login_id=email, code=value
             )
 
             logging.info("Code is valid, user properly stepped up")
