@@ -43,7 +43,7 @@ The user can either `sign up`, `sign in` or `sign up or in`
 ```python
 from descope import DeliveryMethod
 
-# Every user must have an login ID. All other user information is optional
+# Every user must have a login ID. All other user information is optional
 email = "desmond@descope.com"
 user = {"name": "Desmond Copeland", "phone": "212-555-1234", "email": email}
 descope_client.otp.sign_up(method=DeliveryMethod.EMAIL, login_id=email, user=user)
@@ -207,7 +207,7 @@ Existing users can add TOTP using the `update` function.
 ```python
 from descope import DeliveryMethod
 
-# Every user must have an login ID. All other user information is optional
+# Every user must have a login ID. All other user information is optional
 email = "desmond@descope.com"
 user = {"name": "Desmond Copeland", "phone": "212-555-1234", "email": email}
 totp_response = descope_client.totp.sign_up(method=DeliveryMethod.EMAIL, login_id=email, user=user)
@@ -353,7 +353,7 @@ tenants = tenants_resp["tenants"]
 You can create, update, delete or load users, as well as search according to filters:
 
 ```Python
-# A user must have an login ID, other fields are optional.
+# A user must have a login ID, other fields are optional.
 # Roles should be set directly if no tenants exist, otherwise set
 # on a per-tenant basis.
 descope_client.mgmt.user.create(
