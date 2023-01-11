@@ -30,7 +30,7 @@ class EnchantedLink:
             raise AuthException(
                 400,
                 ERROR_TYPE_INVALID_ARGUMENT,
-                "Identifier is empty",
+                "login_id is empty",
             )
 
         validateRefreshTokenProvided(loginOptions, refreshToken)
