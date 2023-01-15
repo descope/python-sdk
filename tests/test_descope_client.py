@@ -4,7 +4,14 @@ from copy import deepcopy
 from unittest import mock
 from unittest.mock import patch
 
-from descope import SESSION_COOKIE_NAME, AuthException, DescopeClient
+from descope import (
+    API_RATE_LIMIT_RETRY_AFTER_HEADER,
+    ERROR_TYPE_API_RATE_LIMIT,
+    SESSION_COOKIE_NAME,
+    AuthException,
+    DescopeClient,
+    RateLimitException,
+)
 from descope.common import SESSION_TOKEN_NAME
 
 
@@ -240,6 +247,24 @@ class TestDescopeClient(unittest.TestCase):
         self.assertEqual(ex.status_code, 401)
         self.assertEqual(ex.error_type, "dummy-type")
         self.assertEqual(ex.error_message, "dummy error message")
+
+    def test_api_rate_limit_exception_object(self):
+        ex = RateLimitException(
+            429,
+            ERROR_TYPE_API_RATE_LIMIT,
+            "API rate limit exceeded description",
+            "API rate limit exceeded",
+            {API_RATE_LIMIT_RETRY_AFTER_HEADER: "9"},
+        )
+        self.assertIsNotNone(str(ex))
+        self.assertIsNotNone(repr(ex))
+        self.assertEqual(ex.status_code, 429)
+        self.assertEqual(ex.error_type, ERROR_TYPE_API_RATE_LIMIT)
+        self.assertEqual(ex.error_description, "API rate limit exceeded description")
+        self.assertEqual(ex.error_message, "API rate limit exceeded")
+        self.assertEqual(
+            ex.rate_limit_parameters.get(API_RATE_LIMIT_RETRY_AFTER_HEADER, ""), "9"
+        )
 
     def test_expired_token(self):
         expired_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg5NzI4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEUyIsImNvb2tpZVBhdGgiOiIvIiwiZXhwIjoxNjU3Nzk4MzI4LCJpYXQiOjE2NTc3OTc3MjgsImlzcyI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInN1YiI6IjJCdEVIa2dPdTAybG1NeHpQSWV4ZE10VXcxTSJ9.i-JoPoYmXl3jeLTARvYnInBiRdTT4uHZ3X3xu_n1dhUb1Qy_gqK7Ru8ErYXeENdfPOe4mjShc_HsVyb5PjE2LMFmb58WR8wixtn0R-u_MqTpuI_422Dk6hMRjTFEVRWu"

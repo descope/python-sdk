@@ -23,11 +23,14 @@ from descope.common import (
     EndpointsV2,
 )
 from descope.exceptions import (
+    API_RATE_LIMIT_RETRY_AFTER_HEADER,
+    ERROR_TYPE_API_RATE_LIMIT,
     ERROR_TYPE_INVALID_ARGUMENT,
     ERROR_TYPE_INVALID_PUBLIC_KEY,
     ERROR_TYPE_INVALID_TOKEN,
     ERROR_TYPE_SERVER_ERROR,
     AuthException,
+    RateLimitException,
 )
 
 
@@ -89,6 +92,19 @@ class Auth:
             verify=self.secure,
         )
         if not response.ok:
+            if response.status_code == 429:
+                resp = response.json()
+                raise RateLimitException(
+                    resp.get("errorCode", "429"),
+                    ERROR_TYPE_API_RATE_LIMIT,
+                    resp.get("errorDescription", ""),
+                    resp.get("message", ""),
+                    rate_limit_parameters={
+                        API_RATE_LIMIT_RETRY_AFTER_HEADER: response.headers.get(
+                            API_RATE_LIMIT_RETRY_AFTER_HEADER, None
+                        )
+                    },
+                )
             raise AuthException(
                 response.status_code, ERROR_TYPE_SERVER_ERROR, response.text
             )
@@ -106,6 +122,20 @@ class Auth:
             params=params,
         )
         if not response.ok:
+            if response.status_code == 429:
+                resp = response.json()
+                raise RateLimitException(
+                    resp.get("errorCode", "429"),
+                    ERROR_TYPE_API_RATE_LIMIT,
+                    resp.get("errorDescription", ""),
+                    resp.get("message", ""),
+                    rate_limit_parameters={
+                        API_RATE_LIMIT_RETRY_AFTER_HEADER: response.headers.get(
+                            API_RATE_LIMIT_RETRY_AFTER_HEADER, None
+                        )
+                    },
+                )
+
             raise AuthException(
                 response.status_code, ERROR_TYPE_SERVER_ERROR, response.text
             )
