@@ -256,7 +256,7 @@ class User:
         Containing the updated user information.
 
         Raise:
-        AuthException: raised if activate operation fails
+        AuthException: raised if the update operation fails
         """
         response = self._auth.do_post(
             MgmtV1.userUpdateEmailPath,
@@ -285,7 +285,7 @@ class User:
         Containing the updated user information.
 
         Raise:
-        AuthException: raised if activate operation fails
+        AuthException: raised if the update operation fails
         """
         response = self._auth.do_post(
             MgmtV1.userUpdatePhonePath,
@@ -312,7 +312,7 @@ class User:
         Containing the updated user information.
 
         Raise:
-        AuthException: raised if activate operation fails
+        AuthException: raised if the update operation fails
         """
         response = self._auth.do_post(
             MgmtV1.userUpdateNamePath,
@@ -340,7 +340,7 @@ class User:
         Containing the updated user information.
 
         Raise:
-        AuthException: raised if activate operation fails
+        AuthException: raised if the operation fails
         """
         response = self._auth.do_post(
             MgmtV1.userAddRolePath,
@@ -368,7 +368,7 @@ class User:
         Containing the updated user information.
 
         Raise:
-        AuthException: raised if activate operation fails
+        AuthException: raised if the operation fails
         """
         response = self._auth.do_post(
             MgmtV1.userRemoveRolePath,
@@ -395,7 +395,7 @@ class User:
         Containing the updated user information.
 
         Raise:
-        AuthException: raised if activate operation fails
+        AuthException: raised if the operation fails
         """
         response = self._auth.do_post(
             MgmtV1.userAddTenantPath,
@@ -422,7 +422,7 @@ class User:
         Containing the updated user information.
 
         Raise:
-        AuthException: raised if activate operation fails
+        AuthException: raised if the operation fails
         """
         response = self._auth.do_post(
             MgmtV1.userRemoveTenantPath,
@@ -451,7 +451,7 @@ class User:
         Containing the updated user information.
 
         Raise:
-        AuthException: raised if activate operation fails
+        AuthException: raised if the operation fails
         """
         response = self._auth.do_post(
             MgmtV1.userAddRolePath,
@@ -480,7 +480,7 @@ class User:
         Containing the updated user information.
 
         Raise:
-        AuthException: raised if activate operation fails
+        AuthException: raised if the operation fails
         """
         response = self._auth.do_post(
             MgmtV1.userRemoveRolePath,
