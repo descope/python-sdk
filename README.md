@@ -375,6 +375,18 @@ descope_client.mgmt.user.update(
     ],
 )
 
+# Update explicit data for a user rather than overriding all fields
+descope_client.mgmt.user.update_phone(
+    login_id="desmond@descope.com",
+    phone="+18005551234",
+    verified=True,
+)
+descope_client.mgmt.user.remove_tenant_roles(
+    login_id="desmond@descope.com",
+    tenant_id="my-tenant-id",
+    role_names=["role-name1"],
+)
+
 # User deletion cannot be undone. Use carefully.
 descope_client.mgmt.user.delete("desmond@descope.com")
 
