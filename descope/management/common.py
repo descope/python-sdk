@@ -14,6 +14,14 @@ class MgmtV1:
     userDeletePath = "/v1/mgmt/user/delete"
     userLoadPath = "/v1/mgmt/user"
     usersSearchPath = "/v1/mgmt/user/search"
+    userUpdateStatusPath = "/v1/mgmt/user/update/status"
+    userUpdateEmailPath = "/v1/mgmt/user/update/email"
+    userUpdatePhonePath = "/v1/mgmt/user/update/phone"
+    userUpdateNamePath = "/v1/mgmt/user/update/name"
+    userAddRolePath = "/v1/mgmt/user/update/role/add"
+    userRemoveRolePath = "/v1/mgmt/user/update/role/remove"
+    userAddTenantPath = "/v1/mgmt/user/update/tenant/add"
+    userRemoveTenantPath = "/v1/mgmt/user/update/tenant/remove"
 
     # access key
     accessKeyCreatePath = "/v1/mgmt/accesskey/create"
