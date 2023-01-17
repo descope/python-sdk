@@ -76,20 +76,20 @@ class Auth:
             else:
                 kid, pub_key, alg = self._validate_and_load_public_key(public_key)
                 self.public_keys = {kid: (pub_key, alg)}
-    
+
     def _raise_rate_limit_exception(self, response):
         resp = response.json()
         raise RateLimitException(
-                    resp.get("errorCode", "429"),
-                    ERROR_TYPE_API_RATE_LIMIT,
-                    resp.get("errorDescription", ""),
-                    resp.get("message", ""),
-                    rate_limit_parameters={
-                        API_RATE_LIMIT_RETRY_AFTER_HEADER: response.headers.get(
-                            API_RATE_LIMIT_RETRY_AFTER_HEADER, None
-                        )
-                    },
+            resp.get("errorCode", "429"),
+            ERROR_TYPE_API_RATE_LIMIT,
+            resp.get("errorDescription", ""),
+            resp.get("message", ""),
+            rate_limit_parameters={
+                API_RATE_LIMIT_RETRY_AFTER_HEADER: response.headers.get(
+                    API_RATE_LIMIT_RETRY_AFTER_HEADER, None
                 )
+            },
+        )
 
     def do_get(
         self,
@@ -107,7 +107,7 @@ class Auth:
         )
         if not response.ok:
             if response.status_code == 429:
-                self._raise_rate_limit_exception(response) # Raise RateLimitException
+                self._raise_rate_limit_exception(response)  # Raise RateLimitException
             raise AuthException(
                 response.status_code, ERROR_TYPE_SERVER_ERROR, response.text
             )
@@ -126,7 +126,7 @@ class Auth:
         )
         if not response.ok:
             if response.status_code == 429:
-                self._raise_rate_limit_exception(response) # Raise RateLimitException
+                self._raise_rate_limit_exception(response)  # Raise RateLimitException
 
             raise AuthException(
                 response.status_code, ERROR_TYPE_SERVER_ERROR, response.text
