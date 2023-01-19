@@ -83,7 +83,7 @@ class Auth:
             resp.get("errorCode", "429"),
             ERROR_TYPE_API_RATE_LIMIT,
             resp.get("errorDescription", ""),
-            resp.get("message", ""),
+            resp.get("errorMessage", ""),
             rate_limit_parameters={
                 API_RATE_LIMIT_RETRY_AFTER_HEADER: response.headers.get(
                     API_RATE_LIMIT_RETRY_AFTER_HEADER, None
