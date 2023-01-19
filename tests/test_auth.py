@@ -364,7 +364,7 @@ class TestAuth(unittest.TestCase):
             mock_request.return_value.json.return_value = {
                 "errorCode": "E130429",
                 "errorDescription": "https://docs.descope.com/rate-limit",
-                "message": "API rate limit exceeded.",
+                "errorMessage": "API rate limit exceeded.",
             }
             mock_request.return_value.headers = {
                 API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"
@@ -390,7 +390,7 @@ class TestAuth(unittest.TestCase):
             mock_request.return_value.json.return_value = {
                 "errorCode": "E130429",
                 "errorDescription": "https://docs.descope.com/rate-limit",
-                "message": "API rate limit exceeded.",
+                "errorMessage": "API rate limit exceeded.",
             }
             mock_request.return_value.headers = {
                 API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"
