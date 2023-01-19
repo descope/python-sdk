@@ -73,7 +73,6 @@ class SSOSettings:
 
         Args:
         tenant_id (str): The tenant ID to be configured
-        enabled (bool): Is SSO enabled
         idp_metadata_url (str): The URL to fetch SSO settings from.
 
         Raise:
