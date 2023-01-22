@@ -104,7 +104,7 @@ def descope_validate_auth(descope_client, permissions=[], tenant=""):
             session_token = cookies.get(SESSION_COOKIE_NAME, None)
             refresh_token = cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
             try:
-                jwt_response = descope_client.validate_session_request(
+                jwt_response = descope_client.validate_and_refresh_session(
                     session_token, refresh_token
                 )
 

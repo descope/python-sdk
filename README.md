@@ -237,18 +237,28 @@ The session and refresh JWTs should be returned to the caller, and passed with e
 ### Session Validation
 
 Every secure request performed between your client and server needs to be validated. The client sends
-the session and refresh tokens with every request, and they are validated using:
+the session and refresh tokens with every request, and they are validated using one of the following:
 
 ```python
-jwt_response = descope_client.validate_session_request(session_token, refresh_token)
+# Validate the session. Will raise if expired
+try:
+    descope_client.validate_session(session_token)
+except AuthException:
+    # Session expired
+
+# If validate_session raises an exception, you will need to refresh the session using
+jwt_response = descope_client.refresh_session(refresh_token)
+
+# Alternatively, you could combine the two and
+# have the session validated and automatically refreshed when expired
+jwt_response = descope_client.validate_and_refresh_session(session_token, refresh_token)
 ```
 
-This function will validate the session and also refresh it in the event it has expired.
-It returns the same response as is returned when users first sign up / log in,
+Choose the right session validation and refresh combination that suits your needs.
+
+Refreshed sessions return the same response as is returned when users first sign up / log in,
 containing the session and refresh tokens, as well as all of the JWT claims.
 Make sure to return the tokens from the response to the client, or updated the cookie if you're using it.
-
-The `refresh_token` is optional here to validate a session, but is required to refresh the session in the event it has expired.
 
 Usually, the tokens can be passed in and out via HTTP headers or via a cookie.
 The implementation can defer according to your framework of choice. See our [samples](#code-samples) for a few examples.
@@ -296,6 +306,22 @@ valid_roles = descope_client.validate_roles(
 )
 if not valid_roles:
     # Deny access
+```
+
+### Logging Out
+
+You can log out a user from an active session by providing their `refresh_token` for that session.
+After calling this function, you must invalidate or remove any cookies you have created.
+
+```python
+descope_client.logout(refresh_token)
+```
+
+It is also possible to sign the user out of all the devices they are currently signed-in with. Calling `logout_all` will
+invalidate all user's refresh tokens. After calling this function, you must invalidate or remove any cookies you have created.
+
+```python
+descope_client.logout_all(refresh_token)
 ```
 
 ## Management API
@@ -373,6 +399,18 @@ descope_client.mgmt.user.update(
     user_tenants=[
         AssociatedTenant("my-tenant-id", ["role-name1", "role-name2"]),
     ],
+)
+
+# Update explicit data for a user rather than overriding all fields
+descope_client.mgmt.user.update_phone(
+    login_id="desmond@descope.com",
+    phone="+18005551234",
+    verified=True,
+)
+descope_client.mgmt.user.remove_tenant_roles(
+    login_id="desmond@descope.com",
+    tenant_id="my-tenant-id",
+    role_names=["role-name1"],
 )
 
 # User deletion cannot be undone. Use carefully.

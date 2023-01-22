@@ -122,37 +122,31 @@ class TestDescopeClient(unittest.TestCase):
     def test_validate_session(self):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)
 
-        dummy_refresh_token = ""
-
         invalid_header_jwt_token = "AyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImR1bW15In0.Bcz3xSxEcxgBSZOzqrTvKnb9-u45W-RlAbHSBL6E8zo2yJ9SYfODphdZ8tP5ARNTvFSPj2wgyu1SeiZWoGGPHPNMt4p65tPeVf5W8--d2aKXCc4KvAOOK3B_Cvjy_TO8"
         missing_kid_header_jwt_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCIsImFhYSI6IjMyYjNkYTUyNzdiMTQyYzdlMjRmZGYwZWYwOWUwOTE5In0.eyJleHAiOjE5ODEzOTgxMTF9.GQ3nLYT4XWZWezJ1tRV6ET0ibRvpEipeo6RCuaCQBdP67yu98vtmUvusBElDYVzRxGRtw5d20HICyo0_3Ekb0euUP3iTupgS3EU1DJMeAaJQgOwhdQnQcJFkOpASLKWh"
         invalid_payload_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg4MDc4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEUyIsImNvb2tpZVBhdGgiOiIvIiwiZXhwIjoxNjU3Nzk2Njc4LCJpYXQiOjE2NTc3OTYwNzgsImlzcyI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInN1YiI6IjJCdEVIa2dPdTAybG1NeHpQSWV4ZE10VXcxTSJ9.lTUKMIjkrdsfryREYrgz4jMV7M0-JF-Q-KNlI0xZhamYqnSYtvzdwAoYiyWamx22XrN5SZkcmVZ5bsx-g2C0p5VMbnmmxEaxcnsFJHqVAJUYEv5HGQHumN50DYSlLXXg"
 
         self.assertRaises(
             AuthException,
-            client.validate_session_request,
+            client.validate_session,
             missing_kid_header_jwt_token,
-            dummy_refresh_token,
         )
         self.assertRaises(
             AuthException,
-            client.validate_session_request,
+            client.validate_session,
             invalid_header_jwt_token,
-            dummy_refresh_token,
         )
         self.assertRaises(
             AuthException,
-            client.validate_session_request,
+            client.validate_session,
             invalid_payload_jwt_token,
-            dummy_refresh_token,
         )
 
         # Test case where header_alg != key[alg]
         client4 = DescopeClient(self.dummy_project_id, None)
         self.assertRaises(
             AuthException,
-            client4.validate_session_request,
-            None,
+            client4.validate_session,
             None,
         )
 
@@ -170,11 +164,16 @@ class TestDescopeClient(unittest.TestCase):
             },
         )
 
-        dummy_refresh_token = ""
+        dummy_refresh_token = "refresh"
         valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3VDOXl2MlVHdEdJMW84NGdDWkViOXFFUVciLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0NDMwNjEsImlhdCI6MTY1OTY0MzA2MSwiaXNzIjoiUDJDdUM5eXYyVUd0R0kxbzg0Z0NaRWI5cUVRVyIsInN1YiI6IlUyQ3VDUHVKZ1BXSEdCNVA0R21mYnVQR2hHVm0ifQ.mRo9FihYMR3qnQT06Mj3CJ5X0uTCEcXASZqfLLUv0cPCLBtBqYTbuK-ZRDnV4e4N6zGCNX2a3jjpbyqbViOxICCNSxJsVb-sdsSujtEXwVMsTTLnpWmNsMbOUiKmoME0"
 
+        try:
+            client.validate_session(valid_jwt_token)
+        except AuthException:
+            self.fail("Should pass validation")
+
         self.assertIsNotNone(
-            client.validate_session_request(valid_jwt_token, dummy_refresh_token)
+            client.validate_and_refresh_session(valid_jwt_token, dummy_refresh_token)
         )
 
         # Test case where key id cannot be found
@@ -187,7 +186,7 @@ class TestDescopeClient(unittest.TestCase):
             mock_request.return_value.ok = True
             self.assertRaises(
                 AuthException,
-                client2.validate_session_request,
+                client2.validate_and_refresh_session,
                 valid_jwt_token,
                 dummy_refresh_token,
             )
@@ -199,7 +198,7 @@ class TestDescopeClient(unittest.TestCase):
             mock_request.return_value.ok = True
             self.assertRaises(
                 AuthException,
-                client3.validate_session_request,
+                client3.validate_and_refresh_session,
                 valid_jwt_token,
                 dummy_refresh_token,
             )
@@ -212,7 +211,7 @@ class TestDescopeClient(unittest.TestCase):
             mock_request.return_value.ok = True
             self.assertRaises(
                 AuthException,
-                client4.validate_session_request,
+                client4.validate_and_refresh_session,
                 valid_jwt_token,
                 dummy_refresh_token,
             )
@@ -221,7 +220,7 @@ class TestDescopeClient(unittest.TestCase):
         client4 = DescopeClient(self.dummy_project_id, None)
         self.assertRaises(
             AuthException,
-            client4.validate_session_request,
+            client4.validate_and_refresh_session,
             None,
             None,
         )
@@ -235,7 +234,7 @@ class TestDescopeClient(unittest.TestCase):
 
             self.assertRaises(
                 AuthException,
-                client3.validate_session_request,
+                client3.validate_and_refresh_session,
                 expired_jwt_token,
                 valid_refresh_token,
             )
@@ -287,9 +286,8 @@ class TestDescopeClient(unittest.TestCase):
             mock_request.return_value.ok = False
             self.assertRaises(
                 AuthException,
-                client.validate_session_request,
+                client.validate_session,
                 expired_jwt_token,
-                dummy_refresh_token,
             )
 
         with patch("requests.get") as mock_request:
@@ -297,9 +295,8 @@ class TestDescopeClient(unittest.TestCase):
             mock_request.return_value.ok = True
             self.assertRaises(
                 AuthException,
-                client.validate_session_request,
+                client.validate_session,
                 expired_jwt_token,
-                dummy_refresh_token,
             )
 
         # Test fail flow
@@ -309,7 +306,7 @@ class TestDescopeClient(unittest.TestCase):
             mock_jwt_get_unverified_header.return_value = {}
             self.assertRaises(
                 AuthException,
-                dummy_client.validate_session_request,
+                dummy_client.validate_and_refresh_session,
                 dummy_session_token,
                 dummy_refresh_token,
             )
@@ -324,7 +321,21 @@ class TestDescopeClient(unittest.TestCase):
             my_mock_response.json.return_value = {"sessionJwt": new_session_token}
             mock_request.return_value = my_mock_response
             mock_request.return_value.cookies = {}
-            resp = client.validate_session_request(expired_token, valid_refresh_token)
+
+            # Refresh because of expiration
+            resp = client.validate_and_refresh_session(
+                expired_token, valid_refresh_token
+            )
+
+            new_session_token_from_request = resp[SESSION_TOKEN_NAME]["jwt"]
+            self.assertEqual(
+                new_session_token_from_request,
+                new_session_token,
+                "Failed to refresh token",
+            )
+
+            # Refresh explicitly
+            resp = client.refresh_session(valid_refresh_token)
 
             new_session_token_from_request = resp[SESSION_TOKEN_NAME]["jwt"]
             self.assertEqual(
@@ -346,7 +357,7 @@ class TestDescopeClient(unittest.TestCase):
             mock_request.return_value.cookies = {}
             self.assertRaises(
                 AuthException,
-                dummy_client.validate_session_request,
+                dummy_client.validate_and_refresh_session,
                 expired_jwt_token,
                 valid_refresh_token,
             )

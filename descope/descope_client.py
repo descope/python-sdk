@@ -10,7 +10,7 @@ from descope.authmethod.otp import OTP  # noqa: F401
 from descope.authmethod.saml import SAML  # noqa: F401
 from descope.authmethod.totp import TOTP  # noqa: F401
 from descope.authmethod.webauthn import WebAuthn  # noqa: F401
-from descope.common import SESSION_TOKEN_NAME, EndpointsV1
+from descope.common import EndpointsV1
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 from descope.mgmt import MGMT  # noqa: F401
 
@@ -162,16 +162,46 @@ class DescopeClient:
                 return False
         return True
 
-    def validate_session_request(self, session_token: str, refresh_token: str) -> dict:
+    def validate_session(self, session_token: str):
         """
-        Validate the session for a given request. If the user is authenticated but the
-            session has expired, the session token will automatically be refreshed.
-        Either the session_token or the refresh_token must be provided.
-        Call this function every time you make a private API call that requires an authorized
-            user.
+        Validate a session token. Call this function for every incoming request to your
+        private endpoints. Alternatively, use validate_and_refresh_session in order to
+        automatically refresh expired sessions.
 
         Args:
-        session_token (str): The session token, which contains the signature that will be validated
+        session_token (str): The session token to be validated
+
+        Raise:
+        AuthException: Exception is raised if session is not authorized or any other error occurs
+        """
+        self._auth.validate_session(session_token)
+
+    def refresh_session(self, refresh_token: str):
+        """
+        Refresh a session. Call this function when a session expires and needs to be refreshed.
+
+        Args:
+        refresh_token (str): The refresh token that will be used to refresh the session
+
+        Return value (dict):
+        Return dict includes the session token, refresh token, and all JWT claims
+
+        Raise:
+        AuthException: Exception is raised if refresh token is not authorized or any other error occurs
+        """
+        return self._auth.refresh_session(refresh_token)
+
+    def validate_and_refresh_session(
+        self, session_token: str, refresh_token: str
+    ) -> dict:
+        """
+        Validate the session token and refresh it if it has expired, the session token will automatically be refreshed.
+        Both the session_token or the refresh_token must be provided.
+        Call this function for every incoming request to your
+        private endpoints. Alternatively, use validate_session to only validate the session.
+
+        Args:
+        session_token (str): The session token to be validated
         refresh_token (str): The refresh token that will be used to refresh the session token, if needed
 
         Return value (dict):
@@ -180,18 +210,7 @@ class DescopeClient:
         Raise:
         AuthException: Exception is raised if session is not authorized or another error occurs
         """
-        res = self._auth._validate_and_load_tokens(
-            session_token, refresh_token
-        )  # return jwt_response dict
-
-        # Check if we had to refresh the session token and got a new one
-        if res.get(SESSION_TOKEN_NAME, None) and session_token != res.get(
-            SESSION_TOKEN_NAME
-        ).get("jwt"):
-            return res
-        else:
-            # In such case we return only the data related to the session token
-            return self._auth.adjust_properties({SESSION_TOKEN_NAME: res}, True)
+        return self._auth.validate_and_refresh_session(session_token, refresh_token)
 
     def logout(self, refresh_token: str) -> requests.Response:
         """
@@ -263,20 +282,6 @@ class DescopeClient:
         uri = EndpointsV1.mePath
         response = self._auth.do_get(uri, None, None, refresh_token)
         return response.json()
-
-    def refresh_token(self, refresh_token: str) -> dict:
-        """
-        Return a new session token for the given refresh token
-
-        Args:
-        refresh_token (str): The refresh token
-
-        Return value (dict): returns the session token from the server
-
-        Raise:
-        AuthException: Exception is raised if session is not authorized or another error occurs
-        """
-        return self._auth.refresh_token(refresh_token)
 
     def exchange_access_key(self, access_key: str) -> dict:
         """

@@ -18,7 +18,7 @@ class User:
         self,
         login_id: str,
         email: str = None,
-        phone_number: str = None,
+        phone: str = None,
         display_name: str = None,
         role_names: List[str] = [],
         user_tenants: List[AssociatedTenant] = [],
@@ -29,12 +29,12 @@ class User:
         Args:
         login_id (str): user login ID.
         email (str): Optional user email address.
-        phone_number (str): Optional user phone number.
+        phone (str): Optional user phone number.
         display_name (str): Optional user display name.
         role_names (List[str]): An optional list of the user's roles without tenant association. These roles are
-            mutually exclusive with the `user_tenant` roles, which take precedence over them.
+            mutually exclusive with the `user_tenant` roles.
         user_tenants (List[AssociatedTenant]): An optional list of the user's tenants, and optionally, their roles per tenant. These roles are
-            mutually exclusive with the general `role_names`, and take precedence over them.
+            mutually exclusive with the general `role_names`.
 
         Return value (dict):
         Return dict in the format
@@ -47,7 +47,7 @@ class User:
         response = self._auth.do_post(
             MgmtV1.userCreatePath,
             User._compose_create_update_body(
-                login_id, email, phone_number, display_name, role_names, user_tenants
+                login_id, email, phone, display_name, role_names, user_tenants
             ),
             pswd=self._auth.management_key,
         )
@@ -57,7 +57,7 @@ class User:
         self,
         login_id: str,
         email: str = None,
-        phone_number: str = None,
+        phone: str = None,
         display_name: str = None,
         role_names: List[str] = [],
         user_tenants: List[AssociatedTenant] = [],
@@ -69,12 +69,12 @@ class User:
         Args:
         login_id (str): The login ID of the user to update.
         email (str): Optional user email address.
-        phone_number (str): Optional user phone number.
+        phone (str): Optional user phone number.
         display_name (str): Optional user display name.
         role_names (List[str]): An optional list of the user's roles without tenant association. These roles are
-            mutually exclusive with the `user_tenant` roles, which take precedence over the general roles.
+            mutually exclusive with the `user_tenant` roles.
         user_tenants (List[AssociatedTenant]): An optional list of the user's tenants, and optionally, their roles per tenant. These roles are
-            mutually exclusive with the general `role_names`, and take precedence over them.
+            mutually exclusive with the general `role_names`.
 
         Raise:
         AuthException: raised if creation operation fails
@@ -82,7 +82,7 @@ class User:
         self._auth.do_post(
             MgmtV1.userUpdatePath,
             User._compose_create_update_body(
-                login_id, email, phone_number, display_name, role_names, user_tenants
+                login_id, email, phone, display_name, role_names, user_tenants
             ),
             pswd=self._auth.management_key,
         )
@@ -186,11 +186,314 @@ class User:
         )
         return response.json()
 
+    def activate(
+        self,
+        login_id: str,
+    ) -> dict:
+        """
+        Activate an existing user.
+
+        Args:
+        login_id (str): The login ID of the user to be activated.
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the updated user information.
+
+        Raise:
+        AuthException: raised if activate operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.userUpdateStatusPath,
+            {"loginId": login_id, "status": "enabled"},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    def deactivate(
+        self,
+        login_id: str,
+    ) -> dict:
+        """
+        Deactivate an existing user.
+
+        Args:
+        login_id (str): The login ID of the user to be deactivated.
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the updated user information.
+
+        Raise:
+        AuthException: raised if deactivate operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.userUpdateStatusPath,
+            {"loginId": login_id, "status": "disabled"},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    def update_email(
+        self,
+        login_id: str,
+        email: str = None,
+        verified: bool = None,
+    ) -> dict:
+        """
+        Update the email address for an existing user.
+
+        Args:
+        login_id (str): The login ID of the user to update the email for.
+        email (str): The user email address. Leave empty to remove.
+        verified (bool): Set to true for the user to be able to login with the email address.
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the updated user information.
+
+        Raise:
+        AuthException: raised if the update operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.userUpdateEmailPath,
+            {"loginId": login_id, "email": email, "verified": verified},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    def update_phone(
+        self,
+        login_id: str,
+        phone: str = None,
+        verified: bool = None,
+    ) -> dict:
+        """
+        Update the phone number for an existing user.
+
+        Args:
+        login_id (str): The login ID of the user to update the phone for.
+        phone (str): The user phone number. Leave empty to remove.
+        verified (bool): Set to true for the user to be able to login with the phone number.
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the updated user information.
+
+        Raise:
+        AuthException: raised if the update operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.userUpdatePhonePath,
+            {"loginId": login_id, "phone": phone, "verified": verified},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    def update_display_name(
+        self,
+        login_id: str,
+        display_name: str = None,
+    ) -> dict:
+        """
+        Update the display name for an existing user.
+
+        Args:
+        login_id (str): The login ID of the user to update.
+        display_name (str): Optional user display name. Leave empty to remove.
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the updated user information.
+
+        Raise:
+        AuthException: raised if the update operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.userUpdateNamePath,
+            {"loginId": login_id, "displayName": display_name},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    def add_roles(
+        self,
+        login_id: str,
+        role_names: List[str],
+    ) -> dict:
+        """
+        Add roles to a user without tenant association. Use add_tenant_roles
+        for users that are part of a multi-tenant project.
+
+        Args:
+        login_id (str): The login ID of the user to update.
+        role_names (List[str]): A list of roles to add to a user without tenant association.
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the updated user information.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.userAddRolePath,
+            {"loginId": login_id, "roleNames": role_names},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    def remove_roles(
+        self,
+        login_id: str,
+        role_names: List[str],
+    ) -> dict:
+        """
+        Remove roles from a user without tenant association. Use remove_tenant_roles
+        for users that are part of a multi-tenant project.
+
+        Args:
+        login_id (str): The login ID of the user to update.
+        role_names (List[str]): A list of roles to remove from a user without tenant association.
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the updated user information.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.userRemoveRolePath,
+            {"loginId": login_id, "roleNames": role_names},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    def add_tenant(
+        self,
+        login_id: str,
+        tenant_id: str,
+    ) -> dict:
+        """
+        Add a tenant association to an existing user.
+
+        Args:
+        login_id (str): The login ID of the user to update.
+        tenant_id (str): The ID of the tenant to add to the user.
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the updated user information.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.userAddTenantPath,
+            {"loginId": login_id, "tenantId": tenant_id},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    def remove_tenant(
+        self,
+        login_id: str,
+        tenant_id: str,
+    ) -> dict:
+        """
+        Remove a tenant association from an existing user.
+
+        Args:
+        login_id (str): The login ID of the user to update.
+        tenant_id (str): The ID of the tenant to add to the user.
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the updated user information.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.userRemoveTenantPath,
+            {"loginId": login_id, "tenantId": tenant_id},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    def add_tenant_roles(
+        self,
+        login_id: str,
+        tenant_id: str,
+        role_names: List[str],
+    ) -> dict:
+        """
+        Add roles to a user in a specific tenant.
+
+        Args:
+        login_id (str): The login ID of the user to update.
+        tenant_id (str): The ID of the user's tenant.
+        role_names (List[str]): A list of roles to add to the user.
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the updated user information.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.userAddRolePath,
+            {"loginId": login_id, "tenantId": tenant_id, "roleNames": role_names},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    def remove_tenant_roles(
+        self,
+        login_id: str,
+        tenant_id: str,
+        role_names: List[str],
+    ) -> dict:
+        """
+        Remove roles from a user in a specific tenant.
+
+        Args:
+        login_id (str): The login ID of the user to update.
+        tenant_id (str): The ID of the user's tenant.
+        role_names (List[str]): A list of roles to remove from the user.
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the updated user information.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.userRemoveRolePath,
+            {"loginId": login_id, "tenantId": tenant_id, "roleNames": role_names},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
     @staticmethod
     def _compose_create_update_body(
         login_id: str,
         email: str,
-        phone_number: str,
+        phone: str,
         display_name: str,
         role_names: List[str],
         user_tenants: List[AssociatedTenant],
@@ -198,7 +501,7 @@ class User:
         return {
             "loginId": login_id,
             "email": email,
-            "phoneNumber": phone_number,
+            "phone": phone,
             "displayName": display_name,
             "roleNames": role_names,
             "userTenants": associated_tenants_to_dict(user_tenants),
