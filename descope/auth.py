@@ -84,8 +84,8 @@ class Auth:
             resp.get("errorDescription", ""),
             resp.get("errorMessage", ""),
             rate_limit_parameters={
-                API_RATE_LIMIT_RETRY_AFTER_HEADER: response.headers.get(
-                    API_RATE_LIMIT_RETRY_AFTER_HEADER, None
+                API_RATE_LIMIT_RETRY_AFTER_HEADER: int(
+                    response.headers.get(API_RATE_LIMIT_RETRY_AFTER_HEADER, 0)
                 )
             },
         )
@@ -318,6 +318,8 @@ class Auth:
         )
 
         if not response.ok:
+            if response.status_code == 429:
+                self._raise_rate_limit_exception(response)  # Raise RateLimitException
             raise AuthException(
                 response.status_code,
                 ERROR_TYPE_SERVER_ERROR,
@@ -507,6 +509,8 @@ class Auth:
         try:
             res = self._validate_token(session_token)
             return self.adjust_properties(res, True)
+        except RateLimitException as e:
+            raise e
         except Exception as e:
             raise AuthException(
                 401, ERROR_TYPE_INVALID_TOKEN, f"Invalid session token: {e}"
@@ -522,6 +526,8 @@ class Auth:
 
         try:
             self._validate_token(refresh_token)
+        except RateLimitException as e:
+            raise e
         except Exception as e:
             # Refresh is invalid
             raise AuthException(

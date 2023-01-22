@@ -270,6 +270,60 @@ class TestAuth(unittest.TestCase):
             None,
         )
 
+        # Test validate_session with Ratelimit exception
+        with patch("requests.get") as mock_request:
+            mock_request.return_value.ok = False
+            mock_request.return_value.status_code = 429
+            mock_request.return_value.json.return_value = {
+                "errorCode": "E130429",
+                "errorDescription": "https://docs.descope.com/rate-limit",
+                "errorMessage": "API rate limit exceeded.",
+            }
+            mock_request.return_value.headers = {
+                API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"
+            }
+            ds = "eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg5NzI4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEUyIsImNvb2tpZVBhdGgiOiIvIiwiZXhwIjoxNjU3Nzk4MzI4LCJpYXQiOjE2NTc3OTc3MjgsImlzcyI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInN1YiI6IjJCdEVIa2dPdTAybG1NeHpQSWV4ZE10VXcxTSJ9.i-JoPoYmXl3jeLTARvYnInBiRdTT4uHZ3X3xu_n1dhUb1Qy_gqK7Ru8ErYXeENdfPOe4mjShc_HsVyb5PjE2LMFmb58WR8wixtn0R-u_MqTpuI_422Dk6hMRjTFEVRWu"
+            with self.assertRaises(RateLimitException) as cm:
+                auth.validate_session(ds)
+            the_exception = cm.exception
+            self.assertEqual(the_exception.status_code, "E130429")
+            self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
+            self.assertEqual(
+                the_exception.error_description, "https://docs.descope.com/rate-limit"
+            )
+            self.assertEqual(the_exception.error_message, "API rate limit exceeded.")
+            self.assertEqual(
+                the_exception.rate_limit_parameters,
+                {API_RATE_LIMIT_RETRY_AFTER_HEADER: 10},
+            )
+
+        # Test refresh_session with Ratelimit exception
+        with patch("requests.get") as mock_request:
+            mock_request.return_value.ok = False
+            mock_request.return_value.status_code = 429
+            mock_request.return_value.json.return_value = {
+                "errorCode": "E130429",
+                "errorDescription": "https://docs.descope.com/rate-limit",
+                "errorMessage": "API rate limit exceeded.",
+            }
+            mock_request.return_value.headers = {
+                API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"
+            }
+            dsr = "eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg5NzI4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEUyIsImNvb2tpZVBhdGgiOiIvIiwiZXhwIjoxNjU3Nzk4MzI4LCJpYXQiOjE2NTc3OTc3MjgsImlzcyI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInN1YiI6IjJCdEVIa2dPdTAybG1NeHpQSWV4ZE10VXcxTSJ9.i-JoPoYmXl3jeLTARvYnInBiRdTT4uHZ3X3xu_n1dhUb1Qy_gqK7Ru8ErYXeENdfPOe4mjShc_HsVyb5PjE2LMFmb58WR8wixtn0R-u_MqTpuI_422Dk6hMRjTFEVRWu"
+            with self.assertRaises(RateLimitException) as cm:
+                auth.refresh_session(dsr)
+            the_exception = cm.exception
+            self.assertEqual(the_exception.status_code, "E130429")
+            self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
+            self.assertEqual(
+                the_exception.error_description, "https://docs.descope.com/rate-limit"
+            )
+            self.assertEqual(the_exception.error_message, "API rate limit exceeded.")
+            self.assertEqual(
+                the_exception.rate_limit_parameters,
+                {API_RATE_LIMIT_RETRY_AFTER_HEADER: 10},
+            )
+
     def test_exchange_access_key(self):
         dummy_access_key = "dummy access key"
         auth = Auth(self.dummy_project_id, self.public_key_dict)
@@ -403,7 +457,7 @@ class TestAuth(unittest.TestCase):
             self.assertEqual(the_exception.error_message, "API rate limit exceeded.")
             self.assertEqual(
                 the_exception.rate_limit_parameters,
-                {API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"},
+                {API_RATE_LIMIT_RETRY_AFTER_HEADER: 10},
             )
 
         # Test do_get
@@ -429,7 +483,33 @@ class TestAuth(unittest.TestCase):
             self.assertEqual(the_exception.error_message, "API rate limit exceeded.")
             self.assertEqual(
                 the_exception.rate_limit_parameters,
-                {API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"},
+                {API_RATE_LIMIT_RETRY_AFTER_HEADER: 10},
+            )
+
+        # Test validate_session
+        with patch("requests.get") as mock_request:
+            mock_request.return_value.ok = False
+            mock_request.return_value.status_code = 429
+            mock_request.return_value.json.return_value = {
+                "errorCode": "E130429",
+                "errorDescription": "https://docs.descope.com/rate-limit",
+                "errorMessage": "API rate limit exceeded.",
+            }
+            mock_request.return_value.headers = {
+                API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"
+            }
+            with self.assertRaises(RateLimitException) as cm:
+                auth._fetch_public_keys()
+            the_exception = cm.exception
+            self.assertEqual(the_exception.status_code, "E130429")
+            self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
+            self.assertEqual(
+                the_exception.error_description, "https://docs.descope.com/rate-limit"
+            )
+            self.assertEqual(the_exception.error_message, "API rate limit exceeded.")
+            self.assertEqual(
+                the_exception.rate_limit_parameters,
+                {API_RATE_LIMIT_RETRY_AFTER_HEADER: 10},
             )
 
 
