@@ -9,7 +9,6 @@ import jwt
 import pkg_resources
 import requests
 from email_validator import EmailNotValidError, validate_email
-from jwt.exceptions import ExpiredSignatureError
 
 from descope.common import (
     COOKIE_DATA_NAME,
@@ -227,15 +226,8 @@ class Auth:
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Invalid delivery method"
             )
 
-    def refresh_token(self, refresh_token: str) -> dict:
-        uri = Auth._compose_refresh_token_url()
-        response = self.do_post(uri, {}, None, refresh_token)
-
-        resp = response.json()
-        return self.generate_jwt_response(resp, refresh_token)
-
     def exchange_access_key(self, access_key: str) -> dict:
-        uri = Auth._compose_exchange_access_key_url()
+        uri = EndpointsV1.exchangeAuthAccessKeyPath
         server_response = self.do_post(uri, {}, None, access_key)
         json = server_response.json()
         return self._generate_auth_info(json, None, False)
@@ -482,53 +474,56 @@ class Auth:
         claims["jwt"] = token
         return claims
 
-    def _validate_and_load_tokens(self, session_token: str, refresh_token: str) -> dict:
-        if not session_token and not refresh_token:
+    def validate_session(self, session_token: str) -> dict:
+        if not session_token:
             raise AuthException(
-                500,
+                400,
                 ERROR_TYPE_INVALID_TOKEN,
-                "Both refresh token and session token are empty",
+                "Session token is required for validation",
             )
 
-        if session_token:
-            try:
-                return self._validate_token(session_token)
-            except ExpiredSignatureError:
-                # Session token expired, check that refresh token is valid
-                if refresh_token:
-                    try:
-                        self._validate_token(refresh_token)
-                    except Exception as e:
-                        raise AuthException(
-                            401, ERROR_TYPE_INVALID_TOKEN, f"Invalid refresh token: {e}"
-                        )
-                else:
-                    raise AuthException(
-                        401,
-                        ERROR_TYPE_INVALID_TOKEN,
-                        "Session token expired and no refresh token provided",
-                    )
-                # Refresh token is valid now refresh the session token
-                return self.refresh_token(refresh_token)  # return jwt_response dict
-            except Exception as e:
-                raise AuthException(
-                    500, ERROR_TYPE_INVALID_TOKEN, f"Invalid token: {e}"
-                )
+        try:
+            res = self._validate_token(session_token)
+            return self.adjust_properties(res, True)
+        except Exception as e:
+            raise AuthException(
+                401, ERROR_TYPE_INVALID_TOKEN, f"Invalid session token: {e}"
+            )
 
-        # If we got here, we did not have a session token so only do the refresh
+    def refresh_session(self, refresh_token: str) -> dict:
+        if not refresh_token:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_TOKEN,
+                "Refresh token is required to refresh a session",
+            )
+
         try:
             self._validate_token(refresh_token)
         except Exception as e:
+            # Refresh is invalid
             raise AuthException(
                 401, ERROR_TYPE_INVALID_TOKEN, f"Invalid refresh token: {e}"
             )
-        # Refresh token is valid now refresh the session token
-        return self.refresh_token(refresh_token)  # return jwt_response dict
 
-    @staticmethod
-    def _compose_refresh_token_url() -> str:
-        return EndpointsV1.refreshTokenPath
+        uri = EndpointsV1.refreshTokenPath
+        response = self.do_post(uri, {}, None, refresh_token)
 
-    @staticmethod
-    def _compose_exchange_access_key_url() -> str:
-        return EndpointsV1.exchangeAuthAccessKeyPath
+        resp = response.json()
+        return self.generate_jwt_response(resp, refresh_token)
+
+    def validate_and_refresh_session(
+        self, session_token: str, refresh_token: str
+    ) -> dict:
+        if not session_token or not refresh_token:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_TOKEN,
+                "Session and refresh tokens are required for validation and refresh",
+            )
+
+        try:
+            return self.validate_session(session_token)
+        except Exception:
+            # Session is invalid - try to refresh it
+            return self.refresh_session(refresh_token)

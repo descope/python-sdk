@@ -64,7 +64,9 @@ def main():
 
         try:
             logging.info(f"going to validate session...{session_token_1}")
-            descope_client.validate_session_request(session_token_1, refresh_token_1)
+            descope_client.validate_and_refresh_session(
+                session_token_1, refresh_token_1
+            )
             logging.info("Session is valid and all is OK")
         except AuthException as e:
             logging.info(f"Session is not valid {e}")
