@@ -174,7 +174,7 @@ class DescopeClient:
         Raise:
         AuthException: Exception is raised if session is not authorized or any other error occurs
         """
-        self._auth._validate_session(session_token)
+        self._auth.validate_session(session_token)
 
     def refresh_session(self, refresh_token: str):
         """
@@ -189,7 +189,7 @@ class DescopeClient:
         Raise:
         AuthException: Exception is raised if refresh token is not authorized or any other error occurs
         """
-        return self._auth._refresh_session(refresh_token)
+        return self._auth.refresh_session(refresh_token)
 
     def validate_and_refresh_session(
         self, session_token: str, refresh_token: str
@@ -210,7 +210,7 @@ class DescopeClient:
         Raise:
         AuthException: Exception is raised if session is not authorized or another error occurs
         """
-        return self._auth._validate_and_refresh_session(session_token, refresh_token)
+        return self._auth.validate_and_refresh_session(session_token, refresh_token)
 
     def logout(self, refresh_token: str) -> requests.Response:
         """

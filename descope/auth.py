@@ -226,13 +226,6 @@ class Auth:
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Invalid delivery method"
             )
 
-    def refresh_token(self, refresh_token: str) -> dict:
-        uri = EndpointsV1.refreshTokenPath
-        response = self.do_post(uri, {}, None, refresh_token)
-
-        resp = response.json()
-        return self.generate_jwt_response(resp, refresh_token)
-
     def exchange_access_key(self, access_key: str) -> dict:
         uri = EndpointsV1.exchangeAuthAccessKeyPath
         server_response = self.do_post(uri, {}, None, access_key)
@@ -481,7 +474,7 @@ class Auth:
         claims["jwt"] = token
         return claims
 
-    def _validate_session(self, session_token: str) -> dict:
+    def validate_session(self, session_token: str) -> dict:
         if not session_token:
             raise AuthException(
                 400,
@@ -497,7 +490,7 @@ class Auth:
                 401, ERROR_TYPE_INVALID_TOKEN, f"Invalid session token: {e}"
             )
 
-    def _refresh_session(self, refresh_token: str) -> dict:
+    def refresh_session(self, refresh_token: str) -> dict:
         if not refresh_token:
             raise AuthException(
                 400,
@@ -512,9 +505,14 @@ class Auth:
             raise AuthException(
                 401, ERROR_TYPE_INVALID_TOKEN, f"Invalid refresh token: {e}"
             )
-        return self.refresh_token(refresh_token)
 
-    def _validate_and_refresh_session(
+        uri = EndpointsV1.refreshTokenPath
+        response = self.do_post(uri, {}, None, refresh_token)
+
+        resp = response.json()
+        return self.generate_jwt_response(resp, refresh_token)
+
+    def validate_and_refresh_session(
         self, session_token: str, refresh_token: str
     ) -> dict:
         if not session_token or not refresh_token:
@@ -525,7 +523,7 @@ class Auth:
             )
 
         try:
-            return self._validate_session(session_token)
+            return self.validate_session(session_token)
         except Exception:
             # Session is invalid - try to refresh it
-            return self._refresh_session(refresh_token)
+            return self.refresh_session(refresh_token)

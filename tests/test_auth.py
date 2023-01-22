@@ -222,7 +222,7 @@ class TestAuth(unittest.TestCase):
 
         self.assertRaises(AuthException, Auth.get_login_id_by_method, AAA.DUMMY, user)
 
-    def test_refresh_token(self):
+    def test_refresh_session(self):
         dummy_refresh_token = "dummy refresh token"
         auth = Auth(self.dummy_project_id, self.public_key_dict)
 
@@ -231,7 +231,7 @@ class TestAuth(unittest.TestCase):
             mock_request.return_value.ok = False
             self.assertRaises(
                 AuthException,
-                auth.refresh_token,
+                auth.refresh_session,
                 dummy_refresh_token,
             )
 
@@ -241,25 +241,25 @@ class TestAuth(unittest.TestCase):
         # Bad input for session
         self.assertRaises(
             AuthException,
-            auth._validate_session,
+            auth.validate_session,
             None,
         )
 
         # Bad input for refresh
         self.assertRaises(
             AuthException,
-            auth._refresh_session,
+            auth.refresh_session,
             None,
         )
 
         # Bad input for session and refresh
         self.assertRaises(
-            AuthException, auth._validate_and_refresh_session, None, "refresh-token"
+            AuthException, auth.validate_and_refresh_session, None, "refresh-token"
         )
 
         self.assertRaises(
             AuthException,
-            auth._validate_and_refresh_session,
+            auth.validate_and_refresh_session,
             "session-token",
             None,
         )
