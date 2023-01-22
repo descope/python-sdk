@@ -617,7 +617,7 @@ updated_jwt = client.mgmt.jwt.updateJWT(
 
 ## API Rate limits
 
-Handle API rate limits by comparing the exception to the APIRateLimitExceeded exception, which includes the RateLimitParameters map with the key "Retry-After." This key indicates how many seconds until the next valid API call can take place. More information on Descope's rate limit is covered here: https://docs.descope.com/rate-limit
+Handle API rate limits by comparing the exception to the APIRateLimitExceeded exception, which includes the RateLimitParameters map with the key "Retry-After." This key indicates how many seconds until the next valid API call can take place. More information on Descope's rate limit is covered here: [Descope rate limit reference page](https://docs.descope.com/rate-limit)
 
 ```python
 try:
