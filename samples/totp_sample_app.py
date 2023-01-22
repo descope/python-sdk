@@ -65,7 +65,7 @@ def main():
         # validate session
         try:
             logging.info("going to validate session...")
-            jwt_response = descope_client.validate_session_request(
+            jwt_response = descope_client.validate_and_refresh_session(
                 session_token, refresh_token
             )
             logging.info(f"Session is valid and all is OK, claims: {jwt_response}")

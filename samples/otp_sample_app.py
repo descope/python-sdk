@@ -39,20 +39,22 @@ def main():
 
         try:
             logging.info("going to validate session..")
-            descope_client.validate_session_request(session_token, refresh_token)
+            descope_client.validate_session(session_token)
             logging.info("Session is valid and all is OK")
         except AuthException as e:
             logging.info(f"Session is not valid {e}")
 
         try:
             logging.info("refreshing the session token..")
-            claims = descope_client.refresh_token(refresh_token)
+            claims = descope_client.refresh_session(refresh_token)
             logging.info(
                 "going to revalidate the session with the newly refreshed token.."
             )
 
             new_session_token = claims.get(SESSION_TOKEN_NAME).get("jwt")
-            descope_client.validate_session_request(new_session_token, refresh_token)
+            descope_client.validate_and_refresh_session(
+                new_session_token, refresh_token
+            )
             logging.info("Session is valid also for the refreshed token.")
         except AuthException as e:
             logging.info(f"Session is not valid for the refreshed token: {e}")
