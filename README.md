@@ -615,6 +615,23 @@ updated_jwt = client.mgmt.jwt.updateJWT(
 )
 ```
 
+## API Rate limits
+
+Handle API rate limits by comparing the exception to the APIRateLimitExceeded exception, which includes the RateLimitParameters map with the key "Retry-After." This key indicates how many seconds until the next valid API call can take place. More information on Descope's rate limit is covered here: [Descope rate limit reference page](https://docs.descope.com/rate-limit)
+
+```python
+try:
+    descope_client.magiclink.sign_up_or_in(
+        method=DeliveryMethod.EMAIL,
+        login_id="desmond@descope.com",
+        uri="http://myapp.com/verify-magic-link",
+    )
+except RateLimitException as e:
+    retry_after_seconds = e.rate_limit_parameters.get(API_RATE_LIMIT_RETRY_AFTER_HEADER)
+    # This variable indicates how many seconds until the next valid API call can take place.
+```
+
+
 ## Code Samples
 
 You can find various usage samples in the [samples folder](https://github.com/descope/python-sdk/blob/main/samples).

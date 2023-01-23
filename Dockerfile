@@ -23,7 +23,7 @@ RUN apt-get update \
         git
 
 # Install Poetry - respects $POETRY_VERSION & $POETRY_HOME
-ENV POETRY_VERSION=1.2.0
+ENV POETRY_VERSION=1.3.2
 RUN curl -sSL https://install.python-poetry.org | python
 
 # We copy our Python requirements here to cache them

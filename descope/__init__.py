@@ -7,6 +7,11 @@ from descope.common import (
     DeliveryMethod,
 )
 from descope.descope_client import DescopeClient
-from descope.exceptions import AuthException
+from descope.exceptions import (
+    API_RATE_LIMIT_RETRY_AFTER_HEADER,
+    ERROR_TYPE_API_RATE_LIMIT,
+    AuthException,
+    RateLimitException,
+)
 from descope.management.common import AssociatedTenant
 from descope.management.sso_settings import AttributeMapping, RoleMapping
