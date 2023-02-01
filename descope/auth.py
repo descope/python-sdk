@@ -541,13 +541,13 @@ class Auth:
         return self.generate_jwt_response(resp, refresh_token)
 
     def validate_and_refresh_session(
-        self, session_token: str, refresh_token: str
+        self, session_token: str = None, refresh_token: str = None
     ) -> dict:
-        if not session_token or not refresh_token:
+        if not session_token and not refresh_token:
             raise AuthException(
                 400,
                 ERROR_TYPE_INVALID_TOKEN,
-                "Session and refresh tokens are required for validation and refresh",
+                "Session and refresh tokens are both empty",
             )
 
         try:

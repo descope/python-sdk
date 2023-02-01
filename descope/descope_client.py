@@ -196,7 +196,7 @@ class DescopeClient:
     ) -> dict:
         """
         Validate the session token and refresh it if it has expired, the session token will automatically be refreshed.
-        Both the session_token or the refresh_token must be provided.
+        Either the session_token or the refresh_token must be provided.
         Call this function for every incoming request to your
         private endpoints. Alternatively, use validate_session to only validate the session.
 

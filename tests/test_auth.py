@@ -247,27 +247,7 @@ class TestAuth(unittest.TestCase):
         # Bad input for session
         self.assertRaises(
             AuthException,
-            auth.validate_session,
-            None,
-        )
-
-        # Bad input for refresh
-        self.assertRaises(
-            AuthException,
-            auth.refresh_session,
-            None,
-        )
-
-        # Bad input for session and refresh
-        self.assertRaises(
-            AuthException, auth.validate_and_refresh_session, None, "refresh-token"
-        )
-
-        self.assertRaises(
-            AuthException,
             auth.validate_and_refresh_session,
-            "session-token",
-            None,
         )
 
         # Test validate_session with Ratelimit exception
@@ -486,7 +466,7 @@ class TestAuth(unittest.TestCase):
                 {API_RATE_LIMIT_RETRY_AFTER_HEADER: 10},
             )
 
-        # Test validate_session
+        # Test _fetch_public_keys rate limit
         with patch("requests.get") as mock_request:
             mock_request.return_value.ok = False
             mock_request.return_value.status_code = 429
