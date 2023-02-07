@@ -519,14 +519,14 @@ You can create, update, delete or load permissions:
 # You can optionally set a description for a permission.
 descope_client.mgmt.permission.create(
     name="My Permission",
-    description="Optional description to briefly explain what this permission allows.",
+    description="Optional description to briefly explain what this permission allows."
 )
 
 # Update will override all fields as is. Use carefully.
 descope_client.mgmt.permission.update(
     name="My Permission",
-    new_name="My Updated Permission"
-    description="A revised description",
+    new_name="My Updated Permission",
+    description="A revised description"
 )
 
 # Permission deletion cannot be undone. Use carefully.
@@ -554,9 +554,9 @@ descope_client.mgmt.role.create(
 # Update will override all fields as is. Use carefully.
 descope_client.mgmt.role.update(
     name="My Role",
-    new_name="My Updated Role"
+    new_name="My Updated Role",
     description="A revised description",
-    permission_names=["My Updated Permission", "Another Permission"],
+    permission_names=["My Updated Permission", "Another Permission"]
 )
 
 # Role deletion cannot be undone. Use carefully.
