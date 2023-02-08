@@ -37,7 +37,7 @@ def set_cookie_on_response(response: Response, token: dict, cookieData: dict):
         domain=cookie_domain,
         secure=False,  # True
         httponly=True,
-        samesite="None",  # "Strict", "Lax", "None"
+        samesite="Strict",  # "Strict", "Lax", "None"
     )
 
 
