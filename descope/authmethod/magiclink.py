@@ -22,8 +22,8 @@ class MagicLink:
         method: DeliveryMethod,
         login_id: str,
         uri: str,
-        loginOptions: LoginOptions = None,
-        refreshToken: str = None,
+        login_options: LoginOptions = None,
+        refresh_token: str = None,
     ) -> None:
         if not login_id:
             raise AuthException(
@@ -32,12 +32,12 @@ class MagicLink:
                 "Identifier is empty",
             )
 
-        validateRefreshTokenProvided(loginOptions, refreshToken)
+        validateRefreshTokenProvided(login_options, refresh_token)
 
-        body = MagicLink._compose_signin_body(login_id, uri, loginOptions)
+        body = MagicLink._compose_signin_body(login_id, uri, login_options)
         uri = MagicLink._compose_signin_url(method)
 
-        self._auth.do_post(uri, body, None, refreshToken)
+        self._auth.do_post(uri, body, None, refresh_token)
 
     def sign_up(
         self, method: DeliveryMethod, login_id: str, uri: str, user: dict = None
@@ -118,12 +118,12 @@ class MagicLink:
     def _compose_signin_body(
         login_id: string,
         uri: string,
-        loginOptions: LoginOptions = None,
+        login_options: LoginOptions = None,
     ) -> dict:
         return {
             "loginId": login_id,
             "URI": uri,
-            "loginOptions": loginOptions.__dict__ if loginOptions else {},
+            "loginOptions": login_options.__dict__ if login_options else {},
         }
 
     @staticmethod

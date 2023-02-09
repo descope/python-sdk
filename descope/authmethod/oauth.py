@@ -13,8 +13,8 @@ class OAuth:
         self,
         provider: str,
         return_url: str = "",
-        loginOptions: LoginOptions = None,
-        refreshToken: str = None,
+        login_options: LoginOptions = None,
+        refresh_token: str = None,
     ) -> dict:
         """ """
         if not self._verify_provider(provider):
@@ -24,12 +24,12 @@ class OAuth:
                 f"Unknown OAuth provider: {provider}",
             )
 
-        validateRefreshTokenProvided(loginOptions, refreshToken)
+        validateRefreshTokenProvided(login_options, refresh_token)
 
         uri = EndpointsV1.oauthStart
         params = OAuth._compose_start_params(provider, return_url)
         response = self._auth.do_post(
-            uri, loginOptions.__dict__ if loginOptions else {}, params, refreshToken
+            uri, login_options.__dict__ if login_options else {}, params, refresh_token
         )
 
         return response.json()

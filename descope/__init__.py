@@ -5,6 +5,7 @@ from descope.common import (
     SESSION_COOKIE_NAME,
     SESSION_TOKEN_NAME,
     DeliveryMethod,
+    LoginOptions,
 )
 from descope.descope_client import DescopeClient
 from descope.exceptions import (

@@ -137,12 +137,12 @@ class TOTP:
 
     @staticmethod
     def _compose_signin_body(
-        login_id: str, code: str, loginOptions: LoginOptions = None
+        login_id: str, code: str, login_options: LoginOptions = None
     ) -> dict:
         return {
             "loginId": login_id,
             "code": code,
-            "loginOptions": loginOptions.__dict__ if loginOptions else {},
+            "loginOptions": login_options.__dict__ if login_options else {},
         }
 
     @staticmethod
