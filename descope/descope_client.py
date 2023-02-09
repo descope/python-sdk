@@ -162,7 +162,7 @@ class DescopeClient:
                 return False
         return True
 
-    def validate_session(self, session_token: str):
+    def validate_session(self, session_token: str) -> None:
         """
         Validate a session token. Call this function for every incoming request to your
         private endpoints. Alternatively, use validate_and_refresh_session in order to
@@ -176,7 +176,7 @@ class DescopeClient:
         """
         self._auth.validate_session(session_token)
 
-    def refresh_session(self, refresh_token: str):
+    def refresh_session(self, refresh_token: str) -> dict:
         """
         Refresh a session. Call this function when a session expires and needs to be refreshed.
 
