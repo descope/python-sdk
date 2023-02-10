@@ -31,13 +31,13 @@ class TestAuth(unittest.TestCase):
 
     def test_validate_phone(self):
         self.assertRaises(
-            AuthException, Auth.validate_phone, method=DeliveryMethod.PHONE, phone=""
+            AuthException, Auth.validate_phone, method=DeliveryMethod.SMS, phone=""
         )
 
         self.assertRaises(
             AuthException,
             Auth.validate_phone,
-            method=DeliveryMethod.PHONE,
+            method=DeliveryMethod.SMS,
             phone="asd234234234",
         )
 
@@ -151,32 +151,32 @@ class TestAuth(unittest.TestCase):
 
         self.assertEqual(
             Auth.verify_delivery_method(
-                DeliveryMethod.PHONE, "111111111111", {"email": ""}
+                DeliveryMethod.SMS, "111111111111", {"email": ""}
             ),
             True,
         )
         self.assertEqual(
             Auth.verify_delivery_method(
-                DeliveryMethod.PHONE, "+111111111111", {"email": ""}
+                DeliveryMethod.SMS, "+111111111111", {"email": ""}
             ),
             True,
         )
         self.assertEqual(
             Auth.verify_delivery_method(
-                DeliveryMethod.PHONE, "++111111111111", {"email": ""}
+                DeliveryMethod.SMS, "++111111111111", {"email": ""}
             ),
             False,
         )
         self.assertEqual(
-            Auth.verify_delivery_method(DeliveryMethod.PHONE, "asdsad", {"email": ""}),
+            Auth.verify_delivery_method(DeliveryMethod.SMS, "asdsad", {"email": ""}),
             False,
         )
         self.assertEqual(
-            Auth.verify_delivery_method(DeliveryMethod.PHONE, "", {"email": ""}), False
+            Auth.verify_delivery_method(DeliveryMethod.SMS, "", {"email": ""}), False
         )
         self.assertEqual(
             Auth.verify_delivery_method(
-                DeliveryMethod.PHONE, "unvalid@phone.number", {"email": ""}
+                DeliveryMethod.SMS, "unvalid@phone.number", {"email": ""}
             ),
             False,
         )
@@ -215,7 +215,7 @@ class TestAuth(unittest.TestCase):
             ("email", "dummy@dummy.com"),
         )
         self.assertEqual(
-            Auth.get_login_id_by_method(DeliveryMethod.PHONE, user),
+            Auth.get_login_id_by_method(DeliveryMethod.SMS, user),
             ("phone", "11111111"),
         )
         self.assertEqual(

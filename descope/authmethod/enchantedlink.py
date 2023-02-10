@@ -23,8 +23,8 @@ class EnchantedLink:
         self,
         login_id: str,
         uri: str,
-        loginOptions: LoginOptions = None,
-        refreshToken: str = None,
+        login_options: LoginOptions = None,
+        refresh_token: str = None,
     ) -> dict:
         if not login_id:
             raise AuthException(
@@ -33,12 +33,12 @@ class EnchantedLink:
                 "login_id is empty",
             )
 
-        validateRefreshTokenProvided(loginOptions, refreshToken)
+        validateRefreshTokenProvided(login_options, refresh_token)
 
-        body = EnchantedLink._compose_signin_body(login_id, uri, loginOptions)
+        body = EnchantedLink._compose_signin_body(login_id, uri, login_options)
         uri = EnchantedLink._compose_signin_url()
 
-        response = self._auth.do_post(uri, body, None, refreshToken)
+        response = self._auth.do_post(uri, body, None, refresh_token)
         return EnchantedLink._get_pending_ref_from_response(response)
 
     def sign_up(self, login_id: str, uri: str, user: dict = None) -> None:
@@ -114,12 +114,12 @@ class EnchantedLink:
     def _compose_signin_body(
         login_id: string,
         uri: string,
-        loginOptions: LoginOptions = None,
+        login_options: LoginOptions = None,
     ) -> dict:
         return {
             "loginId": login_id,
             "URI": uri,
-            "loginOptions": loginOptions.__dict__ if loginOptions else {},
+            "loginOptions": login_options.__dict__ if login_options else {},
         }
 
     @staticmethod

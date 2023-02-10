@@ -31,7 +31,7 @@ class TestMagicLink(unittest.TestCase):
 
     def test_compose_urls(self):
         self.assertEqual(
-            MagicLink._compose_signin_url(DeliveryMethod.PHONE),
+            MagicLink._compose_signin_url(DeliveryMethod.SMS),
             "/v1/auth/magiclink/signin/sms",
         )
         self.assertEqual(
@@ -44,7 +44,7 @@ class TestMagicLink(unittest.TestCase):
         )
 
         self.assertEqual(
-            MagicLink._compose_update_phone_url(DeliveryMethod.PHONE),
+            MagicLink._compose_update_phone_url(DeliveryMethod.SMS),
             "/v1/auth/magiclink/update/phone/sms",
         )
 
@@ -382,7 +382,7 @@ class TestMagicLink(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNone(
                 magiclink.update_user_phone(
-                    DeliveryMethod.PHONE, "id1", "+11111111", "refresh_token1"
+                    DeliveryMethod.SMS, "id1", "+11111111", "refresh_token1"
                 )
             )
 

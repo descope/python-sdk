@@ -65,8 +65,8 @@ class WebAuthn:
         self,
         login_id: str,
         origin: str,
-        loginOptions: LoginOptions = None,
-        refreshToken: str = None,
+        login_options: LoginOptions = None,
+        refresh_token: str = None,
     ) -> dict:
         """
         Docs
@@ -81,11 +81,11 @@ class WebAuthn:
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Origin cannot be empty"
             )
 
-        validateRefreshTokenProvided(loginOptions, refreshToken)
+        validateRefreshTokenProvided(login_options, refresh_token)
 
         uri = EndpointsV1.signInAuthWebauthnStart
-        body = WebAuthn._compose_sign_in_start_body(login_id, origin, loginOptions)
-        response = self._auth.do_post(uri, body, pswd=refreshToken)
+        body = WebAuthn._compose_sign_in_start_body(login_id, origin, login_options)
+        response = self._auth.do_post(uri, body, pswd=refresh_token)
 
         return response.json()
 
@@ -186,12 +186,12 @@ class WebAuthn:
 
     @staticmethod
     def _compose_sign_in_start_body(
-        login_id: str, origin: str, loginOptions: LoginOptions = None
+        login_id: str, origin: str, login_options: LoginOptions = None
     ) -> dict:
         return {
             "loginId": login_id,
             "origin": origin,
-            "loginOptions": loginOptions.__dict__ if loginOptions else {},
+            "loginOptions": login_options.__dict__ if login_options else {},
         }
 
     @staticmethod

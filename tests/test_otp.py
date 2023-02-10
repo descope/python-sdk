@@ -35,7 +35,7 @@ class TestOTP(unittest.TestCase):
             "/v1/auth/otp/signin/email",
         )
         self.assertEqual(
-            OTP._compose_signin_url(DeliveryMethod.PHONE),
+            OTP._compose_signin_url(DeliveryMethod.SMS),
             "/v1/auth/otp/signin/sms",
         )
         self.assertEqual(
@@ -49,7 +49,7 @@ class TestOTP(unittest.TestCase):
             "/v1/auth/otp/verify/email",
         )
         self.assertEqual(
-            OTP._compose_verify_code_url(DeliveryMethod.PHONE),
+            OTP._compose_verify_code_url(DeliveryMethod.SMS),
             "/v1/auth/otp/verify/sms",
         )
         self.assertEqual(
@@ -63,7 +63,7 @@ class TestOTP(unittest.TestCase):
             "/v1/auth/otp/update/phone/email",
         )
         self.assertEqual(
-            OTP._compose_update_phone_url(DeliveryMethod.PHONE),
+            OTP._compose_update_phone_url(DeliveryMethod.SMS),
             "/v1/auth/otp/update/phone/sms",
         )
         self.assertEqual(
@@ -77,7 +77,7 @@ class TestOTP(unittest.TestCase):
             "/v1/auth/otp/signup-in/email",
         )
         self.assertEqual(
-            OTP._compose_sign_up_or_in_url(DeliveryMethod.PHONE),
+            OTP._compose_sign_up_or_in_url(DeliveryMethod.SMS),
             "/v1/auth/otp/signup-in/sms",
         )
         self.assertEqual(
@@ -133,7 +133,7 @@ class TestOTP(unittest.TestCase):
         self.assertRaises(
             AuthException,
             client.otp.sign_up,
-            DeliveryMethod.PHONE,
+            DeliveryMethod.SMS,
             "dummy@dummy.com",
             invalid_signup_user_details,
         )
@@ -360,7 +360,7 @@ class TestOTP(unittest.TestCase):
         self.assertRaises(
             AuthException,
             client.otp.update_user_phone,
-            DeliveryMethod.PHONE,
+            DeliveryMethod.SMS,
             "",
             "+1111111",
             "refresh_token1",
@@ -368,7 +368,7 @@ class TestOTP(unittest.TestCase):
         self.assertRaises(
             AuthException,
             client.otp.update_user_phone,
-            DeliveryMethod.PHONE,
+            DeliveryMethod.SMS,
             "id1",
             "not_a_phone",
             "refresh_token1",
@@ -387,7 +387,7 @@ class TestOTP(unittest.TestCase):
             self.assertRaises(
                 AuthException,
                 client.otp.update_user_phone,
-                DeliveryMethod.PHONE,
+                DeliveryMethod.SMS,
                 "id1",
                 "+1111111",
                 "refresh_token1",
@@ -398,6 +398,6 @@ class TestOTP(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.otp.update_user_phone(
-                    DeliveryMethod.PHONE, "id1", "+1111111", "refresh_token1"
+                    DeliveryMethod.SMS, "id1", "+1111111", "refresh_token1"
                 )
             )

@@ -200,7 +200,7 @@ def descope_verify_code_by_phone(descope_client):
 
             try:
                 jwt_response = descope_client.otp.verify_code(
-                    DeliveryMethod.PHONE, phone, code
+                    DeliveryMethod.SMS, phone, code
                 )
             except AuthException:
                 return Response("Unauthorized", 401)

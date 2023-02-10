@@ -19,8 +19,8 @@ class OTP:
         self,
         method: DeliveryMethod,
         login_id: str,
-        loginOptions: LoginOptions = None,
-        refreshToken: str = None,
+        login_options: LoginOptions = None,
+        refresh_token: str = None,
     ) -> None:
         """
         Sign in (log in) an existing user with the unique login_id you provide. (See 'sign_up' function for an explanation of the
@@ -31,6 +31,8 @@ class OTP:
         method (DeliveryMethod): The method to use for delivering the OTP verification code to the user, for example
             email, SMS, or WhatsApp
         login_id (str): The login ID of the user being validated for example phone or email
+        login_options (LoginOptions): Optional advanced controls over login parameters
+        refresh_token: Optional refresh token is needed for specific login options
 
         Raise:
         AuthException: raised if sign-in operation fails
@@ -40,11 +42,11 @@ class OTP:
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
             )
 
-        validateRefreshTokenProvided(loginOptions, refreshToken)
+        validateRefreshTokenProvided(login_options, refresh_token)
 
         uri = OTP._compose_signin_url(method)
-        body = OTP._compose_signin_body(login_id, loginOptions)
-        self._auth.do_post(uri, body, refreshToken)
+        body = OTP._compose_signin_body(login_id, login_options)
+        self._auth.do_post(uri, body, refresh_token)
 
     def sign_up(self, method: DeliveryMethod, login_id: str, user: dict = None) -> None:
         """
@@ -214,10 +216,10 @@ class OTP:
         return body
 
     @staticmethod
-    def _compose_signin_body(login_id: str, loginOptions: LoginOptions = None) -> dict:
+    def _compose_signin_body(login_id: str, login_options: LoginOptions = None) -> dict:
         return {
             "loginId": login_id,
-            "loginOptions": loginOptions.__dict__ if loginOptions else {},
+            "loginOptions": login_options.__dict__ if login_options else {},
         }
 
     @staticmethod

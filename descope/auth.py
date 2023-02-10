@@ -166,7 +166,7 @@ class Auth:
                 return True
             except EmailNotValidError:
                 return False
-        elif method == DeliveryMethod.PHONE:
+        elif method == DeliveryMethod.SMS:
             if not user.get("phone", None):
                 user["phone"] = loginId
             if not re.match(PHONE_REGEX, user["phone"]):
@@ -186,7 +186,7 @@ class Auth:
         suffix = ""
         if method is DeliveryMethod.EMAIL:
             suffix = "email"
-        elif method is DeliveryMethod.PHONE:
+        elif method is DeliveryMethod.SMS:
             suffix = "sms"
         elif method is DeliveryMethod.WHATSAPP:
             suffix = "whatsapp"
@@ -202,7 +202,7 @@ class Auth:
         if method is DeliveryMethod.EMAIL:
             email = user.get("email", "")
             return "email", email
-        elif method is DeliveryMethod.PHONE:
+        elif method is DeliveryMethod.SMS:
             phone = user.get("phone", "")
             return "phone", phone
         elif method is DeliveryMethod.WHATSAPP:
@@ -243,7 +243,7 @@ class Auth:
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Invalid phone number"
             )
 
-        if method != DeliveryMethod.PHONE and method != DeliveryMethod.WHATSAPP:
+        if method != DeliveryMethod.SMS and method != DeliveryMethod.WHATSAPP:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Invalid delivery method"
             )
