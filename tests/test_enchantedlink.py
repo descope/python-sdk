@@ -124,6 +124,37 @@ class TestEnchantedLink(unittest.TestCase):
             self.assertEqual(res["pendingRef"], "aaaa")
             self.assertEqual(res["linkId"], "24")
 
+        # Validate refresh token used while provided
+        with patch("requests.post") as mock_post:
+            refresh_token = "dummy refresh token"
+            enchantedlink.sign_in(
+                "dummy@dummy.com",
+                "http://test.me",
+                LoginOptions(stepup=True),
+                refresh_token=refresh_token,
+            )
+            mock_post.assert_called_with(
+                f"{DEFAULT_BASE_URL}{EndpointsV1.signInAuthEnchantedLinkPath}/email",
+                headers={
+                    **common.defaultHeaders,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{refresh_token}",
+                },
+                params=None,
+                data=json.dumps(
+                    {
+                        "loginId": "dummy@dummy.com",
+                        "URI": "http://test.me",
+                        "loginOptions": {
+                            "stepup": True,
+                            "customClaims": None,
+                            "mfa": False,
+                        },
+                    }
+                ),
+                allow_redirects=False,
+                verify=True,
+            )
+
     def test_sign_in_with_login_options(self):
         enchantedlink = EnchantedLink(Auth(self.dummy_project_id, self.public_key_dict))
         with patch("requests.post") as mock_post:

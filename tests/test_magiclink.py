@@ -138,6 +138,38 @@ class TestMagicLink(unittest.TestCase):
                 LoginOptions(mfa=True),
             )
 
+        # Validate refresh token used while provided
+        with patch("requests.post") as mock_post:
+            refresh_token = "dummy refresh token"
+            magiclink.sign_in(
+                DeliveryMethod.EMAIL,
+                "dummy@dummy.com",
+                "http://test.me",
+                LoginOptions(stepup=True),
+                refresh_token=refresh_token,
+            )
+            mock_post.assert_called_with(
+                f"{DEFAULT_BASE_URL}{EndpointsV1.signInAuthMagicLinkPath}/email",
+                headers={
+                    **common.defaultHeaders,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{refresh_token}",
+                },
+                params=None,
+                data=json.dumps(
+                    {
+                        "loginId": "dummy@dummy.com",
+                        "URI": "http://test.me",
+                        "loginOptions": {
+                            "stepup": True,
+                            "customClaims": None,
+                            "mfa": False,
+                        },
+                    }
+                ),
+                allow_redirects=False,
+                verify=True,
+            )
+
     def test_sign_up(self):
         signup_user_details = {
             "username": "jhon",
