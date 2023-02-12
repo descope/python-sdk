@@ -98,7 +98,7 @@ class TestOAuth(unittest.TestCase):
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             lo = LoginOptions(stepup=True, customClaims={"k1": "v1"})
-            oauth.start("facebook", loginOptions=lo, refreshToken="refresh")
+            oauth.start("facebook", login_options=lo, refresh_token="refresh")
             expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.oauthStart}"
             mock_post.assert_called_with(
                 expected_uri,

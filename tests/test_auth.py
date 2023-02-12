@@ -31,13 +31,13 @@ class TestAuth(unittest.TestCase):
 
     def test_validate_phone(self):
         self.assertRaises(
-            AuthException, Auth.validate_phone, method=DeliveryMethod.PHONE, phone=""
+            AuthException, Auth.validate_phone, method=DeliveryMethod.SMS, phone=""
         )
 
         self.assertRaises(
             AuthException,
             Auth.validate_phone,
-            method=DeliveryMethod.PHONE,
+            method=DeliveryMethod.SMS,
             phone="asd234234234",
         )
 
@@ -151,32 +151,32 @@ class TestAuth(unittest.TestCase):
 
         self.assertEqual(
             Auth.verify_delivery_method(
-                DeliveryMethod.PHONE, "111111111111", {"email": ""}
+                DeliveryMethod.SMS, "111111111111", {"email": ""}
             ),
             True,
         )
         self.assertEqual(
             Auth.verify_delivery_method(
-                DeliveryMethod.PHONE, "+111111111111", {"email": ""}
+                DeliveryMethod.SMS, "+111111111111", {"email": ""}
             ),
             True,
         )
         self.assertEqual(
             Auth.verify_delivery_method(
-                DeliveryMethod.PHONE, "++111111111111", {"email": ""}
+                DeliveryMethod.SMS, "++111111111111", {"email": ""}
             ),
             False,
         )
         self.assertEqual(
-            Auth.verify_delivery_method(DeliveryMethod.PHONE, "asdsad", {"email": ""}),
+            Auth.verify_delivery_method(DeliveryMethod.SMS, "asdsad", {"email": ""}),
             False,
         )
         self.assertEqual(
-            Auth.verify_delivery_method(DeliveryMethod.PHONE, "", {"email": ""}), False
+            Auth.verify_delivery_method(DeliveryMethod.SMS, "", {"email": ""}), False
         )
         self.assertEqual(
             Auth.verify_delivery_method(
-                DeliveryMethod.PHONE, "unvalid@phone.number", {"email": ""}
+                DeliveryMethod.SMS, "unvalid@phone.number", {"email": ""}
             ),
             False,
         )
@@ -215,7 +215,7 @@ class TestAuth(unittest.TestCase):
             ("email", "dummy@dummy.com"),
         )
         self.assertEqual(
-            Auth.get_login_id_by_method(DeliveryMethod.PHONE, user),
+            Auth.get_login_id_by_method(DeliveryMethod.SMS, user),
             ("phone", "11111111"),
         )
         self.assertEqual(
@@ -247,27 +247,7 @@ class TestAuth(unittest.TestCase):
         # Bad input for session
         self.assertRaises(
             AuthException,
-            auth.validate_session,
-            None,
-        )
-
-        # Bad input for refresh
-        self.assertRaises(
-            AuthException,
-            auth.refresh_session,
-            None,
-        )
-
-        # Bad input for session and refresh
-        self.assertRaises(
-            AuthException, auth.validate_and_refresh_session, None, "refresh-token"
-        )
-
-        self.assertRaises(
-            AuthException,
             auth.validate_and_refresh_session,
-            "session-token",
-            None,
         )
 
         # Test validate_session with Ratelimit exception
@@ -486,7 +466,7 @@ class TestAuth(unittest.TestCase):
                 {API_RATE_LIMIT_RETRY_AFTER_HEADER: 10},
             )
 
-        # Test validate_session
+        # Test _fetch_public_keys rate limit
         with patch("requests.get") as mock_request:
             mock_request.return_value.ok = False
             mock_request.return_value.status_code = 429

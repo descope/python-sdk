@@ -83,7 +83,7 @@ class EndpointsV2:
 
 class DeliveryMethod(Enum):
     WHATSAPP = 1
-    PHONE = 2
+    SMS = 2
     EMAIL = 3
 
 
@@ -97,12 +97,12 @@ class LoginOptions:
 
 
 def validateRefreshTokenProvided(
-    loginOptions: LoginOptions = None, refreshToken: str = None
+    login_options: LoginOptions = None, refresh_token: str = None
 ):
-    refreshRequired = loginOptions is not None and (
-        loginOptions.mfa or loginOptions.stepup
+    refreshRequired = login_options is not None and (
+        login_options.mfa or login_options.stepup
     )
-    refreshMissing = refreshToken is None or refreshToken == ""
+    refreshMissing = refresh_token is None or refresh_token == ""
     if refreshRequired and refreshMissing:
         raise AuthException(
             400,

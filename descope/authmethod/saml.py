@@ -13,8 +13,8 @@ class SAML:
         self,
         tenant: str,
         return_url: str = None,
-        loginOptions: LoginOptions = None,
-        refreshToken: str = None,
+        login_options: LoginOptions = None,
+        refresh_token: str = None,
     ) -> dict:
         """
         Docs
@@ -29,12 +29,12 @@ class SAML:
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Return url cannot be empty"
             )
 
-        validateRefreshTokenProvided(loginOptions, refreshToken)
+        validateRefreshTokenProvided(login_options, refresh_token)
 
         uri = EndpointsV1.authSAMLStart
         params = SAML._compose_start_params(tenant, return_url)
         response = self._auth.do_post(
-            uri, loginOptions.__dict__ if loginOptions else {}, params, refreshToken
+            uri, login_options.__dict__ if login_options else {}, params, refresh_token
         )
 
         return response.json()

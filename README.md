@@ -441,7 +441,7 @@ You can create, update, delete or load access keys, as well as search according 
 # on a per-tenant basis.
 create_resp = descope_client.mgmt.access_key.create(
     name="name",
-    expired_time=1677844931,
+    expire_time=1677844931,
     key_tenants=[
         AssociatedTenant("my-tenant-id", ["role-name1"]),
     ],
@@ -454,7 +454,7 @@ access_key_resp = descope_client.mgmt.access_key.load("key-id")
 access_key = access_key_resp["key"]
 
 # Search all access keys, optionally according to a tenant filter
-keys_resp = descope_client.mgmt.access_key.search_all(tenant_ids=["my-tenant-id"])
+keys_resp = descope_client.mgmt.access_key.search_all_access_keys(tenant_ids=["my-tenant-id"])
 keys = keys_resp["keys"]
     for key in keys:
         # Do something
@@ -630,7 +630,6 @@ except RateLimitException as e:
     retry_after_seconds = e.rate_limit_parameters.get(API_RATE_LIMIT_RETRY_AFTER_HEADER)
     # This variable indicates how many seconds until the next valid API call can take place.
 ```
-
 
 ## Code Samples
 
