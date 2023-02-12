@@ -13,6 +13,8 @@ jobs:
     name: Pypi
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
       - name: Setup
         uses: descope/.github/.github/actions/python/poetry/setup@main
       - name: Autobump version
