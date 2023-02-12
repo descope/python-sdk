@@ -255,6 +255,36 @@ class TestOTP(unittest.TestCase):
                 LoginOptions(mfa=True),
             )
 
+        # Validate refresh token used while provided
+        with patch("requests.post") as mock_post:
+            refresh_token = "dummy refresh token"
+            client.otp.sign_in(
+                DeliveryMethod.EMAIL,
+                "dummy@dummy.com",
+                LoginOptions(stepup=True),
+                refresh_token=refresh_token,
+            )
+            mock_post.assert_called_with(
+                f"{DEFAULT_BASE_URL}{EndpointsV1.signInAuthOTPPath}/email",
+                headers={
+                    **common.defaultHeaders,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{refresh_token}",
+                },
+                params=None,
+                data=json.dumps(
+                    {
+                        "loginId": "dummy@dummy.com",
+                        "loginOptions": {
+                            "stepup": True,
+                            "customClaims": None,
+                            "mfa": False,
+                        },
+                    }
+                ),
+                allow_redirects=False,
+                verify=True,
+            )
+
     def test_sign_up_or_in(self):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)
 

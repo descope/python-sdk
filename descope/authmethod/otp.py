@@ -46,7 +46,7 @@ class OTP:
 
         uri = OTP._compose_signin_url(method)
         body = OTP._compose_signin_body(login_id, login_options)
-        self._auth.do_post(uri, body, refresh_token)
+        self._auth.do_post(uri, body, None, refresh_token)
 
     def sign_up(self, method: DeliveryMethod, login_id: str, user: dict = None) -> None:
         """
