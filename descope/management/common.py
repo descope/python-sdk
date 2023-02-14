@@ -33,7 +33,6 @@ class MgmtV1:
     accessKeyDeletePath = "/v1/mgmt/accesskey/delete"
 
     # sso
-    ssoConfigurePath = "/v1/mgmt/sso/settings"
     ssoMetadataPath = "/v1/mgmt/sso/metadata"
     ssoMappingPath = "/v1/mgmt/sso/mapping"
 
@@ -56,6 +55,11 @@ class MgmtV1:
     groupLoadAllPath = "/v1/mgmt/group/all"
     groupLoadAllForMemberPath = "/v1/mgmt/group/member/all"
     groupLoadAllGroupMembersPath = "/v1/mgmt/group/members"
+
+
+class MgmtV2:
+    # sso
+    ssoConfigurePath = "/v2/mgmt/sso/settings"
 
 
 class AssociatedTenant:
