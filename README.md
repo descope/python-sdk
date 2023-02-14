@@ -242,7 +242,7 @@ the session and refresh tokens with every request, and they are validated using 
 ```python
 # Validate the session. Will raise if expired
 try:
-    descope_client.validate_session(session_token)
+    jwt_response = descope_client.validate_session(session_token)
 except AuthException:
     # Session expired
 
@@ -486,6 +486,8 @@ descope_client.mgmt.sso.configure(
     idp_url="https://idp.com",
     entity_id="my-idp-entity-id",
     idp_cert="<your-cert-here>",
+    redirect_url="https://your.domain.com", # Global redirection after successful authentication
+    domain="tenant-users.com" # Users authentication with this domain will be logged in to this tenant
 )
 
 # Alternatively, configure using an SSO metadata URL

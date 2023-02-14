@@ -6,7 +6,7 @@ import common
 
 from descope import AttributeMapping, AuthException, DescopeClient, RoleMapping
 from descope.common import DEFAULT_BASE_URL
-from descope.management.common import MgmtV1
+from descope.management.common import MgmtV1, MgmtV2
 
 
 class TestSSOSettings(unittest.TestCase):
@@ -42,6 +42,7 @@ class TestSSOSettings(unittest.TestCase):
                 "entity-id",
                 "cert",
                 "https://redirect.com",
+                "domain.com",
             )
 
         # Test success flow
@@ -54,10 +55,11 @@ class TestSSOSettings(unittest.TestCase):
                     "entity-id",
                     "cert",
                     "https://redirect.com",
+                    "domain.com",
                 )
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.ssoConfigurePath}",
+                f"{DEFAULT_BASE_URL}{MgmtV2.ssoConfigurePath}",
                 headers={
                     **common.defaultHeaders,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -70,6 +72,40 @@ class TestSSOSettings(unittest.TestCase):
                         "entityId": "entity-id",
                         "idpCert": "cert",
                         "redirectURL": "https://redirect.com",
+                        "domain": "domain.com",
+                    }
+                ),
+                allow_redirects=False,
+                verify=True,
+            )
+
+        # Domain is optional
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(
+                client.mgmt.sso.configure(
+                    "tenant-id",
+                    "https://idp.com",
+                    "entity-id",
+                    "cert",
+                    "https://redirect.com",
+                )
+            )
+            mock_post.assert_called_with(
+                f"{DEFAULT_BASE_URL}{MgmtV2.ssoConfigurePath}",
+                headers={
+                    **common.defaultHeaders,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                data=json.dumps(
+                    {
+                        "tenantId": "tenant-id",
+                        "idpURL": "https://idp.com",
+                        "entityId": "entity-id",
+                        "idpCert": "cert",
+                        "redirectURL": "https://redirect.com",
+                        "domain": None,
                     }
                 ),
                 allow_redirects=False,
@@ -85,10 +121,11 @@ class TestSSOSettings(unittest.TestCase):
                     "https://idp.com",
                     "entity-id",
                     "cert",
+                    domain="domain.com",
                 )
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.ssoConfigurePath}",
+                f"{DEFAULT_BASE_URL}{MgmtV2.ssoConfigurePath}",
                 headers={
                     **common.defaultHeaders,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -101,6 +138,7 @@ class TestSSOSettings(unittest.TestCase):
                         "entityId": "entity-id",
                         "idpCert": "cert",
                         "redirectURL": None,
+                        "domain": "domain.com",
                     }
                 ),
                 allow_redirects=False,
