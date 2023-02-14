@@ -162,7 +162,7 @@ class DescopeClient:
                 return False
         return True
 
-    def validate_session(self, session_token: str) -> None:
+    def validate_session(self, session_token: str) -> dict:
         """
         Validate a session token. Call this function for every incoming request to your
         private endpoints. Alternatively, use validate_and_refresh_session in order to
@@ -171,10 +171,13 @@ class DescopeClient:
         Args:
         session_token (str): The session token to be validated
 
+        Return value (dict):
+        Return dict includes the session token and all JWT claims
+
         Raise:
         AuthException: Exception is raised if session is not authorized or any other error occurs
         """
-        self._auth.validate_session(session_token)
+        return self._auth.validate_session(session_token)
 
     def refresh_session(self, refresh_token: str) -> dict:
         """

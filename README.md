@@ -242,7 +242,7 @@ the session and refresh tokens with every request, and they are validated using 
 ```python
 # Validate the session. Will raise if expired
 try:
-    descope_client.validate_session(session_token)
+    jwt_response = descope_client.validate_session(session_token)
 except AuthException:
     # Session expired
 
