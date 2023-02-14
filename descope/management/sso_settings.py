@@ -1,7 +1,7 @@
 from typing import List
 
 from descope.auth import Auth
-from descope.management.common import MgmtV1
+from descope.management.common import MgmtV1, MgmtV2
 
 
 class RoleMapping:
@@ -41,6 +41,7 @@ class SSOSettings:
         entity_id: str,
         idp_cert: str,
         redirect_url: str = None,
+        domain: str = None,
     ) -> None:
         """
         Configure SSO setting for a tenant manually. Alternatively, `configure_via_metadata` can be used instead.
@@ -51,14 +52,15 @@ class SSOSettings:
         entity_id (str): The entity ID (in the IDP).
         idp_cert (str): The certificate provided by the IDP.
         redirect_url (str): An Optional Redirect URL after successful authentication.
+        domain (str): An optional domain used to associate users authenticating via SSO with this tenant
 
         Raise:
         AuthException: raised if configuration operation fails
         """
         self._auth.do_post(
-            MgmtV1.ssoConfigurePath,
+            MgmtV2.ssoConfigurePath,
             SSOSettings._compose_configure_body(
-                tenant_id, idp_url, entity_id, idp_cert, redirect_url
+                tenant_id, idp_url, entity_id, idp_cert, redirect_url, domain
             ),
             pswd=self._auth.management_key,
         )
@@ -116,6 +118,7 @@ class SSOSettings:
         entity_id: str,
         idp_cert: str,
         redirect_url: str = None,
+        domain: str = None,
     ) -> dict:
         return {
             "tenantId": tenant_id,
@@ -123,6 +126,7 @@ class SSOSettings:
             "entityId": entity_id,
             "idpCert": idp_cert,
             "redirectURL": redirect_url,
+            "domain": domain,
         }
 
     @staticmethod
