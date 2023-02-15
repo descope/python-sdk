@@ -1,7 +1,7 @@
 from typing import List
 
 from descope.auth import Auth
-from descope.management.common import MgmtV1, MgmtV2
+from descope.management.common import MgmtV1
 
 
 class RoleMapping:
@@ -58,7 +58,7 @@ class SSOSettings:
         AuthException: raised if configuration operation fails
         """
         self._auth.do_post(
-            MgmtV2.ssoConfigurePath,
+            MgmtV1.ssoConfigurePath,
             SSOSettings._compose_configure_body(
                 tenant_id, idp_url, entity_id, idp_cert, redirect_url, domain
             ),

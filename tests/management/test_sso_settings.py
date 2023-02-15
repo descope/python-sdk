@@ -6,7 +6,7 @@ import common
 
 from descope import AttributeMapping, AuthException, DescopeClient, RoleMapping
 from descope.common import DEFAULT_BASE_URL
-from descope.management.common import MgmtV1, MgmtV2
+from descope.management.common import MgmtV1
 
 
 class TestSSOSettings(unittest.TestCase):
@@ -59,7 +59,7 @@ class TestSSOSettings(unittest.TestCase):
                 )
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV2.ssoConfigurePath}",
+                f"{DEFAULT_BASE_URL}{MgmtV1.ssoConfigurePath}",
                 headers={
                     **common.defaultHeaders,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -92,7 +92,7 @@ class TestSSOSettings(unittest.TestCase):
                 )
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV2.ssoConfigurePath}",
+                f"{DEFAULT_BASE_URL}{MgmtV1.ssoConfigurePath}",
                 headers={
                     **common.defaultHeaders,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -125,7 +125,7 @@ class TestSSOSettings(unittest.TestCase):
                 )
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV2.ssoConfigurePath}",
+                f"{DEFAULT_BASE_URL}{MgmtV1.ssoConfigurePath}",
                 headers={
                     **common.defaultHeaders,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
