@@ -1,7 +1,6 @@
 name: Python
 
-on:
-  pull_request:
+on: [push, pull_request]
 
 permissions:
   contents: read
@@ -26,6 +25,7 @@ jobs:
           poetry run pytest --junitxml=/tmp/pytest.xml --cov-report=term-missing:skip-covered --cov=descope tests/ --cov-report=xml:/tmp/cov.xml
 
       - name: Post Pytest coverage comment
+        if: ${{ github.event_name == 'pull_request' }}
         id: coverageComment
         uses: MishaKav/pytest-coverage-comment@main
         with:
@@ -33,6 +33,7 @@ jobs:
           create-new-comment: false
 
       - name: Coverage
+        if: ${{ github.event_name == 'pull_request' }}
         run: |
           echo "Coverage Percantage - ${{ steps.coverageComment.outputs.coverage }}"
           echo "Coverage Color - ${{ steps.coverageComment.outputs.color }}"
