@@ -1,6 +1,7 @@
 from typing import List
 
 from descope.auth import Auth
+from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 from descope.management.common import (
     AssociatedTenant,
     MgmtV1,
@@ -162,6 +163,7 @@ class User:
         tenant_ids: List[str] = [],
         role_names: List[str] = [],
         limit: int = 0,
+        page: int = 0,
     ) -> dict:
         """
         Search all users.
@@ -170,6 +172,7 @@ class User:
         tenant_ids (List[str]): Optional list of tenant IDs to filter by
         role_names (List[str]): Optional list of role names to filter by
         limit (int): Optional limit of the number of users returned. Leave empty for default.
+        page (int): Optional pagination control. Pages start at 0 and must be non-negative.
 
         Return value (dict):
         Return dict in the format
@@ -179,9 +182,24 @@ class User:
         Raise:
         AuthException: raised if search operation fails
         """
+        if limit < 0:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "limit must be non-negative"
+            )
+
+        if page < 0:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "page must be non-negative"
+            )
+
         response = self._auth.do_post(
             MgmtV1.usersSearchPath,
-            {"tenantIds": tenant_ids, "roleNames": role_names, "limit": limit},
+            {
+                "tenantIds": tenant_ids,
+                "roleNames": role_names,
+                "limit": limit,
+                "page": page,
+            },
             pswd=self._auth.management_key,
         )
         return response.json()

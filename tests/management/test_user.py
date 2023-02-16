@@ -224,6 +224,16 @@ class TestUser(unittest.TestCase):
                 ["r1", "r2"],
             )
 
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertRaises(
+                AuthException, self.client.mgmt.user.search_all, [], [], -1, 0
+            )
+
+            self.assertRaises(
+                AuthException, self.client.mgmt.user.search_all, [], [], 0, -1
+            )
+
         # Test success flow
         with patch("requests.post") as mock_post:
             network_resp = mock.Mock()
@@ -249,6 +259,7 @@ class TestUser(unittest.TestCase):
                         "tenantIds": ["t1, t2"],
                         "roleNames": ["r1", "r2"],
                         "limit": 0,
+                        "page": 0,
                     }
                 ),
                 allow_redirects=False,
