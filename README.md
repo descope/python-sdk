@@ -425,6 +425,7 @@ user_resp = descope_client.mgmt.user.load_by_user_id("<user-id>")
 user = user_resp["user"]
 
 # Search all users, optionally according to tenant and/or role filter
+# results can be paginated using the limit and page parameters
 users_resp = descope_client.mgmt.user.search_all(tenant_ids=["my-tenant-id"])
 users = users_resp["users"]
     for user in users:
