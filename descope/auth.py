@@ -150,9 +150,9 @@ class Auth:
 
     @staticmethod
     def verify_delivery_method(
-        method: DeliveryMethod, loginId: str, user: dict
+        method: DeliveryMethod, login_id: str, user: dict
     ) -> bool:
-        if not loginId:
+        if not login_id:
             return False
 
         if not isinstance(user, dict):
@@ -160,7 +160,7 @@ class Auth:
 
         if method == DeliveryMethod.EMAIL:
             if not user.get("email", None):
-                user["email"] = loginId
+                user["email"] = login_id
             try:
                 validate_email(email=user["email"], check_deliverability=False)
                 return True
@@ -168,12 +168,12 @@ class Auth:
                 return False
         elif method == DeliveryMethod.SMS:
             if not user.get("phone", None):
-                user["phone"] = loginId
+                user["phone"] = login_id
             if not re.match(PHONE_REGEX, user["phone"]):
                 return False
         elif method == DeliveryMethod.WHATSAPP:
             if not user.get("phone", None):
-                user["phone"] = loginId
+                user["phone"] = login_id
             if not re.match(PHONE_REGEX, user["phone"]):
                 return False
         else:
@@ -249,7 +249,7 @@ class Auth:
             )
 
     def exchange_access_key(self, access_key: str) -> dict:
-        uri = EndpointsV1.exchangeAuthAccessKeyPath
+        uri = EndpointsV1.exchange_auth_access_key_path
         server_response = self.do_post(uri, {}, None, access_key)
         json = server_response.json()
         return self._generate_auth_info(json, None, False)
@@ -312,7 +312,7 @@ class Auth:
 
         # This function called under mutex protection so no need to acquire it once again
         response = requests.get(
-            f"{self.base_url}{EndpointsV2.publicKeyPath}/{self.project_id}",
+            f"{self.base_url}{EndpointsV2.public_key_path}/{self.project_id}",
             headers=self._get_default_headers(),
             verify=self.secure,
         )
@@ -328,8 +328,8 @@ class Auth:
 
         jwks_data = response.text
         try:
-            jwkeysWrapper = json.loads(jwks_data)
-            jwkeys = jwkeysWrapper["keys"]
+            jwkeys_wrapper = json.loads(jwks_data)
+            jwkeys = jwkeys_wrapper["keys"]
         except Exception as e:
             raise AuthException(
                 500, ERROR_TYPE_INVALID_PUBLIC_KEY, f"Unable to load jwks. Error: {e}"
@@ -534,7 +534,7 @@ class Auth:
                 401, ERROR_TYPE_INVALID_TOKEN, f"Invalid refresh token: {e}"
             )
 
-        uri = EndpointsV1.refreshTokenPath
+        uri = EndpointsV1.refresh_token_path
         response = self.do_post(uri, {}, None, refresh_token)
 
         resp = response.json()

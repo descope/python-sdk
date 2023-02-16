@@ -28,7 +28,7 @@ class Role:
         AuthException: raised if creation operation fails
         """
         self._auth.do_post(
-            MgmtV1.roleCreatePath,
+            MgmtV1.role_create_path,
             {
                 "name": name,
                 "description": description,
@@ -58,7 +58,7 @@ class Role:
         AuthException: raised if update operation fails
         """
         self._auth.do_post(
-            MgmtV1.roleUpdatePath,
+            MgmtV1.role_update_path,
             {
                 "name": name,
                 "newName": new_name,
@@ -82,7 +82,7 @@ class Role:
         AuthException: raised if creation operation fails
         """
         self._auth.do_post(
-            MgmtV1.roleDeletePath,
+            MgmtV1.role_delete_path,
             {"name": name},
             pswd=self._auth.management_key,
         )
@@ -102,7 +102,7 @@ class Role:
         AuthException: raised if load operation fails
         """
         response = self._auth.do_get(
-            MgmtV1.roleLoadAllPath,
+            MgmtV1.role_load_all_path,
             pswd=self._auth.management_key,
         )
         return response.json()

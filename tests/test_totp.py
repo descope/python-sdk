@@ -115,9 +115,9 @@ class TestTOTP(unittest.TestCase):
                 refresh_token=refresh_token,
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.verifyTOTPPath}",
+                f"{DEFAULT_BASE_URL}{EndpointsV1.verify_totp_path}",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{refresh_token}",
                 },
                 params=None,
@@ -163,11 +163,11 @@ class TestTOTP(unittest.TestCase):
             my_mock_response.json.return_value = valid_response
             mock_post.return_value = my_mock_response
             res = totp.update_user("dummy@dummy.com", valid_jwt_token)
-            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.updateTOTPPath}"
+            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.update_totp_path}"
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{valid_jwt_token}",
                 },
                 params=None,

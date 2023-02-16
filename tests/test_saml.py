@@ -51,11 +51,11 @@ class TestSAML(unittest.TestCase):
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             saml.start("tenant1", "http://dummy.com")
-            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.authSAMLStart}"
+            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.auth_saml_start_path}"
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params={"tenant": "tenant1", "redirectURL": "http://dummy.com"},
@@ -91,13 +91,13 @@ class TestSAML(unittest.TestCase):
 
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
-            lo = LoginOptions(stepup=True, customClaims={"k1": "v1"})
+            lo = LoginOptions(stepup=True, custom_claims={"k1": "v1"})
             saml.start("tenant1", "http://dummy.com", lo, "refresh")
-            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.authSAMLStart}"
+            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.auth_saml_start_path}"
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:refresh",
                 },
                 params={"tenant": "tenant1", "redirectURL": "http://dummy.com"},
@@ -134,9 +134,9 @@ class TestSAML(unittest.TestCase):
             mock_post.return_value = my_mock_response
             saml.exchange_token("c1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.samlExchangeTokenPath}",
+                f"{DEFAULT_BASE_URL}{EndpointsV1.saml_exchange_token_path}",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,

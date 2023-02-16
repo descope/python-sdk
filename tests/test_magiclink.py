@@ -58,7 +58,7 @@ class TestMagicLink(unittest.TestCase):
             },
         )
 
-        lo = LoginOptions(stepup=True, customClaims={"k1": "v1"})
+        lo = LoginOptions(stepup=True, custom_claims={"k1": "v1"})
         self.assertEqual(
             MagicLink._compose_signin_body("id1", "uri1", lo),
             {
@@ -149,9 +149,9 @@ class TestMagicLink(unittest.TestCase):
                 refresh_token=refresh_token,
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.signInAuthMagicLinkPath}/email",
+                f"{DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_magiclink_path}/email",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{refresh_token}",
                 },
                 params=None,
@@ -232,9 +232,9 @@ class TestMagicLink(unittest.TestCase):
                 )
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.signUpAuthMagicLinkPath}/email",
+                f"{DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_magiclink_path}/email",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 data=json.dumps(
@@ -267,9 +267,9 @@ class TestMagicLink(unittest.TestCase):
                 )
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.signUpAuthMagicLinkPath}/email",
+                f"{DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_magiclink_path}/email",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 data=json.dumps(

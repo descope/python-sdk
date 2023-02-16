@@ -3,7 +3,7 @@ from descope.common import (
     REFRESH_SESSION_COOKIE_NAME,
     EndpointsV1,
     LoginOptions,
-    validateRefreshTokenProvided,
+    validate_refresh_token_provided,
 )
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
@@ -31,17 +31,17 @@ class WebAuthn:
         if not user:
             user = {}
 
-        uri = EndpointsV1.signUpAuthWebauthnStart
+        uri = EndpointsV1.sign_up_auth_webauthn_start_path
         body = WebAuthn._compose_sign_up_start_body(login_id, user, origin)
         response = self._auth.do_post(uri, body)
 
         return response.json()
 
-    def sign_up_finish(self, transactionID: str, response: str) -> dict:
+    def sign_up_finish(self, transaction_id: str, response: str) -> dict:
         """
         Docs
         """
-        if not transactionID:
+        if not transaction_id:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Transaction id cannot be empty"
             )
@@ -51,8 +51,8 @@ class WebAuthn:
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Response cannot be empty"
             )
 
-        uri = EndpointsV1.signUpAuthWebauthnFinish
-        body = WebAuthn._compose_sign_up_in_finish_body(transactionID, response)
+        uri = EndpointsV1.sign_up_auth_webauthn_finish_path
+        body = WebAuthn._compose_sign_up_in_finish_body(transaction_id, response)
         response = self._auth.do_post(uri, body, None, "")
 
         resp = response.json()
@@ -81,9 +81,9 @@ class WebAuthn:
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Origin cannot be empty"
             )
 
-        validateRefreshTokenProvided(login_options, refresh_token)
+        validate_refresh_token_provided(login_options, refresh_token)
 
-        uri = EndpointsV1.signInAuthWebauthnStart
+        uri = EndpointsV1.sign_in_auth_webauthn_start_path
         body = WebAuthn._compose_sign_in_start_body(login_id, origin, login_options)
         response = self._auth.do_post(uri, body, pswd=refresh_token)
 
@@ -103,7 +103,7 @@ class WebAuthn:
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Response cannot be empty"
             )
 
-        uri = EndpointsV1.signInAuthWebauthnFinish
+        uri = EndpointsV1.sign_in_auth_webauthn_finish_path
         body = WebAuthn._compose_sign_up_in_finish_body(transaction_id, response)
         response = self._auth.do_post(uri, body, None)
 
@@ -131,7 +131,7 @@ class WebAuthn:
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Origin cannot be empty"
             )
 
-        uri = EndpointsV1.signUpOrInAuthWebauthnStart
+        uri = EndpointsV1.sign_up_or_in_auth_webauthn_start_path
         body = WebAuthn._compose_sign_up_or_in_start_body(login_id, origin)
         response = self._auth.do_post(uri, body)
 
@@ -151,7 +151,7 @@ class WebAuthn:
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Refresh token cannot be empty"
             )
 
-        uri = EndpointsV1.updateAuthWebauthnStart
+        uri = EndpointsV1.update_auth_webauthn_start_path
         body = WebAuthn._compose_update_start_body(login_id, origin)
         response = self._auth.do_post(uri, body, None, refresh_token)
 
@@ -171,7 +171,7 @@ class WebAuthn:
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Response cannot be empty"
             )
 
-        uri = EndpointsV1.updateAuthWebauthnFinish
+        uri = EndpointsV1.update_auth_webauthn_finish_path
         body = WebAuthn._compose_update_finish_body(transaction_id, response)
         self._auth.do_post(uri, body)
 

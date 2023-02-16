@@ -21,64 +21,64 @@ REDIRECT_LOCATION_COOKIE_NAME = "Location"
 
 
 class EndpointsV1:
-    refreshTokenPath = "/v1/auth/refresh"
-    logoutPath = "/v1/auth/logout"
-    logoutAllPath = "/v1/auth/logoutall"
-    mePath = "/v1/auth/me"
+    refresh_token_path = "/v1/auth/refresh"
+    logout_path = "/v1/auth/logout"
+    logout_all_path = "/v1/auth/logoutall"
+    me_path = "/v1/auth/me"
 
     # accesskey
-    exchangeAuthAccessKeyPath = "/v1/auth/accesskey/exchange"
+    exchange_auth_access_key_path = "/v1/auth/accesskey/exchange"
 
     # otp
-    signUpAuthOTPPath = "/v1/auth/otp/signup"
-    signInAuthOTPPath = "/v1/auth/otp/signin"
-    signUpOrInAuthOTPPath = "/v1/auth/otp/signup-in"
-    verifyCodeAuthPath = "/v1/auth/otp/verify"
-    updateUserEmailOTPPath = "/v1/auth/otp/update/email"
-    updateUserPhoneOTPPath = "/v1/auth/otp/update/phone"
+    sign_up_auth_otp_path = "/v1/auth/otp/signup"
+    sign_in_auth_otp_path = "/v1/auth/otp/signin"
+    sign_up_or_in_auth_otp_path = "/v1/auth/otp/signup-in"
+    verify_code_auth_path = "/v1/auth/otp/verify"
+    update_user_email_otp_path = "/v1/auth/otp/update/email"
+    update_user_phone_otp_path = "/v1/auth/otp/update/phone"
 
     # magiclink
-    signUpAuthMagicLinkPath = "/v1/auth/magiclink/signup"
-    signInAuthMagicLinkPath = "/v1/auth/magiclink/signin"
-    signUpOrInAuthMagicLinkPath = "/v1/auth/magiclink/signup-in"
-    verifyMagicLinkAuthPath = "/v1/auth/magiclink/verify"
-    getSessionMagicLinkAuthPath = "/v1/auth/magiclink/pending-session"
-    updateUserEmailMagicLinkPath = "/v1/auth/magiclink/update/email"
-    updateUserPhoneMagicLinkPath = "/v1/auth/magiclink/update/phone"
+    sign_up_auth_magiclink_path = "/v1/auth/magiclink/signup"
+    sign_in_auth_magiclink_path = "/v1/auth/magiclink/signin"
+    sign_up_or_in_auth_magiclink_path = "/v1/auth/magiclink/signup-in"
+    verify_magiclink_auth_path = "/v1/auth/magiclink/verify"
+    get_session_magiclink_auth_path = "/v1/auth/magiclink/pending-session"
+    update_user_email_magiclink_path = "/v1/auth/magiclink/update/email"
+    update_user_phone_magiclink_path = "/v1/auth/magiclink/update/phone"
 
     # enchantedlink
-    signUpAuthEnchantedLinkPath = "/v1/auth/enchantedlink/signup"
-    signInAuthEnchantedLinkPath = "/v1/auth/enchantedlink/signin"
-    signUpOrInAuthEnchantedLinkPath = "/v1/auth/enchantedlink/signup-in"
-    verifyEnchantedLinkAuthPath = "/v1/auth/enchantedlink/verify"
-    getSessionEnchantedLinkAuthPath = "/v1/auth/enchantedlink/pending-session"
-    updateUserEmailEnchantedLinkPath = "/v1/auth/enchantedlink/update/email"
+    sign_up_auth_enchantedlink_path = "/v1/auth/enchantedlink/signup"
+    sign_in_auth_enchantedlink_path = "/v1/auth/enchantedlink/signin"
+    sign_up_or_in_auth_enchantedlink_path = "/v1/auth/enchantedlink/signup-in"
+    verify_enchantedlink_auth_path = "/v1/auth/enchantedlink/verify"
+    get_session_enchantedlink_auth_path = "/v1/auth/enchantedlink/pending-session"
+    update_user_email_enchantedlink_path = "/v1/auth/enchantedlink/update/email"
 
     # oauth
-    oauthStart = "/v1/auth/oauth/authorize"
-    oauthExchangeTokenPath = "/v1/auth/oauth/exchange"
+    oauth_start_path = "/v1/auth/oauth/authorize"
+    oauth_exchange_token_path = "/v1/auth/oauth/exchange"
 
     # saml
-    authSAMLStart = "/v1/auth/saml/authorize"
-    samlExchangeTokenPath = "/v1/auth/saml/exchange"
+    auth_saml_start_path = "/v1/auth/saml/authorize"
+    saml_exchange_token_path = "/v1/auth/saml/exchange"
 
     # totp
-    signUpAuthTOTPPath = "/v1/auth/totp/signup"
-    verifyTOTPPath = "/v1/auth/totp/verify"
-    updateTOTPPath = "/v1/auth/totp/update"
+    sign_up_auth_totp_path = "/v1/auth/totp/signup"
+    verify_totp_path = "/v1/auth/totp/verify"
+    update_totp_path = "/v1/auth/totp/update"
 
     # webauthn
-    signUpAuthWebauthnStart = "/v1/auth/webauthn/signup/start"
-    signUpAuthWebauthnFinish = "/v1/auth/webauthn/signup/finish"
-    signInAuthWebauthnStart = "/v1/auth/webauthn/signin/start"
-    signInAuthWebauthnFinish = "/v1/auth/webauthn/signin/finish"
-    signUpOrInAuthWebauthnStart = "/v1/auth/webauthn/signup-in/start"
-    updateAuthWebauthnStart = "/v1/auth/webauthn/update/start"
-    updateAuthWebauthnFinish = "/v1/auth/webauthn/update/finish"
+    sign_up_auth_webauthn_start_path = "/v1/auth/webauthn/signup/start"
+    sign_up_auth_webauthn_finish_path = "/v1/auth/webauthn/signup/finish"
+    sign_in_auth_webauthn_start_path = "/v1/auth/webauthn/signin/start"
+    sign_in_auth_webauthn_finish_path = "/v1/auth/webauthn/signin/finish"
+    sign_up_or_in_auth_webauthn_start_path = "/v1/auth/webauthn/signup-in/start"
+    update_auth_webauthn_start_path = "/v1/auth/webauthn/update/start"
+    update_auth_webauthn_finish_path = "/v1/auth/webauthn/update/finish"
 
 
 class EndpointsV2:
-    publicKeyPath = "/v2/keys"
+    public_key_path = "/v2/keys"
 
 
 class DeliveryMethod(Enum):
@@ -89,21 +89,21 @@ class DeliveryMethod(Enum):
 
 class LoginOptions:
     def __init__(
-        self, stepup: bool = False, mfa: bool = False, customClaims: dict = None
+        self, stepup: bool = False, mfa: bool = False, custom_claims: dict = None
     ):
         self.stepup = stepup
-        self.customClaims = customClaims
+        self.customClaims = custom_claims
         self.mfa = mfa
 
 
-def validateRefreshTokenProvided(
+def validate_refresh_token_provided(
     login_options: LoginOptions = None, refresh_token: str = None
 ):
-    refreshRequired = login_options is not None and (
+    refresh_required = login_options is not None and (
         login_options.mfa or login_options.stepup
     )
-    refreshMissing = refresh_token is None or refresh_token == ""
-    if refreshRequired and refreshMissing:
+    refresh_missing = refresh_token is None or refresh_token == ""
+    if refresh_required and refresh_missing:
         raise AuthException(
             400,
             ERROR_TYPE_INVALID_ARGUMENT,

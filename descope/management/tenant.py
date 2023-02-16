@@ -33,7 +33,7 @@ class Tenant:
         Raise:
         AuthException: raised if creation operation fails
         """
-        uri = MgmtV1.tenantCreatePath
+        uri = MgmtV1.tenant_create_path
         response = self._auth.do_post(
             uri,
             Tenant._compose_create_update_body(name, id, self_provisioning_domains),
@@ -60,7 +60,7 @@ class Tenant:
         Raise:
         AuthException: raised if creation operation fails
         """
-        uri = MgmtV1.tenantUpdatePath
+        uri = MgmtV1.tenant_update_path
         self._auth.do_post(
             uri,
             Tenant._compose_create_update_body(name, id, self_provisioning_domains),
@@ -80,7 +80,7 @@ class Tenant:
         Raise:
         AuthException: raised if creation operation fails
         """
-        uri = MgmtV1.tenantDeletePath
+        uri = MgmtV1.tenant_delete_path
         self._auth.do_post(uri, {"id": id}, pswd=self._auth.management_key)
 
     def load_all(
@@ -98,7 +98,7 @@ class Tenant:
         AuthException: raised if load operation fails
         """
         response = self._auth.do_get(
-            MgmtV1.tenantLoadAllPath,
+            MgmtV1.tenant_load_all_path,
             pswd=self._auth.management_key,
         )
         return response.json()

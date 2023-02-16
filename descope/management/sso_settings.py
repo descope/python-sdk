@@ -58,7 +58,7 @@ class SSOSettings:
         AuthException: raised if configuration operation fails
         """
         self._auth.do_post(
-            MgmtV1.ssoConfigurePath,
+            MgmtV1.sso_configure_path,
             SSOSettings._compose_configure_body(
                 tenant_id, idp_url, entity_id, idp_cert, redirect_url, domain
             ),
@@ -81,7 +81,7 @@ class SSOSettings:
         AuthException: raised if configuration operation fails
         """
         self._auth.do_post(
-            MgmtV1.ssoMetadataPath,
+            MgmtV1.sso_metadata_path,
             SSOSettings._compose_metadata_body(tenant_id, idp_metadata_url),
             pswd=self._auth.management_key,
         )
@@ -104,7 +104,7 @@ class SSOSettings:
         AuthException: raised if configuration operation fails
         """
         self._auth.do_post(
-            MgmtV1.ssoMappingPath,
+            MgmtV1.sso_mapping_path,
             SSOSettings._compose_mapping_body(
                 tenant_id, role_mappings, attribute_mapping
             ),

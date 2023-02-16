@@ -45,7 +45,7 @@ class User:
         AuthException: raised if update operation fails
         """
         response = self._auth.do_post(
-            MgmtV1.userCreatePath,
+            MgmtV1.user_create_path,
             User._compose_create_update_body(
                 login_id, email, phone, display_name, role_names, user_tenants
             ),
@@ -80,7 +80,7 @@ class User:
         AuthException: raised if creation operation fails
         """
         self._auth.do_post(
-            MgmtV1.userUpdatePath,
+            MgmtV1.user_update_path,
             User._compose_create_update_body(
                 login_id, email, phone, display_name, role_names, user_tenants
             ),
@@ -101,7 +101,7 @@ class User:
         AuthException: raised if creation operation fails
         """
         self._auth.do_post(
-            MgmtV1.userDeletePath,
+            MgmtV1.user_delete_path,
             {"loginId": login_id},
             pswd=self._auth.management_key,
         )
@@ -125,7 +125,7 @@ class User:
         AuthException: raised if load operation fails
         """
         response = self._auth.do_get(
-            MgmtV1.userLoadPath,
+            MgmtV1.user_load_path,
             {"loginId": login_id},
             pswd=self._auth.management_key,
         )
@@ -151,7 +151,7 @@ class User:
         AuthException: raised if load operation fails
         """
         response = self._auth.do_get(
-            MgmtV1.userLoadPath,
+            MgmtV1.user_load_path,
             {"userId": user_id},
             pswd=self._auth.management_key,
         )
@@ -180,7 +180,7 @@ class User:
         AuthException: raised if search operation fails
         """
         response = self._auth.do_post(
-            MgmtV1.usersSearchPath,
+            MgmtV1.users_search_path,
             {"tenantIds": tenant_ids, "roleNames": role_names, "limit": limit},
             pswd=self._auth.management_key,
         )
@@ -205,7 +205,7 @@ class User:
         AuthException: raised if activate operation fails
         """
         response = self._auth.do_post(
-            MgmtV1.userUpdateStatusPath,
+            MgmtV1.user_update_status_path,
             {"loginId": login_id, "status": "enabled"},
             pswd=self._auth.management_key,
         )
@@ -230,7 +230,7 @@ class User:
         AuthException: raised if deactivate operation fails
         """
         response = self._auth.do_post(
-            MgmtV1.userUpdateStatusPath,
+            MgmtV1.user_update_status_path,
             {"loginId": login_id, "status": "disabled"},
             pswd=self._auth.management_key,
         )
@@ -259,7 +259,7 @@ class User:
         AuthException: raised if the update operation fails
         """
         response = self._auth.do_post(
-            MgmtV1.userUpdateEmailPath,
+            MgmtV1.user_update_email_path,
             {"loginId": login_id, "email": email, "verified": verified},
             pswd=self._auth.management_key,
         )
@@ -288,7 +288,7 @@ class User:
         AuthException: raised if the update operation fails
         """
         response = self._auth.do_post(
-            MgmtV1.userUpdatePhonePath,
+            MgmtV1.user_update_phone_path,
             {"loginId": login_id, "phone": phone, "verified": verified},
             pswd=self._auth.management_key,
         )
@@ -315,7 +315,7 @@ class User:
         AuthException: raised if the update operation fails
         """
         response = self._auth.do_post(
-            MgmtV1.userUpdateNamePath,
+            MgmtV1.user_update_name_path,
             {"loginId": login_id, "displayName": display_name},
             pswd=self._auth.management_key,
         )
@@ -343,7 +343,7 @@ class User:
         AuthException: raised if the operation fails
         """
         response = self._auth.do_post(
-            MgmtV1.userAddRolePath,
+            MgmtV1.user_add_role_path,
             {"loginId": login_id, "roleNames": role_names},
             pswd=self._auth.management_key,
         )
@@ -371,7 +371,7 @@ class User:
         AuthException: raised if the operation fails
         """
         response = self._auth.do_post(
-            MgmtV1.userRemoveRolePath,
+            MgmtV1.user_remove_role_path,
             {"loginId": login_id, "roleNames": role_names},
             pswd=self._auth.management_key,
         )
@@ -398,7 +398,7 @@ class User:
         AuthException: raised if the operation fails
         """
         response = self._auth.do_post(
-            MgmtV1.userAddTenantPath,
+            MgmtV1.user_add_tenant_path,
             {"loginId": login_id, "tenantId": tenant_id},
             pswd=self._auth.management_key,
         )
@@ -425,7 +425,7 @@ class User:
         AuthException: raised if the operation fails
         """
         response = self._auth.do_post(
-            MgmtV1.userRemoveTenantPath,
+            MgmtV1.user_remove_tenant_path,
             {"loginId": login_id, "tenantId": tenant_id},
             pswd=self._auth.management_key,
         )
@@ -454,7 +454,7 @@ class User:
         AuthException: raised if the operation fails
         """
         response = self._auth.do_post(
-            MgmtV1.userAddRolePath,
+            MgmtV1.user_add_role_path,
             {"loginId": login_id, "tenantId": tenant_id, "roleNames": role_names},
             pswd=self._auth.management_key,
         )
@@ -483,7 +483,7 @@ class User:
         AuthException: raised if the operation fails
         """
         response = self._auth.do_post(
-            MgmtV1.userRemoveRolePath,
+            MgmtV1.user_remove_role_path,
             {"loginId": login_id, "tenantId": tenant_id, "roleNames": role_names},
             pswd=self._auth.management_key,
         )

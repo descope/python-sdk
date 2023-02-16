@@ -24,7 +24,7 @@ class Permission:
         AuthException: raised if creation operation fails
         """
         self._auth.do_post(
-            MgmtV1.permissionCreatePath,
+            MgmtV1.permission_create_path,
             {"name": name, "description": description},
             pswd=self._auth.management_key,
         )
@@ -48,7 +48,7 @@ class Permission:
         AuthException: raised if update operation fails
         """
         self._auth.do_post(
-            MgmtV1.permissionUpdatePath,
+            MgmtV1.permission_update_path,
             {"name": name, "newName": new_name, "description": description},
             pswd=self._auth.management_key,
         )
@@ -67,7 +67,7 @@ class Permission:
         AuthException: raised if creation operation fails
         """
         self._auth.do_post(
-            MgmtV1.permissionDeletePath,
+            MgmtV1.permission_delete_path,
             {"name": name},
             pswd=self._auth.management_key,
         )
@@ -87,7 +87,7 @@ class Permission:
         AuthException: raised if load operation fails
         """
         response = self._auth.do_get(
-            MgmtV1.permissionLoadAllPath,
+            MgmtV1.permission_load_all_path,
             pswd=self._auth.management_key,
         )
         return response.json()

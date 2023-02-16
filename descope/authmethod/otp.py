@@ -4,7 +4,7 @@ from descope.common import (
     DeliveryMethod,
     EndpointsV1,
     LoginOptions,
-    validateRefreshTokenProvided,
+    validate_refresh_token_provided,
 )
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
@@ -42,7 +42,7 @@ class OTP:
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
             )
 
-        validateRefreshTokenProvided(login_options, refresh_token)
+        validate_refresh_token_provided(login_options, refresh_token)
 
         uri = OTP._compose_signin_url(method)
         body = OTP._compose_signin_body(login_id, login_options)
@@ -154,7 +154,7 @@ class OTP:
 
         Auth.validate_email(email)
 
-        uri = EndpointsV1.updateUserEmailOTPPath
+        uri = EndpointsV1.update_user_email_otp_path
         body = OTP._compose_update_user_email_body(login_id, email)
         self._auth.do_post(uri, body, None, refresh_token)
 
@@ -187,23 +187,23 @@ class OTP:
 
     @staticmethod
     def _compose_signup_url(method: DeliveryMethod) -> str:
-        return Auth.compose_url(EndpointsV1.signUpAuthOTPPath, method)
+        return Auth.compose_url(EndpointsV1.sign_up_auth_otp_path, method)
 
     @staticmethod
     def _compose_signin_url(method: DeliveryMethod) -> str:
-        return Auth.compose_url(EndpointsV1.signInAuthOTPPath, method)
+        return Auth.compose_url(EndpointsV1.sign_in_auth_otp_path, method)
 
     @staticmethod
     def _compose_sign_up_or_in_url(method: DeliveryMethod) -> str:
-        return Auth.compose_url(EndpointsV1.signUpOrInAuthOTPPath, method)
+        return Auth.compose_url(EndpointsV1.sign_up_or_in_auth_otp_path, method)
 
     @staticmethod
     def _compose_verify_code_url(method: DeliveryMethod) -> str:
-        return Auth.compose_url(EndpointsV1.verifyCodeAuthPath, method)
+        return Auth.compose_url(EndpointsV1.verify_code_auth_path, method)
 
     @staticmethod
     def _compose_update_phone_url(method: DeliveryMethod) -> str:
-        return Auth.compose_url(EndpointsV1.updateUserPhoneOTPPath, method)
+        return Auth.compose_url(EndpointsV1.update_user_phone_otp_path, method)
 
     @staticmethod
     def _compose_signup_body(method: DeliveryMethod, login_id: str, user: dict) -> dict:
