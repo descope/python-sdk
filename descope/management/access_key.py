@@ -45,7 +45,7 @@ class AccessKey:
         AuthException: raised if create operation fails
         """
         response = self._auth.do_post(
-            MgmtV1.accessKeyCreatePath,
+            MgmtV1.access_key_create_path,
             AccessKey._compose_create_body(name, expire_time, role_names, key_tenants),
             pswd=self._auth.management_key,
         )
@@ -70,7 +70,7 @@ class AccessKey:
         AuthException: raised if load operation fails
         """
         response = self._auth.do_get(
-            MgmtV1.accessKeyLoadPath,
+            MgmtV1.access_key_load_path,
             {"id": id},
             pswd=self._auth.management_key,
         )
@@ -95,7 +95,7 @@ class AccessKey:
         AuthException: raised if search operation fails
         """
         response = self._auth.do_post(
-            MgmtV1.accessKeysSearchPath,
+            MgmtV1.access_keys_search_path,
             {"tenantIds": tenant_ids},
             pswd=self._auth.management_key,
         )
@@ -118,7 +118,7 @@ class AccessKey:
         AuthException: raised if update operation fails
         """
         self._auth.do_post(
-            MgmtV1.accessKeyUpdatePath,
+            MgmtV1.access_key_update_path,
             {"id": id, "name": name},
             pswd=self._auth.management_key,
         )
@@ -138,7 +138,7 @@ class AccessKey:
         AuthException: raised if deactivation operation fails
         """
         self._auth.do_post(
-            MgmtV1.accessKeyDeactivatePath,
+            MgmtV1.access_key_deactivate_path,
             {"id": id},
             pswd=self._auth.management_key,
         )
@@ -158,7 +158,7 @@ class AccessKey:
         AuthException: raised if activation operation fails
         """
         self._auth.do_post(
-            MgmtV1.accessKeyActivatePath,
+            MgmtV1.access_key_activate_path,
             {"id": id},
             pswd=self._auth.management_key,
         )
@@ -177,7 +177,7 @@ class AccessKey:
         AuthException: raised if creation operation fails
         """
         self._auth.do_post(
-            MgmtV1.accessKeyDeletePath,
+            MgmtV1.access_key_delete_path,
             {"id": id},
             pswd=self._auth.management_key,
         )

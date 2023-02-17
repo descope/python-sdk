@@ -2,7 +2,7 @@ import platform
 
 import pkg_resources
 
-defaultHeaders = {
+default_headers = {
     "Content-Type": "application/json",
     "x-descope-sdk-name": "python",
     "x-descope-sdk-python-version": platform.python_version(),

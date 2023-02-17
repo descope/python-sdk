@@ -3,59 +3,59 @@ from typing import List
 
 class MgmtV1:
     # tenant
-    tenantCreatePath = "/v1/mgmt/tenant/create"
-    tenantUpdatePath = "/v1/mgmt/tenant/update"
-    tenantDeletePath = "/v1/mgmt/tenant/delete"
-    tenantLoadAllPath = "/v1/mgmt/tenant/all"
+    tenant_create_path = "/v1/mgmt/tenant/create"
+    tenant_update_path = "/v1/mgmt/tenant/update"
+    tenant_delete_path = "/v1/mgmt/tenant/delete"
+    tenant_load_all_path = "/v1/mgmt/tenant/all"
 
     # user
-    userCreatePath = "/v1/mgmt/user/create"
-    userUpdatePath = "/v1/mgmt/user/update"
-    userDeletePath = "/v1/mgmt/user/delete"
-    userLoadPath = "/v1/mgmt/user"
-    usersSearchPath = "/v1/mgmt/user/search"
-    userUpdateStatusPath = "/v1/mgmt/user/update/status"
-    userUpdateEmailPath = "/v1/mgmt/user/update/email"
-    userUpdatePhonePath = "/v1/mgmt/user/update/phone"
-    userUpdateNamePath = "/v1/mgmt/user/update/name"
-    userAddRolePath = "/v1/mgmt/user/update/role/add"
-    userRemoveRolePath = "/v1/mgmt/user/update/role/remove"
-    userAddTenantPath = "/v1/mgmt/user/update/tenant/add"
-    userRemoveTenantPath = "/v1/mgmt/user/update/tenant/remove"
+    user_create_path = "/v1/mgmt/user/create"
+    user_update_path = "/v1/mgmt/user/update"
+    user_delete_path = "/v1/mgmt/user/delete"
+    user_load_path = "/v1/mgmt/user"
+    users_search_path = "/v1/mgmt/user/search"
+    user_update_status_path = "/v1/mgmt/user/update/status"
+    user_update_email_path = "/v1/mgmt/user/update/email"
+    user_update_phone_path = "/v1/mgmt/user/update/phone"
+    user_update_name_path = "/v1/mgmt/user/update/name"
+    user_add_role_path = "/v1/mgmt/user/update/role/add"
+    user_remove_role_path = "/v1/mgmt/user/update/role/remove"
+    user_add_tenant_path = "/v1/mgmt/user/update/tenant/add"
+    user_remove_tenant_path = "/v1/mgmt/user/update/tenant/remove"
 
     # access key
-    accessKeyCreatePath = "/v1/mgmt/accesskey/create"
-    accessKeyLoadPath = "/v1/mgmt/accesskey"
-    accessKeysSearchPath = "/v1/mgmt/accesskey/search"
-    accessKeyUpdatePath = "/v1/mgmt/accesskey/update"
-    accessKeyDeactivatePath = "/v1/mgmt/accesskey/deactivate"
-    accessKeyActivatePath = "/v1/mgmt/accesskey/activate"
-    accessKeyDeletePath = "/v1/mgmt/accesskey/delete"
+    access_key_create_path = "/v1/mgmt/accesskey/create"
+    access_key_load_path = "/v1/mgmt/accesskey"
+    access_keys_search_path = "/v1/mgmt/accesskey/search"
+    access_key_update_path = "/v1/mgmt/accesskey/update"
+    access_key_deactivate_path = "/v1/mgmt/accesskey/deactivate"
+    access_key_activate_path = "/v1/mgmt/accesskey/activate"
+    access_key_delete_path = "/v1/mgmt/accesskey/delete"
 
     # sso
-    ssoConfigurePath = "/v1/mgmt/sso/settings"
-    ssoMetadataPath = "/v1/mgmt/sso/metadata"
-    ssoMappingPath = "/v1/mgmt/sso/mapping"
+    sso_configure_path = "/v1/mgmt/sso/settings"
+    sso_metadata_path = "/v1/mgmt/sso/metadata"
+    sso_mapping_path = "/v1/mgmt/sso/mapping"
 
     # jwt
-    updateJwt = "/v1/mgmt/jwt/update"
+    update_jwt_path = "/v1/mgmt/jwt/update"
 
     # permission
-    permissionCreatePath = "/v1/mgmt/permission/create"
-    permissionUpdatePath = "/v1/mgmt/permission/update"
-    permissionDeletePath = "/v1/mgmt/permission/delete"
-    permissionLoadAllPath = "/v1/mgmt/permission/all"
+    permission_create_path = "/v1/mgmt/permission/create"
+    permission_update_path = "/v1/mgmt/permission/update"
+    permission_delete_path = "/v1/mgmt/permission/delete"
+    permission_load_all_path = "/v1/mgmt/permission/all"
 
     # role
-    roleCreatePath = "/v1/mgmt/role/create"
-    roleUpdatePath = "/v1/mgmt/role/update"
-    roleDeletePath = "/v1/mgmt/role/delete"
-    roleLoadAllPath = "/v1/mgmt/role/all"
+    role_create_path = "/v1/mgmt/role/create"
+    role_update_path = "/v1/mgmt/role/update"
+    role_delete_path = "/v1/mgmt/role/delete"
+    role_load_all_path = "/v1/mgmt/role/all"
 
     # group
-    groupLoadAllPath = "/v1/mgmt/group/all"
-    groupLoadAllForMemberPath = "/v1/mgmt/group/member/all"
-    groupLoadAllGroupMembersPath = "/v1/mgmt/group/members"
+    group_load_all_path = "/v1/mgmt/group/all"
+    group_load_all_for_member_path = "/v1/mgmt/group/member/all"
+    group_load_all_group_members_path = "/v1/mgmt/group/members"
 
 
 class AssociatedTenant:

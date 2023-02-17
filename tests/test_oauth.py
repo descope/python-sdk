@@ -67,11 +67,11 @@ class TestOAuth(unittest.TestCase):
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             oauth.start("facebook")
-            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.oauthStart}"
+            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.oauth_start_path}"
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params={"provider": "facebook"},
@@ -97,13 +97,13 @@ class TestOAuth(unittest.TestCase):
 
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
-            lo = LoginOptions(stepup=True, customClaims={"k1": "v1"})
+            lo = LoginOptions(stepup=True, custom_claims={"k1": "v1"})
             oauth.start("facebook", login_options=lo, refresh_token="refresh")
-            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.oauthStart}"
+            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.oauth_start_path}"
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:refresh",
                 },
                 params={"provider": "facebook"},
@@ -140,9 +140,9 @@ class TestOAuth(unittest.TestCase):
             mock_post.return_value = my_mock_response
             oauth.exchange_token("c1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.oauthExchangeTokenPath}",
+                f"{DEFAULT_BASE_URL}{EndpointsV1.oauth_exchange_token_path}",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,

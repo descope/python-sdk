@@ -45,9 +45,9 @@ class TestGroup(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNotNone(client.mgmt.group.load_all_groups("someTenantId"))
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.groupLoadAllPath}",
+                f"{DEFAULT_BASE_URL}{MgmtV1.group_load_all_path}",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
@@ -86,9 +86,9 @@ class TestGroup(unittest.TestCase):
                 )
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.groupLoadAllForMemberPath}",
+                f"{DEFAULT_BASE_URL}{MgmtV1.group_load_all_for_member_path}",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
@@ -128,9 +128,9 @@ class TestGroup(unittest.TestCase):
                 client.mgmt.group.load_all_group_members("someTenantId", "someGroupId")
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.groupLoadAllGroupMembersPath}",
+                f"{DEFAULT_BASE_URL}{MgmtV1.group_load_all_group_members_path}",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,

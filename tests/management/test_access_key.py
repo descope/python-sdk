@@ -57,12 +57,12 @@ class TestAccessKey(unittest.TestCase):
                     AssociatedTenant("tenant2", ["role1", "role2"]),
                 ],
             )
-            accessKey = resp["key"]
-            self.assertEqual(accessKey["id"], "ak1")
+            access_key = resp["key"]
+            self.assertEqual(access_key["id"], "ak1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.accessKeyCreatePath}",
+                f"{DEFAULT_BASE_URL}{MgmtV1.access_key_create_path}",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
@@ -105,12 +105,12 @@ class TestAccessKey(unittest.TestCase):
             network_resp.json.return_value = json.loads("""{"key": {"id": "ak1"}}""")
             mock_get.return_value = network_resp
             resp = client.mgmt.access_key.load("key-id")
-            accessKey = resp["key"]
-            self.assertEqual(accessKey["id"], "ak1")
+            access_key = resp["key"]
+            self.assertEqual(access_key["id"], "ak1")
             mock_get.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.accessKeyLoadPath}",
+                f"{DEFAULT_BASE_URL}{MgmtV1.access_key_load_path}",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params={"id": "key-id"},
@@ -149,9 +149,9 @@ class TestAccessKey(unittest.TestCase):
             self.assertEqual(keys[0]["id"], "ak1")
             self.assertEqual(keys[1]["id"], "ak2")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.accessKeysSearchPath}",
+                f"{DEFAULT_BASE_URL}{MgmtV1.access_keys_search_path}",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
@@ -192,9 +192,9 @@ class TestAccessKey(unittest.TestCase):
                 )
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.accessKeyUpdatePath}",
+                f"{DEFAULT_BASE_URL}{MgmtV1.access_key_update_path}",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
@@ -230,9 +230,9 @@ class TestAccessKey(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.access_key.deactivate("ak1"))
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.accessKeyDeactivatePath}",
+                f"{DEFAULT_BASE_URL}{MgmtV1.access_key_deactivate_path}",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
@@ -267,9 +267,9 @@ class TestAccessKey(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.access_key.activate("ak1"))
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.accessKeyActivatePath}",
+                f"{DEFAULT_BASE_URL}{MgmtV1.access_key_activate_path}",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
@@ -304,9 +304,9 @@ class TestAccessKey(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.access_key.delete("ak1"))
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.accessKeyDeletePath}",
+                f"{DEFAULT_BASE_URL}{MgmtV1.access_key_delete_path}",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,

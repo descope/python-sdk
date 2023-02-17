@@ -3,7 +3,7 @@ from descope.common import (
     REFRESH_SESSION_COOKIE_NAME,
     EndpointsV1,
     LoginOptions,
-    validateRefreshTokenProvided,
+    validate_refresh_token_provided,
 )
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
@@ -40,7 +40,7 @@ class TOTP:
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
             )
 
-        uri = EndpointsV1.signUpAuthTOTPPath
+        uri = EndpointsV1.sign_up_auth_totp_path
         body = TOTP._compose_signup_body(login_id, user)
         response = self._auth.do_post(uri, body)
 
@@ -81,9 +81,9 @@ class TOTP:
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Code cannot be empty"
             )
 
-        validateRefreshTokenProvided(login_options, refresh_token)
+        validate_refresh_token_provided(login_options, refresh_token)
 
-        uri = EndpointsV1.verifyTOTPPath
+        uri = EndpointsV1.verify_totp_path
         body = TOTP._compose_signin_body(login_id, code, login_options)
         response = self._auth.do_post(uri, body, None, refresh_token)
 
@@ -122,7 +122,7 @@ class TOTP:
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Refresh token cannot be empty"
             )
 
-        uri = EndpointsV1.updateTOTPPath
+        uri = EndpointsV1.update_totp_path
         body = TOTP._compose_update_user_body(login_id)
         response = self._auth.do_post(uri, body, None, refresh_token)
 

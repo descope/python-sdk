@@ -41,7 +41,7 @@ class Group:
         AuthException: raised if load operation fails
         """
         response = self._auth.do_post(
-            MgmtV1.groupLoadAllPath,
+            MgmtV1.group_load_all_path,
             {
                 "tenantId": tenant_id,
             },
@@ -84,7 +84,7 @@ class Group:
         AuthException: raised if load operation fails
         """
         response = self._auth.do_post(
-            MgmtV1.groupLoadAllForMemberPath,
+            MgmtV1.group_load_all_for_member_path,
             {
                 "tenantId": tenant_id,
                 "loginIds": login_ids,
@@ -127,7 +127,7 @@ class Group:
         AuthException: raised if load operation fails
         """
         response = self._auth.do_post(
-            MgmtV1.groupLoadAllGroupMembersPath,
+            MgmtV1.group_load_all_group_members_path,
             {
                 "tenantId": tenant_id,
                 "groupId": group_id,

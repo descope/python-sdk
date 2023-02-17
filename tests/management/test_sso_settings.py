@@ -59,9 +59,9 @@ class TestSSOSettings(unittest.TestCase):
                 )
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.ssoConfigurePath}",
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_configure_path}",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
@@ -92,9 +92,9 @@ class TestSSOSettings(unittest.TestCase):
                 )
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.ssoConfigurePath}",
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_configure_path}",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
@@ -125,9 +125,9 @@ class TestSSOSettings(unittest.TestCase):
                 )
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.ssoConfigurePath}",
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_configure_path}",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
@@ -173,9 +173,9 @@ class TestSSOSettings(unittest.TestCase):
                 )
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.ssoMetadataPath}",
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_metadata_path}",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
@@ -219,9 +219,9 @@ class TestSSOSettings(unittest.TestCase):
                 )
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.ssoMappingPath}",
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_mapping_path}",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,

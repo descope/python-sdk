@@ -108,11 +108,13 @@ class TestWebauthN(unittest.TestCase):
             mock_post.return_value = my_mock_response
             res = webauthn.sign_up_start("id1", "https://example.com")
 
-            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.signUpAuthWebauthnStart}"
+            expected_uri = (
+                f"{DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_webauthn_start_path}"
+            )
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
@@ -157,12 +159,14 @@ class TestWebauthN(unittest.TestCase):
             )
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
-            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.signUpAuthWebauthnFinish}"
+            expected_uri = (
+                f"{DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_webauthn_finish_path}"
+            )
             webauthn.sign_up_finish("t01", "response01")
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
@@ -213,11 +217,13 @@ class TestWebauthN(unittest.TestCase):
             my_mock_response.json.return_value = valid_response
             mock_post.return_value = my_mock_response
             res = webauthn.sign_in_start("id1", "https://example.com")
-            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.signInAuthWebauthnStart}"
+            expected_uri = (
+                f"{DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_webauthn_start_path}"
+            )
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
@@ -266,13 +272,15 @@ class TestWebauthN(unittest.TestCase):
             my_mock_response.ok = True
             my_mock_response.json.return_value = valid_response
             mock_post.return_value = my_mock_response
-            lo = LoginOptions(stepup=True, customClaims={"k1": "v1"})
+            lo = LoginOptions(stepup=True, custom_claims={"k1": "v1"})
             res = webauthn.sign_in_start("id1", "https://example.com", lo, "refresh")
-            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.signInAuthWebauthnStart}"
+            expected_uri = (
+                f"{DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_webauthn_start_path}"
+            )
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:refresh",
                 },
                 params=None,
@@ -318,13 +326,15 @@ class TestWebauthN(unittest.TestCase):
             )
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
-            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.signInAuthWebauthnFinish}"
+            expected_uri = (
+                f"{DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_webauthn_finish_path}"
+            )
             webauthn.sign_in_finish("t01", "response01")
 
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
@@ -368,13 +378,11 @@ class TestWebauthN(unittest.TestCase):
             my_mock_response.json.return_value = valid_response
             mock_post.return_value = my_mock_response
             res = webauthn.sign_up_or_in_start("id1", "https://example.com")
-            expected_uri = (
-                f"{DEFAULT_BASE_URL}{EndpointsV1.signUpOrInAuthWebauthnStart}"
-            )
+            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.sign_up_or_in_auth_webauthn_start_path}"
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
@@ -443,11 +451,13 @@ class TestWebauthN(unittest.TestCase):
             res = webauthn.update_start(
                 "dummy@dummy.com", "asdasd", "https://example.com"
             )
-            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.updateAuthWebauthnStart}"
+            expected_uri = (
+                f"{DEFAULT_BASE_URL}{EndpointsV1.update_auth_webauthn_start_path}"
+            )
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:asdasd",
                 },
                 params=None,
@@ -484,12 +494,14 @@ class TestWebauthN(unittest.TestCase):
             )
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
-            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.updateAuthWebauthnFinish}"
+            expected_uri = (
+                f"{DEFAULT_BASE_URL}{EndpointsV1.update_auth_webauthn_finish_path}"
+            )
             webauthn.update_finish("t01", "response01")
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,

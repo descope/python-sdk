@@ -50,9 +50,9 @@ class TestTenant(unittest.TestCase):
             resp = client.mgmt.tenant.create("name", "t1", ["domain.com"])
             self.assertEqual(resp["id"], "t1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.tenantCreatePath}",
+                f"{DEFAULT_BASE_URL}{MgmtV1.tenant_create_path}",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
@@ -92,9 +92,9 @@ class TestTenant(unittest.TestCase):
                 client.mgmt.tenant.update("t1", "new-name", ["domain.com"])
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.tenantUpdatePath}",
+                f"{DEFAULT_BASE_URL}{MgmtV1.tenant_update_path}",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
@@ -131,9 +131,9 @@ class TestTenant(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.tenant.delete("t1"))
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.tenantDeletePath}",
+                f"{DEFAULT_BASE_URL}{MgmtV1.tenant_delete_path}",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
@@ -180,9 +180,9 @@ class TestTenant(unittest.TestCase):
             self.assertEqual(tenants[0]["name"], "tenant1")
             self.assertEqual(tenants[1]["name"], "tenant2")
             mock_get.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.tenantLoadAllPath}",
+                f"{DEFAULT_BASE_URL}{MgmtV1.tenant_load_all_path}",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,

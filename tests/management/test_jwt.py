@@ -35,11 +35,11 @@ class TestUser(unittest.TestCase):
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
-                AuthException, client.mgmt.jwt.updateJWT, "jwt", {"k1": "v1"}
+                AuthException, client.mgmt.jwt.update_jwt, "jwt", {"k1": "v1"}
             )
 
             self.assertRaises(
-                AuthException, client.mgmt.jwt.updateJWT, "", {"k1": "v1"}
+                AuthException, client.mgmt.jwt.update_jwt, "", {"k1": "v1"}
             )
 
         # Test success flow
@@ -48,13 +48,13 @@ class TestUser(unittest.TestCase):
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
             mock_post.return_value = network_resp
-            resp = client.mgmt.jwt.updateJWT("test", {"k1": "v1"})
+            resp = client.mgmt.jwt.update_jwt("test", {"k1": "v1"})
             self.assertEqual(resp, "response")
-            expected_uri = f"{DEFAULT_BASE_URL}{MgmtV1.updateJwt}"
+            expected_uri = f"{DEFAULT_BASE_URL}{MgmtV1.update_jwt_path}"
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 data=json.dumps({"jwt": "test", "customClaims": {"k1": "v1"}}),

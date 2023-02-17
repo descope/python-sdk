@@ -6,7 +6,7 @@ from descope.common import (
     DeliveryMethod,
     EndpointsV1,
     LoginOptions,
-    validateRefreshTokenProvided,
+    validate_refresh_token_provided,
 )
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
@@ -32,7 +32,7 @@ class MagicLink:
                 "Identifier is empty",
             )
 
-        validateRefreshTokenProvided(login_options, refresh_token)
+        validate_refresh_token_provided(login_options, refresh_token)
 
         body = MagicLink._compose_signin_body(login_id, uri, login_options)
         uri = MagicLink._compose_signin_url(method)
@@ -63,7 +63,7 @@ class MagicLink:
         self._auth.do_post(uri, body, None)
 
     def verify(self, token: str) -> dict:
-        uri = EndpointsV1.verifyMagicLinkAuthPath
+        uri = EndpointsV1.verify_magiclink_auth_path
         body = MagicLink._compose_verify_body(token)
         response = self._auth.do_post(uri, body, None)
         resp = response.json()
@@ -81,7 +81,7 @@ class MagicLink:
         Auth.validate_email(email)
 
         body = MagicLink._compose_update_user_email_body(login_id, email)
-        uri = EndpointsV1.updateUserEmailOTPPath
+        uri = EndpointsV1.update_user_email_otp_path
         self._auth.do_post(uri, body, None, refresh_token)
 
     def update_user_phone(
@@ -95,24 +95,24 @@ class MagicLink:
         Auth.validate_phone(method, phone)
 
         body = MagicLink._compose_update_user_phone_body(login_id, phone)
-        uri = EndpointsV1.updateUserPhoneOTPPath
+        uri = EndpointsV1.update_user_phone_otp_path
         self._auth.do_post(uri, body, None, refresh_token)
 
     @staticmethod
     def _compose_signin_url(method: DeliveryMethod) -> str:
-        return Auth.compose_url(EndpointsV1.signInAuthMagicLinkPath, method)
+        return Auth.compose_url(EndpointsV1.sign_in_auth_magiclink_path, method)
 
     @staticmethod
     def _compose_signup_url(method: DeliveryMethod) -> str:
-        return Auth.compose_url(EndpointsV1.signUpAuthMagicLinkPath, method)
+        return Auth.compose_url(EndpointsV1.sign_up_auth_magiclink_path, method)
 
     @staticmethod
     def _compose_sign_up_or_in_url(method: DeliveryMethod) -> str:
-        return Auth.compose_url(EndpointsV1.signUpOrInAuthMagicLinkPath, method)
+        return Auth.compose_url(EndpointsV1.sign_up_or_in_auth_magiclink_path, method)
 
     @staticmethod
     def _compose_update_phone_url(method: DeliveryMethod) -> str:
-        return Auth.compose_url(EndpointsV1.updateUserPhoneMagicLinkPath, method)
+        return Auth.compose_url(EndpointsV1.update_user_phone_magiclink_path, method)
 
     @staticmethod
     def _compose_signin_body(

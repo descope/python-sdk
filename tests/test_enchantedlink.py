@@ -45,7 +45,7 @@ class TestEnchantedLink(unittest.TestCase):
             },
         )
 
-        lo = LoginOptions(stepup=True, customClaims={"k1": "v1"})
+        lo = LoginOptions(stepup=True, custom_claims={"k1": "v1"})
         self.assertEqual(
             EnchantedLink._compose_signin_body("id1", "uri1", lo),
             {
@@ -105,9 +105,9 @@ class TestEnchantedLink(unittest.TestCase):
             mock_post.return_value = my_mock_response
             res = enchantedlink.sign_in("dummy@dummy.com", "http://test.me")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.signInAuthEnchantedLinkPath}/email",
+                f"{DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_enchantedlink_path}/email",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
@@ -134,9 +134,9 @@ class TestEnchantedLink(unittest.TestCase):
                 refresh_token=refresh_token,
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.signInAuthEnchantedLinkPath}/email",
+                f"{DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_enchantedlink_path}/email",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{refresh_token}",
                 },
                 params=None,
@@ -163,12 +163,12 @@ class TestEnchantedLink(unittest.TestCase):
             data = json.loads("""{"pendingRef": "aaaa", "linkId":"24"}""")
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
-            lo = LoginOptions(stepup=True, customClaims={"k1": "v1"})
+            lo = LoginOptions(stepup=True, custom_claims={"k1": "v1"})
             enchantedlink.sign_in("dummy@dummy.com", "http://test.me", lo, "refresh")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.signInAuthEnchantedLinkPath}/email",
+                f"{DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_enchantedlink_path}/email",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:refresh",
                 },
                 params=None,
@@ -211,9 +211,9 @@ class TestEnchantedLink(unittest.TestCase):
                 {"username": "user1", "email": "dummy@dummy.com"},
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.signUpAuthEnchantedLinkPath}/email",
+                f"{DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_enchantedlink_path}/email",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
@@ -241,9 +241,9 @@ class TestEnchantedLink(unittest.TestCase):
                 None,
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.signUpAuthEnchantedLinkPath}/email",
+                f"{DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_enchantedlink_path}/email",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
@@ -273,9 +273,9 @@ class TestEnchantedLink(unittest.TestCase):
                 "http://test.me",
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.signUpOrInAuthEnchantedLinkPath}/email",
+                f"{DEFAULT_BASE_URL}{EndpointsV1.sign_up_or_in_auth_enchantedlink_path}/email",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,

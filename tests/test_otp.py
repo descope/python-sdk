@@ -173,9 +173,9 @@ class TestOTP(unittest.TestCase):
                 )
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.signUpAuthOTPPath}/email",
+                f"{DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_otp_path}/email",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
@@ -202,9 +202,9 @@ class TestOTP(unittest.TestCase):
                 client.otp.sign_up(DeliveryMethod.EMAIL, "dummy@dummy.com", None)
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.signUpAuthOTPPath}/email",
+                f"{DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_otp_path}/email",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
@@ -265,9 +265,9 @@ class TestOTP(unittest.TestCase):
                 refresh_token=refresh_token,
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.signInAuthOTPPath}/email",
+                f"{DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_otp_path}/email",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{refresh_token}",
                 },
                 params=None,

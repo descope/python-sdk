@@ -46,9 +46,9 @@ class TestPermission(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.permission.create("P1", "Something"))
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.permissionCreatePath}",
+                f"{DEFAULT_BASE_URL}{MgmtV1.permission_create_path}",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
@@ -91,9 +91,9 @@ class TestPermission(unittest.TestCase):
                 )
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.permissionUpdatePath}",
+                f"{DEFAULT_BASE_URL}{MgmtV1.permission_update_path}",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
@@ -130,9 +130,9 @@ class TestPermission(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.permission.delete("name"))
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.permissionDeletePath}",
+                f"{DEFAULT_BASE_URL}{MgmtV1.permission_delete_path}",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
@@ -172,9 +172,9 @@ class TestPermission(unittest.TestCase):
             self.assertEqual(permissions[0]["name"], "p1")
             self.assertEqual(permissions[1]["name"], "p2")
             mock_get.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.permissionLoadAllPath}",
+                f"{DEFAULT_BASE_URL}{MgmtV1.permission_load_all_path}",
                 headers={
-                    **common.defaultHeaders,
+                    **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,

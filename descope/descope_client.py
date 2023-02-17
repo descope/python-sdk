@@ -235,7 +235,7 @@ class DescopeClient:
                 f"signed refresh token {refresh_token} is empty",
             )
 
-        uri = EndpointsV1.logoutPath
+        uri = EndpointsV1.logout_path
         return self._auth.do_post(uri, {}, None, refresh_token)
 
     def logout_all(self, refresh_token: str) -> requests.Response:
@@ -258,7 +258,7 @@ class DescopeClient:
                 f"signed refresh token {refresh_token} is empty",
             )
 
-        uri = EndpointsV1.logoutAllPath
+        uri = EndpointsV1.logout_all_path
         return self._auth.do_post(uri, {}, None, refresh_token)
 
     def me(self, refresh_token: str) -> dict:
@@ -282,7 +282,7 @@ class DescopeClient:
                 f"signed refresh token {refresh_token} is empty",
             )
 
-        uri = EndpointsV1.mePath
+        uri = EndpointsV1.me_path
         response = self._auth.do_get(uri, None, None, refresh_token)
         return response.json()
 
