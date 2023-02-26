@@ -391,6 +391,18 @@ descope_client.mgmt.user.create(
     ],
 )
 
+# Alternatively, a user can be created and invited via an email message.
+# Make sure to configure the invite URL in the Descope console prior to using this function,
+# and that an email address is provided in the information.
+descope_client.mgmt.user.invite(
+    login_id="desmond@descope.com",
+    email="desmond@descope.com",
+    display_name="Desmond Copeland",
+    user_tenants=[
+        AssociatedTenant("my-tenant-id", ["role-name1"]),
+    ],
+)
+
 # Update will override all fields as is. Use carefully.
 descope_client.mgmt.user.update(
     login_id="desmond@descope.com",
