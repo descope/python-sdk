@@ -47,8 +47,37 @@ class User:
         """
         response = self._auth.do_post(
             MgmtV1.user_create_path,
-            User._compose_create_update_body(
-                login_id, email, phone, display_name, role_names, user_tenants
+            User._compose_create_body(
+                login_id, email, phone, display_name, role_names, user_tenants, False
+            ),
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    def invite(
+        self,
+        login_id: str,
+        email: str = None,
+        phone: str = None,
+        display_name: str = None,
+        role_names: List[str] = [],
+        user_tenants: List[AssociatedTenant] = [],
+    ) -> dict:
+        """
+        Create a new user and invite them via an email message.
+
+        Functions exactly the same as the `create` function with the additional invitation
+            behavior. See the documentation above for the general creation behavior.
+
+        IMPORTANT: Since the invitation is sent by email, make sure either
+            the email is explicitly set, or the login_id itself is an email address.
+            You must configure the invitation URL in the Descope console prior to
+            calling the method.
+        """
+        response = self._auth.do_post(
+            MgmtV1.user_create_path,
+            User._compose_create_body(
+                login_id, email, phone, display_name, role_names, user_tenants, True
             ),
             pswd=self._auth.management_key,
         )
@@ -82,7 +111,7 @@ class User:
         """
         self._auth.do_post(
             MgmtV1.user_update_path,
-            User._compose_create_update_body(
+            User._compose_update_body(
                 login_id, email, phone, display_name, role_names, user_tenants
             ),
             pswd=self._auth.management_key,
@@ -508,7 +537,23 @@ class User:
         return response.json()
 
     @staticmethod
-    def _compose_create_update_body(
+    def _compose_create_body(
+        login_id: str,
+        email: str,
+        phone: str,
+        display_name: str,
+        role_names: List[str],
+        user_tenants: List[AssociatedTenant],
+        invite: bool,
+    ) -> dict:
+        body = User._compose_update_body(
+            login_id, email, phone, display_name, role_names, user_tenants
+        )
+        body["invite"] = invite
+        return body
+
+    @staticmethod
+    def _compose_update_body(
         login_id: str,
         email: str,
         phone: str,

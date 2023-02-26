@@ -75,6 +75,59 @@ class TestUser(unittest.TestCase):
                             {"tenantId": "tenant1", "roleNames": []},
                             {"tenantId": "tenant2", "roleNames": ["role1", "role2"]},
                         ],
+                        "invite": False,
+                    }
+                ),
+                allow_redirects=False,
+                verify=True,
+            )
+
+    def test_invite(self):
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                self.client.mgmt.user.invite,
+                "valid-id",
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.invite(
+                login_id="name@mail.com",
+                email="name@mail.com",
+                display_name="Name",
+                user_tenants=[
+                    AssociatedTenant("tenant1"),
+                    AssociatedTenant("tenant2", ["role1", "role2"]),
+                ],
+            )
+            user = resp["user"]
+            self.assertEqual(user["id"], "u1")
+            mock_post.assert_called_with(
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_create_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                data=json.dumps(
+                    {
+                        "loginId": "name@mail.com",
+                        "email": "name@mail.com",
+                        "phone": None,
+                        "displayName": "Name",
+                        "roleNames": [],
+                        "userTenants": [
+                            {"tenantId": "tenant1", "roleNames": []},
+                            {"tenantId": "tenant2", "roleNames": ["role1", "role2"]},
+                        ],
+                        "invite": True,
                     }
                 ),
                 allow_redirects=False,
