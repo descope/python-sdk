@@ -625,7 +625,7 @@ updated_jwt = client.mgmt.jwt.update_jwt(
     jwt: "original-jwt",
     custom_claims: {
         "custom-key1": "custom-value1",
-        "custom-key2": "custom-value2",
+        "custom-key2": "custom-value2"
     },
 )
 ```
