@@ -46,7 +46,7 @@ from descope import DeliveryMethod
 # Every user must have a login ID. All other user information is optional
 email = "desmond@descope.com"
 user = {"name": "Desmond Copeland", "phone": "212-555-1234", "email": email}
-descope_client.otp.sign_up(method=DeliveryMethod.EMAIL, login_id=email, user=user)
+masked_address = descope_client.otp.sign_up(method=DeliveryMethod.EMAIL, login_id=email, user=user)
 ```
 
 The user will receive a code using the selected delivery method. Verify that code using:
@@ -72,7 +72,7 @@ The user can either `sign up`, `sign in` or `sign up or in`
 ```python
 from descope import DeliveryMethod
 
-descope_client.magiclink.sign_up_or_in(
+masked_address = descope_client.magiclink.sign_up_or_in(
     method=DeliveryMethod.EMAIL,
     login_id="desmond@descope.com",
     uri="http://myapp.com/verify-magic-link", # Set redirect URI here or via console
@@ -115,6 +115,7 @@ resp = descope_client.enchantedlink.sign_up_or_in(
 )
 link_identifier = resp["linkId"] # Show the user which link they should press in their email
 pending_ref = resp["pendingRef"] # Used to poll for a valid session
+masked_email = resp["maskedEmail"] # The email that the message was sent to in a masked format
 ```
 
 After sending the link, you must poll to receive a valid session using the `pending_ref` from
