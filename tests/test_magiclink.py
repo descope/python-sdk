@@ -122,12 +122,16 @@ class TestMagicLink(unittest.TestCase):
 
         # Test success flow
         with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
-                magiclink.sign_in(
-                    DeliveryMethod.EMAIL, "dummy@dummy.com", "http://test.me"
-                )
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
+
+            mock_post.return_value = my_mock_response
+
+            maskedEmail = magiclink.sign_in(
+                DeliveryMethod.EMAIL, "dummy@dummy.com", "http://test.me"
             )
+            self.assertEqual("t***@example.com", maskedEmail)
 
             self.assertRaises(
                 AuthException,
@@ -203,15 +207,17 @@ class TestMagicLink(unittest.TestCase):
 
         # Test success flow
         with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
-                magiclink.sign_up(
-                    DeliveryMethod.EMAIL,
-                    "dummy@dummy.com",
-                    "http://test.me",
-                    signup_user_details,
-                )
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
+            mock_post.return_value = my_mock_response
+            resp = magiclink.sign_up(
+                DeliveryMethod.EMAIL,
+                "dummy@dummy.com",
+                "http://test.me",
+                signup_user_details,
             )
+            self.assertEqual("t***@example.com", resp)
 
         # Test flow where username not set and we used the login_id as default
         signup_user_details = {
@@ -222,14 +228,18 @@ class TestMagicLink(unittest.TestCase):
         }
 
         with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
+            mock_post.return_value = my_mock_response
+            self.assertEqual(
+                "t***@example.com",
                 magiclink.sign_up(
                     DeliveryMethod.EMAIL,
                     "dummy@dummy.com",
                     "http://test.me",
                     signup_user_details,
-                )
+                ),
             )
             mock_post.assert_called_with(
                 f"{DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_magiclink_path}/email",
@@ -257,14 +267,18 @@ class TestMagicLink(unittest.TestCase):
 
         # Test user is None so using the login_id as default
         with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
+            mock_post.return_value = my_mock_response
+            self.assertEqual(
+                "t***@example.com",
                 magiclink.sign_up(
                     DeliveryMethod.EMAIL,
                     "dummy@dummy.com",
                     "http://test.me",
                     None,
-                )
+                ),
             )
             mock_post.assert_called_with(
                 f"{DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_magiclink_path}/email",
@@ -302,11 +316,15 @@ class TestMagicLink(unittest.TestCase):
 
         # Test success flow
         with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
+            mock_post.return_value = my_mock_response
+            self.assertEqual(
+                "t***@example.com",
                 magiclink.sign_up_or_in(
                     DeliveryMethod.EMAIL, "dummy@dummy.com", "http://test.me"
-                )
+                ),
             )
 
     def test_verify(self):
@@ -381,9 +399,13 @@ class TestMagicLink(unittest.TestCase):
 
         # Test success flow
         with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
-                magiclink.update_user_email("id1", "dummy@dummy.com", "refresh_token1")
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
+            mock_post.return_value = my_mock_response
+            self.assertEqual(
+                "t***@example.com",
+                magiclink.update_user_email("id1", "dummy@dummy.com", "refresh_token1"),
             )
 
     def test_update_user_phone(self):
@@ -411,11 +433,15 @@ class TestMagicLink(unittest.TestCase):
 
         # Test success flow
         with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.json.return_value = {"maskedPhone": "*****1111"}
+            mock_post.return_value = my_mock_response
+            self.assertEqual(
+                "*****1111",
                 magiclink.update_user_phone(
                     DeliveryMethod.SMS, "id1", "+11111111", "refresh_token1"
-                )
+                ),
             )
 
 

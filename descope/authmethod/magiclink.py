@@ -24,7 +24,7 @@ class MagicLink:
         uri: str,
         login_options: LoginOptions = None,
         refresh_token: str = None,
-    ) -> None:
+    ) -> str:
         if not login_id:
             raise AuthException(
                 400,
@@ -37,11 +37,12 @@ class MagicLink:
         body = MagicLink._compose_signin_body(login_id, uri, login_options)
         uri = MagicLink._compose_signin_url(method)
 
-        self._auth.do_post(uri, body, None, refresh_token)
+        response = self._auth.do_post(uri, body, None, refresh_token)
+        return Auth.extract_masked_address(response.json(), method)
 
     def sign_up(
         self, method: DeliveryMethod, login_id: str, uri: str, user: dict = None
-    ) -> None:
+    ) -> str:
 
         if not user:
             user = {}
@@ -55,12 +56,14 @@ class MagicLink:
 
         body = MagicLink._compose_signup_body(method, login_id, uri, user)
         uri = MagicLink._compose_signup_url(method)
-        self._auth.do_post(uri, body, None)
+        response = self._auth.do_post(uri, body, None)
+        return Auth.extract_masked_address(response.json(), method)
 
-    def sign_up_or_in(self, method: DeliveryMethod, login_id: str, uri: str) -> None:
+    def sign_up_or_in(self, method: DeliveryMethod, login_id: str, uri: str) -> str:
         body = MagicLink._compose_signin_body(login_id, uri)
         uri = MagicLink._compose_sign_up_or_in_url(method)
-        self._auth.do_post(uri, body, None)
+        response = self._auth.do_post(uri, body, None)
+        return Auth.extract_masked_address(response.json(), method)
 
     def verify(self, token: str) -> dict:
         uri = EndpointsV1.verify_magiclink_auth_path
@@ -72,7 +75,7 @@ class MagicLink:
         )
         return jwt_response
 
-    def update_user_email(self, login_id: str, email: str, refresh_token: str) -> None:
+    def update_user_email(self, login_id: str, email: str, refresh_token: str) -> str:
         if not login_id:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
@@ -82,11 +85,12 @@ class MagicLink:
 
         body = MagicLink._compose_update_user_email_body(login_id, email)
         uri = EndpointsV1.update_user_email_otp_path
-        self._auth.do_post(uri, body, None, refresh_token)
+        response = self._auth.do_post(uri, body, None, refresh_token)
+        return Auth.extract_masked_address(response.json(), DeliveryMethod.EMAIL)
 
     def update_user_phone(
         self, method: DeliveryMethod, login_id: str, phone: str, refresh_token: str
-    ) -> None:
+    ) -> str:
         if not login_id:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
@@ -96,7 +100,8 @@ class MagicLink:
 
         body = MagicLink._compose_update_user_phone_body(login_id, phone)
         uri = EndpointsV1.update_user_phone_otp_path
-        self._auth.do_post(uri, body, None, refresh_token)
+        response = self._auth.do_post(uri, body, None, refresh_token)
+        return Auth.extract_masked_address(response.json(), DeliveryMethod.SMS)
 
     @staticmethod
     def _compose_signin_url(method: DeliveryMethod) -> str:

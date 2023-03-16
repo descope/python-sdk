@@ -41,7 +41,7 @@ class EnchantedLink:
         response = self._auth.do_post(uri, body, None, refresh_token)
         return EnchantedLink._get_pending_ref_from_response(response)
 
-    def sign_up(self, login_id: str, uri: str, user: dict = None) -> None:
+    def sign_up(self, login_id: str, uri: str, user: dict = None) -> dict:
         if not user:
             user = {}
 

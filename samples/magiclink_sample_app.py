@@ -23,13 +23,15 @@ def main():
 
         logging.info("Going to signup / signin using Magic Link ...")
         email = input("Please insert email to signup / signin:\n")
-        descope_client.magiclink.sign_up_or_in(
+        masked_mail = descope_client.magiclink.sign_up_or_in(
             method=DeliveryMethod.EMAIL,
             login_id=email,
             uri="http://test.me",
         )
 
-        token = input("Please insert the token you received by email:\n")
+        token = input(
+            f"Please insert the token you received by email ({masked_mail}):\n"
+        )
         try:
             jwt_response = descope_client.magiclink.verify(token=token)
             logging.info("Token is valid")
