@@ -556,6 +556,7 @@ class Auth:
             # Session is invalid - try to refresh it
             return self.refresh_session(refresh_token)
 
+    @staticmethod
     def extract_masked_address(response: dict, method: DeliveryMethod) -> str:
         if method == DeliveryMethod.SMS or method == DeliveryMethod.WHATSAPP:
             return response["maskedPhone"]

@@ -127,11 +127,9 @@ class TestMagicLink(unittest.TestCase):
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
 
             mock_post.return_value = my_mock_response
-
-            maskedEmail = magiclink.sign_in(
+            self.assertEquals("t***@example.com", magiclink.sign_in(
                 DeliveryMethod.EMAIL, "dummy@dummy.com", "http://test.me"
-            )
-            self.assertEqual("t***@example.com", maskedEmail)
+            ))
 
             self.assertRaises(
                 AuthException,

@@ -38,8 +38,8 @@ def main():
         )
 
         link_identifier = resp["linkId"]
-        maskedEmail = resp["maskedEmail"]
-        logging.info(f"we have sent you an email to {maskedEmail}")
+        masked_email = resp["maskedEmail"]
+        logging.info(f"we have sent you an email to {masked_email}")
         logging.info(f"Please click the link with the identifier {link_identifier}")
         pending_ref = resp["pendingRef"]
 
