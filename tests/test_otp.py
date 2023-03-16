@@ -150,11 +150,15 @@ class TestOTP(unittest.TestCase):
 
         # Test success flow
         with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
+            mock_post.return_value = my_mock_response
+            self.assertEqual(
+                "t***@example.com",
                 client.otp.sign_up(
                     DeliveryMethod.EMAIL, "dummy@dummy.com", signup_user_details
-                )
+                ),
             )
 
         # Test flow where username set as empty and we used the login_id as default
@@ -166,11 +170,15 @@ class TestOTP(unittest.TestCase):
         }
 
         with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
+            mock_post.return_value = my_mock_response
+            self.assertEqual(
+                "t***@example.com",
                 client.otp.sign_up(
                     DeliveryMethod.EMAIL, "dummy@dummy.com", signup_user_details
-                )
+                ),
             )
             mock_post.assert_called_with(
                 f"{DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_otp_path}/email",
@@ -197,9 +205,13 @@ class TestOTP(unittest.TestCase):
 
         # Test user is None so using the login_id as default
         with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
-                client.otp.sign_up(DeliveryMethod.EMAIL, "dummy@dummy.com", None)
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
+            mock_post.return_value = my_mock_response
+            self.assertEqual(
+                "t***@example.com",
+                client.otp.sign_up(DeliveryMethod.EMAIL, "dummy@dummy.com", None),
             )
             mock_post.assert_called_with(
                 f"{DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_otp_path}/email",
@@ -243,9 +255,13 @@ class TestOTP(unittest.TestCase):
 
         # Test success flow
         with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
-                client.otp.sign_in(DeliveryMethod.EMAIL, "dummy@dummy.com")
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
+            mock_post.return_value = my_mock_response
+            self.assertEqual(
+                "t***@example.com",
+                client.otp.sign_in(DeliveryMethod.EMAIL, "dummy@dummy.com"),
             )
             self.assertRaises(
                 AuthException,
@@ -304,9 +320,13 @@ class TestOTP(unittest.TestCase):
 
         # Test success flow
         with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
-                client.otp.sign_up_or_in(DeliveryMethod.EMAIL, "dummy@dummy.com")
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
+            mock_post.return_value = my_mock_response
+            self.assertEqual(
+                "t***@example.com",
+                client.otp.sign_up_or_in(DeliveryMethod.EMAIL, "dummy@dummy.com"),
             )
 
     def test_verify_code(self):
@@ -378,9 +398,15 @@ class TestOTP(unittest.TestCase):
 
         # Test success flow
         with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
-                client.otp.update_user_email("id1", "dummy@dummy.com", "refresh_token1")
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
+            mock_post.return_value = my_mock_response
+            self.assertEqual(
+                "t***@example.com",
+                client.otp.update_user_email(
+                    "id1", "dummy@dummy.com", "refresh_token1"
+                ),
             )
 
     def test_update_user_phone(self):
@@ -425,9 +451,13 @@ class TestOTP(unittest.TestCase):
 
         # Test success flow
         with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.json.return_value = {"maskedPhone": "*****111"}
+            mock_post.return_value = my_mock_response
+            self.assertEqual(
+                "*****111",
                 client.otp.update_user_phone(
                     DeliveryMethod.SMS, "id1", "+1111111", "refresh_token1"
-                )
+                ),
             )

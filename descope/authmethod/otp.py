@@ -21,7 +21,7 @@ class OTP:
         login_id: str,
         login_options: LoginOptions = None,
         refresh_token: str = None,
-    ) -> None:
+    ) -> str:
         """
         Sign in (log in) an existing user with the unique login_id you provide. (See 'sign_up' function for an explanation of the
             login_id field.) Provide the DeliveryMethod required for this user. If the login_id value cannot be used for the
@@ -46,9 +46,10 @@ class OTP:
 
         uri = OTP._compose_signin_url(method)
         body = OTP._compose_signin_body(login_id, login_options)
-        self._auth.do_post(uri, body, None, refresh_token)
+        response = self._auth.do_post(uri, body, None, refresh_token)
+        return Auth.extract_masked_address(response.json(), method)
 
-    def sign_up(self, method: DeliveryMethod, login_id: str, user: dict = None) -> None:
+    def sign_up(self, method: DeliveryMethod, login_id: str, user: dict = None) -> str:
         """
         Sign up (create) a new user using their email or phone number. Choose a delivery method for OTP
             verification, for example email, SMS, or WhatsApp.
@@ -76,9 +77,10 @@ class OTP:
 
         uri = OTP._compose_signup_url(method)
         body = OTP._compose_signup_body(method, login_id, user)
-        self._auth.do_post(uri, body)
+        response = self._auth.do_post(uri, body)
+        return Auth.extract_masked_address(response.json(), method)
 
-    def sign_up_or_in(self, method: DeliveryMethod, login_id: str) -> None:
+    def sign_up_or_in(self, method: DeliveryMethod, login_id: str) -> str:
         """
         Sign_up_or_in lets you handle both sign up and sign in with a single call. Sign-up_or_in will first determine if
             login_id is a new or existing end user. If login_id is new, a new end user user will be created and then
@@ -99,7 +101,8 @@ class OTP:
 
         uri = OTP._compose_sign_up_or_in_url(method)
         body = OTP._compose_signin_body(login_id)
-        self._auth.do_post(uri, body)
+        response = self._auth.do_post(uri, body)
+        return Auth.extract_masked_address(response.json(), method)
 
     def verify_code(self, method: DeliveryMethod, login_id: str, code: str) -> dict:
         """
@@ -134,7 +137,7 @@ class OTP:
         )
         return jwt_response
 
-    def update_user_email(self, login_id: str, email: str, refresh_token: str) -> None:
+    def update_user_email(self, login_id: str, email: str, refresh_token: str) -> str:
         """
         Update the email address of an end user, after verifying the authenticity of the end user using OTP.
 
@@ -156,11 +159,12 @@ class OTP:
 
         uri = EndpointsV1.update_user_email_otp_path
         body = OTP._compose_update_user_email_body(login_id, email)
-        self._auth.do_post(uri, body, None, refresh_token)
+        response = self._auth.do_post(uri, body, None, refresh_token)
+        return Auth.extract_masked_address(response.json(), DeliveryMethod.EMAIL)
 
     def update_user_phone(
         self, method: DeliveryMethod, login_id: str, phone: str, refresh_token: str
-    ) -> None:
+    ) -> str:
         """
         Update the phone number of an existing end user, after verifying the authenticity of the end user using OTP.
 
@@ -183,7 +187,8 @@ class OTP:
 
         uri = OTP._compose_update_phone_url(method)
         body = OTP._compose_update_user_phone_body(login_id, phone)
-        self._auth.do_post(uri, body, None, refresh_token)
+        response = self._auth.do_post(uri, body, None, refresh_token)
+        return Auth.extract_masked_address(response.json(), DeliveryMethod.SMS)
 
     @staticmethod
     def _compose_signup_url(method: DeliveryMethod) -> str:

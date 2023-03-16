@@ -20,11 +20,15 @@ def main():
     try:
         descope_client = DescopeClient(project_id=project_id)
 
-        logging.info("Going to sign in using OTP...")
-        email = input("Please insert email to signin:\n")
-        descope_client.otp.sign_in(method=DeliveryMethod.EMAIL, login_id=email)
+        logging.info("Going to signup or in using OTP...")
+        email = input("Please insert email to signup or in:\n")
+        masked_email = descope_client.otp.sign_up_or_in(
+            method=DeliveryMethod.EMAIL, login_id=email
+        )
 
-        value = input("Please insert the code you received by email:\n")
+        value = input(
+            f"Please insert the code you received by email to {masked_email}:\n"
+        )
         try:
             jwt_response = descope_client.otp.verify_code(
                 method=DeliveryMethod.EMAIL, login_id=email, code=value
