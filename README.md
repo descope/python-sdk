@@ -235,6 +235,74 @@ refresh_token = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("jwt")
 
 The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)
 
+### Passwords
+
+The user can also authenticate with a password, though it's recommended to
+prefer passwordless authentication methods if possible. Sign up requires the
+caller to provide a valid password that meets all the requirements configured
+for the [password authentication method](https://app.descope.com/settings/authentication/password) in the Descope console.
+
+```python
+# Every user must have a login_id and a password. All other user information is optional
+login_id = "desmond@descope.com"
+password = "qYlvi65KaX"
+user = {
+    "name": "Desmond Copeland",
+    "email": login_id,
+}
+jwt_response = descope_client.password.sign_up(
+    login_id=login_id,
+    password=password,
+    user=user,
+)
+session_token = jwt_response[SESSION_TOKEN_NAME].get("jwt")
+refresh_token = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("jwt")
+```
+
+The user can later sign in using the same login_id and password.
+
+```python
+jwt_response = descope_client.password.sign_in(login_id, password)
+session_token = jwt_response[SESSION_TOKEN_NAME].get("jwt")
+refresh_token = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("jwt")
+```
+
+The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)
+
+In case the user needs to update their password, one of two methods are available: Resetting their password or replacing their password
+
+**Changing Passwords**
+
+_NOTE: send_reset will only work if the user has a validated email address. Otherwise password reset prompts cannot be sent._
+
+In the [password authentication method](https://app.descope.com/settings/authentication/password) in the Descope console, it is possible to define which alternative authentication method can be used in order to authenticate the user, in order to reset and update their password.
+
+```python
+# Start the reset process by sending a password reset prompt. In this example we'll assume
+# that magic link is configured as the reset method. The optional redirect URL is used in the
+# same way as in regular magic link authentication.
+login_id := "desmond@descope.com"
+redirect_url := "https://myapp.com/password-reset"
+descope_client.password.send_reset(login_id, redirect_url)
+```
+
+The magic link, in this case, must then be verified like any other magic link (see the [magic link section](#magic-link) for more details). However, after verifying the user, it is expected
+to allow them to provide a new password instead of the old one. Since the user is now authenticated, this is possible via:
+
+```python
+# The token is required to make sure the user is authenticated.
+err := descope_client.password.update(login_id, new_password, token)
+```
+
+`update` can always be called when the user is authenticated and has a valid session.
+
+Alternatively, it is also possible to replace an existing active password with a new one.
+
+```python
+# Replaces the user's current password with a new one
+descope_client.password.replace(login_id, old_password, new_password)
+```
+
 ### Session Validation
 
 Every secure request performed between your client and server needs to be validated. The client sends
