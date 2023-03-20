@@ -84,7 +84,7 @@ class MagicLink:
         Auth.validate_email(email)
 
         body = MagicLink._compose_update_user_email_body(login_id, email)
-        uri = EndpointsV1.update_user_email_otp_path
+        uri = EndpointsV1.update_user_email_magiclink_path
         response = self._auth.do_post(uri, body, None, refresh_token)
         return Auth.extract_masked_address(response.json(), DeliveryMethod.EMAIL)
 
@@ -99,7 +99,7 @@ class MagicLink:
         Auth.validate_phone(method, phone)
 
         body = MagicLink._compose_update_user_phone_body(login_id, phone)
-        uri = EndpointsV1.update_user_phone_otp_path
+        uri = EndpointsV1.update_user_phone_magiclink_path
         response = self._auth.do_post(uri, body, None, refresh_token)
         return Auth.extract_masked_address(response.json(), DeliveryMethod.SMS)
 
