@@ -8,7 +8,6 @@ from descope import (  # noqa: E402
     REFRESH_SESSION_TOKEN_NAME,
     SESSION_TOKEN_NAME,
     AuthException,
-    DeliveryMethod,
     DescopeClient,
 )
 
