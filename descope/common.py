@@ -77,12 +77,12 @@ class EndpointsV1:
     update_auth_webauthn_finish_path = "/v1/auth/webauthn/update/finish"
 
     # password
-    sign_up_password_path = "v1/auth/password/signup"
-    sign_in_password_path = "v1/auth/password/signin"
-    send_reset_password_path = "v1/auth/password/reset"
-    update_password_path = "v1/auth/password/update"
-    replace_password_path = "v1/auth/password/replace"
-    password_policy_path = "v1/auth/password/policy"
+    sign_up_password_path = "/v1/auth/password/signup"
+    sign_in_password_path = "/v1/auth/password/signin"
+    send_reset_password_path = "/v1/auth/password/reset"
+    update_password_path = "/v1/auth/password/update"
+    replace_password_path = "/v1/auth/password/replace"
+    password_policy_path = "/v1/auth/password/policy"
 
 
 class EndpointsV2:

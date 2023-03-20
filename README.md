@@ -290,7 +290,7 @@ The magic link, in this case, must then be verified like any other magic link (s
 to allow them to provide a new password instead of the old one. Since the user is now authenticated, this is possible via:
 
 ```python
-# The token is required to make sure the user is authenticated.
+# The refresh token is required to make sure the user is authenticated.
 err := descope_client.password.update(login_id, new_password, token)
 ```
 

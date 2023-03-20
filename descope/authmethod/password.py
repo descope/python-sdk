@@ -95,8 +95,9 @@ class Password:
         redirect_url: str = None,
     ) -> dict:
         """
-        Sign in by verifying the validity of a password entered by an end user.
-        NOTE: This is only possible if the user has a verified email address.
+        Sends a password reset prompt to the user with the given
+            login_id according to the password settings defined in the Descope console.
+            NOTE: The user must be verified according to the configured password reset method.
 
         Args:
         login_id (str): The login ID of the user to receive a password reset prompt
