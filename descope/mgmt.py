@@ -7,6 +7,7 @@ from descope.management.role import Role  # noqa: F401
 from descope.management.sso_settings import SSOSettings  # noqa: F401
 from descope.management.tenant import Tenant  # noqa: F401
 from descope.management.user import User  # noqa: F401
+from descope.management.flow import Flow  # noqa: F401
 
 
 class MGMT:
@@ -22,6 +23,7 @@ class MGMT:
         self._permission = Permission(auth)
         self._role = Role(auth)
         self._group = Group(auth)
+        self._flow = Flow(auth)
 
     @property
     def tenant(self):
@@ -54,3 +56,7 @@ class MGMT:
     @property
     def group(self):
         return self._group
+
+    @property
+    def flow(self):
+        return self._flow
