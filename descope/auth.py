@@ -214,6 +214,19 @@ class Auth:
             )
 
     @staticmethod
+    def get_method_string(method: DeliveryMethod) -> str:
+        if method is DeliveryMethod.EMAIL:
+            return "email"
+        elif method is DeliveryMethod.SMS:
+            return "phone"
+        elif method is DeliveryMethod.WHATSAPP:
+            return "whatsapp"
+        else:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, f"Unknown delivery method: {method}"
+            )
+
+    @staticmethod
     def validate_email(email: str):
         if email == "":
             raise AuthException(
@@ -309,7 +322,6 @@ class Auth:
             )
 
     def _fetch_public_keys(self) -> None:
-
         # This function called under mutex protection so no need to acquire it once again
         response = requests.get(
             f"{self.base_url}{EndpointsV2.public_key_path}/{self.project_id}",

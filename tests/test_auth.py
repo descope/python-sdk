@@ -228,6 +228,25 @@ class TestAuth(unittest.TestCase):
 
         self.assertRaises(AuthException, Auth.get_login_id_by_method, AAA.DUMMY, user)
 
+    def test_get_method_string(self):
+        self.assertEqual(
+            Auth.get_method_string(DeliveryMethod.EMAIL),
+            "email",
+        )
+        self.assertEqual(
+            Auth.get_method_string(DeliveryMethod.SMS),
+            "phone",
+        )
+        self.assertEqual(
+            Auth.get_method_string(DeliveryMethod.WHATSAPP),
+            "whatsapp",
+        )
+
+        class AAA(Enum):
+            DUMMY = 4
+
+        self.assertRaises(AuthException, Auth.get_method_string, AAA.DUMMY)
+
     def test_refresh_session(self):
         dummy_refresh_token = "dummy refresh token"
         auth = Auth(self.dummy_project_id, self.public_key_dict)
