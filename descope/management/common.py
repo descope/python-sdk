@@ -12,6 +12,7 @@ class MgmtV1:
     user_create_path = "/v1/mgmt/user/create"
     user_update_path = "/v1/mgmt/user/update"
     user_delete_path = "/v1/mgmt/user/delete"
+    user_delete_all_test_users_path = "/v1/mgmt/user/test/delete/all"
     user_load_path = "/v1/mgmt/user"
     users_search_path = "/v1/mgmt/user/search"
     user_update_status_path = "/v1/mgmt/user/update/status"
@@ -22,6 +23,9 @@ class MgmtV1:
     user_remove_role_path = "/v1/mgmt/user/update/role/remove"
     user_add_tenant_path = "/v1/mgmt/user/update/tenant/add"
     user_remove_tenant_path = "/v1/mgmt/user/update/tenant/remove"
+    user_generate_otp_for_test_path = "/v1/mgmt/tests/generate/otp"
+    user_generate_magic_link_for_test_path = "/v1/mgmt/tests/generate/magiclink"
+    user_generate_enchanted_link_for_test_path = "/v1/mgmt/tests/generate/enchantedlink"
 
     # access key
     access_key_create_path = "/v1/mgmt/accesskey/create"
