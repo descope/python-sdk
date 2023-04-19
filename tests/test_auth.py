@@ -4,6 +4,8 @@ from enum import Enum
 from unittest import mock
 from unittest.mock import patch
 
+import common
+
 from descope import (
     API_RATE_LIMIT_RETRY_AFTER_HEADER,
     ERROR_TYPE_API_RATE_LIMIT,
@@ -15,8 +17,9 @@ from descope.auth import Auth
 from descope.common import REFRESH_SESSION_TOKEN_NAME, SESSION_TOKEN_NAME
 
 
-class TestAuth(unittest.TestCase):
+class TestAuth(common.DescopeTest):
     def setUp(self) -> None:
+        super().setUp()
         self.dummy_project_id = "dummy"
         self.public_key_dict = {
             "alg": "ES384",
