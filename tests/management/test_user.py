@@ -1,17 +1,17 @@
 import json
-import unittest
 from unittest import mock
 from unittest.mock import patch
 
-import common
-
 from descope import AssociatedTenant, AuthException, DescopeClient
-from descope.common import DEFAULT_BASE_URL, DeliveryMethod
+from descope.common import DeliveryMethod
 from descope.management.common import MgmtV1
 
+from .. import common
 
-class TestUser(unittest.TestCase):
+
+class TestUser(common.DescopeTest):
     def setUp(self) -> None:
+        super().setUp()
         self.dummy_project_id = "dummy"
         self.dummy_management_key = "key"
         self.public_key_dict = {
@@ -58,7 +58,7 @@ class TestUser(unittest.TestCase):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_create_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_create_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -111,7 +111,7 @@ class TestUser(unittest.TestCase):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_create_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_create_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -164,7 +164,7 @@ class TestUser(unittest.TestCase):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_create_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_create_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -211,7 +211,7 @@ class TestUser(unittest.TestCase):
                 )
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_update_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -247,7 +247,7 @@ class TestUser(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNone(self.client.mgmt.user.delete("u1"))
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_delete_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_delete_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -277,7 +277,7 @@ class TestUser(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNone(self.client.mgmt.user.delete_all_test_users())
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_delete_all_test_users_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_delete_all_test_users_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -308,7 +308,7 @@ class TestUser(unittest.TestCase):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_get.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_load_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_load_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -338,7 +338,7 @@ class TestUser(unittest.TestCase):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_get.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_load_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_load_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -385,7 +385,7 @@ class TestUser(unittest.TestCase):
             self.assertEqual(users[0]["id"], "u1")
             self.assertEqual(users[1]["id"], "u2")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.users_search_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.users_search_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -425,7 +425,7 @@ class TestUser(unittest.TestCase):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_update_status_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_status_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -461,7 +461,7 @@ class TestUser(unittest.TestCase):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_update_status_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_status_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -498,7 +498,7 @@ class TestUser(unittest.TestCase):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_update_email_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_email_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -536,7 +536,7 @@ class TestUser(unittest.TestCase):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_update_phone_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_phone_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -574,7 +574,7 @@ class TestUser(unittest.TestCase):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_update_name_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_name_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -611,7 +611,7 @@ class TestUser(unittest.TestCase):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_add_role_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_add_role_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -648,7 +648,7 @@ class TestUser(unittest.TestCase):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_remove_role_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_remove_role_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -685,7 +685,7 @@ class TestUser(unittest.TestCase):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_add_tenant_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_add_tenant_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -722,7 +722,7 @@ class TestUser(unittest.TestCase):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_remove_tenant_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_remove_tenant_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -762,7 +762,7 @@ class TestUser(unittest.TestCase):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_add_role_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_add_role_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -803,7 +803,7 @@ class TestUser(unittest.TestCase):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_remove_role_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_remove_role_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -845,7 +845,7 @@ class TestUser(unittest.TestCase):
             self.assertEqual(resp["code"], "123456")
             self.assertEqual(resp["loginId"], "login-id")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_generate_otp_for_test_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_generate_otp_for_test_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -887,7 +887,7 @@ class TestUser(unittest.TestCase):
             self.assertEqual(resp["link"], "some-link")
             self.assertEqual(resp["loginId"], "login-id")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_generate_magic_link_for_test_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_generate_magic_link_for_test_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -930,7 +930,7 @@ class TestUser(unittest.TestCase):
             self.assertEqual(resp["loginId"], "login-id")
             self.assertEqual(resp["pendingRef"], "some-ref")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_generate_enchanted_link_for_test_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_generate_enchanted_link_for_test_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",

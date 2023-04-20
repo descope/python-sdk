@@ -14,9 +14,12 @@ from descope import (
 from descope.auth import Auth
 from descope.common import REFRESH_SESSION_TOKEN_NAME, SESSION_TOKEN_NAME
 
+from . import common
 
-class TestAuth(unittest.TestCase):
+
+class TestAuth(common.DescopeTest):
     def setUp(self) -> None:
+        super().setUp()
         self.dummy_project_id = "dummy"
         self.public_key_dict = {
             "alg": "ES384",

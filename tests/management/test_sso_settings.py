@@ -1,16 +1,15 @@
 import json
-import unittest
 from unittest.mock import patch
 
-import common
-
 from descope import AttributeMapping, AuthException, DescopeClient, RoleMapping
-from descope.common import DEFAULT_BASE_URL
 from descope.management.common import MgmtV1
 
+from .. import common
 
-class TestSSOSettings(unittest.TestCase):
+
+class TestSSOSettings(common.DescopeTest):
     def setUp(self) -> None:
+        super().setUp()
         self.dummy_project_id = "dummy"
         self.dummy_management_key = "key"
         self.public_key_dict = {
@@ -59,7 +58,7 @@ class TestSSOSettings(unittest.TestCase):
                 )
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.sso_configure_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_configure_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -92,7 +91,7 @@ class TestSSOSettings(unittest.TestCase):
                 )
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.sso_configure_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_configure_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -125,7 +124,7 @@ class TestSSOSettings(unittest.TestCase):
                 )
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.sso_configure_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_configure_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -173,7 +172,7 @@ class TestSSOSettings(unittest.TestCase):
                 )
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.sso_metadata_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_metadata_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -219,7 +218,7 @@ class TestSSOSettings(unittest.TestCase):
                 )
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.sso_mapping_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_mapping_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",

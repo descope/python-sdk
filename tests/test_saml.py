@@ -3,16 +3,17 @@ import unittest
 from unittest import mock
 from unittest.mock import patch
 
-import common
-
 from descope import AuthException
 from descope.auth import Auth
 from descope.authmethod.saml import SAML
-from descope.common import DEFAULT_BASE_URL, EndpointsV1, LoginOptions
+from descope.common import EndpointsV1, LoginOptions
+
+from . import common
 
 
-class TestSAML(unittest.TestCase):
+class TestSAML(common.DescopeTest):
     def setUp(self) -> None:
+        super().setUp()
         self.dummy_project_id = "dummy"
         self.public_key_dict = {
             "alg": "ES384",
@@ -51,7 +52,9 @@ class TestSAML(unittest.TestCase):
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             saml.start("tenant1", "http://dummy.com")
-            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.auth_saml_start_path}"
+            expected_uri = (
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.auth_saml_start_path}"
+            )
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
@@ -93,7 +96,9 @@ class TestSAML(unittest.TestCase):
             mock_post.return_value.ok = True
             lo = LoginOptions(stepup=True, custom_claims={"k1": "v1"})
             saml.start("tenant1", "http://dummy.com", lo, "refresh")
-            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.auth_saml_start_path}"
+            expected_uri = (
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.auth_saml_start_path}"
+            )
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
@@ -134,7 +139,7 @@ class TestSAML(unittest.TestCase):
             mock_post.return_value = my_mock_response
             saml.exchange_token("c1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.saml_exchange_token_path}",
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.saml_exchange_token_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",

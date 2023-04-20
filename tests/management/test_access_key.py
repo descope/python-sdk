@@ -1,17 +1,16 @@
 import json
-import unittest
 from unittest import mock
 from unittest.mock import patch
 
-import common
-
 from descope import AssociatedTenant, AuthException, DescopeClient
-from descope.common import DEFAULT_BASE_URL
 from descope.management.common import MgmtV1
 
+from .. import common
 
-class TestAccessKey(unittest.TestCase):
+
+class TestAccessKey(common.DescopeTest):
     def setUp(self) -> None:
+        super().setUp()
         self.dummy_project_id = "dummy"
         self.dummy_management_key = "key"
         self.public_key_dict = {
@@ -60,7 +59,7 @@ class TestAccessKey(unittest.TestCase):
             access_key = resp["key"]
             self.assertEqual(access_key["id"], "ak1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.access_key_create_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.access_key_create_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -108,7 +107,7 @@ class TestAccessKey(unittest.TestCase):
             access_key = resp["key"]
             self.assertEqual(access_key["id"], "ak1")
             mock_get.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.access_key_load_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.access_key_load_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -149,7 +148,7 @@ class TestAccessKey(unittest.TestCase):
             self.assertEqual(keys[0]["id"], "ak1")
             self.assertEqual(keys[1]["id"], "ak2")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.access_keys_search_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.access_keys_search_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -192,7 +191,7 @@ class TestAccessKey(unittest.TestCase):
                 )
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.access_key_update_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.access_key_update_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -230,7 +229,7 @@ class TestAccessKey(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.access_key.deactivate("ak1"))
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.access_key_deactivate_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.access_key_deactivate_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -267,7 +266,7 @@ class TestAccessKey(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.access_key.activate("ak1"))
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.access_key_activate_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.access_key_activate_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -304,7 +303,7 @@ class TestAccessKey(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.access_key.delete("ak1"))
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.access_key_delete_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.access_key_delete_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
