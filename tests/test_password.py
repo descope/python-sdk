@@ -2,12 +2,12 @@ import json
 from unittest import mock
 from unittest.mock import patch
 
-import common
-
 from descope import AuthException
 from descope.auth import Auth
 from descope.authmethod.password import Password  # noqa: F401
 from descope.common import EndpointsV1
+
+from . import common
 
 
 class TestPassword(common.DescopeTest):

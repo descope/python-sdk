@@ -4,8 +4,6 @@ from copy import deepcopy
 from unittest import mock
 from unittest.mock import patch
 
-import common
-
 from descope import (
     API_RATE_LIMIT_RETRY_AFTER_HEADER,
     ERROR_TYPE_API_RATE_LIMIT,
@@ -15,6 +13,8 @@ from descope import (
     RateLimitException,
 )
 from descope.common import SESSION_TOKEN_NAME
+
+from . import common
 
 
 class TestDescopeClient(common.DescopeTest):

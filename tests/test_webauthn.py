@@ -3,12 +3,12 @@ import unittest
 from unittest import mock
 from unittest.mock import patch
 
-import common
-
 from descope import AuthException
 from descope.auth import Auth
 from descope.authmethod.webauthn import WebAuthn
 from descope.common import EndpointsV1, LoginOptions
+
+from . import common
 
 
 class TestWebauthN(common.DescopeTest):

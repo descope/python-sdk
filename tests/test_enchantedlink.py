@@ -3,12 +3,12 @@ import unittest
 from unittest import mock
 from unittest.mock import patch
 
-import common
-
 from descope import SESSION_COOKIE_NAME, AuthException
 from descope.auth import Auth
 from descope.authmethod.enchantedlink import EnchantedLink  # noqa: F401
 from descope.common import REFRESH_SESSION_COOKIE_NAME, EndpointsV1, LoginOptions
+
+from . import common
 
 
 class TestEnchantedLink(common.DescopeTest):

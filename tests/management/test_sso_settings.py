@@ -1,10 +1,10 @@
 import json
 from unittest.mock import patch
 
-import common
-
 from descope import AttributeMapping, AuthException, DescopeClient, RoleMapping
 from descope.management.common import MgmtV1
+
+from .. import common
 
 
 class TestSSOSettings(common.DescopeTest):

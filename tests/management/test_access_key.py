@@ -2,10 +2,10 @@ import json
 from unittest import mock
 from unittest.mock import patch
 
-import common
-
 from descope import AssociatedTenant, AuthException, DescopeClient
 from descope.management.common import MgmtV1
+
+from .. import common
 
 
 class TestAccessKey(common.DescopeTest):

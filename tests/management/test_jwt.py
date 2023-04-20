@@ -4,7 +4,8 @@ from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
 from descope.management.common import MgmtV1
-from tests import common
+
+from .. import common
 
 
 class TestUser(common.DescopeTest):

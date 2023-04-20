@@ -1,10 +1,10 @@
 import json
 from unittest.mock import patch
 
-import common
-
 from descope import AuthException, DescopeClient
 from descope.management.common import MgmtV1
+
+from .. import common
 
 
 class TestGroup(common.DescopeTest):
