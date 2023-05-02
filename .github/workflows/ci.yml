@@ -20,6 +20,10 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Run flake8
+        run: |
+          poetry run flake8
+
       - name: Run tests
         run: |
           poetry run pytest --junitxml=/tmp/pytest.xml --cov-report=term-missing:skip-covered --cov=descope tests/ --cov-report=xml:/tmp/cov.xml

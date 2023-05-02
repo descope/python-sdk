@@ -14,7 +14,7 @@ class Tenant:
         self,
         name: str,
         id: str = None,
-        self_provisioning_domains: List[str] = [],
+        self_provisioning_domains: List[str] = None,
     ) -> dict:
         """
         Create a new tenant with the given name. Tenant IDs are provisioned automatically, but can be provided
@@ -33,6 +33,8 @@ class Tenant:
         Raise:
         AuthException: raised if creation operation fails
         """
+        self_provisioning_domains = [] if self_provisioning_domains is None else self_provisioning_domains
+
         uri = MgmtV1.tenant_create_path
         response = self._auth.do_post(
             uri,
@@ -45,7 +47,7 @@ class Tenant:
         self,
         id: str,
         name: str,
-        self_provisioning_domains: List[str] = [],
+        self_provisioning_domains: List[str] = None,
     ):
         """
         Update an existing tenant with the given name and domains. IMPORTANT: All parameters are used as overrides
@@ -60,6 +62,8 @@ class Tenant:
         Raise:
         AuthException: raised if creation operation fails
         """
+        self_provisioning_domains = [] if self_provisioning_domains is None else self_provisioning_domains
+
         uri = MgmtV1.tenant_update_path
         self._auth.do_post(
             uri,

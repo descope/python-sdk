@@ -94,10 +94,13 @@ def descope_signin_otp_by_email(descope_client):
     return decorator
 
 
-def descope_validate_auth(descope_client, permissions=[], roles=[], tenant=""):
+def descope_validate_auth(descope_client, permissions=None, roles=None, tenant=""):
     """
     Test if Access Token is valid
     """
+    # MT: Should this be here in the closure or in the decorator scope?
+    permissions = [] if permissions is None else permissions
+    roles = [] if roles is None else roles
 
     def decorator(f):
         @wraps(f)
