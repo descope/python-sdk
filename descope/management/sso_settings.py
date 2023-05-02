@@ -1,6 +1,6 @@
 from typing import List
 
-from descope.auth import Auth
+from descope._auth_base import AuthBase
 from descope.management.common import MgmtV1
 
 
@@ -28,12 +28,7 @@ class AttributeMapping:
         self.group = group
 
 
-class SSOSettings:
-    _auth: Auth
-
-    def __init__(self, auth: Auth):
-        self._auth = auth
-
+class SSOSettings(AuthBase):
     def configure(
         self,
         tenant_id: str,

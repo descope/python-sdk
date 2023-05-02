@@ -1,3 +1,4 @@
+from descope._auth_base import AuthBase
 from descope.auth import Auth
 from descope.common import (
     REFRESH_SESSION_COOKIE_NAME,
@@ -9,12 +10,7 @@ from descope.common import (
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
-class OTP:
-    _auth: Auth
-
-    def __init__(self, auth: Auth):
-        self._auth = auth
-
+class OTP(AuthBase):
     def sign_in(
         self,
         method: DeliveryMethod,

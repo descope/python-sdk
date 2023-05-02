@@ -1,6 +1,6 @@
 from typing import List
 
-from descope.auth import Auth
+from descope._auth_base import AuthBase
 from descope.management.common import (
     AssociatedTenant,
     MgmtV1,
@@ -8,12 +8,7 @@ from descope.management.common import (
 )
 
 
-class AccessKey:
-    _auth: Auth
-
-    def __init__(self, auth: Auth):
-        self._auth = auth
-
+class AccessKey(AuthBase):
     def create(
         self,
         name: str,

@@ -1,14 +1,9 @@
-from descope.auth import Auth
+from descope._auth_base import AuthBase
 from descope.common import EndpointsV1, LoginOptions, validate_refresh_token_provided
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
-class SAML:
-    _auth: Auth
-
-    def __init__(self, auth: Auth):
-        self._auth = auth
-
+class SAML(AuthBase):
     def start(
         self,
         tenant: str,

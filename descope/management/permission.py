@@ -1,13 +1,8 @@
-from descope.auth import Auth
+from descope._auth_base import AuthBase
 from descope.management.common import MgmtV1
 
 
-class Permission:
-    _auth: Auth
-
-    def __init__(self, auth: Auth):
-        self._auth = auth
-
+class Permission(AuthBase):
     def create(
         self,
         name: str,

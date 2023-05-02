@@ -1,14 +1,9 @@
-from descope.auth import Auth
+from descope._auth_base import AuthBase
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 from descope.management.common import MgmtV1
 
 
-class JWT:
-    _auth: Auth
-
-    def __init__(self, auth: Auth):
-        self._auth = auth
-
+class JWT(AuthBase):
     def update_jwt(self, jwt: str, custom_claims: dict) -> str:
         """
         Given a valid JWT, update it with custom claims, and update its authz claims as well

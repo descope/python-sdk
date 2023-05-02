@@ -1,4 +1,4 @@
-from descope.auth import Auth
+from descope._auth_base import AuthBase
 from descope.common import (
     REFRESH_SESSION_COOKIE_NAME,
     EndpointsV1,
@@ -8,12 +8,7 @@ from descope.common import (
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
-class WebAuthn:
-    _auth: Auth
-
-    def __init__(self, auth):
-        self._auth = auth
-
+class WebAuthn(AuthBase):
     def sign_up_start(self, login_id: str, origin: str, user: dict = None) -> dict:
         """
         Docs
