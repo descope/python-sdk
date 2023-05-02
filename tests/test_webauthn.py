@@ -122,6 +122,7 @@ class TestWebauthN(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
             self.assertEqual(res, valid_response)
 
@@ -170,6 +171,7 @@ class TestWebauthN(common.DescopeTest):
                 data=json.dumps({"transactionId": "t01", "response": "response01"}),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
             self.assertIsNotNone(webauthn.sign_up_finish("t01", "response01"))
 
@@ -231,6 +233,7 @@ class TestWebauthN(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
             self.assertEqual(res, valid_response)
 
@@ -290,6 +293,7 @@ class TestWebauthN(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
             self.assertEqual(res, valid_response)
 
@@ -332,6 +336,7 @@ class TestWebauthN(common.DescopeTest):
                 data=json.dumps({"transactionId": "t01", "response": "response01"}),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
             self.assertIsNotNone(webauthn.sign_up_finish("t01", "response01"))
 
@@ -385,6 +390,7 @@ class TestWebauthN(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
             self.assertEqual(res, valid_response)
 
@@ -455,6 +461,7 @@ class TestWebauthN(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
             self.assertEqual(res, valid_response)
 
@@ -495,6 +502,7 @@ class TestWebauthN(common.DescopeTest):
                 data=json.dumps({"transactionId": "t01", "response": "response01"}),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
             self.assertIsNotNone(webauthn.sign_up_finish("t01", "response01"))
 

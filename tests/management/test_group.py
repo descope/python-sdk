@@ -57,6 +57,7 @@ class TestGroup(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
     def test_load_all_groups_for_members(self):
@@ -100,6 +101,7 @@ class TestGroup(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
     def test_load_all_group_members(self):
@@ -141,4 +143,5 @@ class TestGroup(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )

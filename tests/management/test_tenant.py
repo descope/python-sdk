@@ -64,6 +64,7 @@ class TestTenant(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
     def test_update(self):
@@ -106,6 +107,7 @@ class TestTenant(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
     def test_delete(self):
@@ -143,6 +145,7 @@ class TestTenant(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
     def test_load_all(self):
@@ -187,4 +190,5 @@ class TestTenant(common.DescopeTest):
                 params=None,
                 allow_redirects=None,
                 verify=True,
+                timeout=60,
             )

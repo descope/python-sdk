@@ -76,6 +76,7 @@ class TestSSOSettings(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
         # Domain is optional
@@ -109,6 +110,7 @@ class TestSSOSettings(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
         # Redirect is optional
@@ -142,6 +144,7 @@ class TestSSOSettings(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
     def test_configure_via_metadata(self):
@@ -186,6 +189,7 @@ class TestSSOSettings(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
     def test_mapping(self):
@@ -238,4 +242,5 @@ class TestSSOSettings(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )

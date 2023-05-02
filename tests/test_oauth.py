@@ -79,6 +79,7 @@ class TestOAuth(common.DescopeTest):
                 data=json.dumps({}),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
     def test_oauth_start_with_login_options(self):
@@ -113,6 +114,7 @@ class TestOAuth(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
     def test_compose_exchange_params(self):
@@ -150,6 +152,7 @@ class TestOAuth(common.DescopeTest):
                 data=json.dumps({"code": "c1"}),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
 

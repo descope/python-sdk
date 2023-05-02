@@ -61,4 +61,5 @@ class TestUser(common.DescopeTest):
                 allow_redirects=False,
                 verify=True,
                 params=None,
+                timeout=60,
             )

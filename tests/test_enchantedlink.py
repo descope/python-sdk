@@ -116,6 +116,7 @@ class TestEnchantedLink(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
             self.assertEqual(res["pendingRef"], "aaaa")
             self.assertEqual(res["linkId"], "24")
@@ -149,6 +150,7 @@ class TestEnchantedLink(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
     def test_sign_in_with_login_options(self):
@@ -181,6 +183,7 @@ class TestEnchantedLink(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
     def test_sign_up(self):
@@ -223,6 +226,7 @@ class TestEnchantedLink(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
             self.assertEqual(res["pendingRef"], "aaaa")
 
@@ -253,6 +257,7 @@ class TestEnchantedLink(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
             self.assertEqual(res["pendingRef"], "aaaa")
 
@@ -284,6 +289,7 @@ class TestEnchantedLink(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
     def test_verify(self):

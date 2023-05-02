@@ -169,6 +169,7 @@ class TestMagicLink(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
     def test_sign_up(self):
@@ -259,6 +260,7 @@ class TestMagicLink(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
                 params=None,
             )
 
@@ -293,6 +295,7 @@ class TestMagicLink(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
                 params=None,
             )
 

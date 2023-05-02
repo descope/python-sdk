@@ -65,6 +65,7 @@ class TestSAML(common.DescopeTest):
                 data=json.dumps({}),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
             self.assertRaises(
                 AuthException,
@@ -111,6 +112,7 @@ class TestSAML(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
     def test_compose_exchange_params(self):
@@ -148,6 +150,7 @@ class TestSAML(common.DescopeTest):
                 data=json.dumps({"code": "c1"}),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
 

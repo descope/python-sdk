@@ -114,6 +114,7 @@ class TestPassword(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
     def test_sign_in(self):
@@ -186,6 +187,7 @@ class TestPassword(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
     def test_send_reset(self):
@@ -243,6 +245,7 @@ class TestPassword(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
     def test_update(self):
@@ -329,6 +332,7 @@ class TestPassword(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
     def test_replace(self):
@@ -413,6 +417,7 @@ class TestPassword(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
     def test_policy(self):
@@ -444,4 +449,5 @@ class TestPassword(common.DescopeTest):
                 params=None,
                 allow_redirects=None,
                 verify=True,
+                timeout=60,
             )

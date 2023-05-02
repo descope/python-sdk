@@ -78,6 +78,7 @@ class TestAccessKey(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
     def test_load(self):
@@ -115,6 +116,7 @@ class TestAccessKey(common.DescopeTest):
                 params={"id": "key-id"},
                 allow_redirects=None,
                 verify=True,
+                timeout=60,
             )
 
     def test_search_all_users(self):
@@ -161,6 +163,7 @@ class TestAccessKey(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
     def test_update(self):
@@ -205,6 +208,7 @@ class TestAccessKey(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
     def test_deactivate(self):
@@ -242,6 +246,7 @@ class TestAccessKey(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
     def test_activate(self):
@@ -279,6 +284,7 @@ class TestAccessKey(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
     def test_delete(self):
@@ -316,4 +322,5 @@ class TestAccessKey(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )

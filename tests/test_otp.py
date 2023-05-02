@@ -196,6 +196,7 @@ class TestOTP(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
         # Test user is None so using the login_id as default
@@ -224,6 +225,7 @@ class TestOTP(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
         # test undefined enum value
@@ -294,6 +296,7 @@ class TestOTP(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
     def test_sign_up_or_in(self):

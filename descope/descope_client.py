@@ -11,7 +11,7 @@ from descope.authmethod.password import Password  # noqa: F401
 from descope.authmethod.saml import SAML  # noqa: F401
 from descope.authmethod.totp import TOTP  # noqa: F401
 from descope.authmethod.webauthn import WebAuthn  # noqa: F401
-from descope.common import EndpointsV1
+from descope.common import EndpointsV1, DEFAULT_TIMEOUT_SECONDS
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 from descope.mgmt import MGMT  # noqa: F401
 
@@ -25,8 +25,9 @@ class DescopeClient:
         public_key: str = None,
         skip_verify: bool = False,
         management_key: str = None,
+        timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
     ):
-        auth = Auth(project_id, public_key, skip_verify, management_key)
+        auth = Auth(project_id, public_key, skip_verify, management_key, timeout_seconds)
         self._auth = auth
         self._mgmt = MGMT(auth)
         self._magiclink = MagicLink(auth)

@@ -134,6 +134,7 @@ class TestTOTP(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
 
     def test_update_user(self):
@@ -174,5 +175,6 @@ class TestTOTP(common.DescopeTest):
                 data=json.dumps({"loginId": "dummy@dummy.com"}),
                 allow_redirects=False,
                 verify=True,
+                timeout=60,
             )
             self.assertEqual(res, valid_response)
