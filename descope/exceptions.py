@@ -40,7 +40,9 @@ class RateLimitException(Exception):
         self.error_type = error_type
         self.error_description = error_description
         self.error_message = error_message
-        self.rate_limit_parameters = {} if rate_limit_parameters is None else rate_limit_parameters
+        self.rate_limit_parameters = (
+            {} if rate_limit_parameters is None else rate_limit_parameters
+        )
 
     def __repr__(self):
         return f"Error {self.__dict__}"

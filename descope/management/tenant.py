@@ -33,7 +33,9 @@ class Tenant:
         Raise:
         AuthException: raised if creation operation fails
         """
-        self_provisioning_domains = [] if self_provisioning_domains is None else self_provisioning_domains
+        self_provisioning_domains = (
+            [] if self_provisioning_domains is None else self_provisioning_domains
+        )
 
         uri = MgmtV1.tenant_create_path
         response = self._auth.do_post(
@@ -62,7 +64,9 @@ class Tenant:
         Raise:
         AuthException: raised if creation operation fails
         """
-        self_provisioning_domains = [] if self_provisioning_domains is None else self_provisioning_domains
+        self_provisioning_domains = (
+            [] if self_provisioning_domains is None else self_provisioning_domains
+        )
 
         uri = MgmtV1.tenant_update_path
         self._auth.do_post(
