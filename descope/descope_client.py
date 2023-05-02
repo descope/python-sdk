@@ -27,7 +27,9 @@ class DescopeClient:
         management_key: str = None,
         timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
     ):
-        auth = Auth(project_id, public_key, skip_verify, management_key, timeout_seconds)
+        auth = Auth(
+            project_id, public_key, skip_verify, management_key, timeout_seconds
+        )
         self._auth = auth
         self._mgmt = MGMT(auth)
         self._magiclink = MagicLink(auth)
