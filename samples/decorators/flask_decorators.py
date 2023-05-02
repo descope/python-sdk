@@ -98,13 +98,13 @@ def descope_validate_auth(descope_client, permissions=None, roles=None, tenant="
     """
     Test if Access Token is valid
     """
-    # MT: Should this be here in the closure or in the decorator scope?
-    permissions = [] if permissions is None else permissions
-    roles = [] if roles is None else roles
 
     def decorator(f):
         @wraps(f)
         def decorated(*args, **kwargs):
+            _permissions = [] if permissions is None else permissions
+            _roles = [] if roles is None else roles
+
             cookies = request.cookies.copy()
             session_token = cookies.get(SESSION_COOKIE_NAME, None)
             refresh_token = cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
@@ -116,26 +116,26 @@ def descope_validate_auth(descope_client, permissions=None, roles=None, tenant="
             except AuthException:
                 return Response("Access denied", 401)
 
-            if permissions:
+            if _permissions:
                 if tenant:
                     valid_permissions = descope_client.validate_tenant_permissions(
-                        jwt_response, permissions
+                        jwt_response, _permissions
                     )
                 else:
                     valid_permissions = descope_client.validate_permissions(
-                        jwt_response, permissions
+                        jwt_response, _permissions
                     )
 
                 if not valid_permissions:
                     return Response("Access denied", 401)
 
-            if roles:
+            if _roles:
                 if tenant:
                     valid_roles = descope_client.validate_tenant_roles(
-                        jwt_response, roles
+                        jwt_response, _roles
                     )
                 else:
-                    valid_roles = descope_client.validate_roles(jwt_response, roles)
+                    valid_roles = descope_client.validate_roles(jwt_response, _roles)
 
                 if not valid_roles:
                     return Response("Access denied", 401)
