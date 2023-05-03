@@ -132,9 +132,7 @@ class Auth:
             )
         return response
 
-    def do_delete(
-        self, uri: str, pswd: str = None
-    ) -> requests.Response:
+    def do_delete(self, uri: str, pswd: str = None) -> requests.Response:
         response = requests.delete(
             f"{self.base_url}{uri}",
             headers=self._get_default_headers(pswd),
