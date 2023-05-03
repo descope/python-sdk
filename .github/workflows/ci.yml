@@ -29,6 +29,7 @@ jobs:
         id: coverageComment
         uses: MishaKav/pytest-coverage-comment@main
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           pytest-xml-coverage-path: /tmp/cov.xml
           create-new-comment: false
 
