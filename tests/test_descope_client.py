@@ -14,9 +14,12 @@ from descope import (
 )
 from descope.common import SESSION_TOKEN_NAME
 
+from . import common
 
-class TestDescopeClient(unittest.TestCase):
+
+class TestDescopeClient(common.DescopeTest):
     def setUp(self) -> None:
+        super().setUp()
         self.dummy_project_id = "dummy"
         self.public_key_dict = {
             "alg": "ES384",

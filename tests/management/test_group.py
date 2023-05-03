@@ -1,16 +1,15 @@
 import json
-import unittest
 from unittest.mock import patch
 
-import common
-
 from descope import AuthException, DescopeClient
-from descope.common import DEFAULT_BASE_URL
 from descope.management.common import MgmtV1
 
+from .. import common
 
-class TestGroup(unittest.TestCase):
+
+class TestGroup(common.DescopeTest):
     def setUp(self) -> None:
+        super().setUp()
         self.dummy_project_id = "dummy"
         self.dummy_management_key = "key"
         self.public_key_dict = {
@@ -45,7 +44,7 @@ class TestGroup(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNotNone(client.mgmt.group.load_all_groups("someTenantId"))
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.group_load_all_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.group_load_all_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -86,7 +85,7 @@ class TestGroup(unittest.TestCase):
                 )
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.group_load_all_for_member_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.group_load_all_for_member_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -128,7 +127,7 @@ class TestGroup(unittest.TestCase):
                 client.mgmt.group.load_all_group_members("someTenantId", "someGroupId")
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.group_load_all_group_members_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.group_load_all_group_members_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",

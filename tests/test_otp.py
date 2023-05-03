@@ -1,23 +1,18 @@
 import json
-import unittest
 from enum import Enum
 from unittest import mock
 from unittest.mock import patch
 
-import common
-
 from descope import SESSION_COOKIE_NAME, AuthException, DeliveryMethod, DescopeClient
 from descope.authmethod.otp import OTP  # noqa: F401
-from descope.common import (
-    DEFAULT_BASE_URL,
-    REFRESH_SESSION_COOKIE_NAME,
-    EndpointsV1,
-    LoginOptions,
-)
+from descope.common import REFRESH_SESSION_COOKIE_NAME, EndpointsV1, LoginOptions
+
+from . import common
 
 
-class TestOTP(unittest.TestCase):
+class TestOTP(common.DescopeTest):
     def setUp(self) -> None:
+        super().setUp()
         self.dummy_project_id = "dummy"
         self.public_key_dict = {
             "alg": "ES384",
@@ -181,7 +176,7 @@ class TestOTP(unittest.TestCase):
                 ),
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_otp_path}/email",
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_otp_path}/email",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
@@ -214,7 +209,7 @@ class TestOTP(unittest.TestCase):
                 client.otp.sign_up(DeliveryMethod.EMAIL, "dummy@dummy.com", None),
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_otp_path}/email",
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_otp_path}/email",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
@@ -281,7 +276,7 @@ class TestOTP(unittest.TestCase):
                 refresh_token=refresh_token,
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_otp_path}/email",
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_otp_path}/email",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{refresh_token}",

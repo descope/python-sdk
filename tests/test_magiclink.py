@@ -3,21 +3,17 @@ import unittest
 from unittest import mock
 from unittest.mock import patch
 
-import common
-
 from descope import SESSION_COOKIE_NAME, AuthException, DeliveryMethod
 from descope.auth import Auth
 from descope.authmethod.magiclink import MagicLink  # noqa: F401
-from descope.common import (
-    DEFAULT_BASE_URL,
-    REFRESH_SESSION_COOKIE_NAME,
-    EndpointsV1,
-    LoginOptions,
-)
+from descope.common import REFRESH_SESSION_COOKIE_NAME, EndpointsV1, LoginOptions
+
+from . import common
 
 
-class TestMagicLink(unittest.TestCase):
+class TestMagicLink(common.DescopeTest):
     def setUp(self) -> None:
+        super().setUp()
         self.dummy_project_id = "dummy"
         self.public_key_dict = {
             "alg": "ES384",
@@ -154,7 +150,7 @@ class TestMagicLink(unittest.TestCase):
                 refresh_token=refresh_token,
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_magiclink_path}/email",
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_magiclink_path}/email",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{refresh_token}",
@@ -243,7 +239,7 @@ class TestMagicLink(unittest.TestCase):
                 ),
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_magiclink_path}/email",
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_magiclink_path}/email",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
@@ -282,7 +278,7 @@ class TestMagicLink(unittest.TestCase):
                 ),
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_magiclink_path}/email",
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_magiclink_path}/email",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",

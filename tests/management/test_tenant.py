@@ -1,17 +1,16 @@
 import json
-import unittest
 from unittest import mock
 from unittest.mock import patch
 
-import common
-
 from descope import AuthException, DescopeClient
-from descope.common import DEFAULT_BASE_URL
 from descope.management.common import MgmtV1
 
+from .. import common
 
-class TestTenant(unittest.TestCase):
+
+class TestTenant(common.DescopeTest):
     def setUp(self) -> None:
+        super().setUp()
         self.dummy_project_id = "dummy"
         self.dummy_management_key = "key"
         self.public_key_dict = {
@@ -50,7 +49,7 @@ class TestTenant(unittest.TestCase):
             resp = client.mgmt.tenant.create("name", "t1", ["domain.com"])
             self.assertEqual(resp["id"], "t1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.tenant_create_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_create_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -92,7 +91,7 @@ class TestTenant(unittest.TestCase):
                 client.mgmt.tenant.update("t1", "new-name", ["domain.com"])
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.tenant_update_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_update_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -131,7 +130,7 @@ class TestTenant(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.tenant.delete("t1"))
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.tenant_delete_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_delete_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -180,7 +179,7 @@ class TestTenant(unittest.TestCase):
             self.assertEqual(tenants[0]["name"], "tenant1")
             self.assertEqual(tenants[1]["name"], "tenant2")
             mock_get.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.tenant_load_all_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_load_all_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",

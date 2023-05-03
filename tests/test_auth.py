@@ -14,9 +14,12 @@ from descope import (
 from descope.auth import Auth
 from descope.common import REFRESH_SESSION_TOKEN_NAME, SESSION_TOKEN_NAME
 
+from . import common
 
-class TestAuth(unittest.TestCase):
+
+class TestAuth(common.DescopeTest):
     def setUp(self) -> None:
+        super().setUp()
         self.dummy_project_id = "dummy"
         self.public_key_dict = {
             "alg": "ES384",
@@ -227,6 +230,25 @@ class TestAuth(unittest.TestCase):
             DUMMY = 4
 
         self.assertRaises(AuthException, Auth.get_login_id_by_method, AAA.DUMMY, user)
+
+    def test_get_method_string(self):
+        self.assertEqual(
+            Auth.get_method_string(DeliveryMethod.EMAIL),
+            "email",
+        )
+        self.assertEqual(
+            Auth.get_method_string(DeliveryMethod.SMS),
+            "phone",
+        )
+        self.assertEqual(
+            Auth.get_method_string(DeliveryMethod.WHATSAPP),
+            "whatsapp",
+        )
+
+        class AAA(Enum):
+            DUMMY = 4
+
+        self.assertRaises(AuthException, Auth.get_method_string, AAA.DUMMY)
 
     def test_refresh_session(self):
         dummy_refresh_token = "dummy refresh token"
