@@ -40,7 +40,7 @@ class User:
         user_tenants (List[AssociatedTenant]): An optional list of the user's tenants, and optionally, their roles per tenant. These roles are
             mutually exclusive with the general `role_names`.
         picture (str): Optional url for user picture
-        custom_attributes (dict): Optional all set the different custom attributes that were previously configured in console app
+        custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in console app
 
         Return value (dict):
         Return dict in the format
@@ -94,7 +94,7 @@ class User:
         user_tenants (List[AssociatedTenant]): An optional list of the user's tenants, and optionally, their roles per tenant. These roles are
             mutually exclusive with the general `role_names`.
         picture (str): Optional url for user picture
-        custom_attributes (dict): Optional all set the different custom attributes that were previously configured in console app
+        custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in console app
 
         Return value (dict):
         Return dict in the format
@@ -187,7 +187,7 @@ class User:
         user_tenants (List[AssociatedTenant]): An optional list of the user's tenants, and optionally, their roles per tenant. These roles are
             mutually exclusive with the general `role_names`.
         picture (str): Optional url for user picture
-        custom_attributes (dict): Optional all set the different custom attributes that were previously configured in console app
+        custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in console app
 
         Raise:
         AuthException: raised if creation operation fails
@@ -195,7 +195,15 @@ class User:
         self._auth.do_post(
             MgmtV1.user_update_path,
             User._compose_update_body(
-                login_id, email, phone, display_name, role_names, user_tenants, False, picture, custom_attributes
+                login_id,
+                email,
+                phone,
+                display_name,
+                role_names,
+                user_tenants,
+                False,
+                picture,
+                custom_attributes,
             ),
             pswd=self._auth.management_key,
         )
@@ -323,16 +331,16 @@ class User:
                 400, ERROR_TYPE_INVALID_ARGUMENT, "page must be non-negative"
             )
         body = {
-                "tenantIds": tenant_ids,
-                "roleNames": role_names,
-                "limit": limit,
-                "page": page,
-                "testUsersOnly": test_users_only,
-                "withTestUser": with_test_user,
-            }
-        if custom_attributes != None:
+            "tenantIds": tenant_ids,
+            "roleNames": role_names,
+            "limit": limit,
+            "page": page,
+            "testUsersOnly": test_users_only,
+            "withTestUser": with_test_user,
+        }
+        if custom_attributes is not None:
             body["customAttributes"] = custom_attributes
-       
+
         response = self._auth.do_post(
             MgmtV1.users_search_path,
             body=body,
@@ -746,10 +754,18 @@ class User:
         invite: bool,
         test: bool,
         picture: str,
-        custom_attributes: dict
+        custom_attributes: dict,
     ) -> dict:
         body = User._compose_update_body(
-            login_id, email, phone, display_name, role_names, user_tenants, test, picture, custom_attributes
+            login_id,
+            email,
+            phone,
+            display_name,
+            role_names,
+            user_tenants,
+            test,
+            picture,
+            custom_attributes,
         )
         body["invite"] = invite
         return body
