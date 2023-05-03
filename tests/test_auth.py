@@ -512,6 +512,7 @@ class TestAuth(common.DescopeTest):
             self.assertEqual(
                 the_exception.rate_limit_parameters,
                 {API_RATE_LIMIT_RETRY_AFTER_HEADER: 10},
+            )
 
         # Test _fetch_public_keys rate limit
         with patch("requests.get") as mock_request:
