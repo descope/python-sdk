@@ -24,6 +24,8 @@ class User:
         display_name: str = None,
         role_names: List[str] = [],
         user_tenants: List[AssociatedTenant] = [],
+        picture: str = None,
+        custom_attributes: dict = None,
     ) -> dict:
         """
         Create a new user. Users can have any number of optional fields, including email, phone number and authorization.
@@ -37,6 +39,8 @@ class User:
             mutually exclusive with the `user_tenant` roles.
         user_tenants (List[AssociatedTenant]): An optional list of the user's tenants, and optionally, their roles per tenant. These roles are
             mutually exclusive with the general `role_names`.
+        picture (str): Optional url for user picture
+        custom_attributes (dict): Optional all set the different custom attributes that were previously configured in console app
 
         Return value (dict):
         Return dict in the format
@@ -57,6 +61,8 @@ class User:
                 user_tenants,
                 False,
                 False,
+                picture,
+                custom_attributes,
             ),
             pswd=self._auth.management_key,
         )
@@ -70,6 +76,8 @@ class User:
         display_name: str = None,
         role_names: List[str] = [],
         user_tenants: List[AssociatedTenant] = [],
+        picture: str = None,
+        custom_attributes: dict = None,
     ) -> dict:
         """
         Create a new test user.
@@ -85,6 +93,8 @@ class User:
             mutually exclusive with the `user_tenant` roles.
         user_tenants (List[AssociatedTenant]): An optional list of the user's tenants, and optionally, their roles per tenant. These roles are
             mutually exclusive with the general `role_names`.
+        picture (str): Optional url for user picture
+        custom_attributes (dict): Optional all set the different custom attributes that were previously configured in console app
 
         Return value (dict):
         Return dict in the format
@@ -105,6 +115,8 @@ class User:
                 user_tenants,
                 False,
                 True,
+                picture,
+                custom_attributes,
             ),
             pswd=self._auth.management_key,
         )
@@ -118,6 +130,8 @@ class User:
         display_name: str = None,
         role_names: List[str] = [],
         user_tenants: List[AssociatedTenant] = [],
+        picture: str = None,
+        custom_attributes: dict = None,
     ) -> dict:
         """
         Create a new user and invite them via an email message.
@@ -141,6 +155,8 @@ class User:
                 user_tenants,
                 True,
                 False,
+                picture,
+                custom_attributes,
             ),
             pswd=self._auth.management_key,
         )
@@ -154,6 +170,8 @@ class User:
         display_name: str = None,
         role_names: List[str] = [],
         user_tenants: List[AssociatedTenant] = [],
+        picture: str = None,
+        custom_attributes: dict = None,
     ):
         """
         Update an existing user with the given various fields. IMPORTANT: All parameters are used as overrides
@@ -168,6 +186,8 @@ class User:
             mutually exclusive with the `user_tenant` roles.
         user_tenants (List[AssociatedTenant]): An optional list of the user's tenants, and optionally, their roles per tenant. These roles are
             mutually exclusive with the general `role_names`.
+        picture (str): Optional url for user picture
+        custom_attributes (dict): Optional all set the different custom attributes that were previously configured in console app
 
         Raise:
         AuthException: raised if creation operation fails
@@ -175,7 +195,7 @@ class User:
         self._auth.do_post(
             MgmtV1.user_update_path,
             User._compose_update_body(
-                login_id, email, phone, display_name, role_names, user_tenants, False
+                login_id, email, phone, display_name, role_names, user_tenants, False, picture, custom_attributes
             ),
             pswd=self._auth.management_key,
         )
@@ -272,6 +292,7 @@ class User:
         page: int = 0,
         test_users_only: bool = False,
         with_test_user: bool = False,
+        custom_attributes: dict = None,
     ) -> dict:
         """
         Search all users.
@@ -301,17 +322,20 @@ class User:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "page must be non-negative"
             )
-
-        response = self._auth.do_post(
-            MgmtV1.users_search_path,
-            {
+        body = {
                 "tenantIds": tenant_ids,
                 "roleNames": role_names,
                 "limit": limit,
                 "page": page,
                 "testUsersOnly": test_users_only,
                 "withTestUser": with_test_user,
-            },
+            }
+        if custom_attributes != None:
+            body["customAttributes"] = custom_attributes
+       
+        response = self._auth.do_post(
+            MgmtV1.users_search_path,
+            body=body,
             pswd=self._auth.management_key,
         )
         return response.json()
@@ -721,9 +745,11 @@ class User:
         user_tenants: List[AssociatedTenant],
         invite: bool,
         test: bool,
+        picture: str,
+        custom_attributes: dict
     ) -> dict:
         body = User._compose_update_body(
-            login_id, email, phone, display_name, role_names, user_tenants, test
+            login_id, email, phone, display_name, role_names, user_tenants, test, picture, custom_attributes
         )
         body["invite"] = invite
         return body
@@ -737,6 +763,8 @@ class User:
         role_names: List[str],
         user_tenants: List[AssociatedTenant],
         test: bool,
+        picture: str,
+        custom_attributes: dict,
     ) -> dict:
         return {
             "loginId": login_id,
@@ -746,4 +774,6 @@ class User:
             "roleNames": role_names,
             "userTenants": associated_tenants_to_dict(user_tenants),
             "test": test,
+            "picture": picture,
+            "customAttributes": custom_attributes,
         }
