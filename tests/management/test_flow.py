@@ -3,7 +3,6 @@ import unittest
 from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
-from descope.common import DEFAULT_BASE_URL
 from descope.management.common import MgmtV1
 
 from .. import common
@@ -45,7 +44,7 @@ class TestFlow(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNotNone(client.mgmt.flow.export_flow("test"))
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.flow_export_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.flow_export_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -86,7 +85,7 @@ class TestFlow(unittest.TestCase):
                 client.mgmt.flow.import_flow("name", {"name": "test"}, [{"id": "test"}])
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.flow_import_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.flow_import_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -121,7 +120,7 @@ class TestFlow(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNotNone(client.mgmt.flow.export_theme())
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.theme_export_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.theme_export_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -152,7 +151,7 @@ class TestFlow(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNotNone(client.mgmt.flow.import_theme({"id": "test"}))
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.theme_import_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.theme_import_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
