@@ -269,7 +269,6 @@ class TestUser(common.DescopeTest):
             self.assertRaises(
                 AuthException,
                 self.client.mgmt.user.delete,
-                "valid-id",
             )
 
         # Test success flow
