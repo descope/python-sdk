@@ -220,9 +220,8 @@ class User:
         Raise:
         AuthException: raised if creation operation fails
         """
-        self._auth.do_post(
+        self._auth.do_delete(
             MgmtV1.user_delete_all_test_users_path,
-            {},
             pswd=self._auth.management_key,
         )
 
