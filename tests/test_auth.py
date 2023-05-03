@@ -238,7 +238,7 @@ class TestAuth(common.DescopeTest):
         )
         self.assertEqual(
             Auth.get_method_string(DeliveryMethod.SMS),
-            "phone",
+            "sms",
         )
         self.assertEqual(
             Auth.get_method_string(DeliveryMethod.WHATSAPP),

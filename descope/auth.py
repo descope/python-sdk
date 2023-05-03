@@ -218,7 +218,7 @@ class Auth:
         if method is DeliveryMethod.EMAIL:
             return "email"
         elif method is DeliveryMethod.SMS:
-            return "phone"
+            return "sms"
         elif method is DeliveryMethod.WHATSAPP:
             return "whatsapp"
         else:
