@@ -43,7 +43,7 @@ class TestFlow(unittest.TestCase):
         # Test success flow
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
-            self.assertIsNone(client.mgmt.flow.export_flow("test"))
+            self.assertIsNotNone(client.mgmt.flow.export_flow("test"))
             mock_post.assert_called_with(
                 f"{DEFAULT_BASE_URL}{MgmtV1.flow_export_path}",
                 headers={
@@ -82,7 +82,7 @@ class TestFlow(unittest.TestCase):
         # Test success flow
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
-            self.assertIsNone(
+            self.assertIsNotNone(
                 client.mgmt.flow.import_flow("name", {"name": "test"}, [{"id": "test"}])
             )
             mock_post.assert_called_with(
@@ -119,7 +119,7 @@ class TestFlow(unittest.TestCase):
         # Test success flow
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
-            self.assertIsNone(client.mgmt.flow.export_theme())
+            self.assertIsNotNone(client.mgmt.flow.export_theme())
             mock_post.assert_called_with(
                 f"{DEFAULT_BASE_URL}{MgmtV1.theme_export_path}",
                 headers={
@@ -150,7 +150,7 @@ class TestFlow(unittest.TestCase):
         # Test success flow
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
-            self.assertIsNone(client.mgmt.flow.import_theme({"id": "test"}))
+            self.assertIsNotNone(client.mgmt.flow.import_theme({"id": "test"}))
             mock_post.assert_called_with(
                 f"{DEFAULT_BASE_URL}{MgmtV1.theme_import_path}",
                 headers={
