@@ -6,9 +6,14 @@ from flask import Flask, Response, jsonify, request
 
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
-from descope import (COOKIE_DATA_NAME,  # noqa: E402
-                     REFRESH_SESSION_COOKIE_NAME, SESSION_COOKIE_NAME,
-                     SESSION_TOKEN_NAME, AuthException, DescopeClient)
+from descope import COOKIE_DATA_NAME  # noqa: E402
+from descope import (
+    REFRESH_SESSION_COOKIE_NAME,
+    SESSION_COOKIE_NAME,
+    SESSION_TOKEN_NAME,
+    AuthException,
+    DescopeClient,
+)
 
 APP = Flask(__name__)
 

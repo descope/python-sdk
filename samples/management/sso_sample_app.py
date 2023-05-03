@@ -4,8 +4,12 @@ import sys
 
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
-from descope import (AttributeMapping, AuthException,  # noqa: E402
-                     DescopeClient, RoleMapping)
+from descope import (  # noqa: E402
+    AttributeMapping,
+    AuthException,
+    DescopeClient,
+    RoleMapping,
+)
 
 logging.basicConfig(level=logging.INFO)
 

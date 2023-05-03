@@ -6,9 +6,12 @@ from unittest.mock import patch
 from descope import SESSION_COOKIE_NAME, AuthException, DeliveryMethod
 from descope.auth import Auth
 from descope.authmethod.magiclink import MagicLink  # noqa: F401
-from descope.common import (DEFAULT_TIMEOUT_SECONDS,
-                            REFRESH_SESSION_COOKIE_NAME, EndpointsV1,
-                            LoginOptions)
+from descope.common import (
+    DEFAULT_TIMEOUT_SECONDS,
+    REFRESH_SESSION_COOKIE_NAME,
+    EndpointsV1,
+    LoginOptions,
+)
 
 from . import common
 

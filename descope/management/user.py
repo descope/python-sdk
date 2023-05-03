@@ -3,8 +3,11 @@ from typing import List
 from descope.auth import Auth
 from descope.common import DeliveryMethod
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
-from descope.management.common import (AssociatedTenant, MgmtV1,
-                                       associated_tenants_to_dict)
+from descope.management.common import (
+    AssociatedTenant,
+    MgmtV1,
+    associated_tenants_to_dict,
+)
 
 
 class User:

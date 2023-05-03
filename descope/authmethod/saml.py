@@ -1,6 +1,5 @@
 from descope.auth import Auth
-from descope.common import (EndpointsV1, LoginOptions,
-                            validate_refresh_token_provided)
+from descope.common import EndpointsV1, LoginOptions, validate_refresh_token_provided
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 

@@ -11,10 +11,15 @@ from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT
 
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
+from descope import COOKIE_DATA_NAME  # noqa: E402
 from descope import AuthException  # noqa: E402
-from descope import (COOKIE_DATA_NAME,  # noqa: E402
-                     REFRESH_SESSION_COOKIE_NAME, REFRESH_SESSION_TOKEN_NAME,
-                     SESSION_COOKIE_NAME, SESSION_TOKEN_NAME, DeliveryMethod)
+from descope import (
+    REFRESH_SESSION_COOKIE_NAME,
+    REFRESH_SESSION_TOKEN_NAME,
+    SESSION_COOKIE_NAME,
+    SESSION_TOKEN_NAME,
+    DeliveryMethod,
+)
 
 
 def set_cookie_on_response(response: Response, token: dict, cookie_data: dict):
