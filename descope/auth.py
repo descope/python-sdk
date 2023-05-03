@@ -132,6 +132,22 @@ class Auth:
             )
         return response
 
+    def do_delete(self, uri: str, pswd: str = None) -> requests.Response:
+        response = requests.delete(
+            f"{self.base_url}{uri}",
+            headers=self._get_default_headers(pswd),
+            allow_redirects=False,
+            verify=self.secure,
+        )
+        if not response.ok:
+            if response.status_code == 429:
+                self._raise_rate_limit_exception(response)  # Raise RateLimitException
+
+            raise AuthException(
+                response.status_code, ERROR_TYPE_SERVER_ERROR, response.text
+            )
+        return response
+
     def exchange_token(self, uri, code: str) -> dict:
         if not code:
             raise AuthException(
