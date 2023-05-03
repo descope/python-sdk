@@ -264,26 +264,23 @@ class TestUser(common.DescopeTest):
 
     def test_delete_all_test_users(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("requests.delete") as mock_delete:
+            mock_delete.return_value.ok = False
             self.assertRaises(
                 AuthException,
-                self.client.mgmt.user.delete,
-                "valid-id",
+                self.client.mgmt.user.delete_all_test_users,
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("requests.delete") as mock_delete:
+            mock_delete.return_value.ok = True
             self.assertIsNone(self.client.mgmt.user.delete_all_test_users())
-            mock_post.assert_called_with(
+            mock_delete.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.user_delete_all_test_users_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
-                params=None,
-                data=json.dumps({}),
                 allow_redirects=False,
                 verify=True,
             )
