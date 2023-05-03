@@ -29,7 +29,9 @@ def main():
         try:
             logging.info("Importing sign-up-or-in flow and change name")
             res["flow"]["name"] = "Importing from SDK"
-            res = descope_client.mgmt.flow.import_flow('sign-up-or-in', res["flow"], res["screens"])
+            res = descope_client.mgmt.flow.import_flow(
+                "sign-up-or-in", res["flow"], res["screens"]
+            )
 
         except AuthException as e:
             logging.info(f"Importing flow failed {e}")
@@ -43,7 +45,7 @@ def main():
 
         try:
             logging.info("Importing theme back")
-            res = descope_client.mgmt.flow.import_theme('sign-up-or-in', res)
+            res = descope_client.mgmt.flow.import_theme("sign-up-or-in", res)
 
         except AuthException as e:
             logging.info(f"Importing theme failed {e}")

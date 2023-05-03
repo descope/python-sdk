@@ -309,7 +309,6 @@ class Auth:
             )
 
     def _fetch_public_keys(self) -> None:
-
         # This function called under mutex protection so no need to acquire it once again
         response = requests.get(
             f"{self.base_url}{EndpointsV2.public_key_path}/{self.project_id}",

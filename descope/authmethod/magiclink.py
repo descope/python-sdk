@@ -43,7 +43,6 @@ class MagicLink:
     def sign_up(
         self, method: DeliveryMethod, login_id: str, uri: str, user: dict = None
     ) -> str:
-
         if not user:
             user = {}
 

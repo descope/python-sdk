@@ -75,19 +75,15 @@ class TestFlow(unittest.TestCase):
                 AuthException,
                 client.mgmt.flow.import_flow,
                 "name",
-                { "name": "test" },
-                [{ "id": "test" }]
+                {"name": "test"},
+                [{"id": "test"}],
             )
 
         # Test success flow
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
-                client.mgmt.flow.import_flow(
-                    "name",
-                { "name": "test" },
-                [{ "id": "test" }]
-                )
+                client.mgmt.flow.import_flow("name", {"name": "test"}, [{"id": "test"}])
             )
             mock_post.assert_called_with(
                 f"{DEFAULT_BASE_URL}{MgmtV1.flow_import_path}",
@@ -99,8 +95,8 @@ class TestFlow(unittest.TestCase):
                 data=json.dumps(
                     {
                         "flowId": "name",
-                        "flow": { "name": "test" },
-                        "screens": [{ "id": "test" }],
+                        "flow": {"name": "test"},
+                        "screens": [{"id": "test"}],
                     }
                 ),
                 allow_redirects=False,
@@ -118,10 +114,7 @@ class TestFlow(unittest.TestCase):
         # Test failed flows
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.flow.export_theme
-            )
+            self.assertRaises(AuthException, client.mgmt.flow.export_theme)
 
         # Test success flow
         with patch("requests.post") as mock_post:
@@ -134,9 +127,7 @@ class TestFlow(unittest.TestCase):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {}
-                ),
+                data=json.dumps({}),
                 allow_redirects=False,
                 verify=True,
             )
@@ -153,19 +144,13 @@ class TestFlow(unittest.TestCase):
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
-                AuthException,
-                client.mgmt.flow.import_theme,
-                {"id": "test"}
+                AuthException, client.mgmt.flow.import_theme, {"id": "test"}
             )
 
         # Test success flow
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
-            self.assertIsNone(
-                client.mgmt.flow.import_theme(
-                { "id": "test" }
-                )
-            )
+            self.assertIsNone(client.mgmt.flow.import_theme({"id": "test"}))
             mock_post.assert_called_with(
                 f"{DEFAULT_BASE_URL}{MgmtV1.theme_import_path}",
                 headers={
@@ -173,11 +158,7 @@ class TestFlow(unittest.TestCase):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "theme": { "id": "test" }
-                    }
-                ),
+                data=json.dumps({"theme": {"id": "test"}}),
                 allow_redirects=False,
                 verify=True,
             )
