@@ -268,7 +268,7 @@ class TestUser(common.DescopeTest):
             mock_delete.return_value.ok = False
             self.assertRaises(
                 AuthException,
-                self.client.mgmt.user.delete,
+                self.client.mgmt.user.delete_all_test_users,
             )
 
         # Test success flow
