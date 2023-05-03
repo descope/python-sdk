@@ -55,7 +55,7 @@ class TestUser(common.DescopeTest):
                     AssociatedTenant("tenant2", ["role1", "role2"]),
                 ],
                 picture="https://test.com",
-                custom_attributes={"ak": "av"}
+                custom_attributes={"ak": "av"},
             )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
@@ -111,7 +111,7 @@ class TestUser(common.DescopeTest):
                     AssociatedTenant("tenant1"),
                     AssociatedTenant("tenant2", ["role1", "role2"]),
                 ],
-                custom_attributes={"ak": "av"}
+                custom_attributes={"ak": "av"},
             )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
@@ -135,7 +135,7 @@ class TestUser(common.DescopeTest):
                         ],
                         "test": True,
                         "picture": None,
-                        "customAttributes":{"ak": "av"},
+                        "customAttributes": {"ak": "av"},
                         "invite": False,
                     }
                 ),
@@ -167,7 +167,7 @@ class TestUser(common.DescopeTest):
                     AssociatedTenant("tenant1"),
                     AssociatedTenant("tenant2", ["role1", "role2"]),
                 ],
-                custom_attributes={"ak": "av"}
+                custom_attributes={"ak": "av"},
             )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
@@ -219,7 +219,7 @@ class TestUser(common.DescopeTest):
                     display_name="new-name",
                     role_names=["domain.com"],
                     picture="https://test.com",
-                    custom_attributes={"ak": "av"}
+                    custom_attributes={"ak": "av"},
                 )
             )
             mock_post.assert_called_with(
@@ -416,7 +416,7 @@ class TestUser(common.DescopeTest):
                 verify=True,
             )
 
-         # Test success flow with custom attributes
+        # Test success flow with custom attributes
         with patch("requests.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
@@ -425,7 +425,10 @@ class TestUser(common.DescopeTest):
             )
             mock_post.return_value = network_resp
             resp = self.client.mgmt.user.search_all(
-                ["t1, t2"], ["r1", "r2"], with_test_user=True, custom_attributes={"ak": "av"}
+                ["t1, t2"],
+                ["r1", "r2"],
+                with_test_user=True,
+                custom_attributes={"ak": "av"},
             )
             users = resp["users"]
             self.assertEqual(len(users), 2)

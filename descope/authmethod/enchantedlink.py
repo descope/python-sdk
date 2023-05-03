@@ -79,7 +79,14 @@ class EnchantedLink:
         body = EnchantedLink._compose_verify_body(token)
         self._auth.do_post(uri, body, None)
 
-    def update_user_email(self, login_id: str, email: str, refresh_token: str, add_to_login_ids: bool = False, on_merge_use_existing: bool = False) -> dict:
+    def update_user_email(
+        self,
+        login_id: str,
+        email: str,
+        refresh_token: str,
+        add_to_login_ids: bool = False,
+        on_merge_use_existing: bool = False,
+    ) -> dict:
         if not login_id:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
@@ -87,7 +94,9 @@ class EnchantedLink:
 
         Auth.validate_email(email)
 
-        body = EnchantedLink._compose_update_user_email_body(login_id, email, add_to_login_ids, on_merge_use_existing)
+        body = EnchantedLink._compose_update_user_email_body(
+            login_id, email, add_to_login_ids, on_merge_use_existing
+        )
         uri = EndpointsV1.update_user_email_otp_path
         response = self._auth.do_post(uri, body, None, refresh_token)
         return EnchantedLink._get_pending_ref_from_response(response)
@@ -141,8 +150,15 @@ class EnchantedLink:
         return {"token": token}
 
     @staticmethod
-    def _compose_update_user_email_body(login_id: str, email: str, add_to_login_ids: bool, on_merge_use_existing: bool) -> dict:
-        return {"loginId": login_id, "email": email, "addToLoginIDs": add_to_login_ids, "onMergeUseExisting": on_merge_use_existing}
+    def _compose_update_user_email_body(
+        login_id: str, email: str, add_to_login_ids: bool, on_merge_use_existing: bool
+    ) -> dict:
+        return {
+            "loginId": login_id,
+            "email": email,
+            "addToLoginIDs": add_to_login_ids,
+            "onMergeUseExisting": on_merge_use_existing,
+        }
 
     @staticmethod
     def _compose_get_session_body(pending_ref: str) -> dict:
