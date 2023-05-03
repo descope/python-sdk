@@ -488,6 +488,31 @@ class TestAuth(common.DescopeTest):
                 {API_RATE_LIMIT_RETRY_AFTER_HEADER: 10},
             )
 
+        # Test do_delete
+        with patch("requests.delete") as mock_request:
+            mock_request.return_value.ok = False
+            mock_request.return_value.status_code = 429
+            mock_request.return_value.json.return_value = {
+                "errorCode": "E130429",
+                "errorDescription": "https://docs.descope.com/rate-limit",
+                "errorMessage": "API rate limit exceeded.",
+            }
+            mock_request.return_value.headers = {
+                API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"
+            }
+            with self.assertRaises(RateLimitException) as cm:
+                auth.do_delete("http://test.com")
+            the_exception = cm.exception
+            self.assertEqual(the_exception.status_code, "E130429")
+            self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
+            self.assertEqual(
+                the_exception.error_description, "https://docs.descope.com/rate-limit"
+            )
+            self.assertEqual(the_exception.error_message, "API rate limit exceeded.")
+            self.assertEqual(
+                the_exception.rate_limit_parameters,
+                {API_RATE_LIMIT_RETRY_AFTER_HEADER: 10},
+
         # Test _fetch_public_keys rate limit
         with patch("requests.get") as mock_request:
             mock_request.return_value.ok = False
