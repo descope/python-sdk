@@ -3,6 +3,7 @@ from unittest import mock
 from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
+from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
 from .. import common
@@ -59,7 +60,7 @@ class TestPermission(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_update(self):
@@ -106,7 +107,7 @@ class TestPermission(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_delete(self):
@@ -144,7 +145,7 @@ class TestPermission(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_load_all(self):
@@ -182,5 +183,5 @@ class TestPermission(common.DescopeTest):
                 params=None,
                 allow_redirects=None,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )

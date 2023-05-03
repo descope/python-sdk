@@ -6,7 +6,12 @@ from unittest.mock import patch
 from descope import SESSION_COOKIE_NAME, AuthException
 from descope.auth import Auth
 from descope.authmethod.enchantedlink import EnchantedLink  # noqa: F401
-from descope.common import REFRESH_SESSION_COOKIE_NAME, EndpointsV1, LoginOptions
+from descope.common import (
+    REFRESH_SESSION_COOKIE_NAME,
+    EndpointsV1,
+    LoginOptions,
+    DEFAULT_TIMEOUT_SECONDS,
+)
 
 from . import common
 
@@ -116,7 +121,7 @@ class TestEnchantedLink(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(res["pendingRef"], "aaaa")
             self.assertEqual(res["linkId"], "24")
@@ -150,7 +155,7 @@ class TestEnchantedLink(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_sign_in_with_login_options(self):
@@ -183,7 +188,7 @@ class TestEnchantedLink(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_sign_up(self):
@@ -226,7 +231,7 @@ class TestEnchantedLink(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(res["pendingRef"], "aaaa")
 
@@ -257,7 +262,7 @@ class TestEnchantedLink(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(res["pendingRef"], "aaaa")
 
@@ -289,7 +294,7 @@ class TestEnchantedLink(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_verify(self):

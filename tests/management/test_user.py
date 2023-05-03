@@ -3,7 +3,7 @@ from unittest import mock
 from unittest.mock import patch
 
 from descope import AssociatedTenant, AuthException, DescopeClient
-from descope.common import DeliveryMethod
+from descope.common import DeliveryMethod, DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
 from .. import common
@@ -81,7 +81,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_create_test_user(self):
@@ -135,7 +135,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_invite(self):
@@ -189,7 +189,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_update(self):
@@ -233,7 +233,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_delete(self):
@@ -264,7 +264,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_delete_all_test_users(self):
@@ -291,7 +291,7 @@ class TestUser(common.DescopeTest):
                 data=json.dumps({}),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_load(self):
@@ -322,7 +322,7 @@ class TestUser(common.DescopeTest):
                 params={"loginId": "valid-id"},
                 allow_redirects=None,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_load_by_user_id(self):
@@ -353,7 +353,7 @@ class TestUser(common.DescopeTest):
                 params={"userId": "user-id"},
                 allow_redirects=None,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_search_all(self):
@@ -411,7 +411,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_activate(self):
@@ -448,7 +448,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_deactivate(self):
@@ -485,7 +485,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_update_email(self):
@@ -524,7 +524,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_update_phone(self):
@@ -563,7 +563,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_update_display_name(self):
@@ -601,7 +601,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_add_roles(self):
@@ -639,7 +639,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_remove_roles(self):
@@ -677,7 +677,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_add_tenant(self):
@@ -715,7 +715,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_remove_tenant(self):
@@ -753,7 +753,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_add_tenant_roles(self):
@@ -795,7 +795,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_remove_tenant_roles(self):
@@ -837,7 +837,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_generate_otp_for_test_user(self):
@@ -879,7 +879,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_generate_magic_link_for_test_user(self):
@@ -923,7 +923,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_generate_enchanted_link_for_test_user(self):
@@ -966,5 +966,5 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )

@@ -2,6 +2,7 @@ import json
 from unittest.mock import patch
 
 from descope import AttributeMapping, AuthException, DescopeClient, RoleMapping
+from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
 from .. import common
@@ -76,7 +77,7 @@ class TestSSOSettings(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Domain is optional
@@ -110,7 +111,7 @@ class TestSSOSettings(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Redirect is optional
@@ -144,7 +145,7 @@ class TestSSOSettings(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_configure_via_metadata(self):
@@ -189,7 +190,7 @@ class TestSSOSettings(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_mapping(self):
@@ -242,5 +243,5 @@ class TestSSOSettings(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )

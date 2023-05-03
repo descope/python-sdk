@@ -6,7 +6,7 @@ from unittest.mock import patch
 from descope import AuthException
 from descope.auth import Auth
 from descope.authmethod.saml import SAML
-from descope.common import EndpointsV1, LoginOptions
+from descope.common import EndpointsV1, LoginOptions, DEFAULT_TIMEOUT_SECONDS
 
 from . import common
 
@@ -65,7 +65,7 @@ class TestSAML(common.DescopeTest):
                 data=json.dumps({}),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertRaises(
                 AuthException,
@@ -112,7 +112,7 @@ class TestSAML(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_compose_exchange_params(self):
@@ -150,7 +150,7 @@ class TestSAML(common.DescopeTest):
                 data=json.dumps({"code": "c1"}),
                 allow_redirects=False,
                 verify=True,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
 

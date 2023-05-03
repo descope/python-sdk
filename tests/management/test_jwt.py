@@ -3,6 +3,7 @@ from unittest import mock
 from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
+from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
 from .. import common
@@ -61,5 +62,5 @@ class TestUser(common.DescopeTest):
                 allow_redirects=False,
                 verify=True,
                 params=None,
-                timeout=60,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
