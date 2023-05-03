@@ -3,7 +3,7 @@ from unittest import mock
 from unittest.mock import patch
 
 from descope import AssociatedTenant, AuthException, DescopeClient
-from descope.common import DeliveryMethod, DEFAULT_TIMEOUT_SECONDS
+from descope.common import DEFAULT_TIMEOUT_SECONDS, DeliveryMethod
 from descope.management.common import MgmtV1
 
 from .. import common

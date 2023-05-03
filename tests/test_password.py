@@ -5,7 +5,7 @@ from unittest.mock import patch
 from descope import AuthException
 from descope.auth import Auth
 from descope.authmethod.password import Password  # noqa: F401
-from descope.common import EndpointsV1, DEFAULT_TIMEOUT_SECONDS
+from descope.common import DEFAULT_TIMEOUT_SECONDS, EndpointsV1
 
 from . import common
 

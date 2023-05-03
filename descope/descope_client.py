@@ -11,7 +11,7 @@ from descope.authmethod.password import Password  # noqa: F401
 from descope.authmethod.saml import SAML  # noqa: F401
 from descope.authmethod.totp import TOTP  # noqa: F401
 from descope.authmethod.webauthn import WebAuthn  # noqa: F401
-from descope.common import EndpointsV1, DEFAULT_TIMEOUT_SECONDS
+from descope.common import DEFAULT_TIMEOUT_SECONDS, EndpointsV1
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 from descope.mgmt import MGMT  # noqa: F401
 

@@ -4,14 +4,9 @@ from copy import deepcopy
 from unittest import mock
 from unittest.mock import patch
 
-from descope import (
-    API_RATE_LIMIT_RETRY_AFTER_HEADER,
-    ERROR_TYPE_API_RATE_LIMIT,
-    SESSION_COOKIE_NAME,
-    AuthException,
-    DescopeClient,
-    RateLimitException,
-)
+from descope import (API_RATE_LIMIT_RETRY_AFTER_HEADER,
+                     ERROR_TYPE_API_RATE_LIMIT, SESSION_COOKIE_NAME,
+                     AuthException, DescopeClient, RateLimitException)
 from descope.common import SESSION_TOKEN_NAME
 
 from . import common

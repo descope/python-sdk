@@ -3,14 +3,12 @@ from enum import Enum
 from unittest import mock
 from unittest.mock import patch
 
-from descope import SESSION_COOKIE_NAME, AuthException, DeliveryMethod, DescopeClient
+from descope import (SESSION_COOKIE_NAME, AuthException, DeliveryMethod,
+                     DescopeClient)
 from descope.authmethod.otp import OTP  # noqa: F401
-from descope.common import (
-    REFRESH_SESSION_COOKIE_NAME,
-    EndpointsV1,
-    LoginOptions,
-    DEFAULT_TIMEOUT_SECONDS,
-)
+from descope.common import (DEFAULT_TIMEOUT_SECONDS,
+                            REFRESH_SESSION_COOKIE_NAME, EndpointsV1,
+                            LoginOptions)
 
 from . import common
 

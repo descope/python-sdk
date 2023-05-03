@@ -4,13 +4,9 @@ from enum import Enum
 from unittest import mock
 from unittest.mock import patch
 
-from descope import (
-    API_RATE_LIMIT_RETRY_AFTER_HEADER,
-    ERROR_TYPE_API_RATE_LIMIT,
-    AuthException,
-    DeliveryMethod,
-    RateLimitException,
-)
+from descope import (API_RATE_LIMIT_RETRY_AFTER_HEADER,
+                     ERROR_TYPE_API_RATE_LIMIT, AuthException, DeliveryMethod,
+                     RateLimitException)
 from descope.auth import Auth
 from descope.common import REFRESH_SESSION_TOKEN_NAME, SESSION_TOKEN_NAME
 

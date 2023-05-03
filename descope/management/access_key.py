@@ -1,11 +1,8 @@
 from typing import List
 
 from descope.auth import Auth
-from descope.management.common import (
-    AssociatedTenant,
-    MgmtV1,
-    associated_tenants_to_dict,
-)
+from descope.management.common import (AssociatedTenant, MgmtV1,
+                                       associated_tenants_to_dict)
 
 
 class AccessKey:

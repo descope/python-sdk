@@ -10,28 +10,18 @@ import pkg_resources
 import requests
 from email_validator import EmailNotValidError, validate_email
 
-from descope.common import (
-    COOKIE_DATA_NAME,
-    DEFAULT_BASE_URL,
-    DEFAULT_TIMEOUT_SECONDS,
-    PHONE_REGEX,
-    REFRESH_SESSION_COOKIE_NAME,
-    REFRESH_SESSION_TOKEN_NAME,
-    SESSION_TOKEN_NAME,
-    DeliveryMethod,
-    EndpointsV1,
-    EndpointsV2,
-)
-from descope.exceptions import (
-    API_RATE_LIMIT_RETRY_AFTER_HEADER,
-    ERROR_TYPE_API_RATE_LIMIT,
-    ERROR_TYPE_INVALID_ARGUMENT,
-    ERROR_TYPE_INVALID_PUBLIC_KEY,
-    ERROR_TYPE_INVALID_TOKEN,
-    ERROR_TYPE_SERVER_ERROR,
-    AuthException,
-    RateLimitException,
-)
+from descope.common import (COOKIE_DATA_NAME, DEFAULT_BASE_URL,
+                            DEFAULT_TIMEOUT_SECONDS, PHONE_REGEX,
+                            REFRESH_SESSION_COOKIE_NAME,
+                            REFRESH_SESSION_TOKEN_NAME, SESSION_TOKEN_NAME,
+                            DeliveryMethod, EndpointsV1, EndpointsV2)
+from descope.exceptions import (API_RATE_LIMIT_RETRY_AFTER_HEADER,
+                                ERROR_TYPE_API_RATE_LIMIT,
+                                ERROR_TYPE_INVALID_ARGUMENT,
+                                ERROR_TYPE_INVALID_PUBLIC_KEY,
+                                ERROR_TYPE_INVALID_TOKEN,
+                                ERROR_TYPE_SERVER_ERROR, AuthException,
+                                RateLimitException)
 
 
 class Auth:
