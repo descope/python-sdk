@@ -1,11 +1,13 @@
 import datetime
 import os
 import sys
+import uuid
 from functools import wraps
 
 from flask import Response, _request_ctx_stack, redirect, request
 
 from descope.descope_client import DescopeClient
+from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT
 
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
@@ -92,7 +94,7 @@ def descope_signin_otp_by_email(descope_client):
     return decorator
 
 
-def descope_validate_auth(descope_client, permissions=[], tenant=""):
+def descope_validate_auth(descope_client, permissions=[], roles=[], tenant=""):
     """
     Test if Access Token is valid
     """
@@ -122,6 +124,17 @@ def descope_validate_auth(descope_client, permissions=[], tenant=""):
                     )
 
                 if not valid_permissions:
+                    return Response("Access denied", 401)
+
+            if roles:
+                if tenant:
+                    valid_roles = descope_client.validate_tenant_roles(
+                        jwt_response, roles
+                    )
+                else:
+                    valid_roles = descope_client.validate_roles(jwt_response, roles)
+
+                if not valid_roles:
                     return Response("Access denied", 401)
 
             # Save the claims on the context execute the original API
@@ -369,6 +382,7 @@ def descope_logout(descope_client):
         def decorated(*args, **kwargs):
             cookies = request.cookies.copy()
             refresh_token = cookies.get(REFRESH_SESSION_COOKIE_NAME)
+            cookie_domain = request.headers.get("Host", "")
             try:
                 descope_client.logout(refresh_token)
             except AuthException as e:
@@ -378,7 +392,9 @@ def descope_logout(descope_client):
             response = f(*args, **kwargs)
 
             # Invalidate all cookies
-            cookies.clear()
+            if cookie_domain:
+                response.delete_cookie(SESSION_COOKIE_NAME, "/", cookie_domain)
+                response.delete_cookie(REFRESH_SESSION_COOKIE_NAME, "/", cookie_domain)
             return response
 
         return decorated
@@ -406,6 +422,52 @@ def descope_oauth(descope_client: DescopeClient):
             f(*args, **kwargs)
 
             return redirect(redirect_url["url"], 302)
+
+        return decorated
+
+    return decorator
+
+
+def descope_full_login(project_id, flow_id, success_redirect_url):
+    """
+    Descope Flow login
+    """
+
+    def decorator(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            id = f"descope-{uuid.uuid4()}"
+            if not success_redirect_url:
+                raise AuthException(
+                    500,
+                    ERROR_TYPE_INVALID_ARGUMENT,
+                    "Missing success_redirect_url parameter",
+                )
+
+            html = f"""<!DOCTYPE html>
+                        <html lang="en">
+                        <head>
+                            <script src="https://unpkg.com/@descope/web-component/dist/index.js"></script>
+                        </head>
+
+                        <body>
+                            <descope-wc id="{id}" project-id="{project_id}" flow-id="{flow_id}"></descope-wc>
+                            <script>
+                                const setCookie = (cookieName, cookieValue, maxAge, path, domain) => {{
+                                    document.cookie = cookieName + '=' + cookieValue + ';max-age=' + maxAge + ';path=' + path + ';domain=' + domain + '; samesite=strict; secure;'
+                                }}
+                                const descopeWcEle = document.getElementById('{id}');
+                                descopeWcEle.addEventListener('success', async (e) => {{
+                                    setCookie('{SESSION_COOKIE_NAME}', e.detail.sessionJwt, e.detail.cookieMaxAge, e.detail.cookiePath, e.detail.cookieDomain)
+                                    setCookie('{REFRESH_SESSION_COOKIE_NAME}', e.detail.refreshJwt, e.detail.cookieMaxAge, e.detail.cookiePath, e.detail.cookieDomain)
+
+                                    document.location.replace("{success_redirect_url}")
+                                }});
+                            </script>
+                        </body>
+                        </html>"""
+            f(*args, **kwargs)
+            return html
 
         return decorated
 

@@ -1,17 +1,16 @@
 import json
-import unittest
 from unittest import mock
 from unittest.mock import patch
 
-import common
-
 from descope import AuthException, DescopeClient
-from descope.common import DEFAULT_BASE_URL
 from descope.management.common import MgmtV1
 
+from .. import common
 
-class TestPermission(unittest.TestCase):
+
+class TestPermission(common.DescopeTest):
     def setUp(self) -> None:
+        super().setUp()
         self.dummy_project_id = "dummy"
         self.dummy_management_key = "key"
         self.public_key_dict = {
@@ -46,7 +45,7 @@ class TestPermission(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.permission.create("P1", "Something"))
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.permission_create_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.permission_create_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -91,7 +90,7 @@ class TestPermission(unittest.TestCase):
                 )
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.permission_update_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.permission_update_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -130,7 +129,7 @@ class TestPermission(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.permission.delete("name"))
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.permission_delete_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.permission_delete_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -172,7 +171,7 @@ class TestPermission(unittest.TestCase):
             self.assertEqual(permissions[0]["name"], "p1")
             self.assertEqual(permissions[1]["name"], "p2")
             mock_get.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.permission_load_all_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.permission_load_all_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",

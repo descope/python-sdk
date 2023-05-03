@@ -1,18 +1,18 @@
 import json
-import unittest
 from unittest import mock
 from unittest.mock import patch
-
-import common
 
 from descope import AuthException
 from descope.auth import Auth
 from descope.authmethod.password import Password  # noqa: F401
-from descope.common import DEFAULT_BASE_URL, EndpointsV1
+from descope.common import EndpointsV1
+
+from . import common
 
 
-class TestPassword(unittest.TestCase):
+class TestPassword(common.DescopeTest):
     def setUp(self) -> None:
+        super().setUp()
         self.dummy_project_id = "dummy"
         self.public_key_dict = {
             "alg": "ES384",
@@ -94,7 +94,7 @@ class TestPassword(unittest.TestCase):
             )
 
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.sign_up_password_path}",
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_password_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
@@ -172,7 +172,7 @@ class TestPassword(unittest.TestCase):
             self.assertIsNotNone(password.sign_in("dummy@dummy.com", "123456"))
 
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.sign_in_password_path}",
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_in_password_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
@@ -229,7 +229,7 @@ class TestPassword(unittest.TestCase):
             )
 
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.send_reset_password_path}",
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.send_reset_password_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
@@ -315,7 +315,7 @@ class TestPassword(unittest.TestCase):
                 password.update("dummy@dummy.com", "123456", valid_jwt_token)
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.update_password_path}",
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_password_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{valid_jwt_token}",
@@ -398,7 +398,7 @@ class TestPassword(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNone(password.replace("dummy@dummy.com", "123456", "1234567"))
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.replace_password_path}",
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.replace_password_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
@@ -436,7 +436,7 @@ class TestPassword(unittest.TestCase):
             mock_get.return_value = my_mock_response
             self.assertIsNotNone(password.get_policy())
             mock_get.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.password_policy_path}",
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.password_policy_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",

@@ -1,16 +1,16 @@
 import json
-import unittest
 from unittest import mock
 from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
-from descope.common import DEFAULT_BASE_URL
 from descope.management.common import MgmtV1
-from tests import common
+
+from .. import common
 
 
-class TestUser(unittest.TestCase):
+class TestUser(common.DescopeTest):
     def setUp(self) -> None:
+        super().setUp()
         self.dummy_project_id = "dummy"
         self.dummy_management_key = "key"
         self.public_key_dict = {
@@ -50,7 +50,7 @@ class TestUser(unittest.TestCase):
             mock_post.return_value = network_resp
             resp = client.mgmt.jwt.update_jwt("test", {"k1": "v1"})
             self.assertEqual(resp, "response")
-            expected_uri = f"{DEFAULT_BASE_URL}{MgmtV1.update_jwt_path}"
+            expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.update_jwt_path}"
             mock_post.assert_called_with(
                 expected_uri,
                 headers={

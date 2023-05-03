@@ -3,21 +3,17 @@ import unittest
 from unittest import mock
 from unittest.mock import patch
 
-import common
-
 from descope import SESSION_COOKIE_NAME, AuthException
 from descope.auth import Auth
 from descope.authmethod.enchantedlink import EnchantedLink  # noqa: F401
-from descope.common import (
-    DEFAULT_BASE_URL,
-    REFRESH_SESSION_COOKIE_NAME,
-    EndpointsV1,
-    LoginOptions,
-)
+from descope.common import REFRESH_SESSION_COOKIE_NAME, EndpointsV1, LoginOptions
+
+from . import common
 
 
-class TestEnchantedLink(unittest.TestCase):
+class TestEnchantedLink(common.DescopeTest):
     def setUp(self) -> None:
+        super().setUp()
         self.dummy_project_id = "dummy"
         self.public_key_dict = {
             "alg": "ES384",
@@ -105,7 +101,7 @@ class TestEnchantedLink(unittest.TestCase):
             mock_post.return_value = my_mock_response
             res = enchantedlink.sign_in("dummy@dummy.com", "http://test.me")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_enchantedlink_path}/email",
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_enchantedlink_path}/email",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
@@ -134,7 +130,7 @@ class TestEnchantedLink(unittest.TestCase):
                 refresh_token=refresh_token,
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_enchantedlink_path}/email",
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_enchantedlink_path}/email",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{refresh_token}",
@@ -166,7 +162,7 @@ class TestEnchantedLink(unittest.TestCase):
             lo = LoginOptions(stepup=True, custom_claims={"k1": "v1"})
             enchantedlink.sign_in("dummy@dummy.com", "http://test.me", lo, "refresh")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_enchantedlink_path}/email",
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_enchantedlink_path}/email",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:refresh",
@@ -211,7 +207,7 @@ class TestEnchantedLink(unittest.TestCase):
                 {"username": "user1", "email": "dummy@dummy.com"},
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_enchantedlink_path}/email",
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_enchantedlink_path}/email",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
@@ -241,7 +237,7 @@ class TestEnchantedLink(unittest.TestCase):
                 None,
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_enchantedlink_path}/email",
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_enchantedlink_path}/email",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
@@ -273,7 +269,7 @@ class TestEnchantedLink(unittest.TestCase):
                 "http://test.me",
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.sign_up_or_in_auth_enchantedlink_path}/email",
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_or_in_auth_enchantedlink_path}/email",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",

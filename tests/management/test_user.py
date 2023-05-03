@@ -1,17 +1,17 @@
 import json
-import unittest
 from unittest import mock
 from unittest.mock import patch
 
-import common
-
 from descope import AssociatedTenant, AuthException, DescopeClient
-from descope.common import DEFAULT_BASE_URL
+from descope.common import DeliveryMethod
 from descope.management.common import MgmtV1
 
+from .. import common
 
-class TestUser(unittest.TestCase):
+
+class TestUser(common.DescopeTest):
     def setUp(self) -> None:
+        super().setUp()
         self.dummy_project_id = "dummy"
         self.dummy_management_key = "key"
         self.public_key_dict = {
@@ -58,7 +58,7 @@ class TestUser(unittest.TestCase):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_create_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_create_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -75,6 +75,60 @@ class TestUser(unittest.TestCase):
                             {"tenantId": "tenant1", "roleNames": []},
                             {"tenantId": "tenant2", "roleNames": ["role1", "role2"]},
                         ],
+                        "test": False,
+                        "invite": False,
+                    }
+                ),
+                allow_redirects=False,
+                verify=True,
+            )
+
+    def test_create_test_user(self):
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                self.client.mgmt.user.create,
+                "valid-id",
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.create_test_user(
+                login_id="name@mail.com",
+                email="name@mail.com",
+                display_name="Name",
+                user_tenants=[
+                    AssociatedTenant("tenant1"),
+                    AssociatedTenant("tenant2", ["role1", "role2"]),
+                ],
+            )
+            user = resp["user"]
+            self.assertEqual(user["id"], "u1")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_create_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                data=json.dumps(
+                    {
+                        "loginId": "name@mail.com",
+                        "email": "name@mail.com",
+                        "phone": None,
+                        "displayName": "Name",
+                        "roleNames": [],
+                        "userTenants": [
+                            {"tenantId": "tenant1", "roleNames": []},
+                            {"tenantId": "tenant2", "roleNames": ["role1", "role2"]},
+                        ],
+                        "test": True,
                         "invite": False,
                     }
                 ),
@@ -110,7 +164,7 @@ class TestUser(unittest.TestCase):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_create_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_create_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -127,6 +181,7 @@ class TestUser(unittest.TestCase):
                             {"tenantId": "tenant1", "roleNames": []},
                             {"tenantId": "tenant2", "roleNames": ["role1", "role2"]},
                         ],
+                        "test": False,
                         "invite": True,
                     }
                 ),
@@ -156,7 +211,7 @@ class TestUser(unittest.TestCase):
                 )
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_update_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -170,6 +225,7 @@ class TestUser(unittest.TestCase):
                         "displayName": "new-name",
                         "roleNames": ["domain.com"],
                         "userTenants": [],
+                        "test": False,
                     }
                 ),
                 allow_redirects=False,
@@ -191,7 +247,7 @@ class TestUser(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNone(self.client.mgmt.user.delete("u1"))
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_delete_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_delete_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -202,6 +258,32 @@ class TestUser(unittest.TestCase):
                         "loginId": "u1",
                     }
                 ),
+                allow_redirects=False,
+                verify=True,
+            )
+
+    def test_delete_all_test_users(self):
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                self.client.mgmt.user.delete,
+                "valid-id",
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(self.client.mgmt.user.delete_all_test_users())
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_delete_all_test_users_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                data=json.dumps({}),
                 allow_redirects=False,
                 verify=True,
             )
@@ -226,7 +308,7 @@ class TestUser(unittest.TestCase):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_get.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_load_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_load_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -256,7 +338,7 @@ class TestUser(unittest.TestCase):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_get.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_load_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_load_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -295,13 +377,15 @@ class TestUser(unittest.TestCase):
                 """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
             )
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.search_all(["t1, t2"], ["r1", "r2"])
+            resp = self.client.mgmt.user.search_all(
+                ["t1, t2"], ["r1", "r2"], with_test_user=True
+            )
             users = resp["users"]
             self.assertEqual(len(users), 2)
             self.assertEqual(users[0]["id"], "u1")
             self.assertEqual(users[1]["id"], "u2")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.users_search_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.users_search_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -313,6 +397,8 @@ class TestUser(unittest.TestCase):
                         "roleNames": ["r1", "r2"],
                         "limit": 0,
                         "page": 0,
+                        "testUsersOnly": False,
+                        "withTestUser": True,
                     }
                 ),
                 allow_redirects=False,
@@ -339,7 +425,7 @@ class TestUser(unittest.TestCase):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_update_status_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_status_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -375,7 +461,7 @@ class TestUser(unittest.TestCase):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_update_status_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_status_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -412,7 +498,7 @@ class TestUser(unittest.TestCase):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_update_email_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_email_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -450,7 +536,7 @@ class TestUser(unittest.TestCase):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_update_phone_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_phone_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -488,7 +574,7 @@ class TestUser(unittest.TestCase):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_update_name_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_name_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -525,7 +611,7 @@ class TestUser(unittest.TestCase):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_add_role_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_add_role_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -562,7 +648,7 @@ class TestUser(unittest.TestCase):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_remove_role_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_remove_role_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -599,7 +685,7 @@ class TestUser(unittest.TestCase):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_add_tenant_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_add_tenant_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -636,7 +722,7 @@ class TestUser(unittest.TestCase):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_remove_tenant_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_remove_tenant_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -676,7 +762,7 @@ class TestUser(unittest.TestCase):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_add_role_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_add_role_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -717,7 +803,7 @@ class TestUser(unittest.TestCase):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.user_remove_role_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_remove_role_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -728,6 +814,132 @@ class TestUser(unittest.TestCase):
                         "loginId": "valid-id",
                         "tenantId": "tid",
                         "roleNames": ["foo", "bar"],
+                    }
+                ),
+                allow_redirects=False,
+                verify=True,
+            )
+
+    def test_generate_otp_for_test_user(self):
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                self.client.mgmt.user.generate_otp_for_test_user,
+                "login-id",
+                "email",
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads(
+                """{"code": "123456", "loginId": "login-id"}"""
+            )
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.generate_otp_for_test_user(
+                DeliveryMethod.EMAIL, "login-id"
+            )
+            self.assertEqual(resp["code"], "123456")
+            self.assertEqual(resp["loginId"], "login-id")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_generate_otp_for_test_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                data=json.dumps(
+                    {
+                        "loginId": "login-id",
+                        "deliveryMethod": "email",
+                    }
+                ),
+                allow_redirects=False,
+                verify=True,
+            )
+
+    def test_generate_magic_link_for_test_user(self):
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                self.client.mgmt.user.generate_magic_link_for_test_user,
+                "login-id",
+                "email",
+                "bla",
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads(
+                """{"link": "some-link", "loginId": "login-id"}"""
+            )
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.generate_magic_link_for_test_user(
+                DeliveryMethod.EMAIL, "login-id", "bla"
+            )
+            self.assertEqual(resp["link"], "some-link")
+            self.assertEqual(resp["loginId"], "login-id")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_generate_magic_link_for_test_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                data=json.dumps(
+                    {
+                        "loginId": "login-id",
+                        "deliveryMethod": "email",
+                        "URI": "bla",
+                    }
+                ),
+                allow_redirects=False,
+                verify=True,
+            )
+
+    def test_generate_enchanted_link_for_test_user(self):
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                self.client.mgmt.user.generate_enchanted_link_for_test_user,
+                "login-id",
+                "bla",
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads(
+                """{"link": "some-link", "loginId": "login-id", "pendingRef": "some-ref"}"""
+            )
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.generate_enchanted_link_for_test_user(
+                "login-id", "bla"
+            )
+            self.assertEqual(resp["link"], "some-link")
+            self.assertEqual(resp["loginId"], "login-id")
+            self.assertEqual(resp["pendingRef"], "some-ref")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_generate_enchanted_link_for_test_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                data=json.dumps(
+                    {
+                        "loginId": "login-id",
+                        "URI": "bla",
                     }
                 ),
                 allow_redirects=False,

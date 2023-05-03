@@ -214,6 +214,19 @@ class Auth:
             )
 
     @staticmethod
+    def get_method_string(method: DeliveryMethod) -> str:
+        if method is DeliveryMethod.EMAIL:
+            return "email"
+        elif method is DeliveryMethod.SMS:
+            return "phone"
+        elif method is DeliveryMethod.WHATSAPP:
+            return "whatsapp"
+        else:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, f"Unknown delivery method: {method}"
+            )
+
+    @staticmethod
     def validate_email(email: str):
         if email == "":
             raise AuthException(

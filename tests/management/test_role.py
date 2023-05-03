@@ -1,17 +1,16 @@
 import json
-import unittest
 from unittest import mock
 from unittest.mock import patch
 
-import common
-
 from descope import AuthException, DescopeClient
-from descope.common import DEFAULT_BASE_URL
 from descope.management.common import MgmtV1
 
+from .. import common
 
-class TestRole(unittest.TestCase):
+
+class TestRole(common.DescopeTest):
     def setUp(self) -> None:
+        super().setUp()
         self.dummy_project_id = "dummy"
         self.dummy_management_key = "key"
         self.public_key_dict = {
@@ -46,7 +45,7 @@ class TestRole(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.role.create("R1", "Something", ["P1"]))
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.role_create_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.role_create_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -93,7 +92,7 @@ class TestRole(unittest.TestCase):
                 )
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.role_update_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.role_update_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -133,7 +132,7 @@ class TestRole(unittest.TestCase):
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.role.delete("name"))
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.role_delete_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.role_delete_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -186,7 +185,7 @@ class TestRole(unittest.TestCase):
             self.assertEqual(permissions[0], "P1")
             self.assertEqual(permissions[1], "P2")
             mock_get.assert_called_with(
-                f"{DEFAULT_BASE_URL}{MgmtV1.role_load_all_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.role_load_all_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",

@@ -1,18 +1,18 @@
 import json
-import unittest
 from unittest import mock
 from unittest.mock import patch
-
-import common
 
 from descope import AuthException
 from descope.auth import Auth
 from descope.authmethod.totp import TOTP  # noqa: F401
-from descope.common import DEFAULT_BASE_URL, EndpointsV1, LoginOptions
+from descope.common import EndpointsV1, LoginOptions
+
+from . import common
 
 
-class TestTOTP(unittest.TestCase):
+class TestTOTP(common.DescopeTest):
     def setUp(self) -> None:
+        super().setUp()
         self.dummy_project_id = "dummy"
         self.public_key_dict = {
             "alg": "ES384",
@@ -115,7 +115,7 @@ class TestTOTP(unittest.TestCase):
                 refresh_token=refresh_token,
             )
             mock_post.assert_called_with(
-                f"{DEFAULT_BASE_URL}{EndpointsV1.verify_totp_path}",
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.verify_totp_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{refresh_token}",
@@ -163,7 +163,7 @@ class TestTOTP(unittest.TestCase):
             my_mock_response.json.return_value = valid_response
             mock_post.return_value = my_mock_response
             res = totp.update_user("dummy@dummy.com", valid_jwt_token)
-            expected_uri = f"{DEFAULT_BASE_URL}{EndpointsV1.update_totp_path}"
+            expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_totp_path}"
             mock_post.assert_called_with(
                 expected_uri,
                 headers={

@@ -1,6 +1,7 @@
 from typing import List
 
 from descope.auth import Auth
+from descope.common import DeliveryMethod
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 from descope.management.common import (
     AssociatedTenant,
@@ -48,7 +49,62 @@ class User:
         response = self._auth.do_post(
             MgmtV1.user_create_path,
             User._compose_create_body(
-                login_id, email, phone, display_name, role_names, user_tenants, False
+                login_id,
+                email,
+                phone,
+                display_name,
+                role_names,
+                user_tenants,
+                False,
+                False,
+            ),
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    def create_test_user(
+        self,
+        login_id: str,
+        email: str = None,
+        phone: str = None,
+        display_name: str = None,
+        role_names: List[str] = [],
+        user_tenants: List[AssociatedTenant] = [],
+    ) -> dict:
+        """
+        Create a new test user.
+        The login_id is required and will determine what the user will use to sign in.
+        Make sure the login id is unique for test. All other fields are optional.
+
+        Args:
+        login_id (str): user login ID.
+        email (str): Optional user email address.
+        phone (str): Optional user phone number.
+        display_name (str): Optional user display name.
+        role_names (List[str]): An optional list of the user's roles without tenant association. These roles are
+            mutually exclusive with the `user_tenant` roles.
+        user_tenants (List[AssociatedTenant]): An optional list of the user's tenants, and optionally, their roles per tenant. These roles are
+            mutually exclusive with the general `role_names`.
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the created test user information.
+
+        Raise:
+        AuthException: raised if update operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.user_create_path,
+            User._compose_create_body(
+                login_id,
+                email,
+                phone,
+                display_name,
+                role_names,
+                user_tenants,
+                False,
+                True,
             ),
             pswd=self._auth.management_key,
         )
@@ -77,7 +133,14 @@ class User:
         response = self._auth.do_post(
             MgmtV1.user_create_path,
             User._compose_create_body(
-                login_id, email, phone, display_name, role_names, user_tenants, True
+                login_id,
+                email,
+                phone,
+                display_name,
+                role_names,
+                user_tenants,
+                True,
+                False,
             ),
             pswd=self._auth.management_key,
         )
@@ -112,7 +175,7 @@ class User:
         self._auth.do_post(
             MgmtV1.user_update_path,
             User._compose_update_body(
-                login_id, email, phone, display_name, role_names, user_tenants
+                login_id, email, phone, display_name, role_names, user_tenants, False
             ),
             pswd=self._auth.management_key,
         )
@@ -133,6 +196,21 @@ class User:
         self._auth.do_post(
             MgmtV1.user_delete_path,
             {"loginId": login_id},
+            pswd=self._auth.management_key,
+        )
+
+    def delete_all_test_users(
+        self,
+    ):
+        """
+        Delete all test users in the project. IMPORTANT: This action is irreversible. Use carefully.
+
+        Raise:
+        AuthException: raised if creation operation fails
+        """
+        self._auth.do_post(
+            MgmtV1.user_delete_all_test_users_path,
+            {},
             pswd=self._auth.management_key,
         )
 
@@ -193,6 +271,8 @@ class User:
         role_names: List[str] = [],
         limit: int = 0,
         page: int = 0,
+        test_users_only: bool = False,
+        with_test_user: bool = False,
     ) -> dict:
         """
         Search all users.
@@ -202,6 +282,8 @@ class User:
         role_names (List[str]): Optional list of role names to filter by
         limit (int): Optional limit of the number of users returned. Leave empty for default.
         page (int): Optional pagination control. Pages start at 0 and must be non-negative.
+        test_users_only (bool): Optional filter only test users.
+        with_test_user (bool): Optional include test users in search.
 
         Return value (dict):
         Return dict in the format
@@ -228,6 +310,8 @@ class User:
                 "roleNames": role_names,
                 "limit": limit,
                 "page": page,
+                "testUsersOnly": test_users_only,
+                "withTestUser": with_test_user,
             },
             pswd=self._auth.management_key,
         )
@@ -536,6 +620,98 @@ class User:
         )
         return response.json()
 
+    def generate_otp_for_test_user(
+        self,
+        method: DeliveryMethod,
+        login_id: str,
+    ) -> dict:
+        """
+        Generate OTP for the given login ID of a test user.
+        This is useful when running tests and don't want to use 3rd party messaging services.
+
+        Args:
+        method (DeliveryMethod): The method to use for "delivering" the OTP verification code to the user, for example
+            EMAIL, SMS, or WHATSAPP
+        login_id (str): The login ID of the test user being validated.
+
+        Return value (dict):
+        Return dict in the format
+             {"code": "", "loginId": ""}
+        Containing the code for the login (exactly as it sent via Email or SMS).
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.user_generate_otp_for_test_path,
+            {"loginId": login_id, "deliveryMethod": Auth.get_method_string(method)},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    def generate_magic_link_for_test_user(
+        self,
+        method: DeliveryMethod,
+        login_id: str,
+        uri: str,
+    ) -> dict:
+        """
+        Generate Magic Link for the given login ID of a test user.
+        This is useful when running tests and don't want to use 3rd party messaging services.
+
+        Args:
+        method (DeliveryMethod): The method to use for "delivering" the verification magic link to the user, for example
+            EMAIL, SMS, or WHATSAPP
+        login_id (str): The login ID of the test user being validated.
+        uri (str): Optional redirect uri which will be used instead of any global configuration.
+
+        Return value (dict):
+        Return dict in the format
+             {"link": "", "loginId": ""}
+        Containing the magic link for the login (exactly as it sent via Email or SMS).
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.user_generate_magic_link_for_test_path,
+            {
+                "loginId": login_id,
+                "deliveryMethod": Auth.get_method_string(method),
+                "URI": uri,
+            },
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    def generate_enchanted_link_for_test_user(
+        self,
+        login_id: str,
+        uri: str,
+    ) -> dict:
+        """
+        Generate Enchanted Link for the given login ID of a test user.
+        This is useful when running tests and don't want to use 3rd party messaging services.
+
+        Args:
+        login_id (str): The login ID of the test user being validated.
+        uri (str): Optional redirect uri which will be used instead of any global configuration.
+
+        Return value (dict):
+        Return dict in the format
+             {"link": "", "loginId": "", "pendingRef": ""}
+        Containing the enchanted link for the login (exactly as it sent via Email or SMS) and pendingRef.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.user_generate_enchanted_link_for_test_path,
+            {"loginId": login_id, "URI": uri},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
     @staticmethod
     def _compose_create_body(
         login_id: str,
@@ -545,9 +721,10 @@ class User:
         role_names: List[str],
         user_tenants: List[AssociatedTenant],
         invite: bool,
+        test: bool,
     ) -> dict:
         body = User._compose_update_body(
-            login_id, email, phone, display_name, role_names, user_tenants
+            login_id, email, phone, display_name, role_names, user_tenants, test
         )
         body["invite"] = invite
         return body
@@ -560,6 +737,7 @@ class User:
         display_name: str,
         role_names: List[str],
         user_tenants: List[AssociatedTenant],
+        test: bool,
     ) -> dict:
         return {
             "loginId": login_id,
@@ -568,4 +746,5 @@ class User:
             "displayName": display_name,
             "roleNames": role_names,
             "userTenants": associated_tenants_to_dict(user_tenants),
+            "test": test,
         }
