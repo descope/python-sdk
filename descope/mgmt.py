@@ -1,5 +1,6 @@
 from descope.auth import Auth
 from descope.management.access_key import AccessKey  # noqa: F401
+from descope.management.flow import Flow  # noqa: F401
 from descope.management.group import Group  # noqa: F401
 from descope.management.jwt import JWT  # noqa: F401
 from descope.management.permission import Permission  # noqa: F401
@@ -7,7 +8,6 @@ from descope.management.role import Role  # noqa: F401
 from descope.management.sso_settings import SSOSettings  # noqa: F401
 from descope.management.tenant import Tenant  # noqa: F401
 from descope.management.user import User  # noqa: F401
-from descope.management.flow import Flow  # noqa: F401
 
 
 class MGMT:
