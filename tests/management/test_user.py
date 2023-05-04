@@ -463,6 +463,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_activate(self):

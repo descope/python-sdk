@@ -143,6 +143,7 @@ class Auth:
             headers=self._get_default_headers(pswd),
             allow_redirects=False,
             verify=self.secure,
+            timeout=self.timeout_seconds,
         )
         if not response.ok:
             if response.status_code == 429:
