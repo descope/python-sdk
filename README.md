@@ -30,9 +30,38 @@ descope_client = DescopeClient()
 descope_client = DescopeClient(project_id="<Project ID>")
 ```
 
-## Usage
+## Authentication Functions
 
-Here are some examples how to manage and authenticate users:
+These sections show how to use the SDK to perform various authentication/authorization functions:
+
+1. [OTP Authentication](#otp-authentication)
+2. [Magic Link](#magic-link)
+3. [Enchanted Link](#enchanted-link)
+4. [OAuth](#oauth)
+5. [SSO/SAML](#ssosaml)
+6. [TOTP Authentication](#totp-authentication)
+7. [Passwords](#passwords)
+8. [Session Validation](#session-validation)
+9. [Roles & Permission Validation](#roles--permission-validation)
+10. [Logging Out](#logging-out)
+
+## API Managment Function
+
+These sections show how to use the SDK to perform API management functions:
+
+1. [Setup](#setup-1)
+2. [Manage Tenants](#manage-tenants)
+3. [Manage Users](#manage-users)
+4. [Manage Access Keys](#manage-access-keys)
+5. [Manage SSO Setting](#manage-sso-setting)
+6. [Manage Permissions](#manage-permissions)
+7. [Manage Roles](#manage-roles)
+8. [Query SSO Groups](#query-sso-groups)
+7. [Manage Flows](#manage-flows)
+8. [Manage JWTs](#manage-jwts)
+9. [Utils for your end to end (e2e) tests and integration tests](#utils-for-your-end-to-end-e2e-tests-and-integration-tests)
+
+If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
 ### OTP Authentication
 
@@ -772,22 +801,6 @@ pending_ref = resp["pendingRef"]
 
 # Note 1: The generate code/link functions, work only for test users, will not work for regular users.
 # Note 2: In case of testing sign-in / sign-up operations with test users, need to make sure to generate the code prior calling the sign-in / sign-up operations.
-```
-
-## API Rate limits
-
-Handle API rate limits by comparing the exception to the APIRateLimitExceeded exception, which includes the RateLimitParameters map with the key "Retry-After." This key indicates how many seconds until the next valid API call can take place. More information on Descope's rate limit is covered here: [Descope rate limit reference page](https://docs.descope.com/rate-limit)
-
-```python
-try:
-    descope_client.magiclink.sign_up_or_in(
-        method=DeliveryMethod.EMAIL,
-        login_id="desmond@descope.com",
-        uri="http://myapp.com/verify-magic-link",
-    )
-except RateLimitException as e:
-    retry_after_seconds = e.rate_limit_parameters.get(API_RATE_LIMIT_RETRY_AFTER_HEADER)
-    # This variable indicates how many seconds until the next valid API call can take place.
 ```
 
 ## Code Samples
