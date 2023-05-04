@@ -19,6 +19,8 @@ class MgmtV1:
     user_update_email_path = "/v1/mgmt/user/update/email"
     user_update_phone_path = "/v1/mgmt/user/update/phone"
     user_update_name_path = "/v1/mgmt/user/update/name"
+    user_update_picture_path = "/v1/mgmt/user/update/picture"
+    user_update_custom_attribute_path = "/v1/mgmt/user/update/customAttribute"
     user_add_role_path = "/v1/mgmt/user/update/role/add"
     user_remove_role_path = "/v1/mgmt/user/update/role/remove"
     user_add_tenant_path = "/v1/mgmt/user/update/tenant/add"

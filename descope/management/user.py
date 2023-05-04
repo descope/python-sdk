@@ -498,6 +498,63 @@ class User:
         )
         return response.json()
 
+    def update_picture(
+        self,
+        login_id: str,
+        picture: str = None,
+    ) -> dict:
+        """
+        Update the picture for an existing user.
+
+        Args:
+        login_id (str): The login ID of the user to update.
+        picture (str): Optional url to user avatar. Leave empty to remove.
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the updated user information.
+
+        Raise:
+        AuthException: raised if the update operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.user_update_picture_path,
+            {"loginId": login_id, "picture": picture},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    def update_custom_attribute(
+        self, login_id: str, attribute_key: str, attribute_val
+    ) -> dict:
+        """
+        Update a custom attribute of an existing user.
+
+        Args:
+        login_id (str): The login ID of the user to update.
+        attribute_key (str): The custom attribute that needs to be updated, this attribute needs to exists in Descope console app
+        attribute_val: The value to be updated
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the updated user information.
+
+        Raise:
+        AuthException: raised if the update operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.user_update_custom_attribute_path,
+            {
+                "loginId": login_id,
+                "attributeKey": attribute_key,
+                "attributeValue": attribute_val,
+            },
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
     def add_roles(
         self,
         login_id: str,
