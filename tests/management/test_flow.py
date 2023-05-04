@@ -1,10 +1,9 @@
 import json
-import unittest
 from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
-from descope.management.common import MgmtV1
 from descope.common import DEFAULT_TIMEOUT_SECONDS
+from descope.management.common import MgmtV1
 
 from .. import common
 
