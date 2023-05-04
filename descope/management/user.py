@@ -22,8 +22,8 @@ class User:
         email: str = None,
         phone: str = None,
         display_name: str = None,
-        role_names: List[str] = [],
-        user_tenants: List[AssociatedTenant] = [],
+        role_names: List[str] = None,
+        user_tenants: List[AssociatedTenant] = None,
         picture: str = None,
         custom_attributes: dict = None,
     ) -> dict:
@@ -50,6 +50,9 @@ class User:
         Raise:
         AuthException: raised if update operation fails
         """
+        role_names = [] if role_names is None else role_names
+        user_tenants = [] if user_tenants is None else user_tenants
+
         response = self._auth.do_post(
             MgmtV1.user_create_path,
             User._compose_create_body(
@@ -74,8 +77,8 @@ class User:
         email: str = None,
         phone: str = None,
         display_name: str = None,
-        role_names: List[str] = [],
-        user_tenants: List[AssociatedTenant] = [],
+        role_names: List[str] = None,
+        user_tenants: List[AssociatedTenant] = None,
         picture: str = None,
         custom_attributes: dict = None,
     ) -> dict:
@@ -104,6 +107,9 @@ class User:
         Raise:
         AuthException: raised if update operation fails
         """
+        role_names = [] if role_names is None else role_names
+        user_tenants = [] if user_tenants is None else user_tenants
+
         response = self._auth.do_post(
             MgmtV1.user_create_path,
             User._compose_create_body(
@@ -128,8 +134,8 @@ class User:
         email: str = None,
         phone: str = None,
         display_name: str = None,
-        role_names: List[str] = [],
-        user_tenants: List[AssociatedTenant] = [],
+        role_names: List[str] = None,
+        user_tenants: List[AssociatedTenant] = None,
         picture: str = None,
         custom_attributes: dict = None,
     ) -> dict:
@@ -144,6 +150,9 @@ class User:
             You must configure the invitation URL in the Descope console prior to
             calling the method.
         """
+        role_names = [] if role_names is None else role_names
+        user_tenants = [] if user_tenants is None else user_tenants
+
         response = self._auth.do_post(
             MgmtV1.user_create_path,
             User._compose_create_body(
@@ -168,8 +177,8 @@ class User:
         email: str = None,
         phone: str = None,
         display_name: str = None,
-        role_names: List[str] = [],
-        user_tenants: List[AssociatedTenant] = [],
+        role_names: List[str] = None,
+        user_tenants: List[AssociatedTenant] = None,
         picture: str = None,
         custom_attributes: dict = None,
     ):
@@ -192,6 +201,9 @@ class User:
         Raise:
         AuthException: raised if creation operation fails
         """
+        role_names = [] if role_names is None else role_names
+        user_tenants = [] if user_tenants is None else user_tenants
+
         self._auth.do_post(
             MgmtV1.user_update_path,
             User._compose_update_body(
@@ -294,8 +306,8 @@ class User:
 
     def search_all(
         self,
-        tenant_ids: List[str] = [],
-        role_names: List[str] = [],
+        tenant_ids: List[str] = None,
+        role_names: List[str] = None,
         limit: int = 0,
         page: int = 0,
         test_users_only: bool = False,
@@ -321,6 +333,9 @@ class User:
         Raise:
         AuthException: raised if search operation fails
         """
+        tenant_ids = [] if tenant_ids is None else tenant_ids
+        role_names = [] if role_names is None else role_names
+
         if limit < 0:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "limit must be non-negative"
