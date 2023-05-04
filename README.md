@@ -653,6 +653,32 @@ roles = roles_resp["roles"]
         # Do something
 ```
 
+### Manage Flows and Theme
+
+You can export and import your project flows and theme:
+
+```Python
+# Export a selected flow by id for the flow and matching screens.
+exported_flow_and_screens = descope_client.mgmt.flow.export_flow(
+    flow_id="sign-up-or-in",
+)
+
+# Import a given flow and screens to the flow matching the id provided.
+imported_flow_and_screens = descope_client.mgmt.flow.import_flow(
+    flow_id="sign-up-or-in",
+    flow={},
+    screens=[]
+)
+
+# Export your project theme.
+exported_theme = descope_client.mgmt.flow.export_theme()
+
+# Import a theme to your project.
+imported_theme = descope_client.mgmt.flow.import_flow(
+    theme={}
+)
+```
+
 ### Query SSO Groups
 
 You can query SSO groups:

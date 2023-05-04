@@ -14,7 +14,7 @@ class Role:
         self,
         name: str,
         description: str = None,
-        permission_names: List[str] = [],
+        permission_names: List[str] = None,
     ):
         """
         Create a new role.
@@ -27,6 +27,8 @@ class Role:
         Raise:
         AuthException: raised if creation operation fails
         """
+        permission_names = [] if permission_names is None else permission_names
+
         self._auth.do_post(
             MgmtV1.role_create_path,
             {
@@ -42,7 +44,7 @@ class Role:
         name: str,
         new_name: str,
         description: str = None,
-        permission_names: List[str] = [],
+        permission_names: List[str] = None,
     ):
         """
         Update an existing role with the given various fields. IMPORTANT: All parameters are used as overrides
@@ -57,6 +59,7 @@ class Role:
         Raise:
         AuthException: raised if update operation fails
         """
+        permission_names = [] if permission_names is None else permission_names
         self._auth.do_post(
             MgmtV1.role_update_path,
             {

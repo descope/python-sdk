@@ -22,8 +22,10 @@ class User:
         email: str = None,
         phone: str = None,
         display_name: str = None,
-        role_names: List[str] = [],
-        user_tenants: List[AssociatedTenant] = [],
+        role_names: List[str] = None,
+        user_tenants: List[AssociatedTenant] = None,
+        picture: str = None,
+        custom_attributes: dict = None,
     ) -> dict:
         """
         Create a new user. Users can have any number of optional fields, including email, phone number and authorization.
@@ -37,6 +39,8 @@ class User:
             mutually exclusive with the `user_tenant` roles.
         user_tenants (List[AssociatedTenant]): An optional list of the user's tenants, and optionally, their roles per tenant. These roles are
             mutually exclusive with the general `role_names`.
+        picture (str): Optional url for user picture
+        custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
 
         Return value (dict):
         Return dict in the format
@@ -46,6 +50,9 @@ class User:
         Raise:
         AuthException: raised if update operation fails
         """
+        role_names = [] if role_names is None else role_names
+        user_tenants = [] if user_tenants is None else user_tenants
+
         response = self._auth.do_post(
             MgmtV1.user_create_path,
             User._compose_create_body(
@@ -57,6 +64,8 @@ class User:
                 user_tenants,
                 False,
                 False,
+                picture,
+                custom_attributes,
             ),
             pswd=self._auth.management_key,
         )
@@ -68,8 +77,10 @@ class User:
         email: str = None,
         phone: str = None,
         display_name: str = None,
-        role_names: List[str] = [],
-        user_tenants: List[AssociatedTenant] = [],
+        role_names: List[str] = None,
+        user_tenants: List[AssociatedTenant] = None,
+        picture: str = None,
+        custom_attributes: dict = None,
     ) -> dict:
         """
         Create a new test user.
@@ -85,6 +96,8 @@ class User:
             mutually exclusive with the `user_tenant` roles.
         user_tenants (List[AssociatedTenant]): An optional list of the user's tenants, and optionally, their roles per tenant. These roles are
             mutually exclusive with the general `role_names`.
+        picture (str): Optional url for user picture
+        custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
 
         Return value (dict):
         Return dict in the format
@@ -94,6 +107,9 @@ class User:
         Raise:
         AuthException: raised if update operation fails
         """
+        role_names = [] if role_names is None else role_names
+        user_tenants = [] if user_tenants is None else user_tenants
+
         response = self._auth.do_post(
             MgmtV1.user_create_path,
             User._compose_create_body(
@@ -105,6 +121,8 @@ class User:
                 user_tenants,
                 False,
                 True,
+                picture,
+                custom_attributes,
             ),
             pswd=self._auth.management_key,
         )
@@ -116,8 +134,10 @@ class User:
         email: str = None,
         phone: str = None,
         display_name: str = None,
-        role_names: List[str] = [],
-        user_tenants: List[AssociatedTenant] = [],
+        role_names: List[str] = None,
+        user_tenants: List[AssociatedTenant] = None,
+        picture: str = None,
+        custom_attributes: dict = None,
     ) -> dict:
         """
         Create a new user and invite them via an email message.
@@ -130,6 +150,9 @@ class User:
             You must configure the invitation URL in the Descope console prior to
             calling the method.
         """
+        role_names = [] if role_names is None else role_names
+        user_tenants = [] if user_tenants is None else user_tenants
+
         response = self._auth.do_post(
             MgmtV1.user_create_path,
             User._compose_create_body(
@@ -141,6 +164,8 @@ class User:
                 user_tenants,
                 True,
                 False,
+                picture,
+                custom_attributes,
             ),
             pswd=self._auth.management_key,
         )
@@ -152,8 +177,10 @@ class User:
         email: str = None,
         phone: str = None,
         display_name: str = None,
-        role_names: List[str] = [],
-        user_tenants: List[AssociatedTenant] = [],
+        role_names: List[str] = None,
+        user_tenants: List[AssociatedTenant] = None,
+        picture: str = None,
+        custom_attributes: dict = None,
     ):
         """
         Update an existing user with the given various fields. IMPORTANT: All parameters are used as overrides
@@ -168,14 +195,27 @@ class User:
             mutually exclusive with the `user_tenant` roles.
         user_tenants (List[AssociatedTenant]): An optional list of the user's tenants, and optionally, their roles per tenant. These roles are
             mutually exclusive with the general `role_names`.
+        picture (str): Optional url for user picture
+        custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
 
         Raise:
         AuthException: raised if creation operation fails
         """
+        role_names = [] if role_names is None else role_names
+        user_tenants = [] if user_tenants is None else user_tenants
+
         self._auth.do_post(
             MgmtV1.user_update_path,
             User._compose_update_body(
-                login_id, email, phone, display_name, role_names, user_tenants, False
+                login_id,
+                email,
+                phone,
+                display_name,
+                role_names,
+                user_tenants,
+                False,
+                picture,
+                custom_attributes,
             ),
             pswd=self._auth.management_key,
         )
@@ -208,9 +248,8 @@ class User:
         Raise:
         AuthException: raised if creation operation fails
         """
-        self._auth.do_post(
+        self._auth.do_delete(
             MgmtV1.user_delete_all_test_users_path,
-            {},
             pswd=self._auth.management_key,
         )
 
@@ -267,12 +306,13 @@ class User:
 
     def search_all(
         self,
-        tenant_ids: List[str] = [],
-        role_names: List[str] = [],
+        tenant_ids: List[str] = None,
+        role_names: List[str] = None,
         limit: int = 0,
         page: int = 0,
         test_users_only: bool = False,
         with_test_user: bool = False,
+        custom_attributes: dict = None,
     ) -> dict:
         """
         Search all users.
@@ -293,6 +333,9 @@ class User:
         Raise:
         AuthException: raised if search operation fails
         """
+        tenant_ids = [] if tenant_ids is None else tenant_ids
+        role_names = [] if role_names is None else role_names
+
         if limit < 0:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "limit must be non-negative"
@@ -302,17 +345,20 @@ class User:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "page must be non-negative"
             )
+        body = {
+            "tenantIds": tenant_ids,
+            "roleNames": role_names,
+            "limit": limit,
+            "page": page,
+            "testUsersOnly": test_users_only,
+            "withTestUser": with_test_user,
+        }
+        if custom_attributes is not None:
+            body["customAttributes"] = custom_attributes
 
         response = self._auth.do_post(
             MgmtV1.users_search_path,
-            {
-                "tenantIds": tenant_ids,
-                "roleNames": role_names,
-                "limit": limit,
-                "page": page,
-                "testUsersOnly": test_users_only,
-                "withTestUser": with_test_user,
-            },
+            body=body,
             pswd=self._auth.management_key,
         )
         return response.json()
@@ -722,9 +768,19 @@ class User:
         user_tenants: List[AssociatedTenant],
         invite: bool,
         test: bool,
+        picture: str,
+        custom_attributes: dict,
     ) -> dict:
         body = User._compose_update_body(
-            login_id, email, phone, display_name, role_names, user_tenants, test
+            login_id,
+            email,
+            phone,
+            display_name,
+            role_names,
+            user_tenants,
+            test,
+            picture,
+            custom_attributes,
         )
         body["invite"] = invite
         return body
@@ -738,6 +794,8 @@ class User:
         role_names: List[str],
         user_tenants: List[AssociatedTenant],
         test: bool,
+        picture: str,
+        custom_attributes: dict,
     ) -> dict:
         return {
             "loginId": login_id,
@@ -747,4 +805,6 @@ class User:
             "roleNames": role_names,
             "userTenants": associated_tenants_to_dict(user_tenants),
             "test": test,
+            "picture": picture,
+            "customAttributes": custom_attributes,
         }

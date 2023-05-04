@@ -18,8 +18,8 @@ class AccessKey:
         self,
         name: str,
         expire_time: int = 0,
-        role_names: List[str] = [],
-        key_tenants: List[AssociatedTenant] = [],
+        role_names: List[str] = None,
+        key_tenants: List[AssociatedTenant] = None,
     ) -> dict:
         """
         Create a new access key.
@@ -44,6 +44,9 @@ class AccessKey:
         Raise:
         AuthException: raised if create operation fails
         """
+        role_names = [] if role_names is None else role_names
+        key_tenants = [] if key_tenants is None else key_tenants
+
         response = self._auth.do_post(
             MgmtV1.access_key_create_path,
             AccessKey._compose_create_body(name, expire_time, role_names, key_tenants),
@@ -78,7 +81,7 @@ class AccessKey:
 
     def search_all_access_keys(
         self,
-        tenant_ids: List[str] = [],
+        tenant_ids: List[str] = None,
     ) -> dict:
         """
         Search all access keys.
@@ -94,6 +97,8 @@ class AccessKey:
         Raise:
         AuthException: raised if search operation fails
         """
+        tenant_ids = [] if tenant_ids is None else tenant_ids
+
         response = self._auth.do_post(
             MgmtV1.access_keys_search_path,
             {"tenantIds": tenant_ids},

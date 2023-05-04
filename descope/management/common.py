@@ -56,6 +56,14 @@ class MgmtV1:
     role_delete_path = "/v1/mgmt/role/delete"
     role_load_all_path = "/v1/mgmt/role/all"
 
+    # flow
+    flow_import_path = "/v1/mgmt/flow/import"
+    flow_export_path = "/v1/mgmt/flow/export"
+
+    # theme
+    theme_import_path = "/v1/mgmt/theme/import"
+    theme_export_path = "/v1/mgmt/theme/export"
+
     # group
     group_load_all_path = "/v1/mgmt/group/all"
     group_load_all_for_member_path = "/v1/mgmt/group/member/all"
@@ -69,9 +77,9 @@ class AssociatedTenant:
     roles for the user or access key in this specific tenant.
     """
 
-    def __init__(self, tenant_id: str, role_names: List[str] = []):
+    def __init__(self, tenant_id: str, role_names: List[str] = None):
         self.tenant_id = tenant_id
-        self.role_names = role_names
+        self.role_names = [] if role_names is None else role_names
 
 
 def associated_tenants_to_dict(associated_tenants: List[AssociatedTenant]) -> list:

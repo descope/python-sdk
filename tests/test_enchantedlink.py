@@ -75,8 +75,13 @@ class TestEnchantedLink(common.DescopeTest):
         )
 
         self.assertEqual(
-            EnchantedLink._compose_update_user_email_body("id1", "email1"),
-            {"loginId": "id1", "email": "email1"},
+            EnchantedLink._compose_update_user_email_body("id1", "email1", True, False),
+            {
+                "loginId": "id1",
+                "email": "email1",
+                "addToLoginIDs": True,
+                "onMergeUseExisting": False,
+            },
         )
 
         self.assertEqual(
