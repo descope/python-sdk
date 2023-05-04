@@ -1,5 +1,8 @@
-from decorators.flask_decorators import descope_full_login  # noqa: E402;
-from decorators.flask_decorators import descope_logout, descope_validate_auth
+from decorators.flask_decorators import (  # noqa: E402
+    descope_full_login,
+    descope_logout,
+    descope_validate_auth,
+)
 from flask import Flask, Response
 
 from descope import DescopeClient  # noqa: E402
