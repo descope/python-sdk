@@ -5,7 +5,7 @@ from unittest.mock import patch
 from descope import AuthException
 from descope.auth import Auth
 from descope.authmethod.password import Password  # noqa: F401
-from descope.common import EndpointsV1
+from descope.common import DEFAULT_TIMEOUT_SECONDS, EndpointsV1
 
 from . import common
 
@@ -114,6 +114,7 @@ class TestPassword(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_sign_in(self):
@@ -186,6 +187,7 @@ class TestPassword(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_send_reset(self):
@@ -243,6 +245,7 @@ class TestPassword(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_update(self):
@@ -329,6 +332,7 @@ class TestPassword(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_replace(self):
@@ -413,6 +417,7 @@ class TestPassword(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_policy(self):
@@ -444,4 +449,5 @@ class TestPassword(common.DescopeTest):
                 params=None,
                 allow_redirects=None,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )

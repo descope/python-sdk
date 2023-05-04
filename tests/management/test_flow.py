@@ -1,15 +1,16 @@
 import json
-import unittest
 from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
+from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
 from .. import common
 
 
-class TestFlow(unittest.TestCase):
+class TestFlow(common.DescopeTest):
     def setUp(self) -> None:
+        super().setUp()
         self.dummy_project_id = "dummy"
         self.dummy_management_key = "key"
         self.public_key_dict = {
@@ -57,6 +58,7 @@ class TestFlow(unittest.TestCase):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_import_flow(self):
@@ -100,6 +102,7 @@ class TestFlow(unittest.TestCase):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_export_theme(self):
@@ -129,6 +132,7 @@ class TestFlow(unittest.TestCase):
                 data=json.dumps({}),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_import_theme(self):
@@ -160,4 +164,5 @@ class TestFlow(unittest.TestCase):
                 data=json.dumps({"theme": {"id": "test"}}),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )

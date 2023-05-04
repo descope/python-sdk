@@ -11,13 +11,13 @@ from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT
 
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
-from descope import AuthException  # noqa: E402
 from descope import (  # noqa: E402
     COOKIE_DATA_NAME,
     REFRESH_SESSION_COOKIE_NAME,
     REFRESH_SESSION_TOKEN_NAME,
     SESSION_COOKIE_NAME,
     SESSION_TOKEN_NAME,
+    AuthException,
     DeliveryMethod,
 )
 

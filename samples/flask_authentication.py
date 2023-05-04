@@ -1,4 +1,4 @@
-from decorators.flask_decorators import (  # noqa: E402;
+from decorators.flask_decorators import (  # noqa: E402
     descope_full_login,
     descope_logout,
     descope_validate_auth,
