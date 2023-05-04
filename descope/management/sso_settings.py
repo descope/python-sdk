@@ -90,7 +90,6 @@ class SSOSettings:
         self,
         tenant_id: str,
         role_mappings: List[RoleMapping] = None,
-        # MT: Should this be List[AttributeMapping]?
         attribute_mapping: AttributeMapping = None,
     ):
         """

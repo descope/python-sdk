@@ -56,6 +56,14 @@ class MgmtV1:
     role_delete_path = "/v1/mgmt/role/delete"
     role_load_all_path = "/v1/mgmt/role/all"
 
+    # flow
+    flow_import_path = "/v1/mgmt/flow/import"
+    flow_export_path = "/v1/mgmt/flow/export"
+
+    # theme
+    theme_import_path = "/v1/mgmt/theme/import"
+    theme_export_path = "/v1/mgmt/theme/export"
+
     # group
     group_load_all_path = "/v1/mgmt/group/all"
     group_load_all_for_member_path = "/v1/mgmt/group/member/all"
