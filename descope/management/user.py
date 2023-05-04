@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 
 from descope.auth import Auth
 from descope.common import DeliveryMethod
@@ -526,7 +526,7 @@ class User:
         return response.json()
 
     def update_custom_attribute(
-        self, login_id: str, attribute_key: str, attribute_val
+        self, login_id: str, attribute_key: str, attribute_val: Union[str, int, bool]
     ) -> dict:
         """
         Update a custom attribute of an existing user.
