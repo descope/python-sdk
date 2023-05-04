@@ -691,6 +691,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_update_custom_attribute(self):
@@ -722,7 +723,6 @@ class TestUser(common.DescopeTest):
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
-                params=None,
                 data=json.dumps(
                     {
                         "loginId": "valid-id",
@@ -732,6 +732,8 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                params=None,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_add_roles(self):
