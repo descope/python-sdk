@@ -82,14 +82,28 @@ class TestOTP(common.DescopeTest):
 
     def test_compose_update_user_phone_body(self):
         self.assertEqual(
-            OTP._compose_update_user_phone_body("dummy@dummy.com", "+11111111"),
-            {"loginId": "dummy@dummy.com", "phone": "+11111111"},
+            OTP._compose_update_user_phone_body(
+                "dummy@dummy.com", "+11111111", False, True
+            ),
+            {
+                "loginId": "dummy@dummy.com",
+                "phone": "+11111111",
+                "addToLoginIDs": False,
+                "onMergeUseExisting": True,
+            },
         )
 
     def test_compose_update_user_email_body(self):
         self.assertEqual(
-            OTP._compose_update_user_email_body("dummy@dummy.com", "dummy@dummy.com"),
-            {"loginId": "dummy@dummy.com", "email": "dummy@dummy.com"},
+            OTP._compose_update_user_email_body(
+                "dummy@dummy.com", "dummy@dummy.com", False, True
+            ),
+            {
+                "loginId": "dummy@dummy.com",
+                "email": "dummy@dummy.com",
+                "addToLoginIDs": False,
+                "onMergeUseExisting": True,
+            },
         )
 
     def test_sign_up(self):
