@@ -43,7 +43,8 @@ class Flow:
         screens: List[dict],
     ) -> dict:
         """
-        Import the given flow id flow and screens.
+        Import the given flow and screens to the flow id.
+        Imoprtant: This will override the current project flow by the given id, treat with caution.
 
         Args:
         flow_id (str): the flow id to import to.
@@ -96,6 +97,7 @@ class Flow:
     ) -> dict:
         """
         Import the given theme as the current project theme.
+        Imoprtant: This will override the current project theme, treat with caution.
 
         Args:
         theme (Theme): the theme to import. dict in the format
