@@ -40,7 +40,7 @@ class User:
         user_tenants (List[AssociatedTenant]): An optional list of the user's tenants, and optionally, their roles per tenant. These roles are
             mutually exclusive with the general `role_names`.
         picture (str): Optional url for user picture
-        custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in console app
+        custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
 
         Return value (dict):
         Return dict in the format
@@ -94,7 +94,7 @@ class User:
         user_tenants (List[AssociatedTenant]): An optional list of the user's tenants, and optionally, their roles per tenant. These roles are
             mutually exclusive with the general `role_names`.
         picture (str): Optional url for user picture
-        custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in console app
+        custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
 
         Return value (dict):
         Return dict in the format
@@ -187,7 +187,7 @@ class User:
         user_tenants (List[AssociatedTenant]): An optional list of the user's tenants, and optionally, their roles per tenant. These roles are
             mutually exclusive with the general `role_names`.
         picture (str): Optional url for user picture
-        custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in console app
+        custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
 
         Raise:
         AuthException: raised if creation operation fails
