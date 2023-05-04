@@ -85,13 +85,23 @@ class TestMagicLink(common.DescopeTest):
         )
 
         self.assertEqual(
-            MagicLink._compose_update_user_email_body("id1", "email1"),
-            {"loginId": "id1", "email": "email1"},
+            MagicLink._compose_update_user_email_body("id1", "email1", True, False),
+            {
+                "loginId": "id1",
+                "email": "email1",
+                "addToLoginIDs": True,
+                "onMergeUseExisting": False,
+            },
         )
 
         self.assertEqual(
-            MagicLink._compose_update_user_phone_body("id1", "+11111111"),
-            {"loginId": "id1", "phone": "+11111111"},
+            MagicLink._compose_update_user_phone_body("id1", "+11111111", False, True),
+            {
+                "loginId": "id1",
+                "phone": "+11111111",
+                "addToLoginIDs": False,
+                "onMergeUseExisting": True,
+            },
         )
 
     def test_sign_in(self):
