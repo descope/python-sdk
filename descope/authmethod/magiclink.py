@@ -43,7 +43,6 @@ class MagicLink:
     def sign_up(
         self, method: DeliveryMethod, login_id: str, uri: str, user: dict = None
     ) -> str:
-
         if not user:
             user = {}
 
@@ -75,7 +74,14 @@ class MagicLink:
         )
         return jwt_response
 
-    def update_user_email(self, login_id: str, email: str, refresh_token: str) -> str:
+    def update_user_email(
+        self,
+        login_id: str,
+        email: str,
+        refresh_token: str,
+        add_to_login_ids: bool = False,
+        on_merge_use_existing: bool = False,
+    ) -> str:
         if not login_id:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
@@ -83,13 +89,21 @@ class MagicLink:
 
         Auth.validate_email(email)
 
-        body = MagicLink._compose_update_user_email_body(login_id, email)
+        body = MagicLink._compose_update_user_email_body(
+            login_id, email, add_to_login_ids, on_merge_use_existing
+        )
         uri = EndpointsV1.update_user_email_magiclink_path
         response = self._auth.do_post(uri, body, None, refresh_token)
         return Auth.extract_masked_address(response.json(), DeliveryMethod.EMAIL)
 
     def update_user_phone(
-        self, method: DeliveryMethod, login_id: str, phone: str, refresh_token: str
+        self,
+        method: DeliveryMethod,
+        login_id: str,
+        phone: str,
+        refresh_token: str,
+        add_to_login_ids: bool = False,
+        on_merge_use_existing: bool = False,
     ) -> str:
         if not login_id:
             raise AuthException(
@@ -98,7 +112,9 @@ class MagicLink:
 
         Auth.validate_phone(method, phone)
 
-        body = MagicLink._compose_update_user_phone_body(login_id, phone)
+        body = MagicLink._compose_update_user_phone_body(
+            login_id, phone, add_to_login_ids, on_merge_use_existing
+        )
         uri = EndpointsV1.update_user_phone_magiclink_path
         response = self._auth.do_post(uri, body, None, refresh_token)
         return Auth.extract_masked_address(response.json(), DeliveryMethod.SMS)
@@ -151,9 +167,23 @@ class MagicLink:
         return {"token": token}
 
     @staticmethod
-    def _compose_update_user_email_body(login_id: str, email: str) -> dict:
-        return {"loginId": login_id, "email": email}
+    def _compose_update_user_email_body(
+        login_id: str, email: str, add_to_login_ids: bool, on_merge_use_existing: bool
+    ) -> dict:
+        return {
+            "loginId": login_id,
+            "email": email,
+            "addToLoginIDs": add_to_login_ids,
+            "onMergeUseExisting": on_merge_use_existing,
+        }
 
     @staticmethod
-    def _compose_update_user_phone_body(login_id: str, phone: str) -> dict:
-        return {"loginId": login_id, "phone": phone}
+    def _compose_update_user_phone_body(
+        login_id: str, phone: str, add_to_login_ids: bool, on_merge_use_existing: bool
+    ) -> dict:
+        return {
+            "loginId": login_id,
+            "phone": phone,
+            "addToLoginIDs": add_to_login_ids,
+            "onMergeUseExisting": on_merge_use_existing,
+        }
