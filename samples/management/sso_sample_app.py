@@ -23,6 +23,16 @@ def main():
         descope_client = DescopeClient(
             project_id=project_id, management_key=management_key
         )
+
+        try:
+            logging.info("Get SSO settings for tenant")
+            settings_res = descope_client.mgmt.sso.get_settings(tenant_id)
+            sso_tenant_domain = settings_res["domain"]
+            logging.info(f"SSO domain for tenant: {sso_tenant_domain}")
+
+        except AuthException as e:
+            logging.info(f"Get SSO settings failed {e}")
+
         idp_url = ""
         entity_id = ""
         idp_cert = ""

@@ -34,6 +34,29 @@ class SSOSettings:
     def __init__(self, auth: Auth):
         self._auth = auth
 
+    def get_settings(
+        self,
+        tenant_id: str,
+    ) -> dict:
+        """
+        Get SSO setting for the provided tenant_id.
+
+        Args:
+        tenant_id (str): The tenant ID of the desired SSO Settings
+
+        Return value (dict):
+        Containing the loaded SSO settings information.
+
+        Raise:
+        AuthException: raised if configuration operation fails
+        """
+        response = self._auth.do_get(
+            MgmtV1.sso_settings_path,
+            {"tenantId": tenant_id},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
     def configure(
         self,
         tenant_id: str,
@@ -58,7 +81,7 @@ class SSOSettings:
         AuthException: raised if configuration operation fails
         """
         self._auth.do_post(
-            MgmtV1.sso_configure_path,
+            MgmtV1.sso_settings_path,
             SSOSettings._compose_configure_body(
                 tenant_id, idp_url, entity_id, idp_cert, redirect_url, domain
             ),

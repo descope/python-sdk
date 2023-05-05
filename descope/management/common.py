@@ -39,7 +39,7 @@ class MgmtV1:
     access_key_delete_path = "/v1/mgmt/accesskey/delete"
 
     # sso
-    sso_configure_path = "/v1/mgmt/sso/settings"
+    sso_settings_path = "/v1/mgmt/sso/settings"
     sso_metadata_path = "/v1/mgmt/sso/metadata"
     sso_mapping_path = "/v1/mgmt/sso/mapping"
 

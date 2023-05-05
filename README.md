@@ -562,6 +562,9 @@ descope_client.mgmt.access_key.delete("key-id")
 You can manage SSO settings and map SSO group roles and user attributes.
 
 ```Python
+# You can get SSO settings for a tenant
+sso_settings_res = descope_client.mgmt.sso.get_settings("tenant-id")
+
 # You can configure SSO settings manually by setting the required fields directly
 descope_client.mgmt.sso.configure(
     tenant_id, # Which tenant this configuration is for
