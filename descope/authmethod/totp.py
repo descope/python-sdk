@@ -1,4 +1,4 @@
-from descope.auth import Auth
+from descope._auth_base import AuthBase
 from descope.common import (
     REFRESH_SESSION_COOKIE_NAME,
     EndpointsV1,
@@ -8,12 +8,7 @@ from descope.common import (
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
-class TOTP:
-    _auth: Auth
-
-    def __init__(self, auth):
-        self._auth = auth
-
+class TOTP(AuthBase):
     def sign_up(self, login_id: str, user: dict = None) -> dict:
         """
         Sign up (create) a new user using their email or phone number.
@@ -21,7 +16,7 @@ class TOTP:
 
         Args:
         login_id (str): The login ID of the user being validated
-        user (dict) optional: Preserve additional user metadata in the form of
+        user (dict) optional: Preserve additional user metadata in the form of,
              {"name": "Desmond Copeland", "phone": "2125551212", "email": "des@cope.com"}
 
         Return value (dict):

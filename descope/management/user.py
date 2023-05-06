@@ -1,5 +1,6 @@
 from typing import List, Union
 
+from descope._auth_base import AuthBase
 from descope.auth import Auth
 from descope.common import DeliveryMethod
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
@@ -10,12 +11,7 @@ from descope.management.common import (
 )
 
 
-class User:
-    _auth: Auth
-
-    def __init__(self, auth: Auth):
-        self._auth = auth
-
+class User(AuthBase):
     def create(
         self,
         login_id: str,
