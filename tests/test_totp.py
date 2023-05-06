@@ -5,7 +5,7 @@ from unittest.mock import patch
 from descope import AuthException
 from descope.auth import Auth
 from descope.authmethod.totp import TOTP  # noqa: F401
-from descope.common import EndpointsV1, LoginOptions
+from descope.common import DEFAULT_TIMEOUT_SECONDS, EndpointsV1, LoginOptions
 
 from . import common
 
@@ -134,6 +134,7 @@ class TestTOTP(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_update_user(self):
@@ -174,5 +175,6 @@ class TestTOTP(common.DescopeTest):
                 data=json.dumps({"loginId": "dummy@dummy.com"}),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(res, valid_response)

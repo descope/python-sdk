@@ -3,6 +3,7 @@ from unittest import mock
 from unittest.mock import patch
 
 from descope import AssociatedTenant, AuthException, DescopeClient
+from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
 from .. import common
@@ -78,6 +79,7 @@ class TestAccessKey(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_load(self):
@@ -115,6 +117,7 @@ class TestAccessKey(common.DescopeTest):
                 params={"id": "key-id"},
                 allow_redirects=None,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_search_all_users(self):
@@ -161,6 +164,7 @@ class TestAccessKey(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_update(self):
@@ -205,6 +209,7 @@ class TestAccessKey(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_deactivate(self):
@@ -242,6 +247,7 @@ class TestAccessKey(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_activate(self):
@@ -279,6 +285,7 @@ class TestAccessKey(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_delete(self):
@@ -316,4 +323,5 @@ class TestAccessKey(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )

@@ -5,7 +5,7 @@ from flask import Flask, jsonify
 
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
-from decorators.flask_decorators import (  # noqa: E402;
+from decorators.flask_decorators import (  # noqa: E402
     descope_logout,
     descope_oauth,
     descope_validate_auth,

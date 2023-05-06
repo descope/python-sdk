@@ -3,7 +3,7 @@ from unittest import mock
 from unittest.mock import patch
 
 from descope import AssociatedTenant, AuthException, DescopeClient
-from descope.common import DeliveryMethod
+from descope.common import DEFAULT_TIMEOUT_SECONDS, DeliveryMethod
 from descope.management.common import MgmtV1
 
 from .. import common
@@ -54,6 +54,8 @@ class TestUser(common.DescopeTest):
                     AssociatedTenant("tenant1"),
                     AssociatedTenant("tenant2", ["role1", "role2"]),
                 ],
+                picture="https://test.com",
+                custom_attributes={"ak": "av"},
             )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
@@ -76,11 +78,14 @@ class TestUser(common.DescopeTest):
                             {"tenantId": "tenant2", "roleNames": ["role1", "role2"]},
                         ],
                         "test": False,
+                        "picture": "https://test.com",
+                        "customAttributes": {"ak": "av"},
                         "invite": False,
                     }
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_create_test_user(self):
@@ -107,6 +112,7 @@ class TestUser(common.DescopeTest):
                     AssociatedTenant("tenant1"),
                     AssociatedTenant("tenant2", ["role1", "role2"]),
                 ],
+                custom_attributes={"ak": "av"},
             )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
@@ -129,11 +135,14 @@ class TestUser(common.DescopeTest):
                             {"tenantId": "tenant2", "roleNames": ["role1", "role2"]},
                         ],
                         "test": True,
+                        "picture": None,
+                        "customAttributes": {"ak": "av"},
                         "invite": False,
                     }
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_invite(self):
@@ -160,6 +169,7 @@ class TestUser(common.DescopeTest):
                     AssociatedTenant("tenant1"),
                     AssociatedTenant("tenant2", ["role1", "role2"]),
                 ],
+                custom_attributes={"ak": "av"},
             )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
@@ -182,11 +192,14 @@ class TestUser(common.DescopeTest):
                             {"tenantId": "tenant2", "roleNames": ["role1", "role2"]},
                         ],
                         "test": False,
+                        "picture": None,
+                        "customAttributes": {"ak": "av"},
                         "invite": True,
                     }
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_update(self):
@@ -208,6 +221,8 @@ class TestUser(common.DescopeTest):
                     "id",
                     display_name="new-name",
                     role_names=["domain.com"],
+                    picture="https://test.com",
+                    custom_attributes={"ak": "av"},
                 )
             )
             mock_post.assert_called_with(
@@ -226,10 +241,13 @@ class TestUser(common.DescopeTest):
                         "roleNames": ["domain.com"],
                         "userTenants": [],
                         "test": False,
+                        "picture": "https://test.com",
+                        "customAttributes": {"ak": "av"},
                     }
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_delete(self):
@@ -260,32 +278,31 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_delete_all_test_users(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("requests.delete") as mock_delete:
+            mock_delete.return_value.ok = False
             self.assertRaises(
                 AuthException,
-                self.client.mgmt.user.delete,
-                "valid-id",
+                self.client.mgmt.user.delete_all_test_users,
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("requests.delete") as mock_delete:
+            mock_delete.return_value.ok = True
             self.assertIsNone(self.client.mgmt.user.delete_all_test_users())
-            mock_post.assert_called_with(
+            mock_delete.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.user_delete_all_test_users_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
-                params=None,
-                data=json.dumps({}),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_load(self):
@@ -316,6 +333,7 @@ class TestUser(common.DescopeTest):
                 params={"loginId": "valid-id"},
                 allow_redirects=None,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_load_by_user_id(self):
@@ -346,6 +364,7 @@ class TestUser(common.DescopeTest):
                 params={"userId": "user-id"},
                 allow_redirects=None,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_search_all(self):
@@ -403,6 +422,48 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test success flow with custom attributes
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads(
+                """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
+            )
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.search_all(
+                ["t1, t2"],
+                ["r1", "r2"],
+                with_test_user=True,
+                custom_attributes={"ak": "av"},
+            )
+            users = resp["users"]
+            self.assertEqual(len(users), 2)
+            self.assertEqual(users[0]["id"], "u1")
+            self.assertEqual(users[1]["id"], "u2")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.users_search_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                data=json.dumps(
+                    {
+                        "tenantIds": ["t1, t2"],
+                        "roleNames": ["r1", "r2"],
+                        "limit": 0,
+                        "page": 0,
+                        "testUsersOnly": False,
+                        "withTestUser": True,
+                        "customAttributes": {"ak": "av"},
+                    }
+                ),
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_activate(self):
@@ -439,6 +500,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_deactivate(self):
@@ -475,6 +537,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_update_email(self):
@@ -513,6 +576,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_update_phone(self):
@@ -551,6 +615,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_update_display_name(self):
@@ -588,6 +653,87 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_update_picture(self):
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                self.client.mgmt.user.update_picture,
+                "valid-id",
+                "foo",
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.update_picture("valid-id", "foo")
+            user = resp["user"]
+            self.assertEqual(user["id"], "u1")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_picture_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                data=json.dumps(
+                    {
+                        "loginId": "valid-id",
+                        "picture": "foo",
+                    }
+                ),
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_update_custom_attribute(self):
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                self.client.mgmt.user.update_custom_attribute,
+                "valid-id",
+                "foo",
+                "bar",
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.update_custom_attribute(
+                "valid-id", "foo", "bar"
+            )
+            user = resp["user"]
+            self.assertEqual(user["id"], "u1")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_custom_attribute_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                data=json.dumps(
+                    {
+                        "loginId": "valid-id",
+                        "attributeKey": "foo",
+                        "attributeValue": "bar",
+                    }
+                ),
+                allow_redirects=False,
+                verify=True,
+                params=None,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_add_roles(self):
@@ -625,6 +771,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_remove_roles(self):
@@ -662,6 +809,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_add_tenant(self):
@@ -699,6 +847,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_remove_tenant(self):
@@ -736,6 +885,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_add_tenant_roles(self):
@@ -777,6 +927,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_remove_tenant_roles(self):
@@ -818,6 +969,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_generate_otp_for_test_user(self):
@@ -859,6 +1011,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_generate_magic_link_for_test_user(self):
@@ -902,6 +1055,7 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_generate_enchanted_link_for_test_user(self):
@@ -944,4 +1098,5 @@ class TestUser(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )

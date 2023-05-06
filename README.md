@@ -562,6 +562,9 @@ descope_client.mgmt.access_key.delete("key-id")
 You can manage SSO settings and map SSO group roles and user attributes.
 
 ```Python
+# You can get SSO settings for a tenant
+sso_settings_res = descope_client.mgmt.sso.get_settings("tenant-id")
+
 # You can configure SSO settings manually by setting the required fields directly
 descope_client.mgmt.sso.configure(
     tenant_id, # Which tenant this configuration is for
@@ -651,6 +654,32 @@ roles_resp = descope_client.mgmt.role.load_all()
 roles = roles_resp["roles"]
     for role in roles:
         # Do something
+```
+
+### Manage Flows and Theme
+
+You can export and import your project flows and theme:
+
+```Python
+# Export a selected flow by id for the flow and matching screens.
+exported_flow_and_screens = descope_client.mgmt.flow.export_flow(
+    flow_id="sign-up-or-in",
+)
+
+# Import a given flow and screens to the flow matching the id provided.
+imported_flow_and_screens = descope_client.mgmt.flow.import_flow(
+    flow_id="sign-up-or-in",
+    flow={},
+    screens=[]
+)
+
+# Export your project theme.
+exported_theme = descope_client.mgmt.flow.export_theme()
+
+# Import a theme to your project.
+imported_theme = descope_client.mgmt.flow.import_flow(
+    theme={}
+)
 ```
 
 ### Query SSO Groups

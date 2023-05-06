@@ -13,6 +13,7 @@ from email_validator import EmailNotValidError, validate_email
 from descope.common import (
     COOKIE_DATA_NAME,
     DEFAULT_BASE_URL,
+    DEFAULT_TIMEOUT_SECONDS,
     PHONE_REGEX,
     REFRESH_SESSION_COOKIE_NAME,
     REFRESH_SESSION_TOKEN_NAME,
@@ -42,6 +43,7 @@ class Auth:
         public_key: str = None,
         skip_verify: bool = False,
         management_key: str = None,
+        timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
     ):
         self.lock_public_keys = Lock()
         # validate project id
@@ -61,6 +63,7 @@ class Auth:
             self.secure = False
 
         self.base_url = os.getenv("DESCOPE_BASE_URI", None) or DEFAULT_BASE_URL
+        self.timeout_seconds = timeout_seconds
 
         if not management_key:
             management_key = os.getenv("DESCOPE_MANAGEMENT_KEY", None)
@@ -103,6 +106,7 @@ class Auth:
             params=params,
             allow_redirects=allow_redirects,
             verify=self.secure,
+            timeout=self.timeout_seconds,
         )
         if not response.ok:
             if response.status_code == 429:
@@ -122,6 +126,24 @@ class Auth:
             allow_redirects=False,
             verify=self.secure,
             params=params,
+            timeout=self.timeout_seconds,
+        )
+        if not response.ok:
+            if response.status_code == 429:
+                self._raise_rate_limit_exception(response)  # Raise RateLimitException
+
+            raise AuthException(
+                response.status_code, ERROR_TYPE_SERVER_ERROR, response.text
+            )
+        return response
+
+    def do_delete(self, uri: str, pswd: str = None) -> requests.Response:
+        response = requests.delete(
+            f"{self.base_url}{uri}",
+            headers=self._get_default_headers(pswd),
+            allow_redirects=False,
+            verify=self.secure,
+            timeout=self.timeout_seconds,
         )
         if not response.ok:
             if response.status_code == 429:
@@ -218,7 +240,7 @@ class Auth:
         if method is DeliveryMethod.EMAIL:
             return "email"
         elif method is DeliveryMethod.SMS:
-            return "phone"
+            return "sms"
         elif method is DeliveryMethod.WHATSAPP:
             return "whatsapp"
         else:
@@ -327,6 +349,7 @@ class Auth:
             f"{self.base_url}{EndpointsV2.public_key_path}/{self.project_id}",
             headers=self._get_default_headers(),
             verify=self.secure,
+            timeout=self.timeout_seconds,
         )
 
         if not response.ok:

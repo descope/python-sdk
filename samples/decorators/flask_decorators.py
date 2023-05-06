@@ -11,13 +11,13 @@ from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT
 
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
-from descope import AuthException  # noqa: E402
 from descope import (  # noqa: E402
     COOKIE_DATA_NAME,
     REFRESH_SESSION_COOKIE_NAME,
     REFRESH_SESSION_TOKEN_NAME,
     SESSION_COOKIE_NAME,
     SESSION_TOKEN_NAME,
+    AuthException,
     DeliveryMethod,
 )
 
@@ -94,7 +94,7 @@ def descope_signin_otp_by_email(descope_client):
     return decorator
 
 
-def descope_validate_auth(descope_client, permissions=[], roles=[], tenant=""):
+def descope_validate_auth(descope_client, permissions=None, roles=None, tenant=""):
     """
     Test if Access Token is valid
     """
@@ -102,6 +102,9 @@ def descope_validate_auth(descope_client, permissions=[], roles=[], tenant=""):
     def decorator(f):
         @wraps(f)
         def decorated(*args, **kwargs):
+            _permissions = [] if permissions is None else permissions
+            _roles = [] if roles is None else roles
+
             cookies = request.cookies.copy()
             session_token = cookies.get(SESSION_COOKIE_NAME, None)
             refresh_token = cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
@@ -113,26 +116,26 @@ def descope_validate_auth(descope_client, permissions=[], roles=[], tenant=""):
             except AuthException:
                 return Response("Access denied", 401)
 
-            if permissions:
+            if _permissions:
                 if tenant:
                     valid_permissions = descope_client.validate_tenant_permissions(
-                        jwt_response, permissions
+                        jwt_response, _permissions
                     )
                 else:
                     valid_permissions = descope_client.validate_permissions(
-                        jwt_response, permissions
+                        jwt_response, _permissions
                     )
 
                 if not valid_permissions:
                     return Response("Access denied", 401)
 
-            if roles:
+            if _roles:
                 if tenant:
                     valid_roles = descope_client.validate_tenant_roles(
-                        jwt_response, roles
+                        jwt_response, _roles
                     )
                 else:
-                    valid_roles = descope_client.validate_roles(jwt_response, roles)
+                    valid_roles = descope_client.validate_roles(jwt_response, _roles)
 
                 if not valid_roles:
                     return Response("Access denied", 401)

@@ -2,6 +2,7 @@ import json
 from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
+from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
 from .. import common
@@ -57,6 +58,7 @@ class TestGroup(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_load_all_groups_for_members(self):
@@ -100,6 +102,7 @@ class TestGroup(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_load_all_group_members(self):
@@ -141,4 +144,5 @@ class TestGroup(common.DescopeTest):
                 ),
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
