@@ -1,15 +1,10 @@
 from typing import List
 
-from descope.auth import Auth
+from descope._auth_base import AuthBase
 from descope.management.common import MgmtV1
 
 
-class Flow:
-    _auth: Auth
-
-    def __init__(self, auth: Auth):
-        self._auth = auth
-
+class Flow(AuthBase):
     def export_flow(
         self,
         flow_id: str,
