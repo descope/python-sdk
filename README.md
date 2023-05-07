@@ -47,21 +47,23 @@ These sections show how to use the SDK to perform various authentication/authori
 
 ## API Managment Function
 
-These sections show how to use the SDK to perform API management functions:
+These sections show how to use the SDK to perform permission and user management functions. You will need to create an instance of `descopeClient` by following the [Setup](#setup-1) guide, before you can use any of these functions:
 
-1. [Setup](#setup-1)
-2. [Manage Tenants](#manage-tenants)
-3. [Manage Users](#manage-users)
-4. [Manage Access Keys](#manage-access-keys)
-5. [Manage SSO Setting](#manage-sso-setting)
-6. [Manage Permissions](#manage-permissions)
-7. [Manage Roles](#manage-roles)
-8. [Query SSO Groups](#query-sso-groups)
-7. [Manage Flows](#manage-flows)
-8. [Manage JWTs](#manage-jwts)
-9. [Utils for your end to end (e2e) tests and integration tests](#utils-for-your-end-to-end-e2e-tests-and-integration-tests)
+1. [Manage Tenants](#manage-tenants)
+2. [Manage Users](#manage-users)
+3. [Manage Access Keys](#manage-access-keys)
+4. [Manage SSO Setting](#manage-sso-setting)
+5. [Manage Permissions](#manage-permissions)
+6. [Manage Roles](#manage-roles)
+7. [Query SSO Groups](#query-sso-groups)
+8. [Manage Flows](#manage-flows)
+9. [Manage JWTs](#manage-jwts)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
+
+If you're performing end-to-end testing, check out the [Utils for your end to end (e2e) tests and integration tests](#utils-for-your-end-to-end-e2e-tests-and-integration-tests) section. You will need to use the `descopeClient` object created under [Setup](#setup-1) guide.
+
+For rate limiting information, please confer to the [API Rate Limits](#api-rate-limits) section.
 
 ### OTP Authentication
 
@@ -801,6 +803,22 @@ pending_ref = resp["pendingRef"]
 
 # Note 1: The generate code/link functions, work only for test users, will not work for regular users.
 # Note 2: In case of testing sign-in / sign-up operations with test users, need to make sure to generate the code prior calling the sign-in / sign-up operations.
+```
+
+## API Rate Limits
+
+Handle API rate limits by comparing the exception to the APIRateLimitExceeded exception, which includes the RateLimitParameters map with the key "Retry-After." This key indicates how many seconds until the next valid API call can take place.
+
+```python
+try:
+    descope_client.magiclink.sign_up_or_in(
+        method=DeliveryMethod.EMAIL,
+        login_id="desmond@descope.com",
+        uri="http://myapp.com/verify-magic-link",
+    )
+except RateLimitException as e:
+    retry_after_seconds = e.rate_limit_parameters.get(API_RATE_LIMIT_RETRY_AFTER_HEADER)
+    # This variable indicates how many seconds until the next valid API call can take place.
 ```
 
 ## Code Samples
