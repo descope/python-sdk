@@ -3,7 +3,7 @@ import os
 import platform
 import re
 from threading import Lock
-from typing import Tuple
+from typing import Tuple, Union
 
 import jwt
 import pkg_resources
@@ -294,23 +294,25 @@ class Auth:
         return {"code": code}
 
     @staticmethod
-    def _validate_and_load_public_key(public_key) -> Tuple[str, jwt.PyJWK, str]:
-        if isinstance(public_key, str):
-            try:
-                public_key = json.loads(public_key)
-            except Exception as e:
-                raise AuthException(
-                    500,
-                    ERROR_TYPE_INVALID_PUBLIC_KEY,
-                    f"Unable to load public key. error: {e}",
-                )
-
-        if not isinstance(public_key, dict):
+    def _validate_and_load_public_key(
+        public_key: Union[dict, str]
+    ) -> Tuple[str, jwt.PyJWK, str]:
+        if not isinstance(public_key, (dict, str)):
             raise AuthException(
                 500,
                 ERROR_TYPE_INVALID_PUBLIC_KEY,
                 "Unable to load public key. Invalid public key error: (unknown type)",
             )
+
+        if isinstance(public_key, str):
+            try:
+                public_key = json.loads(public_key)
+            except ValueError as e:
+                raise AuthException(
+                    500,
+                    ERROR_TYPE_INVALID_PUBLIC_KEY,
+                    f"Unable to load public key. error: {e}",
+                )
 
         alg = public_key.get(Auth.ALGORITHM_KEY, None)
         if alg is None:
@@ -365,7 +367,7 @@ class Auth:
         try:
             jwkeys_wrapper = json.loads(jwks_data)
             jwkeys = jwkeys_wrapper["keys"]
-        except Exception as e:
+        except (ValueError, TypeError, KeyError) as e:
             raise AuthException(
                 500, ERROR_TYPE_INVALID_PUBLIC_KEY, f"Unable to load jwks. Error: {e}"
             )
@@ -376,7 +378,7 @@ class Auth:
             try:
                 loaded_kid, pub_key, alg = Auth._validate_and_load_public_key(key)
                 self.public_keys[loaded_kid] = (pub_key, alg)
-            except Exception:
+            except AuthException:
                 # just continue to the next key
                 pass
 
@@ -469,7 +471,7 @@ class Auth:
             headers["x-descope-sdk-version"] = pkg_resources.get_distribution(
                 "descope"
             ).version
-        except Exception:
+        except pkg_resources.DistributionNotFound:
             pass
 
         bearer = self.project_id
@@ -488,7 +490,7 @@ class Auth:
             )
         try:
             unverified_header = jwt.get_unverified_header(token)
-        except Exception as e:
+        except jwt.PyJWTError as e:
             raise AuthException(
                 500,
                 ERROR_TYPE_INVALID_TOKEN,
@@ -529,7 +531,14 @@ class Auth:
                 ERROR_TYPE_INVALID_PUBLIC_KEY,
                 "Algorithm signature in JWT header does not match the algorithm signature in the public key",
             )
-        claims = jwt.decode(jwt=token, key=copy_key[0].key, algorithms=[alg_header])
+        try:
+            claims = jwt.decode(jwt=token, key=copy_key[0].key, algorithms=[alg_header])
+        except jwt.PyJWTError as e:
+            raise AuthException(
+                500,
+                ERROR_TYPE_INVALID_PUBLIC_KEY,
+                "Algorithm signature in JWT header does not match the algorithm signature in the public key",
+            ) from e
         claims["jwt"] = token
         return claims
 
@@ -546,10 +555,10 @@ class Auth:
             return self.adjust_properties(res, True)
         except RateLimitException as e:
             raise e
-        except Exception as e:
+        except AuthException as e:
             raise AuthException(
                 401, ERROR_TYPE_INVALID_TOKEN, f"Invalid session token: {e}"
-            )
+            ) from e
 
     def refresh_session(self, refresh_token: str) -> dict:
         if not refresh_token:
@@ -563,11 +572,11 @@ class Auth:
             self._validate_token(refresh_token)
         except RateLimitException as e:
             raise e
-        except Exception as e:
+        except AuthException as e:
             # Refresh is invalid
             raise AuthException(
                 401, ERROR_TYPE_INVALID_TOKEN, f"Invalid refresh token: {e}"
-            )
+            ) from e
 
         uri = EndpointsV1.refresh_token_path
         response = self.do_post(uri, {}, None, refresh_token)
@@ -587,7 +596,7 @@ class Auth:
 
         try:
             return self.validate_session(session_token)
-        except Exception:
+        except (AuthException, RateLimitException):
             # Session is invalid - try to refresh it
             return self.refresh_session(refresh_token)
 
