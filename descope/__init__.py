@@ -16,3 +16,7 @@ from descope.exceptions import (
 )
 from descope.management.common import AssociatedTenant
 from descope.management.sso_settings import AttributeMapping, RoleMapping
+
+# MT: CI can change this from pyproject.toml
+# Also, the git tag and the version in pyproject.toml differ
+__version__ = '1.5.0'
