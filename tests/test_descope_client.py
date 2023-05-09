@@ -153,6 +153,52 @@ class TestDescopeClient(common.DescopeTest):
             None,
         )
 
+    def test_validate_session_response_structure(self):
+        self.maxDiff = None
+        client = DescopeClient(
+            self.dummy_project_id,
+            {
+                "alg": "ES384",
+                "crv": "P-384",
+                "kid": "P2CuC9yv2UGtGI1o84gCZEb9qEQW",
+                "kty": "EC",
+                "use": "sig",
+                "x": "DCjjyS7blnEmenLyJVwmH6yMnp7MlEggfk1kLtOv_Khtpps_Mq4K9brqsCwQhGUP",
+                "y": "xKy4IQ2FaLEzrrl1KE5mKbioLhj1prYFk1itdTOr6Xpy1fgq86kC7v-Y2F2vpcDc",
+            },
+        )
+
+        ds = "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3VDOXl2MlVHdEdJMW84NGdDWkViOXFFUVciLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEUyIsImV4cCI6MjQ5MzA2MTQxNSwiaWF0IjoxNjU5NjQzMDYxLCJpc3MiOiJQMkN1Qzl5djJVR3RHSTFvODRnQ1pFYjlxRVFXIiwic3ViIjoiVTJDdUNQdUpnUFdIR0I1UDRHbWZidVBHaEdWbSJ9.gMalOv1GhqYVsfITcOc7Jv_fibX1Iof6AFy2KCVmyHmU2KwATT6XYXsHjBFFLq262Pg-LS1IX9f_DV3ppzvb1pSY4ccsP6WDGd1vJpjp3wFBP9Sji6WXL0SCCJUFIyJR"
+        try:
+            jwt_response = client.validate_session(ds)
+        except AuthException:
+            self.fail("Should pass validation")
+
+        self.assertEqual(
+            jwt_response,
+            {
+                "drn": "DS",
+                "exp": 2493061415,
+                "iat": 1659643061,
+                "iss": "P2CuC9yv2UGtGI1o84gCZEb9qEQW",
+                "sub": "U2CuCPuJgPWHGB5P4GmfbuPGhGVm",
+                "jwt": "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3VDOXl2MlVHdEdJMW84NGdDWkViOXFFUVciLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEUyIsImV4cCI6MjQ5MzA2MTQxNSwiaWF0IjoxNjU5NjQzMDYxLCJpc3MiOiJQMkN1Qzl5djJVR3RHSTFvODRnQ1pFYjlxRVFXIiwic3ViIjoiVTJDdUNQdUpnUFdIR0I1UDRHbWZidVBHaEdWbSJ9.gMalOv1GhqYVsfITcOc7Jv_fibX1Iof6AFy2KCVmyHmU2KwATT6XYXsHjBFFLq262Pg-LS1IX9f_DV3ppzvb1pSY4ccsP6WDGd1vJpjp3wFBP9Sji6WXL0SCCJUFIyJR",
+                "permissions": [],
+                "roles": [],
+                "tenants": {},
+                "projectId": "P2CuC9yv2UGtGI1o84gCZEb9qEQW",
+                "userId": "U2CuCPuJgPWHGB5P4GmfbuPGhGVm",
+                "sessionToken": {
+                    "drn": "DS",
+                    "exp": 2493061415,
+                    "iat": 1659643061,
+                    "iss": "P2CuC9yv2UGtGI1o84gCZEb9qEQW",
+                    "sub": "U2CuCPuJgPWHGB5P4GmfbuPGhGVm",
+                    "jwt": "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3VDOXl2MlVHdEdJMW84NGdDWkViOXFFUVciLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEUyIsImV4cCI6MjQ5MzA2MTQxNSwiaWF0IjoxNjU5NjQzMDYxLCJpc3MiOiJQMkN1Qzl5djJVR3RHSTFvODRnQ1pFYjlxRVFXIiwic3ViIjoiVTJDdUNQdUpnUFdIR0I1UDRHbWZidVBHaEdWbSJ9.gMalOv1GhqYVsfITcOc7Jv_fibX1Iof6AFy2KCVmyHmU2KwATT6XYXsHjBFFLq262Pg-LS1IX9f_DV3ppzvb1pSY4ccsP6WDGd1vJpjp3wFBP9Sji6WXL0SCCJUFIyJR",
+                },
+            },
+        )
+
     def test_validate_session_valid_tokens(self):
         client = DescopeClient(
             self.dummy_project_id,
