@@ -514,7 +514,7 @@ users = users_resp["users"]
 
 # Set a new password for a user
 # Note that the new password will be initially set as expired, and the user will need to replace it before logging in.
-descope_client.mgmt.user.set_password("<login-id>""<new-password>")
+descope_client.mgmt.user.set_password("<login-id>", "<new-password>")
 
 # Expire user password
 descope_client.mgmt.user.expire_password("<login-id>")
