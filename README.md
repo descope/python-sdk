@@ -445,7 +445,7 @@ tenants = tenants_resp["tenants"]
 
 ### Manage Users
 
-You can create, update, delete or load users, as well as search according to filters:
+You can create, update, delete or load users, as well as setting new password, expire password and search according to filters:
 
 ```Python
 # A user must have a login ID, other fields are optional.
@@ -511,6 +511,14 @@ users_resp = descope_client.mgmt.user.search_all(tenant_ids=["my-tenant-id"])
 users = users_resp["users"]
     for user in users:
         # Do something
+
+# Set a new password for a user
+# Note that the new password will be initially set as expired, and the user will need to replace it before logging in.
+descope_client.mgmt.user.set_password("<login-id>""<new-password>")
+
+# Expire user password
+descope_client.mgmt.user.expire_password("<login-id>")
+
 ```
 
 ### Manage Access Keys
