@@ -47,7 +47,7 @@ These sections show how to use the SDK to perform various authentication/authori
 
 ## API Managment Function
 
-These sections show how to use the SDK to perform permission and user management functions. You will need to create an instance of `descopeClient` by following the [Setup](#setup-1) guide, before you can use any of these functions:
+These sections show how to use the SDK to perform permission and user management functions. You will need to create an instance of `DescopeClient` by following the [Setup](#setup-1) guide, before you can use any of these functions:
 
 1. [Manage Tenants](#manage-tenants)
 2. [Manage Users](#manage-users)
@@ -61,7 +61,7 @@ These sections show how to use the SDK to perform permission and user management
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
-If you're performing end-to-end testing, check out the [Utils for your end to end (e2e) tests and integration tests](#utils-for-your-end-to-end-e2e-tests-and-integration-tests) section. You will need to use the `descopeClient` object created under [Setup](#setup-1) guide.
+If you're performing end-to-end testing, check out the [Utils for your end to end (e2e) tests and integration tests](#utils-for-your-end-to-end-e2e-tests-and-integration-tests) section. You will need to use the `DescopeClient` object created under [Setup](#setup-1) guide.
 
 For rate limiting information, please confer to the [API Rate Limits](#api-rate-limits) section.
 
