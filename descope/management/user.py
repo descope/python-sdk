@@ -722,24 +722,24 @@ class User(AuthBase):
     def set_password(
         self,
         login_id: str,
-        new_password: str,
+        password: str,
     ) -> None:
         """
             Set the password for the given login ID.
-            Note that the new password will be initially set as expired, and the user will need to
-        replace it before logging in.
-
+            Note: The password will be initially set as expired.
+            The user could not log-in with this password, and must replace it.
+            See also: expire_password
 
         Args:
         login_id (str): The login ID of the user to set the password to.
-        new_password (str): The new password to set to the user.
+        password (str): The new password to set to the user.
 
         Raise:
         AuthException: raised if the operation fails
         """
         self._auth.do_post(
             MgmtV1.user_set_password_path,
-            {"loginId": login_id, "newPassword": new_password},
+            {"loginId": login_id, "password": password},
             pswd=self._auth.management_key,
         )
         return
@@ -750,7 +750,8 @@ class User(AuthBase):
     ) -> None:
         """
             Expires the password for the given login ID.
-
+            Note: user sign-in with an expired password, the user will get an error with code.
+            Use the `password.send_reset` or `password.replace` methods to reset/replace the password.
 
         Args:
         login_id (str): The login ID of the user expire the password to.

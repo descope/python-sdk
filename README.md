@@ -511,14 +511,20 @@ users_resp = descope_client.mgmt.user.search_all(tenant_ids=["my-tenant-id"])
 users = users_resp["users"]
     for user in users:
         # Do something
+```
 
-# Set a new password for a user
-# Note that the new password will be initially set as expired, and the user will need to replace it before logging in.
-descope_client.mgmt.user.set_password("<login-id>", "<new-password>")
+#### Set or Expire User Password
 
-# Expire user password
-descope_client.mgmt.user.expire_password("<login-id>")
+You can set or expire a user's password.
+Note: When setting a password, it will be initially set as expired.
+The user could not log-in an expired password, and must replace it.
 
+```typescript
+// Set a user's password
+await descopeClient.management.user.setPassword('<login-id>', '<some-password>');
+
+// Or alternatively, expire a user password
+await descopeClient.management.user.expirePassword('<login-id>');
 ```
 
 ### Manage Access Keys

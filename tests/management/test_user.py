@@ -1022,7 +1022,7 @@ class TestUser(common.DescopeTest):
                 AuthException,
                 self.client.mgmt.user.set_password,
                 "login-id",
-                "new-password",
+                "some-password",
             )
 
         # Test success flow
@@ -1032,7 +1032,7 @@ class TestUser(common.DescopeTest):
             mock_post.return_value = network_resp
             self.client.mgmt.user.set_password(
                 "login-id",
-                "new-password",
+                "some-password",
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.user_set_password_path}",
@@ -1044,7 +1044,7 @@ class TestUser(common.DescopeTest):
                 data=json.dumps(
                     {
                         "loginId": "login-id",
-                        "newPassword": "new-password",
+                        "password": "some-password",
                     }
                 ),
                 allow_redirects=False,
