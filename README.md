@@ -517,7 +517,7 @@ users = users_resp["users"]
 
 You can set or expire a user's password.
 Note: When setting a password, it will be initially set as expired.
-The user could not log-in an expired password, and must replace it.
+The user could not log-in an expired password, and must replace it on next login.
 
 ```typescript
 // Set a user's password

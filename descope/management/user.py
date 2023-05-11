@@ -727,7 +727,7 @@ class User(AuthBase):
         """
             Set the password for the given login ID.
             Note: The password will be initially set as expired.
-            The user could not log-in with this password, and must replace it.
+            The user could not log-in with this password, and must replace it on next login.
             See also: expire_password
 
         Args:
