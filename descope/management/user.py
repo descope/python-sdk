@@ -719,6 +719,53 @@ class User(AuthBase):
         )
         return response.json()
 
+    def set_password(
+        self,
+        login_id: str,
+        password: str,
+    ) -> None:
+        """
+            Set the password for the given login ID.
+            Note: The password will automatically be set as expired.
+            The user will not be able to log-in with this password, and will be required to replace it on next login.
+            See also: expire_password
+
+        Args:
+        login_id (str): The login ID of the user to set the password to.
+        password (str): The new password to set to the user.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        self._auth.do_post(
+            MgmtV1.user_set_password_path,
+            {"loginId": login_id, "password": password},
+            pswd=self._auth.management_key,
+        )
+        return
+
+    def expire_password(
+        self,
+        login_id: str,
+    ) -> None:
+        """
+            Expires the password for the given login ID.
+            Note: user sign-in with an expired password, the user will get an error with code.
+            Use the `password.send_reset` or `password.replace` methods to reset/replace the password.
+
+        Args:
+        login_id (str): The login ID of the user expire the password to.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        self._auth.do_post(
+            MgmtV1.user_expire_password_path,
+            {"loginId": login_id},
+            pswd=self._auth.management_key,
+        )
+        return
+
     def generate_otp_for_test_user(
         self,
         method: DeliveryMethod,
