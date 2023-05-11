@@ -519,7 +519,7 @@ You can set or expire a user's password.
 Note: When setting a password, it will automatically be set as expired.
 The user will not be able log-in using an expired password, and will be required replace it on next login.
 
-```typescript
+```Python
 // Set a user's password
 descope_client.mgmt.user.setPassword('<login-id>', '<some-password>');
 
