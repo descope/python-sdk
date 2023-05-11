@@ -521,10 +521,10 @@ The user will not be able log-in using an expired password, and will be required
 
 ```typescript
 // Set a user's password
-await descopeClient.management.user.setPassword('<login-id>', '<some-password>');
+descopeClient.management.user.setPassword('<login-id>', '<some-password>');
 
 // Or alternatively, expire a user password
-await descopeClient.management.user.expirePassword('<login-id>');
+descopeClient.management.user.expirePassword('<login-id>');
 ```
 
 ### Manage Access Keys
