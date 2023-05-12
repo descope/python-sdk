@@ -661,14 +661,14 @@ i18n = ["Babel (>=2.7)"]
 
 [[package]]
 name = "liccheck"
-version = "0.8.3"
+version = "0.9.0"
 description = "Check python packages from requirement.txt and report issues"
 category = "dev"
 optional = false
 python-versions = ">=2.7"
 files = [
-    {file = "liccheck-0.8.3-py2.py3-none-any.whl", hash = "sha256:272ef1035c566824a3b9becf6a100f495de1492e33f11e88a21d5a3fee80436c"},
-    {file = "liccheck-0.8.3.tar.gz", hash = "sha256:317015ba05d36dfdf4a366de67b7b8658fc7caedccb5f019ed41dae55897de2b"},
+    {file = "liccheck-0.9.0-py2.py3-none-any.whl", hash = "sha256:6e12a061dae49b6bd58ccc2734f92614e8e67a195153eb80d4fa7982bd0199ff"},
+    {file = "liccheck-0.9.0.tar.gz", hash = "sha256:38b50c1c944a2a2d3e2fcebef347fa889fb941b606d39f8bda9254aeef69fc7f"},
 ]
 
 [package.dependencies]
@@ -1237,4 +1237,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7"
-content-hash = "e8a0a7499a9ecdfe9c1a78baa0c897ab56e35e2dbdba9b511ce07dd29eda64ee"
+content-hash = "fcf5c8044ee89a5e2bcb3b668f1af4543ae85143a2922860465514708a6ebd52"
