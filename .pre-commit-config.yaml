@@ -45,7 +45,7 @@ repos:
         entry: "print"
         language: pygrep
   - repo: https://github.com/dhatim/python-license-check
-    rev: 0.8.3
+    rev: 0.9.0
     hooks:
       - id: liccheck
         language: system
