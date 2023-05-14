@@ -52,12 +52,10 @@ class TestPermission(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "name": "P1",
-                        "description": "Something",
-                    }
-                ),
+                json={
+                    "name": "P1",
+                    "description": "Something",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -98,13 +96,11 @@ class TestPermission(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "name": "name",
-                        "newName": "new-name",
-                        "description": "new-description",
-                    }
-                ),
+                json={
+                    "name": "name",
+                    "newName": "new-name",
+                    "description": "new-description",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -138,11 +134,9 @@ class TestPermission(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "name": "name",
-                    }
-                ),
+                json={
+                    "name": "name",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,

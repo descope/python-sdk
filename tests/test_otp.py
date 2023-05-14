@@ -201,18 +201,16 @@ class TestOTP(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "dummy@dummy.com",
-                        "user": {
-                            "username": "",
-                            "name": "john",
-                            "phone": "972525555555",
-                            "email": "dummy@dummy.com",
-                        },
+                json={
+                    "loginId": "dummy@dummy.com",
+                    "user": {
+                        "username": "",
+                        "name": "john",
+                        "phone": "972525555555",
                         "email": "dummy@dummy.com",
-                    }
-                ),
+                    },
+                    "email": "dummy@dummy.com",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -235,13 +233,11 @@ class TestOTP(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "dummy@dummy.com",
-                        "user": {"email": "dummy@dummy.com"},
-                        "email": "dummy@dummy.com",
-                    }
-                ),
+                json={
+                    "loginId": "dummy@dummy.com",
+                    "user": {"email": "dummy@dummy.com"},
+                    "email": "dummy@dummy.com",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -303,16 +299,14 @@ class TestOTP(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{refresh_token}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "dummy@dummy.com",
-                        "loginOptions": {
-                            "stepup": True,
-                            "customClaims": None,
-                            "mfa": False,
-                        },
-                    }
-                ),
+                json={
+                    "loginId": "dummy@dummy.com",
+                    "loginOptions": {
+                        "stepup": True,
+                        "customClaims": None,
+                        "mfa": False,
+                    },
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,

@@ -56,13 +56,11 @@ class TestTenant(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "name": "name",
-                        "id": "t1",
-                        "selfProvisioningDomains": ["domain.com"],
-                    }
-                ),
+                json={
+                    "name": "name",
+                    "id": "t1",
+                    "selfProvisioningDomains": ["domain.com"],
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -99,13 +97,11 @@ class TestTenant(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "name": "new-name",
-                        "id": "t1",
-                        "selfProvisioningDomains": ["domain.com"],
-                    }
-                ),
+                json={
+                    "name": "new-name",
+                    "id": "t1",
+                    "selfProvisioningDomains": ["domain.com"],
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -139,11 +135,9 @@ class TestTenant(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "id": "t1",
-                    }
-                ),
+                json={
+                    "id": "t1",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,

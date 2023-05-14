@@ -117,9 +117,7 @@ class TestWebauthN(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
-                data=json.dumps(
-                    {"user": {"loginId": "id1"}, "origin": "https://example.com"}
-                ),
+                json={"user": {"loginId": "id1"}, "origin": "https://example.com"},
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -168,7 +166,7 @@ class TestWebauthN(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
-                data=json.dumps({"transactionId": "t01", "response": "response01"}),
+                json={"transactionId": "t01", "response": "response01"},
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -224,13 +222,11 @@ class TestWebauthN(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "id1",
-                        "origin": "https://example.com",
-                        "loginOptions": {},
-                    }
-                ),
+                json={
+                    "loginId": "id1",
+                    "origin": "https://example.com",
+                    "loginOptions": {},
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -280,17 +276,15 @@ class TestWebauthN(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:refresh",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "id1",
-                        "origin": "https://example.com",
-                        "loginOptions": {
-                            "stepup": True,
-                            "customClaims": {"k1": "v1"},
-                            "mfa": False,
-                        },
-                    }
-                ),
+                json={
+                    "loginId": "id1",
+                    "origin": "https://example.com",
+                    "loginOptions": {
+                        "stepup": True,
+                        "customClaims": {"k1": "v1"},
+                        "mfa": False,
+                    },
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -333,7 +327,7 @@ class TestWebauthN(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
-                data=json.dumps({"transactionId": "t01", "response": "response01"}),
+                json={"transactionId": "t01", "response": "response01"},
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -382,12 +376,10 @@ class TestWebauthN(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "id1",
-                        "origin": "https://example.com",
-                    }
-                ),
+                json={
+                    "loginId": "id1",
+                    "origin": "https://example.com",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -456,9 +448,7 @@ class TestWebauthN(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:asdasd",
                 },
                 params=None,
-                data=json.dumps(
-                    {"loginId": "dummy@dummy.com", "origin": "https://example.com"}
-                ),
+                json={"loginId": "dummy@dummy.com", "origin": "https://example.com"},
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -499,7 +489,7 @@ class TestWebauthN(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
-                data=json.dumps({"transactionId": "t01", "response": "response01"}),
+                json={"transactionId": "t01", "response": "response01"},
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,

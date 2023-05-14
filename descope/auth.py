@@ -193,7 +193,7 @@ class Auth:
             DeliveryMethod.WHATSAPP: "whatsapp",
         }.get(method)
 
-        if not method:
+        if not suffix:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, f"Unknown delivery method: {method}"
             )

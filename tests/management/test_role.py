@@ -52,13 +52,11 @@ class TestRole(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "name": "R1",
-                        "description": "Something",
-                        "permissionNames": ["P1"],
-                    }
-                ),
+                json={
+                    "name": "R1",
+                    "description": "Something",
+                    "permissionNames": ["P1"],
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -100,14 +98,12 @@ class TestRole(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "name": "name",
-                        "newName": "new-name",
-                        "description": "new-description",
-                        "permissionNames": ["P1", "P2"],
-                    }
-                ),
+                json={
+                    "name": "name",
+                    "newName": "new-name",
+                    "description": "new-description",
+                    "permissionNames": ["P1", "P2"],
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -141,11 +137,9 @@ class TestRole(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "name": "name",
-                    }
-                ),
+                json={
+                    "name": "name",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
