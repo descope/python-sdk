@@ -25,10 +25,9 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.7"
-requests = "2.29.0"
-PyJWT = "==2.6.0"
-cryptography = "==40.0.2"
-email-validator = "==1.3.1"
+requests = "^2.27.0" # First support for python 3.10
+PyJWT = {version = "^2.4.0", extras = ["crypto"]} # Latest secrutiy update
+email-validator = ">1,<3"
 
 [tool.poetry.group.dev.dependencies]
 mock = "5.0.2"
