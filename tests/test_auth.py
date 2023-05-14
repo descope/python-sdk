@@ -120,7 +120,9 @@ class TestAuth(common.DescopeTest):
 
     def test_verify_delivery_method(self):
         self.assertEqual(
-            Auth.adjust_and_verify_delivery_method(DeliveryMethod.EMAIL, "dummy@dummy.com", None),
+            Auth.adjust_and_verify_delivery_method(
+                DeliveryMethod.EMAIL, "dummy@dummy.com", None
+            ),
             False,
         )
 
@@ -143,7 +145,10 @@ class TestAuth(common.DescopeTest):
             True,
         )
         self.assertEqual(
-            Auth.adjust_and_verify_delivery_method(DeliveryMethod.EMAIL, "", {"phone": ""}), False
+            Auth.adjust_and_verify_delivery_method(
+                DeliveryMethod.EMAIL, "", {"phone": ""}
+            ),
+            False,
         )
         self.assertEqual(
             Auth.adjust_and_verify_delivery_method(
@@ -171,11 +176,16 @@ class TestAuth(common.DescopeTest):
             False,
         )
         self.assertEqual(
-            Auth.adjust_and_verify_delivery_method(DeliveryMethod.SMS, "asdsad", {"email": ""}),
+            Auth.adjust_and_verify_delivery_method(
+                DeliveryMethod.SMS, "asdsad", {"email": ""}
+            ),
             False,
         )
         self.assertEqual(
-            Auth.adjust_and_verify_delivery_method(DeliveryMethod.SMS, "", {"email": ""}), False
+            Auth.adjust_and_verify_delivery_method(
+                DeliveryMethod.SMS, "", {"email": ""}
+            ),
+            False,
         )
         self.assertEqual(
             Auth.adjust_and_verify_delivery_method(
@@ -191,7 +201,9 @@ class TestAuth(common.DescopeTest):
             True,
         )
         self.assertEqual(
-            Auth.adjust_and_verify_delivery_method(DeliveryMethod.WHATSAPP, "", {"email": ""}),
+            Auth.adjust_and_verify_delivery_method(
+                DeliveryMethod.WHATSAPP, "", {"email": ""}
+            ),
             False,
         )
         self.assertEqual(

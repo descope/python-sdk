@@ -269,7 +269,9 @@ class Auth:
         uri = EndpointsV1.exchange_auth_access_key_path
         server_response = self.do_post(uri=uri, body={}, params=None, pswd=access_key)
         json = server_response.json()
-        return self._generate_auth_info(response_body=json, refresh_token=None, user_jwt=False)
+        return self._generate_auth_info(
+            response_body=json, refresh_token=None, user_jwt=False
+        )
 
     @staticmethod
     def _compose_exchange_body(code: str) -> dict:

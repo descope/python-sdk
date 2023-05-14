@@ -292,7 +292,9 @@ class DescopeClient:
             )
 
         uri = EndpointsV1.me_path
-        response = self._auth.do_get(uri=uri, params=None, allow_redirects=None, pswd=refresh_token)
+        response = self._auth.do_get(
+            uri=uri, params=None, allow_redirects=None, pswd=refresh_token
+        )
         return response.json()
 
     def exchange_access_key(self, access_key: str) -> dict:
