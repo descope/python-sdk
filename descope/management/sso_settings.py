@@ -46,8 +46,8 @@ class SSOSettings(AuthBase):
         AuthException: raised if configuration operation fails
         """
         response = self._auth.do_get(
-            MgmtV1.sso_settings_path,
-            {"tenantId": tenant_id},
+            uri=MgmtV1.sso_settings_path,
+            params={"tenantId": tenant_id},
             pswd=self._auth.management_key,
         )
         return response.json()

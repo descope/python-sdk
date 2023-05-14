@@ -268,8 +268,8 @@ class User(AuthBase):
         AuthException: raised if load operation fails
         """
         response = self._auth.do_get(
-            MgmtV1.user_load_path,
-            {"loginId": login_id},
+            uri=MgmtV1.user_load_path,
+            params={"loginId": login_id},
             pswd=self._auth.management_key,
         )
         return response.json()
@@ -294,8 +294,8 @@ class User(AuthBase):
         AuthException: raised if load operation fails
         """
         response = self._auth.do_get(
-            MgmtV1.user_load_path,
-            {"userId": user_id},
+            uri=MgmtV1.user_load_path,
+            params={"userId": user_id},
             pswd=self._auth.management_key,
         )
         return response.json()

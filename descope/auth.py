@@ -145,7 +145,7 @@ class Auth:
             )
 
         body = Auth._compose_exchange_body(code)
-        response = self.do_post(uri, body, None)
+        response = self.do_post(uri=uri, body=body, params=None)
         resp = response.json()
         jwt_response = self.generate_jwt_response(
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME)
@@ -153,7 +153,7 @@ class Auth:
         return jwt_response
 
     @staticmethod
-    def verify_delivery_method(
+    def adjust_and_verify_delivery_method(
         method: DeliveryMethod, login_id: str, user: dict
     ) -> bool:
         if not login_id:
@@ -164,8 +164,6 @@ class Auth:
 
         if method == DeliveryMethod.EMAIL:
             if not user.get("email", None):
-                # MT: This is unexpected. A function called "verify" usually don't
-                # change it's parameters.
                 user["email"] = login_id
             try:
                 validate_email(email=user["email"], check_deliverability=False)
@@ -269,13 +267,9 @@ class Auth:
 
     def exchange_access_key(self, access_key: str) -> dict:
         uri = EndpointsV1.exchange_auth_access_key_path
-        # MT: Left this with positional to show difference from below. I need to read
-        # do_post docs to see what is None.
-        server_response = self.do_post(uri, {}, None, access_key)
+        server_response = self.do_post(uri=uri, body={}, params=None, pswd=access_key)
         json = server_response.json()
-        # MT: IMO this is more readable. You can force uses to use kw only arguments,
-        # see https://peps.python.org/pep-3102/
-        return self._generate_auth_info(json, refresh_token=None, user_jwt=False)
+        return self._generate_auth_info(response_body=json, refresh_token=None, user_jwt=False)
 
     @staticmethod
     def _compose_exchange_body(code: str) -> dict:
@@ -554,7 +548,7 @@ class Auth:
             )
 
         uri = EndpointsV1.refresh_token_path
-        response = self.do_post(uri, {}, None, refresh_token)
+        response = self.do_post(uri=uri, body={}, params=None, pswd=refresh_token)
 
         resp = response.json()
         return self.generate_jwt_response(resp, refresh_token)
