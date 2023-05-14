@@ -31,7 +31,7 @@ email-validator = "==2.0.0.post2"
 
 [tool.poetry.group.dev.dependencies]
 mock = "5.0.2"
-pre-commit = "2.21.0"
+pre-commit = "3.2.2"
 Flask = "2.2.5"
 flake8 = "5.0.4"
 flake8-bugbear = "22.12.6"
