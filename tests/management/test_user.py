@@ -999,12 +999,10 @@ class TestUser(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "login-id",
-                        "password": "some-password",
-                    }
-                ),
+                json={
+                    "loginId": "login-id",
+                    "password": "some-password",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -1035,11 +1033,9 @@ class TestUser(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "login-id",
-                    }
-                ),
+                json={
+                    "loginId": "login-id",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
