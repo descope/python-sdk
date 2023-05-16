@@ -175,7 +175,10 @@ class DescopeClient:
         """
         Validate a session token. Call this function for every incoming request to your
         private endpoints. Alternatively, use validate_and_refresh_session in order to
-        automatically refresh expired sessions.
+        automatically refresh expired sessions. If you need to use these specific claims
+        [amr, drn, exp, iss, rexp, sub, jwt] in the top level of the response dict, please use
+        them from the sessionToken key instead, as these claims will soon be deprecated from the top level
+        of the response dict.
 
         Args:
         session_token (str): The session token to be validated

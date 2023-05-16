@@ -1,3 +1,4 @@
+import copy
 import json
 import os
 import platform
@@ -386,25 +387,32 @@ class Auth:
             jwt_response["tenants"] = jwt_response.get(REFRESH_SESSION_TOKEN_NAME).get(
                 "tenants", {}
             )
+        else:
+            jwt_response["permissions"] = jwt_response.get("permissions", [])
+            jwt_response["roles"] = jwt_response.get("roles", [])
+            jwt_response["tenants"] = jwt_response.get("tenants", {})
 
         # Save the projectID also in the dict top level
-        issuer = jwt_response.get(SESSION_TOKEN_NAME, {}).get(
-            "iss", None
-        ) or jwt_response.get(REFRESH_SESSION_TOKEN_NAME, {}).get("iss", "")
+        issuer = (
+            jwt_response.get(SESSION_TOKEN_NAME, {}).get("iss", None)
+            or jwt_response.get(REFRESH_SESSION_TOKEN_NAME, {}).get("iss", None)
+            or jwt_response.get("iss", "")
+        )
         jwt_response["projectId"] = issuer.rsplit("/")[
             -1
         ]  # support both url issuer and project ID issuer
 
+        sub = (
+            jwt_response.get(SESSION_TOKEN_NAME, {}).get("sub", None)
+            or jwt_response.get(REFRESH_SESSION_TOKEN_NAME, {}).get("sub", None)
+            or jwt_response.get("sub", "")
+        )
         if user_jwt:
             # Save the userID also in the dict top level
-            jwt_response["userId"] = jwt_response.get(SESSION_TOKEN_NAME, {}).get(
-                "sub", None
-            ) or jwt_response.get(REFRESH_SESSION_TOKEN_NAME, {}).get("sub", None)
+            jwt_response["userId"] = sub
         else:
             # Save the AccessKeyID also in the dict top level
-            jwt_response["keyId"] = jwt_response.get(SESSION_TOKEN_NAME, {}).get(
-                "sub", None
-            )
+            jwt_response["keyId"] = sub
 
         return jwt_response
 
@@ -523,6 +531,9 @@ class Auth:
 
         try:
             res = self._validate_token(session_token)
+            res[SESSION_TOKEN_NAME] = copy.deepcopy(
+                res
+            )  # Duplicate for saving backward compatibility but keep the same structure as the refresh operation response
             return self.adjust_properties(res, True)
         except RateLimitException as e:
             raise e

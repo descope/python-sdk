@@ -366,7 +366,13 @@ class TestAuth(common.DescopeTest):
     def test_adjust_properties(self):
         self.assertEqual(
             Auth.adjust_properties(self, jwt_response={}, user_jwt={}),
-            {"keyId": None, "projectId": ""},
+            {
+                "keyId": "",
+                "permissions": [],
+                "projectId": "",
+                "roles": [],
+                "tenants": {},
+            },
         )
 
         jwt_response = {

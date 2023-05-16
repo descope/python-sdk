@@ -30,9 +30,40 @@ descope_client = DescopeClient()
 descope_client = DescopeClient(project_id="<Project ID>")
 ```
 
-## Usage
+## Authentication Functions
 
-Here are some examples how to manage and authenticate users:
+These sections show how to use the SDK to perform various authentication/authorization functions:
+
+1. [OTP Authentication](#otp-authentication)
+2. [Magic Link](#magic-link)
+3. [Enchanted Link](#enchanted-link)
+4. [OAuth](#oauth)
+5. [SSO/SAML](#ssosaml)
+6. [TOTP Authentication](#totp-authentication)
+7. [Passwords](#passwords)
+8. [Session Validation](#session-validation)
+9. [Roles & Permission Validation](#roles--permission-validation)
+10. [Logging Out](#logging-out)
+
+## API Managment Function
+
+These sections show how to use the SDK to perform permission and user management functions. You will need to create an instance of `DescopeClient` by following the [Setup](#setup-1) guide, before you can use any of these functions:
+
+1. [Manage Tenants](#manage-tenants)
+2. [Manage Users](#manage-users)
+3. [Manage Access Keys](#manage-access-keys)
+4. [Manage SSO Setting](#manage-sso-setting)
+5. [Manage Permissions](#manage-permissions)
+6. [Manage Roles](#manage-roles)
+7. [Query SSO Groups](#query-sso-groups)
+8. [Manage Flows](#manage-flows)
+9. [Manage JWTs](#manage-jwts)
+
+If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
+
+If you're performing end-to-end testing, check out the [Utils for your end to end (e2e) tests and integration tests](#utils-for-your-end-to-end-e2e-tests-and-integration-tests) section. You will need to use the `DescopeClient` object created under [Setup](#setup-1) guide.
+
+For rate limiting information, please confer to the [API Rate Limits](#api-rate-limits) section.
 
 ### OTP Authentication
 
@@ -445,7 +476,7 @@ tenants = tenants_resp["tenants"]
 
 ### Manage Users
 
-You can create, update, delete or load users, as well as search according to filters:
+You can create, update, delete or load users, as well as setting new password, expire password and search according to filters:
 
 ```Python
 # A user must have a login ID, other fields are optional.
@@ -511,6 +542,20 @@ users_resp = descope_client.mgmt.user.search_all(tenant_ids=["my-tenant-id"])
 users = users_resp["users"]
     for user in users:
         # Do something
+```
+
+#### Set or Expire User Password
+
+You can set or expire a user's password.
+Note: When setting a password, it will automatically be set as expired.
+The user will not be able log-in using an expired password, and will be required replace it on next login.
+
+```Python
+// Set a user's password
+descope_client.mgmt.user.setPassword('<login-id>', '<some-password>');
+
+// Or alternatively, expire a user password
+descope_client.mgmt.user.expirePassword('<login-id>');
 ```
 
 ### Manage Access Keys
@@ -777,9 +822,9 @@ pending_ref = resp["pendingRef"]
 # Note 2: In case of testing sign-in / sign-up operations with test users, need to make sure to generate the code prior calling the sign-in / sign-up operations.
 ```
 
-## API Rate limits
+## API Rate Limits
 
-Handle API rate limits by comparing the exception to the APIRateLimitExceeded exception, which includes the RateLimitParameters map with the key "Retry-After." This key indicates how many seconds until the next valid API call can take place. More information on Descope's rate limit is covered here: [Descope rate limit reference page](https://docs.descope.com/rate-limit)
+Handle API rate limits by comparing the exception to the APIRateLimitExceeded exception, which includes the RateLimitParameters map with the key "Retry-After." This key indicates how many seconds until the next valid API call can take place.
 
 ```python
 try:
