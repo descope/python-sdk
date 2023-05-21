@@ -52,6 +52,25 @@ class SSOSettings(AuthBase):
         )
         return response.json()
 
+    def delete_settings(
+        self,
+        tenant_id: str,
+    ):
+        """
+        Delete SSO setting for the provided tenant_id.
+
+        Args:
+        tenant_id (str): The tenant ID of the desired SSO Settings to delete
+
+        Raise:
+        AuthException: raised if configuration operation fails
+        """
+        self._auth.do_delete(
+            MgmtV1.sso_settings_path,
+            {"tenantId": tenant_id},
+            pswd=self._auth.management_key,
+        )
+
     def configure(
         self,
         tenant_id: str,

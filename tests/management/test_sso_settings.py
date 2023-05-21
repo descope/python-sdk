@@ -64,6 +64,43 @@ class TestSSOSettings(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+    def test_delete_settings(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flows
+        with patch("requests.delete") as mock_delete:
+            mock_delete.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.sso.delete_settings,
+                "tenant-id",
+            )
+
+        # Test success flow
+        with patch("requests.delete") as mock_delete:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+
+            mock_delete.return_value = network_resp
+            client.mgmt.sso.delete_settings("tenant-id")
+
+            mock_delete.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_settings_path}",
+                params={"tenantId": "tenant-id"},
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
     def test_configure(self):
         client = DescopeClient(
             self.dummy_project_id,
