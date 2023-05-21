@@ -296,6 +296,7 @@ class TestUser(common.DescopeTest):
             self.assertIsNone(self.client.mgmt.user.delete_all_test_users())
             mock_delete.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.user_delete_all_test_users_path}",
+                params=None,
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
