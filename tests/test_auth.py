@@ -12,7 +12,11 @@ from descope import (
     RateLimitException,
 )
 from descope.auth import Auth
-from descope.common import REFRESH_SESSION_TOKEN_NAME, SESSION_TOKEN_NAME
+from descope.common import (
+    DEFAULT_TIMEOUT_SECONDS,
+    REFRESH_SESSION_TOKEN_NAME,
+    SESSION_TOKEN_NAME,
+)
 
 from . import common
 
@@ -530,6 +534,26 @@ class TestAuth(common.DescopeTest):
             self.assertEqual(
                 the_exception.rate_limit_parameters,
                 {API_RATE_LIMIT_RETRY_AFTER_HEADER: 10},
+            )
+
+        # Test do_delete with params and pswd
+        with patch("requests.delete") as mock_delete:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+
+            mock_delete.return_value = network_resp
+            auth.do_delete("/a/b", params={"key": "value"}, pswd="pswd")
+
+            mock_delete.assert_called_with(
+                "http://127.0.0.1/a/b",
+                params={"key": "value"},
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{'pswd'}",
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Test _fetch_public_keys rate limit

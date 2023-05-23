@@ -25,7 +25,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.7"
-requests = "2.30.0" # First support for python 3.10
+requests = "2.31.0" # First support for python 3.10
 PyJWT = {version = "2.7.0", extras = ["crypto"]} # Latest secrutiy update
 email-validator = "==2.0.0.post2"
 
@@ -38,7 +38,7 @@ flake8-bugbear = "22.12.6"
 pytest-cov = "4.0.0"
 pytest = "7.3.1"
 black = "23.3.0"
-liccheck = "0.9.0"
+liccheck = "0.9.1"
 isort = "5.11.4"
 pep8-naming = "0.13.3"
 

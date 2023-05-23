@@ -126,9 +126,10 @@ class Auth:
         self._raise_from_response(response)
         return response
 
-    def do_delete(self, uri: str, pswd: str = None) -> requests.Response:
+    def do_delete(self, uri: str, params=None, pswd: str = None) -> requests.Response:
         response = requests.delete(
             f"{self.base_url}{uri}",
+            params=params,
             headers=self._get_default_headers(pswd),
             allow_redirects=False,
             verify=self.secure,
