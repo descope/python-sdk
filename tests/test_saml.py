@@ -62,7 +62,7 @@ class TestSAML(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params={"tenant": "tenant1", "redirectURL": "http://dummy.com"},
-                data=json.dumps({}),
+                json={},
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -107,9 +107,7 @@ class TestSAML(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:refresh",
                 },
                 params={"tenant": "tenant1", "redirectURL": "http://dummy.com"},
-                data=json.dumps(
-                    {"stepup": True, "customClaims": {"k1": "v1"}, "mfa": False}
-                ),
+                json={"stepup": True, "customClaims": {"k1": "v1"}, "mfa": False},
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -147,7 +145,7 @@ class TestSAML(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
-                data=json.dumps({"code": "c1"}),
+                json={"code": "c1"},
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,

@@ -124,82 +124,94 @@ class TestAuth(common.DescopeTest):
 
     def test_verify_delivery_method(self):
         self.assertEqual(
-            Auth.verify_delivery_method(DeliveryMethod.EMAIL, "dummy@dummy.com", None),
+            Auth.adjust_and_verify_delivery_method(
+                DeliveryMethod.EMAIL, "dummy@dummy.com", None
+            ),
             False,
         )
 
         self.assertEqual(
-            Auth.verify_delivery_method(
+            Auth.adjust_and_verify_delivery_method(
                 DeliveryMethod.EMAIL, "dummy@dummy.com", {"phone": ""}
             ),
             True,
         )
         self.assertEqual(
-            Auth.verify_delivery_method(
+            Auth.adjust_and_verify_delivery_method(
                 DeliveryMethod.EMAIL, "dummy@dummy.com", {"phone": ""}
             ),
             True,
         )
         self.assertEqual(
-            Auth.verify_delivery_method(
+            Auth.adjust_and_verify_delivery_method(
                 DeliveryMethod.EMAIL, "dummy@dummy.com", {"phone": ""}
             ),
             True,
         )
         self.assertEqual(
-            Auth.verify_delivery_method(DeliveryMethod.EMAIL, "", {"phone": ""}), False
+            Auth.adjust_and_verify_delivery_method(
+                DeliveryMethod.EMAIL, "", {"phone": ""}
+            ),
+            False,
         )
         self.assertEqual(
-            Auth.verify_delivery_method(
+            Auth.adjust_and_verify_delivery_method(
                 DeliveryMethod.EMAIL, "dummy@dummy", {"phone": ""}
             ),
             False,
         )
 
         self.assertEqual(
-            Auth.verify_delivery_method(
+            Auth.adjust_and_verify_delivery_method(
                 DeliveryMethod.SMS, "111111111111", {"email": ""}
             ),
             True,
         )
         self.assertEqual(
-            Auth.verify_delivery_method(
+            Auth.adjust_and_verify_delivery_method(
                 DeliveryMethod.SMS, "+111111111111", {"email": ""}
             ),
             True,
         )
         self.assertEqual(
-            Auth.verify_delivery_method(
+            Auth.adjust_and_verify_delivery_method(
                 DeliveryMethod.SMS, "++111111111111", {"email": ""}
             ),
             False,
         )
         self.assertEqual(
-            Auth.verify_delivery_method(DeliveryMethod.SMS, "asdsad", {"email": ""}),
+            Auth.adjust_and_verify_delivery_method(
+                DeliveryMethod.SMS, "asdsad", {"email": ""}
+            ),
             False,
         )
         self.assertEqual(
-            Auth.verify_delivery_method(DeliveryMethod.SMS, "", {"email": ""}), False
+            Auth.adjust_and_verify_delivery_method(
+                DeliveryMethod.SMS, "", {"email": ""}
+            ),
+            False,
         )
         self.assertEqual(
-            Auth.verify_delivery_method(
+            Auth.adjust_and_verify_delivery_method(
                 DeliveryMethod.SMS, "unvalid@phone.number", {"email": ""}
             ),
             False,
         )
 
         self.assertEqual(
-            Auth.verify_delivery_method(
+            Auth.adjust_and_verify_delivery_method(
                 DeliveryMethod.WHATSAPP, "111111111111", {"email": ""}
             ),
             True,
         )
         self.assertEqual(
-            Auth.verify_delivery_method(DeliveryMethod.WHATSAPP, "", {"email": ""}),
+            Auth.adjust_and_verify_delivery_method(
+                DeliveryMethod.WHATSAPP, "", {"email": ""}
+            ),
             False,
         )
         self.assertEqual(
-            Auth.verify_delivery_method(
+            Auth.adjust_and_verify_delivery_method(
                 DeliveryMethod.WHATSAPP, "unvalid@phone.number", {"email": ""}
             ),
             False,
@@ -209,7 +221,7 @@ class TestAuth(common.DescopeTest):
             DUMMY = 4
 
         self.assertEqual(
-            Auth.verify_delivery_method(
+            Auth.adjust_and_verify_delivery_method(
                 AAA.DUMMY, "unvalid@phone.number", {"phone": ""}
             ),
             False,
@@ -485,7 +497,7 @@ class TestAuth(common.DescopeTest):
                 API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"
             }
             with self.assertRaises(RateLimitException) as cm:
-                auth.do_get("http://test.com", False, None)
+                auth.do_get(uri="http://test.com", params=False, allow_redirects=None)
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, "E130429")
             self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)

@@ -82,7 +82,7 @@ class Permission(AuthBase):
         AuthException: raised if load operation fails
         """
         response = self._auth.do_get(
-            MgmtV1.permission_load_all_path,
+            uri=MgmtV1.permission_load_all_path,
             pswd=self._auth.management_key,
         )
         return response.json()

@@ -143,16 +143,14 @@ class TestSSOSettings(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "tenantId": "tenant-id",
-                        "idpURL": "https://idp.com",
-                        "entityId": "entity-id",
-                        "idpCert": "cert",
-                        "redirectURL": "https://redirect.com",
-                        "domain": "domain.com",
-                    }
-                ),
+                json={
+                    "tenantId": "tenant-id",
+                    "idpURL": "https://idp.com",
+                    "entityId": "entity-id",
+                    "idpCert": "cert",
+                    "redirectURL": "https://redirect.com",
+                    "domain": "domain.com",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -177,16 +175,14 @@ class TestSSOSettings(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "tenantId": "tenant-id",
-                        "idpURL": "https://idp.com",
-                        "entityId": "entity-id",
-                        "idpCert": "cert",
-                        "redirectURL": "https://redirect.com",
-                        "domain": None,
-                    }
-                ),
+                json={
+                    "tenantId": "tenant-id",
+                    "idpURL": "https://idp.com",
+                    "entityId": "entity-id",
+                    "idpCert": "cert",
+                    "redirectURL": "https://redirect.com",
+                    "domain": None,
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -211,16 +207,14 @@ class TestSSOSettings(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "tenantId": "tenant-id",
-                        "idpURL": "https://idp.com",
-                        "entityId": "entity-id",
-                        "idpCert": "cert",
-                        "redirectURL": None,
-                        "domain": "domain.com",
-                    }
-                ),
+                json={
+                    "tenantId": "tenant-id",
+                    "idpURL": "https://idp.com",
+                    "entityId": "entity-id",
+                    "idpCert": "cert",
+                    "redirectURL": None,
+                    "domain": "domain.com",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -260,12 +254,10 @@ class TestSSOSettings(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "tenantId": "tenant-id",
-                        "idpMetadataURL": "https://idp-meta.com",
-                    }
-                ),
+                json={
+                    "tenantId": "tenant-id",
+                    "idpMetadataURL": "https://idp-meta.com",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -307,18 +299,16 @@ class TestSSOSettings(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "tenantId": "tenant-id",
-                        "roleMappings": [{"groups": ["a", "b"], "roleName": "role"}],
-                        "attributeMapping": {
-                            "name": "UName",
-                            "email": None,
-                            "phoneNumber": None,
-                            "group": None,
-                        },
-                    }
-                ),
+                json={
+                    "tenantId": "tenant-id",
+                    "roleMappings": [{"groups": ["a", "b"], "roleName": "role"}],
+                    "attributeMapping": {
+                        "name": "UName",
+                        "email": None,
+                        "phoneNumber": None,
+                        "group": None,
+                    },
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,

@@ -121,17 +121,15 @@ class TestTOTP(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{refresh_token}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "dummy@dummy.com",
-                        "code": "1234",
-                        "loginOptions": {
-                            "stepup": True,
-                            "customClaims": None,
-                            "mfa": False,
-                        },
-                    }
-                ),
+                json={
+                    "loginId": "dummy@dummy.com",
+                    "code": "1234",
+                    "loginOptions": {
+                        "stepup": True,
+                        "customClaims": None,
+                        "mfa": False,
+                    },
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -172,7 +170,7 @@ class TestTOTP(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{valid_jwt_token}",
                 },
                 params=None,
-                data=json.dumps({"loginId": "dummy@dummy.com"}),
+                json={"loginId": "dummy@dummy.com"},
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,

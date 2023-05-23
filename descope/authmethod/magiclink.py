@@ -42,7 +42,7 @@ class MagicLink(AuthBase):
         if not user:
             user = {}
 
-        if not self._auth.verify_delivery_method(method, login_id, user):
+        if not self._auth.adjust_and_verify_delivery_method(method, login_id, user):
             raise AuthException(
                 400,
                 ERROR_TYPE_INVALID_ARGUMENT,

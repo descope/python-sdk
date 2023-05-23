@@ -1,4 +1,3 @@
-import json
 from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
@@ -51,11 +50,9 @@ class TestFlow(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "flowId": "test",
-                    }
-                ),
+                json={
+                    "flowId": "test",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -93,13 +90,11 @@ class TestFlow(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "flowId": "name",
-                        "flow": {"name": "test"},
-                        "screens": [{"id": "test"}],
-                    }
-                ),
+                json={
+                    "flowId": "name",
+                    "flow": {"name": "test"},
+                    "screens": [{"id": "test"}],
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -129,7 +124,7 @@ class TestFlow(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps({}),
+                json={},
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -161,7 +156,7 @@ class TestFlow(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps({"theme": {"id": "test"}}),
+                json={"theme": {"id": "test"}},
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
