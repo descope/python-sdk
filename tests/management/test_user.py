@@ -486,6 +486,7 @@ class TestUser(common.DescopeTest):
                 params={"loginId": "valid-id", "provider": "p1"},
                 allow_redirects=None,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_activate(self):
