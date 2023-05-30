@@ -15,6 +15,7 @@ class MgmtV1:
     user_delete_all_test_users_path = "/v1/mgmt/user/test/delete/all"
     user_load_path = "/v1/mgmt/user"
     users_search_path = "/v1/mgmt/user/search"
+    user_get_provider_token = "/v1/mgmt/user/provider/token"
     user_update_status_path = "/v1/mgmt/user/update/status"
     user_update_email_path = "/v1/mgmt/user/update/email"
     user_update_phone_path = "/v1/mgmt/user/update/phone"
