@@ -359,6 +359,35 @@ class User(AuthBase):
         )
         return response.json()
 
+    def get_provider_token(
+        self,
+        login_id: str,
+        provider: str,
+    ) -> dict:
+        """
+        Get the provider token for the given login ID.
+        Only users that sign-in using social providers will have token.
+        Note: The 'Manage tokens from provider' setting must be enabled.
+
+        Args:
+        login_id (str): The login ID of the user.
+        provider (str): The provider name (google, facebook, etc').
+
+        Return value (dict):
+        Return dict in the format
+             {"provider": "", "providerUserId": "", "accessToken": "", "expiration": "", "scopes": "[]"}
+        Containing the provider token of the given user and provider.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._auth.do_get(
+            MgmtV1.user_get_provider_token,
+            {"loginId": login_id, "provider": provider},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
     def activate(
         self,
         login_id: str,
