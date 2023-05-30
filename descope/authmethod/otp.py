@@ -1,3 +1,4 @@
+from descope._auth_base import AuthBase
 from descope.auth import Auth
 from descope.common import (
     REFRESH_SESSION_COOKIE_NAME,
@@ -9,12 +10,7 @@ from descope.common import (
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
-class OTP:
-    _auth: Auth
-
-    def __init__(self, auth: Auth):
-        self._auth = auth
-
+class OTP(AuthBase):
     def sign_in(
         self,
         method: DeliveryMethod,
@@ -68,7 +64,7 @@ class OTP:
         if not user:
             user = {}
 
-        if not self._auth.verify_delivery_method(method, login_id, user):
+        if not self._auth.adjust_and_verify_delivery_method(method, login_id, user):
             raise AuthException(
                 400,
                 ERROR_TYPE_INVALID_ARGUMENT,
@@ -137,7 +133,14 @@ class OTP:
         )
         return jwt_response
 
-    def update_user_email(self, login_id: str, email: str, refresh_token: str) -> str:
+    def update_user_email(
+        self,
+        login_id: str,
+        email: str,
+        refresh_token: str,
+        add_to_login_ids: bool = False,
+        on_merge_use_existing: bool = False,
+    ) -> str:
         """
         Update the email address of an end user, after verifying the authenticity of the end user using OTP.
 
@@ -158,12 +161,20 @@ class OTP:
         Auth.validate_email(email)
 
         uri = EndpointsV1.update_user_email_otp_path
-        body = OTP._compose_update_user_email_body(login_id, email)
+        body = OTP._compose_update_user_email_body(
+            login_id, email, add_to_login_ids, on_merge_use_existing
+        )
         response = self._auth.do_post(uri, body, None, refresh_token)
         return Auth.extract_masked_address(response.json(), DeliveryMethod.EMAIL)
 
     def update_user_phone(
-        self, method: DeliveryMethod, login_id: str, phone: str, refresh_token: str
+        self,
+        method: DeliveryMethod,
+        login_id: str,
+        phone: str,
+        refresh_token: str,
+        add_to_login_ids: bool = False,
+        on_merge_use_existing: bool = False,
     ) -> str:
         """
         Update the phone number of an existing end user, after verifying the authenticity of the end user using OTP.
@@ -173,6 +184,9 @@ class OTP:
         login_id (str): The login ID of the user whose information is being updated
         phone (str): The new phone number. If a phone number already exists for this end user, it will be overwritten
         refresh_token (str): The session's refresh token (used for OTP verification)
+        add_to_login_ids (bool): Defaults to false, determine whether to add this email to the login ids of hte user or not
+        on_merge_use_existing (bool): Defaults to false, In case add_to_login_ids and there is such a user already
+            determine whether keep the existing user, or this new one
 
         Raise:
         AuthException: raised if OTP verification fails or if token verification fails
@@ -186,7 +200,9 @@ class OTP:
         Auth.validate_phone(method, phone)
 
         uri = OTP._compose_update_phone_url(method)
-        body = OTP._compose_update_user_phone_body(login_id, phone)
+        body = OTP._compose_update_user_phone_body(
+            login_id, phone, add_to_login_ids, on_merge_use_existing
+        )
         response = self._auth.do_post(uri, body, None, refresh_token)
         return Auth.extract_masked_address(response.json(), DeliveryMethod.SMS)
 
@@ -232,9 +248,23 @@ class OTP:
         return {"loginId": login_id, "code": code}
 
     @staticmethod
-    def _compose_update_user_email_body(login_id: str, email: str) -> dict:
-        return {"loginId": login_id, "email": email}
+    def _compose_update_user_email_body(
+        login_id: str, email: str, add_to_login_ids: bool, on_merge_use_existing: bool
+    ) -> dict:
+        return {
+            "loginId": login_id,
+            "email": email,
+            "addToLoginIDs": add_to_login_ids,
+            "onMergeUseExisting": on_merge_use_existing,
+        }
 
     @staticmethod
-    def _compose_update_user_phone_body(login_id: str, phone: str) -> dict:
-        return {"loginId": login_id, "phone": phone}
+    def _compose_update_user_phone_body(
+        login_id: str, phone: str, add_to_login_ids: bool, on_merge_use_existing: bool
+    ) -> dict:
+        return {
+            "loginId": login_id,
+            "phone": phone,
+            "addToLoginIDs": add_to_login_ids,
+            "onMergeUseExisting": on_merge_use_existing,
+        }

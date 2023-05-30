@@ -1,7 +1,7 @@
-import json
 from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
+from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
 from .. import common
@@ -50,13 +50,12 @@ class TestGroup(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "tenantId": "someTenantId",
-                    }
-                ),
+                json={
+                    "tenantId": "someTenantId",
+                },
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_load_all_groups_for_members(self):
@@ -91,15 +90,14 @@ class TestGroup(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "tenantId": "someTenantId",
-                        "loginIds": ["three", "four"],
-                        "userIds": ["one", "two"],
-                    }
-                ),
+                json={
+                    "tenantId": "someTenantId",
+                    "loginIds": ["three", "four"],
+                    "userIds": ["one", "two"],
+                },
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_load_all_group_members(self):
@@ -133,12 +131,11 @@ class TestGroup(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "tenantId": "someTenantId",
-                        "groupId": "someGroupId",
-                    }
-                ),
+                json={
+                    "tenantId": "someTenantId",
+                    "groupId": "someGroupId",
+                },
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )

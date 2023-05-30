@@ -6,7 +6,7 @@ from unittest.mock import patch
 from descope import AuthException
 from descope.auth import Auth
 from descope.authmethod.oauth import OAuth
-from descope.common import EndpointsV1, LoginOptions
+from descope.common import DEFAULT_TIMEOUT_SECONDS, EndpointsV1, LoginOptions
 
 from . import common
 
@@ -76,9 +76,10 @@ class TestOAuth(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params={"provider": "facebook"},
-                data=json.dumps({}),
+                json={},
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_oauth_start_with_login_options(self):
@@ -108,11 +109,10 @@ class TestOAuth(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:refresh",
                 },
                 params={"provider": "facebook"},
-                data=json.dumps(
-                    {"stepup": True, "customClaims": {"k1": "v1"}, "mfa": False}
-                ),
+                json={"stepup": True, "customClaims": {"k1": "v1"}, "mfa": False},
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_compose_exchange_params(self):
@@ -147,9 +147,10 @@ class TestOAuth(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
-                data=json.dumps({"code": "c1"}),
+                json={"code": "c1"},
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
 

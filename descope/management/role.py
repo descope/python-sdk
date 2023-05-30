@@ -1,20 +1,15 @@
 from typing import List
 
-from descope.auth import Auth
+from descope._auth_base import AuthBase
 from descope.management.common import MgmtV1
 
 
-class Role:
-    _auth: Auth
-
-    def __init__(self, auth: Auth):
-        self._auth = auth
-
+class Role(AuthBase):
     def create(
         self,
         name: str,
         description: str = None,
-        permission_names: List[str] = [],
+        permission_names: List[str] = None,
     ):
         """
         Create a new role.
@@ -27,6 +22,8 @@ class Role:
         Raise:
         AuthException: raised if creation operation fails
         """
+        permission_names = [] if permission_names is None else permission_names
+
         self._auth.do_post(
             MgmtV1.role_create_path,
             {
@@ -42,7 +39,7 @@ class Role:
         name: str,
         new_name: str,
         description: str = None,
-        permission_names: List[str] = [],
+        permission_names: List[str] = None,
     ):
         """
         Update an existing role with the given various fields. IMPORTANT: All parameters are used as overrides
@@ -57,6 +54,7 @@ class Role:
         Raise:
         AuthException: raised if update operation fails
         """
+        permission_names = [] if permission_names is None else permission_names
         self._auth.do_post(
             MgmtV1.role_update_path,
             {
@@ -102,7 +100,7 @@ class Role:
         AuthException: raised if load operation fails
         """
         response = self._auth.do_get(
-            MgmtV1.role_load_all_path,
+            uri=MgmtV1.role_load_all_path,
             pswd=self._auth.management_key,
         )
         return response.json()

@@ -3,6 +3,7 @@ from unittest import mock
 from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
+from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
 from .. import common
@@ -57,8 +58,9 @@ class TestUser(common.DescopeTest):
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
-                data=json.dumps({"jwt": "test", "customClaims": {"k1": "v1"}}),
+                json={"jwt": "test", "customClaims": {"k1": "v1"}},
                 allow_redirects=False,
                 verify=True,
                 params=None,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )

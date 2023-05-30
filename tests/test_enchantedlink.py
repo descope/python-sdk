@@ -6,7 +6,12 @@ from unittest.mock import patch
 from descope import SESSION_COOKIE_NAME, AuthException
 from descope.auth import Auth
 from descope.authmethod.enchantedlink import EnchantedLink  # noqa: F401
-from descope.common import REFRESH_SESSION_COOKIE_NAME, EndpointsV1, LoginOptions
+from descope.common import (
+    DEFAULT_TIMEOUT_SECONDS,
+    REFRESH_SESSION_COOKIE_NAME,
+    EndpointsV1,
+    LoginOptions,
+)
 
 from . import common
 
@@ -70,8 +75,13 @@ class TestEnchantedLink(common.DescopeTest):
         )
 
         self.assertEqual(
-            EnchantedLink._compose_update_user_email_body("id1", "email1"),
-            {"loginId": "id1", "email": "email1"},
+            EnchantedLink._compose_update_user_email_body("id1", "email1", True, False),
+            {
+                "loginId": "id1",
+                "email": "email1",
+                "addToLoginIDs": True,
+                "onMergeUseExisting": False,
+            },
         )
 
         self.assertEqual(
@@ -107,15 +117,14 @@ class TestEnchantedLink(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "dummy@dummy.com",
-                        "URI": "http://test.me",
-                        "loginOptions": {},
-                    }
-                ),
+                json={
+                    "loginId": "dummy@dummy.com",
+                    "URI": "http://test.me",
+                    "loginOptions": {},
+                },
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(res["pendingRef"], "aaaa")
             self.assertEqual(res["linkId"], "24")
@@ -136,19 +145,18 @@ class TestEnchantedLink(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{refresh_token}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "dummy@dummy.com",
-                        "URI": "http://test.me",
-                        "loginOptions": {
-                            "stepup": True,
-                            "customClaims": None,
-                            "mfa": False,
-                        },
-                    }
-                ),
+                json={
+                    "loginId": "dummy@dummy.com",
+                    "URI": "http://test.me",
+                    "loginOptions": {
+                        "stepup": True,
+                        "customClaims": None,
+                        "mfa": False,
+                    },
+                },
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_sign_in_with_login_options(self):
@@ -168,19 +176,18 @@ class TestEnchantedLink(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:refresh",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "dummy@dummy.com",
-                        "URI": "http://test.me",
-                        "loginOptions": {
-                            "stepup": True,
-                            "customClaims": {"k1": "v1"},
-                            "mfa": False,
-                        },
-                    }
-                ),
+                json={
+                    "loginId": "dummy@dummy.com",
+                    "URI": "http://test.me",
+                    "loginOptions": {
+                        "stepup": True,
+                        "customClaims": {"k1": "v1"},
+                        "mfa": False,
+                    },
+                },
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_sign_up(self):
@@ -213,16 +220,15 @@ class TestEnchantedLink(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "dummy@dummy.com",
-                        "URI": "http://test.me",
-                        "user": {"username": "user1", "email": "dummy@dummy.com"},
-                        "email": "dummy@dummy.com",
-                    }
-                ),
+                json={
+                    "loginId": "dummy@dummy.com",
+                    "URI": "http://test.me",
+                    "user": {"username": "user1", "email": "dummy@dummy.com"},
+                    "email": "dummy@dummy.com",
+                },
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(res["pendingRef"], "aaaa")
 
@@ -243,16 +249,15 @@ class TestEnchantedLink(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "dummy@dummy.com",
-                        "URI": "http://test.me",
-                        "user": {"email": "dummy@dummy.com"},
-                        "email": "dummy@dummy.com",
-                    }
-                ),
+                json={
+                    "loginId": "dummy@dummy.com",
+                    "URI": "http://test.me",
+                    "user": {"email": "dummy@dummy.com"},
+                    "email": "dummy@dummy.com",
+                },
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(res["pendingRef"], "aaaa")
 
@@ -275,15 +280,14 @@ class TestEnchantedLink(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "dummy@dummy.com",
-                        "URI": "http://test.me",
-                        "loginOptions": {},
-                    }
-                ),
+                json={
+                    "loginId": "dummy@dummy.com",
+                    "URI": "http://test.me",
+                    "loginOptions": {},
+                },
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_verify(self):

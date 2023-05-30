@@ -6,7 +6,12 @@ from unittest.mock import patch
 from descope import SESSION_COOKIE_NAME, AuthException, DeliveryMethod
 from descope.auth import Auth
 from descope.authmethod.magiclink import MagicLink  # noqa: F401
-from descope.common import REFRESH_SESSION_COOKIE_NAME, EndpointsV1, LoginOptions
+from descope.common import (
+    DEFAULT_TIMEOUT_SECONDS,
+    REFRESH_SESSION_COOKIE_NAME,
+    EndpointsV1,
+    LoginOptions,
+)
 
 from . import common
 
@@ -85,13 +90,23 @@ class TestMagicLink(common.DescopeTest):
         )
 
         self.assertEqual(
-            MagicLink._compose_update_user_email_body("id1", "email1"),
-            {"loginId": "id1", "email": "email1"},
+            MagicLink._compose_update_user_email_body("id1", "email1", True, False),
+            {
+                "loginId": "id1",
+                "email": "email1",
+                "addToLoginIDs": True,
+                "onMergeUseExisting": False,
+            },
         )
 
         self.assertEqual(
-            MagicLink._compose_update_user_phone_body("id1", "+11111111"),
-            {"loginId": "id1", "phone": "+11111111"},
+            MagicLink._compose_update_user_phone_body("id1", "+11111111", False, True),
+            {
+                "loginId": "id1",
+                "phone": "+11111111",
+                "addToLoginIDs": False,
+                "onMergeUseExisting": True,
+            },
         )
 
     def test_sign_in(self):
@@ -156,19 +171,18 @@ class TestMagicLink(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{refresh_token}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "dummy@dummy.com",
-                        "URI": "http://test.me",
-                        "loginOptions": {
-                            "stepup": True,
-                            "customClaims": None,
-                            "mfa": False,
-                        },
-                    }
-                ),
+                json={
+                    "loginId": "dummy@dummy.com",
+                    "URI": "http://test.me",
+                    "loginOptions": {
+                        "stepup": True,
+                        "customClaims": None,
+                        "mfa": False,
+                    },
+                },
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_sign_up(self):
@@ -244,21 +258,20 @@ class TestMagicLink(common.DescopeTest):
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
-                data=json.dumps(
-                    {
-                        "loginId": "dummy@dummy.com",
-                        "URI": "http://test.me",
-                        "user": {
-                            "username": "",
-                            "name": "john",
-                            "phone": "972525555555",
-                            "email": "dummy@dummy.com",
-                        },
+                json={
+                    "loginId": "dummy@dummy.com",
+                    "URI": "http://test.me",
+                    "user": {
+                        "username": "",
+                        "name": "john",
+                        "phone": "972525555555",
                         "email": "dummy@dummy.com",
-                    }
-                ),
+                    },
+                    "email": "dummy@dummy.com",
+                },
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
                 params=None,
             )
 
@@ -283,16 +296,15 @@ class TestMagicLink(common.DescopeTest):
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
-                data=json.dumps(
-                    {
-                        "loginId": "dummy@dummy.com",
-                        "URI": "http://test.me",
-                        "user": {"email": "dummy@dummy.com"},
-                        "email": "dummy@dummy.com",
-                    }
-                ),
+                json={
+                    "loginId": "dummy@dummy.com",
+                    "URI": "http://test.me",
+                    "user": {"email": "dummy@dummy.com"},
+                    "email": "dummy@dummy.com",
+                },
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
                 params=None,
             )
 

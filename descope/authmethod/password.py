@@ -1,14 +1,9 @@
-from descope.auth import Auth
+from descope._auth_base import AuthBase
 from descope.common import REFRESH_SESSION_COOKIE_NAME, EndpointsV1
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
-class Password:
-    _auth: Auth
-
-    def __init__(self, auth):
-        self._auth = auth
-
+class Password(AuthBase):
     def sign_up(self, login_id: str, password: str, user: dict = None) -> dict:
         """
         Sign up (create) a new user using a login ID and password.
@@ -218,7 +213,7 @@ class Password:
         AuthException: raised if get policy operation fails
         """
 
-        response = self._auth.do_get(EndpointsV1.password_policy_path)
+        response = self._auth.do_get(uri=EndpointsV1.password_policy_path)
         return response.json()
 
     @staticmethod

@@ -3,6 +3,7 @@ from unittest import mock
 from unittest.mock import patch
 
 from descope import AssociatedTenant, AuthException, DescopeClient
+from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
 from .. import common
@@ -65,19 +66,18 @@ class TestAccessKey(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "name": "key-name",
-                        "expireTime": 123456789,
-                        "roleNames": [],
-                        "keyTenants": [
-                            {"tenantId": "tenant1", "roleNames": []},
-                            {"tenantId": "tenant2", "roleNames": ["role1", "role2"]},
-                        ],
-                    }
-                ),
+                json={
+                    "name": "key-name",
+                    "expireTime": 123456789,
+                    "roleNames": [],
+                    "keyTenants": [
+                        {"tenantId": "tenant1", "roleNames": []},
+                        {"tenantId": "tenant2", "roleNames": ["role1", "role2"]},
+                    ],
+                },
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_load(self):
@@ -115,6 +115,7 @@ class TestAccessKey(common.DescopeTest):
                 params={"id": "key-id"},
                 allow_redirects=None,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_search_all_users(self):
@@ -154,13 +155,12 @@ class TestAccessKey(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "tenantIds": ["t1, t2"],
-                    }
-                ),
+                json={
+                    "tenantIds": ["t1, t2"],
+                },
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_update(self):
@@ -197,14 +197,13 @@ class TestAccessKey(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "id": "key-id",
-                        "name": "new-name",
-                    }
-                ),
+                json={
+                    "id": "key-id",
+                    "name": "new-name",
+                },
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_deactivate(self):
@@ -235,13 +234,12 @@ class TestAccessKey(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "id": "ak1",
-                    }
-                ),
+                json={
+                    "id": "ak1",
+                },
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_activate(self):
@@ -272,13 +270,12 @@ class TestAccessKey(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "id": "ak1",
-                    }
-                ),
+                json={
+                    "id": "ak1",
+                },
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_delete(self):
@@ -309,11 +306,10 @@ class TestAccessKey(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "id": "ak1",
-                    }
-                ),
+                json={
+                    "id": "ak1",
+                },
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )

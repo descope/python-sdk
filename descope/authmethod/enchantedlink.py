@@ -2,6 +2,7 @@ import string
 
 import requests
 
+from descope._auth_base import AuthBase
 from descope.auth import Auth
 from descope.common import (
     REFRESH_SESSION_COOKIE_NAME,
@@ -13,12 +14,7 @@ from descope.common import (
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
-class EnchantedLink:
-    _auth: Auth
-
-    def __init__(self, auth: Auth):
-        self._auth = auth
-
+class EnchantedLink(AuthBase):
     def sign_in(
         self,
         login_id: str,
@@ -45,7 +41,9 @@ class EnchantedLink:
         if not user:
             user = {}
 
-        if not self._auth.verify_delivery_method(DeliveryMethod.EMAIL, login_id, user):
+        if not self._auth.adjust_and_verify_delivery_method(
+            DeliveryMethod.EMAIL, login_id, user
+        ):
             raise AuthException(
                 400,
                 ERROR_TYPE_INVALID_ARGUMENT,
@@ -79,7 +77,14 @@ class EnchantedLink:
         body = EnchantedLink._compose_verify_body(token)
         self._auth.do_post(uri, body, None)
 
-    def update_user_email(self, login_id: str, email: str, refresh_token: str) -> dict:
+    def update_user_email(
+        self,
+        login_id: str,
+        email: str,
+        refresh_token: str,
+        add_to_login_ids: bool = False,
+        on_merge_use_existing: bool = False,
+    ) -> dict:
         if not login_id:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
@@ -87,7 +92,9 @@ class EnchantedLink:
 
         Auth.validate_email(email)
 
-        body = EnchantedLink._compose_update_user_email_body(login_id, email)
+        body = EnchantedLink._compose_update_user_email_body(
+            login_id, email, add_to_login_ids, on_merge_use_existing
+        )
         uri = EndpointsV1.update_user_email_otp_path
         response = self._auth.do_post(uri, body, None, refresh_token)
         return EnchantedLink._get_pending_ref_from_response(response)
@@ -141,8 +148,15 @@ class EnchantedLink:
         return {"token": token}
 
     @staticmethod
-    def _compose_update_user_email_body(login_id: str, email: str) -> dict:
-        return {"loginId": login_id, "email": email}
+    def _compose_update_user_email_body(
+        login_id: str, email: str, add_to_login_ids: bool, on_merge_use_existing: bool
+    ) -> dict:
+        return {
+            "loginId": login_id,
+            "email": email,
+            "addToLoginIDs": add_to_login_ids,
+            "onMergeUseExisting": on_merge_use_existing,
+        }
 
     @staticmethod
     def _compose_get_session_body(pending_ref: str) -> dict:

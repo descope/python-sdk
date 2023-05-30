@@ -1,15 +1,10 @@
 from typing import List
 
-from descope.auth import Auth
+from descope._auth_base import AuthBase
 from descope.management.common import MgmtV1
 
 
-class Group:
-    _auth: Auth
-
-    def __init__(self, auth: Auth):
-        self._auth = auth
-
+class Group(AuthBase):
     def load_all_groups(
         self,
         tenant_id: str,
@@ -52,8 +47,8 @@ class Group:
     def load_all_groups_for_members(
         self,
         tenant_id: str,
-        user_ids: List[str] = [],
-        login_ids: List[str] = [],
+        user_ids: List[str] = None,
+        login_ids: List[str] = None,
     ) -> dict:
         """
         Load all groups for the provided user IDs or login IDs.
@@ -83,6 +78,9 @@ class Group:
         Raise:
         AuthException: raised if load operation fails
         """
+        user_ids = [] if user_ids is None else user_ids
+        login_ids = [] if login_ids is None else login_ids
+
         response = self._auth.do_post(
             MgmtV1.group_load_all_for_member_path,
             {

@@ -3,6 +3,7 @@ from unittest import mock
 from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
+from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
 from .. import common
@@ -51,15 +52,14 @@ class TestRole(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "name": "R1",
-                        "description": "Something",
-                        "permissionNames": ["P1"],
-                    }
-                ),
+                json={
+                    "name": "R1",
+                    "description": "Something",
+                    "permissionNames": ["P1"],
+                },
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_update(self):
@@ -98,16 +98,15 @@ class TestRole(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "name": "name",
-                        "newName": "new-name",
-                        "description": "new-description",
-                        "permissionNames": ["P1", "P2"],
-                    }
-                ),
+                json={
+                    "name": "name",
+                    "newName": "new-name",
+                    "description": "new-description",
+                    "permissionNames": ["P1", "P2"],
+                },
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_delete(self):
@@ -138,13 +137,12 @@ class TestRole(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "name": "name",
-                    }
-                ),
+                json={
+                    "name": "name",
+                },
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_load_all(self):
@@ -193,4 +191,5 @@ class TestRole(common.DescopeTest):
                 params=None,
                 allow_redirects=None,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )

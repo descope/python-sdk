@@ -1,6 +1,6 @@
 from typing import List
 
-from descope.auth import Auth
+from descope._auth_base import AuthBase
 from descope.management.common import MgmtV1
 
 
@@ -28,11 +28,48 @@ class AttributeMapping:
         self.group = group
 
 
-class SSOSettings:
-    _auth: Auth
+class SSOSettings(AuthBase):
+    def get_settings(
+        self,
+        tenant_id: str,
+    ) -> dict:
+        """
+        Get SSO setting for the provided tenant_id.
 
-    def __init__(self, auth: Auth):
-        self._auth = auth
+        Args:
+        tenant_id (str): The tenant ID of the desired SSO Settings
+
+        Return value (dict):
+        Containing the loaded SSO settings information.
+
+        Raise:
+        AuthException: raised if configuration operation fails
+        """
+        response = self._auth.do_get(
+            uri=MgmtV1.sso_settings_path,
+            params={"tenantId": tenant_id},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    def delete_settings(
+        self,
+        tenant_id: str,
+    ):
+        """
+        Delete SSO setting for the provided tenant_id.
+
+        Args:
+        tenant_id (str): The tenant ID of the desired SSO Settings to delete
+
+        Raise:
+        AuthException: raised if configuration operation fails
+        """
+        self._auth.do_delete(
+            MgmtV1.sso_settings_path,
+            {"tenantId": tenant_id},
+            pswd=self._auth.management_key,
+        )
 
     def configure(
         self,
@@ -58,7 +95,7 @@ class SSOSettings:
         AuthException: raised if configuration operation fails
         """
         self._auth.do_post(
-            MgmtV1.sso_configure_path,
+            MgmtV1.sso_settings_path,
             SSOSettings._compose_configure_body(
                 tenant_id, idp_url, entity_id, idp_cert, redirect_url, domain
             ),
@@ -89,8 +126,8 @@ class SSOSettings:
     def mapping(
         self,
         tenant_id: str,
-        role_mappings: List[RoleMapping] = [],
-        attribute_mapping: AttributeMapping = [],
+        role_mappings: List[RoleMapping] = None,
+        attribute_mapping: AttributeMapping = None,
     ):
         """
         Configure SSO role mapping from the IDP groups to the Descope roles.
@@ -103,6 +140,9 @@ class SSOSettings:
         Raise:
         AuthException: raised if configuration operation fails
         """
+        role_mappings = [] if role_mappings is None else role_mappings
+        attribute_mapping = [] if attribute_mapping is None else attribute_mapping
+
         self._auth.do_post(
             MgmtV1.sso_mapping_path,
             SSOSettings._compose_mapping_body(

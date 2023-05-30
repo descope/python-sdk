@@ -12,7 +12,11 @@ from descope import (
     RateLimitException,
 )
 from descope.auth import Auth
-from descope.common import REFRESH_SESSION_TOKEN_NAME, SESSION_TOKEN_NAME
+from descope.common import (
+    DEFAULT_TIMEOUT_SECONDS,
+    REFRESH_SESSION_TOKEN_NAME,
+    SESSION_TOKEN_NAME,
+)
 
 from . import common
 
@@ -120,82 +124,94 @@ class TestAuth(common.DescopeTest):
 
     def test_verify_delivery_method(self):
         self.assertEqual(
-            Auth.verify_delivery_method(DeliveryMethod.EMAIL, "dummy@dummy.com", None),
+            Auth.adjust_and_verify_delivery_method(
+                DeliveryMethod.EMAIL, "dummy@dummy.com", None
+            ),
             False,
         )
 
         self.assertEqual(
-            Auth.verify_delivery_method(
+            Auth.adjust_and_verify_delivery_method(
                 DeliveryMethod.EMAIL, "dummy@dummy.com", {"phone": ""}
             ),
             True,
         )
         self.assertEqual(
-            Auth.verify_delivery_method(
+            Auth.adjust_and_verify_delivery_method(
                 DeliveryMethod.EMAIL, "dummy@dummy.com", {"phone": ""}
             ),
             True,
         )
         self.assertEqual(
-            Auth.verify_delivery_method(
+            Auth.adjust_and_verify_delivery_method(
                 DeliveryMethod.EMAIL, "dummy@dummy.com", {"phone": ""}
             ),
             True,
         )
         self.assertEqual(
-            Auth.verify_delivery_method(DeliveryMethod.EMAIL, "", {"phone": ""}), False
+            Auth.adjust_and_verify_delivery_method(
+                DeliveryMethod.EMAIL, "", {"phone": ""}
+            ),
+            False,
         )
         self.assertEqual(
-            Auth.verify_delivery_method(
+            Auth.adjust_and_verify_delivery_method(
                 DeliveryMethod.EMAIL, "dummy@dummy", {"phone": ""}
             ),
             False,
         )
 
         self.assertEqual(
-            Auth.verify_delivery_method(
+            Auth.adjust_and_verify_delivery_method(
                 DeliveryMethod.SMS, "111111111111", {"email": ""}
             ),
             True,
         )
         self.assertEqual(
-            Auth.verify_delivery_method(
+            Auth.adjust_and_verify_delivery_method(
                 DeliveryMethod.SMS, "+111111111111", {"email": ""}
             ),
             True,
         )
         self.assertEqual(
-            Auth.verify_delivery_method(
+            Auth.adjust_and_verify_delivery_method(
                 DeliveryMethod.SMS, "++111111111111", {"email": ""}
             ),
             False,
         )
         self.assertEqual(
-            Auth.verify_delivery_method(DeliveryMethod.SMS, "asdsad", {"email": ""}),
+            Auth.adjust_and_verify_delivery_method(
+                DeliveryMethod.SMS, "asdsad", {"email": ""}
+            ),
             False,
         )
         self.assertEqual(
-            Auth.verify_delivery_method(DeliveryMethod.SMS, "", {"email": ""}), False
+            Auth.adjust_and_verify_delivery_method(
+                DeliveryMethod.SMS, "", {"email": ""}
+            ),
+            False,
         )
         self.assertEqual(
-            Auth.verify_delivery_method(
+            Auth.adjust_and_verify_delivery_method(
                 DeliveryMethod.SMS, "unvalid@phone.number", {"email": ""}
             ),
             False,
         )
 
         self.assertEqual(
-            Auth.verify_delivery_method(
+            Auth.adjust_and_verify_delivery_method(
                 DeliveryMethod.WHATSAPP, "111111111111", {"email": ""}
             ),
             True,
         )
         self.assertEqual(
-            Auth.verify_delivery_method(DeliveryMethod.WHATSAPP, "", {"email": ""}),
+            Auth.adjust_and_verify_delivery_method(
+                DeliveryMethod.WHATSAPP, "", {"email": ""}
+            ),
             False,
         )
         self.assertEqual(
-            Auth.verify_delivery_method(
+            Auth.adjust_and_verify_delivery_method(
                 DeliveryMethod.WHATSAPP, "unvalid@phone.number", {"email": ""}
             ),
             False,
@@ -205,7 +221,7 @@ class TestAuth(common.DescopeTest):
             DUMMY = 4
 
         self.assertEqual(
-            Auth.verify_delivery_method(
+            Auth.adjust_and_verify_delivery_method(
                 AAA.DUMMY, "unvalid@phone.number", {"phone": ""}
             ),
             False,
@@ -354,7 +370,13 @@ class TestAuth(common.DescopeTest):
     def test_adjust_properties(self):
         self.assertEqual(
             Auth.adjust_properties(self, jwt_response={}, user_jwt={}),
-            {"keyId": None, "projectId": ""},
+            {
+                "keyId": "",
+                "permissions": [],
+                "projectId": "",
+                "roles": [],
+                "tenants": {},
+            },
         )
 
         jwt_response = {
@@ -475,7 +497,7 @@ class TestAuth(common.DescopeTest):
                 API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"
             }
             with self.assertRaises(RateLimitException) as cm:
-                auth.do_get("http://test.com", False, None)
+                auth.do_get(uri="http://test.com", params=False, allow_redirects=None)
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, "E130429")
             self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
@@ -512,6 +534,26 @@ class TestAuth(common.DescopeTest):
             self.assertEqual(
                 the_exception.rate_limit_parameters,
                 {API_RATE_LIMIT_RETRY_AFTER_HEADER: 10},
+            )
+
+        # Test do_delete with params and pswd
+        with patch("requests.delete") as mock_delete:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+
+            mock_delete.return_value = network_resp
+            auth.do_delete("/a/b", params={"key": "value"}, pswd="pswd")
+
+            mock_delete.assert_called_with(
+                "http://127.0.0.1/a/b",
+                params={"key": "value"},
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{'pswd'}",
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Test _fetch_public_keys rate limit

@@ -1,20 +1,15 @@
 from typing import List
 
-from descope.auth import Auth
+from descope._auth_base import AuthBase
 from descope.management.common import MgmtV1
 
 
-class Tenant:
-    _auth: Auth
-
-    def __init__(self, auth: Auth):
-        self._auth = auth
-
+class Tenant(AuthBase):
     def create(
         self,
         name: str,
         id: str = None,
-        self_provisioning_domains: List[str] = [],
+        self_provisioning_domains: List[str] = None,
     ) -> dict:
         """
         Create a new tenant with the given name. Tenant IDs are provisioned automatically, but can be provided
@@ -33,6 +28,10 @@ class Tenant:
         Raise:
         AuthException: raised if creation operation fails
         """
+        self_provisioning_domains = (
+            [] if self_provisioning_domains is None else self_provisioning_domains
+        )
+
         uri = MgmtV1.tenant_create_path
         response = self._auth.do_post(
             uri,
@@ -45,7 +44,7 @@ class Tenant:
         self,
         id: str,
         name: str,
-        self_provisioning_domains: List[str] = [],
+        self_provisioning_domains: List[str] = None,
     ):
         """
         Update an existing tenant with the given name and domains. IMPORTANT: All parameters are used as overrides
@@ -60,6 +59,10 @@ class Tenant:
         Raise:
         AuthException: raised if creation operation fails
         """
+        self_provisioning_domains = (
+            [] if self_provisioning_domains is None else self_provisioning_domains
+        )
+
         uri = MgmtV1.tenant_update_path
         self._auth.do_post(
             uri,
@@ -98,7 +101,7 @@ class Tenant:
         AuthException: raised if load operation fails
         """
         response = self._auth.do_get(
-            MgmtV1.tenant_load_all_path,
+            uri=MgmtV1.tenant_load_all_path,
             pswd=self._auth.management_key,
         )
         return response.json()

@@ -5,7 +5,7 @@ from unittest.mock import patch
 from descope import AuthException
 from descope.auth import Auth
 from descope.authmethod.totp import TOTP  # noqa: F401
-from descope.common import EndpointsV1, LoginOptions
+from descope.common import DEFAULT_TIMEOUT_SECONDS, EndpointsV1, LoginOptions
 
 from . import common
 
@@ -121,19 +121,18 @@ class TestTOTP(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{refresh_token}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "dummy@dummy.com",
-                        "code": "1234",
-                        "loginOptions": {
-                            "stepup": True,
-                            "customClaims": None,
-                            "mfa": False,
-                        },
-                    }
-                ),
+                json={
+                    "loginId": "dummy@dummy.com",
+                    "code": "1234",
+                    "loginOptions": {
+                        "stepup": True,
+                        "customClaims": None,
+                        "mfa": False,
+                    },
+                },
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_update_user(self):
@@ -171,8 +170,9 @@ class TestTOTP(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{valid_jwt_token}",
                 },
                 params=None,
-                data=json.dumps({"loginId": "dummy@dummy.com"}),
+                json={"loginId": "dummy@dummy.com"},
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(res, valid_response)
