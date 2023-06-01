@@ -312,8 +312,8 @@ In the [password authentication method](https://app.descope.com/settings/authent
 # Start the reset process by sending a password reset prompt. In this example we'll assume
 # that magic link is configured as the reset method. The optional redirect URL is used in the
 # same way as in regular magic link authentication.
-login_id := "desmond@descope.com"
-redirect_url := "https://myapp.com/password-reset"
+login_id = "desmond@descope.com"
+redirect_url = "https://myapp.com/password-reset"
 descope_client.password.send_reset(login_id, redirect_url)
 ```
 
@@ -322,7 +322,7 @@ to allow them to provide a new password instead of the old one. Since the user i
 
 ```python
 # The refresh token is required to make sure the user is authenticated.
-err := descope_client.password.update(login_id, new_password, token)
+err = descope_client.password.update(login_id, new_password, token)
 ```
 
 `update` can always be called when the user is authenticated and has a valid session.
