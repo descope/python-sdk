@@ -4,6 +4,7 @@ from typing import List
 from descope._auth_base import AuthBase
 from descope.management.common import MgmtV1
 
+
 class Audit(AuthBase):
     def search(
         self,
@@ -64,21 +65,31 @@ class Audit(AuthBase):
         Raise:
         AuthException: raised if search operation fails
         """
-        body = {
-            "noTenants": no_tenants
-        }
-        if user_ids is not None: body["userIds"] = user_ids
-        if actions is not None: body["actions"] = actions
-        if excluded_actions is not None: body["excludedActions"] = excluded_actions
-        if devices is not None: body["devices"] = devices
-        if methods is not None: body["methods"] = methods
-        if geos is not None: body["geos"] = geos
-        if remote_addresses is not None: body["remoteAddresses"] = remote_addresses
-        if login_ids is not None: body["externalIds"] = login_ids
-        if tenants is not None: body["tenants"] = tenants
-        if text is not None: body["text"] = text
-        if from_ts is not None: body["from"] = from_ts.timestamp * 1000
-        if to_ts is not None: body["to"] = to_ts.timestamp * 1000
+        body = {"noTenants": no_tenants}
+        if user_ids is not None:
+            body["userIds"] = user_ids
+        if actions is not None:
+            body["actions"] = actions
+        if excluded_actions is not None:
+            body["excludedActions"] = excluded_actions
+        if devices is not None:
+            body["devices"] = devices
+        if methods is not None:
+            body["methods"] = methods
+        if geos is not None:
+            body["geos"] = geos
+        if remote_addresses is not None:
+            body["remoteAddresses"] = remote_addresses
+        if login_ids is not None:
+            body["externalIds"] = login_ids
+        if tenants is not None:
+            body["tenants"] = tenants
+        if text is not None:
+            body["text"] = text
+        if from_ts is not None:
+            body["from"] = from_ts.timestamp * 1000
+        if to_ts is not None:
+            body["to"] = to_ts.timestamp * 1000
 
         response = self._auth.do_post(
             MgmtV1.audit_search,
@@ -88,7 +99,6 @@ class Audit(AuthBase):
         return {
             "audits": list(map(Audit._convert_audit_record, response.json()["audits"]))
         }
-    
 
     @staticmethod
     def _convert_audit_record(a: dict) -> dict:
@@ -103,5 +113,5 @@ class Audit(AuthBase):
             "remoteAddress": a.get("remoteAddress", ""),
             "loginIds": a.get("externalIds", []),
             "tenants": a.get("tenants", []),
-            "data": a.get("data", {})
+            "data": a.get("data", {}),
         }

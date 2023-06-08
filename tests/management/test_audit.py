@@ -47,8 +47,20 @@ class TestAudit(common.DescopeTest):
             network_resp.ok = True
             network_resp.json.return_value = {
                 "audits": [
-                    {"projectId": "p", "userId": "u1", "action": "a1", "externalIds": ["e1"], "occurred": str(datetime.now().timestamp() * 1000)},
-                    {"projectId": "p", "userId": "u2", "action": "a2", "externalIds": ["e2"], "occurred": str(datetime.now().timestamp() * 1000)},
+                    {
+                        "projectId": "p",
+                        "userId": "u1",
+                        "action": "a1",
+                        "externalIds": ["e1"],
+                        "occurred": str(datetime.now().timestamp() * 1000),
+                    },
+                    {
+                        "projectId": "p",
+                        "userId": "u2",
+                        "action": "a2",
+                        "externalIds": ["e2"],
+                        "occurred": str(datetime.now().timestamp() * 1000),
+                    },
                 ]
             }
             mock_post.return_value = network_resp
