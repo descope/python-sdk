@@ -74,6 +74,9 @@ class MgmtV1:
     group_load_all_for_member_path = "/v1/mgmt/group/member/all"
     group_load_all_group_members_path = "/v1/mgmt/group/members"
 
+    # Audit
+    audit_search = "/v1/mgmt/audit/search"
+
 
 class AssociatedTenant:
     """

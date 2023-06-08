@@ -58,6 +58,7 @@ These sections show how to use the SDK to perform permission and user management
 7. [Query SSO Groups](#query-sso-groups)
 8. [Manage Flows](#manage-flows)
 9. [Manage JWTs](#manage-jwts)
+10. [Search Audit](#search-audit)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -765,12 +766,26 @@ You can add custom claims to a valid JWT.
 
 ```python
 updated_jwt = descope_client.mgmt.jwt.update_jwt(
-    jwt: "original-jwt",
-    custom_claims: {
+    jwt="original-jwt",
+    custom_claims={
         "custom-key1": "custom-value1",
         "custom-key2": "custom-value2"
     },
 )
+```
+
+### Search Audit
+
+You can perform an audit search for either specific values or full-text across the fields. Audit search is limited to the last 30 days.
+
+```python
+# Full text search on last 10 days
+audits = descope_client.mgmt.audit.search(
+    text="some-text",
+    from_ts=datetime.now(timezone.utc)-timedelta(days=10)
+)
+# Search successful logins in the last 30 days
+audits = descope_client.mgmt.audit.search(actions=["LoginSucceed"])
 ```
 
 ### Utils for your end to end (e2e) tests and integration tests
