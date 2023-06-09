@@ -777,6 +777,7 @@ updated_jwt = descope_client.mgmt.jwt.update_jwt(
 ### Search Audit
 
 You can perform an audit search for either specific values or full-text across the fields. Audit search is limited to the last 30 days.
+Below are some examples. For a full list of available search criteria options, see the function documentation.
 
 ```python
 # Full text search on last 10 days
