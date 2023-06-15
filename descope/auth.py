@@ -11,6 +11,7 @@ import jwt
 import pkg_resources
 import requests
 from email_validator import EmailNotValidError, validate_email
+from jwt import ImmatureSignatureError
 
 from descope.common import (
     COOKIE_DATA_NAME,
@@ -51,6 +52,7 @@ class Auth:
         skip_verify: bool = False,
         management_key: str = None,
         timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
+        jwt_validation_leeway: int = 5,
     ):
         self.lock_public_keys = Lock()
         # validate project id
@@ -65,6 +67,7 @@ class Auth:
                 ),
             )
         self.project_id = project_id
+        self.jwt_validation_leeway = jwt_validation_leeway
         self.secure = not skip_verify
 
         self.base_url = os.getenv("DESCOPE_BASE_URI") or DEFAULT_BASE_URL
@@ -518,7 +521,21 @@ class Auth:
                 ERROR_TYPE_INVALID_PUBLIC_KEY,
                 "Algorithm signature in JWT header does not match the algorithm signature in the public key",
             )
-        claims = jwt.decode(jwt=token, key=copy_key[0].key, algorithms=[alg_header])
+
+        try:
+            claims = jwt.decode(
+                jwt=token,
+                key=copy_key[0].key,
+                algorithms=[alg_header],
+                leeway=self.jwt_validation_leeway,
+            )
+        except ImmatureSignatureError:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_TOKEN,
+                "Received Invalid token times error due to time glitch (between machines) during jwt validation, try to set the jwt_validation_leeway parameter (in DescopeClient) to higher value than 5sec which is the default",
+            )
+
         claims["jwt"] = token
         return claims
 
@@ -536,7 +553,7 @@ class Auth:
                 res
             )  # Duplicate for saving backward compatibility but keep the same structure as the refresh operation response
             return self.adjust_properties(res, True)
-        except RateLimitException as e:
+        except (RateLimitException, AuthException) as e:
             raise e
         except Exception as e:
             raise AuthException(
