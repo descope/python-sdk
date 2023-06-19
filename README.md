@@ -707,6 +707,8 @@ roles = roles_resp["roles"]
 You can export and import your project flows and theme:
 
 ```Python
+# List all project flows
+flows = descope_client.mgmt.flow.list_flows()
 # Export a selected flow by id for the flow and matching screens.
 exported_flow_and_screens = descope_client.mgmt.flow.export_flow(
     flow_id="sign-up-or-in",
