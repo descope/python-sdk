@@ -5,6 +5,26 @@ from descope.management.common import MgmtV1
 
 
 class Flow(AuthBase):
+    def list_flows(
+        self,
+    ) -> dict:
+        """
+        List all project flows
+
+        Return value (dict):
+        Return dict in the format
+            { "flows": [{"id": "", "name": "", "description": "", "disabled": False}], total: number}
+
+        Raise:
+        AuthException: raised if list operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.flow_list_path,
+            None,
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
     def export_flow(
         self,
         flow_id: str,
@@ -20,7 +40,7 @@ class Flow(AuthBase):
             { "flow": {"id": "", "name": "", "description": "", "disabled": False, "etag": "", "dsl": {}}, screens: [{ "id": "", "inputs": [], "interactions": [] }] }
 
         Raise:
-        AuthException: raised if creation operation fails
+        AuthException: raised if export operation fails
         """
         response = self._auth.do_post(
             MgmtV1.flow_export_path,
@@ -53,7 +73,7 @@ class Flow(AuthBase):
             { "flow": {"id": "", "name": "", "description": "", "disabled": False, "etag": "", "dsl": {}}, screens: [{ "id": "", "inputs": [], "interactions": [] }] }
 
         Raise:
-        AuthException: raised if creation operation fails
+        AuthException: raised if import operation fails
         """
         response = self._auth.do_post(
             MgmtV1.flow_import_path,
@@ -77,7 +97,7 @@ class Flow(AuthBase):
             {"id": "", "cssTemplate": {} }
 
         Raise:
-        AuthException: raised if creation operation fails
+        AuthException: raised if export operation fails
         """
         response = self._auth.do_post(
             MgmtV1.theme_export_path,
@@ -103,7 +123,7 @@ class Flow(AuthBase):
             {"id": "", "cssTemplate": {} }
 
         Raise:
-        AuthException: raised if creation operation fails
+        AuthException: raised if import operation fails
         """
         response = self._auth.do_post(
             MgmtV1.theme_import_path,

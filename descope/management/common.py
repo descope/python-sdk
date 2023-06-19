@@ -62,6 +62,7 @@ class MgmtV1:
     role_load_all_path = "/v1/mgmt/role/all"
 
     # flow
+    flow_list_path = "/v1/mgmt/flow/list"
     flow_import_path = "/v1/mgmt/flow/import"
     flow_export_path = "/v1/mgmt/flow/export"
 
