@@ -56,7 +56,7 @@ These sections show how to use the SDK to perform permission and user management
 5. [Manage Permissions](#manage-permissions)
 6. [Manage Roles](#manage-roles)
 7. [Query SSO Groups](#query-sso-groups)
-8. [Manage Flows](#manage-flows)
+8. [Manage Flows](#manage-flows-and-theme)
 9. [Manage JWTs](#manage-jwts)
 10. [Search Audit](#search-audit)
 
