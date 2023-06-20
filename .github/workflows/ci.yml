@@ -2,6 +2,9 @@ name: Python
 
 on: [push, pull_request]
 
+env:
+  GO_VERSION: 1.18
+
 permissions:
   contents: read
   pull-requests: write
@@ -45,3 +48,8 @@ jobs:
           echo "Coverage Tests - ${{ steps.coverageComment.outputs.tests }}"
           echo "Coverage Time - ${{ steps.coverageComment.outputs.time }}"
           echo "Not Success Test Info - ${{ steps.coverageComment.outputs.notSuccessTestInfo }}"
+
+      - name: Gitleaks
+        uses: ./.github/actions/lint
+        with:
+          go_version: ${{ env.GO_VERSION }}
