@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 CURRENT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+GITLEAKS_VERSION="v8.8.11"
 
 # Run detect-secrets
 echo "- Running secrets check"
