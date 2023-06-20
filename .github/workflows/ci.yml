@@ -50,6 +50,6 @@ jobs:
           echo "Not Success Test Info - ${{ steps.coverageComment.outputs.notSuccessTestInfo }}"
 
       - name: Gitleaks
-        uses: ./.github/actions/lint
+        uses: ./.github/actions/gitleaks
         with:
           go_version: ${{ env.GO_VERSION }}
