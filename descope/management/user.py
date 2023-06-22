@@ -438,6 +438,34 @@ class User(AuthBase):
         )
         return response.json()
 
+    def update_login_id(
+        self,
+        login_id: str,
+        new_login_id: str = None,
+    ) -> dict:
+        """
+        Update login id of user, leave new login empty to remove the ID.
+        A user must have at least one login ID. Trying to remove the last one will fail.
+
+        Args:
+        login_id (str): The login ID of the user to update.
+        new_login_id (str): New login ID to set for the user.
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the updated user information.
+
+        Raise:
+        AuthException: raised if the update operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.user_update_login_id_path,
+            {"loginId": login_id, "newLoginId": new_login_id},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
     def update_email(
         self,
         login_id: str,
