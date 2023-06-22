@@ -470,6 +470,7 @@ class TestDescopeClient(common.DescopeTest):
         )
 
         jwt_response = {"tenants": {"t1": {"permissions": "Perm 1"}}}
+        self.assertTrue(client.validate_tenant_permissions(jwt_response, "t1", []))
         self.assertTrue(
             client.validate_tenant_permissions(jwt_response, "t1", ["Perm 1"])
         )
@@ -479,6 +480,7 @@ class TestDescopeClient(common.DescopeTest):
         self.assertFalse(
             client.validate_tenant_permissions(jwt_response, "t1", ["Perm 1", "Perm 2"])
         )
+        self.assertFalse(client.validate_tenant_permissions(jwt_response, "t2", []))
 
     def test_validate_roles(self):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)
@@ -503,9 +505,13 @@ class TestDescopeClient(common.DescopeTest):
 
         jwt_response = {"tenants": {"t1": {"roles": "Role 1"}}}
         self.assertTrue(client.validate_tenant_roles(jwt_response, "t1", ["Role 1"]))
+        self.assertTrue(client.validate_tenant_roles(jwt_response, "t1", []))
         self.assertFalse(client.validate_tenant_roles(jwt_response, "t1", ["Role 2"]))
         self.assertFalse(
             client.validate_tenant_roles(jwt_response, "t1", ["Role 1", "Role 2"])
+        )
+        self.assertFalse(
+            client.validate_tenant_roles(jwt_response, "t1", ["Perm 1", "Perm 2"])
         )
 
     def test_exchange_access_key_empty_param(self):

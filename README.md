@@ -865,6 +865,30 @@ except RateLimitException as e:
 
 You can find various usage samples in the [samples folder](https://github.com/descope/python-sdk/blob/main/samples).
 
+## Run Locally
+
+### Prerequisites
+ - Python 3.7 or higher
+ - [Poetry](https://python-poetry.org) installed
+
+### Install dependencies
+
+```bash
+poetry install
+```
+
+### Run tests
+
+Running all tests:
+```bash
+poetry run pytest tests
+```
+
+Running all tests with coverage:
+```bash
+poetry run pytest --junitxml=/tmp/pytest.xml --cov-report=term-missing:skip-covered --cov=descope tests/ --cov-report=xml:/tmp/cov.xml
+```
+
 ## Learn More
 
 To learn more please see the [Descope Documentation and API reference page](https://docs.descope.com/).
