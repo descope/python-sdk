@@ -445,10 +445,10 @@ class User(AuthBase):
     ) -> dict:
         """
         Update login id of user, leave new login empty to remove the ID.
-        Last ID cannot be removed
+        A user must have at least one login ID. Trying to remove the last one will fail.
 
         Args:
-        login_id (str): The login ID of the user to update the email for.
+        login_id (str): The login ID of the user to update.
         new_login_id (str): New login ID to set for the user.
 
         Return value (dict):
