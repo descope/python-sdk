@@ -124,6 +124,9 @@ class DescopeClient:
         if tenant == "":
             granted = jwt_response.get("permissions", [])
         else:
+            # ensure that the tenant is associated with the jwt_response
+            if tenant not in jwt_response.get("tenants", {}):
+                return False
             granted = (
                 jwt_response.get("tenants", {}).get(tenant, {}).get("permissions", [])
             )
@@ -170,6 +173,9 @@ class DescopeClient:
         if tenant == "":
             granted = jwt_response.get("roles", [])
         else:
+            # ensure that the tenant is associated with the jwt_response
+            if tenant not in jwt_response.get("tenants", {}):
+                return False
             granted = jwt_response.get("tenants", {}).get(tenant, {}).get("roles", [])
 
         for role in roles:
