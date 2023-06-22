@@ -515,6 +515,10 @@ descope_client.mgmt.user.update(
 )
 
 # Update explicit data for a user rather than overriding all fields
+descope_client.mgmt.user.update_login_id(
+    login_id="desmond@descope.com",
+    new_login_id="bane@descope.com"
+)
 descope_client.mgmt.user.update_phone(
     login_id="desmond@descope.com",
     phone="+18005551234",

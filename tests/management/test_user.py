@@ -559,6 +559,42 @@ class TestUser(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+    def test_update_login_id(self):
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                self.client.mgmt.user.update_login_id,
+                "valid-id",
+                "a@b.c",
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"user": {"id": "a@b.c"}}""")
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.update_login_id("valid-id", "a@b.c")
+            user = resp["user"]
+            self.assertEqual(user["id"], "a@b.c")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_login_id_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                json={
+                    "loginId": "valid-id",
+                    "newLoginId": "a@b.c",
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
     def test_update_email(self):
         # Test failed flows
         with patch("requests.post") as mock_post:
