@@ -177,6 +177,8 @@ class User(AuthBase):
         user_tenants: List[AssociatedTenant] = None,
         picture: str = None,
         custom_attributes: dict = None,
+        verifiedPhone: bool = None,
+        verifiedEmail: bool = None,
     ):
         """
         Update an existing user with the given various fields. IMPORTANT: All parameters are used as overrides
@@ -212,6 +214,8 @@ class User(AuthBase):
                 False,
                 picture,
                 custom_attributes,
+                verifiedEmail,
+                verifiedPhone,
             ),
             pswd=self._auth.management_key,
         )
@@ -953,8 +957,10 @@ class User(AuthBase):
         test: bool,
         picture: str,
         custom_attributes: dict,
+        verifiedEmail: bool = None,
+        verifiedPhone: bool = None,
     ) -> dict:
-        return {
+        res = {
             "loginId": login_id,
             "email": email,
             "phone": phone,
@@ -965,3 +971,8 @@ class User(AuthBase):
             "picture": picture,
             "customAttributes": custom_attributes,
         }
+        if verifiedEmail is not None:
+            res["verifiedEmail"] = verifiedEmail
+        if verifiedEmail is not None:
+            res["verifiedPhone"] = verifiedPhone
+        return res

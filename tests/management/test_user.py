@@ -241,6 +241,38 @@ class TestUser(common.DescopeTest):
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
+        # Test success flow with verified flags
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(
+                self.client.mgmt.user.update(
+                    "id", verifiedEmail=True, verifiedPhone=False
+                )
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                json={
+                    "loginId": "id",
+                    "email": None,
+                    "phone": None,
+                    "displayName": None,
+                    "roleNames": [],
+                    "userTenants": [],
+                    "test": False,
+                    "picture": None,
+                    "customAttributes": None,
+                    "verifiedEmail": True,
+                    "verifiedPhone": False,
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
 
     def test_delete(self):
         # Test failed flows
