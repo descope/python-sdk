@@ -246,7 +246,7 @@ class TestUser(common.DescopeTest):
             mock_post.return_value.ok = True
             self.assertIsNone(
                 self.client.mgmt.user.update(
-                    "id", verifiedEmail=True, verifiedPhone=False
+                    "id", verified_email=True, verified_phone=False
                 )
             )
             mock_post.assert_called_with(
