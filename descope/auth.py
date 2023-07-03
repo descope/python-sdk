@@ -337,7 +337,7 @@ class Auth:
         raise AuthException(
             response.status_code,
             ERROR_TYPE_SERVER_ERROR,
-            f"Error: {response.reason}",
+            response.text,
         )
 
     def _fetch_public_keys(self) -> None:
