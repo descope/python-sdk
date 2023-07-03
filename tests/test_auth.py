@@ -7,6 +7,7 @@ from unittest.mock import patch
 from descope import (
     API_RATE_LIMIT_RETRY_AFTER_HEADER,
     ERROR_TYPE_API_RATE_LIMIT,
+    ERROR_TYPE_SERVER_ERROR,
     AuthException,
     DeliveryMethod,
     RateLimitException,
@@ -580,6 +581,25 @@ class TestAuth(common.DescopeTest):
             self.assertEqual(
                 the_exception.rate_limit_parameters,
                 {API_RATE_LIMIT_RETRY_AFTER_HEADER: 10},
+            )
+
+    def test_raise_from_response(self):
+        auth = Auth(self.dummy_project_id, self.public_key_dict)
+        with patch("requests.get") as mock_request:
+            mock_request.return_value.ok = False
+            mock_request.return_value.status_code = 400
+            mock_request.return_value.error_type = ERROR_TYPE_SERVER_ERROR
+            mock_request.return_value.text = """{"errorCode":"E062108","errorDescription":"User not found","errorMessage":"Cannot find user","message":"Cannot find user"}"""
+            with self.assertRaises(AuthException) as cm:
+                auth.do_get(uri="http://test.com", params=False, allow_redirects=None)
+            the_exception = cm.exception
+            self.assertEqual(the_exception.status_code, 400)
+            self.assertEqual(the_exception.error_type, ERROR_TYPE_SERVER_ERROR)
+            with open("/tmp/ex.txt", "w") as f:
+                f.write(the_exception.error_message)
+            self.assertEqual(
+                the_exception.error_message,
+                """{"errorCode":"E062108","errorDescription":"User not found","errorMessage":"Cannot find user","message":"Cannot find user"}""",
             )
 
 
