@@ -468,6 +468,9 @@ descope_client.mgmt.tenant.update(
 # Tenant deletion cannot be undone. Use carefully.
 descope_client.mgmt.tenant.delete("my-custom-id")
 
+# Load tenant by id
+tenant_resp = descope_client.mgmt.tenant.load("my-custom-id")
+
 # Load all tenants
 tenants_resp = descope_client.mgmt.tenant.load_all()
 tenants = tenants_resp["tenants"]

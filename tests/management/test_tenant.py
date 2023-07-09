@@ -143,6 +143,47 @@ class TestTenant(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+    def test_load(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flows
+        with patch("requests.get") as mock_get:
+            mock_get.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.tenant.load,
+                "valid-id",
+            )
+
+        # Test success flow
+        with patch("requests.get") as mock_get:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads(
+                """
+                {"id": "t1", "name": "tenant1", "selfProvisioningDomains": ["domain1.com"]}
+                """
+            )
+            mock_get.return_value = network_resp
+            resp = client.mgmt.tenant.load("t1")
+            self.assertEqual(resp["name"], "tenant1")
+            mock_get.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_load_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params={"id": "t1"},
+                allow_redirects=None,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
     def test_load_all(self):
         client = DescopeClient(
             self.dummy_project_id,
