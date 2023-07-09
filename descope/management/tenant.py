@@ -86,6 +86,31 @@ class Tenant(AuthBase):
         uri = MgmtV1.tenant_delete_path
         self._auth.do_post(uri, {"id": id}, pswd=self._auth.management_key)
 
+    def load(
+        self,
+        id: str,
+    ) -> dict:
+        """
+        Load tenant by id.
+
+        Args:
+        id (str): The ID of the tenant to load.
+
+        Return value (dict):
+        Return dict in the format
+             {"id": <id>, "name": <name>, "selfProvisioningDomains": []}
+        Containing the loaded tenant information.
+
+        Raise:
+        AuthException: raised if load operation fails
+        """
+        response = self._auth.do_get(
+            uri=MgmtV1.tenant_load_path,
+            params={"id": id},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
     def load_all(
         self,
     ) -> dict:

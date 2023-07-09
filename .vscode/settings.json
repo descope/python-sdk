@@ -3,4 +3,9 @@
     "python.testing.pytestArgs": [
         "tests"
     ],
+    "workbench.colorCustomizations": {
+        "activityBar.background": "#121D85",
+        "titleBar.activeBackground": "#1A28BA",
+        "titleBar.activeForeground": "#F9FAFE"
+    },
 }
