@@ -154,7 +154,11 @@ class TestTenant(common.DescopeTest):
         # Test failed flows
         with patch("requests.get") as mock_get:
             mock_get.return_value.ok = False
-            self.assertRaises(AuthException, client.mgmt.tenant.load)
+            self.assertRaises(
+                AuthException,
+                client.mgmt.tenant.load,
+                "valid-id",
+            )
 
         # Test success flow
         with patch("requests.get") as mock_get:
@@ -174,7 +178,7 @@ class TestTenant(common.DescopeTest):
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
-                params={"loginId": "t1"},
+                params={"id": "t1"},
                 allow_redirects=None,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
