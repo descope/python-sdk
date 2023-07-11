@@ -116,7 +116,7 @@ class SSOSettings(AuthBase):
         tenant_id (str): The tenant ID to be configured
         idp_metadata_url (str): The URL to fetch SSO settings from.
         redirect_url (str): The Redirect URL to use after successful authentication, or empty string to reset it.
-        domain (str): Tomain used to associate users authenticating via SSO with this tenant, or empty string to reset it.
+        domain (str): domain used to associate users authenticating via SSO with this tenant, or empty string to reset it.
 
         Raise:
         AuthException: raised if configuration operation fails
