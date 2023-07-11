@@ -89,7 +89,7 @@ class SSOSettings(AuthBase):
         entity_id (str): The entity ID (in the IDP).
         idp_cert (str): The certificate provided by the IDP.
         redirect_url (str): The Redirect URL to use after successful authentication, or empty string to reset it.
-        domain (str): Tomain used to associate users authenticating via SSO with this tenant, or empty string to reset it.
+        domain (str): domain used to associate users authenticating via SSO with this tenant, or empty string to reset it.
 
         Raise:
         AuthException: raised if configuration operation fails
