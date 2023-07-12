@@ -632,6 +632,8 @@ descope_client.mgmt.sso.configure(
 descope_client.mgmt.sso.configure_via_metadata(
     tenant_id, # Which tenant this configuration is for
     idp_metadata_url="https://idp.com/my-idp-metadata",
+    redirect_url="", # Redirect URL will have to be provided in every authentication call
+    domain="" # Remove the current domain configuration if a value was previously set
 )
 
 # Map IDP groups to Descope roles, or map user attributes.
