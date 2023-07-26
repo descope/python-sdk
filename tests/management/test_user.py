@@ -66,23 +66,21 @@ class TestUser(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "name@mail.com",
-                        "email": "name@mail.com",
-                        "phone": None,
-                        "displayName": "Name",
-                        "roleNames": [],
-                        "userTenants": [
-                            {"tenantId": "tenant1", "roleNames": []},
-                            {"tenantId": "tenant2", "roleNames": ["role1", "role2"]},
-                        ],
-                        "test": False,
-                        "picture": "https://test.com",
-                        "customAttributes": {"ak": "av"},
-                        "invite": False,
-                    }
-                ),
+                json={
+                    "loginId": "name@mail.com",
+                    "email": "name@mail.com",
+                    "phone": None,
+                    "displayName": "Name",
+                    "roleNames": [],
+                    "userTenants": [
+                        {"tenantId": "tenant1", "roleNames": []},
+                        {"tenantId": "tenant2", "roleNames": ["role1", "role2"]},
+                    ],
+                    "test": False,
+                    "picture": "https://test.com",
+                    "customAttributes": {"ak": "av"},
+                    "invite": False,
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -123,23 +121,21 @@ class TestUser(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "name@mail.com",
-                        "email": "name@mail.com",
-                        "phone": None,
-                        "displayName": "Name",
-                        "roleNames": [],
-                        "userTenants": [
-                            {"tenantId": "tenant1", "roleNames": []},
-                            {"tenantId": "tenant2", "roleNames": ["role1", "role2"]},
-                        ],
-                        "test": True,
-                        "picture": None,
-                        "customAttributes": {"ak": "av"},
-                        "invite": False,
-                    }
-                ),
+                json={
+                    "loginId": "name@mail.com",
+                    "email": "name@mail.com",
+                    "phone": None,
+                    "displayName": "Name",
+                    "roleNames": [],
+                    "userTenants": [
+                        {"tenantId": "tenant1", "roleNames": []},
+                        {"tenantId": "tenant2", "roleNames": ["role1", "role2"]},
+                    ],
+                    "test": True,
+                    "picture": None,
+                    "customAttributes": {"ak": "av"},
+                    "invite": False,
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -180,23 +176,21 @@ class TestUser(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "name@mail.com",
-                        "email": "name@mail.com",
-                        "phone": None,
-                        "displayName": "Name",
-                        "roleNames": [],
-                        "userTenants": [
-                            {"tenantId": "tenant1", "roleNames": []},
-                            {"tenantId": "tenant2", "roleNames": ["role1", "role2"]},
-                        ],
-                        "test": False,
-                        "picture": None,
-                        "customAttributes": {"ak": "av"},
-                        "invite": True,
-                    }
-                ),
+                json={
+                    "loginId": "name@mail.com",
+                    "email": "name@mail.com",
+                    "phone": None,
+                    "displayName": "Name",
+                    "roleNames": [],
+                    "userTenants": [
+                        {"tenantId": "tenant1", "roleNames": []},
+                        {"tenantId": "tenant2", "roleNames": ["role1", "role2"]},
+                    ],
+                    "test": False,
+                    "picture": None,
+                    "customAttributes": {"ak": "av"},
+                    "invite": True,
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -232,19 +226,49 @@ class TestUser(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "id",
-                        "email": None,
-                        "phone": None,
-                        "displayName": "new-name",
-                        "roleNames": ["domain.com"],
-                        "userTenants": [],
-                        "test": False,
-                        "picture": "https://test.com",
-                        "customAttributes": {"ak": "av"},
-                    }
-                ),
+                json={
+                    "loginId": "id",
+                    "email": None,
+                    "phone": None,
+                    "displayName": "new-name",
+                    "roleNames": ["domain.com"],
+                    "userTenants": [],
+                    "test": False,
+                    "picture": "https://test.com",
+                    "customAttributes": {"ak": "av"},
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+        # Test success flow with verified flags
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(
+                self.client.mgmt.user.update(
+                    "id", verified_email=True, verified_phone=False
+                )
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                json={
+                    "loginId": "id",
+                    "email": None,
+                    "phone": None,
+                    "displayName": None,
+                    "roleNames": [],
+                    "userTenants": [],
+                    "test": False,
+                    "picture": None,
+                    "customAttributes": None,
+                    "verifiedEmail": True,
+                    "verifiedPhone": False,
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -271,11 +295,9 @@ class TestUser(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "u1",
-                    }
-                ),
+                json={
+                    "loginId": "u1",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -296,6 +318,7 @@ class TestUser(common.DescopeTest):
             self.assertIsNone(self.client.mgmt.user.delete_all_test_users())
             mock_delete.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.user_delete_all_test_users_path}",
+                params=None,
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -410,16 +433,14 @@ class TestUser(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "tenantIds": ["t1, t2"],
-                        "roleNames": ["r1", "r2"],
-                        "limit": 0,
-                        "page": 0,
-                        "testUsersOnly": False,
-                        "withTestUser": True,
-                    }
-                ),
+                json={
+                    "tenantIds": ["t1, t2"],
+                    "roleNames": ["r1", "r2"],
+                    "limit": 0,
+                    "page": 0,
+                    "testUsersOnly": False,
+                    "withTestUser": True,
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -450,18 +471,52 @@ class TestUser(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "tenantIds": ["t1, t2"],
-                        "roleNames": ["r1", "r2"],
-                        "limit": 0,
-                        "page": 0,
-                        "testUsersOnly": False,
-                        "withTestUser": True,
-                        "customAttributes": {"ak": "av"},
-                    }
-                ),
+                json={
+                    "tenantIds": ["t1, t2"],
+                    "roleNames": ["r1", "r2"],
+                    "limit": 0,
+                    "page": 0,
+                    "testUsersOnly": False,
+                    "withTestUser": True,
+                    "customAttributes": {"ak": "av"},
+                },
                 allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_get_provider_token(self):
+        # Test failed flows
+        with patch("requests.get") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                self.client.mgmt.user.get_provider_token,
+                "valid-id",
+                "p1",
+            )
+            # Test success flow
+        with patch("requests.get") as mock_get:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads(
+                """{"provider": "p1", "providerUserId": "puid", "accessToken": "access123", "expiration": "123123123", "scopes": ["s1", "s2"]}"""
+            )
+            mock_get.return_value = network_resp
+            resp = self.client.mgmt.user.get_provider_token("valid-id", "p1")
+            self.assertEqual(resp["provider"], "p1")
+            self.assertEqual(resp["providerUserId"], "puid")
+            self.assertEqual(resp["accessToken"], "access123")
+            self.assertEqual(resp["expiration"], "123123123")
+            self.assertEqual(resp["scopes"], ["s1", "s2"])
+            mock_get.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_get_provider_token}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params={"loginId": "valid-id", "provider": "p1"},
+                allow_redirects=None,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -492,12 +547,10 @@ class TestUser(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "valid-id",
-                        "status": "enabled",
-                    }
-                ),
+                json={
+                    "loginId": "valid-id",
+                    "status": "enabled",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -529,12 +582,46 @@ class TestUser(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "valid-id",
-                        "status": "disabled",
-                    }
-                ),
+                json={
+                    "loginId": "valid-id",
+                    "status": "disabled",
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_update_login_id(self):
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                self.client.mgmt.user.update_login_id,
+                "valid-id",
+                "a@b.c",
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"user": {"id": "a@b.c"}}""")
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.update_login_id("valid-id", "a@b.c")
+            user = resp["user"]
+            self.assertEqual(user["id"], "a@b.c")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_login_id_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                json={
+                    "loginId": "valid-id",
+                    "newLoginId": "a@b.c",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -567,13 +654,11 @@ class TestUser(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "valid-id",
-                        "email": "a@b.c",
-                        "verified": None,
-                    }
-                ),
+                json={
+                    "loginId": "valid-id",
+                    "email": "a@b.c",
+                    "verified": None,
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -606,13 +691,11 @@ class TestUser(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "valid-id",
-                        "phone": "+18005551234",
-                        "verified": True,
-                    }
-                ),
+                json={
+                    "loginId": "valid-id",
+                    "phone": "+18005551234",
+                    "verified": True,
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -645,12 +728,10 @@ class TestUser(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "valid-id",
-                        "displayName": "foo",
-                    }
-                ),
+                json={
+                    "loginId": "valid-id",
+                    "displayName": "foo",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -683,12 +764,10 @@ class TestUser(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "valid-id",
-                        "picture": "foo",
-                    }
-                ),
+                json={
+                    "loginId": "valid-id",
+                    "picture": "foo",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -723,13 +802,11 @@ class TestUser(common.DescopeTest):
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
-                data=json.dumps(
-                    {
-                        "loginId": "valid-id",
-                        "attributeKey": "foo",
-                        "attributeValue": "bar",
-                    }
-                ),
+                json={
+                    "loginId": "valid-id",
+                    "attributeKey": "foo",
+                    "attributeValue": "bar",
+                },
                 allow_redirects=False,
                 verify=True,
                 params=None,
@@ -763,12 +840,10 @@ class TestUser(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "valid-id",
-                        "roleNames": ["foo", "bar"],
-                    }
-                ),
+                json={
+                    "loginId": "valid-id",
+                    "roleNames": ["foo", "bar"],
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -801,12 +876,10 @@ class TestUser(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "valid-id",
-                        "roleNames": ["foo", "bar"],
-                    }
-                ),
+                json={
+                    "loginId": "valid-id",
+                    "roleNames": ["foo", "bar"],
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -839,12 +912,10 @@ class TestUser(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "valid-id",
-                        "tenantId": "tid",
-                    }
-                ),
+                json={
+                    "loginId": "valid-id",
+                    "tenantId": "tid",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -877,12 +948,10 @@ class TestUser(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "valid-id",
-                        "tenantId": "tid",
-                    }
-                ),
+                json={
+                    "loginId": "valid-id",
+                    "tenantId": "tid",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -918,13 +987,11 @@ class TestUser(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "valid-id",
-                        "tenantId": "tid",
-                        "roleNames": ["foo", "bar"],
-                    }
-                ),
+                json={
+                    "loginId": "valid-id",
+                    "tenantId": "tid",
+                    "roleNames": ["foo", "bar"],
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -960,13 +1027,11 @@ class TestUser(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "valid-id",
-                        "tenantId": "tid",
-                        "roleNames": ["foo", "bar"],
-                    }
-                ),
+                json={
+                    "loginId": "valid-id",
+                    "tenantId": "tid",
+                    "roleNames": ["foo", "bar"],
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -1003,12 +1068,79 @@ class TestUser(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "login-id",
-                        "deliveryMethod": "email",
-                    }
-                ),
+                json={
+                    "loginId": "login-id",
+                    "deliveryMethod": "email",
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_user_set_password(self):
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                self.client.mgmt.user.set_password,
+                "login-id",
+                "some-password",
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            mock_post.return_value = network_resp
+            self.client.mgmt.user.set_password(
+                "login-id",
+                "some-password",
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_set_password_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                json={
+                    "loginId": "login-id",
+                    "password": "some-password",
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_user_expire_password(self):
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                self.client.mgmt.user.expire_password,
+                "login-id",
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            mock_post.return_value = network_resp
+            self.client.mgmt.user.expire_password(
+                "login-id",
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_expire_password_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                json={
+                    "loginId": "login-id",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -1046,13 +1178,11 @@ class TestUser(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "login-id",
-                        "deliveryMethod": "email",
-                        "URI": "bla",
-                    }
-                ),
+                json={
+                    "loginId": "login-id",
+                    "deliveryMethod": "email",
+                    "URI": "bla",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -1090,12 +1220,10 @@ class TestUser(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "login-id",
-                        "URI": "bla",
-                    }
-                ),
+                json={
+                    "loginId": "login-id",
+                    "URI": "bla",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,

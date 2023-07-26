@@ -1,4 +1,5 @@
 import json
+import sys
 import unittest
 from copy import deepcopy
 from unittest import mock
@@ -151,6 +152,52 @@ class TestDescopeClient(common.DescopeTest):
             AuthException,
             client4.validate_session,
             None,
+        )
+
+    def test_validate_session_response_structure(self):
+        self.maxDiff = None
+        client = DescopeClient(
+            self.dummy_project_id,
+            {
+                "alg": "ES384",
+                "crv": "P-384",
+                "kid": "P2CuC9yv2UGtGI1o84gCZEb9qEQW",
+                "kty": "EC",
+                "use": "sig",
+                "x": "DCjjyS7blnEmenLyJVwmH6yMnp7MlEggfk1kLtOv_Khtpps_Mq4K9brqsCwQhGUP",
+                "y": "xKy4IQ2FaLEzrrl1KE5mKbioLhj1prYFk1itdTOr6Xpy1fgq86kC7v-Y2F2vpcDc",
+            },
+        )
+
+        ds = "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3VDOXl2MlVHdEdJMW84NGdDWkViOXFFUVciLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEUyIsImV4cCI6MjQ5MzA2MTQxNSwiaWF0IjoxNjU5NjQzMDYxLCJpc3MiOiJQMkN1Qzl5djJVR3RHSTFvODRnQ1pFYjlxRVFXIiwic3ViIjoiVTJDdUNQdUpnUFdIR0I1UDRHbWZidVBHaEdWbSJ9.gMalOv1GhqYVsfITcOc7Jv_fibX1Iof6AFy2KCVmyHmU2KwATT6XYXsHjBFFLq262Pg-LS1IX9f_DV3ppzvb1pSY4ccsP6WDGd1vJpjp3wFBP9Sji6WXL0SCCJUFIyJR"
+        try:
+            jwt_response = client.validate_session(ds)
+        except AuthException:
+            self.fail("Should pass validation")
+
+        self.assertEqual(
+            jwt_response,
+            {
+                "drn": "DS",
+                "exp": 2493061415,
+                "iat": 1659643061,
+                "iss": "P2CuC9yv2UGtGI1o84gCZEb9qEQW",
+                "sub": "U2CuCPuJgPWHGB5P4GmfbuPGhGVm",
+                "jwt": "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3VDOXl2MlVHdEdJMW84NGdDWkViOXFFUVciLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEUyIsImV4cCI6MjQ5MzA2MTQxNSwiaWF0IjoxNjU5NjQzMDYxLCJpc3MiOiJQMkN1Qzl5djJVR3RHSTFvODRnQ1pFYjlxRVFXIiwic3ViIjoiVTJDdUNQdUpnUFdIR0I1UDRHbWZidVBHaEdWbSJ9.gMalOv1GhqYVsfITcOc7Jv_fibX1Iof6AFy2KCVmyHmU2KwATT6XYXsHjBFFLq262Pg-LS1IX9f_DV3ppzvb1pSY4ccsP6WDGd1vJpjp3wFBP9Sji6WXL0SCCJUFIyJR",
+                "permissions": [],
+                "roles": [],
+                "tenants": {},
+                "projectId": "P2CuC9yv2UGtGI1o84gCZEb9qEQW",
+                "userId": "U2CuCPuJgPWHGB5P4GmfbuPGhGVm",
+                "sessionToken": {
+                    "drn": "DS",
+                    "exp": 2493061415,
+                    "iat": 1659643061,
+                    "iss": "P2CuC9yv2UGtGI1o84gCZEb9qEQW",
+                    "sub": "U2CuCPuJgPWHGB5P4GmfbuPGhGVm",
+                    "jwt": "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3VDOXl2MlVHdEdJMW84NGdDWkViOXFFUVciLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEUyIsImV4cCI6MjQ5MzA2MTQxNSwiaWF0IjoxNjU5NjQzMDYxLCJpc3MiOiJQMkN1Qzl5djJVR3RHSTFvODRnQ1pFYjlxRVFXIiwic3ViIjoiVTJDdUNQdUpnUFdIR0I1UDRHbWZidVBHaEdWbSJ9.gMalOv1GhqYVsfITcOc7Jv_fibX1Iof6AFy2KCVmyHmU2KwATT6XYXsHjBFFLq262Pg-LS1IX9f_DV3ppzvb1pSY4ccsP6WDGd1vJpjp3wFBP9Sji6WXL0SCCJUFIyJR",
+                },
+            },
         )
 
     def test_validate_session_valid_tokens(self):
@@ -423,6 +470,7 @@ class TestDescopeClient(common.DescopeTest):
         )
 
         jwt_response = {"tenants": {"t1": {"permissions": "Perm 1"}}}
+        self.assertTrue(client.validate_tenant_permissions(jwt_response, "t1", []))
         self.assertTrue(
             client.validate_tenant_permissions(jwt_response, "t1", ["Perm 1"])
         )
@@ -432,6 +480,7 @@ class TestDescopeClient(common.DescopeTest):
         self.assertFalse(
             client.validate_tenant_permissions(jwt_response, "t1", ["Perm 1", "Perm 2"])
         )
+        self.assertFalse(client.validate_tenant_permissions(jwt_response, "t2", []))
 
     def test_validate_roles(self):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)
@@ -456,9 +505,13 @@ class TestDescopeClient(common.DescopeTest):
 
         jwt_response = {"tenants": {"t1": {"roles": "Role 1"}}}
         self.assertTrue(client.validate_tenant_roles(jwt_response, "t1", ["Role 1"]))
+        self.assertTrue(client.validate_tenant_roles(jwt_response, "t1", []))
         self.assertFalse(client.validate_tenant_roles(jwt_response, "t1", ["Role 2"]))
         self.assertFalse(
             client.validate_tenant_roles(jwt_response, "t1", ["Role 1", "Role 2"])
+        )
+        self.assertFalse(
+            client.validate_tenant_roles(jwt_response, "t1", ["Perm 1", "Perm 2"])
         )
 
     def test_exchange_access_key_empty_param(self):
@@ -466,6 +519,32 @@ class TestDescopeClient(common.DescopeTest):
         with self.assertRaises(AuthException) as cm:
             client.exchange_access_key("")
         self.assertEqual(cm.exception.status_code, 400)
+
+    def test_jwt_validation_leeway(self):
+        # Note: I set here negative leeway just for setting the check time results to be in the "past"
+        valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3VDOXl2MlVHdEdJMW84NGdDWkViOXFFUVciLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0NDMwNjEsImlhdCI6MTY1OTY0MzA2MSwiaXNzIjoiUDJDdUM5eXYyVUd0R0kxbzg0Z0NaRWI5cUVRVyIsInN1YiI6IlUyQ3VDUHVKZ1BXSEdCNVA0R21mYnVQR2hHVm0ifQ.mRo9FihYMR3qnQT06Mj3CJ5X0uTCEcXASZqfLLUv0cPCLBtBqYTbuK-ZRDnV4e4N6zGCNX2a3jjpbyqbViOxICCNSxJsVb-sdsSujtEXwVMsTTLnpWmNsMbOUiKmoME0"
+        min_int = -sys.maxsize - 1
+        client = DescopeClient(
+            self.dummy_project_id,
+            {
+                "alg": "ES384",
+                "crv": "P-384",
+                "kid": "P2CuC9yv2UGtGI1o84gCZEb9qEQW",
+                "kty": "EC",
+                "use": "sig",
+                "x": "DCjjyS7blnEmenLyJVwmH6yMnp7MlEggfk1kLtOv_Khtpps_Mq4K9brqsCwQhGUP",
+                "y": "xKy4IQ2FaLEzrrl1KE5mKbioLhj1prYFk1itdTOr6Xpy1fgq86kC7v-Y2F2vpcDc",
+            },
+            jwt_validation_leeway=min_int,
+        )
+
+        with self.assertRaises(AuthException) as cm:
+            client.validate_session(valid_jwt_token)
+        self.assertEqual(cm.exception.status_code, 400)
+        self.assertEqual(
+            cm.exception.error_message,
+            "Received Invalid token times error due to time glitch (between machines) during jwt validation, try to set the jwt_validation_leeway parameter (in DescopeClient) to higher value than 5sec which is the default",
+        )
 
 
 if __name__ == "__main__":

@@ -66,17 +66,15 @@ class TestAccessKey(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "name": "key-name",
-                        "expireTime": 123456789,
-                        "roleNames": [],
-                        "keyTenants": [
-                            {"tenantId": "tenant1", "roleNames": []},
-                            {"tenantId": "tenant2", "roleNames": ["role1", "role2"]},
-                        ],
-                    }
-                ),
+                json={
+                    "name": "key-name",
+                    "expireTime": 123456789,
+                    "roleNames": [],
+                    "keyTenants": [
+                        {"tenantId": "tenant1", "roleNames": []},
+                        {"tenantId": "tenant2", "roleNames": ["role1", "role2"]},
+                    ],
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -157,11 +155,9 @@ class TestAccessKey(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "tenantIds": ["t1, t2"],
-                    }
-                ),
+                json={
+                    "tenantIds": ["t1, t2"],
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -201,12 +197,10 @@ class TestAccessKey(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "id": "key-id",
-                        "name": "new-name",
-                    }
-                ),
+                json={
+                    "id": "key-id",
+                    "name": "new-name",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -240,11 +234,9 @@ class TestAccessKey(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "id": "ak1",
-                    }
-                ),
+                json={
+                    "id": "ak1",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -278,11 +270,9 @@ class TestAccessKey(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "id": "ak1",
-                    }
-                ),
+                json={
+                    "id": "ak1",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -316,11 +306,9 @@ class TestAccessKey(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "id": "ak1",
-                    }
-                ),
+                json={
+                    "id": "ak1",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,

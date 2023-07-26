@@ -100,18 +100,16 @@ class TestPassword(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "dummy@dummy.com",
-                        "password": "123456",
-                        "user": {
-                            "username": "jhon",
-                            "name": "john",
-                            "phone": "972525555555",
-                            "email": "dummy@dummy.com",
-                        },
-                    }
-                ),
+                json={
+                    "loginId": "dummy@dummy.com",
+                    "password": "123456",
+                    "user": {
+                        "username": "jhon",
+                        "name": "john",
+                        "phone": "972525555555",
+                        "email": "dummy@dummy.com",
+                    },
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -179,12 +177,10 @@ class TestPassword(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "dummy@dummy.com",
-                        "password": "123456",
-                    }
-                ),
+                json={
+                    "loginId": "dummy@dummy.com",
+                    "password": "123456",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -237,12 +233,10 @@ class TestPassword(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "dummy@dummy.com",
-                        "redirectUrl": "https://redirect.here.com",
-                    }
-                ),
+                json={
+                    "loginId": "dummy@dummy.com",
+                    "redirectUrl": "https://redirect.here.com",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -324,12 +318,10 @@ class TestPassword(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{valid_jwt_token}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "dummy@dummy.com",
-                        "newPassword": "123456",
-                    }
-                ),
+                json={
+                    "loginId": "dummy@dummy.com",
+                    "newPassword": "123456",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -408,13 +400,11 @@ class TestPassword(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "loginId": "dummy@dummy.com",
-                        "oldPassword": "123456",
-                        "newPassword": "1234567",
-                    }
-                ),
+                json={
+                    "loginId": "dummy@dummy.com",
+                    "oldPassword": "123456",
+                    "newPassword": "1234567",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,

@@ -29,6 +29,14 @@ def main():
             logging.info(f"Tenant creation failed {e}")
 
         try:
+            logging.info("Loading tenant by id")
+            tenant_resp = descope_client.mgmt.tenant.load(tenant_id)
+            logging.info(f"Found tenant {tenant_resp}")
+
+        except AuthException as e:
+            logging.info(f"Permission load failed {e}")
+
+        try:
             logging.info("Loading all tenants")
             tenants_resp = descope_client.mgmt.tenant.load_all()
             tenants = tenants_resp["tenants"]

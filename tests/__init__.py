@@ -11,6 +11,7 @@ from descope.descope_client import DescopeClient
 from descope.exceptions import (
     API_RATE_LIMIT_RETRY_AFTER_HEADER,
     ERROR_TYPE_API_RATE_LIMIT,
+    ERROR_TYPE_SERVER_ERROR,
     AuthException,
     RateLimitException,
 )

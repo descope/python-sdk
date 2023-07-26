@@ -37,6 +37,8 @@ def main():
         entity_id = ""
         idp_cert = ""
         idp_metadata_url = ""
+        redirect_url = ""
+        domain = ""
         role_mappings = [RoleMapping(["a"], "Tenant Admin")]
         attribute_mapping = AttributeMapping(name="MyName")
 
@@ -47,6 +49,8 @@ def main():
                 idp_url=idp_url,
                 entity_id=entity_id,
                 idp_cert=idp_cert,
+                redirect_url=redirect_url,
+                domain=domain,
             )
 
         except AuthException as e:
@@ -57,6 +61,8 @@ def main():
             descope_client.mgmt.sso.configure_via_metadata(
                 tenant_id,
                 idp_metadata_url=idp_metadata_url,
+                redirect_url=redirect_url,
+                domain=domain,
             )
 
         except AuthException as e:

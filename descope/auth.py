@@ -1,7 +1,9 @@
+import copy
 import json
 import os
 import platform
 import re
+from http import HTTPStatus
 from threading import Lock
 from typing import Tuple, Union
 
@@ -9,6 +11,7 @@ import jwt
 import pkg_resources
 import requests
 from email_validator import EmailNotValidError, validate_email
+from jwt import ImmatureSignatureError
 
 from descope.common import (
     COOKIE_DATA_NAME,
@@ -33,6 +36,11 @@ from descope.exceptions import (
     RateLimitException,
 )
 
+_default_headers = {
+    "Content-Type": "application/json",
+    "x-descope-sdk-name": "python",
+}
+
 
 class Auth:
     ALGORITHM_KEY = "alg"
@@ -44,34 +52,29 @@ class Auth:
         skip_verify: bool = False,
         management_key: str = None,
         timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
+        jwt_validation_leeway: int = 5,
     ):
         self.lock_public_keys = Lock()
         # validate project id
+        project_id = project_id or os.getenv("DESCOPE_PROJECT_ID")
         if not project_id:
-            # try get the project_id from env
-            project_id = os.getenv("DESCOPE_PROJECT_ID", "")
-            if project_id == "":
-                raise AuthException(
-                    400,
-                    ERROR_TYPE_INVALID_ARGUMENT,
-                    "Unable to init Auth object because project_id cannot be empty. Set environment variable DESCOPE_PROJECT_ID or pass your Project ID to the init function.",
-                )
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                (
+                    "Unable to init Auth object because project_id cannot be empty. "
+                    "Set environment variable DESCOPE_PROJECT_ID or pass your Project ID to the init function."
+                ),
+            )
         self.project_id = project_id
+        self.jwt_validation_leeway = jwt_validation_leeway
+        self.secure = not skip_verify
 
-        self.secure = True
-        if skip_verify:
-            self.secure = False
-
-        self.base_url = os.getenv("DESCOPE_BASE_URI", None) or DEFAULT_BASE_URL
+        self.base_url = os.getenv("DESCOPE_BASE_URI") or DEFAULT_BASE_URL
         self.timeout_seconds = timeout_seconds
+        self.management_key = management_key or os.getenv("DESCOPE_MANAGEMENT_KEY")
 
-        if not management_key:
-            management_key = os.getenv("DESCOPE_MANAGEMENT_KEY", None)
-        self.management_key = management_key
-
-        if not public_key:
-            public_key = os.getenv("DESCOPE_PUBLIC_KEY", None)
-
+        public_key = public_key or os.getenv("DESCOPE_PUBLIC_KEY")
         with self.lock_public_keys:
             if not public_key:
                 self.public_keys = {}
@@ -82,7 +85,7 @@ class Auth:
     def _raise_rate_limit_exception(self, response):
         resp = response.json()
         raise RateLimitException(
-            resp.get("errorCode", "429"),
+            resp.get("errorCode", HTTPStatus.TOO_MANY_REQUESTS),
             ERROR_TYPE_API_RATE_LIMIT,
             resp.get("errorDescription", ""),
             resp.get("errorMessage", ""),
@@ -108,12 +111,7 @@ class Auth:
             verify=self.secure,
             timeout=self.timeout_seconds,
         )
-        if not response.ok:
-            if response.status_code == 429:
-                self._raise_rate_limit_exception(response)  # Raise RateLimitException
-            raise AuthException(
-                response.status_code, ERROR_TYPE_SERVER_ERROR, response.text
-            )
+        self._raise_from_response(response)
         return response
 
     def do_post(
@@ -122,36 +120,25 @@ class Auth:
         response = requests.post(
             f"{self.base_url}{uri}",
             headers=self._get_default_headers(pswd),
-            data=json.dumps(body),
+            json=body,
             allow_redirects=False,
             verify=self.secure,
             params=params,
             timeout=self.timeout_seconds,
         )
-        if not response.ok:
-            if response.status_code == 429:
-                self._raise_rate_limit_exception(response)  # Raise RateLimitException
-
-            raise AuthException(
-                response.status_code, ERROR_TYPE_SERVER_ERROR, response.text
-            )
+        self._raise_from_response(response)
         return response
 
-    def do_delete(self, uri: str, pswd: str = None) -> requests.Response:
+    def do_delete(self, uri: str, params=None, pswd: str = None) -> requests.Response:
         response = requests.delete(
             f"{self.base_url}{uri}",
+            params=params,
             headers=self._get_default_headers(pswd),
             allow_redirects=False,
             verify=self.secure,
             timeout=self.timeout_seconds,
         )
-        if not response.ok:
-            if response.status_code == 429:
-                self._raise_rate_limit_exception(response)  # Raise RateLimitException
-
-            raise AuthException(
-                response.status_code, ERROR_TYPE_SERVER_ERROR, response.text
-            )
+        self._raise_from_response(response)
         return response
 
     def exchange_token(self, uri, code: str) -> dict:
@@ -163,15 +150,15 @@ class Auth:
             )
 
         body = Auth._compose_exchange_body(code)
-        response = self.do_post(uri, body, None)
+        response = self.do_post(uri=uri, body=body, params=None)
         resp = response.json()
         jwt_response = self.generate_jwt_response(
-            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
+            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME)
         )
         return jwt_response
 
     @staticmethod
-    def verify_delivery_method(
+    def adjust_and_verify_delivery_method(
         method: DeliveryMethod, login_id: str, user: dict
     ) -> bool:
         if not login_id:
@@ -205,14 +192,13 @@ class Auth:
 
     @staticmethod
     def compose_url(base: str, method: DeliveryMethod) -> str:
-        suffix = ""
-        if method is DeliveryMethod.EMAIL:
-            suffix = "email"
-        elif method is DeliveryMethod.SMS:
-            suffix = "sms"
-        elif method is DeliveryMethod.WHATSAPP:
-            suffix = "whatsapp"
-        else:
+        suffix = {
+            DeliveryMethod.EMAIL: "email",
+            DeliveryMethod.SMS: "sms",
+            DeliveryMethod.WHATSAPP: "whatsapp",
+        }.get(method)
+
+        if not suffix:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, f"Unknown delivery method: {method}"
             )
@@ -221,32 +207,33 @@ class Auth:
 
     @staticmethod
     def get_login_id_by_method(method: DeliveryMethod, user: dict) -> Tuple[str, str]:
-        if method is DeliveryMethod.EMAIL:
-            email = user.get("email", "")
-            return "email", email
-        elif method is DeliveryMethod.SMS:
-            phone = user.get("phone", "")
-            return "phone", phone
-        elif method is DeliveryMethod.WHATSAPP:
-            whatsapp = user.get("phone", "")
-            return ("whatsapp", whatsapp)
-        else:
+        login_id = {
+            DeliveryMethod.EMAIL: ("email", user.get("email", "")),
+            DeliveryMethod.SMS: ("phone", user.get("phone", "")),
+            DeliveryMethod.WHATSAPP: ("whatsapp", user.get("phone", "")),
+        }.get(method)
+
+        if not login_id:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, f"Unknown delivery method: {method}"
             )
 
+        return login_id
+
     @staticmethod
     def get_method_string(method: DeliveryMethod) -> str:
-        if method is DeliveryMethod.EMAIL:
-            return "email"
-        elif method is DeliveryMethod.SMS:
-            return "sms"
-        elif method is DeliveryMethod.WHATSAPP:
-            return "whatsapp"
-        else:
+        name = {
+            DeliveryMethod.EMAIL: "email",
+            DeliveryMethod.SMS: "sms",
+            DeliveryMethod.WHATSAPP: "whatsapp",
+        }.get(method)
+
+        if not name:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, f"Unknown delivery method: {method}"
             )
+
+        return name
 
     @staticmethod
     def validate_email(email: str):
@@ -285,9 +272,11 @@ class Auth:
 
     def exchange_access_key(self, access_key: str) -> dict:
         uri = EndpointsV1.exchange_auth_access_key_path
-        server_response = self.do_post(uri, {}, None, access_key)
+        server_response = self.do_post(uri=uri, body={}, params=None, pswd=access_key)
         json = server_response.json()
-        return self._generate_auth_info(json, None, False)
+        return self._generate_auth_info(
+            response_body=json, refresh_token=None, user_jwt=False
+        )
 
     @staticmethod
     def _compose_exchange_body(code: str) -> dict:
@@ -332,18 +321,26 @@ class Auth:
         try:
             # Load and validate public key
             return (kid, jwt.PyJWK(public_key), alg)
-        except jwt.InvalidKeyError as e:
-            raise AuthException(
-                500,
-                ERROR_TYPE_INVALID_PUBLIC_KEY,
-                f"Unable to load public key. Error: {e}",
-            )
-        except jwt.PyJWKError as e:
+        except (jwt.PyJWKError, jwt.InvalidKeyError) as e:
             raise AuthException(
                 500,
                 ERROR_TYPE_INVALID_PUBLIC_KEY,
                 f"Unable to load public key {e}",
             )
+
+    def _raise_from_response(self, response):
+        """Raise appropriate exception from response, does nothing if response.ok is True."""
+        if response.ok:
+            return
+
+        if response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
+            self._raise_rate_limit_exception(response)  # Raise RateLimitException
+
+        raise AuthException(
+            response.status_code,
+            ERROR_TYPE_SERVER_ERROR,
+            response.text,
+        )
 
     def _fetch_public_keys(self) -> None:
         # This function called under mutex protection so no need to acquire it once again
@@ -353,15 +350,7 @@ class Auth:
             verify=self.secure,
             timeout=self.timeout_seconds,
         )
-
-        if not response.ok:
-            if response.status_code == 429:
-                self._raise_rate_limit_exception(response)  # Raise RateLimitException
-            raise AuthException(
-                response.status_code,
-                ERROR_TYPE_SERVER_ERROR,
-                f"Error: {response.reason}",
-            )
+        self._raise_from_response(response)
 
         jwks_data = response.text
         try:
@@ -384,7 +373,7 @@ class Auth:
 
     def adjust_properties(self, jwt_response: dict, user_jwt: bool):
         # Save permissions, roles and tenants info from Session token or from refresh token on the json top level
-        if jwt_response.get(SESSION_TOKEN_NAME, None):
+        if SESSION_TOKEN_NAME in jwt_response:
             jwt_response["permissions"] = jwt_response.get(SESSION_TOKEN_NAME).get(
                 "permissions", []
             )
@@ -394,7 +383,7 @@ class Auth:
             jwt_response["tenants"] = jwt_response.get(SESSION_TOKEN_NAME).get(
                 "tenants", {}
             )
-        elif jwt_response.get(REFRESH_SESSION_TOKEN_NAME, None):
+        elif REFRESH_SESSION_TOKEN_NAME in jwt_response:
             jwt_response["permissions"] = jwt_response.get(
                 REFRESH_SESSION_TOKEN_NAME
             ).get("permissions", [])
@@ -404,25 +393,32 @@ class Auth:
             jwt_response["tenants"] = jwt_response.get(REFRESH_SESSION_TOKEN_NAME).get(
                 "tenants", {}
             )
+        else:
+            jwt_response["permissions"] = jwt_response.get("permissions", [])
+            jwt_response["roles"] = jwt_response.get("roles", [])
+            jwt_response["tenants"] = jwt_response.get("tenants", {})
 
         # Save the projectID also in the dict top level
-        issuer = jwt_response.get(SESSION_TOKEN_NAME, {}).get(
-            "iss", None
-        ) or jwt_response.get(REFRESH_SESSION_TOKEN_NAME, {}).get("iss", "")
+        issuer = (
+            jwt_response.get(SESSION_TOKEN_NAME, {}).get("iss", None)
+            or jwt_response.get(REFRESH_SESSION_TOKEN_NAME, {}).get("iss", None)
+            or jwt_response.get("iss", "")
+        )
         jwt_response["projectId"] = issuer.rsplit("/")[
             -1
         ]  # support both url issuer and project ID issuer
 
+        sub = (
+            jwt_response.get(SESSION_TOKEN_NAME, {}).get("sub", None)
+            or jwt_response.get(REFRESH_SESSION_TOKEN_NAME, {}).get("sub", None)
+            or jwt_response.get("sub", "")
+        )
         if user_jwt:
             # Save the userID also in the dict top level
-            jwt_response["userId"] = jwt_response.get(SESSION_TOKEN_NAME, {}).get(
-                "sub", None
-            ) or jwt_response.get(REFRESH_SESSION_TOKEN_NAME, {}).get("sub", None)
+            jwt_response["userId"] = sub
         else:
             # Save the AccessKeyID also in the dict top level
-            jwt_response["keyId"] = jwt_response.get(SESSION_TOKEN_NAME, {}).get(
-                "sub", None
-            )
+            jwt_response["keyId"] = sub
 
         return jwt_response
 
@@ -461,11 +457,7 @@ class Auth:
         return jwt_response
 
     def _get_default_headers(self, pswd: str = None):
-        headers = {}
-        headers["Content-Type"] = "application/json"
-
-        headers["x-descope-sdk-name"] = "python"
-
+        headers = _default_headers.copy()
         try:
             headers["x-descope-sdk-python-version"] = platform.python_version()
             headers["x-descope-sdk-version"] = pkg_resources.get_distribution(
@@ -532,13 +524,18 @@ class Auth:
                 "Algorithm signature in JWT header does not match the algorithm signature in the public key",
             )
         try:
-            claims = jwt.decode(jwt=token, key=copy_key[0].key, algorithms=[alg_header])
-        except jwt.PyJWTError as e:
+            claims = jwt.decode(
+                jwt=token,
+                key=copy_key[0].key,
+                algorithms=[alg_header],
+                leeway=self.jwt_validation_leeway,
+            )
+        except ImmatureSignatureError:
             raise AuthException(
-                500,
-                ERROR_TYPE_INVALID_PUBLIC_KEY,
-                "Algorithm signature in JWT header does not match the algorithm signature in the public key",
-            ) from e
+                400,
+                ERROR_TYPE_INVALID_TOKEN,
+                "Received Invalid token times error due to time glitch (between machines) during jwt validation, try to set the jwt_validation_leeway parameter (in DescopeClient) to higher value than 5sec which is the default",
+            )
         claims["jwt"] = token
         return claims
 
@@ -552,8 +549,11 @@ class Auth:
 
         try:
             res = self._validate_token(session_token)
+            res[SESSION_TOKEN_NAME] = copy.deepcopy(
+                res
+            )  # Duplicate for saving backward compatibility but keep the same structure as the refresh operation response
             return self.adjust_properties(res, True)
-        except RateLimitException as e:
+        except (RateLimitException, AuthException) as e:
             raise e
         except AuthException as e:
             raise AuthException(
@@ -579,7 +579,7 @@ class Auth:
             ) from e
 
         uri = EndpointsV1.refresh_token_path
-        response = self.do_post(uri, {}, None, refresh_token)
+        response = self.do_post(uri=uri, body={}, params=None, pswd=refresh_token)
 
         resp = response.json()
         return self.generate_jwt_response(resp, refresh_token)

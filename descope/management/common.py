@@ -6,6 +6,7 @@ class MgmtV1:
     tenant_create_path = "/v1/mgmt/tenant/create"
     tenant_update_path = "/v1/mgmt/tenant/update"
     tenant_delete_path = "/v1/mgmt/tenant/delete"
+    tenant_load_path = "/v1/mgmt/tenant"
     tenant_load_all_path = "/v1/mgmt/tenant/all"
 
     # user
@@ -15,7 +16,9 @@ class MgmtV1:
     user_delete_all_test_users_path = "/v1/mgmt/user/test/delete/all"
     user_load_path = "/v1/mgmt/user"
     users_search_path = "/v1/mgmt/user/search"
+    user_get_provider_token = "/v1/mgmt/user/provider/token"
     user_update_status_path = "/v1/mgmt/user/update/status"
+    user_update_login_id_path = "/v1/mgmt/user/update/loginid"
     user_update_email_path = "/v1/mgmt/user/update/email"
     user_update_phone_path = "/v1/mgmt/user/update/phone"
     user_update_name_path = "/v1/mgmt/user/update/name"
@@ -23,6 +26,8 @@ class MgmtV1:
     user_update_custom_attribute_path = "/v1/mgmt/user/update/customAttribute"
     user_add_role_path = "/v1/mgmt/user/update/role/add"
     user_remove_role_path = "/v1/mgmt/user/update/role/remove"
+    user_set_password_path = "/v1/mgmt/user/password/set"
+    user_expire_password_path = "/v1/mgmt/user/password/expire"
     user_add_tenant_path = "/v1/mgmt/user/update/tenant/add"
     user_remove_tenant_path = "/v1/mgmt/user/update/tenant/remove"
     user_generate_otp_for_test_path = "/v1/mgmt/tests/generate/otp"
@@ -59,6 +64,7 @@ class MgmtV1:
     role_load_all_path = "/v1/mgmt/role/all"
 
     # flow
+    flow_list_path = "/v1/mgmt/flow/list"
     flow_import_path = "/v1/mgmt/flow/import"
     flow_export_path = "/v1/mgmt/flow/export"
 
@@ -70,6 +76,9 @@ class MgmtV1:
     group_load_all_path = "/v1/mgmt/group/all"
     group_load_all_for_member_path = "/v1/mgmt/group/member/all"
     group_load_all_group_members_path = "/v1/mgmt/group/members"
+
+    # Audit
+    audit_search = "/v1/mgmt/audit/search"
 
 
 class AssociatedTenant:

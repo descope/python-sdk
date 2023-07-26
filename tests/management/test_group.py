@@ -1,4 +1,3 @@
-import json
 from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
@@ -51,11 +50,9 @@ class TestGroup(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "tenantId": "someTenantId",
-                    }
-                ),
+                json={
+                    "tenantId": "someTenantId",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -93,13 +90,11 @@ class TestGroup(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "tenantId": "someTenantId",
-                        "loginIds": ["three", "four"],
-                        "userIds": ["one", "two"],
-                    }
-                ),
+                json={
+                    "tenantId": "someTenantId",
+                    "loginIds": ["three", "four"],
+                    "userIds": ["one", "two"],
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -136,12 +131,10 @@ class TestGroup(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                data=json.dumps(
-                    {
-                        "tenantId": "someTenantId",
-                        "groupId": "someGroupId",
-                    }
-                ),
+                json={
+                    "tenantId": "someTenantId",
+                    "groupId": "someGroupId",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,

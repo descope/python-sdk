@@ -177,6 +177,8 @@ class User(AuthBase):
         user_tenants: List[AssociatedTenant] = None,
         picture: str = None,
         custom_attributes: dict = None,
+        verified_email: bool = None,
+        verified_phone: bool = None,
     ):
         """
         Update an existing user with the given various fields. IMPORTANT: All parameters are used as overrides
@@ -212,6 +214,8 @@ class User(AuthBase):
                 False,
                 picture,
                 custom_attributes,
+                verified_email,
+                verified_phone,
             ),
             pswd=self._auth.management_key,
         )
@@ -268,8 +272,8 @@ class User(AuthBase):
         AuthException: raised if load operation fails
         """
         response = self._auth.do_get(
-            MgmtV1.user_load_path,
-            {"loginId": login_id},
+            uri=MgmtV1.user_load_path,
+            params={"loginId": login_id},
             pswd=self._auth.management_key,
         )
         return response.json()
@@ -294,8 +298,8 @@ class User(AuthBase):
         AuthException: raised if load operation fails
         """
         response = self._auth.do_get(
-            MgmtV1.user_load_path,
-            {"userId": user_id},
+            uri=MgmtV1.user_load_path,
+            params={"userId": user_id},
             pswd=self._auth.management_key,
         )
         return response.json()
@@ -359,6 +363,35 @@ class User(AuthBase):
         )
         return response.json()
 
+    def get_provider_token(
+        self,
+        login_id: str,
+        provider: str,
+    ) -> dict:
+        """
+        Get the provider token for the given login ID.
+        Only users that sign-in using social providers will have token.
+        Note: The 'Manage tokens from provider' setting must be enabled.
+
+        Args:
+        login_id (str): The login ID of the user.
+        provider (str): The provider name (google, facebook, etc').
+
+        Return value (dict):
+        Return dict in the format
+             {"provider": "", "providerUserId": "", "accessToken": "", "expiration": "", "scopes": "[]"}
+        Containing the provider token of the given user and provider.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._auth.do_get(
+            MgmtV1.user_get_provider_token,
+            {"loginId": login_id, "provider": provider},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
     def activate(
         self,
         login_id: str,
@@ -405,6 +438,34 @@ class User(AuthBase):
         response = self._auth.do_post(
             MgmtV1.user_update_status_path,
             {"loginId": login_id, "status": "disabled"},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    def update_login_id(
+        self,
+        login_id: str,
+        new_login_id: str = None,
+    ) -> dict:
+        """
+        Update login id of user, leave new login empty to remove the ID.
+        A user must have at least one login ID. Trying to remove the last one will fail.
+
+        Args:
+        login_id (str): The login ID of the user to update.
+        new_login_id (str): New login ID to set for the user.
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the updated user information.
+
+        Raise:
+        AuthException: raised if the update operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.user_update_login_id_path,
+            {"loginId": login_id, "newLoginId": new_login_id},
             pswd=self._auth.management_key,
         )
         return response.json()
@@ -719,6 +780,53 @@ class User(AuthBase):
         )
         return response.json()
 
+    def set_password(
+        self,
+        login_id: str,
+        password: str,
+    ) -> None:
+        """
+            Set the password for the given login ID.
+            Note: The password will automatically be set as expired.
+            The user will not be able to log-in with this password, and will be required to replace it on next login.
+            See also: expire_password
+
+        Args:
+        login_id (str): The login ID of the user to set the password to.
+        password (str): The new password to set to the user.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        self._auth.do_post(
+            MgmtV1.user_set_password_path,
+            {"loginId": login_id, "password": password},
+            pswd=self._auth.management_key,
+        )
+        return
+
+    def expire_password(
+        self,
+        login_id: str,
+    ) -> None:
+        """
+            Expires the password for the given login ID.
+            Note: user sign-in with an expired password, the user will get an error with code.
+            Use the `password.send_reset` or `password.replace` methods to reset/replace the password.
+
+        Args:
+        login_id (str): The login ID of the user expire the password to.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        self._auth.do_post(
+            MgmtV1.user_expire_password_path,
+            {"loginId": login_id},
+            pswd=self._auth.management_key,
+        )
+        return
+
     def generate_otp_for_test_user(
         self,
         method: DeliveryMethod,
@@ -849,8 +957,10 @@ class User(AuthBase):
         test: bool,
         picture: str,
         custom_attributes: dict,
+        verified_email: bool = None,
+        verified_phone: bool = None,
     ) -> dict:
-        return {
+        res = {
             "loginId": login_id,
             "email": email,
             "phone": phone,
@@ -861,3 +971,8 @@ class User(AuthBase):
             "picture": picture,
             "customAttributes": custom_attributes,
         }
+        if verified_email is not None:
+            res["verifiedEmail"] = verified_email
+        if verified_phone is not None:
+            res["verifiedPhone"] = verified_phone
+        return res

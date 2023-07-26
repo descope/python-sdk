@@ -68,8 +68,8 @@ class AccessKey(AuthBase):
         AuthException: raised if load operation fails
         """
         response = self._auth.do_get(
-            MgmtV1.access_key_load_path,
-            {"id": id},
+            uri=MgmtV1.access_key_load_path,
+            params={"id": id},
             pswd=self._auth.management_key,
         )
         return response.json()

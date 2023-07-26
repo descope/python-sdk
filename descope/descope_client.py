@@ -26,9 +26,15 @@ class DescopeClient:
         skip_verify: bool = False,
         management_key: str = None,
         timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
+        jwt_validation_leeway: int = 5,
     ):
         auth = Auth(
-            project_id, public_key, skip_verify, management_key, timeout_seconds
+            project_id,
+            public_key,
+            skip_verify,
+            management_key,
+            timeout_seconds,
+            jwt_validation_leeway,
         )
         self._auth = auth
         self._mgmt = MGMT(auth)
@@ -118,6 +124,9 @@ class DescopeClient:
         if tenant == "":
             granted = jwt_response.get("permissions", [])
         else:
+            # ensure that the tenant is associated with the jwt_response
+            if tenant not in jwt_response.get("tenants", {}):
+                return False
             granted = (
                 jwt_response.get("tenants", {}).get(tenant, {}).get("permissions", [])
             )
@@ -164,6 +173,9 @@ class DescopeClient:
         if tenant == "":
             granted = jwt_response.get("roles", [])
         else:
+            # ensure that the tenant is associated with the jwt_response
+            if tenant not in jwt_response.get("tenants", {}):
+                return False
             granted = jwt_response.get("tenants", {}).get(tenant, {}).get("roles", [])
 
         for role in roles:
@@ -175,7 +187,10 @@ class DescopeClient:
         """
         Validate a session token. Call this function for every incoming request to your
         private endpoints. Alternatively, use validate_and_refresh_session in order to
-        automatically refresh expired sessions.
+        automatically refresh expired sessions. If you need to use these specific claims
+        [amr, drn, exp, iss, rexp, sub, jwt] in the top level of the response dict, please use
+        them from the sessionToken key instead, as these claims will soon be deprecated from the top level
+        of the response dict.
 
         Args:
         session_token (str): The session token to be validated
@@ -292,7 +307,9 @@ class DescopeClient:
             )
 
         uri = EndpointsV1.me_path
-        response = self._auth.do_get(uri, None, None, refresh_token)
+        response = self._auth.do_get(
+            uri=uri, params=None, allow_redirects=None, pswd=refresh_token
+        )
         return response.json()
 
     def exchange_access_key(self, access_key: str) -> dict:

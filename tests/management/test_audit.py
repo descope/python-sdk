@@ -1,4 +1,4 @@
-import json
+from datetime import datetime
 from unittest import mock
 from unittest.mock import patch
 
@@ -9,7 +9,7 @@ from descope.management.common import MgmtV1
 from .. import common
 
 
-class TestUser(common.DescopeTest):
+class TestAudit(common.DescopeTest):
     def setUp(self) -> None:
         super().setUp()
         self.dummy_project_id = "dummy"
@@ -24,7 +24,7 @@ class TestUser(common.DescopeTest):
             "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
         }
 
-    def test_update_jwt(self):
+    def test_search(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -32,35 +32,51 @@ class TestUser(common.DescopeTest):
             self.dummy_management_key,
         )
 
-        # Test failed flows
+        # Test failed search
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
-                AuthException, client.mgmt.jwt.update_jwt, "jwt", {"k1": "v1"}
+                AuthException,
+                client.mgmt.audit.search,
+                "data",
             )
 
-            self.assertRaises(
-                AuthException, client.mgmt.jwt.update_jwt, "", {"k1": "v1"}
-            )
-
-        # Test success flow
+        # Test success search
         with patch("requests.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
-            network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
+            network_resp.json.return_value = {
+                "audits": [
+                    {
+                        "projectId": "p",
+                        "userId": "u1",
+                        "action": "a1",
+                        "externalIds": ["e1"],
+                        "occurred": str(datetime.now().timestamp() * 1000),
+                    },
+                    {
+                        "projectId": "p",
+                        "userId": "u2",
+                        "action": "a2",
+                        "externalIds": ["e2"],
+                        "occurred": str(datetime.now().timestamp() * 1000),
+                    },
+                ]
+            }
             mock_post.return_value = network_resp
-            resp = client.mgmt.jwt.update_jwt("test", {"k1": "v1"})
-            self.assertEqual(resp, "response")
-            expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.update_jwt_path}"
+            resp = client.mgmt.audit.search()
+            audits = resp["audits"]
+            self.assertEqual(len(audits), 2)
+            self.assertEqual(audits[0]["loginIds"][0], "e1")
             mock_post.assert_called_with(
-                expected_uri,
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.audit_search}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
-                json={"jwt": "test", "customClaims": {"k1": "v1"}},
+                params=None,
+                json={"noTenants": False},
                 allow_redirects=False,
                 verify=True,
-                params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
