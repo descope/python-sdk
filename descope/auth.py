@@ -554,8 +554,6 @@ class Auth:
             )  # Duplicate for saving backward compatibility but keep the same structure as the refresh operation response
             return self.adjust_properties(res, True)
         except (RateLimitException, AuthException) as e:
-            raise e
-        except AuthException as e:
             raise AuthException(
                 401, ERROR_TYPE_INVALID_TOKEN, f"Invalid session token: {e}"
             ) from e
