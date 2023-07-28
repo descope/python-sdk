@@ -313,6 +313,7 @@ class User(AuthBase):
         test_users_only: bool = False,
         with_test_user: bool = False,
         custom_attributes: dict = None,
+        statuses: List[str] = None,
     ) -> dict:
         """
         Search all users.
@@ -353,6 +354,9 @@ class User(AuthBase):
             "testUsersOnly": test_users_only,
             "withTestUser": with_test_user,
         }
+        if statuses is not None:
+            body["statuses"] = statuses
+
         if custom_attributes is not None:
             body["customAttributes"] = custom_attributes
 
