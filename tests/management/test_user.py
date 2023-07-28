@@ -459,6 +459,7 @@ class TestUser(common.DescopeTest):
                 ["r1", "r2"],
                 with_test_user=True,
                 custom_attributes={"ak": "av"},
+                statuses=["invited"],
             )
             users = resp["users"]
             self.assertEqual(len(users), 2)
@@ -479,6 +480,7 @@ class TestUser(common.DescopeTest):
                     "testUsersOnly": False,
                     "withTestUser": True,
                     "customAttributes": {"ak": "av"},
+                    "statuses": ["invited"],
                 },
                 allow_redirects=False,
                 verify=True,
