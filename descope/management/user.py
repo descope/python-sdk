@@ -923,6 +923,28 @@ class User(AuthBase):
         )
         return response.json()
 
+    def generate_embedded_link(self, login_id: str, custom_claims: dict = None) -> str:
+        """
+        Generate Embedded Link for the given user login ID.
+        The return value is a token that can be verified via magic link, or using flows
+
+        Args:
+        login_id (str): The login ID of the user to authenticate with.
+        custom_claims (dict): Additional claims to place on the jwt after verification
+
+        Return value (str):
+        Return the token to be used in verification process
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.user_generate_embedded_link_path,
+            {"loginId": login_id, "customClaims": custom_claims},
+            pswd=self._auth.management_key,
+        )
+        return response.json()["token"]
+
     @staticmethod
     def _compose_create_body(
         login_id: str,
