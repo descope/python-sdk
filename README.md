@@ -854,7 +854,7 @@ pending_ref = resp["pendingRef"]
 # Note 2: In case of testing sign-in / sign-up operations with test users, need to make sure to generate the code prior calling the sign-in / sign-up operations.
 
 # Embedded links can be created to directly receive a verifiable token without sending it.
-# This token that can be verified using the magic link 'verify' function, either directly or through a flow.
+# This token can then be verified using the magic link 'verify' function, either directly or through a flow.
 token, err = descope_client.mgmt.user.generate_embedded_link("desmond@descope.com", {"key1":"value1"})
 ```
 
