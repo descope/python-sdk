@@ -852,6 +852,10 @@ pending_ref = resp["pendingRef"]
 
 # Note 1: The generate code/link functions, work only for test users, will not work for regular users.
 # Note 2: In case of testing sign-in / sign-up operations with test users, need to make sure to generate the code prior calling the sign-in / sign-up operations.
+
+# Embedded link can be created via the following call,
+# The return value is a token that can be verified via magic link, or using flows
+token, err = descope_client.mgmt.user.generate_embedded_link("desmond@descope.com", {"key1":"value1"})
 ```
 
 ## API Rate Limits
