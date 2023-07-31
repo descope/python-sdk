@@ -1230,37 +1230,3 @@ class TestUser(common.DescopeTest):
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
-
-    def test_generate_embedded_link(self):
-        # Test failed flows
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException, self.client.mgmt.user.generate_embedded_link, "login-id"
-            )
-
-        # Test success flow
-        with patch("requests.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.ok = True
-            network_resp.json.return_value = json.loads("""{"token": "some-token"}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.generate_embedded_link(
-                "login-id", {"k1": "v1"}
-            )
-            self.assertEqual(resp, "some-token")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_generate_embedded_link_path}",
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                },
-                json={
-                    "loginId": "login-id",
-                    "customClaims": {"k1": "v1"},
-                },
-                allow_redirects=False,
-                verify=True,
-                params=None,
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )

@@ -33,7 +33,6 @@ class MgmtV1:
     user_generate_otp_for_test_path = "/v1/mgmt/tests/generate/otp"
     user_generate_magic_link_for_test_path = "/v1/mgmt/tests/generate/magiclink"
     user_generate_enchanted_link_for_test_path = "/v1/mgmt/tests/generate/enchantedlink"
-    user_generate_embedded_link_path = "/v1/mgmt/user/signin/embeddedlink"
 
     # access key
     access_key_create_path = "/v1/mgmt/accesskey/create"
