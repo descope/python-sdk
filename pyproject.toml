@@ -30,7 +30,7 @@ PyJWT = {version = "2.7.0", extras = ["crypto"]} # Latest secrutiy update
 email-validator = "==2.0.0.post2"
 
 [tool.poetry.group.dev.dependencies]
-mock = "5.0.2"
+mock = "5.1.0"
 pre-commit = "2.21.0"
 Flask = "2.2.5"
 flake8 = "5.0.4"
