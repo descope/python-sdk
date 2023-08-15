@@ -855,7 +855,7 @@ pending_ref = resp["pendingRef"]
 
 # Embedded links can be created to directly receive a verifiable token without sending it.
 # This token can then be verified using the magic link 'verify' function, either directly or through a flow.
-token, err = descope_client.mgmt.user.generate_embedded_link("desmond@descope.com", {"key1":"value1"})
+token = descope_client.mgmt.user.generate_embedded_link("desmond@descope.com", {"key1":"value1"})
 ```
 
 ## API Rate Limits
