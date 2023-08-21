@@ -332,7 +332,9 @@ Alternatively, it is also possible to replace an existing active password with a
 
 ```python
 # Replaces the user's current password with a new one
-descope_client.password.replace(login_id, old_password, new_password)
+jwt_response = descope_client.password.replace(login_id, old_password, new_password)
+session_token = jwt_response[SESSION_TOKEN_NAME].get("jwt")
+refresh_token = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("jwt")
 ```
 
 ### Session Validation

@@ -155,7 +155,7 @@ class Password(AuthBase):
             uri, {"loginId": login_id, "newPassword": new_password}, None, refresh_token
         )
 
-    def replace(self, login_id: str, old_password: str, new_password: str) -> None:
+    def replace(self, login_id: str, old_password: str, new_password: str) -> dict:
         """
         Replace a valid active password with a new one. The old_password is used to
         authenticate the user. If the user cannot be authenticated, this operation
@@ -165,6 +165,11 @@ class Password(AuthBase):
         login_id (str): The login ID of the user whose information is being updated
         old_password (str): The user's current active password
         new_password (str): The new password to use
+
+                        Return value (dict):
+        Return dict in the format
+             {"jwts": [], "user": "", "firstSeen": false, "error": ""}
+        Includes all the jwts tokens (session token, refresh token), token claims, and user information
 
         Raise:
         AuthException: raised if replace operation fails
@@ -186,7 +191,7 @@ class Password(AuthBase):
             )
 
         uri = EndpointsV1.replace_password_path
-        self._auth.do_post(
+        response = self._auth.do_post(
             uri,
             {
                 "loginId": login_id,
@@ -194,6 +199,12 @@ class Password(AuthBase):
                 "newPassword": new_password,
             },
         )
+
+        resp = response.json()
+        jwt_response = self._auth.generate_jwt_response(
+            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
+        )
+        return jwt_response
 
     def get_policy(self) -> dict:
         """
