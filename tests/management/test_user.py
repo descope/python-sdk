@@ -86,6 +86,57 @@ class TestUser(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+    def test_create_with_verified_parameters(self):
+        # Test success flow with verified email and phone
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.create(
+                login_id="name@mail.com",
+                email="name@mail.com",
+                display_name="Name",
+                user_tenants=[
+                    AssociatedTenant("tenant1"),
+                    AssociatedTenant("tenant2", ["role1", "role2"]),
+                ],
+                picture="https://test.com",
+                custom_attributes={"ak": "av"},
+                verified_email=True,
+                verified_phone=False,
+            )
+            user = resp["user"]
+            self.assertEqual(user["id"], "u1")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_create_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                json={
+                    "loginId": "name@mail.com",
+                    "email": "name@mail.com",
+                    "phone": None,
+                    "displayName": "Name",
+                    "roleNames": [],
+                    "userTenants": [
+                        {"tenantId": "tenant1", "roleNames": []},
+                        {"tenantId": "tenant2", "roleNames": ["role1", "role2"]},
+                    ],
+                    "test": False,
+                    "picture": "https://test.com",
+                    "customAttributes": {"ak": "av"},
+                    "invite": False,
+                    "verifiedEmail": True,
+                    "verifiedPhone": False,
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
     def test_create_test_user(self):
         # Test failed flows
         with patch("requests.post") as mock_post:

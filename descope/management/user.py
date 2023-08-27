@@ -22,6 +22,8 @@ class User(AuthBase):
         user_tenants: List[AssociatedTenant] = None,
         picture: str = None,
         custom_attributes: dict = None,
+        verified_email: bool = None,
+        verified_phone: bool = None,
     ) -> dict:
         """
         Create a new user. Users can have any number of optional fields, including email, phone number and authorization.
@@ -62,6 +64,8 @@ class User(AuthBase):
                 False,
                 picture,
                 custom_attributes,
+                verified_email,
+                verified_phone,
             ),
             pswd=self._auth.management_key,
         )
@@ -77,6 +81,8 @@ class User(AuthBase):
         user_tenants: List[AssociatedTenant] = None,
         picture: str = None,
         custom_attributes: dict = None,
+        verified_email: bool = None,
+        verified_phone: bool = None,
     ) -> dict:
         """
         Create a new test user.
@@ -119,6 +125,8 @@ class User(AuthBase):
                 True,
                 picture,
                 custom_attributes,
+                verified_email,
+                verified_phone,
             ),
             pswd=self._auth.management_key,
         )
@@ -134,6 +142,8 @@ class User(AuthBase):
         user_tenants: List[AssociatedTenant] = None,
         picture: str = None,
         custom_attributes: dict = None,
+        verified_email: bool = None,
+        verified_phone: bool = None,
     ) -> dict:
         """
         Create a new user and invite them via an email message.
@@ -162,6 +172,8 @@ class User(AuthBase):
                 False,
                 picture,
                 custom_attributes,
+                verified_email,
+                verified_phone,
             ),
             pswd=self._auth.management_key,
         )
@@ -957,6 +969,8 @@ class User(AuthBase):
         test: bool,
         picture: str,
         custom_attributes: dict,
+        verified_email: bool = None,
+        verified_phone: bool = None,
     ) -> dict:
         body = User._compose_update_body(
             login_id,
@@ -970,6 +984,10 @@ class User(AuthBase):
             custom_attributes,
         )
         body["invite"] = invite
+        if verified_email is not None:
+            body["verifiedEmail"] = verified_email
+        if verified_phone is not None:
+            body["verifiedPhone"] = verified_phone
         return body
 
     @staticmethod
