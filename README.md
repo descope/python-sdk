@@ -359,6 +359,8 @@ jwt_response = descope_client.validate_and_refresh_session(session_token, refres
 
 Choose the right session validation and refresh combination that suits your needs.
 
+Note: all those validation apis can receive an optional 'audience' parameter that should be provided when using jwt that has the 'aud' claim)
+
 Refreshed sessions return the same response as is returned when users first sign up / log in,
 containing the session and refresh tokens, as well as all of the JWT claims.
 Make sure to return the tokens from the response to the client, or updated the cookie if you're using it.
