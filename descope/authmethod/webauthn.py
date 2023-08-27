@@ -52,7 +52,7 @@ class WebAuthn(AuthBase):
 
         resp = response.json()
         jwt_response = self._auth.generate_jwt_response(
-            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
+            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), None
         )
         return jwt_response
 
@@ -104,7 +104,7 @@ class WebAuthn(AuthBase):
 
         resp = response.json()
         jwt_response = self._auth.generate_jwt_response(
-            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
+            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), None
         )
         return jwt_response
 

@@ -1,3 +1,11 @@
+import sys
+
+if sys.version_info[0] >= 3 and sys.version_info[1] >= 10:
+    # Python 3.10 and above
+    from collections.abc import Iterable
+else:
+    from collections.abc import Iterable
+
 import copy
 import json
 import os
@@ -153,7 +161,7 @@ class Auth:
         response = self.do_post(uri=uri, body=body, params=None)
         resp = response.json()
         jwt_response = self.generate_jwt_response(
-            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME)
+            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME), None
         )
         return jwt_response
 
@@ -275,7 +283,7 @@ class Auth:
         server_response = self.do_post(uri=uri, body={}, params=None, pswd=access_key)
         json = server_response.json()
         return self._generate_auth_info(
-            response_body=json, refresh_token=None, user_jwt=False
+            response_body=json, refresh_token=None, user_jwt=False, audience=None
         )
 
     @staticmethod
@@ -421,19 +429,25 @@ class Auth:
         return jwt_response
 
     def _generate_auth_info(
-        self, response_body: dict, refresh_token: str, user_jwt: bool
+        self,
+        response_body: dict,
+        refresh_token: str,
+        user_jwt: bool,
+        audience: str | Iterable[str] | None = None,
     ) -> dict:
         jwt_response = {}
         st_jwt = response_body.get("sessionJwt", "")
         if st_jwt:
-            jwt_response[SESSION_TOKEN_NAME] = self._validate_token(st_jwt)
+            jwt_response[SESSION_TOKEN_NAME] = self._validate_token(st_jwt, audience)
         rt_jwt = response_body.get("refreshJwt", "")
         if refresh_token:
             jwt_response[REFRESH_SESSION_TOKEN_NAME] = self._validate_token(
-                refresh_token
+                refresh_token, audience
             )
         elif rt_jwt:
-            jwt_response[REFRESH_SESSION_TOKEN_NAME] = self._validate_token(rt_jwt)
+            jwt_response[REFRESH_SESSION_TOKEN_NAME] = self._validate_token(
+                rt_jwt, audience
+            )
 
         jwt_response = self.adjust_properties(jwt_response, user_jwt)
 
@@ -447,8 +461,15 @@ class Auth:
 
         return jwt_response
 
-    def generate_jwt_response(self, response_body: dict, refresh_cookie: str) -> dict:
-        jwt_response = self._generate_auth_info(response_body, refresh_cookie, True)
+    def generate_jwt_response(
+        self,
+        response_body: dict,
+        refresh_cookie: str,
+        audience: str | Iterable[str] | None = None,
+    ) -> dict:
+        jwt_response = self._generate_auth_info(
+            response_body, refresh_cookie, True, audience
+        )
 
         jwt_response["user"] = response_body.get("user", {})
         jwt_response["firstSeen"] = response_body.get("firstSeen", True)
@@ -471,7 +492,9 @@ class Auth:
         return headers
 
     # Validate a token and load the public key if needed
-    def _validate_token(self, token: str) -> dict:
+    def _validate_token(
+        self, token: str, audience: str | Iterable[str] | None = None
+    ) -> dict:
         if not token:
             raise AuthException(
                 500,
@@ -527,6 +550,7 @@ class Auth:
                 jwt=token,
                 key=copy_key[0].key,
                 algorithms=[alg_header],
+                audience=audience,
                 leeway=self.jwt_validation_leeway,
             )
         except ImmatureSignatureError:
@@ -539,7 +563,9 @@ class Auth:
         claims["jwt"] = token
         return claims
 
-    def validate_session(self, session_token: str) -> dict:
+    def validate_session(
+        self, session_token: str, audience: str | Iterable[str] | None = None
+    ) -> dict:
         if not session_token:
             raise AuthException(
                 400,
@@ -548,7 +574,7 @@ class Auth:
             )
 
         try:
-            res = self._validate_token(session_token)
+            res = self._validate_token(session_token, audience)
             res[SESSION_TOKEN_NAME] = copy.deepcopy(
                 res
             )  # Duplicate for saving backward compatibility but keep the same structure as the refresh operation response
@@ -560,7 +586,9 @@ class Auth:
                 401, ERROR_TYPE_INVALID_TOKEN, f"Invalid session token: {e}"
             )
 
-    def refresh_session(self, refresh_token: str) -> dict:
+    def refresh_session(
+        self, refresh_token: str, audience: str | Iterable[str] | None = None
+    ) -> dict:
         if not refresh_token:
             raise AuthException(
                 400,
@@ -569,7 +597,7 @@ class Auth:
             )
 
         try:
-            self._validate_token(refresh_token)
+            self._validate_token(refresh_token, audience)
         except RateLimitException as e:
             raise e
         except Exception as e:
@@ -582,10 +610,13 @@ class Auth:
         response = self.do_post(uri=uri, body={}, params=None, pswd=refresh_token)
 
         resp = response.json()
-        return self.generate_jwt_response(resp, refresh_token)
+        return self.generate_jwt_response(resp, refresh_token, audience)
 
     def validate_and_refresh_session(
-        self, session_token: str = None, refresh_token: str = None
+        self,
+        session_token: str = None,
+        refresh_token: str = None,
+        audience: str | Iterable[str] | None = None,
     ) -> dict:
         if not session_token and not refresh_token:
             raise AuthException(
@@ -595,10 +626,10 @@ class Auth:
             )
 
         try:
-            return self.validate_session(session_token)
+            return self.validate_session(session_token, audience)
         except Exception:
             # Session is invalid - try to refresh it
-            return self.refresh_session(refresh_token)
+            return self.refresh_session(refresh_token, audience)
 
     @staticmethod
     def extract_masked_address(response: dict, method: DeliveryMethod) -> str:

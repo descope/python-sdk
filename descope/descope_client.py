@@ -1,3 +1,11 @@
+import sys
+
+if sys.version_info[0] >= 3 and sys.version_info[1] >= 10:
+    # Python 3.10 and above
+    from collections.abc import Iterable
+else:
+    from collections.abc import Iterable
+
 from typing import List
 
 import requests
@@ -183,7 +191,9 @@ class DescopeClient:
                 return False
         return True
 
-    def validate_session(self, session_token: str) -> dict:
+    def validate_session(
+        self, session_token: str, audience: str | Iterable[str] | None = None
+    ) -> dict:
         """
         Validate a session token. Call this function for every incoming request to your
         private endpoints. Alternatively, use validate_and_refresh_session in order to
@@ -194,6 +204,7 @@ class DescopeClient:
 
         Args:
         session_token (str): The session token to be validated
+        audience (str|Iterable[str]|None): Optional recipients that the JWT is intended for (must be equal to the 'aud' claim on the provided token)
 
         Return value (dict):
         Return dict includes the session token and all JWT claims
@@ -201,14 +212,17 @@ class DescopeClient:
         Raise:
         AuthException: Exception is raised if session is not authorized or any other error occurs
         """
-        return self._auth.validate_session(session_token)
+        return self._auth.validate_session(session_token, audience)
 
-    def refresh_session(self, refresh_token: str) -> dict:
+    def refresh_session(
+        self, refresh_token: str, audience: str | Iterable[str] | None = None
+    ) -> dict:
         """
         Refresh a session. Call this function when a session expires and needs to be refreshed.
 
         Args:
         refresh_token (str): The refresh token that will be used to refresh the session
+        audience (str|Iterable[str]|None): Optional recipients that the JWT is intended for (must be equal to the 'aud' claim on the provided token)
 
         Return value (dict):
         Return dict includes the session token, refresh token, and all JWT claims
@@ -216,10 +230,13 @@ class DescopeClient:
         Raise:
         AuthException: Exception is raised if refresh token is not authorized or any other error occurs
         """
-        return self._auth.refresh_session(refresh_token)
+        return self._auth.refresh_session(refresh_token, audience)
 
     def validate_and_refresh_session(
-        self, session_token: str, refresh_token: str
+        self,
+        session_token: str,
+        refresh_token: str,
+        audience: str | Iterable[str] | None = None,
     ) -> dict:
         """
         Validate the session token and refresh it if it has expired, the session token will automatically be refreshed.
@@ -230,6 +247,7 @@ class DescopeClient:
         Args:
         session_token (str): The session token to be validated
         refresh_token (str): The refresh token that will be used to refresh the session token, if needed
+        audience (str|Iterable[str]|None): Optional recipients that the JWT is intended for (must be equal to the 'aud' claim on the provided token)
 
         Return value (dict):
         Return dict includes the session token, refresh token, and all JWT claims
@@ -237,7 +255,9 @@ class DescopeClient:
         Raise:
         AuthException: Exception is raised if session is not authorized or another error occurs
         """
-        return self._auth.validate_and_refresh_session(session_token, refresh_token)
+        return self._auth.validate_and_refresh_session(
+            session_token, refresh_token, audience
+        )
 
     def logout(self, refresh_token: str) -> requests.Response:
         """
