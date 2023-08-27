@@ -86,6 +86,7 @@ class TestUser(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+    def test_create_with_verified_parameters(self):
         # Test success flow with verified email and phone
         with patch("requests.post") as mock_post:
             network_resp = mock.Mock()
@@ -129,7 +130,7 @@ class TestUser(common.DescopeTest):
                     "customAttributes": {"ak": "av"},
                     "invite": False,
                     "verifiedEmail": True,
-                    "verifiedPhone": True,
+                    "verifiedPhone": False,
                 },
                 allow_redirects=False,
                 verify=True,
