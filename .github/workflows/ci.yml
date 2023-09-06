@@ -46,7 +46,7 @@ jobs:
         with:
           python-version: ${{ matrix.py }}
       - name: Install tox
-        run: python -m pip install tox-gh>=1.2
+        run: python -m pip install tox-gh>=1.2 poetry
       - name: Setup test suite
         run: tox -vv --notest
       - name: Run test suite
@@ -86,6 +86,9 @@ jobs:
     name: gitleaks
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: Gitleaks
         uses: ./.github/actions/gitleaks
         with:
