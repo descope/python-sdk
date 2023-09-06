@@ -593,8 +593,6 @@ class TestAuth(common.DescopeTest):
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, 400)
             self.assertEqual(the_exception.error_type, ERROR_TYPE_SERVER_ERROR)
-            with open("/tmp/ex.txt", "w") as f:
-                f.write(the_exception.error_message)
             self.assertEqual(
                 the_exception.error_message,
                 """{"errorCode":"E062108","errorDescription":"User not found","errorMessage":"Cannot find user","message":"Cannot find user"}""",
