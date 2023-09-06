@@ -4,12 +4,8 @@ import sys
 
 dir_name = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(dir_name, "../"))
-from descope import (  # noqa: E402
-    REFRESH_SESSION_TOKEN_NAME,
-    SESSION_TOKEN_NAME,
-    AuthException,
-    DescopeClient,
-)
+from descope import REFRESH_SESSION_TOKEN_NAME  # noqa: E402
+from descope import SESSION_TOKEN_NAME, AuthException, DescopeClient  # noqa: E402
 
 logging.basicConfig(level=logging.INFO)
 

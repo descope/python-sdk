@@ -1,4 +1,4 @@
-import string
+from __future__ import annotations
 
 from descope._auth_base import AuthBase
 from descope.auth import Auth
@@ -18,8 +18,8 @@ class MagicLink(AuthBase):
         method: DeliveryMethod,
         login_id: str,
         uri: str,
-        login_options: LoginOptions = None,
-        refresh_token: str = None,
+        login_options: LoginOptions | None = None,
+        refresh_token: str | None = None,
     ) -> str:
         if not login_id:
             raise AuthException(
@@ -37,7 +37,11 @@ class MagicLink(AuthBase):
         return Auth.extract_masked_address(response.json(), method)
 
     def sign_up(
-        self, method: DeliveryMethod, login_id: str, uri: str, user: dict = None
+        self,
+        method: DeliveryMethod,
+        login_id: str,
+        uri: str,
+        user: dict | None = None,
     ) -> str:
         if not user:
             user = {}
@@ -133,9 +137,9 @@ class MagicLink(AuthBase):
 
     @staticmethod
     def _compose_signin_body(
-        login_id: string,
-        uri: string,
-        login_options: LoginOptions = None,
+        login_id: str,
+        uri: str,
+        login_options: LoginOptions | None = None,
     ) -> dict:
         return {
             "loginId": login_id,
@@ -146,11 +150,11 @@ class MagicLink(AuthBase):
     @staticmethod
     def _compose_signup_body(
         method: DeliveryMethod,
-        login_id: string,
-        uri: string,
-        user: dict = None,
+        login_id: str,
+        uri: str,
+        user: dict | None = None,
     ) -> dict:
-        body = {"loginId": login_id, "URI": uri}
+        body: dict[str, str | dict] = {"loginId": login_id, "URI": uri}
 
         if user is not None:
             body["user"] = user
@@ -159,7 +163,7 @@ class MagicLink(AuthBase):
         return body
 
     @staticmethod
-    def _compose_verify_body(token: string) -> dict:
+    def _compose_verify_body(token: str) -> dict:
         return {"token": token}
 
     @staticmethod

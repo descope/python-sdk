@@ -1,3 +1,5 @@
+from typing import Optional
+
 from descope._auth_base import AuthBase
 from descope.management.common import MgmtV1
 
@@ -6,7 +8,7 @@ class Permission(AuthBase):
     def create(
         self,
         name: str,
-        description: str = None,
+        description: Optional[str] = None,
     ):
         """
         Create a new permission.
@@ -28,7 +30,7 @@ class Permission(AuthBase):
         self,
         name: str,
         new_name: str,
-        description: str = None,
+        description: Optional[str] = None,
     ):
         """
         Update an existing permission with the given various fields. IMPORTANT: All parameters are used as overrides

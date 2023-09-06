@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Optional
 
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
@@ -94,7 +95,10 @@ class DeliveryMethod(Enum):
 
 class LoginOptions:
     def __init__(
-        self, stepup: bool = False, mfa: bool = False, custom_claims: dict = None
+        self,
+        stepup: bool = False,
+        mfa: bool = False,
+        custom_claims: Optional[dict] = None,
     ):
         self.stepup = stepup
         self.customClaims = custom_claims
@@ -102,7 +106,7 @@ class LoginOptions:
 
 
 def validate_refresh_token_provided(
-    login_options: LoginOptions = None, refresh_token: str = None
+    login_options: Optional[LoginOptions] = None, refresh_token: Optional[str] = None
 ):
     refresh_required = login_options is not None and (
         login_options.mfa or login_options.stepup

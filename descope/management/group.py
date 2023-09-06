@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from descope._auth_base import AuthBase
 from descope.management.common import MgmtV1
@@ -47,8 +47,8 @@ class Group(AuthBase):
     def load_all_groups_for_members(
         self,
         tenant_id: str,
-        user_ids: List[str] = None,
-        login_ids: List[str] = None,
+        user_ids: Optional[List[str]] = None,
+        login_ids: Optional[List[str]] = None,
     ) -> dict:
         """
         Load all groups for the provided user IDs or login IDs.

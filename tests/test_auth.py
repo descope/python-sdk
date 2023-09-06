@@ -284,10 +284,8 @@ class TestAuth(common.DescopeTest):
         auth = Auth(self.dummy_project_id, self.public_key_dict)
 
         # Bad input for session
-        self.assertRaises(
-            AuthException,
-            auth.validate_and_refresh_session,
-        )
+        with self.assertRaises(AuthException):
+            auth.validate_and_refresh_session(None, None)
 
         # Test validate_session with Ratelimit exception
         with patch("requests.get") as mock_request:

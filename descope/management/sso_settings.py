@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from descope._auth_base import AuthBase
 from descope.management.common import MgmtV1
@@ -17,10 +17,10 @@ class AttributeMapping:
 
     def __init__(
         self,
-        name: str = None,
-        email: str = None,
-        phone_number: str = None,
-        group: str = None,
+        name: Optional[str] = None,
+        email: Optional[str] = None,
+        phone_number: Optional[str] = None,
+        group: Optional[str] = None,
     ):
         self.name = name
         self.email = email
@@ -132,8 +132,8 @@ class SSOSettings(AuthBase):
     def mapping(
         self,
         tenant_id: str,
-        role_mappings: List[RoleMapping] = None,
-        attribute_mapping: AttributeMapping = None,
+        role_mappings: Optional[List[RoleMapping]] = None,
+        attribute_mapping: Optional[AttributeMapping] = None,
     ):
         """
         Configure SSO role mapping from the IDP groups to the Descope roles.
@@ -146,9 +146,6 @@ class SSOSettings(AuthBase):
         Raise:
         AuthException: raised if configuration operation fails
         """
-        role_mappings = [] if role_mappings is None else role_mappings
-        attribute_mapping = [] if attribute_mapping is None else attribute_mapping
-
         self._auth.do_post(
             MgmtV1.sso_mapping_path,
             SSOSettings._compose_mapping_body(
@@ -192,8 +189,8 @@ class SSOSettings(AuthBase):
     @staticmethod
     def _compose_mapping_body(
         tenant_id: str,
-        role_mapping: List[RoleMapping],
-        attribute_mapping: AttributeMapping,
+        role_mapping: Optional[List[RoleMapping]],
+        attribute_mapping: Optional[AttributeMapping],
     ) -> dict:
         return {
             "tenantId": tenant_id,
@@ -204,7 +201,9 @@ class SSOSettings(AuthBase):
         }
 
     @staticmethod
-    def _role_mapping_to_dict(role_mapping: List[RoleMapping]) -> list:
+    def _role_mapping_to_dict(role_mapping: Optional[List[RoleMapping]]) -> list:
+        if role_mapping is None:
+            role_mapping = []
         role_mapping_list = []
         for mapping in role_mapping:
             role_mapping_list.append(
@@ -216,7 +215,11 @@ class SSOSettings(AuthBase):
         return role_mapping_list
 
     @staticmethod
-    def _attribute_mapping_to_dict(attribute_mapping: AttributeMapping) -> dict:
+    def _attribute_mapping_to_dict(
+        attribute_mapping: Optional[AttributeMapping],
+    ) -> dict:
+        if attribute_mapping is None:
+            raise ValueError("Attribute mapping cannot be None")
         return {
             "name": attribute_mapping.name,
             "email": attribute_mapping.email,

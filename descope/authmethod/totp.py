@@ -1,3 +1,5 @@
+from typing import Optional
+
 from descope._auth_base import AuthBase
 from descope.common import (
     REFRESH_SESSION_COOKIE_NAME,
@@ -9,7 +11,7 @@ from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
 class TOTP(AuthBase):
-    def sign_up(self, login_id: str, user: dict = None) -> dict:
+    def sign_up(self, login_id: str, user: Optional[dict] = None) -> dict:
         """
         Sign up (create) a new user using their email or phone number.
             (optional) Include additional user metadata that you wish to save.
@@ -45,8 +47,8 @@ class TOTP(AuthBase):
         self,
         login_id: str,
         code: str,
-        login_options: LoginOptions = None,
-        refresh_token: str = None,
+        login_options: Optional[LoginOptions] = None,
+        refresh_token: Optional[str] = None,
     ) -> dict:
         """
         Sign in by verifying the validity of a TOTP code entered by an end user.
@@ -124,15 +126,15 @@ class TOTP(AuthBase):
         return response.json()
 
     @staticmethod
-    def _compose_signup_body(login_id: str, user: dict) -> dict:
-        body = {"loginId": login_id}
+    def _compose_signup_body(login_id: str, user: Optional[dict]) -> dict:
+        body: dict[str, str | dict] = {"loginId": login_id}
         if user is not None:
             body["user"] = user
         return body
 
     @staticmethod
     def _compose_signin_body(
-        login_id: str, code: str, login_options: LoginOptions = None
+        login_id: str, code: str, login_options: Optional[LoginOptions] = None
     ) -> dict:
         return {
             "loginId": login_id,

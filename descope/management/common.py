@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 
 class MgmtV1:
@@ -89,7 +89,7 @@ class AssociatedTenant:
     roles for the user or access key in this specific tenant.
     """
 
-    def __init__(self, tenant_id: str, role_names: List[str] = None):
+    def __init__(self, tenant_id: str, role_names: Optional[List[str]] = None):
         self.tenant_id = tenant_id
         self.role_names = [] if role_names is None else role_names
 

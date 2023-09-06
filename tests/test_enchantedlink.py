@@ -100,12 +100,8 @@ class TestEnchantedLink(common.DescopeTest):
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
             # Test failed flows
-            self.assertRaises(
-                AuthException,
-                enchantedlink.sign_in,
-                "",
-                "http://test.me",
-            )
+            with self.assertRaises(AuthException):
+                enchantedlink.sign_in("", "http://test.me")
             data = json.loads("""{"pendingRef": "aaaa","linkId":"24"}""")
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response

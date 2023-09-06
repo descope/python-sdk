@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 from descope._auth_base import AuthBase
 from descope.common import REFRESH_SESSION_COOKIE_NAME, EndpointsV1
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
 class Password(AuthBase):
-    def sign_up(self, login_id: str, password: str, user: dict = None) -> dict:
+    def sign_up(self, login_id: str, password: str, user: dict | None = None) -> dict:
         """
         Sign up (create) a new user using a login ID and password.
             (optional) Include additional user metadata that you wish to save.
@@ -87,7 +89,7 @@ class Password(AuthBase):
     def send_reset(
         self,
         login_id: str,
-        redirect_url: str = None,
+        redirect_url: str | None = None,
     ) -> dict:
         """
         Sends a password reset prompt to the user with the given
@@ -228,8 +230,8 @@ class Password(AuthBase):
         return response.json()
 
     @staticmethod
-    def _compose_signup_body(login_id: str, password: str, user: dict) -> dict:
-        body = {"loginId": login_id, "password": password}
+    def _compose_signup_body(login_id: str, password: str, user: dict | None) -> dict:
+        body: dict[str, str | dict] = {"loginId": login_id, "password": password}
         if user is not None:
             body["user"] = user
         return body

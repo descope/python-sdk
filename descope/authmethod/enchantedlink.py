@@ -1,4 +1,4 @@
-import string
+from __future__ import annotations
 
 import requests
 
@@ -19,8 +19,8 @@ class EnchantedLink(AuthBase):
         self,
         login_id: str,
         uri: str,
-        login_options: LoginOptions = None,
-        refresh_token: str = None,
+        login_options: LoginOptions | None = None,
+        refresh_token: str | None = None,
     ) -> dict:
         if not login_id:
             raise AuthException(
@@ -37,7 +37,7 @@ class EnchantedLink(AuthBase):
         response = self._auth.do_post(uri, body, None, refresh_token)
         return EnchantedLink._get_pending_ref_from_response(response)
 
-    def sign_up(self, login_id: str, uri: str, user: dict = None) -> dict:
+    def sign_up(self, login_id: str, uri: str, user: dict | None) -> dict:
         if not user:
             user = {}
 
@@ -119,9 +119,9 @@ class EnchantedLink(AuthBase):
 
     @staticmethod
     def _compose_signin_body(
-        login_id: string,
-        uri: string,
-        login_options: LoginOptions = None,
+        login_id: str,
+        uri: str,
+        login_options: LoginOptions | None = None,
     ) -> dict:
         return {
             "loginId": login_id,
@@ -131,11 +131,11 @@ class EnchantedLink(AuthBase):
 
     @staticmethod
     def _compose_signup_body(
-        login_id: string,
-        uri: string,
-        user: dict = None,
+        login_id: str,
+        uri: str,
+        user: dict | None = None,
     ) -> dict:
-        body = {"loginId": login_id, "URI": uri}
+        body: dict[str, str | dict] = {"loginId": login_id, "URI": uri}
 
         if user is not None:
             body["user"] = user
@@ -144,7 +144,7 @@ class EnchantedLink(AuthBase):
         return body
 
     @staticmethod
-    def _compose_verify_body(token: string) -> dict:
+    def _compose_verify_body(token: str) -> dict:
         return {"token": token}
 
     @staticmethod
