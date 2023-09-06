@@ -51,7 +51,7 @@ jobs:
       - name: Run test suite
         run: tox --skip-pkg-install
         env:
-          COVERAGE_FILE: ".coverage.${{ matrix.python_version }}"
+          COVERAGE_FILE: ".coverage.${{ matrix.py }}"
 
       - name: Store coverage file
         uses: actions/upload-artifact@v3
