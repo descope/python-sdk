@@ -57,3 +57,9 @@ mypy = {version = "1.5.1", python= ">3.8"}
 [build-system]
 requires = ["poetry-core>=1.1.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.coverage.run]
+relative_files = true
+
+[tool.isort]
+profile = "black"
