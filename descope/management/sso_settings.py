@@ -106,8 +106,8 @@ class SSOSettings(AuthBase):
         self,
         tenant_id: str,
         idp_metadata_url: str,
-        redirect_url: str,
-        domain: str,
+        redirect_url: Optional[str] = None,
+        domain: Optional[str] = None,
     ):
         """
         Configure SSO setting for am IDP metadata URL. Alternatively, `configure` can be used instead.
@@ -176,8 +176,8 @@ class SSOSettings(AuthBase):
     def _compose_metadata_body(
         tenant_id: str,
         idp_metadata_url: str,
-        redirect_url: str,
-        domain: str,
+        redirect_url: Optional[str] = None,
+        domain: Optional[str] = None,
     ) -> dict:
         return {
             "tenantId": tenant_id,
