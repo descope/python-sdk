@@ -26,20 +26,21 @@ packages = [
 [tool.poetry.dependencies]
 python = "^3.7"
 requests = "2.31.0" # First support for python 3.10
-PyJWT = {version = "2.8.0", extras = ["crypto"]} # Latest secrutiy update
-email-validator = "==2.0.0.post2"
+pyjwt = {version = "2.8.0", extras = ["crypto"]} # Latest secrutiy update
+email-validator = "^2.0.0.post2"
+liccheck = "^0.9.1"
 
 [tool.poetry.group.dev.dependencies]
 mock = "5.1.0"
-pre-commit = "2.21.0"
-Flask = "2.2.5"
-flake8 = "5.0.4"
-flake8-bugbear = "22.12.6"
-pytest-cov = "4.1.0"
-pytest = "7.4.0"
-black = "23.3.0"
+pre-commit = [{version = "3.0.0", python = ">=3.8"}, {version = "2.21.0", python = "<3.8"}]
+Flask = [{version = "2.3.2", python = ">=3.8"}, {version = "2.2.5", python = "<3.8"}]
+flake8 = [{version = "6.0.0", python = ">=3.8.1"}, {version = "5.0.4", python = "<3.8.1"}]
+flake8-bugbear = [{version = "23.3.23", python = ">=3.8.1"}, {version = "23.3.12", python = "<3.8.1"}]
+black = [{version = "23.7.0", python = ">=3.8"}, {version = "23.3.0", python = "<3.8"}]
 liccheck = "0.9.1"
-isort = "5.11.4"
+pytest = "7.4.2"
+pytest-cov = "4.1.0"
+isort = [{version = "5.12.0", python = ">=3.8"}, {version = "5.11.5", python = "<3.8"}]
 pep8-naming = "0.13.3"
 
 [build-system]
