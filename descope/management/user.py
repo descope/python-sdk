@@ -144,6 +144,7 @@ class User(AuthBase):
         custom_attributes: dict = None,
         verified_email: bool = None,
         verified_phone: bool = None,
+        inviteUrl: str = None,
     ) -> dict:
         """
         Create a new user and invite them via an email message.
@@ -174,6 +175,7 @@ class User(AuthBase):
                 custom_attributes,
                 verified_email,
                 verified_phone,
+                inviteUrl,
             ),
             pswd=self._auth.management_key,
         )
@@ -971,6 +973,7 @@ class User(AuthBase):
         custom_attributes: dict,
         verified_email: bool = None,
         verified_phone: bool = None,
+        inviteUrl: str = None,
     ) -> dict:
         body = User._compose_update_body(
             login_id,
@@ -988,6 +991,8 @@ class User(AuthBase):
             body["verifiedEmail"] = verified_email
         if verified_phone is not None:
             body["verifiedPhone"] = verified_phone
+        if inviteUrl is not None:
+            body["inviteUrl"] = inviteUrl
         return body
 
     @staticmethod
