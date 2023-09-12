@@ -1,5 +1,0 @@
-requests
-flask
-flake8
-PyJWT
-Descope-Auth

@@ -1,11 +1,6 @@
-import os
-import sys
-
 from flask import Flask, jsonify, render_template, request
 
-dir_name = os.path.dirname(__file__)
-sys.path.insert(0, os.path.join(dir_name, "../"))
-from descope import DescopeClient  # noqa: E402
+from descope import DescopeClient
 
 APP = Flask(__name__)
 

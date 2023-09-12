@@ -1,14 +1,9 @@
-import os
-import sys
-
 from flask import Flask, jsonify
 
-dir_name = os.path.dirname(__file__)
-sys.path.insert(0, os.path.join(dir_name, "../"))
-from descope import DescopeClient  # noqa: E402
+from descope import DescopeClient
 
-from .decorators.flask_decorators import descope_logout  # noqa: E402
-from .decorators.flask_decorators import (  # noqa: E402
+from .decorators.flask_decorators import (
+    descope_logout,
     descope_oauth,
     descope_validate_auth,
 )

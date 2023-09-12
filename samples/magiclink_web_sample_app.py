@@ -1,14 +1,9 @@
-import os
-import sys
-
 from flask import Flask, Response, _request_ctx_stack, jsonify, request
 
-dir_name = os.path.dirname(__file__)
-sys.path.insert(0, os.path.join(dir_name, "../"))
-from descope import AuthException, DeliveryMethod, DescopeClient  # noqa: E402
+from descope import AuthException, DeliveryMethod, DescopeClient
 
-from .decorators.flask_decorators import COOKIE_DATA_NAME  # noqa: E402
-from .decorators.flask_decorators import (  # noqa: E402
+from .decorators.flask_decorators import (
+    COOKIE_DATA_NAME,
     REFRESH_SESSION_TOKEN_NAME,
     SESSION_TOKEN_NAME,
     descope_logout,

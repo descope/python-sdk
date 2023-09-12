@@ -24,6 +24,7 @@ class User(AuthBase):
         custom_attributes: Optional[dict] = None,
         verified_email: Optional[bool] = None,
         verified_phone: Optional[bool] = None,
+        invite_url: Optional[str] = None,
     ) -> dict:
         """
         Create a new user. Users can have any number of optional fields, including email, phone number and authorization.
@@ -66,6 +67,7 @@ class User(AuthBase):
                 custom_attributes,
                 verified_email,
                 verified_phone,
+                invite_url,
             ),
             pswd=self._auth.management_key,
         )
@@ -83,6 +85,7 @@ class User(AuthBase):
         custom_attributes: Optional[dict] = None,
         verified_email: Optional[bool] = None,
         verified_phone: Optional[bool] = None,
+        invite_url: Optional[str] = None,
     ) -> dict:
         """
         Create a new test user.
@@ -127,6 +130,7 @@ class User(AuthBase):
                 custom_attributes,
                 verified_email,
                 verified_phone,
+                invite_url,
             ),
             pswd=self._auth.management_key,
         )

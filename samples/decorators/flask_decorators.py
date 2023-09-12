@@ -1,18 +1,11 @@
 import datetime
-import os
-import sys
 import uuid
 from functools import wraps
 
 from flask import Response, _request_ctx_stack, redirect, request
 
-from descope.descope_client import DescopeClient
-from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT
-
-dir_name = os.path.dirname(__file__)
-sys.path.insert(0, os.path.join(dir_name, "../"))
-from descope import COOKIE_DATA_NAME  # noqa: E402
-from descope import (  # noqa: E402
+from descope import (
+    COOKIE_DATA_NAME,
     REFRESH_SESSION_COOKIE_NAME,
     REFRESH_SESSION_TOKEN_NAME,
     SESSION_COOKIE_NAME,
@@ -20,6 +13,8 @@ from descope import (  # noqa: E402
     AuthException,
     DeliveryMethod,
 )
+from descope.descope_client import DescopeClient
+from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT
 
 
 def set_cookie_on_response(response: Response, token: dict, cookie_data: dict):

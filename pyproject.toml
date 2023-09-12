@@ -24,7 +24,6 @@ classifiers = [
 ]
 packages = [
     { include = "descope"},
-    { include = "descope/authmethod"},
 ]
 
 [tool.poetry.urls]
@@ -46,14 +45,15 @@ flake8 = [{version = "6.0.0", python = ">=3.8.1"}, {version = "5.0.4", python = 
 flake8-bugbear = [{version = "23.3.23", python = ">=3.8.1"}, {version = "23.3.12", python = "<3.8.1"}]
 black = [{version = "23.7.0", python = ">=3.8"}, {version = "23.3.0", python = "<3.8"}]
 liccheck = "0.9.1"
-pytest = "7.4.2"
+pytest = {version = "6.2.5", python= ">=3.8"}
 pytest-cov = "4.1.0"
 isort = [{version = "5.12.0", python = ">=3.8"}, {version = "5.11.5", python = "<3.8"}]
 pep8-naming = "0.13.3"
 types-requests = "2.31.0.2"
 types-setuptools = "68.1.0.1"
 pytest-sugar = "0.9.7"
-mypy = {version = "1.5.1", python= ">3.8"}
+mypy = {version = "1.5.1", python = ">=3.8"}
+tox = {version = "4.11.3", python = ">=3.8"}
 
 [build-system]
 requires = ["poetry-core>=1.1.0"]
