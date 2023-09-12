@@ -217,6 +217,7 @@ class TestUser(common.DescopeTest):
                     AssociatedTenant("tenant2", ["role1", "role2"]),
                 ],
                 custom_attributes={"ak": "av"},
+                invite_url="invite.me",
             )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
@@ -241,6 +242,7 @@ class TestUser(common.DescopeTest):
                     "picture": None,
                     "customAttributes": {"ak": "av"},
                     "invite": True,
+                    "inviteUrl": "invite.me",
                 },
                 allow_redirects=False,
                 verify=True,
