@@ -41,6 +41,15 @@ repos:
         files: pyproject.toml
       - id: poetry-check
         files: pyproject.toml
+  - repo: https://github.com/pre-commit/pre-commit
+    rev: v3.3.3
+    hooks:
+      - id: validate_manifest
+  - repo: https://github.com/tox-dev/tox-ini-fmt
+    rev: 1.3.1
+    hooks:
+      - id: tox-ini-fmt
+        args: ["-p", "fix_lint,type"]
   - repo: local
     hooks:
       - id: print_statement
@@ -56,7 +65,10 @@ repos:
         language: system
         files: ^(.*requirements.*\.txt|setup\.cfg|setup\.py|pyproject\.toml|liccheck\.ini)$
         pass_filenames: false
-  - repo: https://github.com/pre-commit/pre-commit
-    rev: v3.3.3
-    hooks:
-      - id: validate_manifest
+      - id: tox
+        name: Run tests with tox
+        description: Run tox to check that all tests pass
+        entry: poetry run tox
+        language: system
+        files: ^(.*\.py)$
+        pass_filenames: false
