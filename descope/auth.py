@@ -636,7 +636,7 @@ class Auth:
                 raise AuthException(
                     400,
                     ERROR_TYPE_INVALID_TOKEN,
-                    "Session token is missing",
+                    "Refresh token is missing",
                 )
             return self.refresh_session(refresh_token, audience)
 
