@@ -391,25 +391,23 @@ class Auth:
     def adjust_properties(self, jwt_response: dict, user_jwt: bool):
         # Save permissions, roles and tenants info from Session token or from refresh token on the json top level
         if SESSION_TOKEN_NAME in jwt_response:
-            jwt_response["permissions"] = jwt_response.get(SESSION_TOKEN_NAME, {}).get(
+            jwt_response["permissions"] = jwt_response[SESSION_TOKEN_NAME].get(
                 "permissions", []
             )
-            jwt_response["roles"] = jwt_response.get(SESSION_TOKEN_NAME, {}).get(
-                "roles", []
-            )
-            jwt_response["tenants"] = jwt_response.get(SESSION_TOKEN_NAME, {}).get(
+            jwt_response["roles"] = jwt_response[SESSION_TOKEN_NAME].get("roles", [])
+            jwt_response["tenants"] = jwt_response[SESSION_TOKEN_NAME].get(
                 "tenants", {}
             )
         elif REFRESH_SESSION_TOKEN_NAME in jwt_response:
-            jwt_response["permissions"] = jwt_response.get(
-                REFRESH_SESSION_TOKEN_NAME, {}
-            ).get("permissions", [])
-            jwt_response["roles"] = jwt_response.get(
-                REFRESH_SESSION_TOKEN_NAME, {}
-            ).get("roles", [])
-            jwt_response["tenants"] = jwt_response.get(
-                REFRESH_SESSION_TOKEN_NAME, {}
-            ).get("tenants", {})
+            jwt_response["permissions"] = jwt_response[REFRESH_SESSION_TOKEN_NAME].get(
+                "permissions", []
+            )
+            jwt_response["roles"] = jwt_response[REFRESH_SESSION_TOKEN_NAME].get(
+                "roles", []
+            )
+            jwt_response["tenants"] = jwt_response[REFRESH_SESSION_TOKEN_NAME].get(
+                "tenants", {}
+            )
         else:
             jwt_response["permissions"] = jwt_response.get("permissions", [])
             jwt_response["roles"] = jwt_response.get("roles", [])
