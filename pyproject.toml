@@ -42,12 +42,13 @@ mock = "5.1.0"
 pre-commit = {version = "3.0.0", python = ">=3.8"}
 flake8 = {version = "6.0.0", python = ">=3.8.1"}
 flake8-bugbear = {version = "23.3.23", python = ">=3.8.1"}
-black = {version = "23.7.0", python = ">=3.8"}
 liccheck = "0.9.1"
 isort = {version = "5.12.0", python = ">=3.8"}
 pep8-naming = "0.13.3"
-
 tox = {version = "4.11.3", python = ">=3.8"}
+
+[tool.poetry.group.format.dependencies]
+black = {version = "23.7.0", python = ">=3.8"}
 
 [tool.poetry.group.types.dependencies]
 mypy = {version = "1.5.1", python = ">=3.8"}
@@ -56,6 +57,7 @@ types-setuptools = "68.1.0.1"
 
 [tool.poetry.group.tests.dependencies]
 pytest = {version = "6.2.5", python = ">=3.8"}
+coverage = {version = "^7.3.1", python = ">=3.8"}
 
 
 [tool.poetry.group.samples.dependencies]
