@@ -72,7 +72,7 @@ repos:
       - id: tox
         name: Run tests with tox
         description: Run tox to check that all tests pass
-        entry: poetry run tox
+        entry: poetry run tox -p
         language: system
         files: ^(.*\.py)$
         pass_filenames: false
