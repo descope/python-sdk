@@ -44,7 +44,7 @@ flake8 = {version = "6.0.0", python = ">=3.8.1"}
 flake8-bugbear = {version = "23.3.23", python = ">=3.8.1"}
 liccheck = "0.9.1"
 isort = {version = "5.12.0", python = ">=3.8"}
-pep8-naming = "0.13.3"
+pep8-naming = {version = "0.13.3", python = ">=3.8"}
 tox = {version = "4.11.3", python = ">=3.8"}
 
 [tool.poetry.group.format.dependencies]
