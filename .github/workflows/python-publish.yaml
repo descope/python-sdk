@@ -18,7 +18,7 @@ jobs:
       - name: Setup
         uses: descope/.github/.github/actions/python/poetry/setup@main
         with:
-          python-version: "3.8"
+          python-version: "3.11"
       - name: Autobump version
         run: |
           poetry version $(git describe --tags --abbrev=0)
