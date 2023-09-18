@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from descope._auth_base import AuthBase
 from descope.auth import Auth
 from descope.common import (
@@ -15,8 +17,8 @@ class OTP(AuthBase):
         self,
         method: DeliveryMethod,
         login_id: str,
-        login_options: LoginOptions = None,
-        refresh_token: str = None,
+        login_options: LoginOptions | None = None,
+        refresh_token: str | None = None,
     ) -> str:
         """
         Sign in (log in) an existing user with the unique login_id you provide. (See 'sign_up' function for an explanation of the
@@ -45,7 +47,9 @@ class OTP(AuthBase):
         response = self._auth.do_post(uri, body, None, refresh_token)
         return Auth.extract_masked_address(response.json(), method)
 
-    def sign_up(self, method: DeliveryMethod, login_id: str, user: dict = None) -> str:
+    def sign_up(
+        self, method: DeliveryMethod, login_id: str, user: dict | None = None
+    ) -> str:
         """
         Sign up (create) a new user using their email or phone number. Choose a delivery method for OTP
             verification, for example email, SMS, or WhatsApp.
@@ -228,7 +232,7 @@ class OTP(AuthBase):
 
     @staticmethod
     def _compose_signup_body(method: DeliveryMethod, login_id: str, user: dict) -> dict:
-        body = {"loginId": login_id}
+        body: dict[str, str | dict] = {"loginId": login_id}
 
         if user is not None:
             body["user"] = user
@@ -237,7 +241,9 @@ class OTP(AuthBase):
         return body
 
     @staticmethod
-    def _compose_signin_body(login_id: str, login_options: LoginOptions = None) -> dict:
+    def _compose_signin_body(
+        login_id: str, login_options: LoginOptions | None = None
+    ) -> dict:
         return {
             "loginId": login_id,
             "loginOptions": login_options.__dict__ if login_options else {},

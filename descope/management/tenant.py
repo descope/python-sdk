@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from descope._auth_base import AuthBase
 from descope.management.common import MgmtV1
@@ -8,8 +8,8 @@ class Tenant(AuthBase):
     def create(
         self,
         name: str,
-        id: str = None,
-        self_provisioning_domains: List[str] = None,
+        id: Optional[str] = None,
+        self_provisioning_domains: Optional[List[str]] = None,
     ) -> dict:
         """
         Create a new tenant with the given name. Tenant IDs are provisioned automatically, but can be provided
@@ -44,7 +44,7 @@ class Tenant(AuthBase):
         self,
         id: str,
         name: str,
-        self_provisioning_domains: List[str] = None,
+        self_provisioning_domains: Optional[List[str]] = None,
     ):
         """
         Update an existing tenant with the given name and domains. IMPORTANT: All parameters are used as overrides
@@ -133,7 +133,7 @@ class Tenant(AuthBase):
 
     @staticmethod
     def _compose_create_update_body(
-        name: str, id: str, self_provisioning_domains: List[str]
+        name: str, id: Optional[str], self_provisioning_domains: List[str]
     ) -> dict:
         return {
             "name": name,

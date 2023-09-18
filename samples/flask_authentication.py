@@ -1,11 +1,12 @@
-from decorators.flask_decorators import (  # noqa: E402
+from flask import Flask, Response
+
+from descope import DescopeClient
+
+from .decorators.flask_decorators import (
     descope_full_login,
     descope_logout,
     descope_validate_auth,
 )
-from flask import Flask, Response
-
-from descope import DescopeClient  # noqa: E402
 
 APP = Flask(__name__)
 PROJECT_ID = ""  # Can be set also by environment variable

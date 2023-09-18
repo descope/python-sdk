@@ -1,11 +1,8 @@
-import os
-import sys
-
 from flask import Flask, Response, _request_ctx_stack, jsonify, request
 
-dir_name = os.path.dirname(__file__)
-sys.path.insert(0, os.path.join(dir_name, "../"))
-from decorators.flask_decorators import (  # noqa: E402
+from descope import AuthException, DeliveryMethod, DescopeClient
+
+from .decorators.flask_decorators import (
     COOKIE_DATA_NAME,
     REFRESH_SESSION_TOKEN_NAME,
     SESSION_TOKEN_NAME,
@@ -14,8 +11,6 @@ from decorators.flask_decorators import (  # noqa: E402
     descope_verify_magiclink_token,
     set_cookie_on_response,
 )
-
-from descope import AuthException, DeliveryMethod, DescopeClient  # noqa: E402
 
 APP = Flask(__name__)
 

@@ -1,3 +1,5 @@
+from typing import Optional
+
 from descope._auth_base import AuthBase
 from descope.common import EndpointsV1, LoginOptions, validate_refresh_token_provided
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
@@ -8,8 +10,8 @@ class OAuth(AuthBase):
         self,
         provider: str,
         return_url: str = "",
-        login_options: LoginOptions = None,
-        refresh_token: str = None,
+        login_options: Optional[LoginOptions] = None,
+        refresh_token: Optional[str] = None,
     ) -> dict:
         """ """
         if not self._verify_provider(provider):
@@ -34,7 +36,7 @@ class OAuth(AuthBase):
         return self._auth.exchange_token(uri, code)
 
     @staticmethod
-    def _verify_provider(oauth_provider: str) -> str:
+    def _verify_provider(oauth_provider: str) -> bool:
         if oauth_provider == "" or oauth_provider is None:
             return False
         return True

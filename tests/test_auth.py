@@ -284,10 +284,8 @@ class TestAuth(common.DescopeTest):
         auth = Auth(self.dummy_project_id, self.public_key_dict)
 
         # Bad input for session
-        self.assertRaises(
-            AuthException,
-            auth.validate_and_refresh_session,
-        )
+        with self.assertRaises(AuthException):
+            auth.validate_and_refresh_session(None, None)
 
         # Test validate_session with Ratelimit exception
         with patch("requests.get") as mock_request:
@@ -595,8 +593,6 @@ class TestAuth(common.DescopeTest):
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, 400)
             self.assertEqual(the_exception.error_type, ERROR_TYPE_SERVER_ERROR)
-            with open("/tmp/ex.txt", "w") as f:
-                f.write(the_exception.error_message)
             self.assertEqual(
                 the_exception.error_message,
                 """{"errorCode":"E062108","errorDescription":"User not found","errorMessage":"Cannot find user","message":"Cannot find user"}""",

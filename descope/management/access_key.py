@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from descope._auth_base import AuthBase
 from descope.management.common import (
@@ -13,8 +13,8 @@ class AccessKey(AuthBase):
         self,
         name: str,
         expire_time: int = 0,
-        role_names: List[str] = None,
-        key_tenants: List[AssociatedTenant] = None,
+        role_names: Optional[List[str]] = None,
+        key_tenants: Optional[List[AssociatedTenant]] = None,
     ) -> dict:
         """
         Create a new access key.
@@ -76,7 +76,7 @@ class AccessKey(AuthBase):
 
     def search_all_access_keys(
         self,
-        tenant_ids: List[str] = None,
+        tenant_ids: Optional[List[str]] = None,
     ) -> dict:
         """
         Search all access keys.

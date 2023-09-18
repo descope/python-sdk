@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Optional, Union
 
 from descope._auth_base import AuthBase
 from descope.auth import Auth
@@ -15,15 +15,16 @@ class User(AuthBase):
     def create(
         self,
         login_id: str,
-        email: str = None,
-        phone: str = None,
-        display_name: str = None,
-        role_names: List[str] = None,
-        user_tenants: List[AssociatedTenant] = None,
-        picture: str = None,
-        custom_attributes: dict = None,
-        verified_email: bool = None,
-        verified_phone: bool = None,
+        email: Optional[str] = None,
+        phone: Optional[str] = None,
+        display_name: Optional[str] = None,
+        role_names: Optional[List[str]] = None,
+        user_tenants: Optional[List[AssociatedTenant]] = None,
+        picture: Optional[str] = None,
+        custom_attributes: Optional[dict] = None,
+        verified_email: Optional[bool] = None,
+        verified_phone: Optional[bool] = None,
+        invite_url: Optional[str] = None,
     ) -> dict:
         """
         Create a new user. Users can have any number of optional fields, including email, phone number and authorization.
@@ -66,6 +67,7 @@ class User(AuthBase):
                 custom_attributes,
                 verified_email,
                 verified_phone,
+                invite_url,
             ),
             pswd=self._auth.management_key,
         )
@@ -74,15 +76,16 @@ class User(AuthBase):
     def create_test_user(
         self,
         login_id: str,
-        email: str = None,
-        phone: str = None,
-        display_name: str = None,
-        role_names: List[str] = None,
-        user_tenants: List[AssociatedTenant] = None,
-        picture: str = None,
-        custom_attributes: dict = None,
-        verified_email: bool = None,
-        verified_phone: bool = None,
+        email: Optional[str] = None,
+        phone: Optional[str] = None,
+        display_name: Optional[str] = None,
+        role_names: Optional[List[str]] = None,
+        user_tenants: Optional[List[AssociatedTenant]] = None,
+        picture: Optional[str] = None,
+        custom_attributes: Optional[dict] = None,
+        verified_email: Optional[bool] = None,
+        verified_phone: Optional[bool] = None,
+        invite_url: Optional[str] = None,
     ) -> dict:
         """
         Create a new test user.
@@ -127,6 +130,7 @@ class User(AuthBase):
                 custom_attributes,
                 verified_email,
                 verified_phone,
+                invite_url,
             ),
             pswd=self._auth.management_key,
         )
@@ -135,16 +139,16 @@ class User(AuthBase):
     def invite(
         self,
         login_id: str,
-        email: str = None,
-        phone: str = None,
-        display_name: str = None,
-        role_names: List[str] = None,
-        user_tenants: List[AssociatedTenant] = None,
-        picture: str = None,
-        custom_attributes: dict = None,
-        verified_email: bool = None,
-        verified_phone: bool = None,
-        invite_url: str = None,
+        email: Optional[str] = None,
+        phone: Optional[str] = None,
+        display_name: Optional[str] = None,
+        role_names: Optional[List[str]] = None,
+        user_tenants: Optional[List[AssociatedTenant]] = None,
+        picture: Optional[str] = None,
+        custom_attributes: Optional[dict] = None,
+        verified_email: Optional[bool] = None,
+        verified_phone: Optional[bool] = None,
+        invite_url: Optional[str] = None,
     ) -> dict:
         """
         Create a new user and invite them via an email message.
@@ -184,15 +188,15 @@ class User(AuthBase):
     def update(
         self,
         login_id: str,
-        email: str = None,
-        phone: str = None,
-        display_name: str = None,
-        role_names: List[str] = None,
-        user_tenants: List[AssociatedTenant] = None,
-        picture: str = None,
-        custom_attributes: dict = None,
-        verified_email: bool = None,
-        verified_phone: bool = None,
+        email: Optional[str] = None,
+        phone: Optional[str] = None,
+        display_name: Optional[str] = None,
+        role_names: Optional[List[str]] = None,
+        user_tenants: Optional[List[AssociatedTenant]] = None,
+        picture: Optional[str] = None,
+        custom_attributes: Optional[dict] = None,
+        verified_email: Optional[bool] = None,
+        verified_phone: Optional[bool] = None,
     ):
         """
         Update an existing user with the given various fields. IMPORTANT: All parameters are used as overrides
@@ -320,14 +324,14 @@ class User(AuthBase):
 
     def search_all(
         self,
-        tenant_ids: List[str] = None,
-        role_names: List[str] = None,
+        tenant_ids: Optional[List[str]] = None,
+        role_names: Optional[List[str]] = None,
         limit: int = 0,
         page: int = 0,
         test_users_only: bool = False,
         with_test_user: bool = False,
-        custom_attributes: dict = None,
-        statuses: List[str] = None,
+        custom_attributes: Optional[dict] = None,
+        statuses: Optional[List[str]] = None,
     ) -> dict:
         """
         Search all users.
@@ -463,7 +467,7 @@ class User(AuthBase):
     def update_login_id(
         self,
         login_id: str,
-        new_login_id: str = None,
+        new_login_id: Optional[str] = None,
     ) -> dict:
         """
         Update login id of user, leave new login empty to remove the ID.
@@ -491,8 +495,8 @@ class User(AuthBase):
     def update_email(
         self,
         login_id: str,
-        email: str = None,
-        verified: bool = None,
+        email: Optional[str] = None,
+        verified: Optional[bool] = None,
     ) -> dict:
         """
         Update the email address for an existing user.
@@ -520,8 +524,8 @@ class User(AuthBase):
     def update_phone(
         self,
         login_id: str,
-        phone: str = None,
-        verified: bool = None,
+        phone: Optional[str] = None,
+        verified: Optional[bool] = None,
     ) -> dict:
         """
         Update the phone number for an existing user.
@@ -549,7 +553,7 @@ class User(AuthBase):
     def update_display_name(
         self,
         login_id: str,
-        display_name: str = None,
+        display_name: Optional[str] = None,
     ) -> dict:
         """
         Update the display name for an existing user.
@@ -576,7 +580,7 @@ class User(AuthBase):
     def update_picture(
         self,
         login_id: str,
-        picture: str = None,
+        picture: Optional[str] = None,
     ) -> dict:
         """
         Update the picture for an existing user.
@@ -937,7 +941,9 @@ class User(AuthBase):
         )
         return response.json()
 
-    def generate_embedded_link(self, login_id: str, custom_claims: dict = None) -> str:
+    def generate_embedded_link(
+        self, login_id: str, custom_claims: Optional[dict] = None
+    ) -> str:
         """
         Generate Embedded Link for the given user login ID.
         The return value is a token that can be verified via magic link, or using flows
@@ -962,18 +968,18 @@ class User(AuthBase):
     @staticmethod
     def _compose_create_body(
         login_id: str,
-        email: str,
-        phone: str,
-        display_name: str,
+        email: Optional[str],
+        phone: Optional[str],
+        display_name: Optional[str],
         role_names: List[str],
         user_tenants: List[AssociatedTenant],
         invite: bool,
         test: bool,
-        picture: str,
-        custom_attributes: dict,
-        verified_email: bool = None,
-        verified_phone: bool = None,
-        invite_url: str = None,
+        picture: Optional[str],
+        custom_attributes: Optional[dict],
+        verified_email: Optional[bool],
+        verified_phone: Optional[bool],
+        invite_url: Optional[str],
     ) -> dict:
         body = User._compose_update_body(
             login_id,
@@ -998,16 +1004,16 @@ class User(AuthBase):
     @staticmethod
     def _compose_update_body(
         login_id: str,
-        email: str,
-        phone: str,
-        display_name: str,
+        email: Optional[str],
+        phone: Optional[str],
+        display_name: Optional[str],
         role_names: List[str],
         user_tenants: List[AssociatedTenant],
         test: bool,
-        picture: str,
-        custom_attributes: dict,
-        verified_email: bool = None,
-        verified_phone: bool = None,
+        picture: Optional[str],
+        custom_attributes: Optional[dict],
+        verified_email: Optional[bool] = None,
+        verified_phone: Optional[bool] = None,
     ) -> dict:
         res = {
             "loginId": login_id,

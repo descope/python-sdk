@@ -9,14 +9,21 @@ homepage = "https://descope.com/"
 repository = "https://github.com/descope/python-sdk"
 documentation = "https://docs.descope.com"
 classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "License :: OSI Approved :: MIT License",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 packages = [
     { include = "descope"},
-    { include = "descope/authmethod"},
 ]
 
 [tool.poetry.urls]
@@ -24,25 +31,53 @@ packages = [
 
 
 [tool.poetry.dependencies]
-python = "^3.7"
-requests = "2.31.0" # First support for python 3.10
-pyjwt = {version = "2.8.0", extras = ["crypto"]} # Latest secrutiy update
-email-validator = "^2.0.0.post2"
+python = ">=3.7,<4.0"
+requests = "2.31.0"
+pyjwt = {version = "2.8.0", extras = ["crypto"]}
+email-validator = "2.0.0.post2"
 liccheck = "^0.9.1"
 
 [tool.poetry.group.dev.dependencies]
 mock = "5.1.0"
-pre-commit = [{version = "3.0.0", python = ">=3.8"}, {version = "2.21.0", python = "<3.8"}]
-Flask = [{version = "2.3.2", python = ">=3.8"}, {version = "2.2.5", python = "<3.8"}]
-flake8 = [{version = "6.0.0", python = ">=3.8.1"}, {version = "5.0.4", python = "<3.8.1"}]
-flake8-bugbear = [{version = "23.3.23", python = ">=3.8.1"}, {version = "23.3.12", python = "<3.8.1"}]
-black = [{version = "23.7.0", python = ">=3.8"}, {version = "23.3.0", python = "<3.8"}]
+pre-commit = {version = "3.0.0", python = ">=3.8"}
+flake8 = {version = "6.0.0", python = ">=3.8.1"}
+flake8-bugbear = {version = "23.3.23", python = ">=3.8.1"}
 liccheck = "0.9.1"
-pytest = "7.4.2"
-pytest-cov = "4.1.0"
-isort = [{version = "5.12.0", python = ">=3.8"}, {version = "5.11.5", python = "<3.8"}]
-pep8-naming = "0.13.3"
+isort = {version = "5.12.0", python = ">=3.8"}
+pep8-naming = {version = "0.13.3", python = ">=3.8"}
+tox = {version = "4.11.3", python = ">=3.8"}
+
+[tool.poetry.group.format.dependencies]
+black = {version = "23.7.0", python = ">=3.8"}
+
+[tool.poetry.group.types.dependencies]
+mypy = {version = "1.5.1", python = ">=3.8"}
+types-requests = "2.31.0.2"
+types-setuptools = "68.1.0.1"
+
+[tool.poetry.group.tests.dependencies]
+pytest = {version = "6.2.5", python = ">=3.8"}
+coverage = {version = "^7.3.1", python = ">=3.8", extras = ["toml"]}
+
+[tool.poetry.group.samples.dependencies]
+Flask = {version = "2.3.2", python = ">=3.8"}
 
 [build-system]
 requires = ["poetry-core>=1.1.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.coverage.run]
+relative_files = true
+source = ["descope"]
+
+[tool.coverage.report]
+fail_under = 96
+skip_covered = true
+skip_empty = true
+
+[tool.isort]
+profile = "black"
+
+[tool.flake8]
+per-file-ignores = "__init__.py:F401"
+ignore = "E501,N818,W503"

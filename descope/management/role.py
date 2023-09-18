@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from descope._auth_base import AuthBase
 from descope.management.common import MgmtV1
@@ -8,8 +8,8 @@ class Role(AuthBase):
     def create(
         self,
         name: str,
-        description: str = None,
-        permission_names: List[str] = None,
+        description: Optional[str] = None,
+        permission_names: Optional[List[str]] = None,
     ):
         """
         Create a new role.
@@ -38,8 +38,8 @@ class Role(AuthBase):
         self,
         name: str,
         new_name: str,
-        description: str = None,
-        permission_names: List[str] = None,
+        description: Optional[str] = None,
+        permission_names: Optional[List[str]] = None,
     ):
         """
         Update an existing role with the given various fields. IMPORTANT: All parameters are used as overrides

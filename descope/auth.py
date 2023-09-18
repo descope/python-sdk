@@ -1,22 +1,21 @@
-import sys
-
-if sys.version_info[0] >= 3 and sys.version_info[1] >= 10:
-    # Python 3.10 and above
-    from collections.abc import Iterable
-else:
-    from collections.abc import Iterable
+from __future__ import annotations
 
 import copy
 import json
 import os
 import platform
 import re
+from collections.abc import Iterable
 from http import HTTPStatus
 from threading import Lock
-from typing import Tuple
 
 import jwt
-import pkg_resources
+
+try:
+    from importlib.metadata import version
+except ImportError:
+    from pkg_resources import get_distribution
+
 import requests
 from email_validator import EmailNotValidError, validate_email
 from jwt import ImmatureSignatureError
@@ -44,9 +43,19 @@ from descope.exceptions import (
     RateLimitException,
 )
 
+
+def sdk_version():
+    try:
+        return version("descope")
+    except NameError:
+        return get_distribution("descope").version
+
+
 _default_headers = {
     "Content-Type": "application/json",
     "x-descope-sdk-name": "python",
+    "x-descope-sdk-python-version": platform.python_version(),
+    "x-descope-sdk-version": sdk_version(),
 }
 
 
@@ -55,16 +64,16 @@ class Auth:
 
     def __init__(
         self,
-        project_id: str = None,
-        public_key: str = None,
+        project_id: str,
+        public_key: dict | str | None,
         skip_verify: bool = False,
-        management_key: str = None,
+        management_key: str | None = None,
         timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
         jwt_validation_leeway: int = 5,
     ):
         self.lock_public_keys = Lock()
         # validate project id
-        project_id = project_id or os.getenv("DESCOPE_PROJECT_ID")
+        project_id = project_id or os.getenv("DESCOPE_PROJECT_ID", "")
         if not project_id:
             raise AuthException(
                 400,
@@ -109,7 +118,7 @@ class Auth:
         uri: str,
         params=None,
         allow_redirects=None,
-        pswd: str = None,
+        pswd: str | None = None,
     ) -> requests.Response:
         response = requests.get(
             f"{self.base_url}{uri}",
@@ -123,7 +132,7 @@ class Auth:
         return response
 
     def do_post(
-        self, uri: str, body: dict, params=None, pswd: str = None
+        self, uri: str, body: dict | None, params=None, pswd: str | None = None
     ) -> requests.Response:
         response = requests.post(
             f"{self.base_url}{uri}",
@@ -137,7 +146,9 @@ class Auth:
         self._raise_from_response(response)
         return response
 
-    def do_delete(self, uri: str, params=None, pswd: str = None) -> requests.Response:
+    def do_delete(
+        self, uri: str, params=None, pswd: str | None = None
+    ) -> requests.Response:
         response = requests.delete(
             f"{self.base_url}{uri}",
             params=params,
@@ -214,7 +225,7 @@ class Auth:
         return f"{base}/{suffix}"
 
     @staticmethod
-    def get_login_id_by_method(method: DeliveryMethod, user: dict) -> Tuple[str, str]:
+    def get_login_id_by_method(method: DeliveryMethod, user: dict) -> tuple[str, str]:
         login_id = {
             DeliveryMethod.EMAIL: ("email", user.get("email", "")),
             DeliveryMethod.SMS: ("phone", user.get("phone", "")),
@@ -291,7 +302,7 @@ class Auth:
         return {"code": code}
 
     @staticmethod
-    def _validate_and_load_public_key(public_key) -> Tuple[str, jwt.PyJWK, str]:
+    def _validate_and_load_public_key(public_key) -> tuple[str, jwt.PyJWK, str]:
         if not isinstance(public_key, (str, dict)):
             raise AuthException(
                 500,
@@ -380,23 +391,21 @@ class Auth:
     def adjust_properties(self, jwt_response: dict, user_jwt: bool):
         # Save permissions, roles and tenants info from Session token or from refresh token on the json top level
         if SESSION_TOKEN_NAME in jwt_response:
-            jwt_response["permissions"] = jwt_response.get(SESSION_TOKEN_NAME).get(
+            jwt_response["permissions"] = jwt_response[SESSION_TOKEN_NAME].get(
                 "permissions", []
             )
-            jwt_response["roles"] = jwt_response.get(SESSION_TOKEN_NAME).get(
-                "roles", []
-            )
-            jwt_response["tenants"] = jwt_response.get(SESSION_TOKEN_NAME).get(
+            jwt_response["roles"] = jwt_response[SESSION_TOKEN_NAME].get("roles", [])
+            jwt_response["tenants"] = jwt_response[SESSION_TOKEN_NAME].get(
                 "tenants", {}
             )
         elif REFRESH_SESSION_TOKEN_NAME in jwt_response:
-            jwt_response["permissions"] = jwt_response.get(
-                REFRESH_SESSION_TOKEN_NAME
-            ).get("permissions", [])
-            jwt_response["roles"] = jwt_response.get(REFRESH_SESSION_TOKEN_NAME).get(
+            jwt_response["permissions"] = jwt_response[REFRESH_SESSION_TOKEN_NAME].get(
+                "permissions", []
+            )
+            jwt_response["roles"] = jwt_response[REFRESH_SESSION_TOKEN_NAME].get(
                 "roles", []
             )
-            jwt_response["tenants"] = jwt_response.get(REFRESH_SESSION_TOKEN_NAME).get(
+            jwt_response["tenants"] = jwt_response[REFRESH_SESSION_TOKEN_NAME].get(
                 "tenants", {}
             )
         else:
@@ -431,9 +440,9 @@ class Auth:
     def _generate_auth_info(
         self,
         response_body: dict,
-        refresh_token: str,
+        refresh_token: str | None,
         user_jwt: bool,
-        audience: str | Iterable[str] | None = None,
+        audience: str | None | Iterable[str] = None,
     ) -> dict:
         jwt_response = {}
         st_jwt = response_body.get("sessionJwt", "")
@@ -465,7 +474,7 @@ class Auth:
         self,
         response_body: dict,
         refresh_cookie: str,
-        audience: str | Iterable[str] | None = None,
+        audience: str | None | Iterable[str] = None,
     ) -> dict:
         jwt_response = self._generate_auth_info(
             response_body, refresh_cookie, True, audience
@@ -475,16 +484,8 @@ class Auth:
         jwt_response["firstSeen"] = response_body.get("firstSeen", True)
         return jwt_response
 
-    def _get_default_headers(self, pswd: str = None):
+    def _get_default_headers(self, pswd: str | None = None):
         headers = _default_headers.copy()
-        try:
-            headers["x-descope-sdk-python-version"] = platform.python_version()
-            headers["x-descope-sdk-version"] = pkg_resources.get_distribution(
-                "descope"
-            ).version
-        except Exception:
-            pass
-
         bearer = self.project_id
         if pswd:
             bearer = f"{self.project_id}:{pswd}"
@@ -493,7 +494,7 @@ class Auth:
 
     # Validate a token and load the public key if needed
     def _validate_token(
-        self, token: str, audience: str | Iterable[str] | None = None
+        self, token: str, audience: str | None | Iterable[str] = None
     ) -> dict:
         if not token:
             raise AuthException(
@@ -564,7 +565,7 @@ class Auth:
         return claims
 
     def validate_session(
-        self, session_token: str, audience: str | Iterable[str] | None = None
+        self, session_token: str, audience: str | None | Iterable[str] = None
     ) -> dict:
         if not session_token:
             raise AuthException(
@@ -587,7 +588,7 @@ class Auth:
             )
 
     def refresh_session(
-        self, refresh_token: str, audience: str | Iterable[str] | None = None
+        self, refresh_token: str, audience: str | None | Iterable[str] = None
     ) -> dict:
         if not refresh_token:
             raise AuthException(
@@ -614,21 +615,27 @@ class Auth:
 
     def validate_and_refresh_session(
         self,
-        session_token: str = None,
-        refresh_token: str = None,
-        audience: str | Iterable[str] | None = None,
+        session_token: str,
+        refresh_token: str,
+        audience: str | None | Iterable[str] = None,
     ) -> dict:
-        if not session_token and not refresh_token:
+        if not session_token:
             raise AuthException(
                 400,
                 ERROR_TYPE_INVALID_TOKEN,
-                "Session and refresh tokens are both empty",
+                "Session token is missing",
             )
 
         try:
             return self.validate_session(session_token, audience)
         except Exception:
             # Session is invalid - try to refresh it
+            if not refresh_token:
+                raise AuthException(
+                    400,
+                    ERROR_TYPE_INVALID_TOKEN,
+                    "Refresh token is missing",
+                )
             return self.refresh_session(refresh_token, audience)
 
     @staticmethod

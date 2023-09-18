@@ -1,11 +1,8 @@
 import logging
-import os
 import sys
 from datetime import datetime
 
-dir_name = os.path.dirname(__file__)
-sys.path.insert(0, os.path.join(dir_name, "../"))
-from descope import AuthException, DescopeClient  # noqa: E402
+from descope import AuthException, DescopeClient
 
 logging.basicConfig(level=logging.INFO)
 

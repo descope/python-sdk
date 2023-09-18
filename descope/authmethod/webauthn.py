@@ -1,3 +1,7 @@
+from typing import Optional
+
+from requests import Response
+
 from descope._auth_base import AuthBase
 from descope.common import (
     REFRESH_SESSION_COOKIE_NAME,
@@ -9,7 +13,12 @@ from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
 class WebAuthn(AuthBase):
-    def sign_up_start(self, login_id: str, origin: str, user: dict = None) -> dict:
+    def sign_up_start(
+        self,
+        login_id: Optional[str],
+        origin: Optional[str],
+        user: Optional[dict] = None,
+    ) -> dict:
         """
         Docs
         """
@@ -32,7 +41,7 @@ class WebAuthn(AuthBase):
 
         return response.json()
 
-    def sign_up_finish(self, transaction_id: str, response: str) -> dict:
+    def sign_up_finish(self, transaction_id: str, response: Response) -> dict:
         """
         Docs
         """
@@ -60,8 +69,8 @@ class WebAuthn(AuthBase):
         self,
         login_id: str,
         origin: str,
-        login_options: LoginOptions = None,
-        refresh_token: str = None,
+        login_options: Optional[LoginOptions] = None,
+        refresh_token: Optional[str] = None,
     ) -> dict:
         """
         Docs
@@ -84,7 +93,7 @@ class WebAuthn(AuthBase):
 
         return response.json()
 
-    def sign_in_finish(self, transaction_id: str, response: str) -> dict:
+    def sign_in_finish(self, transaction_id: str, response: Response) -> dict:
         """
         Docs
         """
@@ -172,16 +181,13 @@ class WebAuthn(AuthBase):
 
     @staticmethod
     def _compose_sign_up_start_body(login_id: str, user: dict, origin: str) -> dict:
-        body = {"user": {"loginId": login_id}}
-        if user is not None:
-            for key, val in user.items():
-                body["user"][key] = val
-        body["origin"] = origin
+        user.update({"loginId": login_id})
+        body = {"user": user, "origin": origin}
         return body
 
     @staticmethod
     def _compose_sign_in_start_body(
-        login_id: str, origin: str, login_options: LoginOptions = None
+        login_id: str, origin: str, login_options: Optional[LoginOptions] = None
     ) -> dict:
         return {
             "loginId": login_id,
@@ -197,7 +203,9 @@ class WebAuthn(AuthBase):
         }
 
     @staticmethod
-    def _compose_sign_up_in_finish_body(transaction_id: str, response: str) -> dict:
+    def _compose_sign_up_in_finish_body(
+        transaction_id: str, response: Response
+    ) -> dict:
         return {"transactionId": transaction_id, "response": response}
 
     @staticmethod

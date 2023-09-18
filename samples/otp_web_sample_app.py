@@ -1,13 +1,9 @@
 import datetime
 import json
-import os
-import sys
 
 from flask import Flask, Response, jsonify, request
 
-dir_name = os.path.dirname(__file__)
-sys.path.insert(0, os.path.join(dir_name, "../"))
-from descope import (  # noqa: E402
+from descope import (
     COOKIE_DATA_NAME,
     REFRESH_SESSION_COOKIE_NAME,
     REFRESH_SESSION_TOKEN_NAME,

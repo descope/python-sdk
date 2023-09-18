@@ -1,3 +1,5 @@
+from typing import Optional
+
 ERROR_TYPE_INVALID_ARGUMENT = "invalid argument"
 ERROR_TYPE_SERVER_ERROR = "server error"
 ERROR_TYPE_INVALID_PUBLIC_KEY = "invalid public key"
@@ -10,9 +12,9 @@ API_RATE_LIMIT_RETRY_AFTER_HEADER = "Retry-After"
 class AuthException(Exception):
     def __init__(
         self,
-        status_code: int = None,
-        error_type: str = None,
-        error_message: str = None,
+        status_code: Optional[int] = None,
+        error_type: Optional[str] = None,
+        error_message: Optional[str] = None,
         **kwargs,
     ):
         self.status_code = status_code
@@ -29,11 +31,11 @@ class AuthException(Exception):
 class RateLimitException(Exception):
     def __init__(
         self,
-        status_code: int = None,
-        error_type: str = None,
-        error_description: str = None,
-        error_message: str = None,
-        rate_limit_parameters: dict = None,
+        status_code: Optional[int] = None,
+        error_type: Optional[str] = None,
+        error_description: Optional[str] = None,
+        error_message: Optional[str] = None,
+        rate_limit_parameters: Optional[dict] = None,
         **kwargs,
     ):
         self.status_code = status_code

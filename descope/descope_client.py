@@ -1,12 +1,6 @@
-import sys
+from __future__ import annotations
 
-if sys.version_info[0] >= 3 and sys.version_info[1] >= 10:
-    # Python 3.10 and above
-    from collections.abc import Iterable
-else:
-    from collections.abc import Iterable
-
-from typing import List
+from collections.abc import Iterable
 
 import requests
 
@@ -29,10 +23,10 @@ class DescopeClient:
 
     def __init__(
         self,
-        project_id: str = None,
-        public_key: str = None,
+        project_id: str,
+        public_key: dict | None = None,
         skip_verify: bool = False,
-        management_key: str = None,
+        management_key: str | None = None,
         timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
         jwt_validation_leeway: int = 5,
     ):
@@ -95,7 +89,7 @@ class DescopeClient:
     def password(self):
         return self._password
 
-    def validate_permissions(self, jwt_response: dict, permissions: List[str]) -> bool:
+    def validate_permissions(self, jwt_response: dict, permissions: list[str]) -> bool:
         """
         Validate that a jwt_response has been granted the specified permissions.
             For a multi-tenant environment use validate_tenant_permissions function
@@ -109,7 +103,7 @@ class DescopeClient:
         return self.validate_tenant_permissions(jwt_response, "", permissions)
 
     def validate_tenant_permissions(
-        self, jwt_response: dict, tenant: str, permissions: List[str]
+        self, jwt_response: dict, tenant: str, permissions: list[str]
     ) -> bool:
         """
         Validate that a jwt_response has been granted the specified permissions on the specified tenant.
@@ -144,7 +138,7 @@ class DescopeClient:
                 return False
         return True
 
-    def validate_roles(self, jwt_response: dict, roles: List[str]) -> bool:
+    def validate_roles(self, jwt_response: dict, roles: list[str]) -> bool:
         """
         Validate that a jwt_response has been granted the specified roles.
             For a multi-tenant environment use validate_tenant_roles function
@@ -158,7 +152,7 @@ class DescopeClient:
         return self.validate_tenant_roles(jwt_response, "", roles)
 
     def validate_tenant_roles(
-        self, jwt_response: dict, tenant: str, roles: List[str]
+        self, jwt_response: dict, tenant: str, roles: list[str]
     ) -> bool:
         """
         Validate that a jwt_response has been granted the specified roles on the specified tenant.

@@ -1,3 +1,5 @@
+from typing import Optional
+
 from descope._auth_base import AuthBase
 from descope.common import EndpointsV1, LoginOptions, validate_refresh_token_provided
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
@@ -7,9 +9,9 @@ class SAML(AuthBase):
     def start(
         self,
         tenant: str,
-        return_url: str = None,
-        login_options: LoginOptions = None,
-        refresh_token: str = None,
+        return_url: Optional[str] = None,
+        login_options: Optional[LoginOptions] = None,
+        refresh_token: Optional[str] = None,
     ) -> dict:
         """
         Docs

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import Any, List, Optional
 
 from descope._auth_base import AuthBase
 from descope.management.common import MgmtV1
@@ -8,19 +8,19 @@ from descope.management.common import MgmtV1
 class Audit(AuthBase):
     def search(
         self,
-        user_ids: List[str] = None,
-        actions: List[str] = None,
-        excluded_actions: List[str] = None,
-        devices: List[str] = None,
-        methods: List[str] = None,
-        geos: List[str] = None,
-        remote_addresses: List[str] = None,
-        login_ids: List[str] = None,
-        tenants: List[str] = None,
+        user_ids: Optional[List[str]] = None,
+        actions: Optional[List[str]] = None,
+        excluded_actions: Optional[List[str]] = None,
+        devices: Optional[List[str]] = None,
+        methods: Optional[List[str]] = None,
+        geos: Optional[List[str]] = None,
+        remote_addresses: Optional[List[str]] = None,
+        login_ids: Optional[List[str]] = None,
+        tenants: Optional[List[str]] = None,
         no_tenants: bool = False,
-        text: str = None,
-        from_ts: datetime = None,
-        to_ts: datetime = None,
+        text: Optional[str] = None,
+        from_ts: Optional[datetime] = None,
+        to_ts: Optional[datetime] = None,
     ) -> dict:
         """
         Search the audit trail up to last 30 days based on given parameters
@@ -65,7 +65,7 @@ class Audit(AuthBase):
         Raise:
         AuthException: raised if search operation fails
         """
-        body = {"noTenants": no_tenants}
+        body: dict[str, Any] = {"noTenants": no_tenants}
         if user_ids is not None:
             body["userIds"] = user_ids
         if actions is not None:
@@ -87,9 +87,9 @@ class Audit(AuthBase):
         if text is not None:
             body["text"] = text
         if from_ts is not None:
-            body["from"] = from_ts.timestamp * 1000
+            body["from"] = from_ts.timestamp() * 1000
         if to_ts is not None:
-            body["to"] = to_ts.timestamp * 1000
+            body["to"] = to_ts.timestamp() * 1000
 
         response = self._auth.do_post(
             MgmtV1.audit_search,

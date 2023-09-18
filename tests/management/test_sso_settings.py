@@ -271,6 +271,33 @@ class TestSSOSettings(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+        # Test partial arguments
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(
+                client.mgmt.sso.configure_via_metadata(
+                    "tenant-id",
+                    "https://idp-meta.com",
+                )
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_metadata_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                json={
+                    "tenantId": "tenant-id",
+                    "idpMetadataURL": "https://idp-meta.com",
+                    "redirectURL": None,
+                    "domain": None,
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
     def test_mapping(self):
         client = DescopeClient(
             self.dummy_project_id,
