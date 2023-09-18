@@ -1,11 +1,14 @@
 from flask import Flask, Response, _request_ctx_stack, jsonify, request
 
-from descope import AuthException, DeliveryMethod, DescopeClient
-
-from .decorators.flask_decorators import (
+from descope import (
     COOKIE_DATA_NAME,
     REFRESH_SESSION_TOKEN_NAME,
     SESSION_TOKEN_NAME,
+    AuthException,
+    DeliveryMethod,
+    DescopeClient,
+)
+from descope.flask import (
     descope_logout,
     descope_validate_auth,
     descope_verify_magiclink_token,

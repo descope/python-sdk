@@ -538,6 +538,23 @@ flake8 = ">=6.0.0"
 dev = ["coverage", "hypothesis", "hypothesmith (>=0.2)", "pre-commit", "pytest", "tox"]
 
 [[package]]
+name = "flake8-pyproject"
+version = "1.2.3"
+description = "Flake8 plug-in loading the configuration from pyproject.toml"
+optional = false
+python-versions = ">= 3.6"
+files = [
+    {file = "flake8_pyproject-1.2.3-py3-none-any.whl", hash = "sha256:6249fe53545205af5e76837644dc80b4c10037e73a0e5db87ff562d75fb5bd4a"},
+]
+
+[package.dependencies]
+Flake8 = ">=5"
+TOMLi = {version = "*", markers = "python_version < \"3.11\""}
+
+[package.extras]
+dev = ["pyTest", "pyTest-cov"]
+
+[[package]]
 name = "flask"
 version = "2.3.2"
 description = "A simple framework for building complex web applications."
@@ -1301,7 +1318,10 @@ files = [
 docs = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-lint"]
 testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-ignore-flaky", "pytest-mypy (>=0.9.1)", "pytest-ruff"]
 
+[extras]
+flask = ["Flask"]
+
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.7,<4.0"
-content-hash = "bd8afe638c4a4edc7f1777c07c444c37a841622b6773c9e6d68ffc1bf3570d36"
+content-hash = "8fa0e550d9d7dad7be5eeef6e58d543a1d0bb6e9f5ecfbee7cd5271ef2e41521"

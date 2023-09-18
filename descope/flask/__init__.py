@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import datetime
 import uuid
 from functools import wraps
 
 from flask import Response, _request_ctx_stack, redirect, request
 
-from descope import (
+from .. import (
     COOKIE_DATA_NAME,
     REFRESH_SESSION_COOKIE_NAME,
     REFRESH_SESSION_TOKEN_NAME,
@@ -13,8 +15,8 @@ from descope import (
     AuthException,
     DeliveryMethod,
 )
-from descope.descope_client import DescopeClient
-from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT
+from ..descope_client import DescopeClient
+from ..exceptions import ERROR_TYPE_INVALID_ARGUMENT
 
 
 def set_cookie_on_response(response: Response, token: dict, cookie_data: dict):
@@ -38,7 +40,7 @@ def set_cookie_on_response(response: Response, token: dict, cookie_data: dict):
     )
 
 
-def descope_signup_otp_by_email(descope_client):
+def descope_signup_otp_by_email(descope_client: DescopeClient):
     """
     Sign-up new user, using email to verify the OTP
     """
@@ -64,7 +66,7 @@ def descope_signup_otp_by_email(descope_client):
     return decorator
 
 
-def descope_signin_otp_by_email(descope_client):
+def descope_signin_otp_by_email(descope_client: DescopeClient):
     """
     Sign-in existing user, using email to verify OTP
     """
@@ -89,7 +91,12 @@ def descope_signin_otp_by_email(descope_client):
     return decorator
 
 
-def descope_validate_auth(descope_client, permissions=None, roles=None, tenant=""):
+def descope_validate_auth(
+    descope_client: DescopeClient,
+    permissions: list[str] | None = None,
+    roles: list[str] | None = None,
+    tenant="",
+):
     """
     Test if Access Token is valid
     """
@@ -152,7 +159,7 @@ def descope_validate_auth(descope_client, permissions=None, roles=None, tenant="
     return decorator
 
 
-def descope_verify_code_by_email(descope_client):
+def descope_verify_code_by_email(descope_client: DescopeClient):
     """
     Verify code by email decorator
     """
@@ -195,7 +202,7 @@ def descope_verify_code_by_email(descope_client):
     return decorator
 
 
-def descope_verify_code_by_phone(descope_client):
+def descope_verify_code_by_phone(descope_client: DescopeClient):
     """
     Verify code by email decorator
     """
@@ -238,7 +245,7 @@ def descope_verify_code_by_phone(descope_client):
     return decorator
 
 
-def descope_verify_code_by_whatsapp(descope_client):
+def descope_verify_code_by_whatsapp(descope_client: DescopeClient):
     """
     Verify code by whatsapp decorator
     """
@@ -281,7 +288,7 @@ def descope_verify_code_by_whatsapp(descope_client):
     return decorator
 
 
-def descope_signup_magiclink_by_email(descope_client, uri):
+def descope_signup_magiclink_by_email(descope_client: DescopeClient, uri: str):
     """
     Signup new user using magiclink via email
     """
@@ -307,7 +314,7 @@ def descope_signup_magiclink_by_email(descope_client, uri):
     return decorator
 
 
-def descope_signin_magiclink_by_email(descope_client, uri):
+def descope_signin_magiclink_by_email(descope_client: DescopeClient, uri: str):
     """
     Signin using magiclink via email
     """
@@ -332,7 +339,7 @@ def descope_signin_magiclink_by_email(descope_client, uri):
     return decorator
 
 
-def descope_verify_magiclink_token(descope_client):
+def descope_verify_magiclink_token(descope_client: DescopeClient):
     """
     Verify magiclink token
     """
@@ -370,7 +377,7 @@ def descope_verify_magiclink_token(descope_client):
     return decorator
 
 
-def descope_logout(descope_client):
+def descope_logout(descope_client: DescopeClient):
     """
     Logout
     """
@@ -426,7 +433,7 @@ def descope_oauth(descope_client: DescopeClient):
     return decorator
 
 
-def descope_full_login(project_id, flow_id, success_redirect_url):
+def descope_full_login(project_id: str, flow_id: str, success_redirect_url: str):
     """
     Descope Flow login
     """

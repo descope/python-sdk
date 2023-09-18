@@ -32,6 +32,7 @@ repos:
     rev: 6.0.0
     hooks:
       - id: flake8
+        additional_dependencies: [Flake8-pyproject]
   - repo: https://github.com/python-poetry/poetry
     rev: 1.6.1
     hooks:
@@ -68,11 +69,4 @@ repos:
         args: [run, liccheck, --level, paranoid]
         language: system
         files: ^(.*requirements.*\.txt|setup\.cfg|setup\.py|pyproject\.toml|liccheck\.ini)$
-        pass_filenames: false
-      - id: tox
-        name: Run tests with tox
-        description: Run tox to check that all tests pass
-        entry: poetry run tox -p
-        language: system
-        files: ^(.*\.py)$
         pass_filenames: false
