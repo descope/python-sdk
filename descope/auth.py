@@ -18,7 +18,7 @@ except ImportError:
 
 import requests
 from email_validator import EmailNotValidError, validate_email
-from jwt import ImmatureSignatureError
+from jwt import ExpiredSignatureError, ImmatureSignatureError
 
 from descope.common import (
     COOKIE_DATA_NAME,
@@ -313,7 +313,7 @@ class Auth:
         if isinstance(public_key, str):
             try:
                 public_key = json.loads(public_key)
-            except Exception as e:
+            except (ValueError, TypeError) as e:
                 raise AuthException(
                     500,
                     ERROR_TYPE_INVALID_PUBLIC_KEY,
@@ -373,7 +373,7 @@ class Auth:
         try:
             jwkeys_wrapper = json.loads(jwks_data)
             jwkeys = jwkeys_wrapper["keys"]
-        except Exception as e:
+        except (ValueError, TypeError, KeyError) as e:
             raise AuthException(
                 500, ERROR_TYPE_INVALID_PUBLIC_KEY, f"Unable to load jwks. Error: {e}"
             )
@@ -384,7 +384,7 @@ class Auth:
             try:
                 loaded_kid, pub_key, alg = Auth._validate_and_load_public_key(key)
                 self.public_keys[loaded_kid] = (pub_key, alg)
-            except Exception:
+            except AuthException:
                 # just continue to the next key
                 pass
 
@@ -504,12 +504,12 @@ class Auth:
             )
         try:
             unverified_header = jwt.get_unverified_header(token)
-        except Exception as e:
+        except jwt.exceptions.PyJWTError as e:
             raise AuthException(
                 500,
                 ERROR_TYPE_INVALID_TOKEN,
                 f"Unable to parse token header. Error: {e}",
-            )
+            ) from e
 
         alg_header = unverified_header.get(Auth.ALGORITHM_KEY, None)
         if alg_header is None or alg_header == "none":
@@ -554,7 +554,7 @@ class Auth:
                 audience=audience,
                 leeway=self.jwt_validation_leeway,
             )
-        except ImmatureSignatureError:
+        except (ImmatureSignatureError, ExpiredSignatureError):
             raise AuthException(
                 400,
                 ERROR_TYPE_INVALID_TOKEN,
@@ -574,18 +574,11 @@ class Auth:
                 "Session token is required for validation",
             )
 
-        try:
-            res = self._validate_token(session_token, audience)
-            res[SESSION_TOKEN_NAME] = copy.deepcopy(
-                res
-            )  # Duplicate for saving backward compatibility but keep the same structure as the refresh operation response
-            return self.adjust_properties(res, True)
-        except (RateLimitException, AuthException) as e:
-            raise e
-        except Exception as e:
-            raise AuthException(
-                401, ERROR_TYPE_INVALID_TOKEN, f"Invalid session token: {e}"
-            )
+        res = self._validate_token(session_token, audience)
+        res[SESSION_TOKEN_NAME] = copy.deepcopy(
+            res
+        )  # Duplicate for saving backward compatibility but keep the same structure as the refresh operation response
+        return self.adjust_properties(res, True)
 
     def refresh_session(
         self, refresh_token: str, audience: str | None | Iterable[str] = None
@@ -597,15 +590,7 @@ class Auth:
                 "Refresh token is required to refresh a session",
             )
 
-        try:
-            self._validate_token(refresh_token, audience)
-        except RateLimitException as e:
-            raise e
-        except Exception as e:
-            # Refresh is invalid
-            raise AuthException(
-                401, ERROR_TYPE_INVALID_TOKEN, f"Invalid refresh token: {e}"
-            )
+        self._validate_token(refresh_token, audience)
 
         uri = EndpointsV1.refresh_token_path
         response = self.do_post(uri=uri, body={}, params=None, pswd=refresh_token)
@@ -628,7 +613,7 @@ class Auth:
 
         try:
             return self.validate_session(session_token, audience)
-        except Exception:
+        except AuthException:
             # Session is invalid - try to refresh it
             if not refresh_token:
                 raise AuthException(
