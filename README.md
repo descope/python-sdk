@@ -15,6 +15,12 @@ Install the package with:
 pip install descope
 ```
 
+#### If you would like to use the Flask decorators, make sure to install the Flask extras:
+
+```bash
+pip install descope[Flask]
+```
+
 ## Setup
 
 A Descope `Project ID` is required to initialize the SDK. Find it on the
@@ -795,10 +801,13 @@ updated_jwt = descope_client.mgmt.jwt.update_jwt(
 ```
 
 # Note 1: The generate code/link functions, work only for test users, will not work for regular users.
+
 # Note 2: In case of testing sign-in / sign-up operations with test users, need to make sure to generate the code prior calling the sign-in / sign-up operations.
 
 # Embedded links can be created to directly receive a verifiable token without sending it.
+
 # This token can then be verified using the magic link 'verify' function, either directly or through a flow.
+
 token = descope_client.mgmt.user.generate_embedded_link("desmond@descope.com", {"key1":"value1"})
 
 ### Search Audit
@@ -885,8 +894,9 @@ You can find various usage samples in the [samples folder](https://github.com/de
 ## Run Locally
 
 ### Prerequisites
- - Python 3.7 or higher
- - [Poetry](https://python-poetry.org) installed
+
+- Python 3.7 or higher
+- [Poetry](https://python-poetry.org) installed
 
 ### Install dependencies
 
@@ -897,11 +907,13 @@ poetry install
 ### Run tests
 
 Running all tests:
+
 ```bash
 poetry run pytest tests
 ```
 
 Running all tests with coverage:
+
 ```bash
 poetry run pytest --junitxml=/tmp/pytest.xml --cov-report=term-missing:skip-covered --cov=descope tests/ --cov-report=xml:/tmp/cov.xml
 ```
