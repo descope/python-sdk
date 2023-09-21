@@ -332,6 +332,8 @@ class User(AuthBase):
         with_test_user: bool = False,
         custom_attributes: Optional[dict] = None,
         statuses: Optional[List[str]] = None,
+        emails: Optional[List[str]] = None,
+        phones: Optional[List[str]] = None,
     ) -> dict:
         """
         Search all users.
@@ -343,6 +345,10 @@ class User(AuthBase):
         page (int): Optional pagination control. Pages start at 0 and must be non-negative.
         test_users_only (bool): Optional filter only test users.
         with_test_user (bool): Optional include test users in search.
+        custom_attributes (dict): Optional search for a attribute with a given value
+        statuses (List[str]): Optional list of statuses to search for ("enabled", "disabled", "invited")
+        emails (List[str]): Optional list of emails to search for
+        phones (List[str]): Optional list of phones to search for
 
         Return value (dict):
         Return dict in the format
@@ -374,6 +380,12 @@ class User(AuthBase):
         }
         if statuses is not None:
             body["statuses"] = statuses
+
+        if emails is not None:
+            body["emails"] = emails
+
+        if phones is not None:
+            body["phones"] = phones
 
         if custom_attributes is not None:
             body["customAttributes"] = custom_attributes
