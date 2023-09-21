@@ -36,9 +36,9 @@ Flask = ["Flask"]
 
 [tool.poetry.dependencies]
 python = ">=3.7,<4.0"
-requests = "2.31.0"
-pyjwt = {version = "2.8.0", extras = ["crypto"]}
-email-validator = "2.0.0.post2"
+requests = ">=2.27.0"
+pyjwt = {version = ">=2.4.0", extras = ["crypto"]}
+email-validator = ">=2,<3"
 liccheck = "^0.9.1"
 Flask = {version = ">=2", python = ">=3.8"}
 
