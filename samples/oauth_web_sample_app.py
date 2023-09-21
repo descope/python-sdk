@@ -1,12 +1,7 @@
 from flask import Flask, jsonify
 
 from descope import DescopeClient
-
-from .decorators.flask_decorators import (
-    descope_logout,
-    descope_oauth,
-    descope_validate_auth,
-)
+from descope.flask import descope_logout, descope_oauth, descope_validate_auth
 
 APP = Flask(__name__)
 

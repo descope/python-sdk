@@ -3,5 +3,8 @@
     "python.testing.pytestArgs": [
         "tests"
     ],
-    "mypy.runUsingActiveInterpreter": true,
+    "flake8.importStrategy": "fromEnvironment",
+    "mypy-type-checker.importStrategy": "fromEnvironment",
+    "isort.importStrategy": "fromEnvironment",
+    "black-formatter.importStrategy": "fromEnvironment",
 }

@@ -1,5 +1,3 @@
-import datetime
-
 from flask import Flask, Response, jsonify, request
 
 from descope import (
@@ -10,6 +8,7 @@ from descope import (
     AuthException,
     DescopeClient,
 )
+from descope.flask import set_cookie_on_response
 
 APP = Flask(__name__)
 
@@ -17,27 +16,6 @@ PROJECT_ID = ""
 
 # init the DescopeClient
 descope_client = DescopeClient(PROJECT_ID, skip_verify=True)
-
-
-def set_cookie_on_response(response: Response, token: dict, cookie_data: dict):
-    cookie_domain = cookie_data.get("domain", "")
-    if cookie_domain == "":
-        cookie_domain = None
-
-    current_time = datetime.datetime.now()
-    expire_time = current_time + datetime.timedelta(days=30)
-
-    return response.set_cookie(
-        key=token.get("drn", ""),
-        value=token.get("jwt", ""),
-        max_age=cookie_data.get("maxAge", int(expire_time.timestamp())),
-        expires=cookie_data.get("exp", expire_time),
-        path=cookie_data.get("path", "/"),
-        domain=cookie_domain,
-        secure=False,  # True
-        httponly=True,
-        samesite="Strict",  # "Strict", "Lax", "None"
-    )
 
 
 class Error(Exception):
