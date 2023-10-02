@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from descope._auth_base import AuthBase
 from descope.management.common import MgmtV1
@@ -182,7 +182,7 @@ class Tenant(AuthBase):
         self_provisioning_domains: List[str],
         custom_attributes: Optional[dict] = None,
     ) -> dict:
-        body = {
+        body: dict[str, Any] = {
             "name": name,
             "id": id,
             "selfProvisioningDomains": self_provisioning_domains,
