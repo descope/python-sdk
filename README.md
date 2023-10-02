@@ -466,6 +466,7 @@ descope_client.mgmt.tenant.create(
     name="My First Tenant",
     id="my-custom-id", # This is optional.
     self_provisioning_domains=["domain.com"],
+    custom_attributes={"attribute-name": "value},
 )
 
 # Update will override all fields as is. Use carefully.
@@ -473,6 +474,7 @@ descope_client.mgmt.tenant.update(
     id="my-custom-id",
     name="My First Tenant",
     self_provisioning_domains=["domain.com", "another-domain.com"],
+    custom_attributes={"attribute-name": "value},
 )
 
 # Tenant deletion cannot be undone. Use carefully.
@@ -483,6 +485,12 @@ tenant_resp = descope_client.mgmt.tenant.load("my-custom-id")
 
 # Load all tenants
 tenants_resp = descope_client.mgmt.tenant.load_all()
+tenants = tenants_resp["tenants"]
+    for tenant in tenants:
+        # Do something
+
+# search all tenants
+tenants_resp = descope_client.mgmt.tenant.search_all(ids=["id1"], names=["name1"], custom_attributes={"k1":"v1"}, self_provisioning_domains=["spd1"])
 tenants = tenants_resp["tenants"]
     for tenant in tenants:
         # Do something

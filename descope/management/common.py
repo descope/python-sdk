@@ -8,6 +8,7 @@ class MgmtV1:
     tenant_delete_path = "/v1/mgmt/tenant/delete"
     tenant_load_path = "/v1/mgmt/tenant"
     tenant_load_all_path = "/v1/mgmt/tenant/all"
+    tenant_search_all_path = "/v1/mgmt/tenant/search"
 
     # user
     user_create_path = "/v1/mgmt/user/create"
