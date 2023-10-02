@@ -66,6 +66,32 @@ class TestTenant(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+        # Test success flow with custom attributes
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"id": "t1"}""")
+            mock_post.return_value = network_resp
+            resp = client.mgmt.tenant.create("name", "t1", ["domain.com"], {"k1": "v1"})
+            self.assertEqual(resp["id"], "t1")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_create_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                json={
+                    "name": "name",
+                    "id": "t1",
+                    "selfProvisioningDomains": ["domain.com"],
+                    "customAttributes": {"k1": "v1"},
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
     def test_update(self):
         client = DescopeClient(
             self.dummy_project_id,
@@ -101,6 +127,32 @@ class TestTenant(common.DescopeTest):
                     "name": "new-name",
                     "id": "t1",
                     "selfProvisioningDomains": ["domain.com"],
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test success flow with custom attributes
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(
+                client.mgmt.tenant.update(
+                    "t1", "new-name", ["domain.com"], {"k1": "v1"}
+                )
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_update_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                json={
+                    "name": "new-name",
+                    "id": "t1",
+                    "selfProvisioningDomains": ["domain.com"],
+                    "customAttributes": {"k1": "v1"},
                 },
                 allow_redirects=False,
                 verify=True,
@@ -226,5 +278,61 @@ class TestTenant(common.DescopeTest):
                 params=None,
                 allow_redirects=None,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_search_all(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(AuthException, client.mgmt.tenant.search_all)
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads(
+                """
+                {
+                    "tenants": [
+                        {"id": "t1", "name": "tenant1", "selfProvisioningDomains": ["domain1.com"]},
+                        {"id": "t2", "name": "tenant2", "selfProvisioningDomains": ["domain1.com"]}
+                    ]
+                }
+                """
+            )
+            mock_post.return_value = network_resp
+            resp = client.mgmt.tenant.search_all(
+                ids=["id1"],
+                names=["name1"],
+                custom_attributes={"k1": "v1"},
+                self_provisioning_domains=["spd1"],
+            )
+            tenants = resp["tenants"]
+            self.assertEqual(len(tenants), 2)
+            self.assertEqual(tenants[0]["name"], "tenant1")
+            self.assertEqual(tenants[1]["name"], "tenant2")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_search_all_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                json={
+                    "tenantIds": ["id1"],
+                    "tenantNames": ["name1"],
+                    "tenantSelfProvisioningDomains": ["spd1"],
+                    "customAttributes": {"k1": "v1"},
+                },
+                allow_redirects=False,
+                verify=True,
+                params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
