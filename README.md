@@ -64,7 +64,8 @@ These sections show how to use the SDK to perform permission and user management
 7. [Query SSO Groups](#query-sso-groups)
 8. [Manage Flows](#manage-flows-and-theme)
 9. [Manage JWTs](#manage-jwts)
-10. [Search Audit](#search-audit)
+10. [Embedded links](#embedded-links)
+11. [Search Audit](#search-audit)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -812,11 +813,15 @@ updated_jwt = descope_client.mgmt.jwt.update_jwt(
 
 # Note 2: In case of testing sign-in / sign-up operations with test users, need to make sure to generate the code prior calling the sign-in / sign-up operations.
 
-# Embedded links can be created to directly receive a verifiable token without sending it.
+### Embedded links
 
-# This token can then be verified using the magic link 'verify' function, either directly or through a flow.
+Embedded links can be created to directly receive a verifiable token without sending it.
 
+This token can then be verified using the magic link 'verify' function, either directly or through a flow.
+
+```python
 token = descope_client.mgmt.user.generate_embedded_link("desmond@descope.com", {"key1":"value1"})
+```
 
 ### Search Audit
 
