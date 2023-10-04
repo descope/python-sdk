@@ -1,4 +1,5 @@
 import json
+import os
 import unittest
 from enum import Enum
 from unittest import mock
@@ -122,6 +123,14 @@ class TestAuth(common.DescopeTest):
             mock_get.return_value.ok = True
             mock_get.return_value.text = valid_keys_response
             self.assertIsNone(auth._fetch_public_keys())
+
+    def test_project_id_from_env(self):
+        os.environ["DESCOPE_PROJECT_ID"] = self.dummy_project_id
+        Auth()
+
+    def test_project_id_from_env_without_env(self):
+        os.environ["DESCOPE_PROJECT_ID"] = ""
+        self.assertRaises(AuthException, Auth)
 
     def test_verify_delivery_method(self):
         self.assertEqual(

@@ -64,8 +64,8 @@ class Auth:
 
     def __init__(
         self,
-        project_id: str,
-        public_key: dict | str | None,
+        project_id: str | None = None,
+        public_key: dict | str | None = None,
         skip_verify: bool = False,
         management_key: str | None = None,
         timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
