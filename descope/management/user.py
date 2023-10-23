@@ -322,6 +322,44 @@ class User(AuthBase):
         )
         return response.json()
 
+    def logout_user(
+        self,
+        login_id: str,
+    ):
+        """
+        Logout a user from all devices.
+
+        Args:
+        login_id (str): The login ID of the user to be logged out.
+
+        Raise:
+        AuthException: raised if creation operation fails
+        """
+        self._auth.do_post(
+            MgmtV1.user_logout_path,
+            {"loginId": login_id},
+            pswd=self._auth.management_key,
+        )
+
+    def logout_user_by_user_id(
+        self,
+        user_id: str,
+    ):
+        """
+        Logout a user from all devices.
+
+        Args:
+        user_id (str): The login ID of the user to be logged out.
+
+        Raise:
+        AuthException: raised if creation operation fails
+        """
+        self._auth.do_post(
+            MgmtV1.user_logout_path,
+            {"userId": user_id},
+            pswd=self._auth.management_key,
+        )
+
     def search_all(
         self,
         tenant_ids: Optional[List[str]] = None,

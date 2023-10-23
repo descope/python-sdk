@@ -14,6 +14,7 @@ class MgmtV1:
     user_create_path = "/v1/mgmt/user/create"
     user_update_path = "/v1/mgmt/user/update"
     user_delete_path = "/v1/mgmt/user/delete"
+    user_logout_path = "/v1/mgmt/user/logout"
     user_delete_all_test_users_path = "/v1/mgmt/user/test/delete/all"
     user_load_path = "/v1/mgmt/user"
     users_search_path = "/v1/mgmt/user/search"
