@@ -563,6 +563,12 @@ user = user_resp["user"]
 user_resp = descope_client.mgmt.user.load_by_user_id("<user-id>")
 user = user_resp["user"]
 
+# Logout user from all devices by login ID
+descope_client.mgmt.user.logout_user("<login-id>")
+
+# Logout user from all devices by user ID
+descope_client.mgmt.user.logout_user_by_user_id("<user-id>")
+
 # Search all users, optionally according to tenant and/or role filter
 # results can be paginated using the limit and page parameters
 users_resp = descope_client.mgmt.user.search_all(tenant_ids=["my-tenant-id"])
