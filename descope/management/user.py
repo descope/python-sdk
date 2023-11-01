@@ -68,6 +68,8 @@ class User(AuthBase):
                 verified_email,
                 verified_phone,
                 invite_url,
+                None,
+                None,
             ),
             pswd=self._auth.management_key,
         )
@@ -131,6 +133,8 @@ class User(AuthBase):
                 verified_email,
                 verified_phone,
                 invite_url,
+                None,
+                None,
             ),
             pswd=self._auth.management_key,
         )
@@ -149,6 +153,12 @@ class User(AuthBase):
         verified_email: Optional[bool] = None,
         verified_phone: Optional[bool] = None,
         invite_url: Optional[str] = None,
+        send_mail: Optional[
+            bool
+        ] = None,  # send invite via mail, default is according to project settings
+        send_sms: Optional[
+            bool
+        ] = None,  # send invite via text message, default is according to project settings
     ) -> dict:
         """
         Create a new user and invite them via an email message.
@@ -180,6 +190,8 @@ class User(AuthBase):
                 verified_email,
                 verified_phone,
                 invite_url,
+                send_mail,
+                send_sms,
             ),
             pswd=self._auth.management_key,
         )
@@ -1030,6 +1042,8 @@ class User(AuthBase):
         verified_email: Optional[bool],
         verified_phone: Optional[bool],
         invite_url: Optional[str],
+        send_mail: Optional[bool],
+        send_sms: Optional[bool],
     ) -> dict:
         body = User._compose_update_body(
             login_id,
@@ -1049,6 +1063,10 @@ class User(AuthBase):
             body["verifiedPhone"] = verified_phone
         if invite_url is not None:
             body["inviteUrl"] = invite_url
+        if send_mail is not None:
+            body["sendMail"] = send_mail
+        if send_sms is not None:
+            body["sendSMS"] = send_sms
         return body
 
     @staticmethod
