@@ -149,8 +149,12 @@ class User(AuthBase):
         verified_email: Optional[bool] = None,
         verified_phone: Optional[bool] = None,
         invite_url: Optional[str] = None,
-        send_mail: Optional[bool] = None, # send invite via mail, default is according to project settings
-        send_sms: Optional[bool] = None, # send invite via text message, default is according to project settings
+        send_mail: Optional[
+            bool
+        ] = None,  # send invite via mail, default is according to project settings
+        send_sms: Optional[
+            bool
+        ] = None,  # send invite via text message, default is according to project settings
     ) -> dict:
         """
         Create a new user and invite them via an email message.
