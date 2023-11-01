@@ -68,6 +68,8 @@ class User(AuthBase):
                 verified_email,
                 verified_phone,
                 invite_url,
+                None,
+                None,
             ),
             pswd=self._auth.management_key,
         )
@@ -131,6 +133,8 @@ class User(AuthBase):
                 verified_email,
                 verified_phone,
                 invite_url,
+                None,
+                None,
             ),
             pswd=self._auth.management_key,
         )
