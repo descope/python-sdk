@@ -218,7 +218,7 @@ class TestUser(common.DescopeTest):
                 ],
                 custom_attributes={"ak": "av"},
                 invite_url="invite.me",
-                send_sms=True
+                send_sms=True,
             )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
@@ -244,7 +244,7 @@ class TestUser(common.DescopeTest):
                     "customAttributes": {"ak": "av"},
                     "invite": True,
                     "inviteUrl": "invite.me",
-                    "sendSMS": True
+                    "sendSMS": True,
                 },
                 allow_redirects=False,
                 verify=True,
