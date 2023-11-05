@@ -83,6 +83,10 @@ class MgmtV1:
     # Audit
     audit_search = "/v1/mgmt/audit/search"
 
+    # Project
+    project_update_name = "/v1/mgmt/project/update/name"
+    project_clone = "/v1/mgmt/project/clone"
+
 
 class AssociatedTenant:
     """
