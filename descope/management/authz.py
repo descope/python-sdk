@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Any
 
 from descope._auth_base import AuthBase
 from descope.management.common import MgmtV1
@@ -85,7 +85,7 @@ class Authz(AuthBase):
         Raise:
         AuthException: raised if save namespace fails
         """
-        body: dict[str, any] = {"namespace": namespace}
+        body: dict[str, Any] = {"namespace": namespace}
         if old_name != "":
             body["oldName"] = old_name
         if schema_name != "":
@@ -105,7 +105,7 @@ class Authz(AuthBase):
         Raise:
         AuthException: raised if delete namespace fails
         """
-        body: dict[str, any] = {"name": name}
+        body: dict[str, Any] = {"name": name}
         if schema_name != "":
             body["schemaName"] = schema_name
         self._auth.do_post(
@@ -132,7 +132,7 @@ class Authz(AuthBase):
         Raise:
         AuthException: raised if save relation definition fails
         """
-        body: dict[str, any] = {
+        body: dict[str, Any] = {
             "relationDefinition": relation_definition,
             "namespace": namespace,
         }
@@ -158,7 +158,7 @@ class Authz(AuthBase):
         Raise:
         AuthException: raised if delete namespace fails
         """
-        body: dict[str, any] = {"name": name, "namespace": namespace}
+        body: dict[str, Any] = {"name": name, "namespace": namespace}
         if schema_name != "":
             body["schemaName"] = schema_name
         self._auth.do_post(
