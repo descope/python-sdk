@@ -997,26 +997,29 @@ schema = descope_client.mgmt.authz.load_schema()
 descope_client.mgmt.authz.save_schema(schema, True)
 
 # Create a relation between a resource and user
-descope_client.mgmt.authz.create_relations([]
-descopeClient.Management.Authz().CreateRelations([]*descope.AuthzRelation {
-    {
-        resource: "some-doc",
-        relationDefinition: "owner",
-        namespace: "doc",
-        target: "u1",
-    },
-})
+descope_client.mgmt.authz.create_relations(
+    [
+        {
+            "resource": "some-doc",
+            "relationDefinition": "owner",
+            "namespace": "doc",
+            "target": "u1",
+        }
+    ]
+)
 
-// Check if target has the relevant relation
-// The answer should be true because an owner is also a viewer
-relations, err := descopeClient.Management.Authz().HasRelations([]*descope.AuthzRelationQuery{
-    {
-        resource: "some-doc",
-        relationDefinition: "viewer",
-        namespace: "doc",
-        target: "u1",
-    }
-})
+# Check if target has the relevant relation
+# The answer should be true because an owner is also a viewer
+relations = descope_client.mgmt.authz.has_relations(
+    [
+        {
+            "resource": "some-doc",
+            "relationDefinition": "viewer",
+            "namespace": "doc",
+            "target": "u1",
+        }
+    ]
+)
 ```
 
 ### Utils for your end to end (e2e) tests and integration tests
