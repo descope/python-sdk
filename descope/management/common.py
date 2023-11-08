@@ -83,6 +83,23 @@ class MgmtV1:
     # Audit
     audit_search = "/v1/mgmt/audit/search"
 
+    # Authz ReBAC
+    authz_schema_save = "/v1/mgmt/authz/schema/save"
+    authz_schema_delete = "/v1/mgmt/authz/schema/delete"
+    authz_schema_load = "/v1/mgmt/authz/schema/load"
+    authz_ns_save = "/v1/mgmt/authz/ns/save"
+    authz_ns_delete = "/v1/mgmt/authz/ns/delete"
+    authz_rd_save = "/v1/mgmt/authz/rd/save"
+    authz_rd_delete = "/v1/mgmt/authz/rd/delete"
+    authz_re_create = "/v1/mgmt/authz/re/create"
+    authz_re_delete = "/v1/mgmt/authz/re/delete"
+    authz_re_delete_resources = "/v1/mgmt/authz/re/deleteresources"
+    authz_re_has_relations = "/v1/mgmt/authz/re/has"
+    authz_re_who = "/v1/mgmt/authz/re/who"
+    authz_re_resource = "/v1/mgmt/authz/re/resource"
+    authz_re_targets = "/v1/mgmt/authz/re/targets"
+    authz_re_target_all = "/v1/mgmt/authz/re/targetall"
+
 
 class AssociatedTenant:
     """
