@@ -85,7 +85,7 @@ class Authz(AuthBase):
         Raise:
         AuthException: raised if save namespace fails
         """
-        body = {"namespace": namespace}
+        body: dict[str, any] = {"namespace": namespace}
         if old_name != "":
             body["oldName"] = old_name
         if schema_name != "":
@@ -105,7 +105,7 @@ class Authz(AuthBase):
         Raise:
         AuthException: raised if delete namespace fails
         """
-        body = {"name": name}
+        body: dict[str, any] = {"name": name}
         if schema_name != "":
             body["schemaName"] = schema_name
         self._auth.do_post(
@@ -132,7 +132,10 @@ class Authz(AuthBase):
         Raise:
         AuthException: raised if save relation definition fails
         """
-        body = {"relationDefinition": relation_definition, "namespace": namespace}
+        body: dict[str, any] = {
+            "relationDefinition": relation_definition,
+            "namespace": namespace,
+        }
         if old_name != "":
             body["oldName"] = old_name
         if schema_name != "":
@@ -155,7 +158,7 @@ class Authz(AuthBase):
         Raise:
         AuthException: raised if delete namespace fails
         """
-        body = {"name": name, "namespace": namespace}
+        body: dict[str, any] = {"name": name, "namespace": namespace}
         if schema_name != "":
             body["schemaName"] = schema_name
         self._auth.do_post(
