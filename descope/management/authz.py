@@ -73,7 +73,7 @@ class Authz(AuthBase):
         return response.json()["schema"]
 
     def save_namespace(
-        self, namespace: dict, old_name: str = None, schema_name: str = None
+        self, namespace: dict, old_name: str = "", schema_name: str = ""
     ):
         """
         Create or update the given namespace
@@ -86,9 +86,9 @@ class Authz(AuthBase):
         AuthException: raised if save namespace fails
         """
         body = {"namespace": namespace}
-        if old_name != None:
+        if old_name != "":
             body["oldName"] = old_name
-        if schema_name != None:
+        if schema_name != "":
             body["schemaName"] = schema_name
         self._auth.do_post(
             MgmtV1.authz_ns_save,
@@ -96,7 +96,7 @@ class Authz(AuthBase):
             pswd=self._auth.management_key,
         )
 
-    def delete_namespace(self, name: str, schema_name: str = None):
+    def delete_namespace(self, name: str, schema_name: str = ""):
         """
         delete_namespace will also delete the relevant relations.
         Args:
@@ -106,7 +106,7 @@ class Authz(AuthBase):
         AuthException: raised if delete namespace fails
         """
         body = {"name": name}
-        if schema_name != None:
+        if schema_name != "":
             body["schemaName"] = schema_name
         self._auth.do_post(
             MgmtV1.authz_ns_delete,
@@ -118,8 +118,8 @@ class Authz(AuthBase):
         self,
         relation_definition: dict,
         namespace: str,
-        old_name: str = None,
-        schema_name: str = None,
+        old_name: str = "",
+        schema_name: str = "",
     ):
         """
         Create or update the given relation definition
@@ -133,9 +133,9 @@ class Authz(AuthBase):
         AuthException: raised if save relation definition fails
         """
         body = {"relationDefinition": relation_definition, "namespace": namespace}
-        if old_name != None:
+        if old_name != "":
             body["oldName"] = old_name
-        if schema_name != None:
+        if schema_name != "":
             body["schemaName"] = schema_name
         self._auth.do_post(
             MgmtV1.authz_rd_save,
@@ -144,7 +144,7 @@ class Authz(AuthBase):
         )
 
     def delete_relation_definition(
-        self, name: str, namespace: str, schema_name: str = None
+        self, name: str, namespace: str, schema_name: str = ""
     ):
         """
         delete_relation_definition will also delete the relevant relations.
@@ -156,7 +156,7 @@ class Authz(AuthBase):
         AuthException: raised if delete namespace fails
         """
         body = {"name": name, "namespace": namespace}
-        if schema_name != None:
+        if schema_name != "":
             body["schemaName"] = schema_name
         self._auth.do_post(
             MgmtV1.authz_rd_delete,
