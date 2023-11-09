@@ -100,6 +100,10 @@ class MgmtV1:
     authz_re_targets = "/v1/mgmt/authz/re/targets"
     authz_re_target_all = "/v1/mgmt/authz/re/targetall"
 
+    # Project
+    project_update_name = "/v1/mgmt/project/update/name"
+    project_clone = "/v1/mgmt/project/clone"
+
 
 class AssociatedTenant:
     """

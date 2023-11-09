@@ -67,7 +67,7 @@ These sections show how to use the SDK to perform permission and user management
 10. [Embedded links](#embedded-links)
 11. [Search Audit](#search-audit)
 12. [Manage ReBAC Authz](#manage-rebac-authz)
-
+13. [Manaage Project](#manage-project)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -1020,6 +1020,20 @@ relations = descope_client.mgmt.authz.has_relations(
         }
     ]
 )
+```
+
+### Manage Project
+
+You can change the project name, as well as to clone the current project to a new one.
+
+```python
+
+# Change the project name
+descope.client.mgmt.project.change_name("new-project-name")
+
+# Clone the current project, including its settings and configurations.
+# Users, tenants and access keys are not cloned.
+clone_resp = descope.client.mgmt.project.clone("new-project-name")
 ```
 
 ### Utils for your end to end (e2e) tests and integration tests
