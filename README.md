@@ -66,7 +66,8 @@ These sections show how to use the SDK to perform permission and user management
 9. [Manage JWTs](#manage-jwts)
 10. [Embedded links](#embedded-links)
 11. [Search Audit](#search-audit)
-12. [Manaage Project](#manage-project)
+12. [Manage ReBAC Authz](#manage-rebac-authz)
+13. [Manaage Project](#manage-project)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -843,6 +844,182 @@ audits = descope_client.mgmt.audit.search(
 )
 # Search successful logins in the last 30 days
 audits = descope_client.mgmt.audit.search(actions=["LoginSucceed"])
+```
+
+### Manage ReBAC Authz
+
+Descope supports full relation based access control (ReBAC) using a zanzibar like schema and operations.
+A schema is comprized of namespaces (entities like documents, folders, orgs, etc.) and each namespace has relation definitions to define relations.
+Each relation definition can be simple (either you have it or not) or complex (union of nodes).
+
+A simple example for a file system like schema would be:
+
+```yaml
+# Example schema for the authz tests
+name: Files
+namespaces:
+  - name: org
+    relationDefinitions:
+      - name: parent
+      - name: member
+        complexDefinition:
+          nType: union
+          children:
+            - nType: child
+              expression:
+                neType: self
+            - nType: child
+              expression:
+                neType: relationLeft
+                relationDefinition: parent
+                relationDefinitionNamespace: org
+                targetRelationDefinition: member
+                targetRelationDefinitionNamespace: org
+  - name: folder
+    relationDefinitions:
+      - name: parent
+      - name: owner
+        complexDefinition:
+          nType: union
+          children:
+            - nType: child
+              expression:
+                neType: self
+            - nType: child
+              expression:
+                neType: relationRight
+                relationDefinition: parent
+                relationDefinitionNamespace: folder
+                targetRelationDefinition: owner
+                targetRelationDefinitionNamespace: folder
+      - name: editor
+        complexDefinition:
+          nType: union
+          children:
+            - nType: child
+              expression:
+                neType: self
+            - nType: child
+              expression:
+                neType: relationRight
+                relationDefinition: parent
+                relationDefinitionNamespace: folder
+                targetRelationDefinition: editor
+                targetRelationDefinitionNamespace: folder
+            - nType: child
+              expression:
+                neType: targetSet
+                targetRelationDefinition: owner
+                targetRelationDefinitionNamespace: folder
+      - name: viewer
+        complexDefinition:
+          nType: union
+          children:
+            - nType: child
+              expression:
+                neType: self
+            - nType: child
+              expression:
+                neType: relationRight
+                relationDefinition: parent
+                relationDefinitionNamespace: folder
+                targetRelationDefinition: viewer
+                targetRelationDefinitionNamespace: folder
+            - nType: child
+              expression:
+                neType: targetSet
+                targetRelationDefinition: editor
+                targetRelationDefinitionNamespace: folder
+  - name: doc
+    relationDefinitions:
+      - name: parent
+      - name: owner
+        complexDefinition:
+          nType: union
+          children:
+            - nType: child
+              expression:
+                neType: self
+            - nType: child
+              expression:
+                neType: relationRight
+                relationDefinition: parent
+                relationDefinitionNamespace: doc
+                targetRelationDefinition: owner
+                targetRelationDefinitionNamespace: folder
+      - name: editor
+        complexDefinition:
+          nType: union
+          children:
+            - nType: child
+              expression:
+                neType: self
+            - nType: child
+              expression:
+                neType: relationRight
+                relationDefinition: parent
+                relationDefinitionNamespace: doc
+                targetRelationDefinition: editor
+                targetRelationDefinitionNamespace: folder
+            - nType: child
+              expression:
+                neType: targetSet
+                targetRelationDefinition: owner
+                targetRelationDefinitionNamespace: doc
+      - name: viewer
+        complexDefinition:
+          nType: union
+          children:
+            - nType: child
+              expression:
+                neType: self
+            - nType: child
+              expression:
+                neType: relationRight
+                relationDefinition: parent
+                relationDefinitionNamespace: doc
+                targetRelationDefinition: viewer
+                targetRelationDefinitionNamespace: folder
+            - nType: child
+              expression:
+                neType: targetSet
+                targetRelationDefinition: editor
+                targetRelationDefinitionNamespace: doc
+```
+
+Descope SDK allows you to fully manage the schema and relations as well as perform simple (and not so simple) checks regarding the existence of relations.
+
+```python
+# Load the existing schema
+schema = descope_client.mgmt.authz.load_schema()
+
+# Save schema and make sure to remove all namespaces not listed
+descope_client.mgmt.authz.save_schema(schema, True)
+
+# Create a relation between a resource and user
+descope_client.mgmt.authz.create_relations(
+    [
+        {
+            "resource": "some-doc",
+            "relationDefinition": "owner",
+            "namespace": "doc",
+            "target": "u1",
+        }
+    ]
+)
+
+# Check if target has the relevant relation
+# The answer should be true because an owner is also a viewer
+relations = descope_client.mgmt.authz.has_relations(
+    [
+        {
+            "resource": "some-doc",
+            "relationDefinition": "viewer",
+            "namespace": "doc",
+            "target": "u1",
+        }
+    ]
+)
 ```
 
 ### Manage Project
