@@ -1032,6 +1032,7 @@ You can change the project name, as well as to clone the current project to a ne
 descope.client.mgmt.project.change_name("new-project-name")
 
 # Clone the current project, including its settings and configurations.
+# Note that this action is supported only with a pro license or above.
 # Users, tenants and access keys are not cloned.
 clone_resp = descope.client.mgmt.project.clone("new-project-name")
 ```

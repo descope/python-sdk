@@ -32,7 +32,8 @@ class Project(AuthBase):
     ):
         """
         Clone the current project, including its settings and configurations.
-        Users, tenants and access keys are not cloned.
+        - This action is supported only with a pro license or above.
+        - Users, tenants and access keys are not cloned.
 
         Args:
         name (str): The new name for the project.
