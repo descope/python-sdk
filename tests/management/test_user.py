@@ -56,6 +56,7 @@ class TestUser(common.DescopeTest):
                 ],
                 picture="https://test.com",
                 custom_attributes={"ak": "av"},
+                additional_login_ids=["id-1", "id-2"],
             )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
@@ -80,6 +81,7 @@ class TestUser(common.DescopeTest):
                     "picture": "https://test.com",
                     "customAttributes": {"ak": "av"},
                     "invite": False,
+                    "additionalLoginIds": ["id-1", "id-2"],
                 },
                 allow_redirects=False,
                 verify=True,
