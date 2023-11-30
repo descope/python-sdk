@@ -4,8 +4,8 @@
 
 | Name                                |    Stmts |     Miss |   Cover |   Missing |
 |------------------------------------ | -------: | -------: | ------: | --------: |
-| descope/auth.py                     |      280 |       12 |     96% |16-17, 50-51, 387-389, 500, 532, 543, 587, 619, 632 |
-| descope/descope\_client.py          |      118 |        3 |     97% |66, 90, 347 |
+| descope/auth.py                     |      280 |       12 |     96% |16-17, 50-51, 389-391, 502, 534, 545, 589, 621, 634 |
+| descope/descope\_client.py          |      118 |        3 |     97% |66, 90, 350 |
 | descope/management/audit.py         |       36 |       11 |     69% |72, 74, 76, 78, 80, 82, 84, 86, 88, 90, 92 |
 | descope/management/sso\_settings.py |       47 |        2 |     96% |  206, 222 |
 | descope/management/user.py          |      144 |        1 |     99% |      1067 |
