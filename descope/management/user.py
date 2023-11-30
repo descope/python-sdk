@@ -1052,7 +1052,7 @@ class User(AuthBase):
         invite_url: Optional[str],
         send_mail: Optional[bool],
         send_sms: Optional[bool],
-        additional_login_ids: Optional[List[str]] = None,
+        additional_login_ids: Optional[List[str]],
     ) -> dict:
         body = User._compose_update_body(
             login_id,
@@ -1064,6 +1064,8 @@ class User(AuthBase):
             test,
             picture,
             custom_attributes,
+            None,
+            None,
             additional_login_ids,
         )
         body["invite"] = invite
