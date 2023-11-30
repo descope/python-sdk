@@ -326,12 +326,15 @@ class DescopeClient:
         )
         return response.json()
 
-    def exchange_access_key(self, access_key: str) -> dict:
+    def exchange_access_key(
+        self, access_key: str, audience: str | Iterable[str] | None = None
+    ) -> dict:
         """
         Return a new session token for the given access key
 
         Args:
         access_key (str): The access key
+        audience (str|Iterable[str]|None): Optional recipients that the JWT is intended for (must be equal to the 'aud' claim on the provided token)
 
         Return value (dict): returns the session token from the server together with the expiry and key id
             (sessionToken:dict, keyId:str, expiration:int)
@@ -344,4 +347,4 @@ class DescopeClient:
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Access key cannot be empty"
             )
 
-        return self._auth.exchange_access_key(access_key)
+        return self._auth.exchange_access_key(access_key, audience)

@@ -289,12 +289,14 @@ class Auth:
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Invalid delivery method"
             )
 
-    def exchange_access_key(self, access_key: str) -> dict:
+    def exchange_access_key(
+        self, access_key: str, audience: str | Iterable[str] | None = None
+    ) -> dict:
         uri = EndpointsV1.exchange_auth_access_key_path
         server_response = self.do_post(uri=uri, body={}, params=None, pswd=access_key)
         json = server_response.json()
         return self._generate_auth_info(
-            response_body=json, refresh_token=None, user_jwt=False, audience=None
+            response_body=json, refresh_token=None, user_jwt=False, audience=audience
         )
 
     @staticmethod
