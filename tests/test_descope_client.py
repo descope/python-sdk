@@ -13,7 +13,7 @@ from descope import (
     DescopeClient,
     RateLimitException,
 )
-from descope.common import SESSION_TOKEN_NAME
+from descope.common import DEFAULT_TIMEOUT_SECONDS, SESSION_TOKEN_NAME, EndpointsV1
 
 from . import common
 
@@ -545,6 +545,48 @@ class TestDescopeClient(common.DescopeTest):
             cm.exception.error_message,
             "Received Invalid token times error due to time glitch (between machines) during jwt validation, try to set the jwt_validation_leeway parameter (in DescopeClient) to higher value than 5sec which is the default",
         )
+
+    def test_select_tenant(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            {
+                "alg": "ES384",
+                "crv": "P-384",
+                "kid": "P2CuC9yv2UGtGI1o84gCZEb9qEQW",
+                "kty": "EC",
+                "use": "sig",
+                "x": "DCjjyS7blnEmenLyJVwmH6yMnp7MlEggfk1kLtOv_Khtpps_Mq4K9brqsCwQhGUP",
+                "y": "xKy4IQ2FaLEzrrl1KE5mKbioLhj1prYFk1itdTOr6Xpy1fgq86kC7v-Y2F2vpcDc",
+            },
+        )
+
+        valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3VDOXl2MlVHdEdJMW84NGdDWkViOXFFUVciLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0NDMwNjEsImlhdCI6MTY1OTY0MzA2MSwiaXNzIjoiUDJDdUM5eXYyVUd0R0kxbzg0Z0NaRWI5cUVRVyIsInN1YiI6IlUyQ3VDUHVKZ1BXSEdCNVA0R21mYnVQR2hHVm0ifQ.mRo9FihYMR3qnQT06Mj3CJ5X0uTCEcXASZqfLLUv0cPCLBtBqYTbuK-ZRDnV4e4N6zGCNX2a3jjpbyqbViOxICCNSxJsVb-sdsSujtEXwVMsTTLnpWmNsMbOUiKmoME0"
+
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.cookies = {}
+            data = json.loads(
+                """{"jwts": ["eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg4MDc4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MTY2MDIxNTI3OCwiaWF0IjoxNjU3Nzk2MDc4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQnRFSGtnT3UwMmxtTXh6UElleGRNdFV3MU0ifQ.oAnvJ7MJvCyL_33oM7YCF12JlQ0m6HWRuteUVAdaswfnD4rHEBmPeuVHGljN6UvOP4_Cf0559o39UHVgm3Fwb-q7zlBbsu_nP1-PRl-F8NJjvBgC5RsAYabtJq7LlQmh"], "user": {"loginIds": ["guyp@descope.com"], "name": "", "email": "guyp@descope.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false}, "firstSeen": false}"""
+            )
+            my_mock_response.json.return_value = data
+            mock_post.return_value = my_mock_response
+            client.select_tenant("t1", valid_jwt_token)
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.select_tenant_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{valid_jwt_token}",
+                },
+                params=None,
+                json={
+                    "tenant": "t1",
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
 
 
 if __name__ == "__main__":

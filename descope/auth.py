@@ -625,6 +625,25 @@ class Auth:
                 )
             return self.refresh_session(refresh_token, audience)
 
+    def select_tenant(self, tenant_id: str, refresh_token: str) -> dict:
+        if not refresh_token:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_TOKEN,
+                "Refresh token is required to refresh a session",
+            )
+
+        uri = EndpointsV1.select_tenant_path
+        response = self.do_post(
+            uri=uri, body={"tenant": tenant_id}, params=None, pswd=refresh_token
+        )
+
+        resp = response.json()
+        jwt_response = self.generate_jwt_response(
+            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), None
+        )
+        return jwt_response
+
     @staticmethod
     def extract_masked_address(response: dict, method: DeliveryMethod) -> str:
         if method == DeliveryMethod.SMS or method == DeliveryMethod.WHATSAPP:
