@@ -20,7 +20,7 @@ REDIRECT_LOCATION_COOKIE_NAME = "Location"
 
 class EndpointsV1:
     refresh_token_path = "/v1/auth/refresh"
-    select_tenant_path = "v1/auth/tenant/select"
+    select_tenant_path = "/v1/auth/tenant/select"
     logout_path = "/v1/auth/logout"
     logout_all_path = "/v1/auth/logoutall"
     me_path = "/v1/auth/me"

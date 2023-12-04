@@ -348,3 +348,23 @@ class DescopeClient:
             )
 
         return self._auth.exchange_access_key(access_key, audience)
+
+    def select_tenant(
+        self,
+        refresh_token: str,
+        tenant_id: str | None = None,
+    ) -> dict:
+        """
+        Add to JWT a selected tenant claim
+
+        Args:
+        refresh_token (str): The refresh token that will be used to refresh the session token, if needed
+        tenant_id (str|None): The tenant id to place on JWT
+
+        Return value (dict):
+        Return dict includes the session token, refresh token, with the tenant id on the jwt
+
+        Raise:
+        AuthException: Exception is raised if session is not authorized or another error occurs
+        """
+        return self._auth.select_tenant(refresh_token, tenant_id)
