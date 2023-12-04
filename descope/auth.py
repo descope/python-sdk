@@ -639,7 +639,7 @@ class Auth:
         )
 
         resp = response.json()
-        jwt_response = self._auth.generate_jwt_response(
+        jwt_response = self.generate_jwt_response(
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), None
         )
         return jwt_response
