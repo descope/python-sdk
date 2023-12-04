@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for descope/auth.py: 96%</title>
+    <title>Coverage for descope/auth.py: 95%</title>
     <link rel="icon" sizes="32x32" href="favicon_32.png">
     <link rel="stylesheet" href="style.css" type="text/css">
     <script type="text/javascript" src="coverage_html.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>descope/auth.py</b>:
-            <span class="pc_cov">96%</span>
+            <span class="pc_cov">95%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -54,9 +54,9 @@
             </div>
         </aside>
         <h2>
-            <span class="text">280 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">268<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">12<span class="text"> missing</span></button>
+            <span class="text">288 statements &nbsp;</span>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">275<span class="text"> run</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">13<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
         <p class="text">
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="d_ed9d64cdfac9d9b5_descope_client_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.3.2">coverage.py v7.3.2</a>,
-            created at 2023-11-30 09:49 +0000
+            created at 2023-12-04 20:00 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -707,13 +707,32 @@
     <p class="pln"><span class="n"><a id="t625" href="#t625">625</a></span><span class="t">                <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t626" href="#t626">626</a></span><span class="t">            <span class="key">return</span> <span class="nam">self</span><span class="op">.</span><span class="nam">refresh_session</span><span class="op">(</span><span class="nam">refresh_token</span><span class="op">,</span> <span class="nam">audience</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t627" href="#t627">627</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t628" href="#t628">628</a></span><span class="t">    <span class="op">@</span><span class="nam">staticmethod</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t629" href="#t629">629</a></span><span class="t">    <span class="key">def</span> <span class="nam">extract_masked_address</span><span class="op">(</span><span class="nam">response</span><span class="op">:</span> <span class="nam">dict</span><span class="op">,</span> <span class="nam">method</span><span class="op">:</span> <span class="nam">DeliveryMethod</span><span class="op">)</span> <span class="op">-></span> <span class="nam">str</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t630" href="#t630">630</a></span><span class="t">        <span class="key">if</span> <span class="nam">method</span> <span class="op">==</span> <span class="nam">DeliveryMethod</span><span class="op">.</span><span class="nam">SMS</span> <span class="key">or</span> <span class="nam">method</span> <span class="op">==</span> <span class="nam">DeliveryMethod</span><span class="op">.</span><span class="nam">WHATSAPP</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t631" href="#t631">631</a></span><span class="t">            <span class="key">return</span> <span class="nam">response</span><span class="op">[</span><span class="str">"maskedPhone"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t632" href="#t632">632</a></span><span class="t">        <span class="key">elif</span> <span class="nam">method</span> <span class="op">==</span> <span class="nam">DeliveryMethod</span><span class="op">.</span><span class="nam">EMAIL</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t633" href="#t633">633</a></span><span class="t">            <span class="key">return</span> <span class="nam">response</span><span class="op">[</span><span class="str">"maskedEmail"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t634" href="#t634">634</a></span><span class="t">        <span class="key">return</span> <span class="str">""</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t628" href="#t628">628</a></span><span class="t">    <span class="key">def</span> <span class="nam">select_tenant</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">tenant_id</span><span class="op">:</span> <span class="nam">str</span><span class="op">,</span> <span class="nam">refresh_token</span><span class="op">:</span> <span class="nam">str</span><span class="op">)</span> <span class="op">-></span> <span class="nam">dict</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t629" href="#t629">629</a></span><span class="t">        <span class="key">if</span> <span class="key">not</span> <span class="nam">refresh_token</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t630" href="#t630">630</a></span><span class="t">            <span class="key">raise</span> <span class="nam">AuthException</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t631" href="#t631">631</a></span><span class="t">                <span class="num">400</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t632" href="#t632">632</a></span><span class="t">                <span class="nam">ERROR_TYPE_INVALID_TOKEN</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t633" href="#t633">633</a></span><span class="t">                <span class="str">"Refresh token is required to refresh a session"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t634" href="#t634">634</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t635" href="#t635">635</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t636" href="#t636">636</a></span><span class="t">        <span class="nam">uri</span> <span class="op">=</span> <span class="nam">EndpointsV1</span><span class="op">.</span><span class="nam">select_tenant_path</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t637" href="#t637">637</a></span><span class="t">        <span class="nam">response</span> <span class="op">=</span> <span class="nam">self</span><span class="op">.</span><span class="nam">do_post</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t638" href="#t638">638</a></span><span class="t">            <span class="nam">uri</span><span class="op">=</span><span class="nam">uri</span><span class="op">,</span> <span class="nam">body</span><span class="op">=</span><span class="op">{</span><span class="str">"tenant"</span><span class="op">:</span> <span class="nam">tenant_id</span><span class="op">}</span><span class="op">,</span> <span class="nam">params</span><span class="op">=</span><span class="key">None</span><span class="op">,</span> <span class="nam">pswd</span><span class="op">=</span><span class="nam">refresh_token</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t639" href="#t639">639</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t640" href="#t640">640</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t641" href="#t641">641</a></span><span class="t">        <span class="nam">resp</span> <span class="op">=</span> <span class="nam">response</span><span class="op">.</span><span class="nam">json</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t642" href="#t642">642</a></span><span class="t">        <span class="nam">jwt_response</span> <span class="op">=</span> <span class="nam">self</span><span class="op">.</span><span class="nam">generate_jwt_response</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t643" href="#t643">643</a></span><span class="t">            <span class="nam">resp</span><span class="op">,</span> <span class="nam">response</span><span class="op">.</span><span class="nam">cookies</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="nam">REFRESH_SESSION_COOKIE_NAME</span><span class="op">,</span> <span class="key">None</span><span class="op">)</span><span class="op">,</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t644" href="#t644">644</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t645" href="#t645">645</a></span><span class="t">        <span class="key">return</span> <span class="nam">jwt_response</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t646" href="#t646">646</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t647" href="#t647">647</a></span><span class="t">    <span class="op">@</span><span class="nam">staticmethod</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t648" href="#t648">648</a></span><span class="t">    <span class="key">def</span> <span class="nam">extract_masked_address</span><span class="op">(</span><span class="nam">response</span><span class="op">:</span> <span class="nam">dict</span><span class="op">,</span> <span class="nam">method</span><span class="op">:</span> <span class="nam">DeliveryMethod</span><span class="op">)</span> <span class="op">-></span> <span class="nam">str</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t649" href="#t649">649</a></span><span class="t">        <span class="key">if</span> <span class="nam">method</span> <span class="op">==</span> <span class="nam">DeliveryMethod</span><span class="op">.</span><span class="nam">SMS</span> <span class="key">or</span> <span class="nam">method</span> <span class="op">==</span> <span class="nam">DeliveryMethod</span><span class="op">.</span><span class="nam">WHATSAPP</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t650" href="#t650">650</a></span><span class="t">            <span class="key">return</span> <span class="nam">response</span><span class="op">[</span><span class="str">"maskedPhone"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t651" href="#t651">651</a></span><span class="t">        <span class="key">elif</span> <span class="nam">method</span> <span class="op">==</span> <span class="nam">DeliveryMethod</span><span class="op">.</span><span class="nam">EMAIL</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t652" href="#t652">652</a></span><span class="t">            <span class="key">return</span> <span class="nam">response</span><span class="op">[</span><span class="str">"maskedEmail"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t653" href="#t653">653</a></span><span class="t">        <span class="key">return</span> <span class="str">""</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -723,7 +742,7 @@
             <a id="nextFileLink" class="nav" href="d_ed9d64cdfac9d9b5_descope_client_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.3.2">coverage.py v7.3.2</a>,
-            created at 2023-11-30 09:49 +0000
+            created at 2023-12-04 20:00 +0000
         </p>
     </div>
 </footer>
