@@ -351,8 +351,8 @@ class DescopeClient:
 
     def select_tenant(
         self,
-        refresh_token: str,
         tenant_id: str,
+        refresh_token: str,
     ) -> dict:
         """
         Add to JWT a selected tenant claim
@@ -367,4 +367,4 @@ class DescopeClient:
         Raise:
         AuthException: Exception is raised if session is not authorized or another error occurs
         """
-        return self._auth.select_tenant(refresh_token, tenant_id)
+        return self._auth.select_tenant(tenant_id, refresh_token)
