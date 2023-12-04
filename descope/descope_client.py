@@ -352,14 +352,14 @@ class DescopeClient:
     def select_tenant(
         self,
         refresh_token: str,
-        tenant_id: str | None = None,
+        tenant_id: str,
     ) -> dict:
         """
         Add to JWT a selected tenant claim
 
         Args:
         refresh_token (str): The refresh token that will be used to refresh the session token, if needed
-        tenant_id (str|None): The tenant id to place on JWT
+        tenant_id (str): The tenant id to place on JWT
 
         Return value (dict):
         Return dict includes the session token, refresh token, with the tenant id on the jwt
