@@ -289,12 +289,14 @@ class Auth:
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Invalid delivery method"
             )
 
-    def exchange_access_key(self, access_key: str) -> dict:
+    def exchange_access_key(
+        self, access_key: str, audience: str | Iterable[str] | None = None
+    ) -> dict:
         uri = EndpointsV1.exchange_auth_access_key_path
         server_response = self.do_post(uri=uri, body={}, params=None, pswd=access_key)
         json = server_response.json()
         return self._generate_auth_info(
-            response_body=json, refresh_token=None, user_jwt=False, audience=None
+            response_body=json, refresh_token=None, user_jwt=False, audience=audience
         )
 
     @staticmethod
@@ -622,6 +624,25 @@ class Auth:
                     "Refresh token is missing",
                 )
             return self.refresh_session(refresh_token, audience)
+
+    def select_tenant(self, tenant_id: str, refresh_token: str) -> dict:
+        if not refresh_token:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_TOKEN,
+                "Refresh token is required to refresh a session",
+            )
+
+        uri = EndpointsV1.select_tenant_path
+        response = self.do_post(
+            uri=uri, body={"tenant": tenant_id}, params=None, pswd=refresh_token
+        )
+
+        resp = response.json()
+        jwt_response = self.generate_jwt_response(
+            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), None
+        )
+        return jwt_response
 
     @staticmethod
     def extract_masked_address(response: dict, method: DeliveryMethod) -> str:

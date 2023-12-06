@@ -18,6 +18,9 @@ class User(AuthBase):
         email: Optional[str] = None,
         phone: Optional[str] = None,
         display_name: Optional[str] = None,
+        given_name: Optional[str] = None,
+        middle_name: Optional[str] = None,
+        family_name: Optional[str] = None,
         role_names: Optional[List[str]] = None,
         user_tenants: Optional[List[AssociatedTenant]] = None,
         picture: Optional[str] = None,
@@ -60,6 +63,9 @@ class User(AuthBase):
                 email,
                 phone,
                 display_name,
+                given_name,
+                middle_name,
+                family_name,
                 role_names,
                 user_tenants,
                 False,
@@ -83,6 +89,9 @@ class User(AuthBase):
         email: Optional[str] = None,
         phone: Optional[str] = None,
         display_name: Optional[str] = None,
+        given_name: Optional[str] = None,
+        middle_name: Optional[str] = None,
+        family_name: Optional[str] = None,
         role_names: Optional[List[str]] = None,
         user_tenants: Optional[List[AssociatedTenant]] = None,
         picture: Optional[str] = None,
@@ -127,6 +136,9 @@ class User(AuthBase):
                 email,
                 phone,
                 display_name,
+                given_name,
+                middle_name,
+                family_name,
                 role_names,
                 user_tenants,
                 False,
@@ -150,6 +162,9 @@ class User(AuthBase):
         email: Optional[str] = None,
         phone: Optional[str] = None,
         display_name: Optional[str] = None,
+        given_name: Optional[str] = None,
+        middle_name: Optional[str] = None,
+        family_name: Optional[str] = None,
         role_names: Optional[List[str]] = None,
         user_tenants: Optional[List[AssociatedTenant]] = None,
         picture: Optional[str] = None,
@@ -186,6 +201,9 @@ class User(AuthBase):
                 email,
                 phone,
                 display_name,
+                given_name,
+                middle_name,
+                family_name,
                 role_names,
                 user_tenants,
                 True,
@@ -209,6 +227,9 @@ class User(AuthBase):
         email: Optional[str] = None,
         phone: Optional[str] = None,
         display_name: Optional[str] = None,
+        given_name: Optional[str] = None,
+        middle_name: Optional[str] = None,
+        family_name: Optional[str] = None,
         role_names: Optional[List[str]] = None,
         user_tenants: Optional[List[AssociatedTenant]] = None,
         picture: Optional[str] = None,
@@ -246,6 +267,9 @@ class User(AuthBase):
                 email,
                 phone,
                 display_name,
+                given_name,
+                middle_name,
+                family_name,
                 role_names,
                 user_tenants,
                 False,
@@ -624,6 +648,9 @@ class User(AuthBase):
         self,
         login_id: str,
         display_name: Optional[str] = None,
+        given_name: Optional[str] = None,
+        middle_name: Optional[str] = None,
+        family_name: Optional[str] = None,
     ) -> dict:
         """
         Update the display name for an existing user.
@@ -640,9 +667,18 @@ class User(AuthBase):
         Raise:
         AuthException: raised if the update operation fails
         """
+        bdy = {"loginId": login_id}
+        if display_name is not None:
+            bdy["displayName"] = display_name
+        if given_name is not None:
+            bdy["givenName"] = given_name
+        if middle_name is not None:
+            bdy["middleName"] = middle_name
+        if family_name is not None:
+            bdy["familyName"] = family_name
         response = self._auth.do_post(
             MgmtV1.user_update_name_path,
-            {"loginId": login_id, "displayName": display_name},
+            bdy,
             pswd=self._auth.management_key,
         )
         return response.json()
@@ -1041,6 +1077,9 @@ class User(AuthBase):
         email: Optional[str],
         phone: Optional[str],
         display_name: Optional[str],
+        given_name: Optional[str],
+        middle_name: Optional[str],
+        family_name: Optional[str],
         role_names: List[str],
         user_tenants: List[AssociatedTenant],
         invite: bool,
@@ -1059,6 +1098,9 @@ class User(AuthBase):
             email=email,
             phone=phone,
             display_name=display_name,
+            given_name=given_name,
+            middle_name=middle_name,
+            family_name=family_name,
             role_names=role_names,
             user_tenants=user_tenants,
             test=test,
@@ -1085,6 +1127,9 @@ class User(AuthBase):
         email: Optional[str],
         phone: Optional[str],
         display_name: Optional[str],
+        given_name: Optional[str],
+        middle_name: Optional[str],
+        family_name: Optional[str],
         role_names: List[str],
         user_tenants: List[AssociatedTenant],
         test: bool,
@@ -1108,6 +1153,12 @@ class User(AuthBase):
         }
         if verified_email is not None:
             res["verifiedEmail"] = verified_email
+        if given_name is not None:
+            res["givenName"] = given_name
+        if middle_name is not None:
+            res["middleName"] = middle_name
+        if family_name is not None:
+            res["familyName"] = family_name
         if verified_phone is not None:
             res["verifiedPhone"] = verified_phone
         return res

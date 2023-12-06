@@ -49,7 +49,8 @@ These sections show how to use the SDK to perform various authentication/authori
 7. [Passwords](#passwords)
 8. [Session Validation](#session-validation)
 9. [Roles & Permission Validation](#roles--permission-validation)
-10. [Logging Out](#logging-out)
+10. [Tenant selection](#tenant-selection)
+11. [Logging Out](#logging-out)
 
 ## API Managment Function
 
@@ -420,6 +421,15 @@ valid_roles = descope_client.validate_roles(
 )
 if not valid_roles:
     # Deny access
+```
+
+### Tenant selection
+For a user that has permissions to multiple tenants, you can set a specific tenant as the current selected one
+This will add an extra attribute to the refresh JWT and the session JWT with the selected tenant ID
+
+```python
+tenant_id_ = "t1"
+jwt_response = descope_client.select_tenant(tenant_id, refresh_token)
 ```
 
 ### Logging Out
