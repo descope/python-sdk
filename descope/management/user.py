@@ -1055,18 +1055,16 @@ class User(AuthBase):
         additional_login_ids: Optional[List[str]],
     ) -> dict:
         body = User._compose_update_body(
-            login_id,
-            email,
-            phone,
-            display_name,
-            role_names,
-            user_tenants,
-            test,
-            picture,
-            custom_attributes,
-            None,
-            None,
-            additional_login_ids,
+            login_id=login_id,
+            email=email,
+            phone=phone,
+            display_name=display_name,
+            role_names=role_names,
+            user_tenants=user_tenants,
+            test=test,
+            picture=picture,
+            custom_attributes=custom_attributes,
+            additional_login_ids=additional_login_ids,
         )
         body["invite"] = invite
         if verified_email is not None:
