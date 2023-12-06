@@ -28,6 +28,7 @@ class User(AuthBase):
         verified_email: Optional[bool] = None,
         verified_phone: Optional[bool] = None,
         invite_url: Optional[str] = None,
+        additional_login_ids: Optional[List[str]] = None,
     ) -> dict:
         """
         Create a new user. Users can have any number of optional fields, including email, phone number and authorization.
@@ -76,6 +77,7 @@ class User(AuthBase):
                 invite_url,
                 None,
                 None,
+                additional_login_ids,
             ),
             pswd=self._auth.management_key,
         )
@@ -97,6 +99,7 @@ class User(AuthBase):
         verified_email: Optional[bool] = None,
         verified_phone: Optional[bool] = None,
         invite_url: Optional[str] = None,
+        additional_login_ids: Optional[List[str]] = None,
     ) -> dict:
         """
         Create a new test user.
@@ -147,6 +150,7 @@ class User(AuthBase):
                 invite_url,
                 None,
                 None,
+                additional_login_ids,
             ),
             pswd=self._auth.management_key,
         )
@@ -174,6 +178,7 @@ class User(AuthBase):
         send_sms: Optional[
             bool
         ] = None,  # send invite via text message, default is according to project settings
+        additional_login_ids: Optional[List[str]] = None,
     ) -> dict:
         """
         Create a new user and invite them via an email message.
@@ -210,6 +215,7 @@ class User(AuthBase):
                 invite_url,
                 send_mail,
                 send_sms,
+                additional_login_ids,
             ),
             pswd=self._auth.management_key,
         )
@@ -230,6 +236,7 @@ class User(AuthBase):
         custom_attributes: Optional[dict] = None,
         verified_email: Optional[bool] = None,
         verified_phone: Optional[bool] = None,
+        additional_login_ids: Optional[List[str]] = None,
     ):
         """
         Update an existing user with the given various fields. IMPORTANT: All parameters are used as overrides
@@ -270,6 +277,7 @@ class User(AuthBase):
                 custom_attributes,
                 verified_email,
                 verified_phone,
+                additional_login_ids,
             ),
             pswd=self._auth.management_key,
         )
@@ -1083,20 +1091,22 @@ class User(AuthBase):
         invite_url: Optional[str],
         send_mail: Optional[bool],
         send_sms: Optional[bool],
+        additional_login_ids: Optional[List[str]],
     ) -> dict:
         body = User._compose_update_body(
-            login_id,
-            email,
-            phone,
-            display_name,
-            given_name,
-            middle_name,
-            family_name,
-            role_names,
-            user_tenants,
-            test,
-            picture,
-            custom_attributes,
+            login_id=login_id,
+            email=email,
+            phone=phone,
+            display_name=display_name,
+            given_name=given_name,
+            middle_name=middle_name,
+            family_name=family_name,
+            role_names=role_names,
+            user_tenants=user_tenants,
+            test=test,
+            picture=picture,
+            custom_attributes=custom_attributes,
+            additional_login_ids=additional_login_ids,
         )
         body["invite"] = invite
         if verified_email is not None:
@@ -1127,6 +1137,7 @@ class User(AuthBase):
         custom_attributes: Optional[dict],
         verified_email: Optional[bool] = None,
         verified_phone: Optional[bool] = None,
+        additional_login_ids: Optional[List[str]] = None,
     ) -> dict:
         res = {
             "loginId": login_id,
@@ -1138,6 +1149,7 @@ class User(AuthBase):
             "test": test,
             "picture": picture,
             "customAttributes": custom_attributes,
+            "additionalLoginIds": additional_login_ids,
         }
         if verified_email is not None:
             res["verifiedEmail"] = verified_email
