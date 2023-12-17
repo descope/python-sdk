@@ -482,6 +482,58 @@ class TestDescopeClient(common.DescopeTest):
         )
         self.assertFalse(client.validate_tenant_permissions(jwt_response, "t2", []))
 
+    def test_get_matched_permissions(self):
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
+        jwt_response = {}
+        self.assertEqual(client.get_matched_permissions(jwt_response, []), [])
+
+        jwt_response = {"permissions": []}
+        self.assertEqual(client.get_matched_permissions(jwt_response, ["Perm 1"]), [])
+
+        jwt_response = {"permissions": ["Perm 1", "Perm 2"]}
+        self.assertEqual(
+            client.get_matched_permissions(jwt_response, ["Perm 1"]), ["Perm 1"]
+        )
+        self.assertEqual(
+            client.get_matched_permissions(jwt_response, ["Perm 1", "Perm 2"]),
+            ["Perm 1", "Perm 2"],
+        )
+        self.assertEqual(
+            client.get_matched_permissions(
+                jwt_response, ["Perm 1", "Perm 2", "Perm 3"]
+            ),
+            ["Perm 1", "Perm 2"],
+        )
+
+        # Tenant level
+        jwt_response = {"tenants": {}}
+        self.assertEqual(
+            client.get_matched_tenant_permissions(jwt_response, "t1", ["Perm 1"]), []
+        )
+
+        jwt_response = {"tenants": {"t1": {}}}
+        self.assertEqual(
+            client.get_matched_tenant_permissions(jwt_response, "t1", ["Perm 1"]), []
+        )
+
+        jwt_response = {"tenants": {"t1": {"permissions": ["Perm 1", "Perm 2"]}}}
+        self.assertEqual(
+            client.get_matched_tenant_permissions(jwt_response, "t1", ["Perm 1"]),
+            ["Perm 1"],
+        )
+        self.assertEqual(
+            client.get_matched_tenant_permissions(
+                jwt_response, "t1", ["Perm 1", "Perm 2"]
+            ),
+            ["Perm 1", "Perm 2"],
+        )
+        self.assertEqual(
+            client.get_matched_tenant_permissions(
+                jwt_response, "t1", ["Perm 1", "Perm 2", "Perm 3"]
+            ),
+            ["Perm 1", "Perm 2"],
+        )
+
     def test_validate_roles(self):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)
         jwt_response = {}
@@ -512,6 +564,51 @@ class TestDescopeClient(common.DescopeTest):
         )
         self.assertFalse(
             client.validate_tenant_roles(jwt_response, "t1", ["Perm 1", "Perm 2"])
+        )
+
+    def test_get_matched_roles(self):
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
+        jwt_response = {}
+        self.assertEqual(client.get_matched_roles(jwt_response, []), [])
+
+        jwt_response = {"roles": []}
+        self.assertEqual(client.get_matched_roles(jwt_response, ["Role 1"]), [])
+
+        jwt_response = {"roles": ["Role 1", "Role 2"]}
+        self.assertEqual(client.get_matched_roles(jwt_response, ["Role 1"]), ["Role 1"])
+        self.assertEqual(
+            client.get_matched_roles(jwt_response, ["Role 1", "Role 2"]),
+            ["Role 1", "Role 2"],
+        )
+        self.assertEqual(
+            client.get_matched_roles(jwt_response, ["Role 1", "Role 2", "Role 3"]),
+            ["Role 1", "Role 2"],
+        )
+
+        # Tenant level
+        jwt_response = {"tenants": {}}
+        self.assertEqual(
+            client.get_matched_tenant_roles(jwt_response, "t1", ["Role 1"]), []
+        )
+
+        jwt_response = {"tenants": {"t1": {}}}
+        self.assertEqual(
+            client.get_matched_tenant_roles(jwt_response, "t1", ["Role 1"]), []
+        )
+
+        jwt_response = {"tenants": {"t1": {"roles": ["Role 1", "Role 2"]}}}
+        self.assertEqual(
+            client.get_matched_tenant_roles(jwt_response, "t1", ["Role 1"]), ["Role 1"]
+        )
+        self.assertEqual(
+            client.get_matched_tenant_roles(jwt_response, "t1", ["Role 1", "Role 2"]),
+            ["Role 1", "Role 2"],
+        )
+        self.assertEqual(
+            client.get_matched_tenant_roles(
+                jwt_response, "t1", ["Role 1", "Role 2", "Role 3"]
+            ),
+            ["Role 1", "Role 2"],
         )
 
     def test_exchange_access_key_empty_param(self):
