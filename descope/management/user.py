@@ -740,6 +740,34 @@ class User(AuthBase):
         )
         return response.json()
 
+    def set_roles(
+        self,
+        login_id: str,
+        role_names: List[str],
+    ) -> dict:
+        """
+        Set roles to a user without tenant association. Use set_tenant_roles
+        for users that are part of a multi-tenant project.
+
+        Args:
+        login_id (str): The login ID of the user to update.
+        role_names (List[str]): A list of roles to set to a user without tenant association.
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the updated user information.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.user_set_role_path,
+            {"loginId": login_id, "roleNames": role_names},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
     def add_roles(
         self,
         login_id: str,
@@ -846,6 +874,35 @@ class User(AuthBase):
         response = self._auth.do_post(
             MgmtV1.user_remove_tenant_path,
             {"loginId": login_id, "tenantId": tenant_id},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    def set_tenant_roles(
+        self,
+        login_id: str,
+        tenant_id: str,
+        role_names: List[str],
+    ) -> dict:
+        """
+        Set roles to a user in a specific tenant.
+
+        Args:
+        login_id (str): The login ID of the user to update.
+        tenant_id (str): The ID of the user's tenant.
+        role_names (List[str]): A list of roles to set on the user.
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the updated user information.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.user_set_role_path,
+            {"loginId": login_id, "tenantId": tenant_id, "roleNames": role_names},
             pswd=self._auth.management_key,
         )
         return response.json()

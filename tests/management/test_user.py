@@ -939,6 +939,42 @@ class TestUser(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+    def test_set_roles(self):
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                self.client.mgmt.user.set_roles,
+                "valid-id",
+                ["foo", "bar"],
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.set_roles("valid-id", ["foo", "bar"])
+            user = resp["user"]
+            self.assertEqual(user["id"], "u1")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_set_role_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                json={
+                    "loginId": "valid-id",
+                    "roleNames": ["foo", "bar"],
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
     def test_add_roles(self):
         # Test failed flows
         with patch("requests.post") as mock_post:
@@ -1077,6 +1113,46 @@ class TestUser(common.DescopeTest):
                 json={
                     "loginId": "valid-id",
                     "tenantId": "tid",
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_set_tenant_roles(self):
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                self.client.mgmt.user.set_tenant_roles,
+                "valid-id",
+                "tid",
+                ["foo", "bar"],
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.set_tenant_roles(
+                "valid-id", "tid", ["foo", "bar"]
+            )
+            user = resp["user"]
+            self.assertEqual(user["id"], "u1")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_set_role_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                json={
+                    "loginId": "valid-id",
+                    "tenantId": "tid",
+                    "roleNames": ["foo", "bar"],
                 },
                 allow_redirects=False,
                 verify=True,
