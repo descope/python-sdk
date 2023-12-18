@@ -403,6 +403,15 @@ valid_roles = descope_client.validate_tenant_roles(
 )
 if not valid_roles:
     # Deny access
+
+# Or get the matched roles/permissions
+matched_tenant_roles = descope_client.get_matched_tenant_roles(
+		jwt_response, "my-tenant-ID", ["role-name1", "role-name2"]
+)
+
+matched_tenant_permissions = descope_client.get_matched_tenant_permissions(
+		jwt_response, "my-tenant-ID", ["permission-name1", "permission-name2"]
+)
 ```
 
 When not using tenants use:
@@ -421,6 +430,15 @@ valid_roles = descope_client.validate_roles(
 )
 if not valid_roles:
     # Deny access
+
+# Or get the matched roles/permissions
+matched_roles = descope_client.get_matched_roles(
+		jwt_response, ["role-name1", "role-name2"]
+)
+
+matched_permissions = descope_client.get_matched_permissions(
+		jwt_response, ["permission-name1", "permission-name2"]
+)
 ```
 
 ### Tenant selection
