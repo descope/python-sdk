@@ -18,8 +18,8 @@ def main():
         try:
             logging.info("Get SSO settings for tenant")
             settings_res = descope_client.mgmt.sso.get_settings(tenant_id)
-            sso_tenant_domain = settings_res["domain"]
-            logging.info(f"SSO domain for tenant: {sso_tenant_domain}")
+            sso_tenant_domains = settings_res["domains"]
+            logging.info(f"SSO domains for tenant: {sso_tenant_domains}")
 
         except AuthException as e:
             logging.info(f"Get SSO settings failed {e}")
@@ -29,7 +29,7 @@ def main():
         idp_cert = ""
         idp_metadata_url = ""
         redirect_url = ""
-        domain = ""
+        domains = []
         role_mappings = [RoleMapping(["a"], "Tenant Admin")]
         attribute_mapping = AttributeMapping(name="MyName")
 
@@ -41,7 +41,7 @@ def main():
                 entity_id=entity_id,
                 idp_cert=idp_cert,
                 redirect_url=redirect_url,
-                domain=domain,
+                domains=domains,
             )
 
         except AuthException as e:
@@ -53,7 +53,7 @@ def main():
                 tenant_id,
                 idp_metadata_url=idp_metadata_url,
                 redirect_url=redirect_url,
-                domain=domain,
+                domains=domains,
             )
 
         except AuthException as e:

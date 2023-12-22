@@ -46,12 +46,12 @@ class TestSSOSettings(common.DescopeTest):
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads(
-                """{"domain": "lulu", "tenantId": "tenant-id"}"""
+                """{"domains": ["lulu", "kuku"], "tenantId": "tenant-id"}"""
             )
             mock_get.return_value = network_resp
             resp = client.mgmt.sso.get_settings("tenant-id")
             self.assertEqual(resp["tenantId"], "tenant-id")
-            self.assertEqual(resp["domain"], "lulu")
+            self.assertEqual(resp["domains"], ["lulu","kuku"])
             mock_get.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_settings_path}",
                 headers={
@@ -120,7 +120,7 @@ class TestSSOSettings(common.DescopeTest):
                 "entity-id",
                 "cert",
                 "https://redirect.com",
-                "domain.com",
+                ["domain.com"],
             )
 
         # Test success flow
@@ -133,7 +133,7 @@ class TestSSOSettings(common.DescopeTest):
                     "entity-id",
                     "cert",
                     "https://redirect.com",
-                    "domain.com",
+                    ["domain.com"],
                 )
             )
             mock_post.assert_called_with(
@@ -149,7 +149,7 @@ class TestSSOSettings(common.DescopeTest):
                     "entityId": "entity-id",
                     "idpCert": "cert",
                     "redirectURL": "https://redirect.com",
-                    "domain": "domain.com",
+                    "domains": ["domain.com"],
                 },
                 allow_redirects=False,
                 verify=True,
@@ -166,7 +166,6 @@ class TestSSOSettings(common.DescopeTest):
                     "entity-id",
                     "cert",
                     "https://redirect.com",
-                    "",
                 )
             )
             mock_post.assert_called_with(
@@ -182,7 +181,7 @@ class TestSSOSettings(common.DescopeTest):
                     "entityId": "entity-id",
                     "idpCert": "cert",
                     "redirectURL": "https://redirect.com",
-                    "domain": "",
+                    "domains": None,
                 },
                 allow_redirects=False,
                 verify=True,
@@ -199,7 +198,7 @@ class TestSSOSettings(common.DescopeTest):
                     "entity-id",
                     "cert",
                     "",
-                    "domain.com",
+                    ["domain.com"],
                 )
             )
             mock_post.assert_called_with(
@@ -215,7 +214,7 @@ class TestSSOSettings(common.DescopeTest):
                     "entityId": "entity-id",
                     "idpCert": "cert",
                     "redirectURL": "",
-                    "domain": "domain.com",
+                    "domains": ["domain.com"],
                 },
                 allow_redirects=False,
                 verify=True,
@@ -239,7 +238,7 @@ class TestSSOSettings(common.DescopeTest):
                 "tenant-id",
                 "https://idp-meta.com",
                 "https://redirect.com",
-                "domain.com",
+                ["domain.com"],
             )
 
         # Test success flow
@@ -250,7 +249,7 @@ class TestSSOSettings(common.DescopeTest):
                     "tenant-id",
                     "https://idp-meta.com",
                     "https://redirect.com",
-                    "domain.com",
+                    ["domain.com"],
                 )
             )
             mock_post.assert_called_with(
@@ -264,7 +263,7 @@ class TestSSOSettings(common.DescopeTest):
                     "tenantId": "tenant-id",
                     "idpMetadataURL": "https://idp-meta.com",
                     "redirectURL": "https://redirect.com",
-                    "domain": "domain.com",
+                    "domains": ["domain.com"],
                 },
                 allow_redirects=False,
                 verify=True,
@@ -291,7 +290,7 @@ class TestSSOSettings(common.DescopeTest):
                     "tenantId": "tenant-id",
                     "idpMetadataURL": "https://idp-meta.com",
                     "redirectURL": None,
-                    "domain": None,
+                    "domains": None,
                 },
                 allow_redirects=False,
                 verify=True,

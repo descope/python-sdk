@@ -78,7 +78,7 @@ class SSOSettings(AuthBase):
         entity_id: str,
         idp_cert: str,
         redirect_url: str,
-        domain: str,
+        domains: Optional[List[str]] = None
     ) -> None:
         """
         Configure SSO setting for a tenant manually. Alternatively, `configure_via_metadata` can be used instead.
@@ -89,7 +89,7 @@ class SSOSettings(AuthBase):
         entity_id (str): The entity ID (in the IDP).
         idp_cert (str): The certificate provided by the IDP.
         redirect_url (str): The Redirect URL to use after successful authentication, or empty string to reset it.
-        domain (str): domain used to associate users authenticating via SSO with this tenant, or empty string to reset it.
+        domain (List[str]): domains used to associate users authenticating via SSO with this tenant. Use empty list or None to reset them.
 
         Raise:
         AuthException: raised if configuration operation fails
@@ -97,7 +97,7 @@ class SSOSettings(AuthBase):
         self._auth.do_post(
             MgmtV1.sso_settings_path,
             SSOSettings._compose_configure_body(
-                tenant_id, idp_url, entity_id, idp_cert, redirect_url, domain
+                tenant_id, idp_url, entity_id, idp_cert, redirect_url, domains
             ),
             pswd=self._auth.management_key,
         )
@@ -107,7 +107,7 @@ class SSOSettings(AuthBase):
         tenant_id: str,
         idp_metadata_url: str,
         redirect_url: Optional[str] = None,
-        domain: Optional[str] = None,
+        domains: Optional[List[str]] = None,
     ):
         """
         Configure SSO setting for am IDP metadata URL. Alternatively, `configure` can be used instead.
@@ -116,7 +116,7 @@ class SSOSettings(AuthBase):
         tenant_id (str): The tenant ID to be configured
         idp_metadata_url (str): The URL to fetch SSO settings from.
         redirect_url (str): The Redirect URL to use after successful authentication, or empty string to reset it.
-        domain (str): domain used to associate users authenticating via SSO with this tenant, or empty string to reset it.
+        domains (List[str]): domains used to associate users authenticating via SSO with this tenant. Use empty list or None to reset them.
 
         Raise:
         AuthException: raised if configuration operation fails
@@ -124,7 +124,7 @@ class SSOSettings(AuthBase):
         self._auth.do_post(
             MgmtV1.sso_metadata_path,
             SSOSettings._compose_metadata_body(
-                tenant_id, idp_metadata_url, redirect_url, domain
+                tenant_id, idp_metadata_url, redirect_url, domains
             ),
             pswd=self._auth.management_key,
         )
@@ -161,7 +161,7 @@ class SSOSettings(AuthBase):
         entity_id: str,
         idp_cert: str,
         redirect_url: str,
-        domain: str,
+        domains: Optional[List[str]],
     ) -> dict:
         return {
             "tenantId": tenant_id,
@@ -169,7 +169,7 @@ class SSOSettings(AuthBase):
             "entityId": entity_id,
             "idpCert": idp_cert,
             "redirectURL": redirect_url,
-            "domain": domain,
+            "domains": domains,
         }
 
     @staticmethod
@@ -177,13 +177,13 @@ class SSOSettings(AuthBase):
         tenant_id: str,
         idp_metadata_url: str,
         redirect_url: Optional[str] = None,
-        domain: Optional[str] = None,
+        domains: Optional[List[str]] = None,
     ) -> dict:
         return {
             "tenantId": tenant_id,
             "idpMetadataURL": idp_metadata_url,
             "redirectURL": redirect_url,
-            "domain": domain,
+            "domains": domains,
         }
 
     @staticmethod
