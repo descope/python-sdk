@@ -92,6 +92,7 @@ class DeliveryMethod(Enum):
     WHATSAPP = 1
     SMS = 2
     EMAIL = 3
+    EMBEDDED = 4
 
 
 class LoginOptions:
