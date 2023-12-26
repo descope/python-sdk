@@ -245,6 +245,7 @@ class Auth:
             DeliveryMethod.EMAIL: "email",
             DeliveryMethod.SMS: "sms",
             DeliveryMethod.WHATSAPP: "whatsapp",
+            DeliveryMethod.EMBEDDED: "Embedded",
         }.get(method)
 
         if not name:

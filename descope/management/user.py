@@ -1023,7 +1023,7 @@ class User(AuthBase):
 
         Args:
         method (DeliveryMethod): The method to use for "delivering" the OTP verification code to the user, for example
-            EMAIL, SMS, or WHATSAPP
+            EMAIL, SMS, WHATSAPP or EMBEDDED
         login_id (str): The login ID of the test user being validated.
 
         Return value (dict):
@@ -1053,7 +1053,7 @@ class User(AuthBase):
 
         Args:
         method (DeliveryMethod): The method to use for "delivering" the verification magic link to the user, for example
-            EMAIL, SMS, or WHATSAPP
+            EMAIL, SMS, WHATSAPP or EMBEDDED
         login_id (str): The login ID of the test user being validated.
         uri (str): Optional redirect uri which will be used instead of any global configuration.
 

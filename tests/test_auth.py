@@ -270,6 +270,10 @@ class TestAuth(common.DescopeTest):
             Auth.get_method_string(DeliveryMethod.WHATSAPP),
             "whatsapp",
         )
+        self.assertEqual(
+            Auth.get_method_string(DeliveryMethod.EMBEDDED),
+            "Embedded",
+        )
 
         class AAA(Enum):
             DUMMY = 4
