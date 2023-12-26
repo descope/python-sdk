@@ -38,7 +38,10 @@ Flask = ["Flask"]
 python = ">=3.7,<4.0"
 requests = ">=2.27.0"
 pyjwt = {version = ">=2.4.0", extras = ["crypto"]}
-email-validator = ">=2,<3"
+email-validator = [
+    {version = ">=2,<=2.0.0.post2", python = ">=3.7,<3.8"},
+    {version = ">=2,<3", python = ">=3.8"}
+]
 liccheck = "^0.9.1"
 Flask = {version = ">=2", python = ">=3.8"}
 

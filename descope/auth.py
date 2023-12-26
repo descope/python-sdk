@@ -190,7 +190,7 @@ class Auth:
             if not user.get("email", None):
                 user["email"] = login_id
             try:
-                validate_email(email=user["email"], check_deliverability=False)
+                validate_email(user["email"], check_deliverability=False)
                 return True
             except EmailNotValidError:
                 return False
@@ -265,7 +265,7 @@ class Auth:
             )
 
         try:
-            validate_email(email=email, check_deliverability=False)
+            validate_email(email, check_deliverability=False)
         except EmailNotValidError as ex:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, f"Invalid email address: {ex}"
