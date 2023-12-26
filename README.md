@@ -442,6 +442,7 @@ matched_permissions = descope_client.get_matched_permissions(
 ```
 
 ### Tenant selection
+
 For a user that has permissions to multiple tenants, you can set a specific tenant as the current selected one
 This will add an extra attribute to the refresh JWT and the session JWT with the selected tenant ID
 
@@ -680,7 +681,7 @@ descope_client.mgmt.sso.configure(
     entity_id="my-idp-entity-id",
     idp_cert="<your-cert-here>",
     redirect_url="https://your.domain.com", # Global redirection after successful authentication
-    domain="tenant-users.com" # Users authentication with this domain will be logged in to this tenant
+    domains=["tenant-users.com"] # Users authentication with these domains will be logged in to this tenant
 )
 
 # Alternatively, configure using an SSO metadata URL
@@ -688,7 +689,7 @@ descope_client.mgmt.sso.configure_via_metadata(
     tenant_id, # Which tenant this configuration is for
     idp_metadata_url="https://idp.com/my-idp-metadata",
     redirect_url="", # Redirect URL will have to be provided in every authentication call
-    domain="" # Remove the current domain configuration if a value was previously set
+    domains=None # Remove the current domains configuration if a value was previously set
 )
 
 # Map IDP groups to Descope roles, or map user attributes.
