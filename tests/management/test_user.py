@@ -1258,8 +1258,9 @@ class TestUser(common.DescopeTest):
                 """{"code": "123456", "loginId": "login-id"}"""
             )
             mock_post.return_value = network_resp
+            login_options = {"stepup": True}
             resp = self.client.mgmt.user.generate_otp_for_test_user(
-                DeliveryMethod.EMAIL, "login-id"
+                DeliveryMethod.EMAIL, "login-id", login_options
             )
             self.assertEqual(resp["code"], "123456")
             self.assertEqual(resp["loginId"], "login-id")
@@ -1273,6 +1274,7 @@ class TestUser(common.DescopeTest):
                 json={
                     "loginId": "login-id",
                     "deliveryMethod": "email",
+                    "loginOptions": login_options,
                 },
                 allow_redirects=False,
                 verify=True,
@@ -1368,8 +1370,9 @@ class TestUser(common.DescopeTest):
                 """{"link": "some-link", "loginId": "login-id"}"""
             )
             mock_post.return_value = network_resp
+            login_options = {"stepup": True}
             resp = self.client.mgmt.user.generate_magic_link_for_test_user(
-                DeliveryMethod.EMAIL, "login-id", "bla"
+                DeliveryMethod.EMAIL, "login-id", "bla", login_options
             )
             self.assertEqual(resp["link"], "some-link")
             self.assertEqual(resp["loginId"], "login-id")
@@ -1384,6 +1387,7 @@ class TestUser(common.DescopeTest):
                     "loginId": "login-id",
                     "deliveryMethod": "email",
                     "URI": "bla",
+                    "loginOptions": login_options,
                 },
                 allow_redirects=False,
                 verify=True,
@@ -1409,8 +1413,9 @@ class TestUser(common.DescopeTest):
                 """{"link": "some-link", "loginId": "login-id", "pendingRef": "some-ref"}"""
             )
             mock_post.return_value = network_resp
+            login_options = {"stepup": True}
             resp = self.client.mgmt.user.generate_enchanted_link_for_test_user(
-                "login-id", "bla"
+                "login-id", "bla", login_options
             )
             self.assertEqual(resp["link"], "some-link")
             self.assertEqual(resp["loginId"], "login-id")
@@ -1425,6 +1430,7 @@ class TestUser(common.DescopeTest):
                 json={
                     "loginId": "login-id",
                     "URI": "bla",
+                    "loginOptions": login_options,
                 },
                 allow_redirects=False,
                 verify=True,

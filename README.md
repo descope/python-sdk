@@ -1097,6 +1097,7 @@ resp = descope_client.mgmt.user.generate_otp_for_test_user(
 )
 code = resp["code"]
 # Now you can verify the code is valid (using descope_client.*.verify for example)
+# login_options can be provided to set custom claims to the generated jwt.
 
 # Same as OTP, magic link can be generated for test user, for example:
 resp = descope_client.mgmt.user.generate_magic_link_for_test_user(

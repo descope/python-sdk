@@ -51,7 +51,7 @@ class TestSSOSettings(common.DescopeTest):
             mock_get.return_value = network_resp
             resp = client.mgmt.sso.get_settings("tenant-id")
             self.assertEqual(resp["tenantId"], "tenant-id")
-            self.assertEqual(resp["domains"], ["lulu","kuku"])
+            self.assertEqual(resp["domains"], ["lulu", "kuku"])
             mock_get.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_settings_path}",
                 headers={
