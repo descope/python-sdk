@@ -78,7 +78,7 @@ class SSOSettings(AuthBase):
         entity_id: str,
         idp_cert: str,
         redirect_url: str,
-        domains: Optional[List[str]] = None
+        domains: Optional[List[str]] = None,
     ) -> None:
         """
         Configure SSO setting for a tenant manually. Alternatively, `configure_via_metadata` can be used instead.

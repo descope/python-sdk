@@ -2,7 +2,7 @@ from typing import List, Optional, Union
 
 from descope._auth_base import AuthBase
 from descope.auth import Auth
-from descope.common import DeliveryMethod
+from descope.common import DeliveryMethod, LoginOptions
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 from descope.management.common import (
     AssociatedTenant,
@@ -1016,6 +1016,7 @@ class User(AuthBase):
         self,
         method: DeliveryMethod,
         login_id: str,
+        login_options: Optional[LoginOptions] = None,
     ) -> dict:
         """
         Generate OTP for the given login ID of a test user.
@@ -1025,6 +1026,7 @@ class User(AuthBase):
         method (DeliveryMethod): The method to use for "delivering" the OTP verification code to the user, for example
             EMAIL, SMS, WHATSAPP or EMBEDDED
         login_id (str): The login ID of the test user being validated.
+        login_options (LoginOptions): optional, can be provided to set custom claims to the generated jwt.
 
         Return value (dict):
         Return dict in the format
@@ -1036,7 +1038,11 @@ class User(AuthBase):
         """
         response = self._auth.do_post(
             MgmtV1.user_generate_otp_for_test_path,
-            {"loginId": login_id, "deliveryMethod": Auth.get_method_string(method)},
+            {
+                "loginId": login_id,
+                "deliveryMethod": Auth.get_method_string(method),
+                "loginOptions": login_options.__dict__ if login_options else {},
+            },
             pswd=self._auth.management_key,
         )
         return response.json()
@@ -1046,6 +1052,7 @@ class User(AuthBase):
         method: DeliveryMethod,
         login_id: str,
         uri: str,
+        login_options: Optional[LoginOptions] = None,
     ) -> dict:
         """
         Generate Magic Link for the given login ID of a test user.
@@ -1056,6 +1063,7 @@ class User(AuthBase):
             EMAIL, SMS, WHATSAPP or EMBEDDED
         login_id (str): The login ID of the test user being validated.
         uri (str): Optional redirect uri which will be used instead of any global configuration.
+        login_options (LoginOptions): optional, can be provided to set custom claims to the generated jwt.
 
         Return value (dict):
         Return dict in the format
@@ -1071,6 +1079,7 @@ class User(AuthBase):
                 "loginId": login_id,
                 "deliveryMethod": Auth.get_method_string(method),
                 "URI": uri,
+                "loginOptions": login_options.__dict__ if login_options else {},
             },
             pswd=self._auth.management_key,
         )
@@ -1080,6 +1089,7 @@ class User(AuthBase):
         self,
         login_id: str,
         uri: str,
+        login_options: Optional[LoginOptions] = None,
     ) -> dict:
         """
         Generate Enchanted Link for the given login ID of a test user.
@@ -1088,6 +1098,7 @@ class User(AuthBase):
         Args:
         login_id (str): The login ID of the test user being validated.
         uri (str): Optional redirect uri which will be used instead of any global configuration.
+        login_options (LoginOptions): optional, can be provided to set custom claims to the generated jwt.
 
         Return value (dict):
         Return dict in the format
@@ -1099,7 +1110,11 @@ class User(AuthBase):
         """
         response = self._auth.do_post(
             MgmtV1.user_generate_enchanted_link_for_test_path,
-            {"loginId": login_id, "URI": uri},
+            {
+                "loginId": login_id,
+                "URI": uri,
+                "loginOptions": login_options.__dict__ if login_options else {},
+            },
             pswd=self._auth.management_key,
         )
         return response.json()
