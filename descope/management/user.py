@@ -1016,7 +1016,7 @@ class User(AuthBase):
         self,
         method: DeliveryMethod,
         login_id: str,
-        login_options: LoginOptions | None = None,
+        login_options: Optional[LoginOptions] = None,
     ) -> dict:
         """
         Generate OTP for the given login ID of a test user.
@@ -1052,7 +1052,7 @@ class User(AuthBase):
         method: DeliveryMethod,
         login_id: str,
         uri: str,
-        login_options: LoginOptions | None = None,
+        login_options: Optional[LoginOptions] = None,
     ) -> dict:
         """
         Generate Magic Link for the given login ID of a test user.
@@ -1089,7 +1089,7 @@ class User(AuthBase):
         self,
         login_id: str,
         uri: str,
-        login_options: LoginOptions | None = None,
+        login_options: Optional[LoginOptions] = None,
     ) -> dict:
         """
         Generate Enchanted Link for the given login ID of a test user.
