@@ -85,7 +85,7 @@ class User(AuthBase):
         Containing the created user information.
 
         Raise:
-        AuthException: raised if update operation fails
+        AuthException: raised if create operation fails
         """
         role_names = [] if role_names is None else role_names
         user_tenants = [] if user_tenants is None else user_tenants
@@ -158,7 +158,7 @@ class User(AuthBase):
         Containing the created test user information.
 
         Raise:
-        AuthException: raised if update operation fails
+        AuthException: raised if create operation fails
         """
         role_names = [] if role_names is None else role_names
         user_tenants = [] if user_tenants is None else user_tenants
@@ -324,7 +324,7 @@ class User(AuthBase):
         custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
 
         Raise:
-        AuthException: raised if creation operation fails
+        AuthException: raised if update operation fails
         """
         role_names = [] if role_names is None else role_names
         user_tenants = [] if user_tenants is None else user_tenants
@@ -362,11 +362,30 @@ class User(AuthBase):
         login_id (str): The login ID of the user to be deleted.
 
         Raise:
-        AuthException: raised if creation operation fails
+        AuthException: raised if delete operation fails
         """
         self._auth.do_post(
             MgmtV1.user_delete_path,
             {"loginId": login_id},
+            pswd=self._auth.management_key,
+        )
+
+    def delete_by_user_id(
+        self,
+        user_id: str,
+    ):
+        """
+        Delete an existing user by user ID. IMPORTANT: This action is irreversible. Use carefully.
+
+        Args:
+        user_id (str): The user ID from the user's JWT.
+
+        Raise:
+        AuthException: raised if delete operation fails
+        """
+        self._auth.do_post(
+            MgmtV1.user_delete_path,
+            {"userId": user_id},
             pswd=self._auth.management_key,
         )
 
@@ -377,7 +396,7 @@ class User(AuthBase):
         Delete all test users in the project. IMPORTANT: This action is irreversible. Use carefully.
 
         Raise:
-        AuthException: raised if creation operation fails
+        AuthException: raised if delete operation fails
         """
         self._auth.do_delete(
             MgmtV1.user_delete_all_test_users_path,
@@ -446,7 +465,7 @@ class User(AuthBase):
         login_id (str): The login ID of the user to be logged out.
 
         Raise:
-        AuthException: raised if creation operation fails
+        AuthException: raised if logout operation fails
         """
         self._auth.do_post(
             MgmtV1.user_logout_path,
@@ -465,7 +484,7 @@ class User(AuthBase):
         user_id (str): The login ID of the user to be logged out.
 
         Raise:
-        AuthException: raised if creation operation fails
+        AuthException: raised if logout operation fails
         """
         self._auth.do_post(
             MgmtV1.user_logout_path,
@@ -1069,13 +1088,35 @@ class User(AuthBase):
             Use the `password.send_reset` or `password.replace` methods to reset/replace the password.
 
         Args:
-        login_id (str): The login ID of the user expire the password to.
+        login_id (str): The login ID of the user to expire the password to.
 
         Raise:
         AuthException: raised if the operation fails
         """
         self._auth.do_post(
             MgmtV1.user_expire_password_path,
+            {"loginId": login_id},
+            pswd=self._auth.management_key,
+        )
+        return
+
+    def remove_all_passkeys(
+        self,
+        login_id: str,
+    ) -> None:
+        """
+            Removes all registered passkeys (WebAuthn devices) for the user with the given login ID.
+            Note: The user might not be able to login anymore if they have no other authentication
+            methods or a verified email/phone.
+
+        Args:
+        login_id (str): The login ID of the user to remove passkeys for.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        self._auth.do_post(
+            MgmtV1.user_remove_all_passkeys_path,
             {"loginId": login_id},
             pswd=self._auth.management_key,
         )

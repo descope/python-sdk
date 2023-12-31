@@ -32,6 +32,7 @@ class MgmtV1:
     user_remove_role_path = "/v1/mgmt/user/update/role/remove"
     user_set_password_path = "/v1/mgmt/user/password/set"
     user_expire_password_path = "/v1/mgmt/user/password/expire"
+    user_remove_all_passkeys_path = "/v1/mgmt/user/passkeys/delete"
     user_add_tenant_path = "/v1/mgmt/user/update/tenant/add"
     user_remove_tenant_path = "/v1/mgmt/user/update/tenant/remove"
     user_generate_otp_for_test_path = "/v1/mgmt/tests/generate/otp"
