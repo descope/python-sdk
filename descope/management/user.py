@@ -1292,9 +1292,7 @@ class User(AuthBase):
             )
             usersBody.append(uBody)
 
-        body = {}
-        body["users"] = usersBody
-        body["invite"] = True
+        body = {"users": usersBody, "invite": True}
         if invite_url is not None:
             body["inviteUrl"] = invite_url
         if send_mail is not None:
