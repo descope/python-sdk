@@ -557,6 +557,24 @@ descope_client.mgmt.user.invite(
     ],
 )
 
+# Batch invite
+descope_client.mgmt.user.invite_batch(
+    users=[
+        UserObj(
+            login_id="desmond@descope.com",
+            email="desmond@descope.com",
+            display_name="Desmond Copeland",
+            user_tenants=[
+                AssociatedTenant("my-tenant-id", ["role-name1"]),
+            ],
+            custom_attributes={"ak": "av"},
+        )
+    ],
+    invite_url="invite.me",
+    send_mail=True,
+    send_sms=True,
+)
+
 # Update will override all fields as is. Use carefully.
 descope_client.mgmt.user.update(
     login_id="desmond@descope.com",

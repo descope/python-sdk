@@ -11,6 +11,40 @@ from descope.management.common import (
 )
 
 
+class UserObj:
+    def __init__(
+        self,
+        login_id: str,
+        email: Optional[str] = None,
+        phone: Optional[str] = None,
+        display_name: Optional[str] = None,
+        given_name: Optional[str] = None,
+        middle_name: Optional[str] = None,
+        family_name: Optional[str] = None,
+        role_names: Optional[List[str]] = None,
+        user_tenants: Optional[List[AssociatedTenant]] = None,
+        picture: Optional[str] = None,
+        custom_attributes: Optional[dict] = None,
+        verified_email: Optional[bool] = None,
+        verified_phone: Optional[bool] = None,
+        additional_login_ids: Optional[List[str]] = None,
+    ):
+        self.login_id = login_id
+        self.email = email
+        self.phone = phone
+        self.display_name = display_name
+        self.given_name = given_name
+        self.middle_name = middle_name
+        self.family_name = family_name
+        self.role_names = role_names
+        self.user_tenants = user_tenants
+        self.picture = picture
+        self.custom_attributes = custom_attributes
+        self.verified_email = verified_email
+        self.verified_phone = verified_phone
+        self.additional_login_ids = additional_login_ids
+
+
 class User(AuthBase):
     def create(
         self,
@@ -181,13 +215,13 @@ class User(AuthBase):
         additional_login_ids: Optional[List[str]] = None,
     ) -> dict:
         """
-        Create a new user and invite them via an email message.
+        Create a new user and invite them via an email / text message.
 
         Functions exactly the same as the `create` function with the additional invitation
             behavior. See the documentation above for the general creation behavior.
 
-        IMPORTANT: Since the invitation is sent by email, make sure either
-            the email is explicitly set, or the login_id itself is an email address.
+        IMPORTANT: Since the invitation is sent by email / phone, make sure either
+            the email / phone is explicitly set, or the login_id itself is an email address / phone number.
             You must configure the invitation URL in the Descope console prior to
             calling the method.
         """
@@ -216,6 +250,41 @@ class User(AuthBase):
                 send_mail,
                 send_sms,
                 additional_login_ids,
+            ),
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    def invite_batch(
+        self,
+        users: List[UserObj],
+        invite_url: Optional[str] = None,
+        send_mail: Optional[
+            bool
+        ] = None,  # send invite via mail, default is according to project settings
+        send_sms: Optional[
+            bool
+        ] = None,  # send invite via text message, default is according to project settings
+    ) -> dict:
+        """
+        Create users in batch and invite them via an email / text message.
+
+        Functions exactly the same as the `create` function with the additional invitation
+            behavior. See the documentation above for the general creation behavior.
+
+        IMPORTANT: Since the invitation is sent by email / phone, make sure either
+            the email / phone is explicitly set, or the login_id itself is an email address / phone number.
+            You must configure the invitation URL in the Descope console prior to
+            calling the method.
+        """
+
+        response = self._auth.do_post(
+            MgmtV1.user_create_batch_path,
+            User._compose_create_batch_body(
+                users,
+                invite_url,
+                send_mail,
+                send_sms,
             ),
             pswd=self._auth.management_key,
         )
@@ -1185,6 +1254,45 @@ class User(AuthBase):
             body["verifiedEmail"] = verified_email
         if verified_phone is not None:
             body["verifiedPhone"] = verified_phone
+        if invite_url is not None:
+            body["inviteUrl"] = invite_url
+        if send_mail is not None:
+            body["sendMail"] = send_mail
+        if send_sms is not None:
+            body["sendSMS"] = send_sms
+        return body
+
+    @staticmethod
+    def _compose_create_batch_body(
+        users: List[UserObj],
+        invite_url: Optional[str],
+        send_mail: Optional[bool],
+        send_sms: Optional[bool],
+    ) -> dict:
+        usersBody = []
+        for user in users:
+            role_names = [] if user.role_names is None else user.role_names
+            user_tenants = [] if user.user_tenants is None else user.user_tenants
+            uBody = User._compose_update_body(
+                login_id=user.login_id,
+                email=user.email,
+                phone=user.phone,
+                display_name=user.display_name,
+                given_name=user.given_name,
+                middle_name=user.middle_name,
+                family_name=user.family_name,
+                role_names=role_names,
+                user_tenants=user_tenants,
+                picture=user.picture,
+                custom_attributes=user.custom_attributes,
+                additional_login_ids=user.additional_login_ids,
+                verified_email=user.verified_email,
+                verified_phone=user.verified_phone,
+                test=False,
+            )
+            usersBody.append(uBody)
+
+        body = {"users": usersBody, "invite": True}
         if invite_url is not None:
             body["inviteUrl"] = invite_url
         if send_mail is not None:
