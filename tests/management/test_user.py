@@ -5,6 +5,7 @@ from unittest.mock import patch
 from descope import AssociatedTenant, AuthException, DescopeClient
 from descope.common import DEFAULT_TIMEOUT_SECONDS, DeliveryMethod, LoginOptions
 from descope.management.common import MgmtV1
+from descope.management.user import UserObj
 
 from .. import common
 
@@ -250,6 +251,77 @@ class TestUser(common.DescopeTest):
                     "inviteUrl": "invite.me",
                     "sendSMS": True,
                     "additionalLoginIds": None,
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_invite_batch(self):
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                self.client.mgmt.user.invite_batch,
+                [],
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"users": [{"id": "u1"}]}""")
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.invite_batch(
+                users=[
+                    UserObj(
+                        login_id="name@mail.com",
+                        email="name@mail.com",
+                        display_name="Name",
+                        user_tenants=[
+                            AssociatedTenant("tenant1"),
+                            AssociatedTenant("tenant2", ["role1", "role2"]),
+                        ],
+                        custom_attributes={"ak": "av"},
+                    )
+                ],
+                invite_url="invite.me",
+                send_sms=True,
+            )
+            users = resp["users"]
+            self.assertEqual(users[0]["id"], "u1")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_create_batch_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                json={
+                    "users": [
+                        {
+                            "loginId": "name@mail.com",
+                            "email": "name@mail.com",
+                            "phone": None,
+                            "displayName": "Name",
+                            "roleNames": [],
+                            "userTenants": [
+                                {"tenantId": "tenant1", "roleNames": []},
+                                {
+                                    "tenantId": "tenant2",
+                                    "roleNames": ["role1", "role2"],
+                                },
+                            ],
+                            "test": False,
+                            "picture": None,
+                            "customAttributes": {"ak": "av"},
+                            "additionalLoginIds": None,
+                        }
+                    ],
+                    "invite": True,
+                    "inviteUrl": "invite.me",
+                    "sendSMS": True,
                 },
                 allow_redirects=False,
                 verify=True,
