@@ -40,7 +40,7 @@ class Project(AuthBase):
         tag(str): Optional tag for the project. Currently, only the "production" tag is supported.
 
                                 Return value (dict):
-        Return dict Containing the new project details (name, id, tag, and settings).
+        Return dict Containing the new project details (name, id, and tag).
 
         Raise:
         AuthException: raised if clone operation fails
