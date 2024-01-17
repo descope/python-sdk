@@ -189,7 +189,7 @@ class SSOApplication(AuthBase):
         acs_allowed_callbacks: Optional[List[str]] = None,
         subject_name_id_type: Optional[str] = None,
         subject_name_id_format: Optional[str] = None,
-    ) -> dict:
+    ):
         """
         Update an existing SAML sso application with the given parameters. IMPORTANT: All parameters are used as overrides
         to the existing sso application. Empty fields will override populated fields. Use carefully.

@@ -155,7 +155,7 @@ class SAMLIDPAttributeMappingInfo:
 
 
 def saml_idp_attribute_mapping_info_to_dict(
-    attributes_mapping: List[SAMLIDPAttributeMappingInfo],
+    attributes_mapping: List[SAMLIDPAttributeMappingInfo] | None,
 ) -> list:
     attributes_mapping_list = []
     if attributes_mapping:
@@ -181,7 +181,7 @@ class SAMLIDPRoleGroupMappingInfo:
 
 
 def saml_idp_role_group_mapping_info_to_dict(
-    role_groups_mapping: List[SAMLIDPRoleGroupMappingInfo],
+    role_groups_mapping: List[SAMLIDPRoleGroupMappingInfo] | None,
 ) -> list:
     role_groups_mapping_list = []
     if role_groups_mapping:
@@ -217,7 +217,7 @@ class SAMLIDPGroupsMappingInfo:
 
 
 def saml_idp_groups_mapping_info_to_dict(
-    groups_mapping: List[SAMLIDPGroupsMappingInfo],
+    groups_mapping: List[SAMLIDPGroupsMappingInfo] | None,
 ) -> list:
     groups_mapping_list = []
     if groups_mapping:
