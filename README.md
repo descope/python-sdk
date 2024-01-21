@@ -9,9 +9,9 @@
 | descope/management/audit.py         |       36 |       11 |     69% |72, 74, 76, 78, 80, 82, 84, 86, 88, 90, 92 |
 | descope/management/sso\_settings.py |       47 |        2 |     96% |  206, 222 |
 | descope/management/user.py          |      205 |        8 |     96% |762, 764, 766, 1301, 1340, 1378, 1380, 1382 |
-|                           **TOTAL** | **1701** |   **39** | **98%** |           |
+|                           **TOTAL** | **1798** |   **39** | **98%** |           |
 
-24 files skipped due to complete coverage.
+25 files skipped due to complete coverage.
 
 
 ## Setup coverage badge
