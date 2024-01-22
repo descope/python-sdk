@@ -69,6 +69,7 @@ class TestFlow(common.DescopeTest):
             self.assertRaises(
                 AuthException,
                 client.mgmt.flow.delete_flows,
+                ["flow-1", "flow-2"],
             )
 
         # Test success delete flows
