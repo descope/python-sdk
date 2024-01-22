@@ -27,7 +27,7 @@ class Flow(AuthBase):
 
     def delete_flows(
         self,
-        flow_ids: [List[str]],
+        flow_ids: List[str],
     ) -> dict:
         """
         Delete flows by the given ids
