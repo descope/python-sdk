@@ -10,6 +10,15 @@ class MgmtV1:
     tenant_load_all_path = "/v1/mgmt/tenant/all"
     tenant_search_all_path = "/v1/mgmt/tenant/search"
 
+    # sso application
+    sso_application_oidc_create_path = "/v1/mgmt/sso/idp/app/oidc/create"
+    sso_application_saml_create_path = "/v1/mgmt/sso/idp/app/saml/create"
+    sso_application_oidc_update_path = "/v1/mgmt/sso/idp/app/oidc/update"
+    sso_application_saml_update_path = "/v1/mgmt/sso/idp/app/saml/update"
+    sso_application_delete_path = "/v1/mgmt/sso/idp/app/delete"
+    sso_application_load_path = "/v1/mgmt/sso/idp/app/load"
+    sso_application_load_all_path = "/v1/mgmt/sso/idp/apps/load"
+
     # user
     user_create_path = "/v1/mgmt/user/create"
     user_create_batch_path = "/v1/mgmt/user/create/batch"
@@ -134,3 +143,97 @@ def associated_tenants_to_dict(associated_tenants: List[AssociatedTenant]) -> li
                 }
             )
     return associated_tenant_list
+
+
+class SAMLIDPAttributeMappingInfo:
+    """
+    Represents a SAML IDP attribute mapping object. use this class for mapping Descope attribute
+    to the relevant SAML Assertion attributes matching your expected SP attributes names.
+    """
+
+    def __init__(self, name: str, type: str, value: str):
+        self.name = name
+        self.type = type
+        self.value = value
+
+
+def saml_idp_attribute_mapping_info_to_dict(
+    attributes_mapping: Optional[List[SAMLIDPAttributeMappingInfo]] = None,
+) -> list:
+    attributes_mapping_list = []
+    if attributes_mapping:
+        for attribute_mapping in attributes_mapping:
+            attributes_mapping_list.append(
+                {
+                    "name": attribute_mapping.name,
+                    "type": attribute_mapping.type,
+                    "value": attribute_mapping.value,
+                }
+            )
+    return attributes_mapping_list
+
+
+class SAMLIDPRoleGroupMappingInfo:
+    """
+    Represents a SAML IDP Role Group mapping object.
+    """
+
+    def __init__(self, id: str, name: str):
+        self.id = id
+        self.name = name
+
+
+def saml_idp_role_group_mapping_info_to_dict(
+    role_groups_mapping: Optional[List[SAMLIDPRoleGroupMappingInfo]] = None,
+) -> list:
+    role_groups_mapping_list = []
+    if role_groups_mapping:
+        for group_mapping in role_groups_mapping:
+            role_groups_mapping_list.append(
+                {
+                    "id": group_mapping.id,
+                    "name": group_mapping.name,
+                }
+            )
+    return role_groups_mapping_list
+
+
+class SAMLIDPGroupsMappingInfo:
+    """
+    Represents a SAML IDP Descope roles to SP groups mapping object. use this class for mapping Descope roles
+    to your SP groups.
+    """
+
+    def __init__(
+        self,
+        name: str,
+        type: str,
+        filter_type: str,
+        value: str,
+        roles: List[SAMLIDPRoleGroupMappingInfo],
+    ):
+        self.name = name
+        self.type = type
+        self.filter_type = filter_type
+        self.value = value
+        self.roles = roles
+
+
+def saml_idp_groups_mapping_info_to_dict(
+    groups_mapping: Optional[List[SAMLIDPGroupsMappingInfo]] = None,
+) -> list:
+    groups_mapping_list = []
+    if groups_mapping:
+        for group_mapping in groups_mapping:
+            groups_mapping_list.append(
+                {
+                    "name": group_mapping.name,
+                    "type": group_mapping.type,
+                    "filterType": group_mapping.filter_type,
+                    "value": group_mapping.value,
+                    "roles": saml_idp_role_group_mapping_info_to_dict(
+                        group_mapping.roles
+                    ),
+                }
+            )
+    return groups_mapping_list
