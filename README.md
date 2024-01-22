@@ -544,6 +544,7 @@ descope_client.mgmt.user.create(
     user_tenants=[
         AssociatedTenant("my-tenant-id", ["role-name1"]),
     ],
+	sso_app_ids=["appId1"],
 )
 
 # Alternatively, a user can be created and invited via an email message.
@@ -556,6 +557,7 @@ descope_client.mgmt.user.invite(
     user_tenants=[
         AssociatedTenant("my-tenant-id", ["role-name1"]),
     ],
+	sso_app_ids=["appId1"],
 )
 
 # Batch invite
@@ -569,6 +571,7 @@ descope_client.mgmt.user.invite_batch(
                 AssociatedTenant("my-tenant-id", ["role-name1"]),
             ],
             custom_attributes={"ak": "av"},
+			sso_app_ids=["appId1"],
         )
     ],
     invite_url="invite.me",
@@ -584,6 +587,7 @@ descope_client.mgmt.user.update(
     user_tenants=[
         AssociatedTenant("my-tenant-id", ["role-name1", "role-name2"]),
     ],
+	sso_app_ids=["appId1"],
 )
 
 # Update explicit data for a user rather than overriding all fields
@@ -600,6 +604,24 @@ descope_client.mgmt.user.remove_tenant_roles(
     login_id="desmond@descope.com",
     tenant_id="my-tenant-id",
     role_names=["role-name1"],
+)
+
+# Set SSO applications association to a user.
+user = descope_client.mgmt.user.set_sso_apps(
+	login_id="desmond@descope.com",
+	sso_app_ids=["appId1", "appId2"]
+)
+
+# Add SSO applications association to a user.
+user = descope_client.mgmt.user.add_sso_apps(
+	login_id="desmond@descope.com",
+	sso_app_ids=["appId1", "appId2"]
+)
+
+# Remove SSO applications association from a user.
+user = descope_client.mgmt.user.remove_sso_apps(
+	login_id="desmond@descope.com",
+	sso_app_ids=["appId1", "appId2"]
 )
 
 # User deletion cannot be undone. Use carefully.

@@ -28,6 +28,7 @@ class UserObj:
         verified_email: Optional[bool] = None,
         verified_phone: Optional[bool] = None,
         additional_login_ids: Optional[List[str]] = None,
+        sso_app_ids: Optional[List[str]] = None,
     ):
         self.login_id = login_id
         self.email = email
@@ -43,6 +44,7 @@ class UserObj:
         self.verified_email = verified_email
         self.verified_phone = verified_phone
         self.additional_login_ids = additional_login_ids
+        self.sso_app_ids = sso_app_ids
 
 
 class User(AuthBase):
@@ -63,6 +65,7 @@ class User(AuthBase):
         verified_phone: Optional[bool] = None,
         invite_url: Optional[str] = None,
         additional_login_ids: Optional[List[str]] = None,
+        sso_app_ids: Optional[List[str]] = None,
     ) -> dict:
         """
         Create a new user. Users can have any number of optional fields, including email, phone number and authorization.
@@ -78,6 +81,7 @@ class User(AuthBase):
             mutually exclusive with the general `role_names`.
         picture (str): Optional url for user picture
         custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
+        sso_app_ids (List[str]): Optional, list of SSO applications IDs to be associated with the user.
 
         Return value (dict):
         Return dict in the format
@@ -112,6 +116,7 @@ class User(AuthBase):
                 None,
                 None,
                 additional_login_ids,
+                sso_app_ids,
             ),
             pswd=self._auth.management_key,
         )
@@ -134,6 +139,7 @@ class User(AuthBase):
         verified_phone: Optional[bool] = None,
         invite_url: Optional[str] = None,
         additional_login_ids: Optional[List[str]] = None,
+        sso_app_ids: Optional[List[str]] = None,
     ) -> dict:
         """
         Create a new test user.
@@ -151,6 +157,7 @@ class User(AuthBase):
             mutually exclusive with the general `role_names`.
         picture (str): Optional url for user picture
         custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
+        sso_app_ids (List[str]): Optional, list of SSO applications IDs to be associated with the user.
 
         Return value (dict):
         Return dict in the format
@@ -213,6 +220,7 @@ class User(AuthBase):
             bool
         ] = None,  # send invite via text message, default is according to project settings
         additional_login_ids: Optional[List[str]] = None,
+        sso_app_ids: Optional[List[str]] = None,
     ) -> dict:
         """
         Create a new user and invite them via an email / text message.
@@ -250,6 +258,7 @@ class User(AuthBase):
                 send_mail,
                 send_sms,
                 additional_login_ids,
+                sso_app_ids,
             ),
             pswd=self._auth.management_key,
         )
@@ -306,6 +315,7 @@ class User(AuthBase):
         verified_email: Optional[bool] = None,
         verified_phone: Optional[bool] = None,
         additional_login_ids: Optional[List[str]] = None,
+        sso_app_ids: Optional[List[str]] = None,
     ):
         """
         Update an existing user with the given various fields. IMPORTANT: All parameters are used as overrides
@@ -322,6 +332,7 @@ class User(AuthBase):
             mutually exclusive with the general `role_names`.
         picture (str): Optional url for user picture
         custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
+        sso_app_ids (List[str]): Optional, list of SSO applications IDs to be associated with the user.
 
         Raise:
         AuthException: raised if update operation fails
@@ -347,6 +358,7 @@ class User(AuthBase):
                 verified_email,
                 verified_phone,
                 additional_login_ids,
+                sso_app_ids,
             ),
             pswd=self._auth.management_key,
         )
@@ -504,6 +516,7 @@ class User(AuthBase):
         statuses: Optional[List[str]] = None,
         emails: Optional[List[str]] = None,
         phones: Optional[List[str]] = None,
+        sso_app_ids: Optional[List[str]] = None,
     ) -> dict:
         """
         Search all users.
@@ -519,6 +532,7 @@ class User(AuthBase):
         statuses (List[str]): Optional list of statuses to search for ("enabled", "disabled", "invited")
         emails (List[str]): Optional list of emails to search for
         phones (List[str]): Optional list of phones to search for
+        sso_app_ids (List[str]): Optional list of SSO application IDs to filter by
 
         Return value (dict):
         Return dict in the format
@@ -559,6 +573,9 @@ class User(AuthBase):
 
         if custom_attributes is not None:
             body["customAttributes"] = custom_attributes
+
+        if sso_app_ids is not None:
+            body["ssoAppIds"] = sso_app_ids
 
         response = self._auth.do_post(
             MgmtV1.users_search_path,
@@ -908,6 +925,87 @@ class User(AuthBase):
         response = self._auth.do_post(
             MgmtV1.user_remove_role_path,
             {"loginId": login_id, "roleNames": role_names},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    def set_sso_apps(
+        self,
+        login_id: str,
+        sso_app_ids: List[str],
+    ) -> dict:
+        """
+        Set SSO applications association to a user.
+
+        Args:
+        login_id (str): The login ID of the user to update.
+        sso_app_ids (List[str]): A list of sso applications ids for associate with a user.
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the updated user information.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.user_set_sso_apps,
+            {"loginId": login_id, "ssoAppIds": sso_app_ids},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    def add_sso_apps(
+        self,
+        login_id: str,
+        sso_app_ids: List[str],
+    ) -> dict:
+        """
+        Add SSO applications association to a user.
+
+        Args:
+        login_id (str): The login ID of the user to update.
+        sso_app_ids (List[str]): A list of sso applications ids for associate with a user.
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the updated user information.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.user_add_sso_apps,
+            {"loginId": login_id, "ssoAppIds": sso_app_ids},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    def remove_sso_apps(
+        self,
+        login_id: str,
+        sso_app_ids: List[str],
+    ) -> dict:
+        """
+        Remove SSO applications association from a user.
+
+        Args:
+        login_id (str): The login ID of the user to update.
+        sso_app_ids (List[str]): A list of sso applications ids to remove association from a user.
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the updated user information.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.user_remove_sso_apps,
+            {"loginId": login_id, "ssoAppIds": sso_app_ids},
             pswd=self._auth.management_key,
         )
         return response.json()
@@ -1274,6 +1372,7 @@ class User(AuthBase):
         send_mail: Optional[bool],
         send_sms: Optional[bool],
         additional_login_ids: Optional[List[str]],
+        sso_app_ids: Optional[List[str]] = None,
     ) -> dict:
         body = User._compose_update_body(
             login_id=login_id,
@@ -1289,6 +1388,7 @@ class User(AuthBase):
             picture=picture,
             custom_attributes=custom_attributes,
             additional_login_ids=additional_login_ids,
+            sso_app_ids=sso_app_ids,
         )
         body["invite"] = invite
         if verified_email is not None:
@@ -1314,6 +1414,7 @@ class User(AuthBase):
         for user in users:
             role_names = [] if user.role_names is None else user.role_names
             user_tenants = [] if user.user_tenants is None else user.user_tenants
+            sso_app_ids = [] if user.sso_app_ids is None else user.sso_app_ids
             uBody = User._compose_update_body(
                 login_id=user.login_id,
                 email=user.email,
@@ -1330,6 +1431,7 @@ class User(AuthBase):
                 verified_email=user.verified_email,
                 verified_phone=user.verified_phone,
                 test=False,
+                sso_app_ids=sso_app_ids,
             )
             usersBody.append(uBody)
 
@@ -1359,6 +1461,7 @@ class User(AuthBase):
         verified_email: Optional[bool] = None,
         verified_phone: Optional[bool] = None,
         additional_login_ids: Optional[List[str]] = None,
+        sso_app_ids: Optional[List[str]] = None,
     ) -> dict:
         res = {
             "loginId": login_id,
@@ -1371,6 +1474,7 @@ class User(AuthBase):
             "picture": picture,
             "customAttributes": custom_attributes,
             "additionalLoginIds": additional_login_ids,
+            "ssoAppIDs": sso_app_ids,
         }
         if verified_email is not None:
             res["verifiedEmail"] = verified_email
