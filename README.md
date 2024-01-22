@@ -820,6 +820,11 @@ flows = flows_resp["flows"]
 for flow in flows:
     # Do something
 
+# Delete flows by ids
+descope_client.mgmt.flow.delete_flows(
+    flow_ids=["flow-1", "flow-2"],
+)
+
 # Export a selected flow by id for the flow and matching screens.
 exported_flow_and_screens = descope_client.mgmt.flow.export_flow(
     flow_id="sign-up-or-in",

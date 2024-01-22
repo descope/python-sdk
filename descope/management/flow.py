@@ -25,6 +25,28 @@ class Flow(AuthBase):
         )
         return response.json()
 
+    def delete_flows(
+        self,
+        flow_ids: [List[str]],
+    ) -> dict:
+        """
+        Delete flows by the given ids
+
+        Args:
+        flow_ids (List[str]): list of flow IDs to delete.
+
+        Raise:
+        AuthException: raised if delete operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.flow_delete_path,
+            {
+                "ids": flow_ids,
+            },
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
     def export_flow(
         self,
         flow_id: str,

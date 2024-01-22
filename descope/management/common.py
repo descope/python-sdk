@@ -83,6 +83,7 @@ class MgmtV1:
 
     # flow
     flow_list_path = "/v1/mgmt/flow/list"
+    flow_delete_path = "/v1/mgmt/flow/delete"
     flow_import_path = "/v1/mgmt/flow/import"
     flow_export_path = "/v1/mgmt/flow/export"
 

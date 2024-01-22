@@ -63,7 +63,7 @@ class SSOSettings(AuthBase):
         tenant_id (str): The tenant ID of the desired SSO Settings to delete
 
         Raise:
-        AuthException: raised if configuration operation fails
+        AuthException: raised if delete operation fails
         """
         self._auth.do_delete(
             MgmtV1.sso_settings_path,
