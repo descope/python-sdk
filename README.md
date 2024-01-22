@@ -9,7 +9,7 @@
 | descope/management/audit.py         |       36 |       11 |     69% |72, 74, 76, 78, 80, 82, 84, 86, 88, 90, 92 |
 | descope/management/sso\_settings.py |       47 |        2 |     96% |  206, 222 |
 | descope/management/user.py          |      218 |        8 |     96% |779, 781, 783, 1401, 1442, 1482, 1484, 1486 |
-|                           **TOTAL** | **1814** |   **39** | **98%** |           |
+|                           **TOTAL** | **1818** |   **39** | **98%** |           |
 
 25 files skipped due to complete coverage.
 
