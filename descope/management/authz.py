@@ -365,7 +365,7 @@ class Authz(AuthBase):
         )
         return response.json()["relations"]
 
-    def get_modified(self, since: Optional[datetime] = 0) -> dict:
+    def get_modified(self, since: Optional[datetime] = None) -> dict:
         """
         Get all targets and resources changed since the given date.
         Args:
