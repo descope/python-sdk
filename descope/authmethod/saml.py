@@ -5,7 +5,7 @@ from descope.common import EndpointsV1, LoginOptions, validate_refresh_token_pro
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
-class SAML(AuthBase):
+class SSO(AuthBase):
     def start(
         self,
         tenant: str,
@@ -29,7 +29,7 @@ class SAML(AuthBase):
         validate_refresh_token_provided(login_options, refresh_token)
 
         uri = EndpointsV1.auth_saml_start_path
-        params = SAML._compose_start_params(tenant, return_url)
+        params = SSO._compose_start_params(tenant, return_url)
         response = self._auth.do_post(
             uri, login_options.__dict__ if login_options else {}, params, refresh_token
         )

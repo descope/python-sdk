@@ -5,13 +5,13 @@ from unittest.mock import patch
 
 from descope import AuthException
 from descope.auth import Auth
-from descope.authmethod.saml import SAML
+from descope.authmethod.sso import SSO
 from descope.common import DEFAULT_TIMEOUT_SECONDS, EndpointsV1, LoginOptions
 
 from . import common
 
 
-class TestSAML(common.DescopeTest):
+class TestSSO(common.DescopeTest):
     def setUp(self) -> None:
         super().setUp()
         self.dummy_project_id = "dummy"
@@ -27,33 +27,33 @@ class TestSAML(common.DescopeTest):
 
     def test_compose_start_params(self):
         self.assertEqual(
-            SAML._compose_start_params("tenant1", "http://dummy.com"),
+            SSO._compose_start_params("tenant1", "http://dummy.com"),
             {"tenant": "tenant1", "redirectURL": "http://dummy.com"},
         )
 
-    def test_saml_start(self):
-        saml = SAML(Auth(self.dummy_project_id, self.public_key_dict))
+    def test_sso_start(self):
+        sso = SSO(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
-        self.assertRaises(AuthException, saml.start, "", "http://dummy.com")
-        self.assertRaises(AuthException, saml.start, None, "http://dummy.com")
-        self.assertRaises(AuthException, saml.start, "tenant1", "")
-        self.assertRaises(AuthException, saml.start, "tenant1", None)
+        self.assertRaises(AuthException, sso.start, "", "http://dummy.com")
+        self.assertRaises(AuthException, sso.start, None, "http://dummy.com")
+        self.assertRaises(AuthException, sso.start, "tenant1", "")
+        self.assertRaises(AuthException, sso.start, "tenant1", None)
 
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(AuthException, saml.start, "tenant1", "http://dummy.com")
+            self.assertRaises(AuthException, sso.start, "tenant1", "http://dummy.com")
 
         # Test success flow
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
-            self.assertIsNotNone(saml.start("tenant1", "http://dummy.com"))
+            self.assertIsNotNone(sso.start("tenant1", "http://dummy.com"))
 
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
-            saml.start("tenant1", "http://dummy.com")
+            sso.start("tenant1", "http://dummy.com")
             expected_uri = (
-                f"{common.DEFAULT_BASE_URL}{EndpointsV1.auth_saml_start_path}"
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.auth_sso_start_path}"
             )
             mock_post.assert_called_with(
                 expected_uri,
@@ -69,36 +69,36 @@ class TestSAML(common.DescopeTest):
             )
             self.assertRaises(
                 AuthException,
-                saml.start,
+                sso.start,
                 "tenant",
                 "http://dummy.com",
                 LoginOptions(mfa=True),
             )
 
-    def test_saml_start_with_login_options(self):
-        saml = SAML(Auth(self.dummy_project_id, self.public_key_dict))
+    def test_sso_start_with_login_options(self):
+        sso = SSO(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
-        self.assertRaises(AuthException, saml.start, "", "http://dummy.com")
-        self.assertRaises(AuthException, saml.start, None, "http://dummy.com")
-        self.assertRaises(AuthException, saml.start, "tenant1", "")
-        self.assertRaises(AuthException, saml.start, "tenant1", None)
+        self.assertRaises(AuthException, sso.start, "", "http://dummy.com")
+        self.assertRaises(AuthException, sso.start, None, "http://dummy.com")
+        self.assertRaises(AuthException, sso.start, "tenant1", "")
+        self.assertRaises(AuthException, sso.start, "tenant1", None)
 
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(AuthException, saml.start, "tenant1", "http://dummy.com")
+            self.assertRaises(AuthException, sso.start, "tenant1", "http://dummy.com")
 
         # Test success flow
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
-            self.assertIsNotNone(saml.start("tenant1", "http://dummy.com"))
+            self.assertIsNotNone(sso.start("tenant1", "http://dummy.com"))
 
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             lo = LoginOptions(stepup=True, custom_claims={"k1": "v1"})
-            saml.start("tenant1", "http://dummy.com", lo, "refresh")
+            sso.start("tenant1", "http://dummy.com", lo, "refresh")
             expected_uri = (
-                f"{common.DEFAULT_BASE_URL}{EndpointsV1.auth_saml_start_path}"
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.auth_sso_start_path}"
             )
             mock_post.assert_called_with(
                 expected_uri,
@@ -117,15 +117,15 @@ class TestSAML(common.DescopeTest):
         self.assertEqual(Auth._compose_exchange_body("c1"), {"code": "c1"})
 
     def test_exchange_token(self):
-        saml = SAML(Auth(self.dummy_project_id, self.public_key_dict))
+        sso = SSO(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
-        self.assertRaises(AuthException, saml.exchange_token, "")
-        self.assertRaises(AuthException, saml.exchange_token, None)
+        self.assertRaises(AuthException, sso.exchange_token, "")
+        self.assertRaises(AuthException, sso.exchange_token, None)
 
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(AuthException, saml.exchange_token, "c1")
+            self.assertRaises(AuthException, sso.exchange_token, "c1")
 
         # Test success flow
         with patch("requests.post") as mock_post:
@@ -137,9 +137,9 @@ class TestSAML(common.DescopeTest):
             )
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
-            saml.exchange_token("c1")
+            sso.exchange_token("c1")
             mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{EndpointsV1.saml_exchange_token_path}",
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.sso_exchange_token_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",

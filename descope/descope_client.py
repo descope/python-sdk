@@ -10,7 +10,7 @@ from descope.authmethod.magiclink import MagicLink  # noqa: F401
 from descope.authmethod.oauth import OAuth  # noqa: F401
 from descope.authmethod.otp import OTP  # noqa: F401
 from descope.authmethod.password import Password  # noqa: F401
-from descope.authmethod.saml import SAML  # noqa: F401
+from descope.authmethod.sso import SSO  # noqa: F401
 from descope.authmethod.totp import TOTP  # noqa: F401
 from descope.authmethod.webauthn import WebAuthn  # noqa: F401
 from descope.common import DEFAULT_TIMEOUT_SECONDS, EndpointsV1
@@ -43,7 +43,7 @@ class DescopeClient:
         self._magiclink = MagicLink(auth)
         self._enchantedlink = EnchantedLink(auth)
         self._oauth = OAuth(auth)
-        self._saml = SAML(auth)
+        self._sso = SSO(auth)
         self._otp = OTP(auth)
         self._totp = TOTP(auth)
         self._webauthn = WebAuthn(auth)
@@ -78,8 +78,8 @@ class DescopeClient:
         return self._oauth
 
     @property
-    def saml(self):
-        return self._saml
+    def sso(self):
+        return self._sso
 
     @property
     def webauthn(self):

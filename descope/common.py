@@ -57,9 +57,9 @@ class EndpointsV1:
     oauth_start_path = "/v1/auth/oauth/authorize"
     oauth_exchange_token_path = "/v1/auth/oauth/exchange"
 
-    # saml
-    auth_saml_start_path = "/v1/auth/saml/authorize"
-    saml_exchange_token_path = "/v1/auth/saml/exchange"
+    # sso (saml or oidc)
+    auth_sso_start_path = "/v1/auth/saml/authorize"
+    sso_exchange_token_path = "/v1/auth/saml/exchange"
 
     # totp
     sign_up_auth_totp_path = "/v1/auth/totp/signup"

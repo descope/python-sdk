@@ -44,7 +44,7 @@ These sections show how to use the SDK to perform various authentication/authori
 2. [Magic Link](#magic-link)
 3. [Enchanted Link](#enchanted-link)
 4. [OAuth](#oauth)
-5. [SSO/SAML](#ssosaml)
+5. [SSO](#sso)
 6. [TOTP Authentication](#totp-authentication)
 7. [Passwords](#passwords)
 8. [Session Validation](#session-validation)
@@ -215,22 +215,22 @@ refresh_token = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("jwt")
 
 The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)
 
-### SSO/SAML
+### SSO
 
-Users can authenticate to a specific tenant using SAML or Single Sign On. Configure your SSO/SAML settings on the [Descope console](https://app.descope.com/settings/authentication/sso). To start a flow call:
+Users can authenticate to a specific tenant using SAML or OIDC. Configure your SSO settings on the [Descope console](https://app.descope.com/settings/authentication/sso). To start a flow call:
 
 ```python
 
-descope_client.saml.start(
+descope_client.sso.start(
     tenant="my-tenant-ID", # Choose which tenant to log into
-    return_url="https://my-app.com/handle-saml", # Can be configured in the console instead of here
+    return_url="https://my-app.com/handle-sso", # Can be configured in the console instead of here
 )
 ```
 
 The user will authenticate with the authentication provider configured for that tenant, and will be redirected back to the redirect URL, with an appended `code` HTTP URL parameter. Exchange it to validate the user:
 
 ```python
-jwt_response = descope_client.saml.exchange_token(code)
+jwt_response = descope_client.sso.exchange_token(code)
 session_token = jwt_response[SESSION_TOKEN_NAME].get("jwt")
 refresh_token = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("jwt")
 ```
