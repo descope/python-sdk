@@ -68,7 +68,8 @@ These sections show how to use the SDK to perform permission and user management
 10. [Embedded links](#embedded-links)
 11. [Search Audit](#search-audit)
 12. [Manage ReBAC Authz](#manage-rebac-authz)
-13. [Manaage Project](#manage-project)
+13. [Manage Project](#manage-project)
+14. [Manage SSO Applications](#manage-sso-applications)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -543,6 +544,7 @@ descope_client.mgmt.user.create(
     user_tenants=[
         AssociatedTenant("my-tenant-id", ["role-name1"]),
     ],
+	sso_app_ids=["appId1"],
 )
 
 # Alternatively, a user can be created and invited via an email message.
@@ -555,6 +557,7 @@ descope_client.mgmt.user.invite(
     user_tenants=[
         AssociatedTenant("my-tenant-id", ["role-name1"]),
     ],
+	sso_app_ids=["appId1"],
 )
 
 # Batch invite
@@ -568,6 +571,7 @@ descope_client.mgmt.user.invite_batch(
                 AssociatedTenant("my-tenant-id", ["role-name1"]),
             ],
             custom_attributes={"ak": "av"},
+			sso_app_ids=["appId1"],
         )
     ],
     invite_url="invite.me",
@@ -583,6 +587,7 @@ descope_client.mgmt.user.update(
     user_tenants=[
         AssociatedTenant("my-tenant-id", ["role-name1", "role-name2"]),
     ],
+	sso_app_ids=["appId1"],
 )
 
 # Update explicit data for a user rather than overriding all fields
@@ -599,6 +604,24 @@ descope_client.mgmt.user.remove_tenant_roles(
     login_id="desmond@descope.com",
     tenant_id="my-tenant-id",
     role_names=["role-name1"],
+)
+
+# Set SSO applications association to a user.
+user = descope_client.mgmt.user.set_sso_apps(
+	login_id="desmond@descope.com",
+	sso_app_ids=["appId1", "appId2"]
+)
+
+# Add SSO applications association to a user.
+user = descope_client.mgmt.user.add_sso_apps(
+	login_id="desmond@descope.com",
+	sso_app_ids=["appId1", "appId2"]
+)
+
+# Remove SSO applications association from a user.
+user = descope_client.mgmt.user.remove_sso_apps(
+	login_id="desmond@descope.com",
+	sso_app_ids=["appId1", "appId2"]
 )
 
 # User deletion cannot be undone. Use carefully.
@@ -796,6 +819,11 @@ print(f'Total number of flows: {flows_resp["total"]}')
 flows = flows_resp["flows"]
 for flow in flows:
     # Do something
+
+# Delete flows by ids
+descope_client.mgmt.flow.delete_flows(
+    flow_ids=["flow-1", "flow-2"],
+)
 
 # Export a selected flow by id for the flow and matching screens.
 exported_flow_and_screens = descope_client.mgmt.flow.export_flow(
@@ -1083,6 +1111,59 @@ descope.client.mgmt.project.change_name("new-project-name")
 # Users, tenants and access keys are not cloned.
 clone_resp = descope.client.mgmt.project.clone("new-project-name")
 ```
+
+### Manage SSO Applications
+
+You can create, update, delete or load sso applications:
+
+```Python
+# Create OIDC SSO application
+descope_client.mgmt.sso_application.create_oidc_application(
+    name="My First sso app",
+	login_page_url="http://dummy.com",
+	id="my-custom-id", # This is optional.
+)
+
+# Create SAML SSO application
+descope_client.mgmt.sso_application.create_saml_application(
+    name="My First sso app",
+	login_page_url="http://dummy.com",
+	id="my-custom-id", # This is optional.
+	use_metadata_info=True,
+	metadata_url="http://dummy.com/metadata
+)
+
+# Update OIDC SSO application
+# Update will override all fields as is. Use carefully.
+descope_client.mgmt.sso_application.update_oidc_application(
+    id="my-custom-id",
+    name="My First sso app",
+    login_page_url="http://dummy.com",
+)
+
+# Update SAML SSO application
+# Update will override all fields as is. Use carefully.
+descope_client.mgmt.sso_application.update_saml_application(
+    id="my-custom-id",
+    name="My First sso app",
+    login_page_url="http://dummy.com",
+	use_metadata_info=False,
+	entity_id="ent1234",
+	acs_url="http://dummy.com/acs,
+	certificate="my cert"
+)
+
+# SSO application deletion cannot be undone. Use carefully.
+descope_client.mgmt.sso_application.delete("my-custom-id")
+
+# Load SSO application by id
+app_resp = descope_client.mgmt.sso_application.load("my-custom-id")
+
+# Load all SSO applications
+apps_resp = descope_client.mgmt.sso_application.load_all()
+apps = apps_resp["apps"]
+    for app in apps:
+        # Do something
 
 ### Utils for your end to end (e2e) tests and integration tests
 

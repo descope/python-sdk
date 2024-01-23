@@ -8,6 +8,7 @@ from descope.management.jwt import JWT  # noqa: F401
 from descope.management.permission import Permission  # noqa: F401
 from descope.management.project import Project  # noqa: F401
 from descope.management.role import Role  # noqa: F401
+from descope.management.sso_application import SSOApplication  # noqa: F401
 from descope.management.sso_settings import SSOSettings  # noqa: F401
 from descope.management.tenant import Tenant  # noqa: F401
 from descope.management.user import User  # noqa: F401
@@ -19,6 +20,7 @@ class MGMT:
     def __init__(self, auth: Auth):
         self._auth = auth
         self._tenant = Tenant(auth)
+        self._sso_application = SSOApplication(auth)
         self._user = User(auth)
         self._access_key = AccessKey(auth)
         self._sso = SSOSettings(auth)
@@ -34,6 +36,10 @@ class MGMT:
     @property
     def tenant(self):
         return self._tenant
+
+    @property
+    def sso_application(self):
+        return self._sso_application
 
     @property
     def user(self):

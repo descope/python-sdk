@@ -600,7 +600,7 @@ class TestAuth(common.DescopeTest):
             mock_request.return_value.ok = False
             mock_request.return_value.status_code = 400
             mock_request.return_value.error_type = ERROR_TYPE_SERVER_ERROR
-            mock_request.return_value.text = """{"errorCode":"E062108","errorDescription":"User not found","errorMessage":"Cannot find user","message":"Cannot find user"}"""
+            mock_request.return_value.text = """{"errorCode":"E062108","errorDescription":"User not found","errorMessage":"Cannot find user"}"""
             with self.assertRaises(AuthException) as cm:
                 auth.do_get(uri="http://test.com", params=False, allow_redirects=None)
             the_exception = cm.exception
@@ -608,7 +608,7 @@ class TestAuth(common.DescopeTest):
             self.assertEqual(the_exception.error_type, ERROR_TYPE_SERVER_ERROR)
             self.assertEqual(
                 the_exception.error_message,
-                """{"errorCode":"E062108","errorDescription":"User not found","errorMessage":"Cannot find user","message":"Cannot find user"}""",
+                """{"errorCode":"E062108","errorDescription":"User not found","errorMessage":"Cannot find user"}""",
             )
 
 
