@@ -223,7 +223,7 @@ Users can authenticate to a specific tenant using SAML/OIDC based on the tenant 
 ```python
 descope_client.sso.start(
     tenant="my-tenant-ID", # Choose which tenant to log into
-    return_url="https://my-app.com/handle-ssso", # Can be configured in the console instead of here
+    return_url="https://my-app.com/handle-sso", # Can be configured in the console instead of here
 )
 ```
 

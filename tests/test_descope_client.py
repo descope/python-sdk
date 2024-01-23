@@ -442,6 +442,7 @@ class TestDescopeClient(common.DescopeTest):
         self.assertIsNotNone(client.totp, "Empty totp object")
         self.assertIsNotNone(client.oauth, "Empty oauth object")
         self.assertIsNotNone(client.saml, "Empty saml object")
+        self.assertIsNotNone(client.sso, "Empty saml object")
         self.assertIsNotNone(client.webauthn, "Empty webauthN object")
 
     def test_validate_permissions(self):
