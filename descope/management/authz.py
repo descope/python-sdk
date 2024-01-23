@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import List, Any, Optional
+from typing import Any, List, Optional
 
 from descope._auth_base import AuthBase
 from descope.management.common import MgmtV1
@@ -365,9 +365,9 @@ class Authz(AuthBase):
         )
         return response.json()["relations"]
 
-    def get_modified(self, since: Optional(datetime)) -> dict:
+    def get_modified(self, since: Optional[datetime] = 0) -> dict:
         """
-        Return a list of targets and resources changed since the given date.
+        Get all targets and resources changed since the given date.
         Args:
         since (datetime): only return changes from this given datetime
 
@@ -378,7 +378,11 @@ class Authz(AuthBase):
         """
         response = self._auth.do_post(
             MgmtV1.authz_get_modified,
-            {"since": int(since.replace(tzinfo=timezone.utc).timestamp()*1000) if since else 0},
+            {
+                "since": int(since.replace(tzinfo=timezone.utc).timestamp() * 1000)
+                if since
+                else 0
+            },
             pswd=self._auth.management_key,
         )
         return response.json()["relations"]

@@ -559,7 +559,7 @@ class TestAuthz(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def get_modified(self):
+    def test_get_modified(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -570,9 +570,7 @@ class TestAuthz(common.DescopeTest):
         # Test failed get_modified
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException, client.mgmt.authz.get_modified
-            )
+            self.assertRaises(AuthException, client.mgmt.authz.get_modified)
 
         # Test success flow
         with patch("requests.post") as mock_post:

@@ -1090,6 +1090,9 @@ relations = descope_client.mgmt.authz.has_relations(
         }
     ]
 )
+
+# Get list of targets and resources changed since the given date.
+res = descope_client.mgmt.authz.get_modified()
 ```
 
 ### Manage Project
