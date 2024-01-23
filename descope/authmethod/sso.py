@@ -28,7 +28,7 @@ class SSO(AuthBase):
         validate_refresh_token_provided(login_options, refresh_token)
 
         uri = EndpointsV1.auth_sso_start_path
-        params = SSO._compose_start_params(tenant, return_url)
+        params = SSO._compose_start_params(tenant, return_url if return_url else "")
         response = self._auth.do_post(
             uri, login_options.__dict__ if login_options else {}, params, refresh_token
         )
