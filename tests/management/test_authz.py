@@ -558,3 +558,35 @@ class TestAuthz(common.DescopeTest):
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
+
+    def get_modified(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed get_modified
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException, client.mgmt.authz.get_modified
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNotNone(client.mgmt.authz.get_modified())
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.authz_get_modified}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                json={"since": 0},
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
