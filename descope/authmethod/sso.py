@@ -5,8 +5,7 @@ from descope.common import EndpointsV1, LoginOptions, validate_refresh_token_pro
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
-# This class is DEPRECATED please use SSO instead
-class SAML(AuthBase):
+class SSO(AuthBase):
     def start(
         self,
         tenant: str,
@@ -15,22 +14,21 @@ class SAML(AuthBase):
         refresh_token: Optional[str] = None,
     ) -> dict:
         """
-        DEPRECATED
+        Start tenant sso session (saml/oidc based on tenant settings)
+
+        Return value (dict): the redirect url for the login page
+        Return dict in the format
+             {'url': 'http://dummy.com/login..'}
         """
         if not tenant:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Tenant cannot be empty"
             )
 
-        if not return_url:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "Return url cannot be empty"
-            )
-
         validate_refresh_token_provided(login_options, refresh_token)
 
-        uri = EndpointsV1.auth_saml_start_path
-        params = SAML._compose_start_params(tenant, return_url)
+        uri = EndpointsV1.auth_sso_start_path
+        params = SSO._compose_start_params(tenant, return_url)
         response = self._auth.do_post(
             uri, login_options.__dict__ if login_options else {}, params, refresh_token
         )
@@ -38,7 +36,7 @@ class SAML(AuthBase):
         return response.json()
 
     def exchange_token(self, code: str) -> dict:
-        uri = EndpointsV1.saml_exchange_token_path
+        uri = EndpointsV1.sso_exchange_token_path
         return self._auth.exchange_token(uri, code)
 
     @staticmethod
