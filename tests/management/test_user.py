@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from descope import AssociatedTenant, AuthException, DescopeClient
 from descope.common import DEFAULT_TIMEOUT_SECONDS, DeliveryMethod, LoginOptions
-from descope.management.common import MgmtV1
+from descope.management.common import MgmtV1, Sort
 from descope.management.user import UserObj
 
 from .. import common
@@ -673,6 +673,53 @@ class TestUser(common.DescopeTest):
                     "testUsersOnly": False,
                     "withTestUser": True,
                     "ssoAppIds": ["app1"],
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test success flow with text and sort
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads(
+                """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
+            )
+            mock_post.return_value = network_resp
+            sort = [Sort(field="kuku", desc=True), Sort(field="bubu")]
+            resp = self.client.mgmt.user.search_all(
+                ["t1, t2"],
+                ["r1", "r2"],
+                with_test_user=True,
+                sso_app_ids=["app1"],
+                text="blue",
+                sort=sort,
+            )
+            users = resp["users"]
+            self.assertEqual(len(users), 2)
+            self.assertEqual(users[0]["id"], "u1")
+            self.assertEqual(users[1]["id"], "u2")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.users_search_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                json={
+                    "tenantIds": ["t1, t2"],
+                    "roleNames": ["r1", "r2"],
+                    "limit": 0,
+                    "page": 0,
+                    "testUsersOnly": False,
+                    "withTestUser": True,
+                    "ssoAppIds": ["app1"],
+                    "text": "blue",
+                    "sort": [
+                        {"desc": True, "field": "kuku"},
+                        {"desc": False, "field": "bubu"},
+                    ],
                 },
                 allow_redirects=False,
                 verify=True,
