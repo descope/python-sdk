@@ -7,6 +7,7 @@ from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 from descope.management.common import (
     AssociatedTenant,
     MgmtV1,
+    Sort,
     associated_tenants_to_dict,
 )
 
@@ -517,6 +518,8 @@ class User(AuthBase):
         emails: Optional[List[str]] = None,
         phones: Optional[List[str]] = None,
         sso_app_ids: Optional[List[str]] = None,
+        sort: Optional[List[Sort]] = None,
+        text: Optional[str] = None,
     ) -> dict:
         """
         Search all users.
@@ -533,6 +536,8 @@ class User(AuthBase):
         emails (List[str]): Optional list of emails to search for
         phones (List[str]): Optional list of phones to search for
         sso_app_ids (List[str]): Optional list of SSO application IDs to filter by
+        text (str): Optional string, allows free text search among all user's attributes.
+        sort (List[Sort]): Optional List[dict], allows to sort by fields.
 
         Return value (dict):
         Return dict in the format
@@ -576,6 +581,12 @@ class User(AuthBase):
 
         if sso_app_ids is not None:
             body["ssoAppIds"] = sso_app_ids
+
+        if text is not None:
+            body["text"] = text
+
+        if sort is not None:
+            body["sort"] = sort
 
         response = self._auth.do_post(
             MgmtV1.users_search_path,

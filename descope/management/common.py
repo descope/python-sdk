@@ -239,3 +239,13 @@ def saml_idp_groups_mapping_info_to_dict(
                 }
             )
     return groups_mapping_list
+
+
+class Sort:
+    """
+    Represents a sort object.
+    """
+
+    def __init__(self, field: str, desc: Optional[bool] = False):
+        self.field = field
+        self.desc = desc
