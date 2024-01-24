@@ -713,9 +713,100 @@ descope_client.mgmt.access_key.delete("key-id")
 You can manage SSO settings and map SSO group roles and user attributes.
 
 ```Python
+# You can load all tenant SSO settings
+sso_settings_res = descope_client.mgmt.sso.load_settings("tenant-id")
+
+# import based on your configuration needs:
+from descope import (
+    SSOOIDCSettings,
+    OIDCAttributeMapping,
+    SSOSAMLSettings,
+    SAMLAttributeMapping,
+    SAMLRoleMapping,
+    SSOSAMLSettingsByMetadata
+)
+
+# You can Configure SSO SAML settings for a tenant manually.
+settings = SSOSAMLSettings(
+	idp_url="https://dummy.com/saml",
+	idp_entity_id="entity1234",
+	idp_cert="my certificate",
+	attribute_mapping=SAMLAttributeMapping(
+		name="name",
+		given_name="givenName",
+		middle_name="middleName",
+		family_name="familyName",
+		picture="picture",
+		email="email",
+		phone_number="phoneNumber",
+		group="groups"
+	),
+	role_mappings=[SAMLRoleMapping(groups=["grp1"], role="rl1")],
+)
+descope_client.mgmt.sso.configure_saml_settings(
+	tenant_id, # Which tenant this configuration is for
+	settings, # The SAML settings
+	redirect_url="https://your.domain.com", # Global redirection after successful authentication
+    domains=["tenant-users.com"] # Users authentication with these domains will be logged in to this tenant
+)
+
+# You can Configure SSO SAML settings for a tenant by fetching them from an IDP metadata URL.
+settings = SSOSAMLSettingsByMetadata(
+	idp_metadata_url="https://dummy.com/metadata",
+	attribute_mapping=SAMLAttributeMapping(
+		name="myName",
+		given_name="givenName",
+		middle_name="middleName",
+		family_name="familyName",
+		picture="picture",
+		email="email",
+		phone_number="phoneNumber",
+		group="groups"
+	),
+	role_mappings=[SAMLRoleMapping(groups=["grp1"], role="rl1")],
+)
+descope_client.mgmt.sso.configure_saml_settings_by_metadata(
+	tenant_id, # Which tenant this configuration is for
+	settings,  # The SAML settings
+	redirect_url="https://your.domain.com", # Global redirection after successful authentication
+    domains=["tenant-users.com"] # Users authentication with these domains will be logged in to this tenant
+)
+
+# You can Configure SSO OIDC settings for a tenant manually.
+settings = SSOOIDCSettings(
+	name="myProvider",
+	client_id="myId",
+	client_secret="secret",
+	auth_url="https://dummy.com/auth",
+	token_url="https://dummy.com/token",
+	user_data_url="https://dummy.com/userInfo",
+	scope=["openid", "profile", "email"],
+	attribute_mapping=OIDCAttributeMapping(
+		login_id="subject",
+		name="name",
+		given_name="givenName",
+		middle_name="middleName",
+		family_name="familyName",
+		email="email",
+		verified_email="verifiedEmail",
+		username="username",
+		phone_number="phoneNumber",
+		verified_phone="verifiedPhone",
+		picture="picture"
+	)
+)
+descope_client.mgmt.sso.configure_oidc_settings(
+	tenant_id, # Which tenant this configuration is for
+	settings, # The OIDC provider settings
+	redirect_url="https://your.domain.com", # Global redirection after successful authentication
+    domains=["tenant-users.com"] # Users authentication with these domains will be logged in to this tenant
+)
+
+# DEPRECATED (use load_settings(..) function instead)
 # You can get SSO settings for a tenant
 sso_settings_res = descope_client.mgmt.sso.get_settings("tenant-id")
 
+# DEPRECATED (use configure_saml_settings(..) function instead)
 # You can configure SSO settings manually by setting the required fields directly
 descope_client.mgmt.sso.configure(
     tenant_id, # Which tenant this configuration is for
@@ -726,6 +817,7 @@ descope_client.mgmt.sso.configure(
     domains=["tenant-users.com"] # Users authentication with these domains will be logged in to this tenant
 )
 
+# DEPRECATED (use configure_saml_settings_by_metadata(..) function instead)
 # Alternatively, configure using an SSO metadata URL
 descope_client.mgmt.sso.configure_via_metadata(
     tenant_id, # Which tenant this configuration is for
@@ -734,6 +826,7 @@ descope_client.mgmt.sso.configure_via_metadata(
     domains=None # Remove the current domains configuration if a value was previously set
 )
 
+# DEPRECATED (use configure_saml_settings() or configure_saml_settings_by_metadata(..) functions instead)
 # Map IDP groups to Descope roles, or map user attributes.
 # This function overrides any previous mapping (even when empty). Use carefully.
 descope_client.mgmt.sso.mapping(

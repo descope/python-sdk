@@ -1,7 +1,12 @@
 from typing import List, Optional
 
 from descope._auth_base import AuthBase
-from descope.management.common import MgmtV1
+from descope.management.common import (
+    MgmtV1,
+    SSOOIDCSettings,
+    SSOSAMLSettings,
+    SSOSAMLSettingsByMetadata,
+)
 
 
 class RoleMapping:
@@ -29,24 +34,26 @@ class AttributeMapping:
 
 
 class SSOSettings(AuthBase):
-    def get_settings(
+    def load_settings(
         self,
         tenant_id: str,
     ) -> dict:
         """
-        Get SSO setting for the provided tenant_id.
+        Load SSO setting for the provided tenant_id.
 
         Args:
         tenant_id (str): The tenant ID of the desired SSO Settings
 
         Return value (dict):
         Containing the loaded SSO settings information.
+        Return dict in the format:
+             {"tenant": {"id": "T2AAAA", "name": "myTenantName", "selfProvisioningDomains": [], "customAttributes": {}, "authType": "saml", "domains": ["lulu", "kuku"]}, "saml": {"idpEntityId": "", "idpSSOUrl": "", "idpCertificate": "", "idpMetadataUrl": "https://dummy.com/metadata", "spEntityId": "", "spACSUrl": "", "spCertificate": "", "attributeMapping": {"name": "name", "email": "email", "username": "", "phoneNumber": "phone", "group": "", "givenName": "", "middleName": "", "familyName": "", "picture": "", "customAttributes": {}}, "groupsMapping": [], "redirectUrl": ""}, "oidc": {"name": "", "clientId": "", "clientSecret": "", "redirectUrl": "", "authUrl": "", "tokenUrl": "", "userDataUrl": "", "scope": [], "JWKsUrl": "", "userAttrMapping": {"loginId": "sub", "username": "", "name": "name", "email": "email", "phoneNumber": "phone_number", "verifiedEmail": "email_verified", "verifiedPhone": "phone_number_verified", "picture": "picture", "givenName": "given_name", "middleName": "middle_name", "familyName": "family_name"}, "manageProviderTokens": False, "callbackDomain": "", "prompt": [], "grantType": "authorization_code", "issuer": ""}}
 
         Raise:
-        AuthException: raised if configuration operation fails
+        AuthException: raised if load configuration operation fails
         """
         response = self._auth.do_get(
-            uri=MgmtV1.sso_settings_path,
+            uri=MgmtV1.sso_load_settings_path,
             params={"tenantId": tenant_id},
             pswd=self._auth.management_key,
         )
@@ -71,6 +78,117 @@ class SSOSettings(AuthBase):
             pswd=self._auth.management_key,
         )
 
+    def configure_oidc_settings(
+        self,
+        tenant_id: str,
+        settings: SSOOIDCSettings,
+        redirect_url: Optional[str] = None,
+        domains: Optional[List[str]] = None,
+    ):
+        """
+        Configure SSO OIDC settings for a tenant.
+
+        Args:
+        tenant_id (str): The tenant ID to be configured
+        settings (SSOOIDCSettings): The OIDC settings to be configured for this tenant (all settings parameters are required).
+        redirect_url (str): Optional, the Redirect URL to use after successful authentication, or empty string to reset it (if not given it has to be set when starting an SSO authentication via the request).
+        domains (List[str]): Optional,domains used to associate users authenticating via SSO with this tenant. Use empty list or None to reset them.
+
+        Raise:
+        AuthException: raised if configuration operation fails
+        """
+
+        self._auth.do_post(
+            MgmtV1.sso_configure_oidc_settings,
+            SSOSettings._compose_configure_oidc_settings_body(
+                tenant_id, settings, redirect_url, domains
+            ),
+            pswd=self._auth.management_key,
+        )
+
+    def configure_saml_settings(
+        self,
+        tenant_id: str,
+        settings: SSOSAMLSettings,
+        redirect_url: Optional[str] = None,
+        domains: Optional[List[str]] = None,
+    ):
+        """
+        Configure SSO SAML settings for a tenant.
+
+        Args:
+        tenant_id (str): The tenant ID to be configured
+        settings (SSOSAMLSettings): The SAML settings to be configured for this tenant (all settings parameters are required).
+        redirect_url (str): Optional,the Redirect URL to use after successful authentication, or empty string to reset it (if not given it has to be set when starting an SSO authentication via the request).
+        domains (List[str]): Optional, domains used to associate users authenticating via SSO with this tenant. Use empty list or None to reset them.
+
+        Raise:
+        AuthException: raised if configuration operation fails
+        """
+
+        self._auth.do_post(
+            MgmtV1.sso_configure_saml_settings,
+            SSOSettings._compose_configure_saml_settings_body(
+                tenant_id, settings, redirect_url, domains
+            ),
+            pswd=self._auth.management_key,
+        )
+
+    def configure_saml_settings_by_metadata(
+        self,
+        tenant_id: str,
+        settings: SSOSAMLSettingsByMetadata,
+        redirect_url: Optional[str] = None,
+        domains: Optional[List[str]] = None,
+    ):
+        """
+        Configure SSO SAML settings for a tenant by fetching them from an IDP metadata URL.
+
+        Args:
+        tenant_id (str): The tenant ID to be configured
+        settings (SSOSAMLSettingsByMetadata): The SAML settings to be configured for this tenant (all settings parameters are required).
+        redirect_url (str): Optional, the Redirect URL to use after successful authentication, or empty string to reset it (if not given it has to be set when starting an SSO authentication via the request).
+        domains (List[str]): Optional, domains used to associate users authenticating via SSO with this tenant. Use empty list or None to reset them.
+
+        Raise:
+        AuthException: raised if configuration operation fails
+        """
+
+        self._auth.do_post(
+            MgmtV1.sso_configure_saml_by_metadata_settings,
+            SSOSettings._compose_configure_saml_settings_by_metadata_body(
+                tenant_id, settings, redirect_url, domains
+            ),
+            pswd=self._auth.management_key,
+        )
+
+    # DEPRECATED
+    def get_settings(
+        self,
+        tenant_id: str,
+    ) -> dict:
+        """
+        DEPRECATED (use load_settings(..) function instead)
+
+        Get SSO setting for the provided tenant_id.
+
+        Args:
+        tenant_id (str): The tenant ID of the desired SSO Settings
+
+        Return value (dict):
+        Containing the loaded SSO settings information.
+
+        Raise:
+        AuthException: raised if configuration operation fails
+        """
+        response = self._auth.do_get(
+            uri=MgmtV1.sso_settings_path,
+            params={"tenantId": tenant_id},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    # DEPRECATED
     def configure(
         self,
         tenant_id: str,
@@ -81,6 +199,8 @@ class SSOSettings(AuthBase):
         domains: Optional[List[str]] = None,
     ) -> None:
         """
+        DEPRECATED (use configure_saml_settings(..) function instead)
+
         Configure SSO setting for a tenant manually. Alternatively, `configure_via_metadata` can be used instead.
 
         Args:
@@ -102,6 +222,7 @@ class SSOSettings(AuthBase):
             pswd=self._auth.management_key,
         )
 
+    # DEPRECATED
     def configure_via_metadata(
         self,
         tenant_id: str,
@@ -110,6 +231,8 @@ class SSOSettings(AuthBase):
         domains: Optional[List[str]] = None,
     ):
         """
+        DEPRECATED (use configure_saml_settings_by_metadata(..) function instead)
+
         Configure SSO setting for am IDP metadata URL. Alternatively, `configure` can be used instead.
 
         Args:
@@ -129,6 +252,7 @@ class SSOSettings(AuthBase):
             pswd=self._auth.management_key,
         )
 
+    # DEPRECATED
     def mapping(
         self,
         tenant_id: str,
@@ -136,6 +260,8 @@ class SSOSettings(AuthBase):
         attribute_mapping: Optional[AttributeMapping] = None,
     ):
         """
+        DEPRECATED (use configure_saml_settings(..) or configure_saml_settings_by_metadata(..) functions instead)
+
         Configure SSO role mapping from the IDP groups to the Descope roles.
 
         Args:
@@ -225,4 +351,128 @@ class SSOSettings(AuthBase):
             "email": attribute_mapping.email,
             "phoneNumber": attribute_mapping.phone_number,
             "group": attribute_mapping.group,
+        }
+
+    @staticmethod
+    def _compose_configure_oidc_settings_body(
+        tenant_id: str,
+        settings: SSOOIDCSettings,
+        redirect_url: str,
+        domains: Optional[List[str]],
+    ) -> dict:
+        attr_mapping = None
+        if settings.attribute_mapping:
+            attr_mapping = {
+                "loginId": settings.attribute_mapping.login_id,
+                "name": settings.attribute_mapping.name,
+                "givenName": settings.attribute_mapping.given_name,
+                "middleName": settings.attribute_mapping.middle_name,
+                "familyName": settings.attribute_mapping.family_name,
+                "email": settings.attribute_mapping.email,
+                "verifiedEmail": settings.attribute_mapping.verified_email,
+                "username": settings.attribute_mapping.username,
+                "phoneNumber": settings.attribute_mapping.phone_number,
+                "verifiedPhone": settings.attribute_mapping.verified_phone,
+                "picture": settings.attribute_mapping.picture,
+            }
+
+        return {
+            "tenantId": tenant_id,
+            "settings": {
+                "name": settings.name,
+                "clientId": settings.client_id,
+                "clientSecret": settings.client_secret,
+                "redirectUrl": settings.redirect_url,
+                "authUrl": settings.auth_url,
+                "tokenUrl": settings.token_url,
+                "userDataUrl": settings.user_data_url,
+                "scope": settings.scope,
+                "JWKsUrl": settings.jwks_url,
+                "userAttrMapping": attr_mapping,
+                "manageProviderTokens": settings.manage_provider_tokens,
+                "callbackDomain": settings.callback_domain,
+                "prompt": settings.prompt,
+                "grantType": settings.grant_type,
+                "issuer": settings.issuer,
+            },
+            "redirectUrl": redirect_url,
+            "domains": domains,
+        }
+
+    @staticmethod
+    def _compose_configure_saml_settings_body(
+        tenant_id: str,
+        settings: SSOSAMLSettings,
+        redirect_url: str,
+        domains: Optional[List[str]],
+    ) -> dict:
+        attr_mapping = None
+        if settings.attribute_mapping:
+            attr_mapping = {
+                "name": settings.attribute_mapping.name,
+                "givenName": settings.attribute_mapping.given_name,
+                "middleName": settings.attribute_mapping.middle_name,
+                "familyName": settings.attribute_mapping.family_name,
+                "picture": settings.attribute_mapping.picture,
+                "email": settings.attribute_mapping.email,
+                "phoneNumber": settings.attribute_mapping.phone_number,
+                "group": settings.attribute_mapping.group,
+                "customAttributes": settings.attribute_mapping.custom_attributes,
+            }
+
+        grp_mapping = None
+        if settings.role_mappings:
+            grp_mapping = []
+            for grp in settings.role_mappings:
+                grp_mapping.append({"groups": grp.groups, "roleName": grp.role})
+
+        return {
+            "tenantId": tenant_id,
+            "settings": {
+                "idpUrl": settings.idp_url,
+                "entityId": settings.idp_entity_id,
+                "idpCert": settings.idp_cert,
+                "attributeMapping": attr_mapping,
+                "roleMappings": grp_mapping,
+            },
+            "redirectUrl": redirect_url,
+            "domains": domains,
+        }
+
+    @staticmethod
+    def _compose_configure_saml_settings_by_metadata_body(
+        tenant_id: str,
+        settings: SSOSAMLSettingsByMetadata,
+        redirect_url: str,
+        domains: Optional[List[str]],
+    ) -> dict:
+        attr_mapping = None
+        if settings.attribute_mapping:
+            attr_mapping = {
+                "name": settings.attribute_mapping.name,
+                "givenName": settings.attribute_mapping.given_name,
+                "middleName": settings.attribute_mapping.middle_name,
+                "familyName": settings.attribute_mapping.family_name,
+                "picture": settings.attribute_mapping.picture,
+                "email": settings.attribute_mapping.email,
+                "phoneNumber": settings.attribute_mapping.phone_number,
+                "group": settings.attribute_mapping.group,
+                "customAttributes": settings.attribute_mapping.custom_attributes,
+            }
+
+        grp_mapping = None
+        if settings.role_mappings:
+            grp_mapping = []
+            for grp in settings.role_mappings:
+                grp_mapping.append({"groups": grp.groups, "roleName": grp.role})
+
+        return {
+            "tenantId": tenant_id,
+            "settings": {
+                "idpMetadataUrl": settings.idp_metadata_url,
+                "attributeMapping": attr_mapping,
+                "roleMappings": grp_mapping,
+            },
+            "redirectUrl": redirect_url,
+            "domains": domains,
         }

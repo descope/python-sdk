@@ -4,7 +4,14 @@ from unittest.mock import patch
 
 from descope import AttributeMapping, AuthException, DescopeClient, RoleMapping
 from descope.common import DEFAULT_TIMEOUT_SECONDS
-from descope.management.common import MgmtV1
+from descope.management.common import (
+    MgmtV1,
+    SAMLAttributeMapping,
+    SAMLRoleMapping,
+    SSOOIDCSettings,
+    SSOSAMLSettings,
+    SSOSAMLSettingsByMetadata,
+)
 
 from .. import common
 
@@ -24,6 +31,324 @@ class TestSSOSettings(common.DescopeTest):
             "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
         }
 
+    def test_delete_settings(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flows
+        with patch("requests.delete") as mock_delete:
+            mock_delete.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.sso.delete_settings,
+                "tenant-id",
+            )
+
+        # Test success flow
+        with patch("requests.delete") as mock_delete:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+
+            mock_delete.return_value = network_resp
+            client.mgmt.sso.delete_settings("tenant-id")
+
+            mock_delete.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_settings_path}",
+                params={"tenantId": "tenant-id"},
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_load_settings(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flows
+        with patch("requests.get") as mock_get:
+            mock_get.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.sso.load_settings,
+                "tenant-id",
+            )
+
+        # Test success flow
+        with patch("requests.get") as mock_get:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads(
+                """{"tenant": {"id": "T2AAAA", "name": "myTenantName", "selfProvisioningDomains": [], "customAttributes": {}, "authType": "saml", "domains": ["lulu", "kuku"]}, "saml": {"idpEntityId": "", "idpSSOUrl": "", "idpCertificate": "", "idpMetadataUrl": "https://dummy.com/metadata", "spEntityId": "", "spACSUrl": "", "spCertificate": "", "attributeMapping": {"name": "name", "email": "email", "username": "", "phoneNumber": "phone", "group": "", "givenName": "", "middleName": "", "familyName": "", "picture": "", "customAttributes": {}}, "groupsMapping": [], "redirectUrl": ""}, "oidc": {"name": "", "clientId": "", "clientSecret": "", "redirectUrl": "", "authUrl": "", "tokenUrl": "", "userDataUrl": "", "scope": [], "JWKsUrl": "", "userAttrMapping": {"loginId": "sub", "username": "", "name": "name", "email": "email", "phoneNumber": "phone_number", "verifiedEmail": "email_verified", "verifiedPhone": "phone_number_verified", "picture": "picture", "givenName": "given_name", "middleName": "middle_name", "familyName": "family_name"}, "manageProviderTokens": false, "callbackDomain": "", "prompt": [], "grantType": "authorization_code", "issuer": ""}}"""
+            )
+            mock_get.return_value = network_resp
+            resp = client.mgmt.sso.load_settings("T2AAAA")
+            tenant = resp.get("tenant", {})
+            self.assertEqual(tenant.get("id", ""), "T2AAAA")
+            self.assertEqual(tenant.get("domains", []), ["lulu", "kuku"])
+            saml_settings = resp.get("saml", {})
+            self.assertEqual(
+                saml_settings.get("idpMetadataUrl", ""), "https://dummy.com/metadata"
+            )
+            mock_get.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_load_settings_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params={"tenantId": "T2AAAA"},
+                allow_redirects=None,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_configure_oidc_settings(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.sso.configure_oidc_settings,
+                "tenant-id",
+                SSOOIDCSettings(
+                    name="myName",
+                    client_id="cid",
+                ),
+                "https://redirect.com",
+                ["domain.com"],
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(
+                client.mgmt.sso.configure_oidc_settings(
+                    "tenant-id",
+                    SSOOIDCSettings(
+                        name="myName",
+                        client_id="cid",
+                        client_secret="secret",
+                        redirect_url="http://dummy.com/",
+                        auth_url="http://dummy.com/auth",
+                        token_url="http://dummy.com/token",
+                        user_data_url="http://dummy.com/userInfo",
+                        scope=["openid", "profile", "email"],
+                    ),
+                    "https://redirect.com",
+                    ["domain.com"],
+                )
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_configure_oidc_settings}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                json={
+                    "tenantId": "tenant-id",
+                    "settings": {
+                        "name": "myName",
+                        "clientId": "cid",
+                        "clientSecret": "secret",
+                        "redirectUrl": "http://dummy.com/",
+                        "authUrl": "http://dummy.com/auth",
+                        "tokenUrl": "http://dummy.com/token",
+                        "userDataUrl": "http://dummy.com/userInfo",
+                        "scope": ["openid", "profile", "email"],
+                        "JWKsUrl": None,
+                        "userAttrMapping": None,
+                        "manageProviderTokens": False,
+                        "callbackDomain": None,
+                        "prompt": None,
+                        "grantType": None,
+                        "issuer": None,
+                    },
+                    "redirectUrl": "https://redirect.com",
+                    "domains": ["domain.com"],
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_configure_saml_settings(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.sso.configure_saml_settings,
+                "tenant-id",
+                SSOSAMLSettings(
+                    idp_url="http://dummy.com", idp_entity_id="ent1234", idp_cert="cert"
+                ),
+                "https://redirect.com",
+                ["domain.com"],
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(
+                client.mgmt.sso.configure_saml_settings(
+                    "tenant-id",
+                    SSOSAMLSettings(
+                        idp_url="http://dummy.com",
+                        idp_entity_id="ent1234",
+                        idp_cert="cert",
+                        attribute_mapping=SAMLAttributeMapping(
+                            name="name",
+                            given_name="givenName",
+                            middle_name="middleName",
+                            family_name="familyName",
+                            picture="picture",
+                            email="email",
+                            phone_number="phoneNumber",
+                            group="groups",
+                        ),
+                        role_mappings=[SAMLRoleMapping(groups=["grp1"], role="rl1")],
+                    ),
+                    "https://redirect.com",
+                    ["domain.com"],
+                )
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_configure_saml_settings}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                json={
+                    "tenantId": "tenant-id",
+                    "settings": {
+                        "idpUrl": "http://dummy.com",
+                        "entityId": "ent1234",
+                        "idpCert": "cert",
+                        "attributeMapping": {
+                            "name": "name",
+                            "givenName": "givenName",
+                            "middleName": "middleName",
+                            "familyName": "familyName",
+                            "picture": "picture",
+                            "email": "email",
+                            "phoneNumber": "phoneNumber",
+                            "group": "groups",
+                            "customAttributes": None,
+                        },
+                        "roleMappings": [{"groups": ["grp1"], "roleName": "rl1"}],
+                    },
+                    "redirectUrl": "https://redirect.com",
+                    "domains": ["domain.com"],
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_configure_saml_settings_by_metadata(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.sso.configure_saml_settings_by_metadata,
+                "tenant-id",
+                SSOSAMLSettingsByMetadata(idp_metadata_url="http://dummy.com/metadata"),
+                "https://redirect.com",
+                ["domain.com"],
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(
+                client.mgmt.sso.configure_saml_settings_by_metadata(
+                    "tenant-id",
+                    SSOSAMLSettingsByMetadata(
+                        idp_metadata_url="http://dummy.com/metadata",
+                        attribute_mapping=SAMLAttributeMapping(
+                            name="name",
+                            given_name="givenName",
+                            middle_name="middleName",
+                            family_name="familyName",
+                            picture="picture",
+                            email="email",
+                            phone_number="phoneNumber",
+                            group="groups",
+                        ),
+                        role_mappings=[SAMLRoleMapping(groups=["grp1"], role="rl1")],
+                    ),
+                    "https://redirect.com",
+                    ["domain.com"],
+                )
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_configure_saml_by_metadata_settings}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                json={
+                    "tenantId": "tenant-id",
+                    "settings": {
+                        "idpMetadataUrl": "http://dummy.com/metadata",
+                        "attributeMapping": {
+                            "name": "name",
+                            "givenName": "givenName",
+                            "middleName": "middleName",
+                            "familyName": "familyName",
+                            "picture": "picture",
+                            "email": "email",
+                            "phoneNumber": "phoneNumber",
+                            "group": "groups",
+                            "customAttributes": None,
+                        },
+                        "roleMappings": [{"groups": ["grp1"], "roleName": "rl1"}],
+                    },
+                    "redirectUrl": "https://redirect.com",
+                    "domains": ["domain.com"],
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    # Testing DEPRECATED functions
     def test_get_settings(self):
         client = DescopeClient(
             self.dummy_project_id,
@@ -60,43 +385,6 @@ class TestSSOSettings(common.DescopeTest):
                 },
                 params={"tenantId": "tenant-id"},
                 allow_redirects=None,
-                verify=True,
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )
-
-    def test_delete_settings(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
-
-        # Test failed flows
-        with patch("requests.delete") as mock_delete:
-            mock_delete.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.sso.delete_settings,
-                "tenant-id",
-            )
-
-        # Test success flow
-        with patch("requests.delete") as mock_delete:
-            network_resp = mock.Mock()
-            network_resp.ok = True
-
-            mock_delete.return_value = network_resp
-            client.mgmt.sso.delete_settings("tenant-id")
-
-            mock_delete.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_settings_path}",
-                params={"tenantId": "tenant-id"},
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                },
-                allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
