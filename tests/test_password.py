@@ -242,6 +242,43 @@ class TestPassword(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+        # Test success flow with template options
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.cookies = {}
+            data = json.loads(
+                """{"resetMethod": "magiclink", "maskedEmail": "du***@***my.com"}"""
+            )
+            my_mock_response.json.return_value = data
+            mock_post.return_value = my_mock_response
+
+            self.assertIsNotNone(
+                password.send_reset(
+                    "dummy@dummy.com",
+                    "https://redirect.here.com",
+                    {"bla": "blue"},
+                )
+            )
+
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.send_reset_password_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}",
+                },
+                params=None,
+                json={
+                    "loginId": "dummy@dummy.com",
+                    "redirectUrl": "https://redirect.here.com",
+                    "templateOptions": {"bla": "blue"},
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
     def test_update(self):
         password = Password(Auth(self.dummy_project_id, self.public_key_dict))
 

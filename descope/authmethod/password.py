@@ -90,6 +90,7 @@ class Password(AuthBase):
         self,
         login_id: str,
         redirect_url: str | None = None,
+        template_options: dict | None = None,
     ) -> dict:
         """
         Sends a password reset prompt to the user with the given
@@ -118,8 +119,16 @@ class Password(AuthBase):
             )
 
         uri = EndpointsV1.send_reset_password_path
+        body: dict[str, str | dict] = {
+            "loginId": login_id,
+            "redirectUrl": redirect_url,
+        }
+        if template_options is not None:
+            body["templateOptions"] = template_options
+
         response = self._auth.do_post(
-            uri, {"loginId": login_id, "redirectUrl": redirect_url}
+            uri,
+            body,
         )
 
         return response.json()
