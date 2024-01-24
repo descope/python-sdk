@@ -1,12 +1,7 @@
 from typing import List, Optional
 
 from descope._auth_base import AuthBase
-from descope.management.common import (
-    MgmtV1,
-    SSOOIDCSettings,
-    SSOSAMLSettings,
-    SSOSAMLSettingsByMetadata,
-)
+from descope.management.common import MgmtV1
 
 
 class RoleMapping:
@@ -26,11 +21,129 @@ class AttributeMapping:
         email: Optional[str] = None,
         phone_number: Optional[str] = None,
         group: Optional[str] = None,
+        given_name: Optional[str] = None,
+        middle_name: Optional[str] = None,
+        family_name: Optional[str] = None,
+        picture: Optional[str] = None,
+        custom_attributes: Optional[dict] = None,
     ):
         self.name = name
         self.email = email
         self.phone_number = phone_number
         self.group = group
+        self.given_name = given_name
+        self.middle_name = middle_name
+        self.family_name = family_name
+        self.picture = picture
+        self.custom_attributes = custom_attributes
+
+
+class OIDCAttributeMapping:
+    """
+    Represents tenant OIDC attribute mapping.
+    """
+
+    def __init__(
+        self,
+        login_id: str,
+        name: str,
+        given_name: str,
+        middle_name: str,
+        family_name: str,
+        email: str,
+        verified_email: str,
+        username: str,
+        phone_number: str,
+        verified_phone: str,
+        picture: str,
+    ):
+        self.login_id = login_id
+        self.name = name
+        self.given_name = given_name
+        self.middle_name = middle_name
+        self.family_name = family_name
+        self.email = email
+        self.verified_email = verified_email
+        self.username = username
+        self.phone_number = phone_number
+        self.verified_phone = verified_phone
+        self.picture = picture
+
+
+class SSOOIDCSettings:
+    """
+    Represents tenant OIDC settings.
+    """
+
+    def __init__(
+        self,
+        name: str,
+        client_id: str,
+        client_secret: Optional[str] = None,
+        redirect_url: Optional[str] = None,
+        auth_url: Optional[str] = None,
+        token_url: Optional[str] = None,
+        user_data_url: Optional[str] = None,
+        scope: Optional[List[str]] = None,
+        jwks_url: Optional[str] = None,
+        attribute_mapping: Optional[OIDCAttributeMapping] = None,
+        manage_provider_tokens: Optional[bool] = False,
+        callback_domain: Optional[str] = None,
+        prompt: Optional[List[str]] = None,
+        grant_type: Optional[str] = None,
+        issuer: Optional[str] = None,
+    ):
+        self.name = name
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.redirect_url = redirect_url
+        self.auth_url = auth_url
+        self.token_url = token_url
+        self.user_data_url = user_data_url
+        self.scope = scope
+        self.jwks_url = jwks_url
+        self.attribute_mapping = attribute_mapping
+        self.manage_provider_tokens = manage_provider_tokens
+        self.callback_domain = callback_domain
+        self.prompt = prompt
+        self.grant_type = grant_type
+        self.issuer = issuer
+
+
+class SSOSAMLSettings:
+    """
+    Represents tenant SAML settings (manually configuration).
+    """
+
+    def __init__(
+        self,
+        idp_url: str,
+        idp_entity_id: str,
+        idp_cert: str,
+        attribute_mapping: Optional[AttributeMapping] = None,
+        role_mappings: Optional[List[RoleMapping]] = None,
+    ):
+        self.idp_url = idp_url
+        self.idp_entity_id = idp_entity_id
+        self.idp_cert = idp_cert
+        self.attribute_mapping = attribute_mapping
+        self.role_mappings = role_mappings
+
+
+class SSOSAMLSettingsByMetadata:
+    """
+    Represents tenant SAML settings (automatically (by metadata xml) configuration).
+    """
+
+    def __init__(
+        self,
+        idp_metadata_url: str,
+        attribute_mapping: Optional[AttributeMapping] = None,
+        role_mappings: Optional[List[RoleMapping]] = None,
+    ):
+        self.idp_metadata_url = idp_metadata_url
+        self.attribute_mapping = attribute_mapping
+        self.role_mappings = role_mappings
 
 
 class SSOSettings(AuthBase):
@@ -357,7 +470,7 @@ class SSOSettings(AuthBase):
     def _compose_configure_oidc_settings_body(
         tenant_id: str,
         settings: SSOOIDCSettings,
-        redirect_url: str,
+        redirect_url: Optional[str],
         domains: Optional[List[str]],
     ) -> dict:
         attr_mapping = None
@@ -403,7 +516,7 @@ class SSOSettings(AuthBase):
     def _compose_configure_saml_settings_body(
         tenant_id: str,
         settings: SSOSAMLSettings,
-        redirect_url: str,
+        redirect_url: Optional[str],
         domains: Optional[List[str]],
     ) -> dict:
         attr_mapping = None
@@ -424,7 +537,7 @@ class SSOSettings(AuthBase):
         if settings.role_mappings:
             grp_mapping = []
             for grp in settings.role_mappings:
-                grp_mapping.append({"groups": grp.groups, "roleName": grp.role})
+                grp_mapping.append({"groups": grp.groups, "roleName": grp.role_name})
 
         return {
             "tenantId": tenant_id,
@@ -443,7 +556,7 @@ class SSOSettings(AuthBase):
     def _compose_configure_saml_settings_by_metadata_body(
         tenant_id: str,
         settings: SSOSAMLSettingsByMetadata,
-        redirect_url: str,
+        redirect_url: Optional[str],
         domains: Optional[List[str]],
     ) -> dict:
         attr_mapping = None
@@ -464,7 +577,7 @@ class SSOSettings(AuthBase):
         if settings.role_mappings:
             grp_mapping = []
             for grp in settings.role_mappings:
-                grp_mapping.append({"groups": grp.groups, "roleName": grp.role})
+                grp_mapping.append({"groups": grp.groups, "roleName": grp.role_name})
 
         return {
             "tenantId": tenant_id,

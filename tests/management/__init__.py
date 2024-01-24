@@ -16,13 +16,14 @@ from descope.exceptions import (
 )
 from descope.management.common import (
     AssociatedTenant,
-    SAMLAttributeMapping,
     SAMLIDPAttributeMappingInfo,
     SAMLIDPGroupsMappingInfo,
     SAMLIDPRoleGroupMappingInfo,
-    SAMLRoleMapping,
+)
+from descope.management.sso_settings import (
+    AttributeMapping,
+    RoleMapping,
     SSOOIDCSettings,
     SSOSAMLSettings,
     SSOSAMLSettingsByMetadata,
 )
-from descope.management.sso_settings import AttributeMapping, RoleMapping

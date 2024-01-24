@@ -721,8 +721,8 @@ from descope import (
     SSOOIDCSettings,
     OIDCAttributeMapping,
     SSOSAMLSettings,
-    SAMLAttributeMapping,
-    SAMLRoleMapping,
+    AttributeMapping,
+    RoleMapping,
     SSOSAMLSettingsByMetadata
 )
 
@@ -731,7 +731,7 @@ settings = SSOSAMLSettings(
 	idp_url="https://dummy.com/saml",
 	idp_entity_id="entity1234",
 	idp_cert="my certificate",
-	attribute_mapping=SAMLAttributeMapping(
+	attribute_mapping=AttributeMapping(
 		name="name",
 		given_name="givenName",
 		middle_name="middleName",
@@ -741,7 +741,7 @@ settings = SSOSAMLSettings(
 		phone_number="phoneNumber",
 		group="groups"
 	),
-	role_mappings=[SAMLRoleMapping(groups=["grp1"], role="rl1")],
+	role_mappings=[RoleMapping(groups=["grp1"], role="rl1")],
 )
 descope_client.mgmt.sso.configure_saml_settings(
 	tenant_id, # Which tenant this configuration is for
@@ -753,7 +753,7 @@ descope_client.mgmt.sso.configure_saml_settings(
 # You can Configure SSO SAML settings for a tenant by fetching them from an IDP metadata URL.
 settings = SSOSAMLSettingsByMetadata(
 	idp_metadata_url="https://dummy.com/metadata",
-	attribute_mapping=SAMLAttributeMapping(
+	attribute_mapping=AttributeMapping(
 		name="myName",
 		given_name="givenName",
 		middle_name="middleName",
@@ -763,7 +763,7 @@ settings = SSOSAMLSettingsByMetadata(
 		phone_number="phoneNumber",
 		group="groups"
 	),
-	role_mappings=[SAMLRoleMapping(groups=["grp1"], role="rl1")],
+	role_mappings=[RoleMapping(groups=["grp1"], role="rl1")],
 )
 descope_client.mgmt.sso.configure_saml_settings_by_metadata(
 	tenant_id, # Which tenant this configuration is for

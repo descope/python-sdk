@@ -4,10 +4,8 @@ from unittest.mock import patch
 
 from descope import AttributeMapping, AuthException, DescopeClient, RoleMapping
 from descope.common import DEFAULT_TIMEOUT_SECONDS
-from descope.management.common import (
-    MgmtV1,
-    SAMLAttributeMapping,
-    SAMLRoleMapping,
+from descope.management.common import MgmtV1
+from descope.management.sso_settings import (
     SSOOIDCSettings,
     SSOSAMLSettings,
     SSOSAMLSettingsByMetadata,
@@ -222,7 +220,7 @@ class TestSSOSettings(common.DescopeTest):
                         idp_url="http://dummy.com",
                         idp_entity_id="ent1234",
                         idp_cert="cert",
-                        attribute_mapping=SAMLAttributeMapping(
+                        attribute_mapping=AttributeMapping(
                             name="name",
                             given_name="givenName",
                             middle_name="middleName",
@@ -232,7 +230,7 @@ class TestSSOSettings(common.DescopeTest):
                             phone_number="phoneNumber",
                             group="groups",
                         ),
-                        role_mappings=[SAMLRoleMapping(groups=["grp1"], role="rl1")],
+                        role_mappings=[RoleMapping(groups=["grp1"], role_name="rl1")],
                     ),
                     "https://redirect.com",
                     ["domain.com"],
@@ -300,7 +298,7 @@ class TestSSOSettings(common.DescopeTest):
                     "tenant-id",
                     SSOSAMLSettingsByMetadata(
                         idp_metadata_url="http://dummy.com/metadata",
-                        attribute_mapping=SAMLAttributeMapping(
+                        attribute_mapping=AttributeMapping(
                             name="name",
                             given_name="givenName",
                             middle_name="middleName",
@@ -310,7 +308,7 @@ class TestSSOSettings(common.DescopeTest):
                             phone_number="phoneNumber",
                             group="groups",
                         ),
-                        role_mappings=[SAMLRoleMapping(groups=["grp1"], role="rl1")],
+                        role_mappings=[RoleMapping(groups=["grp1"], role_name="rl1")],
                     ),
                     "https://redirect.com",
                     ["domain.com"],
