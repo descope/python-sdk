@@ -464,6 +464,11 @@ class SSOSettings(AuthBase):
             "email": attribute_mapping.email,
             "phoneNumber": attribute_mapping.phone_number,
             "group": attribute_mapping.group,
+            "givenName": attribute_mapping.given_name,
+            "middleName": attribute_mapping.middle_name,
+            "familyName": attribute_mapping.family_name,
+            "picture": attribute_mapping.picture,
+            "customAttributes": attribute_mapping.custom_attributes,
         }
 
     @staticmethod
@@ -521,23 +526,9 @@ class SSOSettings(AuthBase):
     ) -> dict:
         attr_mapping = None
         if settings.attribute_mapping:
-            attr_mapping = {
-                "name": settings.attribute_mapping.name,
-                "givenName": settings.attribute_mapping.given_name,
-                "middleName": settings.attribute_mapping.middle_name,
-                "familyName": settings.attribute_mapping.family_name,
-                "picture": settings.attribute_mapping.picture,
-                "email": settings.attribute_mapping.email,
-                "phoneNumber": settings.attribute_mapping.phone_number,
-                "group": settings.attribute_mapping.group,
-                "customAttributes": settings.attribute_mapping.custom_attributes,
-            }
-
-        grp_mapping = None
-        if settings.role_mappings:
-            grp_mapping = []
-            for grp in settings.role_mappings:
-                grp_mapping.append({"groups": grp.groups, "roleName": grp.role_name})
+            attr_mapping = SSOSettings._attribute_mapping_to_dict(
+                settings.attribute_mapping
+            )
 
         return {
             "tenantId": tenant_id,
@@ -546,7 +537,9 @@ class SSOSettings(AuthBase):
                 "entityId": settings.idp_entity_id,
                 "idpCert": settings.idp_cert,
                 "attributeMapping": attr_mapping,
-                "roleMappings": grp_mapping,
+                "roleMappings": SSOSettings._role_mapping_to_dict(
+                    settings.role_mappings
+                ),
             },
             "redirectUrl": redirect_url,
             "domains": domains,
@@ -561,30 +554,18 @@ class SSOSettings(AuthBase):
     ) -> dict:
         attr_mapping = None
         if settings.attribute_mapping:
-            attr_mapping = {
-                "name": settings.attribute_mapping.name,
-                "givenName": settings.attribute_mapping.given_name,
-                "middleName": settings.attribute_mapping.middle_name,
-                "familyName": settings.attribute_mapping.family_name,
-                "picture": settings.attribute_mapping.picture,
-                "email": settings.attribute_mapping.email,
-                "phoneNumber": settings.attribute_mapping.phone_number,
-                "group": settings.attribute_mapping.group,
-                "customAttributes": settings.attribute_mapping.custom_attributes,
-            }
-
-        grp_mapping = None
-        if settings.role_mappings:
-            grp_mapping = []
-            for grp in settings.role_mappings:
-                grp_mapping.append({"groups": grp.groups, "roleName": grp.role_name})
+            attr_mapping = SSOSettings._attribute_mapping_to_dict(
+                settings.attribute_mapping
+            )
 
         return {
             "tenantId": tenant_id,
             "settings": {
                 "idpMetadataUrl": settings.idp_metadata_url,
                 "attributeMapping": attr_mapping,
-                "roleMappings": grp_mapping,
+                "roleMappings": SSOSettings._role_mapping_to_dict(
+                    settings.role_mappings
+                ),
             },
             "redirectUrl": redirect_url,
             "domains": domains,

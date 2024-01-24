@@ -6,9 +6,11 @@ from descope import AttributeMapping, AuthException, DescopeClient, RoleMapping
 from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 from descope.management.sso_settings import (
+    OIDCAttributeMapping,
     SSOOIDCSettings,
     SSOSAMLSettings,
     SSOSAMLSettingsByMetadata,
+    SSOSettings,
 )
 
 from .. import common
@@ -149,6 +151,19 @@ class TestSSOSettings(common.DescopeTest):
                         token_url="http://dummy.com/token",
                         user_data_url="http://dummy.com/userInfo",
                         scope=["openid", "profile", "email"],
+                        attribute_mapping=OIDCAttributeMapping(
+                            login_id="my-id",
+                            name="name",
+                            given_name="givenName",
+                            middle_name="middleName",
+                            family_name="familyName",
+                            email="email",
+                            verified_email="verifiedEmail",
+                            username="username",
+                            phone_number="phoneNumber",
+                            verified_phone="verifiedPhone",
+                            picture="picture",
+                        ),
                     ),
                     "https://redirect.com",
                     ["domain.com"],
@@ -173,12 +188,24 @@ class TestSSOSettings(common.DescopeTest):
                         "userDataUrl": "http://dummy.com/userInfo",
                         "scope": ["openid", "profile", "email"],
                         "JWKsUrl": None,
-                        "userAttrMapping": None,
                         "manageProviderTokens": False,
                         "callbackDomain": None,
                         "prompt": None,
                         "grantType": None,
                         "issuer": None,
+                        "userAttrMapping": {
+                            "loginId": "my-id",
+                            "name": "name",
+                            "givenName": "givenName",
+                            "middleName": "middleName",
+                            "familyName": "familyName",
+                            "email": "email",
+                            "verifiedEmail": "verifiedEmail",
+                            "username": "username",
+                            "phoneNumber": "phoneNumber",
+                            "verifiedPhone": "verifiedPhone",
+                            "picture": "picture",
+                        },
                     },
                     "redirectUrl": "https://redirect.com",
                     "domains": ["domain.com"],
@@ -345,6 +372,9 @@ class TestSSOSettings(common.DescopeTest):
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
+
+    def test_attribute_mapping_to_dict(self):
+        self.assertRaises(ValueError, SSOSettings._attribute_mapping_to_dict, None)
 
     # Testing DEPRECATED functions
     def test_get_settings(self):
@@ -627,6 +657,11 @@ class TestSSOSettings(common.DescopeTest):
                         "email": None,
                         "phoneNumber": None,
                         "group": None,
+                        "givenName": None,
+                        "middleName": None,
+                        "familyName": None,
+                        "picture": None,
+                        "customAttributes": None,
                     },
                 },
                 allow_redirects=False,
