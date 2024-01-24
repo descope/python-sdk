@@ -9,6 +9,7 @@ from descope.management.common import (
     MgmtV1,
     Sort,
     associated_tenants_to_dict,
+    sort_to_dict,
 )
 
 
@@ -586,7 +587,7 @@ class User(AuthBase):
             body["text"] = text
 
         if sort is not None:
-            body["sort"] = sort
+            body["sort"] = sort_to_dict(sort)
 
         response = self._auth.do_post(
             MgmtV1.users_search_path,

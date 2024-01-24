@@ -717,8 +717,8 @@ class TestUser(common.DescopeTest):
                     "ssoAppIds": ["app1"],
                     "text": "blue",
                     "sort": [
-                        {"field": "kuku", "desc": True},
-                        {"field": "bubu", "desc": False},
+                        {"desc": True, "field": "kuku"},
+                        {"desc": False, "field": "bubu"},
                     ],
                 },
                 allow_redirects=False,

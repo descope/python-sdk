@@ -249,3 +249,16 @@ class Sort:
     def __init__(self, field: str, desc: Optional[bool] = False):
         self.field = field
         self.desc = desc
+
+
+def sort_to_dict(sort: List[Sort]) -> list:
+    sort_list = []
+    if sort:
+        for s in sort:
+            sort_list.append(
+                {
+                    "field": s.field,
+                    "desc": s.desc,
+                }
+            )
+    return sort_list
