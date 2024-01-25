@@ -5,12 +5,13 @@
 | Name                        |    Stmts |     Miss |   Cover |   Missing |
 |---------------------------- | -------: | -------: | ------: | --------: |
 | descope/auth.py             |      288 |       13 |     95% |16-17, 50-51, 390-392, 503, 535, 546, 590, 622, 631, 654 |
+| descope/common.py           |       90 |        1 |     99% |       152 |
 | descope/descope\_client.py  |      161 |        5 |     97% |68, 99, 183, 280, 459 |
 | descope/management/audit.py |       36 |       11 |     69% |72, 74, 76, 78, 80, 82, 84, 86, 88, 90, 92 |
 | descope/management/user.py  |      222 |        8 |     96% |791, 793, 795, 1413, 1454, 1494, 1496, 1498 |
-|                   **TOTAL** | **1944** |   **37** | **98%** |           |
+|                   **TOTAL** | **1991** |   **38** | **98%** |           |
 
-27 files skipped due to complete coverage.
+26 files skipped due to complete coverage.
 
 
 ## Setup coverage badge
