@@ -111,7 +111,7 @@ class OTP(AuthBase):
             )
 
         uri = OTP._compose_sign_up_or_in_url(method)
-        login_options: dict[str, str | dict] = None
+        login_options: LoginOptions | None = None
         if signup_options is not None:
             login_options = LoginOptions(
                 custom_claims=signup_options.customClaims,

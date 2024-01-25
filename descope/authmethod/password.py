@@ -119,7 +119,7 @@ class Password(AuthBase):
             )
 
         uri = EndpointsV1.send_reset_password_path
-        body: dict[str, str | bool | dict] = {
+        body: dict[str, str | bool | dict | None] = {
             "loginId": login_id,
             "redirectUrl": redirect_url,
         }

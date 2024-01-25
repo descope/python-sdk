@@ -70,7 +70,7 @@ class MagicLink(AuthBase):
         uri: str,
         signup_options: SignUpOptions | None = None,
     ) -> str:
-        login_options: dict[str, str | dict] = None
+        login_options: LoginOptions | None = None
         if signup_options is not None:
             login_options = LoginOptions(
                 custom_claims=signup_options.customClaims,

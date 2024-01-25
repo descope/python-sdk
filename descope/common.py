@@ -145,7 +145,7 @@ class SignUpOptions:
         self.templateOptions = template_options
 
 
-def signup_options_to_dict(signup_options: Optional(SignUpOptions) = None) -> dict:
+def signup_options_to_dict(signup_options: Optional[SignUpOptions] = None) -> dict:
     res = {}
     if signup_options is not None:
         if signup_options.customClaims is not None:

@@ -66,7 +66,7 @@ class EnchantedLink(AuthBase):
     def sign_up_or_in(
         self, login_id: str, uri: str, signup_options: SignUpOptions | None = None
     ) -> dict:
-        login_options: dict[str, str | dict] = None
+        login_options: LoginOptions | None = None
         if signup_options is not None:
             login_options = LoginOptions(
                 custom_claims=signup_options.customClaims,
