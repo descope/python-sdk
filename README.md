@@ -1196,17 +1196,29 @@ res = descope_client.mgmt.authz.get_modified()
 
 ### Manage Project
 
-You can change the project name, as well as to clone the current project to a new one.
+You can change the project name, as well as clone the current project to
+create a new one.
 
 ```python
-
 # Change the project name
-descope.client.mgmt.project.change_name("new-project-name")
+descope_client.mgmt.project.change_name("new-project-name")
 
 # Clone the current project, including its settings and configurations.
 # Note that this action is supported only with a pro license or above.
 # Users, tenants and access keys are not cloned.
-clone_resp = descope.client.mgmt.project.clone("new-project-name")
+clone_resp = descope_client.mgmt.project.clone("new-project-name")
+```
+
+You can manage your project's settings and configurations by exporting your
+project's environment. You can also import previously exported data into
+the same project or a different one.
+
+```python
+# Exports the current state of the project
+export = descope_client.mgmt.project.export_project()
+
+# Import the previously exported data into the current project
+descope_client.mgmt.project.import_project(export)
 ```
 
 ### Manage SSO Applications
