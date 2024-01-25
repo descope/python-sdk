@@ -11,6 +11,7 @@ from descope.common import (
     REFRESH_SESSION_COOKIE_NAME,
     EndpointsV1,
     LoginOptions,
+    SignUpOptions,
 )
 
 from . import common
@@ -155,6 +156,37 @@ class TestEnchantedLink(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+        # With template options
+        with patch("requests.post") as mock_post:
+            refresh_token = "dummy refresh token"
+            enchantedlink.sign_in(
+                "dummy@dummy.com",
+                "http://test.me",
+                LoginOptions(stepup=True, template_options={"blue": "bla"}),
+                refresh_token=refresh_token,
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_enchantedlink_path}/email",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{refresh_token}",
+                },
+                params=None,
+                json={
+                    "loginId": "dummy@dummy.com",
+                    "URI": "http://test.me",
+                    "loginOptions": {
+                        "stepup": True,
+                        "customClaims": None,
+                        "templateOptions": {"blue": "bla"},
+                        "mfa": False,
+                    },
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
     def test_sign_in_with_login_options(self):
         enchantedlink = EnchantedLink(Auth(self.dummy_project_id, self.public_key_dict))
         with patch("requests.post") as mock_post:
@@ -257,6 +289,37 @@ class TestEnchantedLink(common.DescopeTest):
             )
             self.assertEqual(res["pendingRef"], "aaaa")
 
+        # Test success flow with sign up options
+        with patch("requests.post") as mock_post:
+            data = json.loads("""{"pendingRef": "aaaa"}""")
+            my_mock_response.json.return_value = data
+            mock_post.return_value = my_mock_response
+            res = enchantedlink.sign_up(
+                "dummy@dummy.com",
+                "http://test.me",
+                None,
+                SignUpOptions(template_options={"bla": "blue"}),
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_enchantedlink_path}/email",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}",
+                },
+                params=None,
+                json={
+                    "loginId": "dummy@dummy.com",
+                    "URI": "http://test.me",
+                    "user": {"email": "dummy@dummy.com"},
+                    "email": "dummy@dummy.com",
+                    "loginOptions": {"templateOptions": {"bla": "blue"}},
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+            self.assertEqual(res["pendingRef"], "aaaa")
+
     def test_sign_up_or_in(self):
         enchantedlink = EnchantedLink(Auth(self.dummy_project_id, self.public_key_dict))
         with patch("requests.post") as mock_post:
@@ -280,6 +343,40 @@ class TestEnchantedLink(common.DescopeTest):
                     "loginId": "dummy@dummy.com",
                     "URI": "http://test.me",
                     "loginOptions": {},
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test success flow with sign up options
+        with patch("requests.post") as mock_post:
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            data = json.loads("""{"pendingRef": "aaaa"}""")
+            my_mock_response.json.return_value = data
+            mock_post.return_value = my_mock_response
+            enchantedlink.sign_up_or_in(
+                "dummy@dummy.com",
+                "http://test.me",
+                SignUpOptions(template_options={"bla": "blue"}),
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_or_in_auth_enchantedlink_path}/email",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}",
+                },
+                params=None,
+                json={
+                    "loginId": "dummy@dummy.com",
+                    "URI": "http://test.me",
+                    "loginOptions": {
+                        "stepup": False,
+                        "customClaims": None,
+                        "mfa": False,
+                        "templateOptions": {"bla": "blue"},
+                    },
                 },
                 allow_redirects=False,
                 verify=True,
@@ -347,6 +444,56 @@ class TestEnchantedLink(common.DescopeTest):
                 "id1", "dummy@dummy.com", "refresh_token1"
             )
             self.assertEqual(res["pendingRef"], "aaaa")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_user_email_enchantedlink_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:refresh_token1",
+                },
+                json={
+                    "loginId": "id1",
+                    "email": "dummy@dummy.com",
+                    "addToLoginIDs": False,
+                    "onMergeUseExisting": False,
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+                params=None,
+            )
+
+        # with template options
+        with patch("requests.post") as mock_post:
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            data = json.loads("""{"pendingRef": "aaaa"}""")
+            my_mock_response.json.return_value = data
+            mock_post.return_value = my_mock_response
+            res = enchantedlink.update_user_email(
+                "id1",
+                "dummy@dummy.com",
+                "refresh_token1",
+                template_options={"bla": "blue"},
+            )
+            self.assertEqual(res["pendingRef"], "aaaa")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_user_email_enchantedlink_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:refresh_token1",
+                },
+                json={
+                    "loginId": "id1",
+                    "email": "dummy@dummy.com",
+                    "addToLoginIDs": False,
+                    "onMergeUseExisting": False,
+                    "templateOptions": {"bla": "blue"},
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+                params=None,
+            )
 
 
 if __name__ == "__main__":
