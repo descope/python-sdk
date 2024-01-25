@@ -178,7 +178,7 @@ class MagicLink(AuthBase):
         user: dict | None = None,
         signup_options: SignUpOptions | None = None,
     ) -> dict:
-        body: dict[str, str | dict] = {"loginId": login_id, "URI": uri}
+        body: dict[str, str | bool | dict] = {"loginId": login_id, "URI": uri}
 
         if signup_options is not None:
             body["loginOptions"] = signup_options_to_dict(signup_options)
@@ -201,7 +201,7 @@ class MagicLink(AuthBase):
         on_merge_use_existing: bool,
         template_options: dict | None = None,
     ) -> dict:
-        body: dict[str, str | dict] = {
+        body: dict[str, str | bool | dict] = {
             "loginId": login_id,
             "email": email,
             "addToLoginIDs": add_to_login_ids,
@@ -220,7 +220,7 @@ class MagicLink(AuthBase):
         on_merge_use_existing: bool,
         template_options: dict | None = None,
     ) -> dict:
-        body: dict[str, str | dict] = {
+        body: dict[str, str | bool | dict] = {
             "loginId": login_id,
             "phone": phone,
             "addToLoginIDs": add_to_login_ids,

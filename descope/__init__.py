@@ -6,6 +6,7 @@ from descope.common import (
     SESSION_TOKEN_NAME,
     DeliveryMethod,
     LoginOptions,
+    SignUpOptions,
 )
 from descope.descope_client import DescopeClient
 from descope.exceptions import (

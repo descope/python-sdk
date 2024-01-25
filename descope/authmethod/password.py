@@ -119,7 +119,7 @@ class Password(AuthBase):
             )
 
         uri = EndpointsV1.send_reset_password_path
-        body: dict[str, str | dict] = {
+        body: dict[str, str | bool | dict] = {
             "loginId": login_id,
             "redirectUrl": redirect_url,
         }
@@ -240,7 +240,7 @@ class Password(AuthBase):
 
     @staticmethod
     def _compose_signup_body(login_id: str, password: str, user: dict | None) -> dict:
-        body: dict[str, str | dict] = {"loginId": login_id, "password": password}
+        body: dict[str, str | bool | dict] = {"loginId": login_id, "password": password}
         if user is not None:
             body["user"] = user
         return body
