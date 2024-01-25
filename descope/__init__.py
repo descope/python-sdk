@@ -22,4 +22,11 @@ from descope.management.common import (
     SAMLIDPGroupsMappingInfo,
     SAMLIDPRoleGroupMappingInfo,
 )
-from descope.management.sso_settings import AttributeMapping, RoleMapping
+from descope.management.sso_settings import (
+    AttributeMapping,
+    OIDCAttributeMapping,
+    RoleMapping,
+    SSOOIDCSettings,
+    SSOSAMLSettings,
+    SSOSAMLSettingsByMetadata,
+)
