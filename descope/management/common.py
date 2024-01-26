@@ -124,6 +124,8 @@ class MgmtV1:
     # Project
     project_update_name = "/v1/mgmt/project/update/name"
     project_clone = "/v1/mgmt/project/clone"
+    project_export = "/v1/mgmt/project/export"
+    project_import = "/v1/mgmt/project/import"
 
 
 class AssociatedTenant:
