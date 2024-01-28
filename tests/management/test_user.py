@@ -6,6 +6,13 @@ from descope import AssociatedTenant, AuthException, DescopeClient
 from descope.common import DEFAULT_TIMEOUT_SECONDS, DeliveryMethod, LoginOptions
 from descope.management.common import MgmtV1, Sort
 from descope.management.user import UserObj
+from descope.management.user_pwd import (
+    UserPassword,
+    UserPasswordBcrypt,
+    UserPasswordFirebase,
+    UserPasswordPbkdf2,
+    UserPasswordDjango,
+)
 
 from .. import common
 
@@ -291,6 +298,16 @@ class TestUser(common.DescopeTest):
                         ],
                         custom_attributes={"ak": "av"},
                         sso_app_ids=["app1", "app2"],
+                        password=UserPassword(
+                            hashed=UserPasswordFirebase(
+                                hash="h",
+                                salt="s",
+                                saltSeparator="sp",
+                                signerKey="sk",
+                                memory=14,
+                                rounds=8,
+                            ),
+                        ),
                     )
                 ],
                 invite_url="invite.me",
@@ -325,6 +342,18 @@ class TestUser(common.DescopeTest):
                             "customAttributes": {"ak": "av"},
                             "additionalLoginIds": None,
                             "ssoAppIDs": ["app1", "app2"],
+                            "password": {
+                                "hashed": {
+                                    "firebase": {
+                                        "hash": "h",
+                                        "salt": "s",
+                                        "saltSeparator": "sp",
+                                        "signerKey": "sk",
+                                        "memory": 14,
+                                        "rounds": 8,
+                                    }
+                                }
+                            },
                         }
                     ],
                     "invite": True,
@@ -335,6 +364,24 @@ class TestUser(common.DescopeTest):
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
+            bcrypt = UserPasswordBcrypt(hash="h")
+            self.assertEqual(bcrypt.json(), {"bcrypt": {"hash": "h"}})
+            pbkdf2 = UserPasswordPbkdf2(
+                hash="h", salt="s", iterations=14, variant="sha256"
+            )
+            self.assertEqual(
+                pbkdf2.json(),
+                {
+                    "pbkdf2": {
+                        "hash": "h",
+                        "salt": "s",
+                        "iterations": 14,
+                        "type": "sha256",
+                    }
+                },
+            )
+            django = UserPasswordDjango(hash="h")
+            self.assertEqual(django.json(), {"django": {"hash": "h"}})
 
     def test_update(self):
         # Test failed flows
