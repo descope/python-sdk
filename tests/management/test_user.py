@@ -382,6 +382,8 @@ class TestUser(common.DescopeTest):
             )
             django = UserPasswordDjango(hash="h")
             self.assertEqual(django.to_dict(), {"django": {"hash": "h"}})
+            user.password = UserPassword()
+            self.assertEqual(user.password.to_dict(), None)
             user.password = UserPassword(cleartext="clear")
             resp = self.client.mgmt.user.invite_batch(
                 users=[user],
