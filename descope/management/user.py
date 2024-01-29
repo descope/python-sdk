@@ -1431,7 +1431,7 @@ class User(AuthBase):
             role_names = [] if user.role_names is None else user.role_names
             user_tenants = [] if user.user_tenants is None else user.user_tenants
             sso_app_ids = [] if user.sso_app_ids is None else user.sso_app_ids
-            password = None if user.password is None else user.password.json()
+            password = None if user.password is None else user.password.to_dict()
             uBody = User._compose_update_body(
                 login_id=user.login_id,
                 email=user.email,

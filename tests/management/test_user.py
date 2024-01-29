@@ -300,8 +300,8 @@ class TestUser(common.DescopeTest):
                     hashed=UserPasswordFirebase(
                         hash="h",
                         salt="s",
-                        saltSeparator="sp",
-                        signerKey="sk",
+                        salt_separator="sp",
+                        signer_key="sk",
                         memory=14,
                         rounds=8,
                     ),
@@ -365,12 +365,12 @@ class TestUser(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             bcrypt = UserPasswordBcrypt(hash="h")
-            self.assertEqual(bcrypt.json(), {"bcrypt": {"hash": "h"}})
+            self.assertEqual(bcrypt.to_dict(), {"bcrypt": {"hash": "h"}})
             pbkdf2 = UserPasswordPbkdf2(
                 hash="h", salt="s", iterations=14, variant="sha256"
             )
             self.assertEqual(
-                pbkdf2.json(),
+                pbkdf2.to_dict(),
                 {
                     "pbkdf2": {
                         "hash": "h",
@@ -381,7 +381,7 @@ class TestUser(common.DescopeTest):
                 },
             )
             django = UserPasswordDjango(hash="h")
-            self.assertEqual(django.json(), {"django": {"hash": "h"}})
+            self.assertEqual(django.to_dict(), {"django": {"hash": "h"}})
             user.password = UserPassword(cleartext="clear")
             resp = self.client.mgmt.user.invite_batch(
                 users=[user],

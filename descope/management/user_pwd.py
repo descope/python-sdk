@@ -11,7 +11,7 @@ class UserPasswordBcrypt:
         """
         self.hash = hash
 
-    def json(self):
+    def to_dict(self):
         return {
             "bcrypt": {
                 "hash": self.hash,
@@ -24,8 +24,8 @@ class UserPasswordFirebase:
         self,
         hash: str,
         salt: str,
-        saltSeparator: str,
-        signerKey: str,
+        salt_separator: str,
+        signer_key: str,
         memory: int,
         rounds: int,
     ):
@@ -37,18 +37,18 @@ class UserPasswordFirebase:
         """
         self.hash = hash
         self.salt = salt
-        self.saltSeparator = saltSeparator
-        self.signerKey = signerKey
+        self.salt_separator = salt_separator
+        self.signer_key = signer_key
         self.memory = memory
         self.rounds = rounds
 
-    def json(self):
+    def to_dict(self):
         return {
             "firebase": {
                 "hash": self.hash,
                 "salt": self.salt,
-                "saltSeparator": self.saltSeparator,
-                "signerKey": self.signerKey,
+                "saltSeparator": self.salt_separator,
+                "signerKey": self.signer_key,
                 "memory": self.memory,
                 "rounds": self.rounds,
             },
@@ -73,7 +73,7 @@ class UserPasswordPbkdf2:
         self.iterations = iterations
         self.variant = variant
 
-    def json(self):
+    def to_dict(self):
         return {
             "pbkdf2": {
                 "hash": self.hash,
@@ -94,7 +94,7 @@ class UserPasswordDjango:
         """
         self.hash = hash
 
-    def json(self):
+    def to_dict(self):
         return {
             "django": {
                 "hash": self.hash,
@@ -122,9 +122,9 @@ class UserPassword:
         self.cleartext = cleartext
         self.hashed = hashed
 
-    def json(self):
+    def to_dict(self):
         if self.cleartext is not None:
             return {"cleartext": self.cleartext}
         elif self.hashed is not None:
-            return {"hashed": self.hashed.json()}
+            return {"hashed": self.hashed.to_dict()}
         return None
