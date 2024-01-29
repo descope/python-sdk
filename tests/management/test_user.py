@@ -6,6 +6,13 @@ from descope import AssociatedTenant, AuthException, DescopeClient
 from descope.common import DEFAULT_TIMEOUT_SECONDS, DeliveryMethod, LoginOptions
 from descope.management.common import MgmtV1, Sort
 from descope.management.user import UserObj
+from descope.management.user_pwd import (
+    UserPassword,
+    UserPasswordBcrypt,
+    UserPasswordFirebase,
+    UserPasswordPbkdf2,
+    UserPasswordDjango,
+)
 
 from .. import common
 
@@ -279,25 +286,72 @@ class TestUser(common.DescopeTest):
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"users": [{"id": "u1"}]}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.invite_batch(
-                users=[
-                    UserObj(
-                        login_id="name@mail.com",
-                        email="name@mail.com",
-                        display_name="Name",
-                        user_tenants=[
-                            AssociatedTenant("tenant1"),
-                            AssociatedTenant("tenant2", ["role1", "role2"]),
-                        ],
-                        custom_attributes={"ak": "av"},
-                        sso_app_ids=["app1", "app2"],
-                    )
+            user = UserObj(
+                login_id="name@mail.com",
+                email="name@mail.com",
+                display_name="Name",
+                user_tenants=[
+                    AssociatedTenant("tenant1"),
+                    AssociatedTenant("tenant2", ["role1", "role2"]),
                 ],
+                custom_attributes={"ak": "av"},
+                sso_app_ids=["app1", "app2"],
+                password=UserPassword(
+                    hashed=UserPasswordFirebase(
+                        hash="h",
+                        salt="s",
+                        salt_separator="sp",
+                        signer_key="sk",
+                        memory=14,
+                        rounds=8,
+                    ),
+                ),
+            )
+            resp = self.client.mgmt.user.invite_batch(
+                users=[user],
                 invite_url="invite.me",
                 send_sms=True,
             )
             users = resp["users"]
             self.assertEqual(users[0]["id"], "u1")
+            expectedUsers = {
+                "users": [
+                    {
+                        "loginId": "name@mail.com",
+                        "email": "name@mail.com",
+                        "phone": None,
+                        "displayName": "Name",
+                        "roleNames": [],
+                        "userTenants": [
+                            {"tenantId": "tenant1", "roleNames": []},
+                            {
+                                "tenantId": "tenant2",
+                                "roleNames": ["role1", "role2"],
+                            },
+                        ],
+                        "test": False,
+                        "picture": None,
+                        "customAttributes": {"ak": "av"},
+                        "additionalLoginIds": None,
+                        "ssoAppIDs": ["app1", "app2"],
+                        "password": {
+                            "hashed": {
+                                "firebase": {
+                                    "hash": "h",
+                                    "salt": "s",
+                                    "saltSeparator": "sp",
+                                    "signerKey": "sk",
+                                    "memory": 14,
+                                    "rounds": 8,
+                                }
+                            }
+                        },
+                    }
+                ],
+                "invite": True,
+                "inviteUrl": "invite.me",
+                "sendSMS": True,
+            }
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.user_create_batch_path}",
                 headers={
@@ -305,32 +359,65 @@ class TestUser(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                json={
-                    "users": [
-                        {
-                            "loginId": "name@mail.com",
-                            "email": "name@mail.com",
-                            "phone": None,
-                            "displayName": "Name",
-                            "roleNames": [],
-                            "userTenants": [
-                                {"tenantId": "tenant1", "roleNames": []},
-                                {
-                                    "tenantId": "tenant2",
-                                    "roleNames": ["role1", "role2"],
-                                },
-                            ],
-                            "test": False,
-                            "picture": None,
-                            "customAttributes": {"ak": "av"},
-                            "additionalLoginIds": None,
-                            "ssoAppIDs": ["app1", "app2"],
-                        }
-                    ],
-                    "invite": True,
-                    "inviteUrl": "invite.me",
-                    "sendSMS": True,
+                json=expectedUsers,
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+            bcrypt = UserPasswordBcrypt(hash="h")
+            self.assertEqual(bcrypt.to_dict(), {"bcrypt": {"hash": "h"}})
+            pbkdf2 = UserPasswordPbkdf2(
+                hash="h", salt="s", iterations=14, variant="sha256"
+            )
+            self.assertEqual(
+                pbkdf2.to_dict(),
+                {
+                    "pbkdf2": {
+                        "hash": "h",
+                        "salt": "s",
+                        "iterations": 14,
+                        "type": "sha256",
+                    }
                 },
+            )
+            django = UserPasswordDjango(hash="h")
+            self.assertEqual(django.to_dict(), {"django": {"hash": "h"}})
+            user.password = UserPassword()
+            self.assertEqual(user.password.to_dict(), None)
+            user.password = UserPassword(cleartext="clear")
+            resp = self.client.mgmt.user.invite_batch(
+                users=[user],
+                invite_url="invite.me",
+                send_sms=True,
+            )
+            expectedUsers["users"][0]["password"] = {"cleartext": "clear"}
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_create_batch_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                json=expectedUsers,
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+            user.password = None
+            resp = self.client.mgmt.user.invite_batch(
+                users=[user],
+                invite_url="invite.me",
+                send_sms=True,
+            )
+            del expectedUsers["users"][0]["password"]
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_create_batch_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                json=expectedUsers,
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,

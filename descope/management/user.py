@@ -4,6 +4,7 @@ from descope._auth_base import AuthBase
 from descope.auth import Auth
 from descope.common import DeliveryMethod, LoginOptions
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
+from descope.management.user_pwd import UserPassword
 from descope.management.common import (
     AssociatedTenant,
     MgmtV1,
@@ -31,6 +32,7 @@ class UserObj:
         verified_phone: Optional[bool] = None,
         additional_login_ids: Optional[List[str]] = None,
         sso_app_ids: Optional[List[str]] = None,
+        password: Optional[UserPassword] = None,
     ):
         self.login_id = login_id
         self.email = email
@@ -47,6 +49,7 @@ class UserObj:
         self.verified_phone = verified_phone
         self.additional_login_ids = additional_login_ids
         self.sso_app_ids = sso_app_ids
+        self.password = password
 
 
 class User(AuthBase):
@@ -361,6 +364,7 @@ class User(AuthBase):
                 verified_phone,
                 additional_login_ids,
                 sso_app_ids,
+                None,
             ),
             pswd=self._auth.management_key,
         )
@@ -1427,6 +1431,7 @@ class User(AuthBase):
             role_names = [] if user.role_names is None else user.role_names
             user_tenants = [] if user.user_tenants is None else user.user_tenants
             sso_app_ids = [] if user.sso_app_ids is None else user.sso_app_ids
+            password = None if user.password is None else user.password.to_dict()
             uBody = User._compose_update_body(
                 login_id=user.login_id,
                 email=user.email,
@@ -1444,6 +1449,7 @@ class User(AuthBase):
                 verified_phone=user.verified_phone,
                 test=False,
                 sso_app_ids=sso_app_ids,
+                password=password,
             )
             usersBody.append(uBody)
 
@@ -1474,6 +1480,7 @@ class User(AuthBase):
         verified_phone: Optional[bool] = None,
         additional_login_ids: Optional[List[str]] = None,
         sso_app_ids: Optional[List[str]] = None,
+        password: Optional[dict] = None,
     ) -> dict:
         res = {
             "loginId": login_id,
@@ -1498,4 +1505,6 @@ class User(AuthBase):
             res["familyName"] = family_name
         if verified_phone is not None:
             res["verifiedPhone"] = verified_phone
+        if password is not None:
+            res["password"] = password
         return res
