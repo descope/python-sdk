@@ -11,7 +11,7 @@ class UserPasswordBcrypt:
         """
         self.hash = hash
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return {
             "bcrypt": {
                 "hash": self.hash,
@@ -42,7 +42,7 @@ class UserPasswordFirebase:
         self.memory = memory
         self.rounds = rounds
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return {
             "firebase": {
                 "hash": self.hash,
@@ -73,7 +73,7 @@ class UserPasswordPbkdf2:
         self.iterations = iterations
         self.variant = variant
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return {
             "pbkdf2": {
                 "hash": self.hash,
@@ -94,7 +94,7 @@ class UserPasswordDjango:
         """
         self.hash = hash
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return {
             "django": {
                 "hash": self.hash,
@@ -122,7 +122,7 @@ class UserPassword:
         self.cleartext = cleartext
         self.hashed = hashed
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         if self.cleartext is not None:
             return {"cleartext": self.cleartext}
         elif self.hashed is not None:
