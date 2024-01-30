@@ -15,6 +15,7 @@ class AccessKey(AuthBase):
         expire_time: int = 0,
         role_names: Optional[List[str]] = None,
         key_tenants: Optional[List[AssociatedTenant]] = None,
+        user_id: Optional[str] = None,
     ) -> dict:
         """
         Create a new access key.
@@ -26,6 +27,8 @@ class AccessKey(AuthBase):
             mutually exclusive with the `key_tenant` roles, which take precedence over them.
         key_tenants (List[AssociatedTenant]): An optional list of the access key's tenants, and optionally, their roles per tenant. These roles are
             mutually exclusive with the general `role_names`, and take precedence over them.
+        user_id (str): Bind access key to this user id
+            If user_id is supplied, then authorization would be ignored, and access key would be bound to the users authorization
 
         Return value (dict):
         Return dict in the format
@@ -44,7 +47,9 @@ class AccessKey(AuthBase):
 
         response = self._auth.do_post(
             MgmtV1.access_key_create_path,
-            AccessKey._compose_create_body(name, expire_time, role_names, key_tenants),
+            AccessKey._compose_create_body(
+                name, expire_time, role_names, key_tenants, user_id
+            ),
             pswd=self._auth.management_key,
         )
         return response.json()
@@ -188,10 +193,12 @@ class AccessKey(AuthBase):
         expire_time: int,
         role_names: List[str],
         key_tenants: List[AssociatedTenant],
+        user_id: Optional[str] = None,
     ) -> dict:
         return {
             "name": name,
             "expireTime": expire_time,
             "roleNames": role_names,
             "keyTenants": associated_tenants_to_dict(key_tenants),
+            "userId": user_id,
         }
