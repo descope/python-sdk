@@ -193,7 +193,7 @@ class AccessKey(AuthBase):
         expire_time: int,
         role_names: List[str],
         key_tenants: List[AssociatedTenant],
-        user_id: str | None,
+        user_id: Optional[str] = None,
     ) -> dict:
         return {
             "name": name,
