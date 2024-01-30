@@ -435,6 +435,41 @@ class DescopeClient:
         )
         return response.json()
 
+    def history(self, refresh_token: str) -> list[dict]:
+        """
+        Retrieve user authentication history for the refresh token
+
+        Args:
+        refresh_token (str): The refresh token
+
+        Return value (List[dict]):
+        Return List in the format
+             [
+                {
+                    "userId": "User's ID",
+                    "loginTime": "User'sLogin time",
+                    "city": "User's city",
+                    "country": "User's country",
+                    "ip": User's IP
+                }
+            ]
+
+        Raise:
+        AuthException: Exception is raised if session is not authorized or another error occurs
+        """
+        if refresh_token is None:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                f"signed refresh token {refresh_token} is empty",
+            )
+
+        uri = EndpointsV1.history_path
+        response = self._auth.do_get(
+            uri=uri, params=None, allow_redirects=None, pswd=refresh_token
+        )
+        return response.json()
+
     def exchange_access_key(
         self, access_key: str, audience: str | Iterable[str] | None = None
     ) -> dict:
