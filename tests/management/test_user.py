@@ -9,9 +9,9 @@ from descope.management.user import UserObj
 from descope.management.user_pwd import (
     UserPassword,
     UserPasswordBcrypt,
+    UserPasswordDjango,
     UserPasswordFirebase,
     UserPasswordPbkdf2,
-    UserPasswordDjango,
 )
 
 from .. import common
@@ -1870,6 +1870,72 @@ class TestUser(common.DescopeTest):
                     "loginId": "login-id",
                     "customClaims": {"k1": "v1"},
                 },
+                allow_redirects=False,
+                verify=True,
+                params=None,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_history(self):
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException, self.client.mgmt.user.history, ["user-id-1", "user-id-2"]
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads(
+                """
+                [
+                    {
+                        "userId":    "kuku",
+                        "city":      "kefar saba",
+                        "country":   "Israel",
+                        "ip":        "1.1.1.1",
+                        "loginTime": 32
+                    },
+                    {
+                        "userId":    "nunu",
+                        "city":      "eilat",
+                        "country":   "Israele",
+                        "ip":        "1.1.1.2",
+                        "loginTime": 23
+                    }
+                ]
+                """
+            )
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.history(["user-id-1", "user-id-2"])
+            self.assertEqual(
+                resp,
+                [
+                    {
+                        "userId": "kuku",
+                        "city": "kefar saba",
+                        "country": "Israel",
+                        "ip": "1.1.1.1",
+                        "loginTime": 32,
+                    },
+                    {
+                        "userId": "nunu",
+                        "city": "eilat",
+                        "country": "Israele",
+                        "ip": "1.1.1.2",
+                        "loginTime": 23,
+                    },
+                ],
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_history_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                json=["user-id-1", "user-id-2"],
                 allow_redirects=False,
                 verify=True,
                 params=None,

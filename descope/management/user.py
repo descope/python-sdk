@@ -4,7 +4,6 @@ from descope._auth_base import AuthBase
 from descope.auth import Auth
 from descope.common import DeliveryMethod, LoginOptions
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
-from descope.management.user_pwd import UserPassword
 from descope.management.common import (
     AssociatedTenant,
     MgmtV1,
@@ -12,6 +11,7 @@ from descope.management.common import (
     associated_tenants_to_dict,
     sort_to_dict,
 )
+from descope.management.user_pwd import UserPassword
 
 
 class UserObj:
@@ -1366,6 +1366,35 @@ class User(AuthBase):
             pswd=self._auth.management_key,
         )
         return response.json()["token"]
+
+    def history(self, user_ids: List[str]) -> List[dict]:
+        """
+        Retrieve users' authentication history, by the given user's ids.
+
+        Args:
+        login_ids (List[str]): List of Users' IDs.
+
+        Return value (List[dict]):
+        Return List in the format
+             [
+                {
+                    "userId": "User's ID",
+                    "loginTime": "User'sLogin time",
+                    "city": "User's city",
+                    "country": "User's country",
+                    "ip": User's IP
+                }
+            ]
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.user_history_path,
+            user_ids,
+            pswd=self._auth.management_key,
+        )
+        return response.json()
 
     @staticmethod
     def _compose_create_body(
