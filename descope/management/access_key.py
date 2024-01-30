@@ -15,7 +15,7 @@ class AccessKey(AuthBase):
         expire_time: int = 0,
         role_names: Optional[List[str]] = None,
         key_tenants: Optional[List[AssociatedTenant]] = None,
-        user_id: str = None,
+        user_id: Optional[str] = None,
     ) -> dict:
         """
         Create a new access key.
