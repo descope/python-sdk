@@ -688,6 +688,7 @@ You can create, update, delete or load access keys, as well as search according 
 # An access key must have a name and expiration, other fields are optional.
 # Roles should be set directly if no tenants exist, otherwise set
 # on a per-tenant basis.
+# If user_id is supplied, then authorization would be ignored, and access key would be bound to the users authorization
 create_resp = descope_client.mgmt.access_key.create(
     name="name",
     expire_time=1677844931,

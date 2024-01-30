@@ -56,6 +56,7 @@ class TestAccessKey(common.DescopeTest):
                     AssociatedTenant("tenant1"),
                     AssociatedTenant("tenant2", ["role1", "role2"]),
                 ],
+                user_id="userid",
             )
             access_key = resp["key"]
             self.assertEqual(access_key["id"], "ak1")
@@ -74,6 +75,7 @@ class TestAccessKey(common.DescopeTest):
                         {"tenantId": "tenant1", "roleNames": []},
                         {"tenantId": "tenant2", "roleNames": ["role1", "role2"]},
                     ],
+                    "userId": "userid",
                 },
                 allow_redirects=False,
                 verify=True,
