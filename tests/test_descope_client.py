@@ -122,6 +122,69 @@ class TestDescopeClient(common.DescopeTest):
             user_response = client.me(dummy_refresh_token)
             self.assertIsNotNone(user_response)
             self.assertEqual(data["name"], user_response["name"])
+            mock_get.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.me_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}",
+                },
+                allow_redirects=None,
+                verify=True,
+                params=None,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_history(self):
+        dummy_refresh_token = ""
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
+
+        self.assertRaises(AuthException, client.history, None)
+
+        # Test failed flow
+        with patch("requests.get") as mock_get:
+            mock_get.return_value.ok = False
+            self.assertRaises(AuthException, client.history, dummy_refresh_token)
+
+        # Test success flow
+        with patch("requests.get") as mock_get:
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            data = json.loads(
+                """
+                [
+                    {
+                        "userId":    "kuku",
+                        "city":      "kefar saba",
+                        "country":   "Israel",
+                        "ip":        "1.1.1.1",
+                        "loginTime": 32
+                    },
+                    {
+                        "userId":    "nunu",
+                        "city":      "eilat",
+                        "country":   "Israele",
+                        "ip":        "1.1.1.2",
+                        "loginTime": 23
+                    }
+                ]
+                """
+            )
+            my_mock_response.json.return_value = data
+            mock_get.return_value = my_mock_response
+            user_response = client.history(dummy_refresh_token)
+            self.assertIsNotNone(user_response)
+            self.assertEqual(data, user_response)
+            mock_get.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.history_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}",
+                },
+                allow_redirects=None,
+                verify=True,
+                params=None,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
 
     def test_validate_session(self):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)

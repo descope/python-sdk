@@ -51,6 +51,7 @@ These sections show how to use the SDK to perform various authentication/authori
 9. [Roles & Permission Validation](#roles--permission-validation)
 10. [Tenant selection](#tenant-selection)
 11. [Logging Out](#logging-out)
+12. [History](#history)
 
 ## API Managment Function
 
@@ -371,7 +372,7 @@ jwt_response = descope_client.validate_and_refresh_session(session_token, refres
 
 Choose the right session validation and refresh combination that suits your needs.
 
-Note: all those validation apis can receive an optional 'audience' parameter that should be provided when using jwt that has the 'aud' claim)
+Note: all those validation apis can receive an optional 'audience' parameter that should be provided when using jwt that has the 'aud' claim.
 
 Refreshed sessions return the same response as is returned when users first sign up / log in,
 containing the session and refresh tokens, as well as all of the JWT claims.
@@ -467,6 +468,16 @@ invalidate all user's refresh tokens. After calling this function, you must inva
 
 ```python
 descope_client.logout_all(refresh_token)
+```
+
+### History
+You can get the current session user history.
+The request requires a valid refresh token.
+
+```python
+users_history_resp = descope_client.history(refresh_token)
+for user_history in users_history_resp:
+    # Do something
 ```
 
 ## Management API
@@ -647,6 +658,11 @@ descope_client.mgmt.user.logout_user_by_user_id("<user-id>")
 users_resp = descope_client.mgmt.user.search_all(tenant_ids=["my-tenant-id"])
 users = users_resp["users"]
     for user in users:
+        # Do something
+
+# Get users' authentication history
+users_history_resp = descope_client.mgmt.user.history(["user-id-1", "user-id-2"])
+    for user_history in users_history_resp:
         # Do something
 ```
 

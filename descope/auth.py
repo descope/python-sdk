@@ -132,7 +132,11 @@ class Auth:
         return response
 
     def do_post(
-        self, uri: str, body: dict | None, params=None, pswd: str | None = None
+        self,
+        uri: str,
+        body: dict | list[dict] | list[str] | None,
+        params=None,
+        pswd: str | None = None,
     ) -> requests.Response:
         response = requests.post(
             f"{self.base_url}{uri}",
