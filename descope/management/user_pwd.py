@@ -121,10 +121,3 @@ class UserPassword:
         """
         self.cleartext = cleartext
         self.hashed = hashed
-
-    def to_dict(self) -> Optional[dict]:
-        if self.cleartext is not None:
-            return {"cleartext": self.cleartext}
-        elif self.hashed is not None:
-            return {"hashed": self.hashed.to_dict()}
-        return None

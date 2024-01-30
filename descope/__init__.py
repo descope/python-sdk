@@ -30,3 +30,13 @@ from descope.management.sso_settings import (
     SSOSAMLSettings,
     SSOSAMLSettingsByMetadata,
 )
+from descope.management.user import (
+    UserObj,
+)
+from descope.management.user_pwd import (
+    UserPassword,
+    UserPasswordBcrypt,
+    UserPasswordFirebase,
+    UserPasswordPbkdf2,
+    UserPasswordDjango,
+)

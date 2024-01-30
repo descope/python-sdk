@@ -1460,7 +1460,10 @@ class User(AuthBase):
             role_names = [] if user.role_names is None else user.role_names
             user_tenants = [] if user.user_tenants is None else user.user_tenants
             sso_app_ids = [] if user.sso_app_ids is None else user.sso_app_ids
-            password = None if user.password is None else user.password.to_dict()
+            password = None if user.password is None else user.password.cleartext
+            hashed_password = None
+            if (user.password is not None) and (user.password.hashed is not None):
+                hashed_password = user.password.hashed.to_dict()
             uBody = User._compose_update_body(
                 login_id=user.login_id,
                 email=user.email,
@@ -1479,6 +1482,7 @@ class User(AuthBase):
                 test=False,
                 sso_app_ids=sso_app_ids,
                 password=password,
+                hashed_password=hashed_password,
             )
             usersBody.append(uBody)
 
@@ -1509,7 +1513,8 @@ class User(AuthBase):
         verified_phone: Optional[bool] = None,
         additional_login_ids: Optional[List[str]] = None,
         sso_app_ids: Optional[List[str]] = None,
-        password: Optional[dict] = None,
+        password: Optional[str] = None,
+        hashed_password: Optional[dict] = None,
     ) -> dict:
         res = {
             "loginId": login_id,
@@ -1536,4 +1541,6 @@ class User(AuthBase):
             res["verifiedPhone"] = verified_phone
         if password is not None:
             res["password"] = password
+        if hashed_password is not None:
+            res["hashedPassword"] = hashed_password
         return res
