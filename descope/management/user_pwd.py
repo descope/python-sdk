@@ -17,10 +17,6 @@ class UserPasswordBcrypt:
                 "hash": self.hash,
             },
         }
-        """ return {
-            "algorithm": "bcrypt",
-            "hash": self.hash,
-        } """
 
 
 class UserPasswordFirebase:
@@ -125,10 +121,3 @@ class UserPassword:
         """
         self.cleartext = cleartext
         self.hashed = hashed
-
-    def to_dict(self) -> Optional[dict]:
-        if self.cleartext is not None:
-            return {"cleartext": self.cleartext}
-        elif self.hashed is not None:
-            return self.hashed.to_dict() #return self.hashed.to_dict()
-        return None

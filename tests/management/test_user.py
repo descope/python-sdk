@@ -314,6 +314,7 @@ class TestUser(common.DescopeTest):
             )
             users = resp["users"]
             self.assertEqual(users[0]["id"], "u1")
+
             expectedUsers = {
                 "users": [
                     {
@@ -334,16 +335,14 @@ class TestUser(common.DescopeTest):
                         "customAttributes": {"ak": "av"},
                         "additionalLoginIds": None,
                         "ssoAppIDs": ["app1", "app2"],
-                        "password": {
-                            "hashed": {
-                                "firebase": {
-                                    "hash": "h",
-                                    "salt": "s",
-                                    "saltSeparator": "sp",
-                                    "signerKey": "sk",
-                                    "memory": 14,
-                                    "rounds": 8,
-                                }
+                        "hashedPassword": {
+                            "firebase": {
+                                "hash": "h",
+                                "salt": "s",
+                                "saltSeparator": "sp",
+                                "signerKey": "sk",
+                                "memory": 14,
+                                "rounds": 8,
                             }
                         },
                     }
@@ -364,8 +363,10 @@ class TestUser(common.DescopeTest):
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
+
             bcrypt = UserPasswordBcrypt(hash="h")
             self.assertEqual(bcrypt.to_dict(), {"bcrypt": {"hash": "h"}})
+
             pbkdf2 = UserPasswordPbkdf2(
                 hash="h", salt="s", iterations=14, variant="sha256"
             )
@@ -380,17 +381,19 @@ class TestUser(common.DescopeTest):
                     }
                 },
             )
+
             django = UserPasswordDjango(hash="h")
             self.assertEqual(django.to_dict(), {"django": {"hash": "h"}})
-            user.password = UserPassword()
-            self.assertEqual(user.password.to_dict(), None)
+
             user.password = UserPassword(cleartext="clear")
             resp = self.client.mgmt.user.invite_batch(
                 users=[user],
                 invite_url="invite.me",
                 send_sms=True,
             )
-            expectedUsers["users"][0]["password"] = {"cleartext": "clear"}
+
+            del expectedUsers["users"][0]["hashedPassword"]
+            expectedUsers["users"][0]["password"] = "clear"
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.user_create_batch_path}",
                 headers={
@@ -403,12 +406,14 @@ class TestUser(common.DescopeTest):
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
+
             user.password = None
             resp = self.client.mgmt.user.invite_batch(
                 users=[user],
                 invite_url="invite.me",
                 send_sms=True,
             )
+
             del expectedUsers["users"][0]["password"]
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.user_create_batch_path}",
