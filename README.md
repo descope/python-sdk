@@ -4,12 +4,12 @@
 
 | Name                        |    Stmts |     Miss |   Cover |   Missing |
 |---------------------------- | -------: | -------: | ------: | --------: |
-| descope/auth.py             |      288 |       13 |     95% |16-17, 50-51, 390-392, 503, 535, 546, 590, 622, 631, 654 |
-| descope/common.py           |       90 |        1 |     99% |       152 |
-| descope/descope\_client.py  |      161 |        5 |     97% |68, 99, 183, 280, 459 |
+| descope/auth.py             |      288 |       13 |     95% |16-17, 50-51, 394-396, 507, 539, 550, 594, 626, 635, 658 |
+| descope/common.py           |       91 |        1 |     99% |       153 |
+| descope/descope\_client.py  |      167 |        5 |     97% |68, 99, 183, 280, 494 |
 | descope/management/audit.py |       36 |       11 |     69% |72, 74, 76, 78, 80, 82, 84, 86, 88, 90, 92 |
-| descope/management/user.py  |      227 |        8 |     96% |795, 797, 799, 1417, 1460, 1501, 1503, 1505 |
-|                   **TOTAL** | **2043** |   **38** | **98%** |           |
+| descope/management/user.py  |      230 |        8 |     97% |795, 797, 799, 1446, 1489, 1530, 1532, 1534 |
+|                   **TOTAL** | **2054** |   **38** | **98%** |           |
 
 27 files skipped due to complete coverage.
 
