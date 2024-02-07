@@ -794,6 +794,7 @@ settings = SSOOIDCSettings(
 	name="myProvider",
 	client_id="myId",
 	client_secret="secret",
+    redirect_url="https://your.domain.com",
 	auth_url="https://dummy.com/auth",
 	token_url="https://dummy.com/token",
 	user_data_url="https://dummy.com/userInfo",
@@ -815,7 +816,6 @@ settings = SSOOIDCSettings(
 descope_client.mgmt.sso.configure_oidc_settings(
 	tenant_id, # Which tenant this configuration is for
 	settings, # The OIDC provider settings
-	redirect_url="https://your.domain.com", # Global redirection after successful authentication
     domains=["tenant-users.com"] # Users authentication with these domains will be logged in to this tenant
 )
 

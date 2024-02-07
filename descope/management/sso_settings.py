@@ -195,7 +195,6 @@ class SSOSettings(AuthBase):
         self,
         tenant_id: str,
         settings: SSOOIDCSettings,
-        redirect_url: Optional[str] = None,
         domains: Optional[List[str]] = None,
     ):
         """
@@ -204,7 +203,6 @@ class SSOSettings(AuthBase):
         Args:
         tenant_id (str): The tenant ID to be configured
         settings (SSOOIDCSettings): The OIDC settings to be configured for this tenant (all settings parameters are required).
-        redirect_url (str): Optional, the Redirect URL to use after successful authentication, or empty string to reset it (if not given it has to be set when starting an SSO authentication via the request).
         domains (List[str]): Optional,domains used to associate users authenticating via SSO with this tenant. Use empty list or None to reset them.
 
         Raise:
@@ -214,7 +212,7 @@ class SSOSettings(AuthBase):
         self._auth.do_post(
             MgmtV1.sso_configure_oidc_settings,
             SSOSettings._compose_configure_oidc_settings_body(
-                tenant_id, settings, redirect_url, domains
+                tenant_id, settings, domains
             ),
             pswd=self._auth.management_key,
         )
@@ -475,7 +473,6 @@ class SSOSettings(AuthBase):
     def _compose_configure_oidc_settings_body(
         tenant_id: str,
         settings: SSOOIDCSettings,
-        redirect_url: Optional[str],
         domains: Optional[List[str]],
     ) -> dict:
         attr_mapping = None
@@ -513,7 +510,6 @@ class SSOSettings(AuthBase):
                 "grantType": settings.grant_type,
                 "issuer": settings.issuer,
             },
-            "redirectUrl": redirect_url,
             "domains": domains,
         }
 
