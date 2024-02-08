@@ -132,6 +132,27 @@ class TestAuth(common.DescopeTest):
         os.environ["DESCOPE_PROJECT_ID"] = ""
         self.assertRaises(AuthException, Auth)
 
+    def test_base_url_for_project_id(self):
+        self.assertEqual("https://api.descope.com", Auth.base_url_for_project_id(""))
+        self.assertEqual(
+            "https://api.descope.com", Auth.base_url_for_project_id("Puse")
+        )
+        self.assertEqual(
+            "https://api.descope.com", Auth.base_url_for_project_id("Puse1ar")
+        )
+        self.assertEqual(
+            "https://api.descope.com",
+            Auth.base_url_for_project_id("P2aAc4T2V93bddihGEx2Ryhc8e5Z"),
+        )
+        self.assertEqual(
+            "https://api.use1.descope.com",
+            Auth.base_url_for_project_id("Puse12aAc4T2V93bddihGEx2Ryhc8e5Z"),
+        )
+        self.assertEqual(
+            "https://api.use1.descope.com",
+            Auth.base_url_for_project_id("Puse12aAc4T2V93bddihGEx2Ryhc8e5Zfoobar"),
+        )
+
     def test_verify_delivery_method(self):
         self.assertEqual(
             Auth.adjust_and_verify_delivery_method(
