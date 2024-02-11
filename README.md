@@ -899,7 +899,7 @@ descope_client.mgmt.role.create(
     name="My Role",
     description="Optional description to briefly explain what this role allows.",
     permission_names=["My Updated Permission"],
-    tenant_id="Optional will scope this role for this specific tenant. If left empty, the role will be available to all tenants."
+    tenant_id="Optionally scope this role for this specific tenant. If left empty, the role will be available to all tenants."
 )
 
 # Update will override all fields as is. Use carefully.
