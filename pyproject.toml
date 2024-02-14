@@ -65,7 +65,7 @@ types-requests = "2.31.0.2"
 types-setuptools = "68.1.0.1"
 
 [tool.poetry.group.tests.dependencies]
-pytest = {version = "6.2.5", python = ">=3.8"}
+pytest = {version = "7.4.4", python = ">=3.8"}
 coverage = {version = "^7.3.1", python = ">=3.8", extras = ["toml"]}
 
 [build-system]
