@@ -1675,6 +1675,30 @@ class TestUser(common.DescopeTest):
                 json={
                     "loginId": "login-id",
                     "password": "some-password",
+                    "persistPassword": False,
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test with persist password
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            mock_post.return_value = network_resp
+            self.client.mgmt.user.set_password("login-id", "some-password", True)
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_set_password_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                json={
+                    "loginId": "login-id",
+                    "password": "some-password",
+                    "persistPassword": True,
                 },
                 allow_redirects=False,
                 verify=True,

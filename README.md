@@ -669,12 +669,12 @@ users_history_resp = descope_client.mgmt.user.history(["user-id-1", "user-id-2"]
 #### Set or Expire User Password
 
 You can set or expire a user's password.
-Note: When setting a password, it will automatically be set as expired.
+Note: When setting a password, it will automatically be set as expired unless persistPassword flag will be set to True,
 The user will not be able log-in using an expired password, and will be required replace it on next login.
 
 ```Python
 // Set a user's password
-descope_client.mgmt.user.setPassword('<login-id>', '<some-password>');
+descope_client.mgmt.user.set_password('<login-id>', '<some-password>', '<persist-password-flag>');
 
 // Or alternatively, expire a user password
 descope_client.mgmt.user.expirePassword('<login-id>');
