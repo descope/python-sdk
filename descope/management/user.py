@@ -1182,7 +1182,7 @@ class User(AuthBase):
         Args:
         login_id (str): The login ID of the user to set the password to.
         password (str): The new password to set to the user.
-        set_active (bool): Keep the password persist so it will not be expired on next log-in
+        set_active (bool): Keep the password active so it will not be expired on next log-in
 
         Raise:
         AuthException: raised if the operation fails
