@@ -1171,18 +1171,18 @@ class User(AuthBase):
         self,
         login_id: str,
         password: str,
-        persist_password: Optional[bool] = False,
+        set_active: Optional[bool] = False,
     ) -> None:
         """
             Set the password for the given login ID.
-            Note: The password will automatically be set as expired unless the persist_password flag will be set to True,
+            Note: The password will automatically be set as expired unless the set_active flag will be set to True,
             The user will not be able to log-in with this password, and will be required to replace it on next login.
             See also: expire_password
 
         Args:
         login_id (str): The login ID of the user to set the password to.
         password (str): The new password to set to the user.
-        persist_password (bool): Keep the password persist so it will not be expired on next log-in
+        set_active (bool): Keep the password persist so it will not be expired on next log-in
 
         Raise:
         AuthException: raised if the operation fails
@@ -1192,7 +1192,7 @@ class User(AuthBase):
             {
                 "loginId": login_id,
                 "password": password,
-                "persistPassword": persist_password,
+                "setActive": set_active,
             },
             pswd=self._auth.management_key,
         )

@@ -1675,7 +1675,7 @@ class TestUser(common.DescopeTest):
                 json={
                     "loginId": "login-id",
                     "password": "some-password",
-                    "persistPassword": False,
+                    "setActive": False,
                 },
                 allow_redirects=False,
                 verify=True,
@@ -1698,7 +1698,7 @@ class TestUser(common.DescopeTest):
                 json={
                     "loginId": "login-id",
                     "password": "some-password",
-                    "persistPassword": True,
+                    "setActive": True,
                 },
                 allow_redirects=False,
                 verify=True,
