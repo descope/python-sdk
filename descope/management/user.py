@@ -1186,7 +1186,7 @@ class User(AuthBase):
         AuthException: raised if the operation fails
         """
         self._auth.do_post(
-            MgmtV1.user_set_password_path,
+            MgmtV1.user_set_temporary_password_path,
             {
                 "loginId": login_id,
                 "password": password,
@@ -1212,7 +1212,7 @@ class User(AuthBase):
         AuthException: raised if the operation fails
         """
         self._auth.do_post(
-            MgmtV1.user_set_password_path,
+            MgmtV1.user_set_active_password_path,
             {
                 "loginId": login_id,
                 "password": password,

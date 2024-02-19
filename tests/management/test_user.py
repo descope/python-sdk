@@ -1666,7 +1666,7 @@ class TestUser(common.DescopeTest):
                 "some-password",
             )
             mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_set_password_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_set_temporary_password_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
@@ -1703,7 +1703,7 @@ class TestUser(common.DescopeTest):
                 "some-password",
             )
             mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_set_password_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_set_active_password_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
