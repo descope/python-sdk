@@ -669,7 +669,7 @@ users_history_resp = descope_client.mgmt.user.history(["user-id-1", "user-id-2"]
 #### Set or Expire User Password
 
 You can set a new active password for a user that they can sign in with. 
-You can also set a temporary password that they user will be forced to change on the next login.
+You can also set a temporary password that the user will be forced to change on the next login.
 For a user that already has an active password, you can expire their current password, effectively requiring them to change it on the next login.
 
 ```Python
