@@ -75,6 +75,7 @@ class MgmtV1:
 
     # jwt
     update_jwt_path = "/v1/mgmt/jwt/update"
+    impersonate_path = "/v1/mgmt/impersonate"
 
     # permission
     permission_create_path = "/v1/mgmt/permission/create"
