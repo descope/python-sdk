@@ -66,11 +66,12 @@ These sections show how to use the SDK to perform permission and user management
 7. [Query SSO Groups](#query-sso-groups)
 8. [Manage Flows](#manage-flows-and-theme)
 9. [Manage JWTs](#manage-jwts)
-10. [Embedded links](#embedded-links)
-11. [Search Audit](#search-audit)
-12. [Manage ReBAC Authz](#manage-rebac-authz)
-13. [Manage Project](#manage-project)
-14. [Manage SSO Applications](#manage-sso-applications)
+10. [Impersonate](#impersonate)
+12. [Embedded links](#embedded-links)
+13. [Search Audit](#search-audit)
+14. [Manage ReBAC Authz](#manage-rebac-authz)
+15. [Manage Project](#manage-project)
+16. [Manage SSO Applications](#manage-sso-applications)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -668,7 +669,7 @@ users_history_resp = descope_client.mgmt.user.history(["user-id-1", "user-id-2"]
 
 #### Set or Expire User Password
 
-You can set a new active password for a user that they can sign in with. 
+You can set a new active password for a user that they can sign in with.
 You can also set a temporary password that the user will be forced to change on the next login.
 For a user that already has an active password, you can expire their current password, effectively requiring them to change it on the next login.
 
@@ -1006,6 +1007,20 @@ updated_jwt = descope_client.mgmt.jwt.update_jwt(
         "custom-key1": "custom-value1",
         "custom-key2": "custom-value2"
     },
+)
+```
+
+### Impersonate
+
+You can impersonate to another user
+The impersonator user must have the `impersonation` permission in order for this request to work.
+The response would be a refresh JWT of the impersonated user
+
+```python
+refresh_jwt = descope_client.mgmt.jwt.impersonate(
+    impersonator_id="<Login ID impersonator>",
+    login_id="<Login ID of impersonated person>",
+    validate_consent=True
 )
 ```
 

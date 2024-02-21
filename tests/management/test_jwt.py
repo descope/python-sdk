@@ -64,3 +64,52 @@ class TestUser(common.DescopeTest):
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
+
+    def test_impersonate(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException, client.mgmt.jwt.impersonate, "imp1", "imp2", False
+            )
+
+            self.assertRaises(
+                AuthException, client.mgmt.jwt.impersonate, "", "imp2", False
+            )
+
+            self.assertRaises(
+                AuthException, client.mgmt.jwt.impersonate, "imp1", "", False
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
+            mock_post.return_value = network_resp
+            resp = client.mgmt.jwt.impersonate("imp1", "imp2", True)
+            self.assertEqual(resp, "response")
+            expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.impersonate_path}"
+            mock_post.assert_called_with(
+                expected_uri,
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                json={
+                    "loginId": "imp2",
+                    "impersonatorId": "imp1",
+                    "validateConsent": True,
+                },
+                allow_redirects=False,
+                verify=True,
+                params=None,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
