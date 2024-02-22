@@ -22,6 +22,8 @@ from jwt import ExpiredSignatureError, ImmatureSignatureError
 
 from descope.common import (
     COOKIE_DATA_NAME,
+    DEFAULT_URL_PREFIX,
+    DEFAULT_DOMAIN,
     DEFAULT_BASE_URL,
     DEFAULT_TIMEOUT_SECONDS,
     PHONE_REGEX,
@@ -87,7 +89,9 @@ class Auth:
         self.jwt_validation_leeway = jwt_validation_leeway
         self.secure = not skip_verify
 
-        self.base_url = os.getenv("DESCOPE_BASE_URI") or DEFAULT_BASE_URL
+        self.base_url = os.getenv("DESCOPE_BASE_URI")
+        if not self.base_url:
+            self.base_url = self.base_url_for_project_id(self.project_id)
         self.timeout_seconds = timeout_seconds
         self.management_key = management_key or os.getenv("DESCOPE_MANAGEMENT_KEY")
 
@@ -179,6 +183,13 @@ class Auth:
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME), None
         )
         return jwt_response
+
+    @staticmethod
+    def base_url_for_project_id(project_id):
+        if len(project_id) >= 32:
+            region = project_id[1:5]
+            return ".".join([DEFAULT_URL_PREFIX, region, DEFAULT_DOMAIN])
+        return DEFAULT_BASE_URL
 
     @staticmethod
     def adjust_and_verify_delivery_method(

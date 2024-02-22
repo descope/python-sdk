@@ -132,7 +132,6 @@ class TestSSOSettings(common.DescopeTest):
                     name="myName",
                     client_id="cid",
                 ),
-                "https://redirect.com",
                 ["domain.com"],
             )
 
@@ -165,7 +164,6 @@ class TestSSOSettings(common.DescopeTest):
                             picture="picture",
                         ),
                     ),
-                    "https://redirect.com",
                     ["domain.com"],
                 )
             )
@@ -207,7 +205,6 @@ class TestSSOSettings(common.DescopeTest):
                             "picture": "picture",
                         },
                     },
-                    "redirectUrl": "https://redirect.com",
                     "domains": ["domain.com"],
                 },
                 allow_redirects=False,

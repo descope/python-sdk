@@ -66,11 +66,12 @@ These sections show how to use the SDK to perform permission and user management
 7. [Query SSO Groups](#query-sso-groups)
 8. [Manage Flows](#manage-flows-and-theme)
 9. [Manage JWTs](#manage-jwts)
-10. [Embedded links](#embedded-links)
-11. [Search Audit](#search-audit)
-12. [Manage ReBAC Authz](#manage-rebac-authz)
-13. [Manage Project](#manage-project)
-14. [Manage SSO Applications](#manage-sso-applications)
+10. [Impersonate](#impersonate)
+12. [Embedded links](#embedded-links)
+13. [Search Audit](#search-audit)
+14. [Manage ReBAC Authz](#manage-rebac-authz)
+15. [Manage Project](#manage-project)
+16. [Manage SSO Applications](#manage-sso-applications)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -668,15 +669,19 @@ users_history_resp = descope_client.mgmt.user.history(["user-id-1", "user-id-2"]
 
 #### Set or Expire User Password
 
-You can set or expire a user's password.
-Note: When setting a password, it will automatically be set as expired.
-The user will not be able log-in using an expired password, and will be required replace it on next login.
+You can set a new active password for a user that they can sign in with.
+You can also set a temporary password that the user will be forced to change on the next login.
+For a user that already has an active password, you can expire their current password, effectively requiring them to change it on the next login.
 
 ```Python
-// Set a user's password
-descope_client.mgmt.user.setPassword('<login-id>', '<some-password>');
 
-// Or alternatively, expire a user password
+# Set a user's temporary password
+descope_client.mgmt.user.set_temporary_password('<login-id>', '<some-password>');
+
+# Set a user's password
+descope_client.mgmt.user.set_active_password('<login-id>', '<some-password>');
+
+# Or alternatively, expire a user password
 descope_client.mgmt.user.expirePassword('<login-id>');
 ```
 
@@ -794,6 +799,7 @@ settings = SSOOIDCSettings(
 	name="myProvider",
 	client_id="myId",
 	client_secret="secret",
+    redirect_url="https://your.domain.com",
 	auth_url="https://dummy.com/auth",
 	token_url="https://dummy.com/token",
 	user_data_url="https://dummy.com/userInfo",
@@ -815,7 +821,6 @@ settings = SSOOIDCSettings(
 descope_client.mgmt.sso.configure_oidc_settings(
 	tenant_id, # Which tenant this configuration is for
 	settings, # The OIDC provider settings
-	redirect_url="https://your.domain.com", # Global redirection after successful authentication
     domains=["tenant-users.com"] # Users authentication with these domains will be logged in to this tenant
 )
 
@@ -899,6 +904,7 @@ descope_client.mgmt.role.create(
     name="My Role",
     description="Optional description to briefly explain what this role allows.",
     permission_names=["My Updated Permission"],
+    tenant_id="Optionally scope this role for this specific tenant. If left empty, the role will be available to all tenants."
 )
 
 # Update will override all fields as is. Use carefully.
@@ -907,10 +913,11 @@ descope_client.mgmt.role.update(
     new_name="My Updated Role",
     description="A revised description",
     permission_names=["My Updated Permission", "Another Permission"]
+    tenant_id="The tenant ID to which this role is associated, leave empty, if role is a global one"
 )
 
 # Role deletion cannot be undone. Use carefully.
-descope_client.mgmt.role.delete("My Updated Role")
+descope_client.mgmt.role.delete("My Updated Role", "<tenant_id>")
 
 # Load all roles
 roles_resp = descope_client.mgmt.role.load_all()
@@ -1000,6 +1007,20 @@ updated_jwt = descope_client.mgmt.jwt.update_jwt(
         "custom-key1": "custom-value1",
         "custom-key2": "custom-value2"
     },
+)
+```
+
+### Impersonate
+
+You can impersonate to another user
+The impersonator user must have the `impersonation` permission in order for this request to work.
+The response would be a refresh JWT of the impersonated user
+
+```python
+refresh_jwt = descope_client.mgmt.jwt.impersonate(
+    impersonator_id="<Login ID impersonator>",
+    login_id="<Login ID of impersonated person>",
+    validate_consent=True
 )
 ```
 

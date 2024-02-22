@@ -42,7 +42,9 @@ class MgmtV1:
     user_add_sso_apps = "/v1/mgmt/user/update/ssoapp/add"
     user_set_sso_apps = "/v1/mgmt/user/update/ssoapp/set"
     user_remove_sso_apps = "/v1/mgmt/user/update/ssoapp/remove"
-    user_set_password_path = "/v1/mgmt/user/password/set"
+    user_set_password_path = "/v1/mgmt/user/password/set"  # Deprecated
+    user_set_temporary_password_path = "/v1/mgmt/user/password/set/temporary"
+    user_set_active_password_path = "/v1/mgmt/user/password/set/active"
     user_expire_password_path = "/v1/mgmt/user/password/expire"
     user_remove_all_passkeys_path = "/v1/mgmt/user/passkeys/delete"
     user_add_tenant_path = "/v1/mgmt/user/update/tenant/add"
@@ -73,6 +75,7 @@ class MgmtV1:
 
     # jwt
     update_jwt_path = "/v1/mgmt/jwt/update"
+    impersonate_path = "/v1/mgmt/impersonate"
 
     # permission
     permission_create_path = "/v1/mgmt/permission/create"

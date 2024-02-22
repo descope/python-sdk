@@ -1167,13 +1167,13 @@ class User(AuthBase):
         )
         return response.json()
 
-    def set_password(
+    def set_temporary_password(
         self,
         login_id: str,
         password: str,
     ) -> None:
         """
-            Set the password for the given login ID.
+            Set the temporary password for the given login ID.
             Note: The password will automatically be set as expired.
             The user will not be able to log-in with this password, and will be required to replace it on next login.
             See also: expire_password
@@ -1186,8 +1186,70 @@ class User(AuthBase):
         AuthException: raised if the operation fails
         """
         self._auth.do_post(
+            MgmtV1.user_set_temporary_password_path,
+            {
+                "loginId": login_id,
+                "password": password,
+                "setActive": False,
+            },
+            pswd=self._auth.management_key,
+        )
+        return
+
+    def set_active_password(
+        self,
+        login_id: str,
+        password: str,
+    ) -> None:
+        """
+            Set the password for the given login ID.
+
+        Args:
+        login_id (str): The login ID of the user to set the password to.
+        password (str): The new password to set to the user.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        self._auth.do_post(
+            MgmtV1.user_set_active_password_path,
+            {
+                "loginId": login_id,
+                "password": password,
+                "setActive": True,
+            },
+            pswd=self._auth.management_key,
+        )
+        return
+
+    # Deprecated (use set_temporary_password instead)
+    def set_password(
+        self,
+        login_id: str,
+        password: str,
+        set_active: Optional[bool] = False,
+    ) -> None:
+        """
+            Set the password for the given login ID.
+            Note: The password will automatically be set as expired unless the set_active flag will be set to True,
+            The user will not be able to log-in with this password, and will be required to replace it on next login.
+            See also: expire_password
+
+        Args:
+        login_id (str): The login ID of the user to set the password to.
+        password (str): The new password to set to the user.
+        set_active (bool): Keep the password active so it will not be expired on next log-in
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        self._auth.do_post(
             MgmtV1.user_set_password_path,
-            {"loginId": login_id, "password": password},
+            {
+                "loginId": login_id,
+                "password": password,
+                "setActive": set_active,
+            },
             pswd=self._auth.management_key,
         )
         return
