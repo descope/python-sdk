@@ -730,6 +730,14 @@ descope_client.mgmt.access_key.activate("key-id")
 descope_client.mgmt.access_key.delete("key-id")
 ```
 
+Exchange the access key and provide optional access key login options:
+```python
+loc = AccessKeyLoginOptions(custom_claims={"k1": "v1"})
+jwt_response = descope_client.exchange_access_key(
+  access_key="accessKey", login_options=loc
+)
+```
+
 ### Manage SSO Setting
 
 You can manage SSO settings and map SSO group roles and user attributes.
