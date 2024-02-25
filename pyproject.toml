@@ -47,7 +47,10 @@ Flask = {version = ">=2", python = ">=3.8"}
 
 [tool.poetry.group.dev.dependencies]
 mock = "5.1.0"
-pre-commit = {version = "3.6.0", python = ">=3.8"}
+pre-commit = [
+    {version = "<3.0.0", python = ">=3.8,<3.9"},
+    {version = "3.6.0", python = ">3.9"}
+]
 flake8 = {version = "7.0.0", python = ">=3.8.1"}
 flake8-pyproject = {version = "1.2.3", python = ">=3.8.1"}
 flake8-bugbear = {version = "23.12.2", python = ">=3.8.1"}
