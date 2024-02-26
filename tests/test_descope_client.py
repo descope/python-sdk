@@ -9,6 +9,7 @@ from descope import (
     API_RATE_LIMIT_RETRY_AFTER_HEADER,
     ERROR_TYPE_API_RATE_LIMIT,
     SESSION_COOKIE_NAME,
+    AccessKeyLoginOptions,
     AuthException,
     DescopeClient,
     RateLimitException,
@@ -680,6 +681,48 @@ class TestDescopeClient(common.DescopeTest):
         with self.assertRaises(AuthException) as cm:
             client.exchange_access_key("")
         self.assertEqual(cm.exception.status_code, 400)
+
+    def test_exchange_access_key(self):
+        # client = DescopeClient(self.dummy_project_id, self.public_key_dict)
+        client = DescopeClient(
+            self.dummy_project_id,
+            {
+                "alg": "ES384",
+                "crv": "P-384",
+                "kid": "P2CuC9yv2UGtGI1o84gCZEb9qEQW",
+                "kty": "EC",
+                "use": "sig",
+                "x": "DCjjyS7blnEmenLyJVwmH6yMnp7MlEggfk1kLtOv_Khtpps_Mq4K9brqsCwQhGUP",
+                "y": "xKy4IQ2FaLEzrrl1KE5mKbioLhj1prYFk1itdTOr6Xpy1fgq86kC7v-Y2F2vpcDc",
+            },
+        )
+        dummy_access_key = "dummy access key"
+        valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3VDOXl2MlVHdEdJMW84NGdDWkViOXFFUVciLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0NDMwNjEsImlhdCI6MTY1OTY0MzA2MSwiaXNzIjoiUDJDdUM5eXYyVUd0R0kxbzg0Z0NaRWI5cUVRVyIsInN1YiI6IlUyQ3VDUHVKZ1BXSEdCNVA0R21mYnVQR2hHVm0ifQ.mRo9FihYMR3qnQT06Mj3CJ5X0uTCEcXASZqfLLUv0cPCLBtBqYTbuK-ZRDnV4e4N6zGCNX2a3jjpbyqbViOxICCNSxJsVb-sdsSujtEXwVMsTTLnpWmNsMbOUiKmoME0"
+        with patch("requests.post") as mock_post:
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            data = {"sessionJwt": valid_jwt_token}
+            my_mock_response.json.return_value = data
+            mock_post.return_value = my_mock_response
+            jwt_response = client.exchange_access_key(
+                access_key=dummy_access_key,
+                login_options=AccessKeyLoginOptions(custom_claims={"k1": "v1"}),
+            )
+            self.assertEqual(jwt_response["keyId"], "U2CuCPuJgPWHGB5P4GmfbuPGhGVm")
+            self.assertEqual(jwt_response["projectId"], "P2CuC9yv2UGtGI1o84gCZEb9qEQW")
+
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.exchange_auth_access_key_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:dummy access key",
+                },
+                params=None,
+                json={"loginOptions": {"customClaims": {"k1": "v1"}}},
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
 
     def test_jwt_validation_leeway(self):
         # Note: I set here negative leeway just for setting the check time results to be in the "past"
