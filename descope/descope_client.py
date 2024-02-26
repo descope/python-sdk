@@ -11,6 +11,7 @@ from descope.authmethod.oauth import OAuth  # noqa: F401
 from descope.authmethod.otp import OTP  # noqa: F401
 from descope.authmethod.password import Password  # noqa: F401
 from descope.authmethod.saml import SAML  # noqa: F401
+from descope.authmethod.sso import SSO  # noqa: F401
 from descope.authmethod.totp import TOTP  # noqa: F401
 from descope.authmethod.webauthn import WebAuthn  # noqa: F401
 from descope.common import DEFAULT_TIMEOUT_SECONDS, EndpointsV1
@@ -43,7 +44,8 @@ class DescopeClient:
         self._magiclink = MagicLink(auth)
         self._enchantedlink = EnchantedLink(auth)
         self._oauth = OAuth(auth)
-        self._saml = SAML(auth)
+        self._saml = SAML(auth)  # deprecated
+        self._sso = SSO(auth)
         self._otp = OTP(auth)
         self._totp = TOTP(auth)
         self._webauthn = WebAuthn(auth)
@@ -77,9 +79,16 @@ class DescopeClient:
     def oauth(self):
         return self._oauth
 
+    # ######## deprecated (use sso instead)
     @property
     def saml(self):
         return self._saml
+
+    # ###################
+
+    @property
+    def sso(self):
+        return self._sso
 
     @property
     def webauthn(self):
@@ -101,6 +110,21 @@ class DescopeClient:
         Return value (bool): returns true if all permissions granted; false if at least one permission not granted
         """
         return self.validate_tenant_permissions(jwt_response, "", permissions)
+
+    def get_matched_permissions(
+        self, jwt_response: dict, permissions: list[str]
+    ) -> list[str]:
+        """
+        Get the list of permissions that a jwt_response has been granted from the provided list of permissions.
+            For a multi-tenant environment use get_matched_tenant_permissions function
+
+        Args:
+        jwt_response (dict): The jwt_response object which includes all JWT claims information
+        permissions (List[str]): List of permissions to validate for this jwt_response
+
+        Return value (List[str]): returns the list of permissions that are granted
+        """
+        return self.get_matched_tenant_permissions(jwt_response, "", permissions)
 
     def validate_tenant_permissions(
         self, jwt_response: dict, tenant: str, permissions: list[str]
@@ -138,6 +162,43 @@ class DescopeClient:
                 return False
         return True
 
+    def get_matched_tenant_permissions(
+        self, jwt_response: dict, tenant: str, permissions: list[str]
+    ) -> list[str]:
+        """
+        Get the list of permissions that a jwt_response has been granted from the provided list of permissions on the specified tenant.
+            For a multi-tenant environment use get_matched_tenant_permissions function
+
+        Args:
+        jwt_response (dict): The jwt_response object which includes all JWT claims information
+        tenant (str): TenantId
+        permissions (List[str]): List of permissions to validate for this jwt_response
+
+        Return value (List[str]): returns the list of permissions that are granted
+        """
+        if not jwt_response:
+            return []
+
+        if isinstance(permissions, str):
+            permissions = [permissions]
+
+        granted = []
+        if tenant == "":
+            granted = jwt_response.get("permissions", [])
+        else:
+            # ensure that the tenant is associated with the jwt_response
+            if tenant not in jwt_response.get("tenants", {}):
+                return []
+            granted = (
+                jwt_response.get("tenants", {}).get(tenant, {}).get("permissions", [])
+            )
+
+        matched = []
+        for perm in permissions:
+            if perm in granted:
+                matched.append(perm)
+        return matched
+
     def validate_roles(self, jwt_response: dict, roles: list[str]) -> bool:
         """
         Validate that a jwt_response has been granted the specified roles.
@@ -150,6 +211,19 @@ class DescopeClient:
         Return value (bool): returns true if all roles granted; false if at least one role not granted
         """
         return self.validate_tenant_roles(jwt_response, "", roles)
+
+    def get_matched_roles(self, jwt_response: dict, roles: list[str]) -> list[str]:
+        """
+        Get the list of roles that a jwt_response has been granted from the provided list of roles.
+            For a multi-tenant environment use get_matched_tenant_roles function
+
+        Args:
+        jwt_response (dict): The jwt_response object which includes all JWT claims information
+        roles (List[str]): List of roles to validate for this jwt_response
+
+        Return value (List[str]): returns the list of roles that are granted
+        """
+        return self.get_matched_tenant_roles(jwt_response, "", roles)
 
     def validate_tenant_roles(
         self, jwt_response: dict, tenant: str, roles: list[str]
@@ -184,6 +258,41 @@ class DescopeClient:
             if role not in granted:
                 return False
         return True
+
+    def get_matched_tenant_roles(
+        self, jwt_response: dict, tenant: str, roles: list[str]
+    ) -> list[str]:
+        """
+        Get the list of roles that a jwt_response has been granted from the provided list of roles on the specified tenant.
+            For a multi-tenant environment use get_matched_tenant_roles function
+
+        Args:
+        jwt_response (dict): The jwt_response object which includes all JWT claims information
+        tenant (str): TenantId
+        roles (List[str]): List of roles to validate for this jwt_response
+
+        Return value (List[str]): returns the list of roles that are granted
+        """
+        if not jwt_response:
+            return []
+
+        if isinstance(roles, str):
+            roles = [roles]
+
+        granted = []
+        if tenant == "":
+            granted = jwt_response.get("roles", [])
+        else:
+            # ensure that the tenant is associated with the jwt_response
+            if tenant not in jwt_response.get("tenants", {}):
+                return []
+            granted = jwt_response.get("tenants", {}).get(tenant, {}).get("roles", [])
+
+        matched = []
+        for role in roles:
+            if role in granted:
+                matched.append(role)
+        return matched
 
     def validate_session(
         self, session_token: str, audience: str | Iterable[str] | None = None
@@ -326,6 +435,41 @@ class DescopeClient:
         )
         return response.json()
 
+    def history(self, refresh_token: str) -> list[dict]:
+        """
+        Retrieve user authentication history for the refresh token
+
+        Args:
+        refresh_token (str): The refresh token
+
+        Return value (List[dict]):
+        Return List in the format
+             [
+                {
+                    "userId": "User's ID",
+                    "loginTime": "User'sLogin time",
+                    "city": "User's city",
+                    "country": "User's country",
+                    "ip": User's IP
+                }
+            ]
+
+        Raise:
+        AuthException: Exception is raised if session is not authorized or another error occurs
+        """
+        if refresh_token is None:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                f"signed refresh token {refresh_token} is empty",
+            )
+
+        uri = EndpointsV1.history_path
+        response = self._auth.do_get(
+            uri=uri, params=None, allow_redirects=None, pswd=refresh_token
+        )
+        return response.json()
+
     def exchange_access_key(
         self, access_key: str, audience: str | Iterable[str] | None = None
     ) -> dict:
@@ -348,3 +492,23 @@ class DescopeClient:
             )
 
         return self._auth.exchange_access_key(access_key, audience)
+
+    def select_tenant(
+        self,
+        tenant_id: str,
+        refresh_token: str,
+    ) -> dict:
+        """
+        Add to JWT a selected tenant claim
+
+        Args:
+        refresh_token (str): The refresh token that will be used to refresh the session token, if needed
+        tenant_id (str): The tenant id to place on JWT
+
+        Return value (dict):
+        Return dict includes the session token, refresh token, with the tenant id on the jwt
+
+        Raise:
+        AuthException: Exception is raised if session is not authorized or another error occurs
+        """
+        return self._auth.select_tenant(tenant_id, refresh_token)

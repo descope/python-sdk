@@ -10,6 +10,7 @@ class Role(AuthBase):
         name: str,
         description: Optional[str] = None,
         permission_names: Optional[List[str]] = None,
+        tenant_id: Optional[str] = None,
     ):
         """
         Create a new role.
@@ -30,6 +31,7 @@ class Role(AuthBase):
                 "name": name,
                 "description": description,
                 "permissionNames": permission_names,
+                "tenantId": tenant_id,
             },
             pswd=self._auth.management_key,
         )
@@ -40,6 +42,7 @@ class Role(AuthBase):
         new_name: str,
         description: Optional[str] = None,
         permission_names: Optional[List[str]] = None,
+        tenant_id: Optional[str] = None,
     ):
         """
         Update an existing role with the given various fields. IMPORTANT: All parameters are used as overrides
@@ -62,6 +65,7 @@ class Role(AuthBase):
                 "newName": new_name,
                 "description": description,
                 "permissionNames": permission_names,
+                "tenantId": tenant_id,
             },
             pswd=self._auth.management_key,
         )
@@ -69,6 +73,7 @@ class Role(AuthBase):
     def delete(
         self,
         name: str,
+        tenant_id: Optional[str] = None,
     ):
         """
         Delete an existing role. IMPORTANT: This action is irreversible. Use carefully.
@@ -81,7 +86,7 @@ class Role(AuthBase):
         """
         self._auth.do_post(
             MgmtV1.role_delete_path,
-            {"name": name},
+            {"name": name, "tenantId": tenant_id},
             pswd=self._auth.management_key,
         )
 

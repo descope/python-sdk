@@ -25,3 +25,38 @@ class JWT(AuthBase):
             pswd=self._auth.management_key,
         )
         return response.json().get("jwt", "")
+
+    def impersonate(
+        self, impersonator_id: str, login_id: str, validate_consent: bool
+    ) -> str:
+        """
+        Impersonate to another user
+
+        Args:
+        impersonator_id (str): login id / user id of impersonator, must have "impersonation" permission.
+        login_id (str): login id of the user whom to which to impersonate to.
+        validate_consent (bool): Indicate whether to allow impersonation in any case or only if a consent to this operation was granted.
+
+        Return value (str): A JWT of the impersonated user
+
+        Raise:
+        AuthException: raised if update failed
+        """
+        if not impersonator_id:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "impersonator_id cannot be empty"
+            )
+        if not login_id:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "login_id cannot be empty"
+            )
+        response = self._auth.do_post(
+            MgmtV1.impersonate_path,
+            {
+                "loginId": login_id,
+                "impersonatorId": impersonator_id,
+                "validateConsent": validate_consent,
+            },
+            pswd=self._auth.management_key,
+        )
+        return response.json().get("jwt", "")

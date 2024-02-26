@@ -132,6 +132,27 @@ class TestAuth(common.DescopeTest):
         os.environ["DESCOPE_PROJECT_ID"] = ""
         self.assertRaises(AuthException, Auth)
 
+    def test_base_url_for_project_id(self):
+        self.assertEqual("https://api.descope.com", Auth.base_url_for_project_id(""))
+        self.assertEqual(
+            "https://api.descope.com", Auth.base_url_for_project_id("Puse")
+        )
+        self.assertEqual(
+            "https://api.descope.com", Auth.base_url_for_project_id("Puse1ar")
+        )
+        self.assertEqual(
+            "https://api.descope.com",
+            Auth.base_url_for_project_id("P2aAc4T2V93bddihGEx2Ryhc8e5Z"),
+        )
+        self.assertEqual(
+            "https://api.use1.descope.com",
+            Auth.base_url_for_project_id("Puse12aAc4T2V93bddihGEx2Ryhc8e5Z"),
+        )
+        self.assertEqual(
+            "https://api.use1.descope.com",
+            Auth.base_url_for_project_id("Puse12aAc4T2V93bddihGEx2Ryhc8e5Zfoobar"),
+        )
+
     def test_verify_delivery_method(self):
         self.assertEqual(
             Auth.adjust_and_verify_delivery_method(
@@ -269,6 +290,10 @@ class TestAuth(common.DescopeTest):
         self.assertEqual(
             Auth.get_method_string(DeliveryMethod.WHATSAPP),
             "whatsapp",
+        )
+        self.assertEqual(
+            Auth.get_method_string(DeliveryMethod.EMBEDDED),
+            "Embedded",
         )
 
         class AAA(Enum):
@@ -596,7 +621,7 @@ class TestAuth(common.DescopeTest):
             mock_request.return_value.ok = False
             mock_request.return_value.status_code = 400
             mock_request.return_value.error_type = ERROR_TYPE_SERVER_ERROR
-            mock_request.return_value.text = """{"errorCode":"E062108","errorDescription":"User not found","errorMessage":"Cannot find user","message":"Cannot find user"}"""
+            mock_request.return_value.text = """{"errorCode":"E062108","errorDescription":"User not found","errorMessage":"Cannot find user"}"""
             with self.assertRaises(AuthException) as cm:
                 auth.do_get(uri="http://test.com", params=False, allow_redirects=None)
             the_exception = cm.exception
@@ -604,7 +629,7 @@ class TestAuth(common.DescopeTest):
             self.assertEqual(the_exception.error_type, ERROR_TYPE_SERVER_ERROR)
             self.assertEqual(
                 the_exception.error_message,
-                """{"errorCode":"E062108","errorDescription":"User not found","errorMessage":"Cannot find user","message":"Cannot find user"}""",
+                """{"errorCode":"E062108","errorDescription":"User not found","errorMessage":"Cannot find user"}""",
             )
 
 

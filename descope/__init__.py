@@ -6,6 +6,7 @@ from descope.common import (
     SESSION_TOKEN_NAME,
     DeliveryMethod,
     LoginOptions,
+    SignUpOptions,
 )
 from descope.descope_client import DescopeClient
 from descope.exceptions import (
@@ -15,5 +16,27 @@ from descope.exceptions import (
     AuthException,
     RateLimitException,
 )
-from descope.management.common import AssociatedTenant
-from descope.management.sso_settings import AttributeMapping, RoleMapping
+from descope.management.common import (
+    AssociatedTenant,
+    SAMLIDPAttributeMappingInfo,
+    SAMLIDPGroupsMappingInfo,
+    SAMLIDPRoleGroupMappingInfo,
+)
+from descope.management.sso_settings import (
+    AttributeMapping,
+    OIDCAttributeMapping,
+    RoleMapping,
+    SSOOIDCSettings,
+    SSOSAMLSettings,
+    SSOSAMLSettingsByMetadata,
+)
+from descope.management.user import (
+    UserObj,
+)
+from descope.management.user_pwd import (
+    UserPassword,
+    UserPasswordBcrypt,
+    UserPasswordFirebase,
+    UserPasswordPbkdf2,
+    UserPasswordDjango,
+)

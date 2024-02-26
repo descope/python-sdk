@@ -7,6 +7,8 @@ from descope.common import (
     DeliveryMethod,
     EndpointsV1,
     LoginOptions,
+    SignUpOptions,
+    signup_options_to_dict,
     validate_refresh_token_provided,
 )
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
@@ -48,7 +50,11 @@ class OTP(AuthBase):
         return Auth.extract_masked_address(response.json(), method)
 
     def sign_up(
-        self, method: DeliveryMethod, login_id: str, user: dict | None = None
+        self,
+        method: DeliveryMethod,
+        login_id: str,
+        user: dict | None = None,
+        signup_options: SignUpOptions | None = None,
     ) -> str:
         """
         Sign up (create) a new user using their email or phone number. Choose a delivery method for OTP
@@ -76,11 +82,16 @@ class OTP(AuthBase):
             )
 
         uri = OTP._compose_signup_url(method)
-        body = OTP._compose_signup_body(method, login_id, user)
+        body = OTP._compose_signup_body(method, login_id, user, signup_options)
         response = self._auth.do_post(uri, body)
         return Auth.extract_masked_address(response.json(), method)
 
-    def sign_up_or_in(self, method: DeliveryMethod, login_id: str) -> str:
+    def sign_up_or_in(
+        self,
+        method: DeliveryMethod,
+        login_id: str,
+        signup_options: SignUpOptions | None = None,
+    ) -> str:
         """
         Sign_up_or_in lets you handle both sign up and sign in with a single call. Sign-up_or_in will first determine if
             login_id is a new or existing end user. If login_id is new, a new end user user will be created and then
@@ -100,7 +111,16 @@ class OTP(AuthBase):
             )
 
         uri = OTP._compose_sign_up_or_in_url(method)
-        body = OTP._compose_signin_body(login_id)
+        login_options: LoginOptions | None = None
+        if signup_options is not None:
+            login_options = LoginOptions(
+                custom_claims=signup_options.customClaims,
+                template_options=signup_options.templateOptions,
+            )
+        body = OTP._compose_signin_body(
+            login_id,
+            login_options,
+        )
         response = self._auth.do_post(uri, body)
         return Auth.extract_masked_address(response.json(), method)
 
@@ -144,6 +164,7 @@ class OTP(AuthBase):
         refresh_token: str,
         add_to_login_ids: bool = False,
         on_merge_use_existing: bool = False,
+        template_options: dict | None = None,
     ) -> str:
         """
         Update the email address of an end user, after verifying the authenticity of the end user using OTP.
@@ -166,7 +187,7 @@ class OTP(AuthBase):
 
         uri = EndpointsV1.update_user_email_otp_path
         body = OTP._compose_update_user_email_body(
-            login_id, email, add_to_login_ids, on_merge_use_existing
+            login_id, email, add_to_login_ids, on_merge_use_existing, template_options
         )
         response = self._auth.do_post(uri, body, None, refresh_token)
         return Auth.extract_masked_address(response.json(), DeliveryMethod.EMAIL)
@@ -179,6 +200,7 @@ class OTP(AuthBase):
         refresh_token: str,
         add_to_login_ids: bool = False,
         on_merge_use_existing: bool = False,
+        template_options: dict | None = None,
     ) -> str:
         """
         Update the phone number of an existing end user, after verifying the authenticity of the end user using OTP.
@@ -205,7 +227,7 @@ class OTP(AuthBase):
 
         uri = OTP._compose_update_phone_url(method)
         body = OTP._compose_update_user_phone_body(
-            login_id, phone, add_to_login_ids, on_merge_use_existing
+            login_id, phone, add_to_login_ids, on_merge_use_existing, template_options
         )
         response = self._auth.do_post(uri, body, None, refresh_token)
         return Auth.extract_masked_address(response.json(), DeliveryMethod.SMS)
@@ -231,8 +253,16 @@ class OTP(AuthBase):
         return Auth.compose_url(EndpointsV1.update_user_phone_otp_path, method)
 
     @staticmethod
-    def _compose_signup_body(method: DeliveryMethod, login_id: str, user: dict) -> dict:
-        body: dict[str, str | dict] = {"loginId": login_id}
+    def _compose_signup_body(
+        method: DeliveryMethod,
+        login_id: str,
+        user: dict,
+        signup_options: SignUpOptions | None = None,
+    ) -> dict:
+        body: dict[str, str | bool | dict] = {"loginId": login_id}
+
+        if signup_options is not None:
+            body["loginOptions"] = signup_options_to_dict(signup_options)
 
         if user is not None:
             body["user"] = user
@@ -255,22 +285,38 @@ class OTP(AuthBase):
 
     @staticmethod
     def _compose_update_user_email_body(
-        login_id: str, email: str, add_to_login_ids: bool, on_merge_use_existing: bool
+        login_id: str,
+        email: str,
+        add_to_login_ids: bool,
+        on_merge_use_existing: bool,
+        template_options: dict | None = None,
     ) -> dict:
-        return {
+        body: dict[str, str | bool | dict] = {
             "loginId": login_id,
             "email": email,
             "addToLoginIDs": add_to_login_ids,
             "onMergeUseExisting": on_merge_use_existing,
         }
+        if template_options is not None:
+            body["templateOptions"] = template_options
+
+        return body
 
     @staticmethod
     def _compose_update_user_phone_body(
-        login_id: str, phone: str, add_to_login_ids: bool, on_merge_use_existing: bool
+        login_id: str,
+        phone: str,
+        add_to_login_ids: bool,
+        on_merge_use_existing: bool,
+        template_options: dict | None = None,
     ) -> dict:
-        return {
+        body: dict[str, str | bool | dict] = {
             "loginId": login_id,
             "phone": phone,
             "addToLoginIDs": add_to_login_ids,
             "onMergeUseExisting": on_merge_use_existing,
         }
+        if template_options is not None:
+            body["templateOptions"] = template_options
+
+        return body

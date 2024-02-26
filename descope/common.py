@@ -3,7 +3,9 @@ from typing import Optional
 
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
-DEFAULT_BASE_URL = "https://api.descope.com"  # pragma: no cover
+DEFAULT_URL_PREFIX = "https://api"
+DEFAULT_DOMAIN = "descope.com"
+DEFAULT_BASE_URL = DEFAULT_URL_PREFIX + "." + DEFAULT_DOMAIN  # pragma: no cover
 DEFAULT_TIMEOUT_SECONDS = 60
 
 PHONE_REGEX = r"""^(?:(?:\(?(?:00|\+)([1-4]\d\d|[1-9]\d?)\)?)?[\-\.\ \\/]?)?((?:\(?\d{1,}\)?[\-\.\ \\/]?){0,})(?:[\-\.\ \\/]?(?:#|ext\.?|extension|x)[\-\.\ \\/]?(\d+))?$"""
@@ -20,9 +22,11 @@ REDIRECT_LOCATION_COOKIE_NAME = "Location"
 
 class EndpointsV1:
     refresh_token_path = "/v1/auth/refresh"
+    select_tenant_path = "/v1/auth/tenant/select"
     logout_path = "/v1/auth/logout"
     logout_all_path = "/v1/auth/logoutall"
     me_path = "/v1/auth/me"
+    history_path = "/v1/auth/me/history"
 
     # accesskey
     exchange_auth_access_key_path = "/v1/auth/accesskey/exchange"
@@ -56,9 +60,15 @@ class EndpointsV1:
     oauth_start_path = "/v1/auth/oauth/authorize"
     oauth_exchange_token_path = "/v1/auth/oauth/exchange"
 
+    # #### DEPRECATED
     # saml
     auth_saml_start_path = "/v1/auth/saml/authorize"
     saml_exchange_token_path = "/v1/auth/saml/exchange"
+    #################
+
+    # sso (saml/oidc)
+    auth_sso_start_path = "/v1/auth/sso/authorize"
+    sso_exchange_token_path = "/v1/auth/sso/exchange"
 
     # totp
     sign_up_auth_totp_path = "/v1/auth/totp/signup"
@@ -91,6 +101,7 @@ class DeliveryMethod(Enum):
     WHATSAPP = 1
     SMS = 2
     EMAIL = 3
+    EMBEDDED = 4
 
 
 class LoginOptions:
@@ -99,10 +110,15 @@ class LoginOptions:
         stepup: bool = False,
         mfa: bool = False,
         custom_claims: Optional[dict] = None,
+        template_options: Optional[
+            dict
+        ] = None,  # for providing messaging template options (templates that are being sent via email / text message)
     ):
         self.stepup = stepup
         self.customClaims = custom_claims
         self.mfa = mfa
+        if template_options is not None:
+            self.templateOptions = template_options
 
 
 def validate_refresh_token_provided(
@@ -118,3 +134,25 @@ def validate_refresh_token_provided(
             ERROR_TYPE_INVALID_ARGUMENT,
             "Missing refresh token for stepup/mfa",
         )
+
+
+class SignUpOptions:
+    def __init__(
+        self,
+        custom_claims: Optional[dict] = None,
+        template_options: Optional[
+            dict
+        ] = None,  # for providing messaging template options (templates that are being sent via email / text message)
+    ):
+        self.customClaims = custom_claims
+        self.templateOptions = template_options
+
+
+def signup_options_to_dict(signup_options: Optional[SignUpOptions] = None) -> dict:
+    res = {}
+    if signup_options is not None:
+        if signup_options.customClaims is not None:
+            res["customClaims"] = signup_options.customClaims
+        if signup_options.templateOptions is not None:
+            res["templateOptions"] = signup_options.templateOptions
+    return res

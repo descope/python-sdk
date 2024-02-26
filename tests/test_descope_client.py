@@ -13,7 +13,7 @@ from descope import (
     DescopeClient,
     RateLimitException,
 )
-from descope.common import SESSION_TOKEN_NAME
+from descope.common import DEFAULT_TIMEOUT_SECONDS, SESSION_TOKEN_NAME, EndpointsV1
 
 from . import common
 
@@ -122,6 +122,69 @@ class TestDescopeClient(common.DescopeTest):
             user_response = client.me(dummy_refresh_token)
             self.assertIsNotNone(user_response)
             self.assertEqual(data["name"], user_response["name"])
+            mock_get.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.me_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}",
+                },
+                allow_redirects=None,
+                verify=True,
+                params=None,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_history(self):
+        dummy_refresh_token = ""
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
+
+        self.assertRaises(AuthException, client.history, None)
+
+        # Test failed flow
+        with patch("requests.get") as mock_get:
+            mock_get.return_value.ok = False
+            self.assertRaises(AuthException, client.history, dummy_refresh_token)
+
+        # Test success flow
+        with patch("requests.get") as mock_get:
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            data = json.loads(
+                """
+                [
+                    {
+                        "userId":    "kuku",
+                        "city":      "kefar saba",
+                        "country":   "Israel",
+                        "ip":        "1.1.1.1",
+                        "loginTime": 32
+                    },
+                    {
+                        "userId":    "nunu",
+                        "city":      "eilat",
+                        "country":   "Israele",
+                        "ip":        "1.1.1.2",
+                        "loginTime": 23
+                    }
+                ]
+                """
+            )
+            my_mock_response.json.return_value = data
+            mock_get.return_value = my_mock_response
+            user_response = client.history(dummy_refresh_token)
+            self.assertIsNotNone(user_response)
+            self.assertEqual(data, user_response)
+            mock_get.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.history_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}",
+                },
+                allow_redirects=None,
+                verify=True,
+                params=None,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
 
     def test_validate_session(self):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)
@@ -442,6 +505,7 @@ class TestDescopeClient(common.DescopeTest):
         self.assertIsNotNone(client.totp, "Empty totp object")
         self.assertIsNotNone(client.oauth, "Empty oauth object")
         self.assertIsNotNone(client.saml, "Empty saml object")
+        self.assertIsNotNone(client.sso, "Empty saml object")
         self.assertIsNotNone(client.webauthn, "Empty webauthN object")
 
     def test_validate_permissions(self):
@@ -482,6 +546,58 @@ class TestDescopeClient(common.DescopeTest):
         )
         self.assertFalse(client.validate_tenant_permissions(jwt_response, "t2", []))
 
+    def test_get_matched_permissions(self):
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
+        jwt_response = {}
+        self.assertEqual(client.get_matched_permissions(jwt_response, []), [])
+
+        jwt_response = {"permissions": []}
+        self.assertEqual(client.get_matched_permissions(jwt_response, ["Perm 1"]), [])
+
+        jwt_response = {"permissions": ["Perm 1", "Perm 2"]}
+        self.assertEqual(
+            client.get_matched_permissions(jwt_response, ["Perm 1"]), ["Perm 1"]
+        )
+        self.assertEqual(
+            client.get_matched_permissions(jwt_response, ["Perm 1", "Perm 2"]),
+            ["Perm 1", "Perm 2"],
+        )
+        self.assertEqual(
+            client.get_matched_permissions(
+                jwt_response, ["Perm 1", "Perm 2", "Perm 3"]
+            ),
+            ["Perm 1", "Perm 2"],
+        )
+
+        # Tenant level
+        jwt_response = {"tenants": {}}
+        self.assertEqual(
+            client.get_matched_tenant_permissions(jwt_response, "t1", ["Perm 1"]), []
+        )
+
+        jwt_response = {"tenants": {"t1": {}}}
+        self.assertEqual(
+            client.get_matched_tenant_permissions(jwt_response, "t1", ["Perm 1"]), []
+        )
+
+        jwt_response = {"tenants": {"t1": {"permissions": ["Perm 1", "Perm 2"]}}}
+        self.assertEqual(
+            client.get_matched_tenant_permissions(jwt_response, "t1", ["Perm 1"]),
+            ["Perm 1"],
+        )
+        self.assertEqual(
+            client.get_matched_tenant_permissions(
+                jwt_response, "t1", ["Perm 1", "Perm 2"]
+            ),
+            ["Perm 1", "Perm 2"],
+        )
+        self.assertEqual(
+            client.get_matched_tenant_permissions(
+                jwt_response, "t1", ["Perm 1", "Perm 2", "Perm 3"]
+            ),
+            ["Perm 1", "Perm 2"],
+        )
+
     def test_validate_roles(self):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)
         jwt_response = {}
@@ -512,6 +628,51 @@ class TestDescopeClient(common.DescopeTest):
         )
         self.assertFalse(
             client.validate_tenant_roles(jwt_response, "t1", ["Perm 1", "Perm 2"])
+        )
+
+    def test_get_matched_roles(self):
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
+        jwt_response = {}
+        self.assertEqual(client.get_matched_roles(jwt_response, []), [])
+
+        jwt_response = {"roles": []}
+        self.assertEqual(client.get_matched_roles(jwt_response, ["Role 1"]), [])
+
+        jwt_response = {"roles": ["Role 1", "Role 2"]}
+        self.assertEqual(client.get_matched_roles(jwt_response, ["Role 1"]), ["Role 1"])
+        self.assertEqual(
+            client.get_matched_roles(jwt_response, ["Role 1", "Role 2"]),
+            ["Role 1", "Role 2"],
+        )
+        self.assertEqual(
+            client.get_matched_roles(jwt_response, ["Role 1", "Role 2", "Role 3"]),
+            ["Role 1", "Role 2"],
+        )
+
+        # Tenant level
+        jwt_response = {"tenants": {}}
+        self.assertEqual(
+            client.get_matched_tenant_roles(jwt_response, "t1", ["Role 1"]), []
+        )
+
+        jwt_response = {"tenants": {"t1": {}}}
+        self.assertEqual(
+            client.get_matched_tenant_roles(jwt_response, "t1", ["Role 1"]), []
+        )
+
+        jwt_response = {"tenants": {"t1": {"roles": ["Role 1", "Role 2"]}}}
+        self.assertEqual(
+            client.get_matched_tenant_roles(jwt_response, "t1", ["Role 1"]), ["Role 1"]
+        )
+        self.assertEqual(
+            client.get_matched_tenant_roles(jwt_response, "t1", ["Role 1", "Role 2"]),
+            ["Role 1", "Role 2"],
+        )
+        self.assertEqual(
+            client.get_matched_tenant_roles(
+                jwt_response, "t1", ["Role 1", "Role 2", "Role 3"]
+            ),
+            ["Role 1", "Role 2"],
         )
 
     def test_exchange_access_key_empty_param(self):
@@ -545,6 +706,48 @@ class TestDescopeClient(common.DescopeTest):
             cm.exception.error_message,
             "Received Invalid token times error due to time glitch (between machines) during jwt validation, try to set the jwt_validation_leeway parameter (in DescopeClient) to higher value than 5sec which is the default",
         )
+
+    def test_select_tenant(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            {
+                "alg": "ES384",
+                "crv": "P-384",
+                "kid": "P2CuC9yv2UGtGI1o84gCZEb9qEQW",
+                "kty": "EC",
+                "use": "sig",
+                "x": "DCjjyS7blnEmenLyJVwmH6yMnp7MlEggfk1kLtOv_Khtpps_Mq4K9brqsCwQhGUP",
+                "y": "xKy4IQ2FaLEzrrl1KE5mKbioLhj1prYFk1itdTOr6Xpy1fgq86kC7v-Y2F2vpcDc",
+            },
+        )
+
+        valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3VDOXl2MlVHdEdJMW84NGdDWkViOXFFUVciLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0NDMwNjEsImlhdCI6MTY1OTY0MzA2MSwiaXNzIjoiUDJDdUM5eXYyVUd0R0kxbzg0Z0NaRWI5cUVRVyIsInN1YiI6IlUyQ3VDUHVKZ1BXSEdCNVA0R21mYnVQR2hHVm0ifQ.mRo9FihYMR3qnQT06Mj3CJ5X0uTCEcXASZqfLLUv0cPCLBtBqYTbuK-ZRDnV4e4N6zGCNX2a3jjpbyqbViOxICCNSxJsVb-sdsSujtEXwVMsTTLnpWmNsMbOUiKmoME0"
+
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.cookies = {}
+            data = json.loads(
+                """{"jwts": ["eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg4MDc4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MTY2MDIxNTI3OCwiaWF0IjoxNjU3Nzk2MDc4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQnRFSGtnT3UwMmxtTXh6UElleGRNdFV3MU0ifQ.oAnvJ7MJvCyL_33oM7YCF12JlQ0m6HWRuteUVAdaswfnD4rHEBmPeuVHGljN6UvOP4_Cf0559o39UHVgm3Fwb-q7zlBbsu_nP1-PRl-F8NJjvBgC5RsAYabtJq7LlQmh"], "user": {"loginIds": ["guyp@descope.com"], "name": "", "email": "guyp@descope.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false}, "firstSeen": false}"""
+            )
+            my_mock_response.json.return_value = data
+            mock_post.return_value = my_mock_response
+            client.select_tenant("t1", valid_jwt_token)
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.select_tenant_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{valid_jwt_token}",
+                },
+                params=None,
+                json={
+                    "tenant": "t1",
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
 
 
 if __name__ == "__main__":

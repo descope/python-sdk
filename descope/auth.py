@@ -22,6 +22,8 @@ from jwt import ExpiredSignatureError, ImmatureSignatureError
 
 from descope.common import (
     COOKIE_DATA_NAME,
+    DEFAULT_URL_PREFIX,
+    DEFAULT_DOMAIN,
     DEFAULT_BASE_URL,
     DEFAULT_TIMEOUT_SECONDS,
     PHONE_REGEX,
@@ -87,7 +89,9 @@ class Auth:
         self.jwt_validation_leeway = jwt_validation_leeway
         self.secure = not skip_verify
 
-        self.base_url = os.getenv("DESCOPE_BASE_URI") or DEFAULT_BASE_URL
+        self.base_url = os.getenv("DESCOPE_BASE_URI")
+        if not self.base_url:
+            self.base_url = self.base_url_for_project_id(self.project_id)
         self.timeout_seconds = timeout_seconds
         self.management_key = management_key or os.getenv("DESCOPE_MANAGEMENT_KEY")
 
@@ -132,7 +136,11 @@ class Auth:
         return response
 
     def do_post(
-        self, uri: str, body: dict | None, params=None, pswd: str | None = None
+        self,
+        uri: str,
+        body: dict | list[dict] | list[str] | None,
+        params=None,
+        pswd: str | None = None,
     ) -> requests.Response:
         response = requests.post(
             f"{self.base_url}{uri}",
@@ -177,6 +185,13 @@ class Auth:
         return jwt_response
 
     @staticmethod
+    def base_url_for_project_id(project_id):
+        if len(project_id) >= 32:
+            region = project_id[1:5]
+            return ".".join([DEFAULT_URL_PREFIX, region, DEFAULT_DOMAIN])
+        return DEFAULT_BASE_URL
+
+    @staticmethod
     def adjust_and_verify_delivery_method(
         method: DeliveryMethod, login_id: str, user: dict
     ) -> bool:
@@ -190,7 +205,7 @@ class Auth:
             if not user.get("email", None):
                 user["email"] = login_id
             try:
-                validate_email(email=user["email"], check_deliverability=False)
+                validate_email(user["email"], check_deliverability=False)
                 return True
             except EmailNotValidError:
                 return False
@@ -245,6 +260,7 @@ class Auth:
             DeliveryMethod.EMAIL: "email",
             DeliveryMethod.SMS: "sms",
             DeliveryMethod.WHATSAPP: "whatsapp",
+            DeliveryMethod.EMBEDDED: "Embedded",
         }.get(method)
 
         if not name:
@@ -264,7 +280,7 @@ class Auth:
             )
 
         try:
-            validate_email(email=email, check_deliverability=False)
+            validate_email(email, check_deliverability=False)
         except EmailNotValidError as ex:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, f"Invalid email address: {ex}"
@@ -624,6 +640,25 @@ class Auth:
                     "Refresh token is missing",
                 )
             return self.refresh_session(refresh_token, audience)
+
+    def select_tenant(self, tenant_id: str, refresh_token: str) -> dict:
+        if not refresh_token:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_TOKEN,
+                "Refresh token is required to refresh a session",
+            )
+
+        uri = EndpointsV1.select_tenant_path
+        response = self.do_post(
+            uri=uri, body={"tenant": tenant_id}, params=None, pswd=refresh_token
+        )
+
+        resp = response.json()
+        jwt_response = self.generate_jwt_response(
+            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), None
+        )
+        return jwt_response
 
     @staticmethod
     def extract_masked_address(response: dict, method: DeliveryMethod) -> str:

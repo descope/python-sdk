@@ -2,13 +2,54 @@ from typing import List, Optional, Union
 
 from descope._auth_base import AuthBase
 from descope.auth import Auth
-from descope.common import DeliveryMethod
+from descope.common import DeliveryMethod, LoginOptions
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 from descope.management.common import (
     AssociatedTenant,
     MgmtV1,
+    Sort,
     associated_tenants_to_dict,
+    sort_to_dict,
 )
+from descope.management.user_pwd import UserPassword
+
+
+class UserObj:
+    def __init__(
+        self,
+        login_id: str,
+        email: Optional[str] = None,
+        phone: Optional[str] = None,
+        display_name: Optional[str] = None,
+        given_name: Optional[str] = None,
+        middle_name: Optional[str] = None,
+        family_name: Optional[str] = None,
+        role_names: Optional[List[str]] = None,
+        user_tenants: Optional[List[AssociatedTenant]] = None,
+        picture: Optional[str] = None,
+        custom_attributes: Optional[dict] = None,
+        verified_email: Optional[bool] = None,
+        verified_phone: Optional[bool] = None,
+        additional_login_ids: Optional[List[str]] = None,
+        sso_app_ids: Optional[List[str]] = None,
+        password: Optional[UserPassword] = None,
+    ):
+        self.login_id = login_id
+        self.email = email
+        self.phone = phone
+        self.display_name = display_name
+        self.given_name = given_name
+        self.middle_name = middle_name
+        self.family_name = family_name
+        self.role_names = role_names
+        self.user_tenants = user_tenants
+        self.picture = picture
+        self.custom_attributes = custom_attributes
+        self.verified_email = verified_email
+        self.verified_phone = verified_phone
+        self.additional_login_ids = additional_login_ids
+        self.sso_app_ids = sso_app_ids
+        self.password = password
 
 
 class User(AuthBase):
@@ -18,6 +59,9 @@ class User(AuthBase):
         email: Optional[str] = None,
         phone: Optional[str] = None,
         display_name: Optional[str] = None,
+        given_name: Optional[str] = None,
+        middle_name: Optional[str] = None,
+        family_name: Optional[str] = None,
         role_names: Optional[List[str]] = None,
         user_tenants: Optional[List[AssociatedTenant]] = None,
         picture: Optional[str] = None,
@@ -25,6 +69,8 @@ class User(AuthBase):
         verified_email: Optional[bool] = None,
         verified_phone: Optional[bool] = None,
         invite_url: Optional[str] = None,
+        additional_login_ids: Optional[List[str]] = None,
+        sso_app_ids: Optional[List[str]] = None,
     ) -> dict:
         """
         Create a new user. Users can have any number of optional fields, including email, phone number and authorization.
@@ -40,6 +86,7 @@ class User(AuthBase):
             mutually exclusive with the general `role_names`.
         picture (str): Optional url for user picture
         custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
+        sso_app_ids (List[str]): Optional, list of SSO applications IDs to be associated with the user.
 
         Return value (dict):
         Return dict in the format
@@ -47,7 +94,7 @@ class User(AuthBase):
         Containing the created user information.
 
         Raise:
-        AuthException: raised if update operation fails
+        AuthException: raised if create operation fails
         """
         role_names = [] if role_names is None else role_names
         user_tenants = [] if user_tenants is None else user_tenants
@@ -59,6 +106,9 @@ class User(AuthBase):
                 email,
                 phone,
                 display_name,
+                given_name,
+                middle_name,
+                family_name,
                 role_names,
                 user_tenants,
                 False,
@@ -70,6 +120,8 @@ class User(AuthBase):
                 invite_url,
                 None,
                 None,
+                additional_login_ids,
+                sso_app_ids,
             ),
             pswd=self._auth.management_key,
         )
@@ -81,6 +133,9 @@ class User(AuthBase):
         email: Optional[str] = None,
         phone: Optional[str] = None,
         display_name: Optional[str] = None,
+        given_name: Optional[str] = None,
+        middle_name: Optional[str] = None,
+        family_name: Optional[str] = None,
         role_names: Optional[List[str]] = None,
         user_tenants: Optional[List[AssociatedTenant]] = None,
         picture: Optional[str] = None,
@@ -88,6 +143,8 @@ class User(AuthBase):
         verified_email: Optional[bool] = None,
         verified_phone: Optional[bool] = None,
         invite_url: Optional[str] = None,
+        additional_login_ids: Optional[List[str]] = None,
+        sso_app_ids: Optional[List[str]] = None,
     ) -> dict:
         """
         Create a new test user.
@@ -105,6 +162,7 @@ class User(AuthBase):
             mutually exclusive with the general `role_names`.
         picture (str): Optional url for user picture
         custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
+        sso_app_ids (List[str]): Optional, list of SSO applications IDs to be associated with the user.
 
         Return value (dict):
         Return dict in the format
@@ -112,7 +170,7 @@ class User(AuthBase):
         Containing the created test user information.
 
         Raise:
-        AuthException: raised if update operation fails
+        AuthException: raised if create operation fails
         """
         role_names = [] if role_names is None else role_names
         user_tenants = [] if user_tenants is None else user_tenants
@@ -124,6 +182,9 @@ class User(AuthBase):
                 email,
                 phone,
                 display_name,
+                given_name,
+                middle_name,
+                family_name,
                 role_names,
                 user_tenants,
                 False,
@@ -135,6 +196,7 @@ class User(AuthBase):
                 invite_url,
                 None,
                 None,
+                additional_login_ids,
             ),
             pswd=self._auth.management_key,
         )
@@ -146,6 +208,9 @@ class User(AuthBase):
         email: Optional[str] = None,
         phone: Optional[str] = None,
         display_name: Optional[str] = None,
+        given_name: Optional[str] = None,
+        middle_name: Optional[str] = None,
+        family_name: Optional[str] = None,
         role_names: Optional[List[str]] = None,
         user_tenants: Optional[List[AssociatedTenant]] = None,
         picture: Optional[str] = None,
@@ -159,15 +224,17 @@ class User(AuthBase):
         send_sms: Optional[
             bool
         ] = None,  # send invite via text message, default is according to project settings
+        additional_login_ids: Optional[List[str]] = None,
+        sso_app_ids: Optional[List[str]] = None,
     ) -> dict:
         """
-        Create a new user and invite them via an email message.
+        Create a new user and invite them via an email / text message.
 
         Functions exactly the same as the `create` function with the additional invitation
             behavior. See the documentation above for the general creation behavior.
 
-        IMPORTANT: Since the invitation is sent by email, make sure either
-            the email is explicitly set, or the login_id itself is an email address.
+        IMPORTANT: Since the invitation is sent by email / phone, make sure either
+            the email / phone is explicitly set, or the login_id itself is an email address / phone number.
             You must configure the invitation URL in the Descope console prior to
             calling the method.
         """
@@ -181,6 +248,9 @@ class User(AuthBase):
                 email,
                 phone,
                 display_name,
+                given_name,
+                middle_name,
+                family_name,
                 role_names,
                 user_tenants,
                 True,
@@ -189,6 +259,43 @@ class User(AuthBase):
                 custom_attributes,
                 verified_email,
                 verified_phone,
+                invite_url,
+                send_mail,
+                send_sms,
+                additional_login_ids,
+                sso_app_ids,
+            ),
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    def invite_batch(
+        self,
+        users: List[UserObj],
+        invite_url: Optional[str] = None,
+        send_mail: Optional[
+            bool
+        ] = None,  # send invite via mail, default is according to project settings
+        send_sms: Optional[
+            bool
+        ] = None,  # send invite via text message, default is according to project settings
+    ) -> dict:
+        """
+        Create users in batch and invite them via an email / text message.
+
+        Functions exactly the same as the `create` function with the additional invitation
+            behavior. See the documentation above for the general creation behavior.
+
+        IMPORTANT: Since the invitation is sent by email / phone, make sure either
+            the email / phone is explicitly set, or the login_id itself is an email address / phone number.
+            You must configure the invitation URL in the Descope console prior to
+            calling the method.
+        """
+
+        response = self._auth.do_post(
+            MgmtV1.user_create_batch_path,
+            User._compose_create_batch_body(
+                users,
                 invite_url,
                 send_mail,
                 send_sms,
@@ -203,12 +310,17 @@ class User(AuthBase):
         email: Optional[str] = None,
         phone: Optional[str] = None,
         display_name: Optional[str] = None,
+        given_name: Optional[str] = None,
+        middle_name: Optional[str] = None,
+        family_name: Optional[str] = None,
         role_names: Optional[List[str]] = None,
         user_tenants: Optional[List[AssociatedTenant]] = None,
         picture: Optional[str] = None,
         custom_attributes: Optional[dict] = None,
         verified_email: Optional[bool] = None,
         verified_phone: Optional[bool] = None,
+        additional_login_ids: Optional[List[str]] = None,
+        sso_app_ids: Optional[List[str]] = None,
     ):
         """
         Update an existing user with the given various fields. IMPORTANT: All parameters are used as overrides
@@ -225,9 +337,10 @@ class User(AuthBase):
             mutually exclusive with the general `role_names`.
         picture (str): Optional url for user picture
         custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
+        sso_app_ids (List[str]): Optional, list of SSO applications IDs to be associated with the user.
 
         Raise:
-        AuthException: raised if creation operation fails
+        AuthException: raised if update operation fails
         """
         role_names = [] if role_names is None else role_names
         user_tenants = [] if user_tenants is None else user_tenants
@@ -239,6 +352,9 @@ class User(AuthBase):
                 email,
                 phone,
                 display_name,
+                given_name,
+                middle_name,
+                family_name,
                 role_names,
                 user_tenants,
                 False,
@@ -246,6 +362,9 @@ class User(AuthBase):
                 custom_attributes,
                 verified_email,
                 verified_phone,
+                additional_login_ids,
+                sso_app_ids,
+                None,
             ),
             pswd=self._auth.management_key,
         )
@@ -261,11 +380,30 @@ class User(AuthBase):
         login_id (str): The login ID of the user to be deleted.
 
         Raise:
-        AuthException: raised if creation operation fails
+        AuthException: raised if delete operation fails
         """
         self._auth.do_post(
             MgmtV1.user_delete_path,
             {"loginId": login_id},
+            pswd=self._auth.management_key,
+        )
+
+    def delete_by_user_id(
+        self,
+        user_id: str,
+    ):
+        """
+        Delete an existing user by user ID. IMPORTANT: This action is irreversible. Use carefully.
+
+        Args:
+        user_id (str): The user ID from the user's JWT.
+
+        Raise:
+        AuthException: raised if delete operation fails
+        """
+        self._auth.do_post(
+            MgmtV1.user_delete_path,
+            {"userId": user_id},
             pswd=self._auth.management_key,
         )
 
@@ -276,7 +414,7 @@ class User(AuthBase):
         Delete all test users in the project. IMPORTANT: This action is irreversible. Use carefully.
 
         Raise:
-        AuthException: raised if creation operation fails
+        AuthException: raised if delete operation fails
         """
         self._auth.do_delete(
             MgmtV1.user_delete_all_test_users_path,
@@ -345,7 +483,7 @@ class User(AuthBase):
         login_id (str): The login ID of the user to be logged out.
 
         Raise:
-        AuthException: raised if creation operation fails
+        AuthException: raised if logout operation fails
         """
         self._auth.do_post(
             MgmtV1.user_logout_path,
@@ -364,7 +502,7 @@ class User(AuthBase):
         user_id (str): The login ID of the user to be logged out.
 
         Raise:
-        AuthException: raised if creation operation fails
+        AuthException: raised if logout operation fails
         """
         self._auth.do_post(
             MgmtV1.user_logout_path,
@@ -384,6 +522,9 @@ class User(AuthBase):
         statuses: Optional[List[str]] = None,
         emails: Optional[List[str]] = None,
         phones: Optional[List[str]] = None,
+        sso_app_ids: Optional[List[str]] = None,
+        sort: Optional[List[Sort]] = None,
+        text: Optional[str] = None,
     ) -> dict:
         """
         Search all users.
@@ -399,6 +540,9 @@ class User(AuthBase):
         statuses (List[str]): Optional list of statuses to search for ("enabled", "disabled", "invited")
         emails (List[str]): Optional list of emails to search for
         phones (List[str]): Optional list of phones to search for
+        sso_app_ids (List[str]): Optional list of SSO application IDs to filter by
+        text (str): Optional string, allows free text search among all user's attributes.
+        sort (List[Sort]): Optional List[dict], allows to sort by fields.
 
         Return value (dict):
         Return dict in the format
@@ -439,6 +583,15 @@ class User(AuthBase):
 
         if custom_attributes is not None:
             body["customAttributes"] = custom_attributes
+
+        if sso_app_ids is not None:
+            body["ssoAppIds"] = sso_app_ids
+
+        if text is not None:
+            body["text"] = text
+
+        if sort is not None:
+            body["sort"] = sort_to_dict(sort)
 
         response = self._auth.do_post(
             MgmtV1.users_search_path,
@@ -616,6 +769,9 @@ class User(AuthBase):
         self,
         login_id: str,
         display_name: Optional[str] = None,
+        given_name: Optional[str] = None,
+        middle_name: Optional[str] = None,
+        family_name: Optional[str] = None,
     ) -> dict:
         """
         Update the display name for an existing user.
@@ -632,9 +788,18 @@ class User(AuthBase):
         Raise:
         AuthException: raised if the update operation fails
         """
+        bdy = {"loginId": login_id}
+        if display_name is not None:
+            bdy["displayName"] = display_name
+        if given_name is not None:
+            bdy["givenName"] = given_name
+        if middle_name is not None:
+            bdy["middleName"] = middle_name
+        if family_name is not None:
+            bdy["familyName"] = family_name
         response = self._auth.do_post(
             MgmtV1.user_update_name_path,
-            {"loginId": login_id, "displayName": display_name},
+            bdy,
             pswd=self._auth.management_key,
         )
         return response.json()
@@ -696,6 +861,34 @@ class User(AuthBase):
         )
         return response.json()
 
+    def set_roles(
+        self,
+        login_id: str,
+        role_names: List[str],
+    ) -> dict:
+        """
+        Set roles to a user without tenant association. Use set_tenant_roles
+        for users that are part of a multi-tenant project.
+
+        Args:
+        login_id (str): The login ID of the user to update.
+        role_names (List[str]): A list of roles to set to a user without tenant association.
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the updated user information.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.user_set_role_path,
+            {"loginId": login_id, "roleNames": role_names},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
     def add_roles(
         self,
         login_id: str,
@@ -752,6 +945,87 @@ class User(AuthBase):
         )
         return response.json()
 
+    def set_sso_apps(
+        self,
+        login_id: str,
+        sso_app_ids: List[str],
+    ) -> dict:
+        """
+        Set SSO applications association to a user.
+
+        Args:
+        login_id (str): The login ID of the user to update.
+        sso_app_ids (List[str]): A list of sso applications ids for associate with a user.
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the updated user information.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.user_set_sso_apps,
+            {"loginId": login_id, "ssoAppIds": sso_app_ids},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    def add_sso_apps(
+        self,
+        login_id: str,
+        sso_app_ids: List[str],
+    ) -> dict:
+        """
+        Add SSO applications association to a user.
+
+        Args:
+        login_id (str): The login ID of the user to update.
+        sso_app_ids (List[str]): A list of sso applications ids for associate with a user.
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the updated user information.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.user_add_sso_apps,
+            {"loginId": login_id, "ssoAppIds": sso_app_ids},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    def remove_sso_apps(
+        self,
+        login_id: str,
+        sso_app_ids: List[str],
+    ) -> dict:
+        """
+        Remove SSO applications association from a user.
+
+        Args:
+        login_id (str): The login ID of the user to update.
+        sso_app_ids (List[str]): A list of sso applications ids to remove association from a user.
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the updated user information.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.user_remove_sso_apps,
+            {"loginId": login_id, "ssoAppIds": sso_app_ids},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
     def add_tenant(
         self,
         login_id: str,
@@ -802,6 +1076,35 @@ class User(AuthBase):
         response = self._auth.do_post(
             MgmtV1.user_remove_tenant_path,
             {"loginId": login_id, "tenantId": tenant_id},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    def set_tenant_roles(
+        self,
+        login_id: str,
+        tenant_id: str,
+        role_names: List[str],
+    ) -> dict:
+        """
+        Set roles to a user in a specific tenant.
+
+        Args:
+        login_id (str): The login ID of the user to update.
+        tenant_id (str): The ID of the user's tenant.
+        role_names (List[str]): A list of roles to set on the user.
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the updated user information.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.user_set_role_path,
+            {"loginId": login_id, "tenantId": tenant_id, "roleNames": role_names},
             pswd=self._auth.management_key,
         )
         return response.json()
@@ -864,13 +1167,13 @@ class User(AuthBase):
         )
         return response.json()
 
-    def set_password(
+    def set_temporary_password(
         self,
         login_id: str,
         password: str,
     ) -> None:
         """
-            Set the password for the given login ID.
+            Set the temporary password for the given login ID.
             Note: The password will automatically be set as expired.
             The user will not be able to log-in with this password, and will be required to replace it on next login.
             See also: expire_password
@@ -883,8 +1186,70 @@ class User(AuthBase):
         AuthException: raised if the operation fails
         """
         self._auth.do_post(
+            MgmtV1.user_set_temporary_password_path,
+            {
+                "loginId": login_id,
+                "password": password,
+                "setActive": False,
+            },
+            pswd=self._auth.management_key,
+        )
+        return
+
+    def set_active_password(
+        self,
+        login_id: str,
+        password: str,
+    ) -> None:
+        """
+            Set the password for the given login ID.
+
+        Args:
+        login_id (str): The login ID of the user to set the password to.
+        password (str): The new password to set to the user.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        self._auth.do_post(
+            MgmtV1.user_set_active_password_path,
+            {
+                "loginId": login_id,
+                "password": password,
+                "setActive": True,
+            },
+            pswd=self._auth.management_key,
+        )
+        return
+
+    # Deprecated (use set_temporary_password instead)
+    def set_password(
+        self,
+        login_id: str,
+        password: str,
+        set_active: Optional[bool] = False,
+    ) -> None:
+        """
+            Set the password for the given login ID.
+            Note: The password will automatically be set as expired unless the set_active flag will be set to True,
+            The user will not be able to log-in with this password, and will be required to replace it on next login.
+            See also: expire_password
+
+        Args:
+        login_id (str): The login ID of the user to set the password to.
+        password (str): The new password to set to the user.
+        set_active (bool): Keep the password active so it will not be expired on next log-in
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        self._auth.do_post(
             MgmtV1.user_set_password_path,
-            {"loginId": login_id, "password": password},
+            {
+                "loginId": login_id,
+                "password": password,
+                "setActive": set_active,
+            },
             pswd=self._auth.management_key,
         )
         return
@@ -899,7 +1264,7 @@ class User(AuthBase):
             Use the `password.send_reset` or `password.replace` methods to reset/replace the password.
 
         Args:
-        login_id (str): The login ID of the user expire the password to.
+        login_id (str): The login ID of the user to expire the password to.
 
         Raise:
         AuthException: raised if the operation fails
@@ -911,10 +1276,33 @@ class User(AuthBase):
         )
         return
 
+    def remove_all_passkeys(
+        self,
+        login_id: str,
+    ) -> None:
+        """
+            Removes all registered passkeys (WebAuthn devices) for the user with the given login ID.
+            Note: The user might not be able to login anymore if they have no other authentication
+            methods or a verified email/phone.
+
+        Args:
+        login_id (str): The login ID of the user to remove passkeys for.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        self._auth.do_post(
+            MgmtV1.user_remove_all_passkeys_path,
+            {"loginId": login_id},
+            pswd=self._auth.management_key,
+        )
+        return
+
     def generate_otp_for_test_user(
         self,
         method: DeliveryMethod,
         login_id: str,
+        login_options: Optional[LoginOptions] = None,
     ) -> dict:
         """
         Generate OTP for the given login ID of a test user.
@@ -922,8 +1310,9 @@ class User(AuthBase):
 
         Args:
         method (DeliveryMethod): The method to use for "delivering" the OTP verification code to the user, for example
-            EMAIL, SMS, or WHATSAPP
+            EMAIL, SMS, WHATSAPP or EMBEDDED
         login_id (str): The login ID of the test user being validated.
+        login_options (LoginOptions): optional, can be provided to set custom claims to the generated jwt.
 
         Return value (dict):
         Return dict in the format
@@ -935,7 +1324,11 @@ class User(AuthBase):
         """
         response = self._auth.do_post(
             MgmtV1.user_generate_otp_for_test_path,
-            {"loginId": login_id, "deliveryMethod": Auth.get_method_string(method)},
+            {
+                "loginId": login_id,
+                "deliveryMethod": Auth.get_method_string(method),
+                "loginOptions": login_options.__dict__ if login_options else {},
+            },
             pswd=self._auth.management_key,
         )
         return response.json()
@@ -945,6 +1338,7 @@ class User(AuthBase):
         method: DeliveryMethod,
         login_id: str,
         uri: str,
+        login_options: Optional[LoginOptions] = None,
     ) -> dict:
         """
         Generate Magic Link for the given login ID of a test user.
@@ -952,9 +1346,10 @@ class User(AuthBase):
 
         Args:
         method (DeliveryMethod): The method to use for "delivering" the verification magic link to the user, for example
-            EMAIL, SMS, or WHATSAPP
+            EMAIL, SMS, WHATSAPP or EMBEDDED
         login_id (str): The login ID of the test user being validated.
         uri (str): Optional redirect uri which will be used instead of any global configuration.
+        login_options (LoginOptions): optional, can be provided to set custom claims to the generated jwt.
 
         Return value (dict):
         Return dict in the format
@@ -970,6 +1365,7 @@ class User(AuthBase):
                 "loginId": login_id,
                 "deliveryMethod": Auth.get_method_string(method),
                 "URI": uri,
+                "loginOptions": login_options.__dict__ if login_options else {},
             },
             pswd=self._auth.management_key,
         )
@@ -979,6 +1375,7 @@ class User(AuthBase):
         self,
         login_id: str,
         uri: str,
+        login_options: Optional[LoginOptions] = None,
     ) -> dict:
         """
         Generate Enchanted Link for the given login ID of a test user.
@@ -987,6 +1384,7 @@ class User(AuthBase):
         Args:
         login_id (str): The login ID of the test user being validated.
         uri (str): Optional redirect uri which will be used instead of any global configuration.
+        login_options (LoginOptions): optional, can be provided to set custom claims to the generated jwt.
 
         Return value (dict):
         Return dict in the format
@@ -998,7 +1396,11 @@ class User(AuthBase):
         """
         response = self._auth.do_post(
             MgmtV1.user_generate_enchanted_link_for_test_path,
-            {"loginId": login_id, "URI": uri},
+            {
+                "loginId": login_id,
+                "URI": uri,
+                "loginOptions": login_options.__dict__ if login_options else {},
+            },
             pswd=self._auth.management_key,
         )
         return response.json()
@@ -1027,12 +1429,44 @@ class User(AuthBase):
         )
         return response.json()["token"]
 
+    def history(self, user_ids: List[str]) -> List[dict]:
+        """
+        Retrieve users' authentication history, by the given user's ids.
+
+        Args:
+        login_ids (List[str]): List of Users' IDs.
+
+        Return value (List[dict]):
+        Return List in the format
+             [
+                {
+                    "userId": "User's ID",
+                    "loginTime": "User'sLogin time",
+                    "city": "User's city",
+                    "country": "User's country",
+                    "ip": User's IP
+                }
+            ]
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.user_history_path,
+            user_ids,
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
     @staticmethod
     def _compose_create_body(
         login_id: str,
         email: Optional[str],
         phone: Optional[str],
         display_name: Optional[str],
+        given_name: Optional[str],
+        middle_name: Optional[str],
+        family_name: Optional[str],
         role_names: List[str],
         user_tenants: List[AssociatedTenant],
         invite: bool,
@@ -1044,17 +1478,24 @@ class User(AuthBase):
         invite_url: Optional[str],
         send_mail: Optional[bool],
         send_sms: Optional[bool],
+        additional_login_ids: Optional[List[str]],
+        sso_app_ids: Optional[List[str]] = None,
     ) -> dict:
         body = User._compose_update_body(
-            login_id,
-            email,
-            phone,
-            display_name,
-            role_names,
-            user_tenants,
-            test,
-            picture,
-            custom_attributes,
+            login_id=login_id,
+            email=email,
+            phone=phone,
+            display_name=display_name,
+            given_name=given_name,
+            middle_name=middle_name,
+            family_name=family_name,
+            role_names=role_names,
+            user_tenants=user_tenants,
+            test=test,
+            picture=picture,
+            custom_attributes=custom_attributes,
+            additional_login_ids=additional_login_ids,
+            sso_app_ids=sso_app_ids,
         )
         body["invite"] = invite
         if verified_email is not None:
@@ -1070,11 +1511,61 @@ class User(AuthBase):
         return body
 
     @staticmethod
+    def _compose_create_batch_body(
+        users: List[UserObj],
+        invite_url: Optional[str],
+        send_mail: Optional[bool],
+        send_sms: Optional[bool],
+    ) -> dict:
+        usersBody = []
+        for user in users:
+            role_names = [] if user.role_names is None else user.role_names
+            user_tenants = [] if user.user_tenants is None else user.user_tenants
+            sso_app_ids = [] if user.sso_app_ids is None else user.sso_app_ids
+            password = None if user.password is None else user.password.cleartext
+            hashed_password = None
+            if (user.password is not None) and (user.password.hashed is not None):
+                hashed_password = user.password.hashed.to_dict()
+            uBody = User._compose_update_body(
+                login_id=user.login_id,
+                email=user.email,
+                phone=user.phone,
+                display_name=user.display_name,
+                given_name=user.given_name,
+                middle_name=user.middle_name,
+                family_name=user.family_name,
+                role_names=role_names,
+                user_tenants=user_tenants,
+                picture=user.picture,
+                custom_attributes=user.custom_attributes,
+                additional_login_ids=user.additional_login_ids,
+                verified_email=user.verified_email,
+                verified_phone=user.verified_phone,
+                test=False,
+                sso_app_ids=sso_app_ids,
+                password=password,
+                hashed_password=hashed_password,
+            )
+            usersBody.append(uBody)
+
+        body = {"users": usersBody, "invite": True}
+        if invite_url is not None:
+            body["inviteUrl"] = invite_url
+        if send_mail is not None:
+            body["sendMail"] = send_mail
+        if send_sms is not None:
+            body["sendSMS"] = send_sms
+        return body
+
+    @staticmethod
     def _compose_update_body(
         login_id: str,
         email: Optional[str],
         phone: Optional[str],
         display_name: Optional[str],
+        given_name: Optional[str],
+        middle_name: Optional[str],
+        family_name: Optional[str],
         role_names: List[str],
         user_tenants: List[AssociatedTenant],
         test: bool,
@@ -1082,6 +1573,10 @@ class User(AuthBase):
         custom_attributes: Optional[dict],
         verified_email: Optional[bool] = None,
         verified_phone: Optional[bool] = None,
+        additional_login_ids: Optional[List[str]] = None,
+        sso_app_ids: Optional[List[str]] = None,
+        password: Optional[str] = None,
+        hashed_password: Optional[dict] = None,
     ) -> dict:
         res = {
             "loginId": login_id,
@@ -1093,9 +1588,21 @@ class User(AuthBase):
             "test": test,
             "picture": picture,
             "customAttributes": custom_attributes,
+            "additionalLoginIds": additional_login_ids,
+            "ssoAppIDs": sso_app_ids,
         }
         if verified_email is not None:
             res["verifiedEmail"] = verified_email
+        if given_name is not None:
+            res["givenName"] = given_name
+        if middle_name is not None:
+            res["middleName"] = middle_name
+        if family_name is not None:
+            res["familyName"] = family_name
         if verified_phone is not None:
             res["verifiedPhone"] = verified_phone
+        if password is not None:
+            res["password"] = password
+        if hashed_password is not None:
+            res["hashedPassword"] = hashed_password
         return res

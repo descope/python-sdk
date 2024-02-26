@@ -14,5 +14,16 @@ from descope.exceptions import (
     AuthException,
     RateLimitException,
 )
-from descope.management.common import AssociatedTenant
-from descope.management.sso_settings import AttributeMapping, RoleMapping
+from descope.management.common import (
+    AssociatedTenant,
+    SAMLIDPAttributeMappingInfo,
+    SAMLIDPGroupsMappingInfo,
+    SAMLIDPRoleGroupMappingInfo,
+)
+from descope.management.sso_settings import (
+    AttributeMapping,
+    RoleMapping,
+    SSOOIDCSettings,
+    SSOSAMLSettings,
+    SSOSAMLSettingsByMetadata,
+)
