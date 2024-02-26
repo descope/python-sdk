@@ -60,7 +60,7 @@ pep8-naming = {version = "0.13.3", python = ">=3.8"}
 tox = {version = "4.12.1", python = ">=3.8"}
 
 [tool.poetry.group.format.dependencies]
-black = {version = "23.12.1", python = ">=3.8"}
+black = {version = "24.1.1", python = ">=3.8"}
 
 [tool.poetry.group.types.dependencies]
 mypy = {version = "1.8.0", python = ">=3.8"}
