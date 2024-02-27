@@ -1,6 +1,6 @@
 import logging
 
-from descope import AuthException, DescopeClient
+from descope import AccessKeyLoginOptions, AuthException, DescopeClient
 
 logging.basicConfig(level=logging.INFO)
 
@@ -16,7 +16,10 @@ def main():
             access_key = input("Please insert the access key\n")
 
         try:
-            jwt_response = descope_client.exchange_access_key(access_key)
+            loc = AccessKeyLoginOptions(custom_claims={"k1": "v1"})
+            jwt_response = descope_client.exchange_access_key(
+                access_key=access_key, login_options=loc
+            )
             logging.info("exchange access key successfully")
             logging.info(f"jwt_response: {jwt_response}")
 

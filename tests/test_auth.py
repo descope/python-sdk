@@ -9,6 +9,7 @@ from descope import (
     API_RATE_LIMIT_RETRY_AFTER_HEADER,
     ERROR_TYPE_API_RATE_LIMIT,
     ERROR_TYPE_SERVER_ERROR,
+    AccessKeyLoginOptions,
     AuthException,
     DeliveryMethod,
     RateLimitException,
@@ -18,6 +19,7 @@ from descope.common import (
     DEFAULT_TIMEOUT_SECONDS,
     REFRESH_SESSION_TOKEN_NAME,
     SESSION_TOKEN_NAME,
+    EndpointsV1,
 )
 
 from . import common
@@ -396,9 +398,25 @@ class TestAuth(common.DescopeTest):
             data = {"sessionJwt": valid_jwt_token}
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
-            jwt_response = auth.exchange_access_key(dummy_access_key)
+            jwt_response = auth.exchange_access_key(
+                access_key=dummy_access_key,
+                login_options=AccessKeyLoginOptions(custom_claims={"k1": "v1"}),
+            )
             self.assertEqual(jwt_response["keyId"], "U2Cu0j0WPw3YOiPISJb52L0wUVMg")
             self.assertEqual(jwt_response["projectId"], "P2CtzUhdqpIF2ys9gg7ms06UvtC4")
+
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.exchange_auth_access_key_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:dummy access key",
+                },
+                params=None,
+                json={"loginOptions": {"customClaims": {"k1": "v1"}}},
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
 
     def test_adjust_properties(self):
         self.assertEqual(
