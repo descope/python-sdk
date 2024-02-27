@@ -208,9 +208,9 @@ dnspython==2.6.1 ; python_version >= "3.8" and python_version < "4.0" \
 email-validator==2.0.0.post2 ; python_version >= "3.7" and python_version < "3.8" \
     --hash=sha256:1ff6e86044200c56ae23595695c54e9614f4a9551e0e393614f764860b3d7900 \
     --hash=sha256:2466ba57cda361fb7309fd3d5a225723c788ca4bbad32a0ebd5373b99730285c
-email-validator==2.1.0.post1 ; python_version >= "3.8" and python_version < "4.0" \
-    --hash=sha256:a4b0bd1cf55f073b924258d19321b1f3aa74b4b5a71a42c305575dba920e1a44 \
-    --hash=sha256:c973053efbeddfef924dc0bd93f6e77a1ea7ee0fce935aea7103c7a3d6d2d637
+email-validator==2.1.1 ; python_version >= "3.8" and python_version < "4.0" \
+    --hash=sha256:200a70680ba08904be6d1eef729205cc0d687634399a5924d842533efb824b84 \
+    --hash=sha256:97d882d174e2a65732fb43bfce81a3a834cbc1bde8bf419e30ef5ea976370a05
 flask==3.0.2 ; python_version >= "3.8" and python_version < "4.0" \
     --hash=sha256:3232e0e9c850d781933cf0207523d1ece087eb8d87b23777ae38456e2fbe7c6e \
     --hash=sha256:822c03f4b799204250a7ee84b1eddc40665395333973dfb9deebfe425fefcb7d
