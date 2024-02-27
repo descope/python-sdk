@@ -121,6 +121,14 @@ class LoginOptions:
             self.templateOptions = template_options
 
 
+class AccessKeyLoginOptions:
+    def __init__(
+        self,
+        custom_claims: Optional[dict] = None,
+    ):
+        self.customClaims = custom_claims
+
+
 def validate_refresh_token_provided(
     login_options: Optional[LoginOptions] = None, refresh_token: Optional[str] = None
 ):

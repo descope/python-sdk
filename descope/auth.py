@@ -22,14 +22,15 @@ from jwt import ExpiredSignatureError, ImmatureSignatureError
 
 from descope.common import (
     COOKIE_DATA_NAME,
-    DEFAULT_URL_PREFIX,
-    DEFAULT_DOMAIN,
     DEFAULT_BASE_URL,
+    DEFAULT_DOMAIN,
     DEFAULT_TIMEOUT_SECONDS,
+    DEFAULT_URL_PREFIX,
     PHONE_REGEX,
     REFRESH_SESSION_COOKIE_NAME,
     REFRESH_SESSION_TOKEN_NAME,
     SESSION_TOKEN_NAME,
+    AccessKeyLoginOptions,
     DeliveryMethod,
     EndpointsV1,
     EndpointsV2,
@@ -306,10 +307,16 @@ class Auth:
             )
 
     def exchange_access_key(
-        self, access_key: str, audience: str | Iterable[str] | None = None
+        self,
+        access_key: str,
+        audience: str | Iterable[str] | None = None,
+        login_options: AccessKeyLoginOptions | None = None,
     ) -> dict:
         uri = EndpointsV1.exchange_auth_access_key_path
-        server_response = self.do_post(uri=uri, body={}, params=None, pswd=access_key)
+        body = {
+            "loginOptions": login_options.__dict__ if login_options else {},
+        }
+        server_response = self.do_post(uri=uri, body=body, params=None, pswd=access_key)
         json = server_response.json()
         return self._generate_auth_info(
             response_body=json, refresh_token=None, user_jwt=False, audience=audience
