@@ -1,3 +1,4 @@
+import datetime
 import logging
 
 from descope import AuthException, DescopeClient
@@ -17,9 +18,14 @@ def main():
 
         try:
             logging.info("Going to create a new access key")
+            now = datetime.datetime.now()
+            t = now + datetime.timedelta(minutes=10)
+            exp_time = int(t.timestamp())
+            cc = {"k1": "v1"}
             access_key_resp = descope_client.mgmt.access_key.create(
-                name="key-name", expire_time=1677844931
+                name="key-name", expire_time=exp_time, custom_claims=cc
             )
+            cleartext = access_key_resp["cleartext"]
             access_key = access_key_resp["key"]
             key_id = access_key["id"]
             logging.info(f"Create: created access key {access_key}")
@@ -54,6 +60,12 @@ def main():
 
         except AuthException as e:
             logging.info(f"Access key update failed {e}")
+
+        try:
+            resp = descope_client.exchange_access_key(cleartext, None)
+            logging.info(f"Exchange: session token: {resp}")
+        except AuthException as e:
+            logging.info(f"Access key exchange failed {e}")
 
         try:
             logging.info("Deactivating newly created access key")
