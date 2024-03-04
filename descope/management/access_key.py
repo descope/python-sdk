@@ -29,8 +29,8 @@ class AccessKey(AuthBase):
         key_tenants (List[AssociatedTenant]): An optional list of the access key's tenants, and optionally, their roles per tenant. These roles are
             mutually exclusive with the general `role_names`, and take precedence over them.
         user_id (str): Bind access key to this user id
-            If user_id is supplied, then authorization would be ignored, and access key would be bound to the users authorization
-        custom_claims (dict): Optional, map of claims and their values that will be presented in the jwt
+            If user_id is supplied, then authorizations will be ignored, and the access key will be bound to the user's authorization.
+        custom_claims (dict): Optional, map of claims and their values that will be present in the JWT.
 
         Return value (dict):
         Return dict in the format
