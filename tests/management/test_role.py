@@ -194,3 +194,63 @@ class TestRole(common.DescopeTest):
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
+
+    def test_search(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.role.search,
+                ["t"],
+                ["r"],
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads(
+                """
+                {
+                    "roles": [
+                        {"name": "R1", "permissionNames": ["P1", "P2"]},
+                        {"name": "R2"}
+                    ]
+                }
+                """
+            )
+            mock_post.return_value = network_resp
+            resp = client.mgmt.role.search(["t"], ["r"], "x", ["p1", "p2"])
+            roles = resp["roles"]
+            self.assertEqual(len(roles), 2)
+            self.assertEqual(roles[0]["name"], "R1")
+            self.assertEqual(roles[1]["name"], "R2")
+            permissions = roles[0]["permissionNames"]
+            self.assertEqual(len(permissions), 2)
+            self.assertEqual(permissions[0], "P1")
+            self.assertEqual(permissions[1], "P2")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.role_search_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                json={
+                    "tenantIds": ["t"],
+                    "roleNames": ["r"],
+                    "roleNameLike": "x",
+                    "permissionNames": ["p1", "p2"],
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )

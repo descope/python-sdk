@@ -932,6 +932,12 @@ roles_resp = descope_client.mgmt.role.load_all()
 roles = roles_resp["roles"]
     for role in roles:
         # Do something
+
+# Search roles
+roles_resp = descope_client.mgmt.role.search(["t1", "t2"], ["r1", "r2"])
+roles = roles_resp["roles"]
+    for role in roles:
+        # Do something
 ```
 
 ### Manage Flows and Theme
