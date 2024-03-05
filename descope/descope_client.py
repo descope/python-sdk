@@ -484,8 +484,7 @@ class DescopeClient:
         audience (str|Iterable[str]|None): Optional recipients that the JWT is intended for (must be equal to the 'aud' claim on the provided token)
         login_options (AccessKeyLoginOptions): Optional advanced controls over login parameters
 
-        Return value (dict): returns the session token from the server together with the expiry and key id
-            (sessionToken:dict, keyId:str, expiration:int)
+        Return dict includes the session token and all JWT claims
 
         Raise:
         AuthException: Exception is raised if access key is not valid or another error occurs

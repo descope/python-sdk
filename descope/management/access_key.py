@@ -16,6 +16,7 @@ class AccessKey(AuthBase):
         role_names: Optional[List[str]] = None,
         key_tenants: Optional[List[AssociatedTenant]] = None,
         user_id: Optional[str] = None,
+        custom_claims: Optional[dict] = None,
     ) -> dict:
         """
         Create a new access key.
@@ -28,7 +29,8 @@ class AccessKey(AuthBase):
         key_tenants (List[AssociatedTenant]): An optional list of the access key's tenants, and optionally, their roles per tenant. These roles are
             mutually exclusive with the general `role_names`, and take precedence over them.
         user_id (str): Bind access key to this user id
-            If user_id is supplied, then authorization would be ignored, and access key would be bound to the users authorization
+            If user_id is supplied, then authorizations will be ignored, and the access key will be bound to the user's authorization.
+        custom_claims (dict): Optional, map of claims and their values that will be present in the JWT.
 
         Return value (dict):
         Return dict in the format
@@ -48,7 +50,7 @@ class AccessKey(AuthBase):
         response = self._auth.do_post(
             MgmtV1.access_key_create_path,
             AccessKey._compose_create_body(
-                name, expire_time, role_names, key_tenants, user_id
+                name, expire_time, role_names, key_tenants, user_id, custom_claims
             ),
             pswd=self._auth.management_key,
         )
@@ -194,6 +196,7 @@ class AccessKey(AuthBase):
         role_names: List[str],
         key_tenants: List[AssociatedTenant],
         user_id: Optional[str] = None,
+        custom_claims: Optional[dict] = None,
     ) -> dict:
         return {
             "name": name,
@@ -201,4 +204,5 @@ class AccessKey(AuthBase):
             "roleNames": role_names,
             "keyTenants": associated_tenants_to_dict(key_tenants),
             "userId": user_id,
+            "customClaims": custom_claims,
         }

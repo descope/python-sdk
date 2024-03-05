@@ -27,6 +27,6 @@ default_headers = {
 
 class DescopeTest(unittest.TestCase):
     def setUp(self) -> None:
-        os.environ[
-            "DESCOPE_BASE_URI"
-        ] = DEFAULT_BASE_URL  # Make sure tests always running against localhost
+        os.environ["DESCOPE_BASE_URI"] = (
+            DEFAULT_BASE_URL  # Make sure tests always running against localhost
+        )
