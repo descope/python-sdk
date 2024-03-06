@@ -134,7 +134,7 @@ class Role(AuthBase):
         Raise:
         AuthException: raised if load operation fails
         """
-        body = {}
+        body: dict[str, str | List[str]] = {}
         if tenant_ids is not None:
             body["tenantIds"] = tenant_ids
         if role_names is not None:
@@ -143,7 +143,7 @@ class Role(AuthBase):
             body["roleNameLike"] = role_name_like
         if permission_names is not None:
             body["permissionNames"] = permission_names
-        
+
         response = self._auth.do_post(
             MgmtV1.role_search_path,
             body,

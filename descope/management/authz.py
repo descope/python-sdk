@@ -379,9 +379,11 @@ class Authz(AuthBase):
         response = self._auth.do_post(
             MgmtV1.authz_get_modified,
             {
-                "since": int(since.replace(tzinfo=timezone.utc).timestamp() * 1000)
-                if since
-                else 0
+                "since": (
+                    int(since.replace(tzinfo=timezone.utc).timestamp() * 1000)
+                    if since
+                    else 0
+                )
             },
             pswd=self._auth.management_key,
         )
