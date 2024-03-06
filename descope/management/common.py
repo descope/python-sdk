@@ -88,6 +88,7 @@ class MgmtV1:
     role_update_path = "/v1/mgmt/role/update"
     role_delete_path = "/v1/mgmt/role/delete"
     role_load_all_path = "/v1/mgmt/role/all"
+    role_search_path = "/v1/mgmt/role/search"
 
     # flow
     flow_list_path = "/v1/mgmt/flow/list"

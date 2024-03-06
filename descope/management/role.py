@@ -109,3 +109,44 @@ class Role(AuthBase):
             pswd=self._auth.management_key,
         )
         return response.json()
+
+    def search(
+        self,
+        tenant_ids: Optional[List[str]] = None,
+        role_names: Optional[List[str]] = None,
+        role_name_like: Optional[str] = None,
+        permission_names: Optional[List[str]] = None,
+    ) -> dict:
+        """
+        Search roles based on the given filters.
+
+        Args:
+        tenant_ids (List[str]): List of tenant ids to filter by
+        role_names (List[str]): Only return matching roles to the given names
+        role_name_like (str): Return roles that contain the given string ignoring case
+        permission_names (List[str]): Only return roles that have the given permissions
+
+        Return value (dict):
+        Return dict in the format
+             {"roles": [{"name": <name>, "description": <description>, "permissionNames":[]}] }
+        Containing the loaded role information.
+
+        Raise:
+        AuthException: raised if load operation fails
+        """
+        body: dict[str, str | List[str]] = {}
+        if tenant_ids is not None:
+            body["tenantIds"] = tenant_ids
+        if role_names is not None:
+            body["roleNames"] = role_names
+        if role_name_like is not None:
+            body["roleNameLike"] = role_name_like
+        if permission_names is not None:
+            body["permissionNames"] = permission_names
+
+        response = self._auth.do_post(
+            MgmtV1.role_search_path,
+            body,
+            pswd=self._auth.management_key,
+        )
+        return response.json()
