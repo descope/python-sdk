@@ -1239,13 +1239,13 @@ files = [
 
 [[package]]
 name = "tox"
-version = "4.12.1"
+version = "4.14.1"
 description = "tox is a generic virtualenv management and test command line tool"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "tox-4.12.1-py3-none-any.whl", hash = "sha256:c07ea797880a44f3c4f200ad88ad92b446b83079d4ccef89585df64cc574375c"},
-    {file = "tox-4.12.1.tar.gz", hash = "sha256:61aafbeff1bd8a5af84e54ef6e8402f53c6a6066d0782336171ddfbf5362122e"},
+    {file = "tox-4.14.1-py3-none-any.whl", hash = "sha256:b03754b6ee6dadc70f2611da82b4ed8f625fcafd247e15d1d0cb056f90a06d3b"},
+    {file = "tox-4.14.1.tar.gz", hash = "sha256:f0ad758c3bbf7e237059c929d3595479363c3cdd5a06ac3e49d1dd020ffbee45"},
 ]
 
 [package.dependencies]
@@ -1375,4 +1375,4 @@ flask = ["Flask"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.7,<4.0"
-content-hash = "fda35f50136614edae7fe09a43d8c94cb3e29e8628b67c85ef79d553488284df"
+content-hash = "fbe3a814086321c0cf9c07541d0f497d4401dbd3fc1f4378ce2d830cf27f2551"
