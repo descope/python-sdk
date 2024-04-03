@@ -81,7 +81,7 @@ For rate limiting information, please confer to the [API Rate Limits](#api-rate-
 
 ### OTP Authentication
 
-Send a user a one-time password (OTP) using your preferred delivery method (_email / SMS_). An email address or phone number must be provided accordingly.
+Send a user a one-time password (OTP) using your preferred delivery method (_email / SMS / Voice call / WhatsApp_). An email address or phone number must be provided accordingly.
 
 The user can either `sign up`, `sign in` or `sign up or in`
 
@@ -108,7 +108,7 @@ The session and refresh JWTs should be returned to the caller, and passed with e
 
 ### Magic Link
 
-Send a user a Magic Link using your preferred delivery method (_email / SMS_).
+Send a user a Magic Link using your preferred delivery method (_email / SMS / Voice call / WhatsApp_).
 The Magic Link will redirect the user to page where the its token needs to be verified.
 This redirection can be configured in code, or generally in the [Descope Console](https://app.descope.com/settings/authentication/magiclink)
 
@@ -1329,7 +1329,7 @@ apps = apps_resp["apps"]
 ### Utils for your end to end (e2e) tests and integration tests
 
 To ease your e2e tests, we exposed dedicated management methods,
-that way, you don't need to use 3rd party messaging services in order to receive sign-in/up Emails or SMS, and avoid the need of parsing the code and token from them.
+that way, you don't need to use 3rd party messaging services in order to receive sign-in/up Email, SMS, Voice call, WhatsApp, and avoid the need of parsing the code and token from them.
 
 ```Python
 # User for test can be created, this user will be able to generate code/link without

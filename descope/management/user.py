@@ -1310,14 +1310,14 @@ class User(AuthBase):
 
         Args:
         method (DeliveryMethod): The method to use for "delivering" the OTP verification code to the user, for example
-            EMAIL, SMS, WHATSAPP or EMBEDDED
+            EMAIL, SMS, VOICE, WHATSAPP or EMBEDDED
         login_id (str): The login ID of the test user being validated.
         login_options (LoginOptions): optional, can be provided to set custom claims to the generated jwt.
 
         Return value (dict):
         Return dict in the format
              {"code": "", "loginId": ""}
-        Containing the code for the login (exactly as it sent via Email or SMS).
+        Containing the code for the login (exactly as it sent via Email or Phone messaging).
 
         Raise:
         AuthException: raised if the operation fails
@@ -1346,7 +1346,7 @@ class User(AuthBase):
 
         Args:
         method (DeliveryMethod): The method to use for "delivering" the verification magic link to the user, for example
-            EMAIL, SMS, WHATSAPP or EMBEDDED
+            EMAIL, SMS, VOICE, WHATSAPP or EMBEDDED
         login_id (str): The login ID of the test user being validated.
         uri (str): Optional redirect uri which will be used instead of any global configuration.
         login_options (LoginOptions): optional, can be provided to set custom claims to the generated jwt.
@@ -1354,7 +1354,7 @@ class User(AuthBase):
         Return value (dict):
         Return dict in the format
              {"link": "", "loginId": ""}
-        Containing the magic link for the login (exactly as it sent via Email or SMS).
+        Containing the magic link for the login (exactly as it sent via Email or Phone messaging).
 
         Raise:
         AuthException: raised if the operation fails
@@ -1389,7 +1389,7 @@ class User(AuthBase):
         Return value (dict):
         Return dict in the format
              {"link": "", "loginId": "", "pendingRef": ""}
-        Containing the enchanted link for the login (exactly as it sent via Email or SMS) and pendingRef.
+        Containing the enchanted link for the login (exactly as it sent via Email or Phone messaging) and pendingRef.
 
         Raise:
         AuthException: raised if the operation fails

@@ -102,6 +102,7 @@ class DeliveryMethod(Enum):
     SMS = 2
     EMAIL = 3
     EMBEDDED = 4
+    VOICE = 5
 
 
 class LoginOptions:

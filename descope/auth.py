@@ -215,6 +215,11 @@ class Auth:
                 user["phone"] = login_id
             if not re.match(PHONE_REGEX, user["phone"]):
                 return False
+        elif method == DeliveryMethod.VOICE:
+            if not user.get("phone", None):
+                user["phone"] = login_id
+            if not re.match(PHONE_REGEX, user["phone"]):
+                return False
         elif method == DeliveryMethod.WHATSAPP:
             if not user.get("phone", None):
                 user["phone"] = login_id
@@ -230,6 +235,7 @@ class Auth:
         suffix = {
             DeliveryMethod.EMAIL: "email",
             DeliveryMethod.SMS: "sms",
+            DeliveryMethod.VOICE: "voice",
             DeliveryMethod.WHATSAPP: "whatsapp",
         }.get(method)
 
@@ -245,6 +251,7 @@ class Auth:
         login_id = {
             DeliveryMethod.EMAIL: ("email", user.get("email", "")),
             DeliveryMethod.SMS: ("phone", user.get("phone", "")),
+            DeliveryMethod.VOICE: ("voice", user.get("phone", "")),
             DeliveryMethod.WHATSAPP: ("whatsapp", user.get("phone", "")),
         }.get(method)
 
@@ -260,6 +267,7 @@ class Auth:
         name = {
             DeliveryMethod.EMAIL: "email",
             DeliveryMethod.SMS: "sms",
+            DeliveryMethod.VOICE: "voice",
             DeliveryMethod.WHATSAPP: "whatsapp",
             DeliveryMethod.EMBEDDED: "Embedded",
         }.get(method)
@@ -301,7 +309,11 @@ class Auth:
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Invalid phone number"
             )
 
-        if method != DeliveryMethod.SMS and method != DeliveryMethod.WHATSAPP:
+        if (
+            method != DeliveryMethod.SMS
+            and method != DeliveryMethod.VOICE
+            and method != DeliveryMethod.WHATSAPP
+        ):
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Invalid delivery method"
             )
@@ -669,7 +681,11 @@ class Auth:
 
     @staticmethod
     def extract_masked_address(response: dict, method: DeliveryMethod) -> str:
-        if method == DeliveryMethod.SMS or method == DeliveryMethod.WHATSAPP:
+        if (
+            method == DeliveryMethod.SMS
+            or method == DeliveryMethod.VOICE
+            or method == DeliveryMethod.WHATSAPP
+        ):
             return response["maskedPhone"]
         elif method == DeliveryMethod.EMAIL:
             return response["maskedEmail"]

@@ -39,6 +39,10 @@ class TestOTP(common.DescopeTest):
             "/v1/auth/otp/signin/sms",
         )
         self.assertEqual(
+            OTP._compose_signin_url(DeliveryMethod.VOICE),
+            "/v1/auth/otp/signin/voice",
+        )
+        self.assertEqual(
             OTP._compose_signin_url(DeliveryMethod.WHATSAPP),
             "/v1/auth/otp/signin/whatsapp",
         )
@@ -51,6 +55,10 @@ class TestOTP(common.DescopeTest):
         self.assertEqual(
             OTP._compose_verify_code_url(DeliveryMethod.SMS),
             "/v1/auth/otp/verify/sms",
+        )
+        self.assertEqual(
+            OTP._compose_verify_code_url(DeliveryMethod.VOICE),
+            "/v1/auth/otp/verify/voice",
         )
         self.assertEqual(
             OTP._compose_verify_code_url(DeliveryMethod.WHATSAPP),
@@ -67,6 +75,10 @@ class TestOTP(common.DescopeTest):
             "/v1/auth/otp/update/phone/sms",
         )
         self.assertEqual(
+            OTP._compose_update_phone_url(DeliveryMethod.VOICE),
+            "/v1/auth/otp/update/phone/voice",
+        )
+        self.assertEqual(
             OTP._compose_update_phone_url(DeliveryMethod.WHATSAPP),
             "/v1/auth/otp/update/phone/whatsapp",
         )
@@ -79,6 +91,10 @@ class TestOTP(common.DescopeTest):
         self.assertEqual(
             OTP._compose_sign_up_or_in_url(DeliveryMethod.SMS),
             "/v1/auth/otp/signup-in/sms",
+        )
+        self.assertEqual(
+            OTP._compose_sign_up_or_in_url(DeliveryMethod.VOICE),
+            "/v1/auth/otp/signup-in/voice",
         )
         self.assertEqual(
             OTP._compose_sign_up_or_in_url(DeliveryMethod.WHATSAPP),
@@ -148,6 +164,20 @@ class TestOTP(common.DescopeTest):
             AuthException,
             client.otp.sign_up,
             DeliveryMethod.SMS,
+            "dummy@dummy.com",
+            invalid_signup_user_details,
+        )
+        self.assertRaises(
+            AuthException,
+            client.otp.sign_up,
+            DeliveryMethod.VOICE,
+            "dummy@dummy.com",
+            invalid_signup_user_details,
+        )
+        self.assertRaises(
+            AuthException,
+            client.otp.sign_up,
+            DeliveryMethod.WHATSAPP,
             "dummy@dummy.com",
             invalid_signup_user_details,
         )
@@ -628,6 +658,64 @@ class TestOTP(common.DescopeTest):
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_user_phone_otp_path}/sms",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:refresh_token1",
+                },
+                json={
+                    "loginId": "id1",
+                    "phone": "+1111111",
+                    "addToLoginIDs": False,
+                    "onMergeUseExisting": False,
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+                params=None,
+            )
+
+        with patch("requests.post") as mock_post:
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.json.return_value = {"maskedPhone": "*****111"}
+            mock_post.return_value = my_mock_response
+            self.assertEqual(
+                "*****111",
+                client.otp.update_user_phone(
+                    DeliveryMethod.VOICE, "id1", "+1111111", "refresh_token1"
+                ),
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_user_phone_otp_path}/voice",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:refresh_token1",
+                },
+                json={
+                    "loginId": "id1",
+                    "phone": "+1111111",
+                    "addToLoginIDs": False,
+                    "onMergeUseExisting": False,
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+                params=None,
+            )
+
+        with patch("requests.post") as mock_post:
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.json.return_value = {"maskedPhone": "*****111"}
+            mock_post.return_value = my_mock_response
+            self.assertEqual(
+                "*****111",
+                client.otp.update_user_phone(
+                    DeliveryMethod.WHATSAPP, "id1", "+1111111", "refresh_token1"
+                ),
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_user_phone_otp_path}/whatsapp",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:refresh_token1",
