@@ -233,6 +233,43 @@ class TestAuth(common.DescopeTest):
 
         self.assertEqual(
             Auth.adjust_and_verify_delivery_method(
+                DeliveryMethod.VOICE, "111111111111", {"email": ""}
+            ),
+            True,
+        )
+        self.assertEqual(
+            Auth.adjust_and_verify_delivery_method(
+                DeliveryMethod.VOICE, "+111111111111", {"email": ""}
+            ),
+            True,
+        )
+        self.assertEqual(
+            Auth.adjust_and_verify_delivery_method(
+                DeliveryMethod.VOICE, "++111111111111", {"email": ""}
+            ),
+            False,
+        )
+        self.assertEqual(
+            Auth.adjust_and_verify_delivery_method(
+                DeliveryMethod.VOICE, "asdsad", {"email": ""}
+            ),
+            False,
+        )
+        self.assertEqual(
+            Auth.adjust_and_verify_delivery_method(
+                DeliveryMethod.VOICE, "", {"email": ""}
+            ),
+            False,
+        )
+        self.assertEqual(
+            Auth.adjust_and_verify_delivery_method(
+                DeliveryMethod.VOICE, "unvalid@phone.number", {"email": ""}
+            ),
+            False,
+        )
+
+        self.assertEqual(
+            Auth.adjust_and_verify_delivery_method(
                 DeliveryMethod.WHATSAPP, "111111111111", {"email": ""}
             ),
             True,
@@ -271,6 +308,10 @@ class TestAuth(common.DescopeTest):
             ("phone", "11111111"),
         )
         self.assertEqual(
+            Auth.get_login_id_by_method(DeliveryMethod.VOICE, user),
+            ("voice", "11111111"),
+        )
+        self.assertEqual(
             Auth.get_login_id_by_method(DeliveryMethod.WHATSAPP, user),
             ("whatsapp", "11111111"),
         )
@@ -288,6 +329,10 @@ class TestAuth(common.DescopeTest):
         self.assertEqual(
             Auth.get_method_string(DeliveryMethod.SMS),
             "sms",
+        )
+        self.assertEqual(
+            Auth.get_method_string(DeliveryMethod.VOICE),
+            "voice",
         )
         self.assertEqual(
             Auth.get_method_string(DeliveryMethod.WHATSAPP),

@@ -202,9 +202,9 @@ def descope_verify_code_by_email(descope_client: DescopeClient):
     return decorator
 
 
-def descope_verify_code_by_phone(descope_client: DescopeClient):
+def descope_verify_code_by_phone_sms(descope_client: DescopeClient):
     """
-    Verify code by email decorator
+    Verify code by phone sms decorator
     """
 
     def decorator(f):
@@ -245,9 +245,52 @@ def descope_verify_code_by_phone(descope_client: DescopeClient):
     return decorator
 
 
-def descope_verify_code_by_whatsapp(descope_client: DescopeClient):
+def descope_verify_code_by_phone_voice_call(descope_client: DescopeClient):
     """
-    Verify code by whatsapp decorator
+    Verify code by phone voice call decorator
+    """
+
+    def decorator(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            data = request.get_json(force=True)
+            phone = data.get("phone", None)
+            code = data.get("code", None)
+            if not code or not phone:
+                return Response("Unauthorized", 401)
+
+            try:
+                jwt_response = descope_client.otp.verify_code(
+                    DeliveryMethod.VOICE, phone, code
+                )
+            except AuthException:
+                return Response("Unauthorized", 401)
+
+            # Save the claims on the context execute the original API
+            _request_ctx_stack.top.claims = jwt_response
+            response = f(*args, **kwargs)
+
+            set_cookie_on_response(
+                response,
+                jwt_response[SESSION_TOKEN_NAME],
+                jwt_response[COOKIE_DATA_NAME],
+            )
+            set_cookie_on_response(
+                response,
+                jwt_response[REFRESH_SESSION_TOKEN_NAME],
+                jwt_response[COOKIE_DATA_NAME],
+            )
+
+            return response
+
+        return decorated
+
+    return decorator
+
+
+def descope_verify_code_by_phone_whatsapp(descope_client: DescopeClient):
+    """
+    Verify code by phone whatsapp decorator
     """
 
     def decorator(f):

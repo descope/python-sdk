@@ -29,7 +29,7 @@ class OTP(AuthBase):
 
         Args:
         method (DeliveryMethod): The method to use for delivering the OTP verification code to the user, for example
-            email, SMS, or WhatsApp
+            Email, SMS, Voice call, or WhatsApp
         login_id (str): The login ID of the user being validated for example phone or email
         login_options (LoginOptions): Optional advanced controls over login parameters
         refresh_token: Optional refresh token is needed for specific login options
@@ -58,7 +58,7 @@ class OTP(AuthBase):
     ) -> str:
         """
         Sign up (create) a new user using their email or phone number. Choose a delivery method for OTP
-            verification, for example email, SMS, or WhatsApp.
+            verification, for example Email, SMS, Voice call, or WhatsApp.
             (optional) Include additional user metadata that you wish to preserve.
 
         Args:
@@ -99,7 +99,7 @@ class OTP(AuthBase):
             using the OTP DeliveryMethod specified.
 
         Args:
-        method (DeliveryMethod): The method to use for delivering the OTP verification code, for example phone or email
+        method (DeliveryMethod): The method to use for delivering the OTP verification code, for example Email, SMS, Voice call, or WhatsApp
         login_id (str): The Login ID of the user being validated
 
         Raise:
@@ -130,7 +130,7 @@ class OTP(AuthBase):
         (This function is not needed if you are using the sign_up_or_in function.
 
         Args:
-        method (DeliveryMethod): The method to use for delivering the OTP verification code, for example phone or email
+        method (DeliveryMethod): The method to use for delivering the OTP verification code, for example Email, SMS, Voice call, or WhatsApp
         login_id (str): The Login ID of the user being validated
         code (str): The authorization code enter by the end user during signup/signin
 
@@ -206,7 +206,7 @@ class OTP(AuthBase):
         Update the phone number of an existing end user, after verifying the authenticity of the end user using OTP.
 
         Args:
-        method (DeliveryMethod): The method to use for delivering the OTP verification code, for example phone or email
+        method (DeliveryMethod): The method to use for delivering the OTP verification code, for example Email, SMS, Voice call, or WhatsApp
         login_id (str): The login ID of the user whose information is being updated
         phone (str): The new phone number. If a phone number already exists for this end user, it will be overwritten
         refresh_token (str): The session's refresh token (used for OTP verification)
@@ -230,7 +230,7 @@ class OTP(AuthBase):
             login_id, phone, add_to_login_ids, on_merge_use_existing, template_options
         )
         response = self._auth.do_post(uri, body, None, refresh_token)
-        return Auth.extract_masked_address(response.json(), DeliveryMethod.SMS)
+        return Auth.extract_masked_address(response.json(), method)
 
     @staticmethod
     def _compose_signup_url(method: DeliveryMethod) -> str:
