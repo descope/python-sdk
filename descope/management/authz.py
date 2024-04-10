@@ -365,6 +365,26 @@ class Authz(AuthBase):
         )
         return response.json()["relations"]
 
+    def what_can_target_access_with_relation(self, target: str, relation_definition: str, namespace: str) -> List[dict]:
+        """
+        Returns the list of all resources that the target has the given relation to including all derived relations
+        Args:
+        target (str): the target we are returning the relations for
+        relation_definition (str): the RD we are checking
+        namespace (str): the namespace for the RD
+
+        Return value (List[dict]):
+        Return List of relations each in the format of a relation as documented in create_relations
+        Raise:
+        AuthException: raised if query fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.authz_re_target_with_relation,
+            {"target": target, "relationDefinition": relation_definition, "namespace": namespace},
+            pswd=self._auth.management_key,
+        )
+        return response.json()["relations"]
+
     def get_modified(self, since: Optional[datetime] = None) -> dict:
         """
         Get all targets and resources changed since the given date.
