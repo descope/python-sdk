@@ -572,7 +572,7 @@ class TestAuthz(common.DescopeTest):
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
-                AuthException, client.mgmt.authz.what_can_target_access_with_relation, "a" "b" "c"
+                AuthException, client.mgmt.authz.what_can_target_access_with_relation, "a", "b", "c"
             )
 
         # Test success flow
