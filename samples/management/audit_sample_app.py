@@ -17,6 +17,21 @@ def main():
             project_id=project_id, management_key=management_key
         )
         try:
+            logging.info("Going to create audit event")
+            descope_client.mgmt.audit.create_event(
+                action="pencil.created",
+                user_id="user-id",
+                actor_id="actor-id",
+                tenant_id="tenant-id",
+                type="info",
+                data={"some": "data"},
+            )
+            logging.info("Create: created audit event")
+
+        except AuthException as e:
+            logging.info(f"Audit event creation failed {e}")
+
+        try:
             logging.info("Going to search audit")
             text = None
             if len(sys.argv) > 1:

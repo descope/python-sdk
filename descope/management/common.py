@@ -107,6 +107,7 @@ class MgmtV1:
 
     # Audit
     audit_search = "/v1/mgmt/audit/search"
+    audit_create_event = "/v1/mgmt/audit/event"
 
     # Authz ReBAC
     authz_schema_save = "/v1/mgmt/authz/schema/save"
