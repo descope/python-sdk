@@ -1,7 +1,5 @@
 import json
 import logging
-import sys
-from datetime import datetime
 
 from descope import AuthException, DescopeClient
 
@@ -20,7 +18,7 @@ def main():
         try:
             logging.info("Creating test authz schema if different name")
             schema = descope_client.mgmt.authz.load_schema()
-            with open("samples/management/files.json", "rt") as f:
+            with open("samples/management/files.json") as f:
                 schema_from_file = json.load(f)
                 if schema["name"] != schema_from_file["name"]:
                     logging.info("Schema is different, upgrading...")
@@ -135,7 +133,7 @@ def main():
             )
             logging.info(f"Checking existing relations: {res}")
         except AuthException as e:
-            logging.info(f"Audit search failed {e}")
+            logging.info(f"Checking existing relations failed {e}")
 
     except AuthException:
         raise
