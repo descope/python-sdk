@@ -11,7 +11,7 @@
 <header>
     <div class="content">
         <h1>Coverage report:
-            <span class="pc_cov">98%</span>
+            <span class="pc_cov">96%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -23,6 +23,7 @@
                 <div class="keyhelp">
                     <p>
                         <kbd>f</kbd>
+                        <kbd>n</kbd>
                         <kbd>s</kbd>
                         <kbd>m</kbd>
                         <kbd>x</kbd>
@@ -48,9 +49,9 @@
             </div>
         </form>
         <h2>
-                <a class="button current">Files</a>
+                <a class="button" href="index.html">Files</a>
                 <a class="button" href="function_index.html">Functions</a>
-                <a class="button" href="class_index.html">Classes</a>
+                <a class="button current">Classes</a>
         </h2>
         <p class="text">
             <a class="nav" href="https://coverage.readthedocs.io/en/7.5.1">coverage.py v7.5.1</a>,
@@ -63,6 +64,7 @@
         <thead>
             <tr class="tablehead" title="Click to sort">
                 <th id="file" class="name left" aria-sort="none" data-shortcut="f">File<span class="arrows"></span></th>
+                <th id="region" class="name left" aria-sort="none" data-default-sort-order="ascending" data-shortcut="n">class<span class="arrows"></span></th>
                 <th id="statements" aria-sort="none" data-default-sort-order="descending" data-shortcut="s">statements<span class="arrows"></span></th>
                 <th id="missing" aria-sort="none" data-default-sort-order="descending" data-shortcut="m">missing<span class="arrows"></span></th>
                 <th id="excluded" aria-sort="none" data-default-sort-order="descending" data-shortcut="x">excluded<span class="arrows"></span></th>
@@ -71,55 +73,61 @@
         </thead>
         <tbody>
             <tr class="region">
-                <td class="name left"><a href="z_ed9d64cdfac9d9b5_auth_py.html">descope/auth.py</a></td>
-                <td>302</td>
-                <td>14</td>
+                <td class="name left"><a href="z_ed9d64cdfac9d9b5_auth_py.html#t65">descope/auth.py</a></td>
+                <td class="name left"><a href="z_ed9d64cdfac9d9b5_auth_py.html#t65"><data value='Auth'>Auth</data></a></td>
+                <td>237</td>
+                <td>10</td>
                 <td>0</td>
-                <td class="right" data-ratio="288 302">95%</td>
+                <td class="right" data-ratio="227 237">96%</td>
             </tr>
             <tr class="region">
-                <td class="name left"><a href="z_ed9d64cdfac9d9b5_common_py.html">descope/common.py</a></td>
-                <td>97</td>
-                <td>1</td>
-                <td>1</td>
-                <td class="right" data-ratio="96 97">99%</td>
+                <td class="name left"><a href="z_ed9d64cdfac9d9b5_auth_py.html">descope/auth.py</a></td>
+                <td class="name left"><a href="z_ed9d64cdfac9d9b5_auth_py.html"><data value=''><span class='no-noun'>(no class)</span></data></a></td>
+                <td>61</td>
+                <td>2</td>
+                <td>0</td>
+                <td class="right" data-ratio="59 61">97%</td>
             </tr>
             <tr class="region">
-                <td class="name left"><a href="z_ed9d64cdfac9d9b5_descope_client_py.html">descope/descope_client.py</a></td>
-                <td>167</td>
+                <td class="name left"><a href="z_ed9d64cdfac9d9b5_descope_client_py.html#t22">descope/descope_client.py</a></td>
+                <td class="name left"><a href="z_ed9d64cdfac9d9b5_descope_client_py.html#t22"><data value='DescopeClient'>DescopeClient</data></a></td>
+                <td>111</td>
                 <td>4</td>
                 <td>0</td>
-                <td class="right" data-ratio="163 167">98%</td>
+                <td class="right" data-ratio="107 111">96%</td>
             </tr>
             <tr class="region">
-                <td class="name left"><a href="z_f54762f9f1d5aa4d_audit_py.html">descope/management/audit.py</a></td>
-                <td>43</td>
+                <td class="name left"><a href="z_f54762f9f1d5aa4d_audit_py.html#t8">descope/management/audit.py</a></td>
+                <td class="name left"><a href="z_f54762f9f1d5aa4d_audit_py.html#t8"><data value='Audit'>Audit</data></a></td>
+                <td>34</td>
                 <td>11</td>
                 <td>0</td>
-                <td class="right" data-ratio="32 43">74%</td>
+                <td class="right" data-ratio="23 34">68%</td>
             </tr>
             <tr class="region">
-                <td class="name left"><a href="z_f54762f9f1d5aa4d_user_py.html">descope/management/user.py</a></td>
-                <td>241</td>
+                <td class="name left"><a href="z_f54762f9f1d5aa4d_user_py.html#t55">descope/management/user.py</a></td>
+                <td class="name left"><a href="z_f54762f9f1d5aa4d_user_py.html#t55"><data value='User'>User</data></a></td>
+                <td>166</td>
                 <td>8</td>
                 <td>0</td>
-                <td class="right" data-ratio="233 241">97%</td>
+                <td class="right" data-ratio="158 166">95%</td>
             </tr>
         </tbody>
         <tfoot>
             <tr class="total">
                 <td class="name left">Total</td>
-                <td>2112</td>
-                <td>38</td>
+                <td class="name left">&nbsp;</td>
+                <td>835</td>
+                <td>35</td>
                 <td>1</td>
-                <td class="right" data-ratio="2074 2112">98%</td>
+                <td class="right" data-ratio="800 835">96%</td>
             </tr>
         </tfoot>
     </table>
     <p id="no_rows">
         No items found using the specified filter.
     </p>
-        <p>27 files skipped due to complete coverage.</p>
+        <p>11 classes skipped due to complete coverage.</p>
 </main>
 <footer>
     <div class="content">
@@ -129,8 +137,8 @@
         </p>
     </div>
     <aside class="hidden">
-        <a id="prevFileLink" class="nav" href="z_f54762f9f1d5aa4d_user_py.html"></a>
-        <a id="nextFileLink" class="nav" href="z_ed9d64cdfac9d9b5_auth_py.html"></a>
+        <a id="prevFileLink" class="nav" href=""></a>
+        <a id="nextFileLink" class="nav" href=""></a>
         <button type="button" class="button_prev_file" data-shortcut="["></button>
         <button type="button" class="button_next_file" data-shortcut="]"></button>
         <button type="button" class="button_show_hide_help" data-shortcut="?"></button>
