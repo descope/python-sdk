@@ -524,7 +524,8 @@ descope_client.mgmt.tenant.update(
 )
 
 # Tenant deletion cannot be undone. Use carefully.
-descope_client.mgmt.tenant.delete("my-custom-id")
+# Pass true to cascade value, in case you want to delete all users/keys associated only with this tenant
+descope_client.mgmt.tenant.delete(id="my-custom-id", cascade=False)
 
 # Load tenant by id
 tenant_resp = descope_client.mgmt.tenant.load("my-custom-id")
