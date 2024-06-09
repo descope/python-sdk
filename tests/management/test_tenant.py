@@ -179,7 +179,7 @@ class TestTenant(common.DescopeTest):
         # Test success flow
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
-            self.assertIsNone(client.mgmt.tenant.delete("t1"))
+            self.assertIsNone(client.mgmt.tenant.delete("t1", True))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_delete_path}",
                 headers={
@@ -187,9 +187,7 @@ class TestTenant(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                json={
-                    "id": "t1",
-                },
+                json={"id": "t1", "cascade": True},
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
