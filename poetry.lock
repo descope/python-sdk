@@ -1280,13 +1280,13 @@ urllib3 = ">=2"
 
 [[package]]
 name = "types-setuptools"
-version = "69.0.0.20240125"
+version = "69.5.0.20240522"
 description = "Typing stubs for setuptools"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "types-setuptools-69.0.0.20240125.tar.gz", hash = "sha256:22ad498cb585b22ce8c97ada1fccdf294a2e0dd7dc984a28535a84ea82f45b3f"},
-    {file = "types_setuptools-69.0.0.20240125-py3-none-any.whl", hash = "sha256:00835f959ff24ebc32c55da8df9d46e8df25e3c4bfacb43e98b61fde51a4bc41"},
+    {file = "types-setuptools-69.5.0.20240522.tar.gz", hash = "sha256:c5a97601b2d040d3b9fcd0633730f0a8c86ebef208552525c97301427f261549"},
+    {file = "types_setuptools-69.5.0.20240522-py3-none-any.whl", hash = "sha256:e27231cbc80648cfaee4921d2f1150107fdf8d33666958abf2aba0191a82688b"},
 ]
 
 [[package]]
@@ -1375,4 +1375,4 @@ flask = ["Flask"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.7,<4.0"
-content-hash = "fda35f50136614edae7fe09a43d8c94cb3e29e8628b67c85ef79d553488284df"
+content-hash = "78ac3a411972b703e27bafb500d77be44011ec643f177cb0929ab6c3dfeb33e5"
