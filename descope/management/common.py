@@ -125,6 +125,7 @@ class MgmtV1:
     authz_re_resource = "/v1/mgmt/authz/re/resource"
     authz_re_targets = "/v1/mgmt/authz/re/targets"
     authz_re_target_all = "/v1/mgmt/authz/re/targetall"
+    authz_re_target_with_relation = "/v1/mgmt/authz/re/targetwithrelation"
     authz_get_modified = "/v1/mgmt/authz/getmodified"
 
     # Project

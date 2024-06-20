@@ -559,6 +559,39 @@ class TestAuthz(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+
+    def test_what_can_target_access_with_relation(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed what_can_target_access_with_relation
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException, client.mgmt.authz.what_can_target_access_with_relation, "a", "b", "c"
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNotNone(client.mgmt.authz.what_can_target_access_with_relation("a", "b", "c"))
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.authz_re_target_with_relation}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                json={"target": "a", "relationDefinition": "b", "namespace": "c"},
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
     def test_get_modified(self):
         client = DescopeClient(
             self.dummy_project_id,
