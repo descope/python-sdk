@@ -68,7 +68,7 @@ These sections show how to use the SDK to perform permission and user management
 9. [Manage JWTs](#manage-jwts)
 10. [Impersonate](#impersonate)
 12. [Embedded links](#embedded-links)
-13. [Search Audit](#search-audit)
+13. [Audit](#audit)
 14. [Manage ReBAC Authz](#manage-rebac-authz)
 15. [Manage Project](#manage-project)
 16. [Manage SSO Applications](#manage-sso-applications)
@@ -512,7 +512,7 @@ descope_client.mgmt.tenant.create(
     name="My First Tenant",
     id="my-custom-id", # This is optional.
     self_provisioning_domains=["domain.com"],
-    custom_attributes={"attribute-name": "value},
+    custom_attributes={"attribute-name": "value"},
 )
 
 # Update will override all fields as is. Use carefully.
@@ -520,11 +520,12 @@ descope_client.mgmt.tenant.update(
     id="my-custom-id",
     name="My First Tenant",
     self_provisioning_domains=["domain.com", "another-domain.com"],
-    custom_attributes={"attribute-name": "value},
+    custom_attributes={"attribute-name": "value"},
 )
 
 # Tenant deletion cannot be undone. Use carefully.
-descope_client.mgmt.tenant.delete("my-custom-id")
+# Pass true to cascade value, in case you want to delete all users/keys associated only with this tenant
+descope_client.mgmt.tenant.delete(id="my-custom-id", cascade=False)
 
 # Load tenant by id
 tenant_resp = descope_client.mgmt.tenant.load("my-custom-id")
@@ -1052,7 +1053,7 @@ This token can then be verified using the magic link 'verify' function, either d
 token = descope_client.mgmt.user.generate_embedded_link("desmond@descope.com", {"key1":"value1"})
 ```
 
-### Search Audit
+### Audit
 
 You can perform an audit search for either specific values or full-text across the fields. Audit search is limited to the last 30 days.
 Below are some examples. For a full list of available search criteria options, see the function documentation.
@@ -1065,6 +1066,18 @@ audits = descope_client.mgmt.audit.search(
 )
 # Search successful logins in the last 30 days
 audits = descope_client.mgmt.audit.search(actions=["LoginSucceed"])
+```
+
+You can also create audit event with data
+
+```python
+await descopeClient.management.audit.create_event(
+    action="pencil.created",
+    type="info", # info/warn/error
+    actor_id="UXXX",
+    tenant_id="tenant-id"
+    data={"some": "data"}
+)
 ```
 
 ### Manage ReBAC Authz

@@ -81,6 +81,7 @@ class Tenant(AuthBase):
     def delete(
         self,
         id: str,
+        cascade: bool = False,
     ):
         """
         Delete an existing tenant. IMPORTANT: This action is irreversible. Use carefully.
@@ -92,7 +93,9 @@ class Tenant(AuthBase):
         AuthException: raised if creation operation fails
         """
         uri = MgmtV1.tenant_delete_path
-        self._auth.do_post(uri, {"id": id}, pswd=self._auth.management_key)
+        self._auth.do_post(
+            uri, {"id": id, "cascade": cascade}, pswd=self._auth.management_key
+        )
 
     def load(
         self,

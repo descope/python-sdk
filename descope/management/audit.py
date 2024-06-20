@@ -100,6 +100,46 @@ class Audit(AuthBase):
             "audits": list(map(Audit._convert_audit_record, response.json()["audits"]))
         }
 
+    def create_event(
+        self,
+        action: str,
+        type: str,
+        actor_id: str,
+        tenant_id: str,
+        user_id: Optional[str] = None,
+        data: Optional[dict] = None,
+    ):
+        """
+        Create audit event based on given parameters
+
+        Args:
+        action (str): Audit action
+        type (str): Audit type (info/warn/error)
+        actor_id (str): Audit actor id
+        tenant_id (str): Audit tenant id
+        user_id (str): Optional, Audit user id
+        data (dict): Optional, Audit data
+
+        Raise:
+        AuthException: raised if search operation fails
+        """
+        body: dict[str, Any] = {
+            "action": action,
+            "type": type,
+            "actorId": actor_id,
+            "tenantId": tenant_id,
+        }
+        if user_id is not None:
+            body["userId"] = user_id
+        if data is not None:
+            body["data"] = data
+
+        self._auth.do_post(
+            MgmtV1.audit_create_event,
+            body=body,
+            pswd=self._auth.management_key,
+        )
+
     @staticmethod
     def _convert_audit_record(a: dict) -> dict:
         return {
