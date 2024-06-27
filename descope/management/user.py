@@ -33,6 +33,7 @@ class UserObj:
         additional_login_ids: Optional[List[str]] = None,
         sso_app_ids: Optional[List[str]] = None,
         password: Optional[UserPassword] = None,
+        seed: Optional[str] = None,
     ):
         self.login_id = login_id
         self.email = email
@@ -50,6 +51,7 @@ class UserObj:
         self.additional_login_ids = additional_login_ids
         self.sso_app_ids = sso_app_ids
         self.password = password
+        self.seed = seed
 
 
 class User(AuthBase):
@@ -1545,6 +1547,7 @@ class User(AuthBase):
                 sso_app_ids=sso_app_ids,
                 password=password,
                 hashed_password=hashed_password,
+                seed=user.seed,
             )
             usersBody.append(uBody)
 
@@ -1577,6 +1580,7 @@ class User(AuthBase):
         sso_app_ids: Optional[List[str]] = None,
         password: Optional[str] = None,
         hashed_password: Optional[dict] = None,
+        seed: Optional[str] = None,
     ) -> dict:
         res = {
             "loginId": login_id,
@@ -1605,4 +1609,6 @@ class User(AuthBase):
             res["password"] = password
         if hashed_password is not None:
             res["hashedPassword"] = hashed_password
+        if seed is not None:
+            res["seed"] = seed
         return res
