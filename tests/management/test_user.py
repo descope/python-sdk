@@ -306,6 +306,7 @@ class TestUser(common.DescopeTest):
                         rounds=8,
                     ),
                 ),
+                seed="aaa",
             )
             resp = self.client.mgmt.user.invite_batch(
                 users=[user],
@@ -345,6 +346,7 @@ class TestUser(common.DescopeTest):
                                 "rounds": 8,
                             }
                         },
+                        "seed": "aaa",
                     }
                 ],
                 "invite": True,
