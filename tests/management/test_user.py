@@ -880,13 +880,14 @@ class TestUser(common.DescopeTest):
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads(
-                """{"provider": "p1", "providerUserId": "puid", "accessToken": "access123", "expiration": "123123123", "scopes": ["s1", "s2"]}"""
+                """{"provider": "p1", "providerUserId": "puid", "accessToken": "access123", "refreshToken": "refresh456", "expiration": "123123123", "scopes": ["s1", "s2"]}"""
             )
             mock_get.return_value = network_resp
             resp = self.client.mgmt.user.get_provider_token("valid-id", "p1", True, True)
             self.assertEqual(resp["provider"], "p1")
             self.assertEqual(resp["providerUserId"], "puid")
             self.assertEqual(resp["accessToken"], "access123")
+            self.assertEqual(resp["refreshToken"], "refresh456")
             self.assertEqual(resp["expiration"], "123123123")
             self.assertEqual(resp["scopes"], ["s1", "s2"])
             mock_get.assert_called_with(
