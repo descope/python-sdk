@@ -883,7 +883,7 @@ class TestUser(common.DescopeTest):
                 """{"provider": "p1", "providerUserId": "puid", "accessToken": "access123", "expiration": "123123123", "scopes": ["s1", "s2"]}"""
             )
             mock_get.return_value = network_resp
-            resp = self.client.mgmt.user.get_provider_token("valid-id", "p1")
+            resp = self.client.mgmt.user.get_provider_token("valid-id", "p1", True, True)
             self.assertEqual(resp["provider"], "p1")
             self.assertEqual(resp["providerUserId"], "puid")
             self.assertEqual(resp["accessToken"], "access123")
@@ -895,7 +895,7 @@ class TestUser(common.DescopeTest):
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
-                params={"loginId": "valid-id", "provider": "p1"},
+                params={"loginId": "valid-id", "provider": "p1", "withRefreshToken": True, "forceRefresh": True},
                 allow_redirects=None,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,

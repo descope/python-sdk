@@ -606,6 +606,8 @@ class User(AuthBase):
         self,
         login_id: str,
         provider: str,
+        withRefreshToken: Optional[bool] = False,
+        forceRefresh: Optional[bool] = False,
     ) -> dict:
         """
         Get the provider token for the given login ID.
@@ -615,6 +617,8 @@ class User(AuthBase):
         Args:
         login_id (str): The login ID of the user.
         provider (str): The provider name (google, facebook, etc').
+        withRefreshToken (bool): Optional, set to true to get also the refresh token.
+        forceRefresh (bool): Optional, set to true to force refresh the token.
 
         Return value (dict):
         Return dict in the format
@@ -626,7 +630,7 @@ class User(AuthBase):
         """
         response = self._auth.do_get(
             MgmtV1.user_get_provider_token,
-            {"loginId": login_id, "provider": provider},
+            {"loginId": login_id, "provider": provider, "withRefreshToken": withRefreshToken, "forceRefresh": forceRefresh},
             pswd=self._auth.management_key,
         )
         return response.json()
