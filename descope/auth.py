@@ -154,6 +154,25 @@ class Auth:
         )
         self._raise_from_response(response)
         return response
+    
+    def do_patch(
+        self,
+        uri: str,
+        body: dict | list[dict] | list[str] | None,
+        params=None,
+        pswd: str | None = None,
+    ) -> requests.Response:
+        response = requests.patch(
+            f"{self.base_url}{uri}",
+            headers=self._get_default_headers(pswd),
+            json=body,
+            allow_redirects=False,
+            verify=self.secure,
+            params=params,
+            timeout=self.timeout_seconds,
+        )
+        self._raise_from_response(response)
+        return response
 
     def do_delete(
         self, uri: str, params=None, pswd: str | None = None

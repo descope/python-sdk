@@ -327,12 +327,16 @@ class User(AuthBase):
         """
         Update an existing user with the given various fields. IMPORTANT: All parameters are used as overrides
         to the existing user. Empty fields will override populated fields. Use carefully.
+        Use `patch` for partial updates instead.
 
         Args:
         login_id (str): The login ID of the user to update.
         email (str): Optional user email address.
         phone (str): Optional user phone number.
         display_name (str): Optional user display name.
+        given_name (str): Optional user given name.
+        middle_name (str): Optional user middle name.
+        family_name (str): Optional user family name.
         role_names (List[str]): An optional list of the user's roles without tenant association. These roles are
             mutually exclusive with the `user_tenant` roles.
         user_tenants (List[AssociatedTenant]): An optional list of the user's tenants, and optionally, their roles per tenant. These roles are
@@ -367,6 +371,66 @@ class User(AuthBase):
                 additional_login_ids,
                 sso_app_ids,
                 None,
+            ),
+            pswd=self._auth.management_key,
+        )
+
+    def patch(
+        self,
+        login_id: str,
+        email: Optional[str] = None,
+        phone: Optional[str] = None,
+        display_name: Optional[str] = None,
+        given_name: Optional[str] = None,
+        middle_name: Optional[str] = None,
+        family_name: Optional[str] = None,
+        role_names: Optional[List[str]] = None,
+        user_tenants: Optional[List[AssociatedTenant]] = None,
+        picture: Optional[str] = None,
+        custom_attributes: Optional[dict] = None,
+        verified_email: Optional[bool] = None,
+        verified_phone: Optional[bool] = None,
+        sso_app_ids: Optional[List[str]] = None,
+    ):
+        """
+        Patches an existing user with the given various fields. Only the given fields will be used to update the user. 
+
+        Args:
+        login_id (str): The login ID of the user to update.
+        email (str): Optional user email address.
+        phone (str): Optional user phone number.
+        display_name (str): Optional user display name.
+        given_name (str): Optional user given name.
+        middle_name (str): Optional user middle name.
+        family_name (str): Optional user family name.
+        role_names (List[str]): An optional list of the user's roles without tenant association. These roles are
+            mutually exclusive with the `user_tenant` roles.
+        user_tenants (List[AssociatedTenant]): An optional list of the user's tenants, and optionally, their roles per tenant. These roles are
+            mutually exclusive with the general `role_names`.
+        picture (str): Optional url for user picture
+        custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
+        sso_app_ids (List[str]): Optional, list of SSO applications IDs to be associated with the user.
+
+        Raise:
+        AuthException: raised if patch operation fails
+        """
+        self._auth.do_patch(
+            MgmtV1.user_patch_path,
+            User._compose_patch_body(
+                login_id,
+                email,
+                phone,
+                display_name,
+                given_name,
+                middle_name,
+                family_name,
+                role_names,
+                user_tenants,
+                picture,
+                custom_attributes,
+                verified_email,
+                verified_phone,
+                sso_app_ids,
             ),
             pswd=self._auth.management_key,
         )
@@ -1611,4 +1675,52 @@ class User(AuthBase):
             res["hashedPassword"] = hashed_password
         if seed is not None:
             res["seed"] = seed
+        return res
+    
+    @staticmethod
+    def _compose_patch_body(
+        login_id: str,
+        email: Optional[str],
+        phone: Optional[str],
+        display_name: Optional[str],
+        given_name: Optional[str],
+        middle_name: Optional[str],
+        family_name: Optional[str],
+        role_names: Optional[List[str]],
+        user_tenants: Optional[List[AssociatedTenant]],
+        picture: Optional[str],
+        custom_attributes: Optional[dict],
+        verified_email: Optional[bool],
+        verified_phone: Optional[bool],
+        sso_app_ids: Optional[List[str]],
+    ) -> dict:
+        res = {
+            "loginId": login_id,
+        }
+        if email is not None:
+            res["email"] = email
+        if phone is not None:
+            res["phone"] = phone
+        if display_name is not None:
+            res["displayName"] = display_name
+        if given_name is not None:
+            res["givenName"] = given_name
+        if middle_name is not None:
+            res["middleName"] = middle_name
+        if family_name is not None:
+            res["familyName"] = family_name
+        if role_names is not None:
+            res["roleNames"] = role_names
+        if user_tenants is not None:
+            res["userTenants"] = associated_tenants_to_dict(user_tenants)
+        if picture is not None:
+            res["picture"] = picture
+        if custom_attributes is not None:
+            res["customAttributes"] = custom_attributes
+        if verified_email is not None:
+            res["verifiedEmail"] = verified_email
+        if verified_phone is not None:
+            res["verifiedPhone"] = verified_phone
+        if sso_app_ids is not None:
+            res["ssoAppIds"] = sso_app_ids
         return res
