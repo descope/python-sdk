@@ -393,7 +393,7 @@ class User(AuthBase):
         sso_app_ids: Optional[List[str]] = None,
     ):
         """
-        Patches an existing user with the given various fields. Only the given fields will be used to update the user. 
+        Patches an existing user with the given various fields. Only the given fields will be used to update the user.
 
         Args:
         login_id (str): The login ID of the user to update.
@@ -1680,7 +1680,7 @@ class User(AuthBase):
         if seed is not None:
             res["seed"] = seed
         return res
-    
+
     @staticmethod
     def _compose_patch_body(
         login_id: str,

@@ -154,7 +154,7 @@ class Auth:
         )
         self._raise_from_response(response)
         return response
-    
+
     def do_patch(
         self,
         uri: str,

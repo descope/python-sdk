@@ -512,7 +512,7 @@ class TestUser(common.DescopeTest):
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
-    
+
     def test_patch(self):
         # Test failed flows
         with patch("requests.patch") as mock_patch:
