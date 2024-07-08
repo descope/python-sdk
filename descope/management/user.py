@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import Any, List, Optional, Union
 
 from descope._auth_base import AuthBase
 from descope.auth import Auth
@@ -1698,7 +1698,7 @@ class User(AuthBase):
         verified_phone: Optional[bool],
         sso_app_ids: Optional[List[str]],
     ) -> dict:
-        res = {
+        res: dict[str, Any] = {
             "loginId": login_id,
         }
         if email is not None:
