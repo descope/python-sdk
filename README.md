@@ -67,11 +67,11 @@ These sections show how to use the SDK to perform permission and user management
 8. [Manage Flows](#manage-flows-and-theme)
 9. [Manage JWTs](#manage-jwts)
 10. [Impersonate](#impersonate)
-12. [Embedded links](#embedded-links)
-13. [Audit](#audit)
-14. [Manage ReBAC Authz](#manage-rebac-authz)
-15. [Manage Project](#manage-project)
-16. [Manage SSO Applications](#manage-sso-applications)
+11. [Embedded links](#embedded-links)
+12. [Audit](#audit)
+13. [Manage ReBAC Authz](#manage-rebac-authz)
+14. [Manage Project](#manage-project)
+15. [Manage SSO Applications](#manage-sso-applications)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -472,6 +472,7 @@ descope_client.logout_all(refresh_token)
 ```
 
 ### History
+
 You can get the current session user history.
 The request requires a valid refresh token.
 
@@ -545,7 +546,7 @@ tenants = tenants_resp["tenants"]
 
 ### Manage Users
 
-You can create, update, delete or load users, as well as setting new password, expire password and search according to filters:
+You can create, update, patch, delete or load users, as well as setting new password, expire password and search according to filters:
 
 ```Python
 # A user must have a login ID, other fields are optional.
@@ -602,6 +603,13 @@ descope_client.mgmt.user.update(
         AssociatedTenant("my-tenant-id", ["role-name1", "role-name2"]),
     ],
 	sso_app_ids=["appId1"],
+)
+
+# Patch will override only the set fields in the user
+descope_client.mgmt.user.patch(
+    login_id="desmond@descope.com",
+    email="desmond@descope.com",
+    display_name="Desmond Copeland",
 )
 
 # Update explicit data for a user rather than overriding all fields
@@ -732,6 +740,7 @@ descope_client.mgmt.access_key.delete("key-id")
 ```
 
 Exchange the access key and provide optional access key login options:
+
 ```python
 loc = AccessKeyLoginOptions(custom_claims={"k1": "v1"})
 jwt_response = descope_client.exchange_access_key(
@@ -1290,7 +1299,7 @@ descope_client.mgmt.project.import_project(export)
 
 You can create, update, delete or load sso applications:
 
-```Python
+```python
 # Create OIDC SSO application
 descope_client.mgmt.sso_application.create_oidc_application(
     name="My First sso app",
@@ -1338,6 +1347,7 @@ apps_resp = descope_client.mgmt.sso_application.load_all()
 apps = apps_resp["apps"]
     for app in apps:
         # Do something
+```
 
 ### Utils for your end to end (e2e) tests and integration tests
 

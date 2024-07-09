@@ -513,6 +513,100 @@ class TestUser(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+    def test_patch(self):
+        # Test failed flows
+        with patch("requests.patch") as mock_patch:
+            mock_patch.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                self.client.mgmt.user.patch,
+                "valid-id",
+                "email@something.com",
+            )
+
+        # Test success flow with some params set
+        with patch("requests.patch") as mock_patch:
+            mock_patch.return_value.ok = True
+            self.assertIsNone(
+                self.client.mgmt.user.patch(
+                    "id",
+                    display_name="new-name",
+                    email=None,
+                    phone=None,
+                    given_name=None,
+                    role_names=["domain.com"],
+                    user_tenants=None,
+                    picture="https://test.com",
+                    custom_attributes={"ak": "av"},
+                    sso_app_ids=["app1", "app2"],
+                )
+            )
+            mock_patch.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_patch_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                json={
+                    "loginId": "id",
+                    "displayName": "new-name",
+                    "roleNames": ["domain.com"],
+                    "picture": "https://test.com",
+                    "customAttributes": {"ak": "av"},
+                    "ssoAppIds": ["app1", "app2"],
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+        # Test success flow with other params
+        with patch("requests.patch") as mock_patch:
+            mock_patch.return_value.ok = True
+            self.assertIsNone(
+                self.client.mgmt.user.patch(
+                    "id",
+                    email="a@test.com",
+                    phone="+123456789",
+                    given_name="given",
+                    middle_name="middle",
+                    family_name="family",
+                    role_names=None,
+                    user_tenants=[
+                        AssociatedTenant("tenant1"),
+                        AssociatedTenant("tenant2", ["role1", "role2"]),
+                    ],
+                    custom_attributes=None,
+                    verified_email=True,
+                    verified_phone=False,
+                )
+            )
+            mock_patch.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_patch_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                json={
+                    "loginId": "id",
+                    "email": "a@test.com",
+                    "phone": "+123456789",
+                    "givenName": "given",
+                    "middleName": "middle",
+                    "familyName": "family",
+                    "verifiedEmail": True,
+                    "verifiedPhone": False,
+                    "userTenants": [
+                        {"tenantId": "tenant1", "roleNames": []},
+                        {"tenantId": "tenant2", "roleNames": ["role1", "role2"]},
+                    ],
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
     def test_delete(self):
         # Test failed flows
         with patch("requests.post") as mock_post:
