@@ -58,6 +58,7 @@ class TestAccessKey(common.DescopeTest):
                 ],
                 user_id="userid",
                 custom_claims={"k1": "v1"},
+                permitted_ips=["10.0.0.1", "192.168.1.0/24"],
             )
             access_key = resp["key"]
             self.assertEqual(access_key["id"], "ak1")
@@ -78,6 +79,7 @@ class TestAccessKey(common.DescopeTest):
                     ],
                     "userId": "userid",
                     "customClaims": {"k1": "v1"},
+                    "permittedIps": ["10.0.0.1", "192.168.1.0/24"],
                 },
                 allow_redirects=False,
                 verify=True,
