@@ -17,6 +17,7 @@ class AccessKey(AuthBase):
         key_tenants: Optional[List[AssociatedTenant]] = None,
         user_id: Optional[str] = None,
         custom_claims: Optional[dict] = None,
+        description: Optional[str] = None,
         permitted_ips: Optional[List[str]] = None,
     ) -> dict:
         """
@@ -32,6 +33,7 @@ class AccessKey(AuthBase):
         user_id (str): Bind access key to this user id
             If user_id is supplied, then authorizations will be ignored, and the access key will be bound to the user's authorization.
         custom_claims (dict): Optional, map of claims and their values that will be present in the JWT.
+        description: an optional text the access key can hold.
         permitted_ips: (List[str]): An optional list of IP addresses or CIDR ranges that are allowed to use the access key.
 
         Return value (dict):
@@ -58,6 +60,7 @@ class AccessKey(AuthBase):
                 key_tenants,
                 user_id,
                 custom_claims,
+                description,
                 permitted_ips,
             ),
             pswd=self._auth.management_key,
@@ -120,6 +123,7 @@ class AccessKey(AuthBase):
         self,
         id: str,
         name: str,
+        description: str,
     ):
         """
         Update an existing access key with the given various fields. IMPORTANT: All parameters are used as overrides
@@ -128,13 +132,14 @@ class AccessKey(AuthBase):
         Args:
         id (str): The id of the access key to update.
         name (str): The updated access key name.
+        description(str): an optional text the access key can hold.
 
         Raise:
         AuthException: raised if update operation fails
         """
         self._auth.do_post(
             MgmtV1.access_key_update_path,
-            {"id": id, "name": name},
+            {"id": id, "name": name, "description": description},
             pswd=self._auth.management_key,
         )
 
@@ -205,6 +210,7 @@ class AccessKey(AuthBase):
         key_tenants: List[AssociatedTenant],
         user_id: Optional[str] = None,
         custom_claims: Optional[dict] = None,
+        description: Optional[str] = None,
         permitted_ips: Optional[List[str]] = None,
     ) -> dict:
         return {
@@ -214,5 +220,6 @@ class AccessKey(AuthBase):
             "keyTenants": associated_tenants_to_dict(key_tenants),
             "userId": user_id,
             "customClaims": custom_claims,
+            "description": description,
             "permittedIps": permitted_ips,
         }

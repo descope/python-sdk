@@ -703,6 +703,7 @@ You can create, update, delete or load access keys, as well as search according 
 # Roles should be set directly if no tenants exist, otherwise set
 # on a per-tenant basis.
 # If user_id is supplied, then authorization would be ignored, and access key would be bound to the users authorization.
+# If description is supplied, then the access key will hold a descriptive text.
 # If permitted_ips is supplied, then the access key can only be used from that list of IP addresses or CIDR ranges
 create_resp = descope_client.mgmt.access_key.create(
     name="name",
@@ -710,6 +711,7 @@ create_resp = descope_client.mgmt.access_key.create(
     key_tenants=[
         AssociatedTenant("my-tenant-id", ["role-name1"]),
     ],
+    description="this is my access key",
     permitted_ips=['10.0.0.1', '192.168.1.0/24'],
 )
 key = create_resp["key"]
