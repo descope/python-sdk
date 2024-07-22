@@ -58,6 +58,7 @@ class TestAccessKey(common.DescopeTest):
                 ],
                 user_id="userid",
                 custom_claims={"k1": "v1"},
+                description="this is my access key",
                 permitted_ips=["10.0.0.1", "192.168.1.0/24"],
             )
             access_key = resp["key"]
@@ -79,6 +80,7 @@ class TestAccessKey(common.DescopeTest):
                     ],
                     "userId": "userid",
                     "customClaims": {"k1": "v1"},
+                    "description": "this is my access key",
                     "permittedIps": ["10.0.0.1", "192.168.1.0/24"],
                 },
                 allow_redirects=False,
@@ -192,8 +194,7 @@ class TestAccessKey(common.DescopeTest):
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.access_key.update(
-                    "key-id",
-                    name="new-name",
+                    "key-id", name="new-name", description=None
                 )
             )
             mock_post.assert_called_with(
@@ -206,6 +207,7 @@ class TestAccessKey(common.DescopeTest):
                 json={
                     "id": "key-id",
                     "name": "new-name",
+                    "description": None,
                 },
                 allow_redirects=False,
                 verify=True,
