@@ -17,7 +17,7 @@ class AccessKey(AuthBase):
         key_tenants: Optional[List[AssociatedTenant]] = None,
         user_id: Optional[str] = None,
         custom_claims: Optional[dict] = None,
-        description: Optional[str] = None,
+        description: Optional[str] = "",
         permitted_ips: Optional[List[str]] = None,
     ) -> dict:
         """
@@ -123,7 +123,7 @@ class AccessKey(AuthBase):
         self,
         id: str,
         name: str,
-        description: Optional[str] = None,
+        description: Optional[str] = "",
     ):
         """
         Update an existing access key with the given various fields. IMPORTANT: All parameters are used as overrides
