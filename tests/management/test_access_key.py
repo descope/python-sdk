@@ -187,14 +187,15 @@ class TestAccessKey(common.DescopeTest):
                 client.mgmt.access_key.update,
                 "key-id",
                 "new-name",
-                "",
             )
 
         # Test success flow
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
-                client.mgmt.access_key.update("key-id", name="new-name", description="")
+                client.mgmt.access_key.update(
+                    "key-id", name="new-name", description=None
+                )
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.access_key_update_path}",
@@ -206,7 +207,7 @@ class TestAccessKey(common.DescopeTest):
                 json={
                     "id": "key-id",
                     "name": "new-name",
-                    "description": "",
+                    "description": None,
                 },
                 allow_redirects=False,
                 verify=True,

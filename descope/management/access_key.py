@@ -17,7 +17,7 @@ class AccessKey(AuthBase):
         key_tenants: Optional[List[AssociatedTenant]] = None,
         user_id: Optional[str] = None,
         custom_claims: Optional[dict] = None,
-        description: str = "",
+        description: Optional[str] = None,
         permitted_ips: Optional[List[str]] = None,
     ) -> dict:
         """
@@ -33,7 +33,7 @@ class AccessKey(AuthBase):
         user_id (str): Bind access key to this user id
             If user_id is supplied, then authorizations will be ignored, and the access key will be bound to the user's authorization.
         custom_claims (dict): Optional, map of claims and their values that will be present in the JWT.
-        description: an optional text the access key can hold.
+        description (str): an optional text the access key can hold.
         permitted_ips: (List[str]): An optional list of IP addresses or CIDR ranges that are allowed to use the access key.
 
         Return value (dict):
@@ -123,16 +123,15 @@ class AccessKey(AuthBase):
         self,
         id: str,
         name: str,
-        description: str = "",
+        description: Optional[str] = None,
     ):
         """
-        Update an existing access key with the given various fields. IMPORTANT: All parameters are used as overrides
-        to the existing access key. Empty fields will override populated fields. Use carefully.
+        Update an existing access key with the given various fields. IMPORTANT: id and name are mandatory fields.
 
         Args:
         id (str): The id of the access key to update.
         name (str): The updated access key name.
-        description(str): The description of the access key to update.
+        description (str): The description of the access key to update.
 
         Raise:
         AuthException: raised if update operation fails
