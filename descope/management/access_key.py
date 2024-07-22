@@ -123,7 +123,7 @@ class AccessKey(AuthBase):
         self,
         id: str,
         name: str,
-        description: str,
+        description: Optional[str] = None,
     ):
         """
         Update an existing access key with the given various fields. IMPORTANT: All parameters are used as overrides
@@ -132,7 +132,7 @@ class AccessKey(AuthBase):
         Args:
         id (str): The id of the access key to update.
         name (str): The updated access key name.
-        description(str): an optional text the access key can hold.
+        description(str): The description of the access key to update.
 
         Raise:
         AuthException: raised if update operation fails
