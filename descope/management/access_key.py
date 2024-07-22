@@ -131,7 +131,7 @@ class AccessKey(AuthBase):
         Args:
         id (str): The id of the access key to update.
         name (str): The updated access key name.
-        description (str): The description of the access key to update.
+        description (str): The description of the access key to update. (If not provided, will not be override)
 
         Raise:
         AuthException: raised if update operation fails
