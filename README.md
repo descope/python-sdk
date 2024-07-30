@@ -1317,7 +1317,10 @@ descope_client.mgmt.sso_application.create_saml_application(
 	login_page_url="http://dummy.com",
 	id="my-custom-id", # This is optional.
 	use_metadata_info=True,
-	metadata_url="http://dummy.com/metadata
+	metadata_url="http://dummy.com/metadata,
+	default_relay_state="relayState",
+	force_authentication=False,
+	logout_redirect_url="http://dummy.com/logout",
 )
 
 # Update OIDC SSO application

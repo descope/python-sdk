@@ -55,7 +55,9 @@ class TestSSOApplication(common.DescopeTest):
             network_resp.json.return_value = json.loads("""{"id": "app1"}""")
             mock_post.return_value = network_resp
             resp = client.mgmt.sso_application.create_oidc_application(
-                "name", "http://dummy.com"
+                name="name",
+                login_page_url="http://dummy.com",
+                force_authentication=True,
             )
             self.assertEqual(resp["id"], "app1")
             mock_post.assert_called_with(
@@ -72,6 +74,7 @@ class TestSSOApplication(common.DescopeTest):
                     "id": None,
                     "description": None,
                     "logo": None,
+                    "forceAuthentication": True,
                 },
                 allow_redirects=False,
                 verify=True,
@@ -140,6 +143,9 @@ class TestSSOApplication(common.DescopeTest):
                     )
                 ],
                 subject_name_id_type="email",
+                default_relay_state="relayState",
+                force_authentication=True,
+                logout_redirect_url="http://dummy.com/logout",
             )
             self.assertEqual(resp["id"], "app1")
             mock_post.assert_called_with(
@@ -176,6 +182,9 @@ class TestSSOApplication(common.DescopeTest):
                     "acsAllowedCallbacks": [],
                     "subjectNameIdType": "email",
                     "subjectNameIdFormat": None,
+                    "defaultRelayState": "relayState",
+                    "forceAuthentication": True,
+                    "logoutRedirectUrl": "http://dummy.com/logout",
                 },
                 allow_redirects=False,
                 verify=True,
@@ -224,6 +233,7 @@ class TestSSOApplication(common.DescopeTest):
                     "enabled": True,
                     "description": None,
                     "logo": None,
+                    "forceAuthentication": False,
                 },
                 allow_redirects=False,
                 verify=True,
@@ -334,6 +344,9 @@ class TestSSOApplication(common.DescopeTest):
                     "acsAllowedCallbacks": [],
                     "subjectNameIdType": "",
                     "subjectNameIdFormat": None,
+                    "defaultRelayState": None,
+                    "forceAuthentication": False,
+                    "logoutRedirectUrl": None,
                 },
                 allow_redirects=False,
                 verify=True,

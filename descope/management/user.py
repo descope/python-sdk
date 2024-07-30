@@ -694,7 +694,12 @@ class User(AuthBase):
         """
         response = self._auth.do_get(
             MgmtV1.user_get_provider_token,
-            {"loginId": login_id, "provider": provider, "withRefreshToken": withRefreshToken, "forceRefresh": forceRefresh},
+            {
+                "loginId": login_id,
+                "provider": provider,
+                "withRefreshToken": withRefreshToken,
+                "forceRefresh": forceRefresh,
+            },
             pswd=self._auth.management_key,
         )
         return response.json()

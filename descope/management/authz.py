@@ -365,7 +365,9 @@ class Authz(AuthBase):
         )
         return response.json()["relations"]
 
-    def what_can_target_access_with_relation(self, target: str, relation_definition: str, namespace: str) -> List[dict]:
+    def what_can_target_access_with_relation(
+        self, target: str, relation_definition: str, namespace: str
+    ) -> List[dict]:
         """
         Returns the list of all resources that the target has the given relation to including all derived relations
         Args:
@@ -380,7 +382,11 @@ class Authz(AuthBase):
         """
         response = self._auth.do_post(
             MgmtV1.authz_re_target_with_relation,
-            {"target": target, "relationDefinition": relation_definition, "namespace": namespace},
+            {
+                "target": target,
+                "relationDefinition": relation_definition,
+                "namespace": namespace,
+            },
             pswd=self._auth.management_key,
         )
         return response.json()["relations"]
