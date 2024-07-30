@@ -8,7 +8,7 @@
 | descope/common.py           |       97 |        1 |     99% |       164 |
 | descope/descope\_client.py  |      167 |        4 |     98% |68, 99, 183, 280 |
 | descope/management/audit.py |       43 |       11 |     74% |72, 74, 76, 78, 80, 82, 84, 86, 88, 90, 92 |
-| descope/management/user.py  |      276 |        8 |     97% |865, 867, 869, 1578, 1626, 1669, 1671, 1673 |
+| descope/management/user.py  |      276 |        8 |     97% |870, 872, 874, 1583, 1631, 1674, 1676, 1678 |
 |                   **TOTAL** | **2156** |   **38** | **98%** |           |
 
 27 files skipped due to complete coverage.
