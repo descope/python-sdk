@@ -19,6 +19,7 @@ class SSOApplication(AuthBase):
         description: Optional[str] = None,
         logo: Optional[str] = None,
         enabled: Optional[bool] = True,
+        force_authentication: Optional[bool] = False,
     ) -> dict:
         """
         Create a new OIDC sso application with the given name. SSO application IDs are provisioned automatically, but can be provided
@@ -30,6 +31,8 @@ class SSOApplication(AuthBase):
         id (str): Optional sso application ID.
         description (str): Optional sso application description.
         logo (str): Optional sso application logo.
+        enabled (bool): Optional (default True) does the sso application will be enabled or disabled.
+        force_authentication (bool): Optional determine if the IdP should force the user to re-authenticate.
 
         Return value (dict):
         Return dict in the format
@@ -42,7 +45,13 @@ class SSOApplication(AuthBase):
         response = self._auth.do_post(
             uri,
             SSOApplication._compose_create_update_oidc_body(
-                name, login_page_url, id, description, logo, enabled
+                name,
+                login_page_url,
+                id,
+                description,
+                logo,
+                enabled,
+                force_authentication,
             ),
             pswd=self._auth.management_key,
         )
@@ -66,6 +75,9 @@ class SSOApplication(AuthBase):
         acs_allowed_callbacks: Optional[List[str]] = None,
         subject_name_id_type: Optional[str] = None,
         subject_name_id_format: Optional[str] = None,
+        default_relay_state: Optional[str] = None,
+        force_authentication: Optional[bool] = False,
+        logout_redirect_url: Optional[str] = None,
     ) -> dict:
         """
         Create a new SAML sso application with the given name. SSO application IDs are provisioned automatically, but can be provided
@@ -88,6 +100,9 @@ class SSOApplication(AuthBase):
         acs_allowed_callbacks (List[str]): Optional list of urls wildcards strings represents the allowed ACS urls that will be accepted while arriving on the SAML request as SP callback urls.
         subject_name_id_type (str): Optional define the SAML Assertion subject name type, leave empty for using Descope user-id or set to "email"/"phone".
         subject_name_id_format (str): Optional define the SAML Assertion subject name format, leave empty for using "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified".
+        default_relay_state (str): Optional define the default relay state.
+        force_authentication (bool): Optional determine if the IdP should force the user to re-authenticate.
+        logout_redirect_url (str): Optional Target URL to which the user will be redirected upon logout completion.
 
         Return value (dict):
         Return dict in the format
@@ -132,6 +147,9 @@ class SSOApplication(AuthBase):
                 acs_allowed_callbacks,
                 subject_name_id_type,
                 subject_name_id_format,
+                default_relay_state,
+                force_authentication,
+                logout_redirect_url,
             ),
             pswd=self._auth.management_key,
         )
@@ -145,6 +163,7 @@ class SSOApplication(AuthBase):
         description: Optional[str] = None,
         logo: Optional[str] = None,
         enabled: Optional[bool] = True,
+        force_authentication: Optional[bool] = False,
     ):
         """
         Update an existing OIDC sso application with the given parameters. IMPORTANT: All parameters are used as overrides
@@ -157,6 +176,7 @@ class SSOApplication(AuthBase):
         description (str): Optional sso application description.
         logo (str): Optional sso application logo.
         enabled (bool): Optional (default True) does the sso application will be enabled or disabled.
+        force_authentication (bool): Optional determine if the IdP should force the user to re-authenticate.
 
         Raise:
         AuthException: raised if update operation fails
@@ -166,7 +186,13 @@ class SSOApplication(AuthBase):
         self._auth.do_post(
             uri,
             SSOApplication._compose_create_update_oidc_body(
-                name, login_page_url, id, description, logo, enabled
+                name,
+                login_page_url,
+                id,
+                description,
+                logo,
+                enabled,
+                force_authentication,
             ),
             pswd=self._auth.management_key,
         )
@@ -189,6 +215,9 @@ class SSOApplication(AuthBase):
         acs_allowed_callbacks: Optional[List[str]] = None,
         subject_name_id_type: Optional[str] = None,
         subject_name_id_format: Optional[str] = None,
+        default_relay_state: Optional[str] = None,
+        force_authentication: Optional[bool] = False,
+        logout_redirect_url: Optional[str] = None,
     ):
         """
         Update an existing SAML sso application with the given parameters. IMPORTANT: All parameters are used as overrides
@@ -211,6 +240,9 @@ class SSOApplication(AuthBase):
         acs_allowed_callbacks (List[str]): Optional list of urls wildcards strings represents the allowed ACS urls that will be accepted while arriving on the SAML request as SP callback urls.
         subject_name_id_type (str): Optional define the SAML Assertion subject name type, leave empty for using Descope user-id or set to "email"/"phone".
         subject_name_id_format (str): Optional define the SAML Assertion subject name format, leave empty for using "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified".
+        default_relay_state (str): Optional define the default relay state.
+        force_authentication (bool): Optional determine if the IdP should force the user to re-authenticate.
+        logout_redirect_url (str): Optional Target URL to which the user will be redirected upon logout completion.
 
         Raise:
         AuthException: raised if update operation fails
@@ -251,6 +283,9 @@ class SSOApplication(AuthBase):
                 acs_allowed_callbacks,
                 subject_name_id_type,
                 subject_name_id_format,
+                default_relay_state,
+                force_authentication,
+                logout_redirect_url,
             ),
             pswd=self._auth.management_key,
         )
@@ -283,7 +318,7 @@ class SSOApplication(AuthBase):
 
         Return value (dict):
         Return dict in the format
-             {"id":"<id>","name":"<name>","description":"<description>","enabled":true,"logo":"","appType":"saml","samlSettings":{"loginPageUrl":"","idpCert":"<cert>","useMetadataInfo":true,"metadataUrl":"","entityId":"","acsUrl":"","certificate":"","attributeMapping":[{"name":"email","type":"","value":"attrVal1"}],"groupsMapping":[{"name":"grp1","type":"","filterType":"roles","value":"","roles":[{"id":"myRoleId","name":"myRole"}]}],"idpMetadataUrl":"","idpEntityId":"","idpSsoUrl":"","acsAllowedCallbacks":[],"subjectNameIdType":"","subjectNameIdFormat":""},"oidcSettings":{"loginPageUrl":"","issuer":"","discoveryUrl":""}}
+             {"id":"<id>","name":"<name>","description":"<description>","enabled":true,"logo":"","appType":"saml","samlSettings":{"loginPageUrl":"","idpCert":"<cert>","useMetadataInfo":true,"metadataUrl":"","entityId":"","acsUrl":"","certificate":"","attributeMapping":[{"name":"email","type":"","value":"attrVal1"}],"groupsMapping":[{"name":"grp1","type":"","filterType":"roles","value":"","roles":[{"id":"myRoleId","name":"myRole"}]}],"idpMetadataUrl":"","idpEntityId":"","idpSsoUrl":"","acsAllowedCallbacks":[],"subjectNameIdType":"","subjectNameIdFormat":"", "defaultRelayState":"", "forceAuthentication": false, "idpLogoutUrl": "", "logoutRedirectUrl": ""},"oidcSettings":{"loginPageUrl":"","issuer":"","discoveryUrl":"", "forceAuthentication":false}}
         Containing the loaded sso application information.
 
         Raise:
@@ -306,8 +341,8 @@ class SSOApplication(AuthBase):
         Return dict in the format
              {
                                 "apps": [
-                                        {"id":"app1","name":"<name>","description":"<description>","enabled":true,"logo":"","appType":"saml","samlSettings":{"loginPageUrl":"","idpCert":"<cert>","useMetadataInfo":true,"metadataUrl":"","entityId":"","acsUrl":"","certificate":"","attributeMapping":[{"name":"email","type":"","value":"attrVal1"}],"groupsMapping":[{"name":"grp1","type":"","filterType":"roles","value":"","roles":[{"id":"myRoleId","name":"myRole"}]}],"idpMetadataUrl":"","idpEntityId":"","idpSsoUrl":"","acsAllowedCallbacks":[],"subjectNameIdType":"","subjectNameIdFormat":""},"oidcSettings":{"loginPageUrl":"","issuer":"","discoveryUrl":""}},
-                                {"id":"app2","name":"<name>","description":"<description>","enabled":true,"logo":"","appType":"saml","samlSettings":{"loginPageUrl":"","idpCert":"<cert>","useMetadataInfo":true,"metadataUrl":"","entityId":"","acsUrl":"","certificate":"","attributeMapping":[{"name":"email","type":"","value":"attrVal1"}],"groupsMapping":[{"name":"grp1","type":"","filterType":"roles","value":"","roles":[{"id":"myRoleId","name":"myRole"}]}],"idpMetadataUrl":"","idpEntityId":"","idpSsoUrl":"","acsAllowedCallbacks":[],"subjectNameIdType":"","subjectNameIdFormat":""},"oidcSettings":{"loginPageUrl":"","issuer":"","discoveryUrl":""}}
+                                        {"id":"app1","name":"<name>","description":"<description>","enabled":true,"logo":"","appType":"saml","samlSettings":{"loginPageUrl":"","idpCert":"<cert>","useMetadataInfo":true,"metadataUrl":"","entityId":"","acsUrl":"","certificate":"","attributeMapping":[{"name":"email","type":"","value":"attrVal1"}],"groupsMapping":[{"name":"grp1","type":"","filterType":"roles","value":"","roles":[{"id":"myRoleId","name":"myRole"}]}],"idpMetadataUrl":"","idpEntityId":"","idpSsoUrl":"","acsAllowedCallbacks":[],"subjectNameIdType":"","subjectNameIdFormat":"", "defaultRelayState":"", "forceAuthentication": false, "idpLogoutUrl": "", "logoutRedirectUrl": ""},"oidcSettings":{"loginPageUrl":"","issuer":"","discoveryUrl":"", "forceAuthentication":false}},
+                                {"id":"app2","name":"<name>","description":"<description>","enabled":true,"logo":"","appType":"saml","samlSettings":{"loginPageUrl":"","idpCert":"<cert>","useMetadataInfo":true,"metadataUrl":"","entityId":"","acsUrl":"","certificate":"","attributeMapping":[{"name":"email","type":"","value":"attrVal1"}],"groupsMapping":[{"name":"grp1","type":"","filterType":"roles","value":"","roles":[{"id":"myRoleId","name":"myRole"}]}],"idpMetadataUrl":"","idpEntityId":"","idpSsoUrl":"","acsAllowedCallbacks":[],"subjectNameIdType":"","subjectNameIdFormat":"", "defaultRelayState":"", "forceAuthentication": false, "idpLogoutUrl": "", "logoutRedirectUrl": ""},"oidcSettings":{"loginPageUrl":"","issuer":"","discoveryUrl":"", "forceAuthentication":false}}
                                 ]
             }
         Containing the loaded sso applications information.
@@ -329,6 +364,7 @@ class SSOApplication(AuthBase):
         description: Optional[str] = None,
         logo: Optional[str] = None,
         enabled: Optional[bool] = True,
+        force_authentication: Optional[bool] = False,
     ) -> dict:
         body: dict[str, Any] = {
             "name": name,
@@ -337,6 +373,7 @@ class SSOApplication(AuthBase):
             "logo": logo,
             "enabled": enabled,
             "loginPageUrl": login_page_url,
+            "forceAuthentication": force_authentication,
         }
         return body
 
@@ -358,6 +395,9 @@ class SSOApplication(AuthBase):
         acs_allowed_callbacks: Optional[List[str]] = None,
         subject_name_id_type: Optional[str] = None,
         subject_name_id_format: Optional[str] = None,
+        default_relay_state: Optional[str] = None,
+        force_authentication: Optional[bool] = False,
+        logout_redirect_url: Optional[str] = None,
     ) -> dict:
         body: dict[str, Any] = {
             "id": id,
@@ -378,6 +418,9 @@ class SSOApplication(AuthBase):
             "acsAllowedCallbacks": acs_allowed_callbacks,
             "subjectNameIdType": subject_name_id_type,
             "subjectNameIdFormat": subject_name_id_format,
+            "defaultRelayState": default_relay_state,
+            "forceAuthentication": force_authentication,
+            "logoutRedirectUrl": logout_redirect_url,
         }
 
         return body
