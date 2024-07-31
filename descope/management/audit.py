@@ -87,9 +87,9 @@ class Audit(AuthBase):
         if text is not None:
             body["text"] = text
         if from_ts is not None:
-            body["from"] = from_ts.timestamp() * 1000
+            body["from"] = int(from_ts.timestamp() * 1000)
         if to_ts is not None:
-            body["to"] = to_ts.timestamp() * 1000
+            body["to"] = int(to_ts.timestamp() * 1000)
 
         response = self._auth.do_post(
             MgmtV1.audit_search,
