@@ -60,6 +60,42 @@ class TestProject(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+    def test_update_custom_tags(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.project.update_custom_tags,
+                "customTags",
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(client.mgmt.project.update_custom_tags(["tag1", "tag2"]))
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.project_update_custom_tags}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                json={
+                    "customTags": ["tag1", "tag2"],
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
     def test_clone(self):
         client = DescopeClient(
             self.dummy_project_id,
@@ -76,6 +112,7 @@ class TestProject(common.DescopeTest):
                 client.mgmt.project.clone,
                 "new-name",
                 "production",
+                ["apple", "banana", "cherry"],
             )
 
         # Test success flow
@@ -93,6 +130,7 @@ class TestProject(common.DescopeTest):
             resp = client.mgmt.project.clone(
                 "new-name",
                 "production",
+                ["apple", "banana", "cherry"],
             )
             self.assertEqual(resp["id"], "dummy")
             mock_post.assert_called_with(
@@ -105,6 +143,7 @@ class TestProject(common.DescopeTest):
                 json={
                     "name": "new-name",
                     "tag": "production",
+                    "customTags": ["apple", "banana", "cherry"],
                 },
                 allow_redirects=False,
                 verify=True,
