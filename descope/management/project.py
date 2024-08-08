@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 from descope._auth_base import AuthBase
 from descope.management.common import MgmtV1
@@ -25,10 +25,31 @@ class Project(AuthBase):
             pswd=self._auth.management_key,
         )
 
+    def update_custom_tags(
+        self,
+        tags: List[str],
+    ):
+        """
+        Update the current project tags.
+
+        Args:
+        tags (List[str]):  Array of free text tags.
+        Raise:
+        AuthException: raised if operation fails
+        """
+        self._auth.do_post(
+            MgmtV1.project_update_custom_tags,
+            {
+                "customTags": tags,
+            },
+            pswd=self._auth.management_key,
+        )
+
     def clone(
         self,
         name: str,
         tag: Optional[str] = None,
+        custom_tags: Optional[List[str]] = None,
     ):
         """
         Clone the current project, including its settings and configurations.
@@ -38,6 +59,7 @@ class Project(AuthBase):
         Args:
         name (str): The new name for the project.
         tag (str): Optional tag for the project. Currently, only the "production" tag is supported.
+        custom_tags(list[str]): Optional free text tags.
 
         Return value (dict):
         Return dict Containing the new project details (name, id, and tag).
@@ -50,6 +72,7 @@ class Project(AuthBase):
             {
                 "name": name,
                 "tag": tag,
+                "customTags": custom_tags,
             },
             pswd=self._auth.management_key,
         )
@@ -95,7 +118,7 @@ class Project(AuthBase):
         Raise:
         AuthException: raised if import operation fails
         """
-        response = self._auth.do_post(
+        self._auth.do_post(
             MgmtV1.project_import,
             {
                 "files": files,
