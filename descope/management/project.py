@@ -25,7 +25,7 @@ class Project(AuthBase):
             pswd=self._auth.management_key,
         )
 
-    def update_custom_tags(
+    def set_tags(
         self,
         tags: List[str],
     ):
@@ -38,9 +38,9 @@ class Project(AuthBase):
         AuthException: raised if operation fails
         """
         self._auth.do_post(
-            MgmtV1.project_update_custom_tags,
+            MgmtV1.project_set_tags,
             {
-                "customTags": tags,
+                "tags": tags,
             },
             pswd=self._auth.management_key,
         )
@@ -48,8 +48,8 @@ class Project(AuthBase):
     def clone(
         self,
         name: str,
-        tag: Optional[str] = None,
-        custom_tags: Optional[List[str]] = None,
+        environment: Optional[str] = None,
+        tags: Optional[List[str]] = None,
     ):
         """
         Clone the current project, including its settings and configurations.
@@ -58,11 +58,11 @@ class Project(AuthBase):
 
         Args:
         name (str): The new name for the project.
-        tag (str): Optional tag for the project. Currently, only the "production" tag is supported.
-        custom_tags(list[str]): Optional free text tags.
+        environment (str): Optional state for the project. Currently, only the "production" tag is supported.
+        tags(list[str]): Optional free text tags.
 
         Return value (dict):
-        Return dict Containing the new project details (name, id, and tag).
+        Return dict Containing the new project details (name, id, environment and tag).
 
         Raise:
         AuthException: raised if clone operation fails
@@ -71,8 +71,8 @@ class Project(AuthBase):
             MgmtV1.project_clone,
             {
                 "name": name,
-                "tag": tag,
-                "customTags": custom_tags,
+                "environment": environment,
+                "tags": tags,
             },
             pswd=self._auth.management_key,
         )

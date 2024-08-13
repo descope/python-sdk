@@ -60,7 +60,7 @@ class TestProject(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_update_custom_tags(self):
+    def test_set_tags(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -73,23 +73,23 @@ class TestProject(common.DescopeTest):
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
-                client.mgmt.project.update_custom_tags,
-                "customTags",
+                client.mgmt.project.set_tags,
+                "tags",
             )
 
         # Test success flow
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
-            self.assertIsNone(client.mgmt.project.update_custom_tags(["tag1", "tag2"]))
+            self.assertIsNone(client.mgmt.project.set_tags(["tag1", "tag2"]))
             mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.project_update_custom_tags}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.project_set_tags}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
                 json={
-                    "customTags": ["tag1", "tag2"],
+                    "tags": ["tag1", "tag2"],
                 },
                 allow_redirects=False,
                 verify=True,
@@ -142,8 +142,8 @@ class TestProject(common.DescopeTest):
                 params=None,
                 json={
                     "name": "new-name",
-                    "tag": "production",
-                    "customTags": ["apple", "banana", "cherry"],
+                    "environment": "production",
+                    "tags": ["apple", "banana", "cherry"],
                 },
                 allow_redirects=False,
                 verify=True,
