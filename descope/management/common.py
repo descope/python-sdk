@@ -34,7 +34,7 @@ class MgmtV1:
     user_update_login_id_path = "/v1/mgmt/user/update/loginid"
     user_update_email_path = "/v1/mgmt/user/update/email"
     user_update_phone_path = "/v1/mgmt/user/update/phone"
-    user_update_custom_tags_path = "/v1/mgmt/user/update/customtags"
+    user_update_name_path = "/v1/mgmt/user/update/name"
     user_update_picture_path = "/v1/mgmt/user/update/picture"
     user_update_custom_attribute_path = "/v1/mgmt/user/update/customAttribute"
     user_set_role_path = "/v1/mgmt/user/update/role/set"
