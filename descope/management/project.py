@@ -45,6 +45,35 @@ class Project(AuthBase):
             pswd=self._auth.management_key,
         )
 
+    def list_projects(
+        self,
+    ) -> dict:
+        """
+        List of all the projects in the company.
+
+        Return value (dict):
+        Return dict in the format
+             {"projects": []}
+        "projects" contains a list of all of the projects and their information
+
+        Raise:
+        AuthException: raised if operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.project_list_projects,
+            {},
+            pswd=self._auth.management_key,
+        )
+        resp = response.json()
+
+        projects = resp["projects"]
+        # Apply the function to the projects list
+        formatted_projects = self.remove_tag_field(projects)
+
+        # Return the same structure with 'tag' removed
+        result = {"projects": formatted_projects}
+        return result
+
     def clone(
         self,
         name: str,
@@ -126,3 +155,9 @@ class Project(AuthBase):
             pswd=self._auth.management_key,
         )
         return
+
+    # Function to remove 'tag' field from each project
+    def remove_tag_field(self, projects):
+        return [
+            {k: v for k, v in project.items() if k != "tag"} for project in projects
+        ]
