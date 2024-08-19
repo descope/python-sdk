@@ -1282,7 +1282,7 @@ create a new one.
 descope_client.mgmt.project.change_name("new-project-name")
 
 # Change project's tags
-descope_client.mgmt.project.set_tags(["new", "python"])
+descope_client.mgmt.project.update_tags(["new", "python"])
 
 # Clone the current project, including its settings and configurations.
 # Note that this action is supported only with a pro license or above.

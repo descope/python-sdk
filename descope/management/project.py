@@ -25,7 +25,7 @@ class Project(AuthBase):
             pswd=self._auth.management_key,
         )
 
-    def set_tags(
+    def update_tags(
         self,
         tags: List[str],
     ):
@@ -38,7 +38,7 @@ class Project(AuthBase):
         AuthException: raised if operation fails
         """
         self._auth.do_post(
-            MgmtV1.project_set_tags,
+            MgmtV1.project_update_tags,
             {
                 "tags": tags,
             },
