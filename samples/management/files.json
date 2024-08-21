@@ -1,185 +1,185 @@
 {
-    "namespaces": [
+  "namespaces": [
+    {
+      "name": "doc",
+      "relationDefinitions": [
         {
-            "name": "doc",
-            "relationDefinitions": [
-                {
-                    "name": "parent",
-                    "complexDefinition": null
-                },
-                {
-                    "name": "editor",
-                    "complexDefinition": {
-                        "nType": "union",
-                        "children": [
-                            {
-                                "nType": "child",
-                                "children": [],
-                                "expression": null
-                            },
-                            {
-                                "nType": "child",
-                                "children": [],
-                                "expression": null
-                            },
-                            {
-                                "nType": "child",
-                                "children": [],
-                                "expression": null
-                            }
-                        ],
-                        "expression": null
-                    }
-                },
-                {
-                    "name": "viewer",
-                    "complexDefinition": {
-                        "nType": "union",
-                        "children": [
-                            {
-                                "nType": "child",
-                                "children": [],
-                                "expression": null
-                            },
-                            {
-                                "nType": "child",
-                                "children": [],
-                                "expression": null
-                            },
-                            {
-                                "nType": "child",
-                                "children": [],
-                                "expression": null
-                            }
-                        ],
-                        "expression": null
-                    }
-                },
-                {
-                    "name": "owner",
-                    "complexDefinition": {
-                        "nType": "union",
-                        "children": [
-                            {
-                                "nType": "child",
-                                "children": [],
-                                "expression": null
-                            },
-                            {
-                                "nType": "child",
-                                "children": [],
-                                "expression": null
-                            }
-                        ],
-                        "expression": null
-                    }
-                }
-            ]
+          "name": "parent",
+          "complexDefinition": null
         },
         {
-            "name": "folder",
-            "relationDefinitions": [
-                {
-                    "name": "editor",
-                    "complexDefinition": {
-                        "nType": "union",
-                        "children": [
-                            {
-                                "nType": "child",
-                                "children": [],
-                                "expression": null
-                            },
-                            {
-                                "nType": "child",
-                                "children": [],
-                                "expression": null
-                            },
-                            {
-                                "nType": "child",
-                                "children": [],
-                                "expression": null
-                            }
-                        ],
-                        "expression": null
-                    }
-                },
-                {
-                    "name": "parent",
-                    "complexDefinition": null
-                },
-                {
-                    "name": "owner",
-                    "complexDefinition": {
-                        "nType": "union",
-                        "children": [
-                            {
-                                "nType": "child",
-                                "children": [],
-                                "expression": null
-                            },
-                            {
-                                "nType": "child",
-                                "children": [],
-                                "expression": null
-                            }
-                        ],
-                        "expression": null
-                    }
-                },
-                {
-                    "name": "viewer",
-                    "complexDefinition": {
-                        "nType": "union",
-                        "children": [
-                            {
-                                "nType": "child",
-                                "children": [],
-                                "expression": null
-                            },
-                            {
-                                "nType": "child",
-                                "children": [],
-                                "expression": null
-                            },
-                            {
-                                "nType": "child",
-                                "children": [],
-                                "expression": null
-                            }
-                        ],
-                        "expression": null
-                    }
-                }
-            ]
+          "name": "editor",
+          "complexDefinition": {
+            "nType": "union",
+            "children": [
+              {
+                "nType": "child",
+                "children": [],
+                "expression": null
+              },
+              {
+                "nType": "child",
+                "children": [],
+                "expression": null
+              },
+              {
+                "nType": "child",
+                "children": [],
+                "expression": null
+              }
+            ],
+            "expression": null
+          }
         },
         {
-            "name": "org",
-            "relationDefinitions": [
-                {
-                    "name": "parent",
-                    "complexDefinition": null
-                },
-                {
-                    "name": "member",
-                    "complexDefinition": {
-                        "nType": "union",
-                        "children": [
-                            {
-                                "nType": "child",
-                                "children": [],
-                                "expression": null
-                            },
-                            {
-                                "nType": "child",
-                                "children": [],
-                                "expression": null
-                            }
-                        ],
-                        "expression": null
-                    }
-                }
-            ]
+          "name": "viewer",
+          "complexDefinition": {
+            "nType": "union",
+            "children": [
+              {
+                "nType": "child",
+                "children": [],
+                "expression": null
+              },
+              {
+                "nType": "child",
+                "children": [],
+                "expression": null
+              },
+              {
+                "nType": "child",
+                "children": [],
+                "expression": null
+              }
+            ],
+            "expression": null
+          }
+        },
+        {
+          "name": "owner",
+          "complexDefinition": {
+            "nType": "union",
+            "children": [
+              {
+                "nType": "child",
+                "children": [],
+                "expression": null
+              },
+              {
+                "nType": "child",
+                "children": [],
+                "expression": null
+              }
+            ],
+            "expression": null
+          }
         }
-    ],
-    "name": "Files"
+      ]
+    },
+    {
+      "name": "folder",
+      "relationDefinitions": [
+        {
+          "name": "editor",
+          "complexDefinition": {
+            "nType": "union",
+            "children": [
+              {
+                "nType": "child",
+                "children": [],
+                "expression": null
+              },
+              {
+                "nType": "child",
+                "children": [],
+                "expression": null
+              },
+              {
+                "nType": "child",
+                "children": [],
+                "expression": null
+              }
+            ],
+            "expression": null
+          }
+        },
+        {
+          "name": "parent",
+          "complexDefinition": null
+        },
+        {
+          "name": "owner",
+          "complexDefinition": {
+            "nType": "union",
+            "children": [
+              {
+                "nType": "child",
+                "children": [],
+                "expression": null
+              },
+              {
+                "nType": "child",
+                "children": [],
+                "expression": null
+              }
+            ],
+            "expression": null
+          }
+        },
+        {
+          "name": "viewer",
+          "complexDefinition": {
+            "nType": "union",
+            "children": [
+              {
+                "nType": "child",
+                "children": [],
+                "expression": null
+              },
+              {
+                "nType": "child",
+                "children": [],
+                "expression": null
+              },
+              {
+                "nType": "child",
+                "children": [],
+                "expression": null
+              }
+            ],
+            "expression": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "org",
+      "relationDefinitions": [
+        {
+          "name": "parent",
+          "complexDefinition": null
+        },
+        {
+          "name": "member",
+          "complexDefinition": {
+            "nType": "union",
+            "children": [
+              {
+                "nType": "child",
+                "children": [],
+                "expression": null
+              },
+              {
+                "nType": "child",
+                "children": [],
+                "expression": null
+              }
+            ],
+            "expression": null
+          }
+        }
+      ]
+    }
+  ],
+  "name": "Files"
 }
