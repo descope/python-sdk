@@ -49,6 +49,7 @@ jobs:
         env:
           COVERAGE_FILE: "coverage.${{ matrix.os }}.${{ matrix.py }}"
       - name: Store coverage file
+        if: matrix.py != '3.7'
         uses: actions/upload-artifact@v4
         with:
           name: coverage.${{ matrix.os }}.${{ matrix.py }}
