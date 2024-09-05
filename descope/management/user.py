@@ -591,6 +591,7 @@ class User(AuthBase):
         sso_app_ids: Optional[List[str]] = None,
         sort: Optional[List[Sort]] = None,
         text: Optional[str] = None,
+        login_ids: Optional[List[str]] = None,
     ) -> dict:
         """
         Search all users.
@@ -608,6 +609,7 @@ class User(AuthBase):
         phones (List[str]): Optional list of phones to search for
         sso_app_ids (List[str]): Optional list of SSO application IDs to filter by
         text (str): Optional string, allows free text search among all user's attributes.
+        login_ids (List[str]): Optional list of login ids
         sort (List[Sort]): Optional List[dict], allows to sort by fields.
 
         Return value (dict):
@@ -652,6 +654,9 @@ class User(AuthBase):
 
         if sso_app_ids is not None:
             body["ssoAppIds"] = sso_app_ids
+
+        if login_ids is not None:
+            body["loginIds"] = login_ids
 
         if text is not None:
             body["text"] = text
