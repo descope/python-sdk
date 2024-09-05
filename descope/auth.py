@@ -505,13 +505,13 @@ class Auth:
         if st_jwt:
             jwt_response[SESSION_TOKEN_NAME] = self._validate_token(st_jwt, audience)
         rt_jwt = response_body.get("refreshJwt", "")
-        if refresh_token:
-            jwt_response[REFRESH_SESSION_TOKEN_NAME] = self._validate_token(
-                refresh_token, audience
-            )
-        elif rt_jwt:
+        if rt_jwt:
             jwt_response[REFRESH_SESSION_TOKEN_NAME] = self._validate_token(
                 rt_jwt, audience
+            )
+        elif refresh_token:
+            jwt_response[REFRESH_SESSION_TOKEN_NAME] = self._validate_token(
+                refresh_token, audience
             )
 
         jwt_response = self.adjust_properties(jwt_response, user_jwt)
@@ -652,6 +652,9 @@ class Auth:
         response = self.do_post(uri=uri, body={}, params=None, pswd=refresh_token)
 
         resp = response.json()
+        refresh_token = (
+            response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None) or refresh_token
+        )
         return self.generate_jwt_response(resp, refresh_token, audience)
 
     def validate_and_refresh_session(
