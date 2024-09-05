@@ -41,19 +41,20 @@ jobs:
         with:
           python-version: ${{ matrix.py }}
       - name: Install tox
-        run: python -m pip install tox-gh>=1.2 poetry
+        run: python -m pip install "tox-gh>=1.2" poetry
       - name: Setup test suite
         run: tox -vv --notest
       - name: Run test suite
         run: tox --skip-pkg-install
         env:
-          COVERAGE_FILE: ".coverage.${{ matrix.py }}"
-
+          COVERAGE_FILE: "coverage.${{ matrix.os }}.${{ matrix.py }}"
       - name: Store coverage file
-        uses: actions/upload-artifact@v3
+        if: matrix.py != '3.7'
+        uses: actions/upload-artifact@v4
         with:
-          name: coverage
-          path: .coverage.${{ matrix.py }}
+          name: coverage.${{ matrix.os }}.${{ matrix.py }}
+          path: coverage.${{ matrix.os }}.${{ matrix.py }}
+          if-no-files-found: error
 
   coverage:
     if: github.event_name != 'schedule'
@@ -63,13 +64,16 @@ jobs:
     permissions:
       pull-requests: write
       contents: write
+    env:
+      COVERAGE_FILE: "coverage"
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         id: download
         with:
-          name: "coverage"
+          pattern: coverage.*
+          merge-multiple: true
 
       - name: Coverage comment
         id: coverage_comment
@@ -81,7 +85,7 @@ jobs:
           VERBOSE: true
 
       - name: Store Pull Request comment to be posted
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: steps.coverage_comment.outputs.COMMENT_FILE_WRITTEN == 'true'
         with:
           name: python-coverage-comment-action
