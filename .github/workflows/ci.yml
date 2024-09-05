@@ -47,12 +47,12 @@ jobs:
       - name: Run test suite
         run: tox --skip-pkg-install
         env:
-          COVERAGE_FILE: "coverage.${{ matrix.py }}"
+          COVERAGE_FILE: "coverage.${{ matrix.os }}.${{ matrix.py }}"
       - name: Store coverage file
         uses: actions/upload-artifact@v4
         with:
-          name: coverage.${{ matrix.py }}
-          path: coverage.${{ matrix.py }}
+          name: coverage.${{ matrix.os }}.${{ matrix.py }}
+          path: coverage.${{ matrix.os }}.${{ matrix.py }}
           if-no-files-found: error
 
   coverage:
