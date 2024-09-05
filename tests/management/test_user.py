@@ -840,7 +840,11 @@ class TestUser(common.DescopeTest):
             )
             mock_post.return_value = network_resp
             resp = self.client.mgmt.user.search_all(
-                ["t1, t2"], ["r1", "r2"], with_test_user=True, sso_app_ids=["app1"]
+                ["t1, t2"],
+                ["r1", "r2"],
+                with_test_user=True,
+                sso_app_ids=["app1"],
+                login_ids=["l1"],
             )
             users = resp["users"]
             self.assertEqual(len(users), 2)
@@ -861,6 +865,7 @@ class TestUser(common.DescopeTest):
                     "testUsersOnly": False,
                     "withTestUser": True,
                     "ssoAppIds": ["app1"],
+                    "loginIds": ["l1"],
                 },
                 allow_redirects=False,
                 verify=True,
