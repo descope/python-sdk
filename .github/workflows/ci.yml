@@ -64,6 +64,8 @@ jobs:
     permissions:
       pull-requests: write
       contents: write
+    env:
+      COVERAGE_FILE: "coverage"
     steps:
       - uses: actions/checkout@v4
 
