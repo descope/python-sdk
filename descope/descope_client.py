@@ -438,7 +438,7 @@ class DescopeClient:
     def my_tenants(
         self,
         refresh_token: str,
-        dct: bool | None = False,
+        dct: bool = False,
         ids: list[str] | None = None,
     ) -> dict:
         """
