@@ -26,6 +26,7 @@ class EndpointsV1:
     logout_path = "/v1/auth/logout"
     logout_all_path = "/v1/auth/logoutall"
     me_path = "/v1/auth/me"
+    my_tenants_path = "/v1/auth/me/tenants"
     history_path = "/v1/auth/me/history"
 
     # accesskey

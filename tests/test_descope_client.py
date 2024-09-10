@@ -135,6 +135,50 @@ class TestDescopeClient(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+    def test_my_tenants(self):
+        dummy_refresh_token = ""
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
+
+        self.assertRaises(AuthException, client.my_tenants, None)
+        self.assertRaises(AuthException, client.my_tenants, dummy_refresh_token)
+        self.assertRaises(
+            AuthException, client.my_tenants, dummy_refresh_token, True, ["a"]
+        )
+
+        # Test failed flow
+        with patch("requests.post") as mock_get:
+            mock_get.return_value.ok = False
+            self.assertRaises(
+                AuthException, client.my_tenants, dummy_refresh_token, True
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            data = json.loads(
+                """{"tenants": [{"id": "tenant_id", "name": "tenant_name"}]}"""
+            )
+            my_mock_response.json.return_value = data
+            mock_post.return_value = my_mock_response
+            tenant_response = client.my_tenants(dummy_refresh_token, False, ["a"])
+            self.assertIsNotNone(tenant_response)
+            self.assertEqual(
+                data["tenants"][0]["name"], tenant_response["tenants"][0]["name"]
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.my_tenants_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}",
+                },
+                json={"dct": False, "ids": ["a"]},
+                allow_redirects=False,
+                verify=True,
+                params=None,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
     def test_history(self):
         dummy_refresh_token = ""
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)
