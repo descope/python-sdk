@@ -52,6 +52,7 @@ These sections show how to use the SDK to perform various authentication/authori
 10. [Tenant selection](#tenant-selection)
 11. [Logging Out](#logging-out)
 12. [History](#history)
+13. [My Tenants](#my-tenants)
 
 ## API Managment Function
 
@@ -479,6 +480,19 @@ The request requires a valid refresh token.
 ```python
 users_history_resp = descope_client.history(refresh_token)
 for user_history in users_history_resp:
+    # Do something
+```
+
+### My Tenants
+
+You can get the current session user tenants.
+The request requires a valid refresh token.
+And either a boolean to receive the current selected tenant
+Or a list of tenant IDs that this user is part of
+
+```python
+tenants_resp = descope_client.my_tenants(refresh_token, False, ["tenant_id"])
+for tenant in tenants_resp.tenants:
     # Do something
 ```
 

@@ -435,6 +435,53 @@ class DescopeClient:
         )
         return response.json()
 
+    def my_tenants(
+        self,
+        refresh_token: str,
+        dct: bool = False,
+        ids: list[str] | None = None,
+    ) -> dict:
+        """
+        Retrieve tenant attributes that user belongs to, one of dct/ids must be populated .
+
+        Args:
+        dct (bool): Get only the selected tenant from jwt
+        ids (List[str]): Get the list of tenants
+        refresh_token (str): The refresh token
+
+        Return value (dict): returns the tenant requested from the server
+            (id:str, name:str, customAttributes:dict)
+
+        Raise:
+        AuthException: Exception is raised if session is not authorized or another error occurs
+        """
+        if refresh_token is None:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                f"signed refresh token {refresh_token} is empty",
+            )
+        if dct is True and ids is not None and len(ids) > 0:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                "Only one of 'dct' or 'ids' should be supplied",
+            )
+        if dct is False and (ids is None or len(ids) == 0):
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                "Only one of 'dct' or 'ids' should be supplied",
+            )
+
+        body: dict[str, bool | list[str]] = {"dct": dct}
+        if ids is not None:
+            body["ids"] = ids
+
+        uri = EndpointsV1.my_tenants_path
+        response = self._auth.do_post(uri, body, None, refresh_token)
+        return response.json()
+
     def history(self, refresh_token: str) -> list[dict]:
         """
         Retrieve user authentication history for the refresh token
