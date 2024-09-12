@@ -216,12 +216,13 @@ class TestTenant(common.DescopeTest):
             network_resp.ok = True
             network_resp.json.return_value = json.loads(
                 """
-                {"id": "t1", "name": "tenant1", "selfProvisioningDomains": ["domain1.com"]}
+                {"id": "t1", "name": "tenant1", "selfProvisioningDomains": ["domain1.com"], "createdTime": 172606520}
                 """
             )
             mock_get.return_value = network_resp
             resp = client.mgmt.tenant.load("t1")
             self.assertEqual(resp["name"], "tenant1")
+            self.assertEqual(resp["createdTime"], 172606520)
             mock_get.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_load_path}",
                 headers={
@@ -255,8 +256,8 @@ class TestTenant(common.DescopeTest):
                 """
                 {
                     "tenants": [
-                        {"id": "t1", "name": "tenant1", "selfProvisioningDomains": ["domain1.com"]},
-                        {"id": "t2", "name": "tenant2", "selfProvisioningDomains": ["domain1.com"]}
+                        {"id": "t1", "name": "tenant1", "selfProvisioningDomains": ["domain1.com"], "createdTime": 172606520},
+                        {"id": "t2", "name": "tenant2", "selfProvisioningDomains": ["domain1.com"], "createdTime": 172606520}
                     ]
                 }
                 """
@@ -267,6 +268,7 @@ class TestTenant(common.DescopeTest):
             self.assertEqual(len(tenants), 2)
             self.assertEqual(tenants[0]["name"], "tenant1")
             self.assertEqual(tenants[1]["name"], "tenant2")
+            self.assertEqual(tenants[0]["createdTime"], 172606520)
             mock_get.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_load_all_path}",
                 headers={

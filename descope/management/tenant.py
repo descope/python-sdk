@@ -109,7 +109,7 @@ class Tenant(AuthBase):
 
         Return value (dict):
         Return dict in the format
-             {"id": <id>, "name": <name>, "selfProvisioningDomains": [], "customAttributes: {}}
+             {"id": <id>, "name": <name>, "selfProvisioningDomains": [], "customAttributes: {}, "createdTime": <timestamp>}
         Containing the loaded tenant information.
 
         Raise:
@@ -130,7 +130,7 @@ class Tenant(AuthBase):
 
         Return value (dict):
         Return dict in the format
-             {"tenants": [{"id": <id>, "name": <name>, "selfProvisioningDomains": [], customAttributes: {}}]}
+             {"tenants": [{"id": <id>, "name": <name>, "selfProvisioningDomains": [], customAttributes: {}, "createdTime": <timestamp>}]}
         Containing the loaded tenant information.
 
         Raise:
