@@ -542,7 +542,7 @@ class SSOSettings(AuthBase):
                 "idpUrl": settings.idp_url,
                 "entityId": settings.idp_entity_id,
                 "idpCert": settings.idp_cert,
-                "spAcsUrl": settings.sp_acs_url,
+                "spACSUrl": settings.sp_acs_url,
                 "spEntityId": settings.sp_entity_id,
                 "attributeMapping": attr_mapping,
                 "roleMappings": SSOSettings._role_mapping_to_dict(
@@ -570,7 +570,7 @@ class SSOSettings(AuthBase):
             "tenantId": tenant_id,
             "settings": {
                 "idpMetadataUrl": settings.idp_metadata_url,
-                "spAcsUrl": settings.sp_acs_url,
+                "spACSUrl": settings.sp_acs_url,
                 "spEntityId": settings.sp_entity_id,
                 "attributeMapping": attr_mapping,
                 "roleMappings": SSOSettings._role_mapping_to_dict(
