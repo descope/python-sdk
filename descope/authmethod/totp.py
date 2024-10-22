@@ -1,4 +1,4 @@
-from typing import Optional, Iterable
+from typing import Iterable, Optional
 
 from descope._auth_base import AuthBase
 from descope.common import (
@@ -49,7 +49,7 @@ class TOTP(AuthBase):
         code: str,
         login_options: Optional[LoginOptions] = None,
         refresh_token: Optional[str] = None,
-        audience: str | None | Iterable[str] = None
+        audience: str | None | Iterable[str] = None,
     ) -> dict:
         """
         Sign in by verifying the validity of a TOTP code entered by an end user.

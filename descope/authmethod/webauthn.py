@@ -1,4 +1,4 @@
-from typing import Optional, Iterable
+from typing import Iterable, Optional
 
 from requests import Response
 
@@ -41,7 +41,12 @@ class WebAuthn(AuthBase):
 
         return response.json()
 
-    def sign_up_finish(self, transaction_id: str, response: Response, audience: str | None | Iterable[str] = None) -> dict:
+    def sign_up_finish(
+        self,
+        transaction_id: str,
+        response: Response,
+        audience: str | None | Iterable[str] = None,
+    ) -> dict:
         """
         Docs
         """
@@ -93,7 +98,12 @@ class WebAuthn(AuthBase):
 
         return response.json()
 
-    def sign_in_finish(self, transaction_id: str, response: Response, audience: str | None | Iterable[str] = None) -> dict:
+    def sign_in_finish(
+        self,
+        transaction_id: str,
+        response: Response,
+        audience: str | None | Iterable[str] = None,
+    ) -> dict:
         """
         Docs
         """

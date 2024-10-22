@@ -1,12 +1,20 @@
 from __future__ import annotations
+
 from typing import Iterable
+
 from descope._auth_base import AuthBase
 from descope.common import REFRESH_SESSION_COOKIE_NAME, EndpointsV1
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
 class Password(AuthBase):
-    def sign_up(self, login_id: str, password: str, user: dict | None = None, audience: str | None | Iterable[str] = None) -> dict:
+    def sign_up(
+        self,
+        login_id: str,
+        password: str,
+        user: dict | None = None,
+        audience: str | None | Iterable[str] = None,
+    ) -> dict:
         """
         Sign up (create) a new user using a login ID and password.
             (optional) Include additional user metadata that you wish to save.
@@ -47,10 +55,7 @@ class Password(AuthBase):
         return jwt_response
 
     def sign_in(
-        self,
-        login_id: str,
-        password: str,
-        audience: str | None | Iterable[str] = None
+        self, login_id: str, password: str, audience: str | None | Iterable[str] = None
     ) -> dict:
         """
         Sign in by verifying the validity of a password entered by an end user.
@@ -167,7 +172,13 @@ class Password(AuthBase):
             uri, {"loginId": login_id, "newPassword": new_password}, None, refresh_token
         )
 
-    def replace(self, login_id: str, old_password: str, new_password: str, audience: str | None | Iterable[str] = None) -> dict:
+    def replace(
+        self,
+        login_id: str,
+        old_password: str,
+        new_password: str,
+        audience: str | None | Iterable[str] = None,
+    ) -> dict:
         """
         Replace a valid active password with a new one. The old_password is used to
         authenticate the user. If the user cannot be authenticated, this operation

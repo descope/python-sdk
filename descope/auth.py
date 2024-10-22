@@ -188,7 +188,9 @@ class Auth:
         self._raise_from_response(response)
         return response
 
-    def exchange_token(self, uri, code: str, audience: str | None | Iterable[str] = None) -> dict:
+    def exchange_token(
+        self, uri, code: str, audience: str | None | Iterable[str] = None
+    ) -> dict:
         if not code:
             raise AuthException(
                 400,
@@ -682,7 +684,12 @@ class Auth:
                 )
             return self.refresh_session(refresh_token, audience)
 
-    def select_tenant(self, tenant_id: str, refresh_token: str, audience: str | None | Iterable[str] = None) -> dict:
+    def select_tenant(
+        self,
+        tenant_id: str,
+        refresh_token: str,
+        audience: str | None | Iterable[str] = None,
+    ) -> dict:
         if not refresh_token:
             raise AuthException(
                 400,
