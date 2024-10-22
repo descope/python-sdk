@@ -300,7 +300,7 @@ toml==0.10.2 ; python_version >= "3.7" and python_version < "4.0" \
 typing-extensions==4.7.1 ; python_version == "3.7" \
     --hash=sha256:440d5dd3af93b060174bf433bccd69b0babc3b15b1a8dca43789fd7f61514b36 \
     --hash=sha256:b75ddc264f0ba5615db7ba217daeb99701ad295353c45f9e95963337ceeeffb2
-urllib3==2.2.2; python_version >= "3.7" and python_version < "4.0" \
+urllib3==2.2.3; python_version >= "3.7" and python_version < "4.0" \
     --hash=sha256:a448b2f64d686155468037e1ace9f2d2199776e17f0a46610480d311f73e3472 \
     --hash=sha256:dd505485549a7a552833da5e6063639d0d177c04f23bc3864e41e5dc5f612168
 Werkzeug==3.0.3; python_version >= "3.8" and python_version < "4.0" \
