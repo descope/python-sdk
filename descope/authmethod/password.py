@@ -55,7 +55,10 @@ class Password(AuthBase):
         return jwt_response
 
     def sign_in(
-        self, login_id: str, password: str, audience: str | None | Iterable[str] = None
+        self,
+        login_id: str,
+        password: str,
+        audience: str | None | Iterable[str] = None,
     ) -> dict:
         """
         Sign in by verifying the validity of a password entered by an end user.

@@ -5,9 +5,9 @@ import json
 import os
 import platform
 import re
-from collections.abc import Iterable
 from http import HTTPStatus
 from threading import Lock
+from typing import Iterable
 
 import jwt
 

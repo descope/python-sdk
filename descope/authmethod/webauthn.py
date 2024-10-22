@@ -1,4 +1,4 @@
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Union
 
 from requests import Response
 
@@ -45,7 +45,7 @@ class WebAuthn(AuthBase):
         self,
         transaction_id: str,
         response: Response,
-        audience: str | None | Iterable[str] = None,
+        audience: Union[str, None, Iterable[str]] = None,
     ) -> dict:
         """
         Docs
@@ -102,7 +102,7 @@ class WebAuthn(AuthBase):
         self,
         transaction_id: str,
         response: Response,
-        audience: str | None | Iterable[str] = None,
+        audience: Union[str, None, Iterable[str]] = None,
     ) -> dict:
         """
         Docs
