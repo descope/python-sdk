@@ -67,7 +67,7 @@ black = {version = "24.3.0", python = ">=3.8"}
 [tool.poetry.group.types.dependencies]
 mypy = {version = "1.8.0", python = ">=3.8"}
 types-requests = {version = "2.31.0.20240125", python = ">=3.8"}
-types-setuptools = {version = "69.0.0.20240125", python = ">=3.8"}
+types-setuptools = {version = "69.5.0.20240522", python = ">=3.8"}
 
 [tool.poetry.group.tests.dependencies]
 pytest = {version = "8.0.0", python = ">=3.8"}
