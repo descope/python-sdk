@@ -27,7 +27,9 @@ repos:
     rev: v3.10.1
     hooks:
       - id: pyupgrade
-        args: [--py37-plus]
+        args:
+          - --py37-plus
+          - --keep-runtime-typing
   - repo: https://github.com/pycqa/flake8
     rev: 7.0.0
     hooks:

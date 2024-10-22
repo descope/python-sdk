@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable
+from typing import Iterable, Union
 
 from descope._auth_base import AuthBase
 from descope.auth import Auth
@@ -87,7 +87,9 @@ class MagicLink(AuthBase):
         response = self._auth.do_post(uri, body, None)
         return Auth.extract_masked_address(response.json(), method)
 
-    def verify(self, token: str, audience: str | None | Iterable[str] = None) -> dict:
+    def verify(
+        self, token: str, audience: Union[str, None, Iterable[str]] = None
+    ) -> dict:
         uri = EndpointsV1.verify_magiclink_auth_path
         body = MagicLink._compose_verify_body(token)
         response = self._auth.do_post(uri, body, None)

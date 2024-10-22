@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable
+from typing import Iterable, Union
 
 from descope._auth_base import AuthBase
 from descope.auth import Auth
@@ -131,7 +131,7 @@ class OTP(AuthBase):
         method: DeliveryMethod,
         login_id: str,
         code: str,
-        audience: str | None | Iterable[str] = None,
+        audience: Union[str, None, Iterable[str]] = None,
     ) -> dict:
         """
         Verify the validity of an OTP code entered by an end user during sign_in or sign_up.

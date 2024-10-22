@@ -7,7 +7,7 @@ import platform
 import re
 from http import HTTPStatus
 from threading import Lock
-from typing import Iterable
+from typing import Iterable, Union
 
 import jwt
 
@@ -189,7 +189,7 @@ class Auth:
         return response
 
     def exchange_token(
-        self, uri, code: str, audience: str | None | Iterable[str] = None
+        self, uri, code: str, audience: Union[str, None, Iterable[str]] = None
     ) -> dict:
         if not code:
             raise AuthException(
@@ -500,7 +500,7 @@ class Auth:
         response_body: dict,
         refresh_token: str | None,
         user_jwt: bool,
-        audience: str | None | Iterable[str] = None,
+        audience: Union[str, None, Iterable[str]] = None,
     ) -> dict:
         jwt_response = {}
         st_jwt = response_body.get("sessionJwt", "")
@@ -532,7 +532,7 @@ class Auth:
         self,
         response_body: dict,
         refresh_cookie: str,
-        audience: str | None | Iterable[str] = None,
+        audience: Union[str, None, Iterable[str]] = None,
     ) -> dict:
         jwt_response = self._generate_auth_info(
             response_body, refresh_cookie, True, audience
@@ -552,7 +552,7 @@ class Auth:
 
     # Validate a token and load the public key if needed
     def _validate_token(
-        self, token: str, audience: str | None | Iterable[str] = None
+        self, token: str, audience: Union[str, None, Iterable[str]] = None
     ) -> dict:
         if not token:
             raise AuthException(
@@ -623,7 +623,7 @@ class Auth:
         return claims
 
     def validate_session(
-        self, session_token: str, audience: str | None | Iterable[str] = None
+        self, session_token: str, audience: Union[str, None, Iterable[str]] = None
     ) -> dict:
         if not session_token:
             raise AuthException(
@@ -639,7 +639,7 @@ class Auth:
         return self.adjust_properties(res, True)
 
     def refresh_session(
-        self, refresh_token: str, audience: str | None | Iterable[str] = None
+        self, refresh_token: str, audience: Union[str, None, Iterable[str]] = None
     ) -> dict:
         if not refresh_token:
             raise AuthException(
@@ -663,7 +663,7 @@ class Auth:
         self,
         session_token: str,
         refresh_token: str,
-        audience: str | None | Iterable[str] = None,
+        audience: Union[str, None, Iterable[str]] = None,
     ) -> dict:
         if not session_token:
             raise AuthException(
@@ -688,7 +688,7 @@ class Auth:
         self,
         tenant_id: str,
         refresh_token: str,
-        audience: str | None | Iterable[str] = None,
+        audience: Union[str, None, Iterable[str]] = None,
     ) -> dict:
         if not refresh_token:
             raise AuthException(
