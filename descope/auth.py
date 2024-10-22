@@ -5,9 +5,9 @@ import json
 import os
 import platform
 import re
-from collections.abc import Iterable
 from http import HTTPStatus
 from threading import Lock
+from typing import Iterable
 
 import jwt
 
@@ -188,7 +188,9 @@ class Auth:
         self._raise_from_response(response)
         return response
 
-    def exchange_token(self, uri, code: str) -> dict:
+    def exchange_token(
+        self, uri, code: str, audience: str | None | Iterable[str] = None
+    ) -> dict:
         if not code:
             raise AuthException(
                 400,
@@ -200,7 +202,7 @@ class Auth:
         response = self.do_post(uri=uri, body=body, params=None)
         resp = response.json()
         jwt_response = self.generate_jwt_response(
-            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME), None
+            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME), audience
         )
         return jwt_response
 
@@ -682,7 +684,12 @@ class Auth:
                 )
             return self.refresh_session(refresh_token, audience)
 
-    def select_tenant(self, tenant_id: str, refresh_token: str) -> dict:
+    def select_tenant(
+        self,
+        tenant_id: str,
+        refresh_token: str,
+        audience: str | None | Iterable[str] = None,
+    ) -> dict:
         if not refresh_token:
             raise AuthException(
                 400,
@@ -697,7 +704,7 @@ class Auth:
 
         resp = response.json()
         jwt_response = self.generate_jwt_response(
-            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), None
+            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
         )
         return jwt_response
 

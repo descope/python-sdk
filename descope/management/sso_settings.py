@@ -122,12 +122,17 @@ class SSOSAMLSettings:
         idp_cert: str,
         attribute_mapping: Optional[AttributeMapping] = None,
         role_mappings: Optional[List[RoleMapping]] = None,
+        # NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
+        sp_acs_url: Optional[str] = None,
+        sp_entity_id: Optional[str] = None,
     ):
         self.idp_url = idp_url
         self.idp_entity_id = idp_entity_id
         self.idp_cert = idp_cert
         self.attribute_mapping = attribute_mapping
         self.role_mappings = role_mappings
+        self.sp_acs_url = sp_acs_url
+        self.sp_entity_id = sp_entity_id
 
 
 class SSOSAMLSettingsByMetadata:
@@ -140,10 +145,15 @@ class SSOSAMLSettingsByMetadata:
         idp_metadata_url: str,
         attribute_mapping: Optional[AttributeMapping] = None,
         role_mappings: Optional[List[RoleMapping]] = None,
+        # NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
+        sp_acs_url: Optional[str] = None,
+        sp_entity_id: Optional[str] = None,
     ):
         self.idp_metadata_url = idp_metadata_url
         self.attribute_mapping = attribute_mapping
         self.role_mappings = role_mappings
+        self.sp_acs_url = sp_acs_url
+        self.sp_entity_id = sp_entity_id
 
 
 class SSOSettings(AuthBase):
@@ -532,6 +542,8 @@ class SSOSettings(AuthBase):
                 "idpUrl": settings.idp_url,
                 "entityId": settings.idp_entity_id,
                 "idpCert": settings.idp_cert,
+                "spAcsUrl": settings.sp_acs_url,
+                "spEntityId": settings.sp_entity_id,
                 "attributeMapping": attr_mapping,
                 "roleMappings": SSOSettings._role_mapping_to_dict(
                     settings.role_mappings
@@ -558,6 +570,8 @@ class SSOSettings(AuthBase):
             "tenantId": tenant_id,
             "settings": {
                 "idpMetadataUrl": settings.idp_metadata_url,
+                "spAcsUrl": settings.sp_acs_url,
+                "spEntityId": settings.sp_entity_id,
                 "attributeMapping": attr_mapping,
                 "roleMappings": SSOSettings._role_mapping_to_dict(
                     settings.role_mappings
