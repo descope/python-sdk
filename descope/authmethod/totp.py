@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Iterable, Optional, Union
 
 from descope._auth_base import AuthBase
 from descope.common import (
@@ -49,6 +49,7 @@ class TOTP(AuthBase):
         code: str,
         login_options: Optional[LoginOptions] = None,
         refresh_token: Optional[str] = None,
+        audience: Union[str, None, Iterable[str]] = None,
     ) -> dict:
         """
         Sign in by verifying the validity of a TOTP code entered by an end user.
@@ -86,7 +87,7 @@ class TOTP(AuthBase):
 
         resp = response.json()
         jwt_response = self._auth.generate_jwt_response(
-            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), None
+            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
         )
         return jwt_response
 
