@@ -124,7 +124,7 @@ class OTP(AuthBase):
         response = self._auth.do_post(uri, body)
         return Auth.extract_masked_address(response.json(), method)
 
-    def verify_code(self, method: DeliveryMethod, login_id: str, code: str) -> dict:
+    def verify_code(self, method: DeliveryMethod, login_id: str, code: str, audience: str | None | Iterable[str] = None ) -> dict:
         """
         Verify the validity of an OTP code entered by an end user during sign_in or sign_up.
         (This function is not needed if you are using the sign_up_or_in function.
@@ -153,7 +153,7 @@ class OTP(AuthBase):
 
         resp = response.json()
         jwt_response = self._auth.generate_jwt_response(
-            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), None
+            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
         )
         return jwt_response
 

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Iterable
 
 from requests import Response
 
@@ -41,7 +41,7 @@ class WebAuthn(AuthBase):
 
         return response.json()
 
-    def sign_up_finish(self, transaction_id: str, response: Response) -> dict:
+    def sign_up_finish(self, transaction_id: str, response: Response, audience: str | None | Iterable[str] = None) -> dict:
         """
         Docs
         """
@@ -61,7 +61,7 @@ class WebAuthn(AuthBase):
 
         resp = response.json()
         jwt_response = self._auth.generate_jwt_response(
-            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), None
+            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
         )
         return jwt_response
 
@@ -93,7 +93,7 @@ class WebAuthn(AuthBase):
 
         return response.json()
 
-    def sign_in_finish(self, transaction_id: str, response: Response) -> dict:
+    def sign_in_finish(self, transaction_id: str, response: Response, audience: str | None | Iterable[str] = None) -> dict:
         """
         Docs
         """
@@ -113,7 +113,7 @@ class WebAuthn(AuthBase):
 
         resp = response.json()
         jwt_response = self._auth.generate_jwt_response(
-            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), None
+            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
         )
         return jwt_response
 
