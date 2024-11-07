@@ -531,7 +531,7 @@ class Auth:
     def generate_jwt_response(
         self,
         response_body: dict,
-        refresh_cookie: str,
+        refresh_cookie: str | None,
         audience: str | None | Iterable[str] = None,
     ) -> dict:
         jwt_response = self._generate_auth_info(
