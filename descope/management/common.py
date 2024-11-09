@@ -21,6 +21,7 @@ class MgmtV1:
 
     # user
     user_create_path = "/v1/mgmt/user/create"
+    test_user_create_path = "/v1/mgmt/user/create/test"
     user_create_batch_path = "/v1/mgmt/user/create/batch"
     user_update_path = "/v1/mgmt/user/update"
     user_patch_path = "/v1/mgmt/user/patch"
@@ -29,6 +30,7 @@ class MgmtV1:
     user_delete_all_test_users_path = "/v1/mgmt/user/test/delete/all"
     user_load_path = "/v1/mgmt/user"
     users_search_path = "/v2/mgmt/user/search"
+    test_users_search_path = "/v2/mgmt/user/search/test"
     user_get_provider_token = "/v1/mgmt/user/provider/token"
     user_update_status_path = "/v1/mgmt/user/update/status"
     user_update_login_id_path = "/v1/mgmt/user/update/loginid"

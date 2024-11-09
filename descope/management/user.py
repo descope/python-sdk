@@ -178,7 +178,7 @@ class User(AuthBase):
         user_tenants = [] if user_tenants is None else user_tenants
 
         response = self._auth.do_post(
-            MgmtV1.user_create_path,
+            MgmtV1.test_user_create_path,
             User._compose_create_body(
                 login_id,
                 email,
@@ -199,6 +199,7 @@ class User(AuthBase):
                 None,
                 None,
                 additional_login_ids,
+                sso_app_ids,
             ),
             pswd=self._auth.management_key,
         )
@@ -666,6 +667,97 @@ class User(AuthBase):
 
         response = self._auth.do_post(
             MgmtV1.users_search_path,
+            body=body,
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    def search_all_test_users(
+        self,
+        tenant_ids: Optional[List[str]] = None,
+        role_names: Optional[List[str]] = None,
+        limit: int = 0,
+        page: int = 0,
+        custom_attributes: Optional[dict] = None,
+        statuses: Optional[List[str]] = None,
+        emails: Optional[List[str]] = None,
+        phones: Optional[List[str]] = None,
+        sso_app_ids: Optional[List[str]] = None,
+        sort: Optional[List[Sort]] = None,
+        text: Optional[str] = None,
+        login_ids: Optional[List[str]] = None,
+    ) -> dict:
+        """
+        Search all test users.
+
+        Args:
+        tenant_ids (List[str]): Optional list of tenant IDs to filter by
+        role_names (List[str]): Optional list of role names to filter by
+        limit (int): Optional limit of the number of users returned. Leave empty for default.
+        page (int): Optional pagination control. Pages start at 0 and must be non-negative.
+        custom_attributes (dict): Optional search for a attribute with a given value
+        statuses (List[str]): Optional list of statuses to search for ("enabled", "disabled", "invited")
+        emails (List[str]): Optional list of emails to search for
+        phones (List[str]): Optional list of phones to search for
+        sso_app_ids (List[str]): Optional list of SSO application IDs to filter by
+        text (str): Optional string, allows free text search among all user's attributes.
+        login_ids (List[str]): Optional list of login ids
+        sort (List[Sort]): Optional List[dict], allows to sort by fields.
+
+        Return value (dict):
+        Return dict in the format
+             {"users": []}
+        "users" contains a list of all of the found users and their information
+
+        Raise:
+        AuthException: raised if search operation fails
+        """
+        tenant_ids = [] if tenant_ids is None else tenant_ids
+        role_names = [] if role_names is None else role_names
+
+        if limit < 0:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "limit must be non-negative"
+            )
+
+        if page < 0:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "page must be non-negative"
+            )
+        body = {
+            "tenantIds": tenant_ids,
+            "roleNames": role_names,
+            "limit": limit,
+            "page": page,
+            "testUsersOnly": True,
+            "withTestUser": True,
+        }
+        if statuses is not None:
+            body["statuses"] = statuses
+
+        if emails is not None:
+            body["emails"] = emails
+
+        if phones is not None:
+            body["phones"] = phones
+
+        if custom_attributes is not None:
+            body["customAttributes"] = custom_attributes
+
+        if sso_app_ids is not None:
+            body["ssoAppIds"] = sso_app_ids
+
+        if login_ids is not None:
+            body["loginIds"] = login_ids
+
+        if text is not None:
+            body["text"] = text
+
+        if sort is not None:
+            body["sort"] = sort_to_dict(sort)
+
+        response = self._auth.do_post(
+            MgmtV1.test_users_search_path,
             body=body,
             pswd=self._auth.management_key,
         )
