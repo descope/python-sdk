@@ -16,7 +16,7 @@ try:
 except ImportError:
     from pkg_resources import get_distribution
 
-import requests
+import httpx
 from email_validator import EmailNotValidError, validate_email
 from jwt import ExpiredSignatureError, ImmatureSignatureError
 
@@ -122,14 +122,14 @@ class Auth:
         self,
         uri: str,
         params=None,
-        allow_redirects=None,
+        follow_redirects=None,
         pswd: str | None = None,
-    ) -> requests.Response:
-        response = requests.get(
+    ) -> httpx.Response:
+        response = httpx.get(
             f"{self.base_url}{uri}",
             headers=self._get_default_headers(pswd),
             params=params,
-            allow_redirects=allow_redirects,
+            follow_redirects=follow_redirects,
             verify=self.secure,
             timeout=self.timeout_seconds,
         )
@@ -142,12 +142,12 @@ class Auth:
         body: dict | list[dict] | list[str] | None,
         params=None,
         pswd: str | None = None,
-    ) -> requests.Response:
-        response = requests.post(
+    ) -> httpx.Response:
+        response = httpx.post(
             f"{self.base_url}{uri}",
             headers=self._get_default_headers(pswd),
             json=body,
-            allow_redirects=False,
+            follow_redirects=False,
             verify=self.secure,
             params=params,
             timeout=self.timeout_seconds,
@@ -161,12 +161,12 @@ class Auth:
         body: dict | list[dict] | list[str] | None,
         params=None,
         pswd: str | None = None,
-    ) -> requests.Response:
-        response = requests.patch(
+    ) -> httpx.Response:
+        response = httpx.patch(
             f"{self.base_url}{uri}",
             headers=self._get_default_headers(pswd),
             json=body,
-            allow_redirects=False,
+            follow_redirects=False,
             verify=self.secure,
             params=params,
             timeout=self.timeout_seconds,
@@ -176,12 +176,12 @@ class Auth:
 
     def do_delete(
         self, uri: str, params=None, pswd: str | None = None
-    ) -> requests.Response:
-        response = requests.delete(
+    ) -> httpx.Response:
+        response = httpx.delete(
             f"{self.base_url}{uri}",
             params=params,
             headers=self._get_default_headers(pswd),
-            allow_redirects=False,
+            follow_redirects=False,
             verify=self.secure,
             timeout=self.timeout_seconds,
         )
@@ -419,7 +419,7 @@ class Auth:
 
     def _fetch_public_keys(self) -> None:
         # This function called under mutex protection so no need to acquire it once again
-        response = requests.get(
+        response = httpx.get(
             f"{self.base_url}{EndpointsV2.public_key_path}/{self.project_id}",
             headers=self._get_default_headers(),
             verify=self.secure,

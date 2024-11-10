@@ -33,7 +33,7 @@ class TestAudit(common.DescopeTest):
         )
 
         # Test failed search
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -42,7 +42,7 @@ class TestAudit(common.DescopeTest):
             )
 
         # Test success search
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = {
@@ -76,7 +76,7 @@ class TestAudit(common.DescopeTest):
                 },
                 params=None,
                 json={"noTenants": False},
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -90,14 +90,14 @@ class TestAudit(common.DescopeTest):
         )
 
         # Test failed search
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException, client.mgmt.audit.create_event, "a", "b", "c", "d"
             )
 
         # Test success search
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = {}
@@ -125,7 +125,7 @@ class TestAudit(common.DescopeTest):
                     "type": "info",
                     "data": {"some": "data"},
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

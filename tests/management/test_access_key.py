@@ -33,7 +33,7 @@ class TestAccessKey(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -42,7 +42,7 @@ class TestAccessKey(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads(
@@ -83,7 +83,7 @@ class TestAccessKey(common.DescopeTest):
                     "description": "this is my access key",
                     "permittedIps": ["10.0.0.1", "192.168.1.0/24"],
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -97,7 +97,7 @@ class TestAccessKey(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             mock_get.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -106,7 +106,7 @@ class TestAccessKey(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"key": {"id": "ak1"}}""")
@@ -121,7 +121,7 @@ class TestAccessKey(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params={"id": "key-id"},
-                allow_redirects=None,
+                follow_redirects=None,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -135,7 +135,7 @@ class TestAccessKey(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -144,7 +144,7 @@ class TestAccessKey(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads(
@@ -166,7 +166,7 @@ class TestAccessKey(common.DescopeTest):
                 json={
                     "tenantIds": ["t1, t2"],
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -180,7 +180,7 @@ class TestAccessKey(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -190,7 +190,7 @@ class TestAccessKey(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.access_key.update(
@@ -209,7 +209,7 @@ class TestAccessKey(common.DescopeTest):
                     "name": "new-name",
                     "description": None,
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -223,7 +223,7 @@ class TestAccessKey(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -232,7 +232,7 @@ class TestAccessKey(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.access_key.deactivate("ak1"))
             mock_post.assert_called_with(
@@ -245,7 +245,7 @@ class TestAccessKey(common.DescopeTest):
                 json={
                     "id": "ak1",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -259,7 +259,7 @@ class TestAccessKey(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -268,7 +268,7 @@ class TestAccessKey(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.access_key.activate("ak1"))
             mock_post.assert_called_with(
@@ -281,7 +281,7 @@ class TestAccessKey(common.DescopeTest):
                 json={
                     "id": "ak1",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -295,7 +295,7 @@ class TestAccessKey(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -304,7 +304,7 @@ class TestAccessKey(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.access_key.delete("ak1"))
             mock_post.assert_called_with(
@@ -317,7 +317,7 @@ class TestAccessKey(common.DescopeTest):
                 json={
                     "id": "ak1",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

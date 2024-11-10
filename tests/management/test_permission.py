@@ -33,7 +33,7 @@ class TestPermission(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -42,7 +42,7 @@ class TestPermission(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.permission.create("P1", "Something"))
             mock_post.assert_called_with(
@@ -56,7 +56,7 @@ class TestPermission(common.DescopeTest):
                     "name": "P1",
                     "description": "Something",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -70,7 +70,7 @@ class TestPermission(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -80,7 +80,7 @@ class TestPermission(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.permission.update(
@@ -101,7 +101,7 @@ class TestPermission(common.DescopeTest):
                     "newName": "new-name",
                     "description": "new-description",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -115,7 +115,7 @@ class TestPermission(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -124,7 +124,7 @@ class TestPermission(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.permission.delete("name"))
             mock_post.assert_called_with(
@@ -137,7 +137,7 @@ class TestPermission(common.DescopeTest):
                 json={
                     "name": "name",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -151,12 +151,12 @@ class TestPermission(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             mock_get.return_value.ok = False
             self.assertRaises(AuthException, client.mgmt.permission.load_all)
 
         # Test success flow
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads(
@@ -175,7 +175,7 @@ class TestPermission(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                allow_redirects=None,
+                follow_redirects=None,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

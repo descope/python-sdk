@@ -33,7 +33,7 @@ class TestUser(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException, client.mgmt.jwt.update_jwt, "jwt", {"k1": "v1"}
@@ -44,7 +44,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
@@ -59,7 +59,7 @@ class TestUser(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 json={"jwt": "test", "customClaims": {"k1": "v1"}},
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -74,7 +74,7 @@ class TestUser(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException, client.mgmt.jwt.impersonate, "imp1", "imp2", False
@@ -89,7 +89,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
@@ -108,7 +108,7 @@ class TestUser(common.DescopeTest):
                     "impersonatorId": "imp1",
                     "validateConsent": True,
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
