@@ -56,7 +56,10 @@ pep8-naming = "0.14.1"
 tox = "4.23.0"
 
 [tool.poetry.group.format.dependencies]
-black = "24.3.0"
+black = [
+    { version = "<24.10.0", python = "<3.9" },
+    { version = "24.10.0", python = ">=3.9" },
+]
 
 [tool.poetry.group.types.dependencies]
 mypy = "1.11.2"
