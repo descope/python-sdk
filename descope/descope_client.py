@@ -408,6 +408,28 @@ class DescopeClient:
         uri = EndpointsV1.logout_all_path
         return self._auth.do_post(uri, {}, None, refresh_token)
 
+    def logout_previous(self, refresh_token: str) -> requests.Response:
+        """
+        Logout user from previous active sessions.
+
+        Args:
+        refresh_token (str): The refresh token
+
+        Return value (requests.Response): returns the response from the Descope server
+
+        Raise:
+        AuthException: Exception is raised if session is not authorized or another error occurs
+        """
+        if refresh_token is None:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                f"signed refresh token {refresh_token} is empty",
+            )
+
+        uri = EndpointsV1.logout_previous_path
+        return self._auth.do_post(uri, {}, None, refresh_token)
+
     def me(self, refresh_token: str) -> dict:
         """
         Retrieve user details for the refresh token. The returned data includes email, name, phone,

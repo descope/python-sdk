@@ -25,6 +25,7 @@ class EndpointsV1:
     select_tenant_path = "/v1/auth/tenant/select"
     logout_path = "/v1/auth/logout"
     logout_all_path = "/v1/auth/logoutall"
+    logout_previous_path = "/v1/auth/logoutprevious"
     me_path = "/v1/auth/me"
     my_tenants_path = "/v1/auth/me/tenants"
     history_path = "/v1/auth/me/history"
