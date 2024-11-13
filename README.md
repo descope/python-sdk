@@ -472,6 +472,12 @@ invalidate all user's refresh tokens. After calling this function, you must inva
 descope_client.logout_all(refresh_token)
 ```
 
+It is also possible to sign the user out from all previous sessions.
+
+```python
+descope_client.logout_previous(refresh_token)
+```
+
 ### History
 
 You can get the current session user history.
