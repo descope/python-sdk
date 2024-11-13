@@ -1006,7 +1006,6 @@ class TestUser(common.DescopeTest):
             resp = self.client.mgmt.user.search_all_test_users(
                 ["t1, t2"],
                 ["r1", "r2"],
-                with_test_user=True,
                 sso_app_ids=["app1"],
                 login_ids=["l1"],
             )
@@ -1026,7 +1025,7 @@ class TestUser(common.DescopeTest):
                     "roleNames": ["r1", "r2"],
                     "limit": 0,
                     "page": 0,
-                    "testUsersOnly": False,
+                    "testUsersOnly": True,
                     "withTestUser": True,
                     "ssoAppIds": ["app1"],
                     "loginIds": ["l1"],
@@ -1048,7 +1047,6 @@ class TestUser(common.DescopeTest):
             resp = self.client.mgmt.user.search_all_test_users(
                 ["t1, t2"],
                 ["r1", "r2"],
-                with_test_user=True,
                 sso_app_ids=["app1"],
                 text="blue",
                 sort=sort,
@@ -1069,7 +1067,7 @@ class TestUser(common.DescopeTest):
                     "roleNames": ["r1", "r2"],
                     "limit": 0,
                     "page": 0,
-                    "testUsersOnly": False,
+                    "testUsersOnly": True,
                     "withTestUser": True,
                     "ssoAppIds": ["app1"],
                     "text": "blue",
@@ -1094,7 +1092,6 @@ class TestUser(common.DescopeTest):
             resp = self.client.mgmt.user.search_all_test_users(
                 ["t1, t2"],
                 ["r1", "r2"],
-                with_test_user=True,
                 custom_attributes={"ak": "av"},
                 statuses=["invited"],
                 phones=["+111111"],
@@ -1116,7 +1113,7 @@ class TestUser(common.DescopeTest):
                     "roleNames": ["r1", "r2"],
                     "limit": 0,
                     "page": 0,
-                    "testUsersOnly": False,
+                    "testUsersOnly": True,
                     "withTestUser": True,
                     "customAttributes": {"ak": "av"},
                     "statuses": ["invited"],
