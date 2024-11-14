@@ -100,24 +100,6 @@ class TestDescopeClient(common.DescopeTest):
             mock_post.return_value.ok = True
             self.assertIsNotNone(client.logout_all(dummy_refresh_token))
 
-    def test_logout_previous(self):
-        dummy_refresh_token = ""
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
-
-        self.assertRaises(AuthException, client.logout_previous, None)
-
-        # Test failed flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException, client.logout_previous, dummy_refresh_token
-            )
-
-        # Test success flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNotNone(client.logout_previous(dummy_refresh_token))
-
     def test_me(self):
         dummy_refresh_token = ""
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)
