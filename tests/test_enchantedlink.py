@@ -162,7 +162,11 @@ class TestEnchantedLink(common.DescopeTest):
             enchantedlink.sign_in(
                 "dummy@dummy.com",
                 "http://test.me",
-                LoginOptions(stepup=True, template_options={"blue": "bla"}),
+                LoginOptions(
+                    stepup=True,
+                    template_options={"blue": "bla"},
+                    revoke_other_sessions=True,
+                ),
                 refresh_token=refresh_token,
             )
             mock_post.assert_called_with(
@@ -179,6 +183,7 @@ class TestEnchantedLink(common.DescopeTest):
                         "stepup": True,
                         "customClaims": None,
                         "templateOptions": {"blue": "bla"},
+                        "revokeOtherSessions": True,
                         "mfa": False,
                     },
                 },
