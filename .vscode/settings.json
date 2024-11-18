@@ -8,8 +8,8 @@
     "isort.importStrategy": "fromEnvironment",
     "black-formatter.importStrategy": "fromEnvironment",
     "workbench.colorCustomizations": {
-        "activityBar.background": "#4D1C3B",
-        "titleBar.activeBackground": "#6B2752",
-        "titleBar.activeForeground": "#FDF8FB"
+        "activityBar.background": "#121D85",
+        "titleBar.activeBackground": "#1A28BA",
+        "titleBar.activeForeground": "#F9FAFE"
     },
 }

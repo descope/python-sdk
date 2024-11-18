@@ -111,6 +111,7 @@ class LoginOptions:
         self,
         stepup: bool = False,
         mfa: bool = False,
+        revoke_other_sessions: Optional[None] = None,
         custom_claims: Optional[dict] = None,
         template_options: Optional[
             dict
@@ -119,6 +120,8 @@ class LoginOptions:
         self.stepup = stepup
         self.customClaims = custom_claims
         self.mfa = mfa
+        if revoke_other_sessions is not None:
+            self.revokeOtherSessions = revoke_other_sessions
         if template_options is not None:
             self.templateOptions = template_options
 
@@ -149,11 +152,13 @@ def validate_refresh_token_provided(
 class SignUpOptions:
     def __init__(
         self,
+        revoke_other_sessions: Optional[None] = None,
         custom_claims: Optional[dict] = None,
         template_options: Optional[
             dict
         ] = None,  # for providing messaging template options (templates that are being sent via email / text message)
     ):
+        self.revoke_other_sessions = revoke_other_sessions
         self.customClaims = custom_claims
         self.templateOptions = template_options
 
@@ -165,4 +170,6 @@ def signup_options_to_dict(signup_options: Optional[SignUpOptions] = None) -> di
             res["customClaims"] = signup_options.customClaims
         if signup_options.templateOptions is not None:
             res["templateOptions"] = signup_options.templateOptions
+        if signup_options.revoke_other_sessions is not None:
+            res["revokeOtherSessions"] = signup_options.revoke_other_sessions
     return res

@@ -5,7 +5,7 @@ for a backend written in python. You can read more on the [Descope Website](http
 
 ## Requirements
 
-The SDK supports Python 3.7 and above.
+The SDK supports Python 3.8.1 and above.
 
 ## Installing the SDK
 
@@ -1451,7 +1451,7 @@ You can find various usage samples in the [samples folder](https://github.com/de
 
 ### Prerequisites
 
-- Python 3.7 or higher
+- Python 3.8.1 or higher
 - [Poetry](https://python-poetry.org) installed
 
 ### Install dependencies
