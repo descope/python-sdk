@@ -1393,6 +1393,13 @@ descope_client.mgmt.user.create_test_user(
     ],
 )
 
+# Search all test users, optionally according to tenant and/or role filter
+# results can be paginated using the limit and page parameters
+users_resp = descope_client.mgmt.user.search_all_test_users()
+users = users_resp["users"]
+    for user in users:
+        # Do something
+
 # Now test user got created, and this user will be available until you delete it,
 # you can use any management operation for test user CRUD.
 # You can also delete all test users.
