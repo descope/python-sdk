@@ -40,7 +40,7 @@ class MgmtV1:
     user_update_picture_path = "/v1/mgmt/user/update/picture"
     user_update_custom_attribute_path = "/v1/mgmt/user/update/customAttribute"
     user_set_role_path = "/v1/mgmt/user/update/role/set"
-    user_add_role_path = "/v1/mgmt/user/update/role/add"
+    user_add_role_path = "/v2/mgmt/user/update/role/add"
     user_remove_role_path = "/v1/mgmt/user/update/role/remove"
     user_add_sso_apps = "/v1/mgmt/user/update/ssoapp/add"
     user_set_sso_apps = "/v1/mgmt/user/update/ssoapp/set"
