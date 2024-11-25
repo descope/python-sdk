@@ -165,6 +165,7 @@ class TestEnchantedLink(common.DescopeTest):
                 LoginOptions(
                     stepup=True,
                     template_options={"blue": "bla"},
+                    template_id="foo",
                     revoke_other_sessions=True,
                 ),
                 refresh_token=refresh_token,
@@ -183,6 +184,7 @@ class TestEnchantedLink(common.DescopeTest):
                         "stepup": True,
                         "customClaims": None,
                         "templateOptions": {"blue": "bla"},
+                        "templateId": "foo",
                         "revokeOtherSessions": True,
                         "mfa": False,
                     },
@@ -304,7 +306,9 @@ class TestEnchantedLink(common.DescopeTest):
                 "http://test.me",
                 None,
                 SignUpOptions(
-                    template_options={"bla": "blue"}, revoke_other_sessions=True
+                    template_options={"bla": "blue"},
+                    template_id="foo",
+                    revoke_other_sessions=True,
                 ),
             )
             mock_post.assert_called_with(
@@ -321,6 +325,7 @@ class TestEnchantedLink(common.DescopeTest):
                     "email": "dummy@dummy.com",
                     "loginOptions": {
                         "templateOptions": {"bla": "blue"},
+                        "templateId": "foo",
                         "revokeOtherSessions": True,
                     },
                 },
