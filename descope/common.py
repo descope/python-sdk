@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional
+from typing import Any, Optional
 
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
@@ -111,7 +111,7 @@ class LoginOptions:
         self,
         stepup: bool = False,
         mfa: bool = False,
-        revoke_other_sessions: Optional[None] = None,
+        revoke_other_sessions: Optional[bool] = None,
         custom_claims: Optional[dict] = None,
         template_options: Optional[
             dict
@@ -157,7 +157,7 @@ def validate_refresh_token_provided(
 class SignUpOptions:
     def __init__(
         self,
-        revoke_other_sessions: Optional[None] = None,
+        revoke_other_sessions: Optional[bool] = None,
         custom_claims: Optional[dict] = None,
         template_options: Optional[
             dict
@@ -173,7 +173,7 @@ class SignUpOptions:
 
 
 def signup_options_to_dict(signup_options: Optional[SignUpOptions] = None) -> dict:
-    res = {}
+    res: dict[str, Any] = {}
     if signup_options is not None:
         if signup_options.customClaims is not None:
             res["customClaims"] = signup_options.customClaims
