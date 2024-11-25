@@ -60,7 +60,7 @@ class TestMagicLink(common.DescopeTest):
             },
         )
 
-        lo = LoginOptions(stepup=True, custom_claims={"k1": "v1"})
+        lo = LoginOptions(stepup=True, custom_claims={"k1": "v1"}, template_id="foo")
         self.assertEqual(
             MagicLink._compose_signin_body("id1", "uri1", lo),
             {
@@ -70,6 +70,7 @@ class TestMagicLink(common.DescopeTest):
                     "stepup": True,
                     "mfa": False,
                     "customClaims": {"k1": "v1"},
+                    "templateId": "foo",
                 },
             },
         )
@@ -193,7 +194,9 @@ class TestMagicLink(common.DescopeTest):
                 DeliveryMethod.EMAIL,
                 "dummy@dummy.com",
                 "http://test.me",
-                LoginOptions(stepup=True, template_options={"blue": "bla"}),
+                LoginOptions(
+                    stepup=True, template_options={"blue": "bla"}, template_id=None
+                ),
                 refresh_token=refresh_token,
             )
             mock_post.assert_called_with(
@@ -274,7 +277,7 @@ class TestMagicLink(common.DescopeTest):
                 "dummy@dummy.com",
                 "http://test.me",
                 signup_user_details,
-                SignUpOptions(template_options={"bla": "blue"}),
+                SignUpOptions(template_options={"bla": "blue"}, template_id="foo"),
             )
             self.assertEqual("t***@example.com", resp)
 
@@ -294,7 +297,10 @@ class TestMagicLink(common.DescopeTest):
                         "email": "dummy@dummy.com",
                     },
                     "email": "dummy@dummy.com",
-                    "loginOptions": {"templateOptions": {"bla": "blue"}},
+                    "loginOptions": {
+                        "templateOptions": {"bla": "blue"},
+                        "templateId": "foo",
+                    },
                 },
                 allow_redirects=False,
                 verify=True,
@@ -420,7 +426,7 @@ class TestMagicLink(common.DescopeTest):
                     DeliveryMethod.EMAIL,
                     "dummy@dummy.com",
                     "http://test.me",
-                    SignUpOptions(template_options={"bla": "blue"}),
+                    SignUpOptions(template_options={"bla": "blue"}, template_id="foo"),
                 ),
             )
             mock_post.assert_called_with(
@@ -437,6 +443,7 @@ class TestMagicLink(common.DescopeTest):
                         "customClaims": None,
                         "mfa": False,
                         "templateOptions": {"bla": "blue"},
+                        "templateId": "foo",
                     },
                 },
                 allow_redirects=False,

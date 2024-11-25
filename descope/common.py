@@ -116,6 +116,9 @@ class LoginOptions:
         template_options: Optional[
             dict
         ] = None,  # for providing messaging template options (templates that are being sent via email / text message)
+        template_id: Optional[
+            str
+        ] = None,  # for overriding the default template (templates that are being sent via email / text message)
     ):
         self.stepup = stepup
         self.customClaims = custom_claims
@@ -124,6 +127,8 @@ class LoginOptions:
             self.revokeOtherSessions = revoke_other_sessions
         if template_options is not None:
             self.templateOptions = template_options
+        if template_id is not None:
+            self.templateId = template_id
 
 
 class AccessKeyLoginOptions:
@@ -157,10 +162,14 @@ class SignUpOptions:
         template_options: Optional[
             dict
         ] = None,  # for providing messaging template options (templates that are being sent via email / text message)
+        template_id: Optional[
+            str
+        ] = None,  # for overriding the default template (templates that are being sent via email / text message)
     ):
-        self.revoke_other_sessions = revoke_other_sessions
+        self.revokeOtherSessions = revoke_other_sessions
         self.customClaims = custom_claims
         self.templateOptions = template_options
+        self.templateId = template_id
 
 
 def signup_options_to_dict(signup_options: Optional[SignUpOptions] = None) -> dict:
@@ -168,8 +177,10 @@ def signup_options_to_dict(signup_options: Optional[SignUpOptions] = None) -> di
     if signup_options is not None:
         if signup_options.customClaims is not None:
             res["customClaims"] = signup_options.customClaims
+        if signup_options.templateId is not None:
+            res["templateId"] = signup_options.templateId
         if signup_options.templateOptions is not None:
             res["templateOptions"] = signup_options.templateOptions
-        if signup_options.revoke_other_sessions is not None:
-            res["revokeOtherSessions"] = signup_options.revoke_other_sessions
+        if signup_options.revokeOtherSessions is not None:
+            res["revokeOtherSessions"] = signup_options.revokeOtherSessions
     return res

@@ -118,6 +118,7 @@ class OTP(AuthBase):
             login_options = LoginOptions(
                 custom_claims=signup_options.customClaims,
                 template_options=signup_options.templateOptions,
+                template_id=signup_options.templateId,
             )
         body = OTP._compose_signin_body(
             login_id,
