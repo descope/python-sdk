@@ -121,7 +121,7 @@ class TestFGA(common.DescopeTest):
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
-                client.mgmt.authz.delete_relations(
+                client.mgmt.fga.delete_relations(
                     [
                         {
                             "resource": "r",
