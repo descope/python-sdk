@@ -38,7 +38,7 @@ class TestFGA(common.DescopeTest):
         # Test success flow
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
-            self.assertIsNone(client.mgmt.fgs.save_schema("model AuthZ 1.0"))
+            self.assertIsNone(client.mgmt.fga.save_schema("model AuthZ 1.0"))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.fga_save_schema}",
                 headers={
