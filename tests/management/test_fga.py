@@ -76,7 +76,7 @@ class TestFGA(common.DescopeTest):
                             "resourceType": "rt",
                             "relation": "rel",
                             "target": "u",
-                            "targetType": "ty"
+                            "targetType": "ty",
                         }
                     ]
                 )
@@ -95,7 +95,7 @@ class TestFGA(common.DescopeTest):
                             "resourceType": "rt",
                             "relation": "rel",
                             "target": "u",
-                            "targetType": "ty"
+                            "targetType": "ty",
                         }
                     ]
                 },
@@ -128,7 +128,7 @@ class TestFGA(common.DescopeTest):
                             "resourceType": "rt",
                             "relation": "rel",
                             "target": "u",
-                            "targetType": "ty"
+                            "targetType": "ty",
                         }
                     ]
                 )
@@ -147,7 +147,7 @@ class TestFGA(common.DescopeTest):
                             "resourceType": "rt",
                             "relation": "rel",
                             "target": "u",
-                            "targetType": "ty"
+                            "targetType": "ty",
                         }
                     ]
                 },
@@ -180,7 +180,7 @@ class TestFGA(common.DescopeTest):
                             "resourceType": "rt",
                             "relation": "rel",
                             "target": "u",
-                            "targetType": "ty"
+                            "targetType": "ty",
                         }
                     ]
                 )

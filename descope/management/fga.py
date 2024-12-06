@@ -22,8 +22,8 @@ class FGA(AuthBase):
             type folder
             relation parent: folder
             relation owner: user | org#member
-            relation editor: user 
-            relation viewer: user 
+            relation editor: user
+            relation viewer: user
 
             permission can_create: owner | parent.owner
             permission can_edit: editor | can_create
@@ -32,8 +32,8 @@ class FGA(AuthBase):
             type doc
             relation parent: folder
             relation owner: user | org#member
-            relation editor: user 
-            relation viewer: user 
+            relation editor: user
+            relation viewer: user
 
             permission can_create: owner | parent.owner
             permission can_edit: editor | can_create
@@ -132,4 +132,9 @@ class FGA(AuthBase):
             },
             pswd=self._auth.management_key,
         )
-        return list(map(lambda tuple: {"relation": tuple["tuple"], "allowed": tuple["allowed"]}, response.json()["tuples"]))
+        return list(
+            map(
+                lambda tuple: {"relation": tuple["tuple"], "allowed": tuple["allowed"]},
+                response.json()["tuples"],
+            )
+        )
