@@ -193,12 +193,13 @@ class TestFGA(common.DescopeTest):
                 },
                 params=None,
                 json={
-                    "relationQueries": [
+                    "tuples": [
                         {
                             "resource": "r",
-                            "relationDefinition": "rd",
-                            "namespace": "ns",
+                            "resourceType": "rt",
+                            "relation": "rel",
                             "target": "u",
+                            "targetType": "ty",
                         }
                     ]
                 },
