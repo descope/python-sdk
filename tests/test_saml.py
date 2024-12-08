@@ -40,16 +40,16 @@ class TestSAML(common.DescopeTest):
         self.assertRaises(AuthException, saml.start, "tenant1", "")
         self.assertRaises(AuthException, saml.start, "tenant1", None)
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(AuthException, saml.start, "tenant1", "http://dummy.com")
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(saml.start("tenant1", "http://dummy.com"))
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             saml.start("tenant1", "http://dummy.com")
             expected_uri = (
@@ -63,7 +63,7 @@ class TestSAML(common.DescopeTest):
                 },
                 params={"tenant": "tenant1", "redirectURL": "http://dummy.com"},
                 json={},
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -84,16 +84,16 @@ class TestSAML(common.DescopeTest):
         self.assertRaises(AuthException, saml.start, "tenant1", "")
         self.assertRaises(AuthException, saml.start, "tenant1", None)
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(AuthException, saml.start, "tenant1", "http://dummy.com")
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(saml.start("tenant1", "http://dummy.com"))
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             lo = LoginOptions(stepup=True, custom_claims={"k1": "v1"})
             saml.start("tenant1", "http://dummy.com", lo, "refresh")
@@ -108,7 +108,7 @@ class TestSAML(common.DescopeTest):
                 },
                 params={"tenant": "tenant1", "redirectURL": "http://dummy.com"},
                 json={"stepup": True, "customClaims": {"k1": "v1"}, "mfa": False},
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -123,12 +123,12 @@ class TestSAML(common.DescopeTest):
         self.assertRaises(AuthException, saml.exchange_token, "")
         self.assertRaises(AuthException, saml.exchange_token, None)
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(AuthException, saml.exchange_token, "c1")
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
             my_mock_response.cookies = {}
@@ -146,7 +146,7 @@ class TestSAML(common.DescopeTest):
                 },
                 params=None,
                 json={"code": "c1"},
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
