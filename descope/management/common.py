@@ -131,6 +131,12 @@ class MgmtV1:
     authz_re_target_with_relation = "/v1/mgmt/authz/re/targetwithrelation"
     authz_get_modified = "/v1/mgmt/authz/getmodified"
 
+    # FGA (new style Authz)
+    fga_save_schema = "/v1/mgmt/fga/schema"
+    fga_create_relations = "/v1/mgmt/fga/relations"
+    fga_delete_relations = "/v1/mgmt/fga/relations/delete"
+    fga_check = "/v1/mgmt/fga/check"
+
     # Project
     project_update_name = "/v1/mgmt/project/update/name"
     project_update_tags = "/v1/mgmt/project/update/tags"
