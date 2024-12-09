@@ -49,7 +49,7 @@ class TestTOTP(common.DescopeTest):
             signup_user_details,
         )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -59,7 +59,7 @@ class TestTOTP(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(totp.sign_up("dummy@dummy.com", signup_user_details))
 
@@ -72,14 +72,14 @@ class TestTOTP(common.DescopeTest):
         self.assertRaises(AuthException, totp.sign_in_code, "dummy@dummy.com", None)
         self.assertRaises(AuthException, totp.sign_in_code, "dummy@dummy.com", "")
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException, totp.sign_in_code, "dummy@dummy.com", "1234"
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
             my_mock_response.cookies = {}
@@ -98,7 +98,7 @@ class TestTOTP(common.DescopeTest):
             )
 
         # Validate refresh token used while provided
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
             my_mock_response.cookies = {}
@@ -130,7 +130,7 @@ class TestTOTP(common.DescopeTest):
                         "mfa": False,
                     },
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -144,7 +144,7 @@ class TestTOTP(common.DescopeTest):
         self.assertRaises(AuthException, totp.update_user, "dummy@dummy.com", None)
         self.assertRaises(AuthException, totp.update_user, "dummy@dummy.com", "")
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -171,7 +171,7 @@ class TestTOTP(common.DescopeTest):
                 },
                 params=None,
                 json={"loginId": "dummy@dummy.com"},
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
