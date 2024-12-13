@@ -229,6 +229,7 @@ class User(AuthBase):
         ] = None,  # send invite via text message, default is according to project settings
         additional_login_ids: Optional[List[str]] = None,
         sso_app_ids: Optional[List[str]] = None,
+        template_id: str = None,
     ) -> dict:
         """
         Create a new user and invite them via an email / text message.
@@ -267,6 +268,7 @@ class User(AuthBase):
                 send_sms,
                 additional_login_ids,
                 sso_app_ids,
+                template_id,
             ),
             pswd=self._auth.management_key,
         )
@@ -1652,6 +1654,7 @@ class User(AuthBase):
         send_sms: Optional[bool],
         additional_login_ids: Optional[List[str]],
         sso_app_ids: Optional[List[str]] = None,
+        template_id: str = None,
     ) -> dict:
         body = User._compose_update_body(
             login_id=login_id,
@@ -1680,6 +1683,8 @@ class User(AuthBase):
             body["sendMail"] = send_mail
         if send_sms is not None:
             body["sendSMS"] = send_sms
+        if template_id is not None:
+            body["templateId"] = template_id
         return body
 
     @staticmethod
