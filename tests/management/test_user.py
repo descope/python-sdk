@@ -236,6 +236,7 @@ class TestUser(common.DescopeTest):
                 invite_url="invite.me",
                 send_sms=True,
                 sso_app_ids=["app1", "app2"],
+                template_id="tid",
             )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
@@ -264,6 +265,7 @@ class TestUser(common.DescopeTest):
                     "sendSMS": True,
                     "additionalLoginIds": None,
                     "ssoAppIDs": ["app1", "app2"],
+                    "templateId": "tid",
                 },
                 allow_redirects=False,
                 verify=True,
