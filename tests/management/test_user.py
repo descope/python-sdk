@@ -40,7 +40,7 @@ class TestUser(common.DescopeTest):
 
     def test_create(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -49,7 +49,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
@@ -93,14 +93,14 @@ class TestUser(common.DescopeTest):
                     "additionalLoginIds": ["id-1", "id-2"],
                     "ssoAppIDs": ["app1", "app2"],
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_create_with_verified_parameters(self):
         # Test success flow with verified email and phone
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
@@ -146,14 +146,14 @@ class TestUser(common.DescopeTest):
                     "additionalLoginIds": None,
                     "ssoAppIDs": None,
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_create_test_user(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -162,7 +162,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
@@ -203,14 +203,14 @@ class TestUser(common.DescopeTest):
                     "additionalLoginIds": None,
                     "ssoAppIDs": None,
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_invite(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -219,7 +219,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
@@ -267,14 +267,14 @@ class TestUser(common.DescopeTest):
                     "ssoAppIDs": ["app1", "app2"],
                     "templateId": "tid",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_invite_batch(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -283,7 +283,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"users": [{"id": "u1"}]}""")
@@ -363,7 +363,7 @@ class TestUser(common.DescopeTest):
                 },
                 params=None,
                 json=expectedUsers,
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -406,7 +406,7 @@ class TestUser(common.DescopeTest):
                 },
                 params=None,
                 json=expectedUsers,
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -427,14 +427,14 @@ class TestUser(common.DescopeTest):
                 },
                 params=None,
                 json=expectedUsers,
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_update(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -444,7 +444,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
                 self.client.mgmt.user.update(
@@ -476,12 +476,12 @@ class TestUser(common.DescopeTest):
                     "additionalLoginIds": None,
                     "ssoAppIDs": ["app1", "app2"],
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
         # Test success flow with verified flags
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
                 self.client.mgmt.user.update(
@@ -510,14 +510,14 @@ class TestUser(common.DescopeTest):
                     "additionalLoginIds": None,
                     "ssoAppIDs": None,
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_patch(self):
         # Test failed flows
-        with patch("requests.patch") as mock_patch:
+        with patch("httpx.patch") as mock_patch:
             mock_patch.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -527,7 +527,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow with some params set
-        with patch("requests.patch") as mock_patch:
+        with patch("httpx.patch") as mock_patch:
             mock_patch.return_value.ok = True
             self.assertIsNone(
                 self.client.mgmt.user.patch(
@@ -558,12 +558,12 @@ class TestUser(common.DescopeTest):
                     "customAttributes": {"ak": "av"},
                     "ssoAppIds": ["app1", "app2"],
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
         # Test success flow with other params
-        with patch("requests.patch") as mock_patch:
+        with patch("httpx.patch") as mock_patch:
             mock_patch.return_value.ok = True
             self.assertIsNone(
                 self.client.mgmt.user.patch(
@@ -604,14 +604,14 @@ class TestUser(common.DescopeTest):
                         {"tenantId": "tenant2", "roleNames": ["role1", "role2"]},
                     ],
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_delete(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -620,7 +620,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(self.client.mgmt.user.delete("u1"))
             mock_post.assert_called_with(
@@ -633,14 +633,14 @@ class TestUser(common.DescopeTest):
                 json={
                     "loginId": "u1",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_delete_by_user_id(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -649,7 +649,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(self.client.mgmt.user.delete_by_user_id("u1"))
             mock_post.assert_called_with(
@@ -662,14 +662,14 @@ class TestUser(common.DescopeTest):
                 json={
                     "userId": "u1",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_logout(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -678,7 +678,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(self.client.mgmt.user.logout_user("u1"))
             mock_post.assert_called_with(
@@ -691,14 +691,14 @@ class TestUser(common.DescopeTest):
                 json={
                     "loginId": "u1",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_logout_by_user_id(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -707,7 +707,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(self.client.mgmt.user.logout_user_by_user_id("u1"))
             mock_post.assert_called_with(
@@ -720,14 +720,14 @@ class TestUser(common.DescopeTest):
                 json={
                     "userId": "u1",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_delete_all_test_users(self):
         # Test failed flows
-        with patch("requests.delete") as mock_delete:
+        with patch("httpx.delete") as mock_delete:
             mock_delete.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -735,7 +735,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.delete") as mock_delete:
+        with patch("httpx.delete") as mock_delete:
             mock_delete.return_value.ok = True
             self.assertIsNone(self.client.mgmt.user.delete_all_test_users())
             mock_delete.assert_called_with(
@@ -745,14 +745,14 @@ class TestUser(common.DescopeTest):
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_load(self):
         # Test failed flows
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             mock_get.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -761,7 +761,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
@@ -776,14 +776,14 @@ class TestUser(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params={"loginId": "valid-id"},
-                allow_redirects=None,
+                follow_redirects=None,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_load_by_user_id(self):
         # Test failed flows
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             mock_get.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -792,7 +792,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
@@ -807,14 +807,14 @@ class TestUser(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params={"userId": "user-id"},
-                allow_redirects=None,
+                follow_redirects=None,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_search_all(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -823,7 +823,7 @@ class TestUser(common.DescopeTest):
                 ["r1", "r2"],
             )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertRaises(
                 AuthException, self.client.mgmt.user.search_all, [], [], -1, 0
@@ -834,7 +834,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads(
@@ -869,13 +869,13 @@ class TestUser(common.DescopeTest):
                     "ssoAppIds": ["app1"],
                     "loginIds": ["l1"],
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Test success flow with text and sort
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads(
@@ -916,13 +916,13 @@ class TestUser(common.DescopeTest):
                         {"desc": False, "field": "bubu"},
                     ],
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Test success flow with custom attributes
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads(
@@ -961,7 +961,7 @@ class TestUser(common.DescopeTest):
                     "emails": ["a@b.com"],
                     "phones": ["+111111"],
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -1129,7 +1129,7 @@ class TestUser(common.DescopeTest):
 
     def test_get_provider_token(self):
         # Test failed flows
-        with patch("requests.get") as mock_post:
+        with patch("httpx.get") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -1138,7 +1138,7 @@ class TestUser(common.DescopeTest):
                 "p1",
             )
             # Test success flow
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads(
@@ -1166,14 +1166,14 @@ class TestUser(common.DescopeTest):
                     "withRefreshToken": True,
                     "forceRefresh": True,
                 },
-                allow_redirects=None,
+                follow_redirects=None,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_activate(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -1182,7 +1182,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
@@ -1201,14 +1201,14 @@ class TestUser(common.DescopeTest):
                     "loginId": "valid-id",
                     "status": "enabled",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_deactivate(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -1217,7 +1217,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
@@ -1236,14 +1236,14 @@ class TestUser(common.DescopeTest):
                     "loginId": "valid-id",
                     "status": "disabled",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_update_login_id(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -1253,7 +1253,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "a@b.c"}}""")
@@ -1272,14 +1272,14 @@ class TestUser(common.DescopeTest):
                     "loginId": "valid-id",
                     "newLoginId": "a@b.c",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_update_email(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -1289,7 +1289,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
@@ -1309,14 +1309,14 @@ class TestUser(common.DescopeTest):
                     "email": "a@b.c",
                     "verified": None,
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_update_phone(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -1326,7 +1326,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
@@ -1346,14 +1346,14 @@ class TestUser(common.DescopeTest):
                     "phone": "+18005551234",
                     "verified": True,
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_update_display_name(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -1363,7 +1363,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
@@ -1382,14 +1382,14 @@ class TestUser(common.DescopeTest):
                     "loginId": "valid-id",
                     "displayName": "foo",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_update_picture(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -1399,7 +1399,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
@@ -1418,14 +1418,14 @@ class TestUser(common.DescopeTest):
                     "loginId": "valid-id",
                     "picture": "foo",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_update_custom_attribute(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -1436,7 +1436,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
@@ -1457,7 +1457,7 @@ class TestUser(common.DescopeTest):
                     "attributeKey": "foo",
                     "attributeValue": "bar",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -1465,7 +1465,7 @@ class TestUser(common.DescopeTest):
 
     def test_set_roles(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -1475,7 +1475,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
@@ -1494,14 +1494,14 @@ class TestUser(common.DescopeTest):
                     "loginId": "valid-id",
                     "roleNames": ["foo", "bar"],
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_add_roles(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -1511,7 +1511,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
@@ -1530,14 +1530,14 @@ class TestUser(common.DescopeTest):
                     "loginId": "valid-id",
                     "roleNames": ["foo", "bar"],
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_remove_roles(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -1547,7 +1547,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
@@ -1566,14 +1566,14 @@ class TestUser(common.DescopeTest):
                     "loginId": "valid-id",
                     "roleNames": ["foo", "bar"],
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_add_sso_apps(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -1583,7 +1583,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
@@ -1602,14 +1602,14 @@ class TestUser(common.DescopeTest):
                     "loginId": "valid-id",
                     "ssoAppIds": ["foo", "bar"],
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_set_sso_apps(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -1619,7 +1619,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
@@ -1638,14 +1638,14 @@ class TestUser(common.DescopeTest):
                     "loginId": "valid-id",
                     "ssoAppIds": ["foo", "bar"],
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_remove_sso_apps(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -1655,7 +1655,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
@@ -1674,14 +1674,14 @@ class TestUser(common.DescopeTest):
                     "loginId": "valid-id",
                     "ssoAppIds": ["foo", "bar"],
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_add_tenant(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -1691,7 +1691,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
@@ -1710,14 +1710,14 @@ class TestUser(common.DescopeTest):
                     "loginId": "valid-id",
                     "tenantId": "tid",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_remove_tenant(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -1727,7 +1727,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
@@ -1746,14 +1746,14 @@ class TestUser(common.DescopeTest):
                     "loginId": "valid-id",
                     "tenantId": "tid",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_set_tenant_roles(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -1764,7 +1764,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
@@ -1786,14 +1786,14 @@ class TestUser(common.DescopeTest):
                     "tenantId": "tid",
                     "roleNames": ["foo", "bar"],
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_add_tenant_roles(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -1804,7 +1804,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
@@ -1826,14 +1826,14 @@ class TestUser(common.DescopeTest):
                     "tenantId": "tid",
                     "roleNames": ["foo", "bar"],
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_remove_tenant_roles(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -1844,7 +1844,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
@@ -1866,14 +1866,14 @@ class TestUser(common.DescopeTest):
                     "tenantId": "tid",
                     "roleNames": ["foo", "bar"],
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_generate_otp_for_test_user(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -1883,7 +1883,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads(
@@ -1912,14 +1912,14 @@ class TestUser(common.DescopeTest):
                         "mfa": False,
                     },
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_user_set_temporary_password(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -1929,7 +1929,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             mock_post.return_value = network_resp
@@ -1949,14 +1949,14 @@ class TestUser(common.DescopeTest):
                     "password": "some-password",
                     "setActive": False,
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_user_set_active_password(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -1966,7 +1966,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             mock_post.return_value = network_resp
@@ -1986,14 +1986,14 @@ class TestUser(common.DescopeTest):
                     "password": "some-password",
                     "setActive": True,
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_user_set_password(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -2003,7 +2003,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             mock_post.return_value = network_resp
@@ -2023,14 +2023,14 @@ class TestUser(common.DescopeTest):
                     "password": "some-password",
                     "setActive": False,
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_user_expire_password(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -2039,7 +2039,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             mock_post.return_value = network_resp
@@ -2056,14 +2056,14 @@ class TestUser(common.DescopeTest):
                 json={
                     "loginId": "login-id",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_user_remove_all_passkeys(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -2072,7 +2072,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             mock_post.return_value = network_resp
@@ -2089,14 +2089,14 @@ class TestUser(common.DescopeTest):
                 json={
                     "loginId": "login-id",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_generate_magic_link_for_test_user(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -2107,7 +2107,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads(
@@ -2137,14 +2137,14 @@ class TestUser(common.DescopeTest):
                         "mfa": False,
                     },
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_generate_enchanted_link_for_test_user(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -2154,7 +2154,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads(
@@ -2184,21 +2184,21 @@ class TestUser(common.DescopeTest):
                         "mfa": False,
                     },
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_generate_embedded_link(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException, self.client.mgmt.user.generate_embedded_link, "login-id"
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"token": "some-token"}""")
@@ -2217,7 +2217,7 @@ class TestUser(common.DescopeTest):
                     "loginId": "login-id",
                     "customClaims": {"k1": "v1"},
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -2225,14 +2225,14 @@ class TestUser(common.DescopeTest):
 
     def test_history(self):
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException, self.client.mgmt.user.history, ["user-id-1", "user-id-2"]
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads(
@@ -2283,7 +2283,7 @@ class TestUser(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 json=["user-id-1", "user-id-2"],
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
