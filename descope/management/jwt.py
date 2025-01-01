@@ -33,7 +33,7 @@ class JWT(AuthBase):
         impersonator_id: str,
         login_id: str,
         validate_consent: bool,
-        custom_claims: dict = None,
+        custom_claims: Optional[dict] = None,
         tenant_id: Optional[str] = None,
     ) -> str:
         """
