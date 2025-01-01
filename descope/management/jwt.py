@@ -1,3 +1,5 @@
+from typing import Optional
+
 from descope._auth_base import AuthBase
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 from descope.management.common import MgmtV1
@@ -27,7 +29,12 @@ class JWT(AuthBase):
         return response.json().get("jwt", "")
 
     def impersonate(
-        self, impersonator_id: str, login_id: str, validate_consent: bool
+        self,
+        impersonator_id: str,
+        login_id: str,
+        validate_consent: bool,
+        custom_claims: Optional[dict] = None,
+        tenant_id: Optional[str] = None,
     ) -> str:
         """
         Impersonate to another user
@@ -36,6 +43,8 @@ class JWT(AuthBase):
         impersonator_id (str): login id / user id of impersonator, must have "impersonation" permission.
         login_id (str): login id of the user whom to which to impersonate to.
         validate_consent (bool): Indicate whether to allow impersonation in any case or only if a consent to this operation was granted.
+        customClaims dict: Custom claims to add to JWT
+        tenant_id (str): tenant id to set on DCT claim.
 
         Return value (str): A JWT of the impersonated user
 
@@ -56,6 +65,8 @@ class JWT(AuthBase):
                 "loginId": login_id,
                 "impersonatorId": impersonator_id,
                 "validateConsent": validate_consent,
+                "cusotmClaims": custom_claims,
+                "selectedTenant": tenant_id,
             },
             pswd=self._auth.management_key,
         )

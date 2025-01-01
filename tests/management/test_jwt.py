@@ -107,6 +107,8 @@ class TestUser(common.DescopeTest):
                     "loginId": "imp2",
                     "impersonatorId": "imp1",
                     "validateConsent": True,
+                    "cusotmClaims": None,
+                    "selectedTenant": None,
                 },
                 allow_redirects=False,
                 verify=True,

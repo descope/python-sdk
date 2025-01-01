@@ -1062,7 +1062,9 @@ The response would be a refresh JWT of the impersonated user
 refresh_jwt = descope_client.mgmt.jwt.impersonate(
     impersonator_id="<Login ID impersonator>",
     login_id="<Login ID of impersonated person>",
-    validate_consent=True
+    validate_consent=True,
+    custom_claims={"key1":"value1"},
+    tenant_id="<One of the tenants the impersonated user belongs to>"
 )
 ```
 
@@ -1126,8 +1128,8 @@ type org
 type folder
   relation parent: folder
   relation owner: user | org#member
-  relation editor: user 
-  relation viewer: user 
+  relation editor: user
+  relation viewer: user
 
   permission can_create: owner | parent.owner
   permission can_edit: editor | can_create
@@ -1136,8 +1138,8 @@ type folder
 type doc
   relation parent: folder
   relation owner: user | org#member
-  relation editor: user 
-  relation viewer: user 
+  relation editor: user
+  relation viewer: user
 
   permission can_create: owner | parent.owner
   permission can_edit: editor | can_create
