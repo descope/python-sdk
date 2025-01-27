@@ -36,11 +36,11 @@ class TestUser(common.DescopeTest):
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
-                AuthException, client.mgmt.jwt.update_jwt, "jwt", {"k1": "v1"}
+                AuthException, client.mgmt.jwt.update_jwt, "jwt", {"k1": "v1"}, 0
             )
 
             self.assertRaises(
-                AuthException, client.mgmt.jwt.update_jwt, "", {"k1": "v1"}
+                AuthException, client.mgmt.jwt.update_jwt, "", {"k1": "v1"}, 0
             )
 
         # Test success flow
@@ -49,7 +49,7 @@ class TestUser(common.DescopeTest):
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
             mock_post.return_value = network_resp
-            resp = client.mgmt.jwt.update_jwt("test", {"k1": "v1"})
+            resp = client.mgmt.jwt.update_jwt("test", {"k1": "v1"}, 40)
             self.assertEqual(resp, "response")
             expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.update_jwt_path}"
             mock_post.assert_called_with(
@@ -58,7 +58,11 @@ class TestUser(common.DescopeTest):
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
-                json={"jwt": "test", "customClaims": {"k1": "v1"}},
+                json={
+                    "jwt": "test",
+                    "customClaims": {"k1": "v1"},
+                    "refreshDuration": 40,
+                },
                 allow_redirects=False,
                 verify=True,
                 params=None,

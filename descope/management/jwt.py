@@ -6,13 +6,16 @@ from descope.management.common import MgmtV1
 
 
 class JWT(AuthBase):
-    def update_jwt(self, jwt: str, custom_claims: dict) -> str:
+    def update_jwt(
+        self, jwt: str, custom_claims: dict, refresh_duration: Optional[int]
+    ) -> str:
         """
         Given a valid JWT, update it with custom claims, and update its authz claims as well
 
         Args:
         token (str): valid jwt.
         custom_claims (dict): Custom claims to add to JWT, system claims will be filtered out
+        refresh_duration (int): duration in seconds for which the new JWT will be valid
 
         Return value (str): the newly updated JWT
 
@@ -23,7 +26,11 @@ class JWT(AuthBase):
             raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "jwt cannot be empty")
         response = self._auth.do_post(
             MgmtV1.update_jwt_path,
-            {"jwt": jwt, "customClaims": custom_claims},
+            {
+                "jwt": jwt,
+                "customClaims": custom_claims,
+                "refreshDuration": refresh_duration,
+            },
             pswd=self._auth.management_key,
         )
         return response.json().get("jwt", "")
