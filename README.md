@@ -1052,6 +1052,30 @@ updated_jwt = descope_client.mgmt.jwt.update_jwt(
 )
 ```
 
+Generate a JWT for a user, simulating a signin request.
+
+```python
+jwt_response = descope_client.mgmt.jwt.sign_in(
+    login_id="dummy"
+)
+```
+
+Generate a JWT for a user, simulating a signup request.
+
+```python
+jwt_response = descope_client.mgmt.jwt.sign_up(
+    login_id="dummy"
+)
+```
+
+Generate a JWT for a user, simulating a signup or in request.
+
+```python
+jwt_response = descope_client.mgmt.jwt.sign_up_or_in(
+    login_id="dummy"
+)
+```
+
 ### Impersonate
 
 You can impersonate to another user

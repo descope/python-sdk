@@ -88,7 +88,14 @@ class JWT(AuthBase):
     def sign_in(
         self, login_id: str, login_options: Optional[MgmtLoginOptions] = None
     ) -> dict:
-        """ """
+        """
+        Generate a JWT for a user, simulating a signin request.
+
+        Args:
+        login_id (str): login id of the user.
+        login_options (MgmtLoginOptions): options for the login request.
+        """
+
         if not login_id:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "login_id cannot be empty"
@@ -122,7 +129,15 @@ class JWT(AuthBase):
         user: Optional[MgmtUserRequest] = None,
         signup_options: Optional[MgmtSignUpOptions] = None,
     ) -> dict:
-        """ """
+        """
+        Generate a JWT for a user, simulating a signup request.
+
+        Args:
+        login_id (str): login id of the user.
+        user (MgmtUserRequest): user details.
+        signup_options (MgmtSignUpOptions): signup options.
+        """
+
         return self._sign_up_internal(
             login_id, MgmtV1.mgmt_sign_up, user, signup_options
         )
@@ -133,7 +148,14 @@ class JWT(AuthBase):
         user: Optional[MgmtUserRequest] = None,
         signup_options: Optional[MgmtSignUpOptions] = None,
     ) -> dict:
-        """ """
+        """
+        Generate a JWT for a user, simulating a signup or in request.
+
+        Args:
+        login_id (str): login id of the user.
+        user (MgmtUserRequest): user details.
+        signup_options (MgmtSignUpOptions): signup options.
+        """
         return self._sign_up_internal(
             login_id, MgmtV1.mgmt_sign_up_or_in, user, signup_options
         )
@@ -145,7 +167,6 @@ class JWT(AuthBase):
         user: Optional[MgmtUserRequest] = None,
         signup_options: Optional[MgmtSignUpOptions] = None,
     ) -> dict:
-        """ """
         if user is None:
             user = MgmtUserRequest()
 
