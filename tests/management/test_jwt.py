@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
 from descope.common import DEFAULT_TIMEOUT_SECONDS
-from descope.management.common import MgmtV1
+from descope.management.common import MgmtLoginOptions, MgmtV1
 
 from .. import common
 
@@ -113,6 +113,150 @@ class TestUser(common.DescopeTest):
                     "validateConsent": True,
                     "cusotmClaims": None,
                     "selectedTenant": None,
+                },
+                allow_redirects=False,
+                verify=True,
+                params=None,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_sign_in(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flows
+        self.assertRaises(AuthException, client.mgmt.jwt.sign_in, "")
+
+        self.assertRaises(
+            AuthException,
+            client.mgmt.jwt.sign_in,
+            "loginId",
+            MgmtLoginOptions(mfa=True),
+        )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
+            mock_post.return_value = network_resp
+            client.mgmt.jwt.sign_in("loginId")
+            expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.mgmt_sign_in}"
+            mock_post.assert_called_with(
+                expected_uri,
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                json={
+                    "loginId": "loginId",
+                    "stepup": False,
+                    "mfa": False,
+                    "revokeOtherSessions": None,
+                    "customClaims": None,
+                    "jwt": None,
+                },
+                allow_redirects=False,
+                verify=True,
+                params=None,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_sign_up(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flows
+        self.assertRaises(AuthException, client.mgmt.jwt.sign_up, "")
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
+            mock_post.return_value = network_resp
+            client.mgmt.jwt.sign_up("loginId")
+            expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.mgmt_sign_up}"
+            mock_post.assert_called_with(
+                expected_uri,
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                json={
+                    "loginId": "loginId",
+                    "user": {
+                        "name": None,
+                        "givenName": None,
+                        "middleName": None,
+                        "familyName": None,
+                        "phone": None,
+                        "email": None,
+                        "emailVerified": None,
+                        "phoneVerified": None,
+                        "ssoAppId": None,
+                    },
+                    "emailVerified": None,
+                    "phoneVerified": None,
+                    "ssoAppId": None,
+                    "customClaims": None,
+                },
+                allow_redirects=False,
+                verify=True,
+                params=None,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_sign_up_or_in(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flows
+        self.assertRaises(AuthException, client.mgmt.jwt.sign_up_or_in, "")
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
+            mock_post.return_value = network_resp
+            client.mgmt.jwt.sign_up_or_in("loginId")
+            expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.mgmt_sign_up_or_in}"
+            mock_post.assert_called_with(
+                expected_uri,
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                json={
+                    "loginId": "loginId",
+                    "user": {
+                        "name": None,
+                        "givenName": None,
+                        "middleName": None,
+                        "familyName": None,
+                        "phone": None,
+                        "email": None,
+                        "emailVerified": None,
+                        "phoneVerified": None,
+                        "ssoAppId": None,
+                    },
+                    "emailVerified": None,
+                    "phoneVerified": None,
+                    "ssoAppId": None,
+                    "customClaims": None,
                 },
                 allow_redirects=False,
                 verify=True,

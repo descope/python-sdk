@@ -79,6 +79,9 @@ class MgmtV1:
     # jwt
     update_jwt_path = "/v1/mgmt/jwt/update"
     impersonate_path = "/v1/mgmt/impersonate"
+    mgmt_sign_in = "/v1/mgmt/auth/signin"
+    mgmt_sign_up = "/v1/mgmt/auth/signup"
+    mgmt_sign_up_or_in = "/v1/mgmt/auth/signup-in"
 
     # permission
     permission_create_path = "/v1/mgmt/permission/create"
@@ -144,6 +147,71 @@ class MgmtV1:
     project_export = "/v1/mgmt/project/export"
     project_import = "/v1/mgmt/project/import"
     project_list_projects = "/v1/mgmt/projects/list"
+
+
+class MgmtSignUpOptions:
+    def __init__(
+        self,
+        custom_claims: Optional[dict] = None,
+    ):
+        self.custom_claims = custom_claims
+
+
+class MgmtLoginOptions:
+    def __init__(
+        self,
+        stepup: bool = False,
+        mfa: bool = False,
+        revoke_other_sessions: Optional[bool] = None,
+        custom_claims: Optional[dict] = None,
+        jwt: Optional[str] = None,
+    ):
+        self.stepup = stepup
+        self.custom_claims = custom_claims
+        self.mfa = mfa
+        self.revoke_other_sessions = revoke_other_sessions
+        self.jwt = jwt
+
+
+def is_jwt_required(lgo: MgmtLoginOptions) -> bool:
+    return lgo is not None and (lgo.stepup or lgo.mfa)
+
+
+class MgmtUserRequest:
+    def __init__(
+        self,
+        name: Optional[str] = None,
+        given_name: Optional[str] = None,
+        middle_name: Optional[str] = None,
+        family_name: Optional[str] = None,
+        phone: Optional[str] = None,
+        email: Optional[str] = None,
+        email_verified: Optional[bool] = None,
+        phone_verified: Optional[bool] = None,
+        sso_app_id: Optional[str] = None,
+    ):
+        self.name = name
+        self.given_name = given_name
+        self.middle_name = middle_name
+        self.family_name = family_name
+        self.phone = phone
+        self.email = email
+        self.email_verified = email_verified
+        self.phone_verified = phone_verified
+        self.sso_app_id = sso_app_id
+
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "givenName": self.given_name,
+            "middleName": self.middle_name,
+            "familyName": self.family_name,
+            "phone": self.phone,
+            "email": self.email,
+            "emailVerified": self.email_verified,
+            "phoneVerified": self.phone_verified,
+            "ssoAppId": self.sso_app_id,
+        }
 
 
 class AssociatedTenant:
