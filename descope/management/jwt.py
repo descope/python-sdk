@@ -2,7 +2,13 @@ from typing import Optional
 
 from descope._auth_base import AuthBase
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
-from descope.management.common import MgmtV1
+from descope.management.common import (
+    MgmtLoginOptions,
+    MgmtSignUpOptions,
+    MgmtUserRequest,
+    MgmtV1,
+    is_jwt_required,
+)
 
 
 class JWT(AuthBase):
@@ -78,3 +84,112 @@ class JWT(AuthBase):
             pswd=self._auth.management_key,
         )
         return response.json().get("jwt", "")
+
+    def sign_in(
+        self, login_id: str, login_options: Optional[MgmtLoginOptions] = None
+    ) -> dict:
+        """
+        Generate a JWT for a user, simulating a signin request.
+
+        Args:
+        login_id (str): login id of the user.
+        login_options (MgmtLoginOptions): options for the login request.
+        """
+
+        if not login_id:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "login_id cannot be empty"
+            )
+
+        if login_options is None:
+            login_options = MgmtLoginOptions()
+
+        if is_jwt_required(login_options) and not login_options.jwt:
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "JWT is required")
+
+        response = self._auth.do_post(
+            MgmtV1.mgmt_sign_in,
+            {
+                "loginId": login_id,
+                "stepup": login_options.stepup,
+                "mfa": login_options.mfa,
+                "revokeOtherSessions": login_options.revoke_other_sessions,
+                "customClaims": login_options.custom_claims,
+                "jwt": login_options.jwt,
+            },
+            pswd=self._auth.management_key,
+        )
+        resp = response.json()
+        jwt_response = self._auth.generate_jwt_response(resp, None, None)
+        return jwt_response
+
+    def sign_up(
+        self,
+        login_id: str,
+        user: Optional[MgmtUserRequest] = None,
+        signup_options: Optional[MgmtSignUpOptions] = None,
+    ) -> dict:
+        """
+        Generate a JWT for a user, simulating a signup request.
+
+        Args:
+        login_id (str): login id of the user.
+        user (MgmtUserRequest): user details.
+        signup_options (MgmtSignUpOptions): signup options.
+        """
+
+        return self._sign_up_internal(
+            login_id, MgmtV1.mgmt_sign_up, user, signup_options
+        )
+
+    def sign_up_or_in(
+        self,
+        login_id: str,
+        user: Optional[MgmtUserRequest] = None,
+        signup_options: Optional[MgmtSignUpOptions] = None,
+    ) -> dict:
+        """
+        Generate a JWT for a user, simulating a signup or in request.
+
+        Args:
+        login_id (str): login id of the user.
+        user (MgmtUserRequest): user details.
+        signup_options (MgmtSignUpOptions): signup options.
+        """
+        return self._sign_up_internal(
+            login_id, MgmtV1.mgmt_sign_up_or_in, user, signup_options
+        )
+
+    def _sign_up_internal(
+        self,
+        login_id: str,
+        endpoint: str,
+        user: Optional[MgmtUserRequest] = None,
+        signup_options: Optional[MgmtSignUpOptions] = None,
+    ) -> dict:
+        if user is None:
+            user = MgmtUserRequest()
+
+        if not login_id:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "login_id cannot be empty"
+            )
+
+        if signup_options is None:
+            signup_options = MgmtSignUpOptions()
+
+        response = self._auth.do_post(
+            endpoint,
+            {
+                "loginId": login_id,
+                "user": user.to_dict(),
+                "emailVerified": user.email_verified,
+                "phoneVerified": user.phone_verified,
+                "ssoAppId": user.sso_app_id,
+                "customClaims": signup_options.custom_claims,
+            },
+            pswd=self._auth.management_key,
+        )
+        resp = response.json()
+        jwt_response = self._auth.generate_jwt_response(resp, None, None)
+        return jwt_response
