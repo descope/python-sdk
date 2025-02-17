@@ -27,8 +27,18 @@ class TestSSO(common.DescopeTest):
 
     def test_compose_start_params(self):
         self.assertEqual(
-            SSO._compose_start_params("tenant1", "http://dummy.com"),
+            SSO._compose_start_params("tenant1", "http://dummy.com", "", ""),
             {"tenant": "tenant1", "redirectURL": "http://dummy.com"},
+        )
+
+        self.assertEqual(
+            SSO._compose_start_params("tenant1", "http://dummy.com", "bla", "blue"),
+            {
+                "tenant": "tenant1",
+                "redirectURL": "http://dummy.com",
+                "prompt": "bla",
+                "ssoId": "blue",
+            },
         )
 
     def test_sso_start(self):
@@ -49,7 +59,7 @@ class TestSSO(common.DescopeTest):
 
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
-            sso.start("tenant1", "http://dummy.com")
+            sso.start("tenant1", "http://dummy.com", sso_id="some-sso-id")
             expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.auth_sso_start_path}"
             mock_post.assert_called_with(
                 expected_uri,
@@ -57,7 +67,11 @@ class TestSSO(common.DescopeTest):
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
                 },
-                params={"tenant": "tenant1", "redirectURL": "http://dummy.com"},
+                params={
+                    "tenant": "tenant1",
+                    "redirectURL": "http://dummy.com",
+                    "ssoId": "some-sso-id",
+                },
                 json={},
                 allow_redirects=False,
                 verify=True,
