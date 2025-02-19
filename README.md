@@ -587,6 +587,8 @@ descope_client.mgmt.user.invite(
         AssociatedTenant("my-tenant-id", ["role-name1"]),
     ],
 	sso_app_ids=["appId1"],
+  # You can override the project's User Invitation Redirect URL with this parameter
+  invite_url="invite.me"
 )
 
 # Batch invite
