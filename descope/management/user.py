@@ -595,6 +595,10 @@ class User(AuthBase):
         sort: Optional[List[Sort]] = None,
         text: Optional[str] = None,
         login_ids: Optional[List[str]] = None,
+        from_created_time: Optional[int] = None,
+        to_created_time: Optional[int] = None,
+        from_modified_time: Optional[int] = None,
+        to_modified_time: Optional[int] = None,
     ) -> dict:
         """
         Search all users.
@@ -614,6 +618,10 @@ class User(AuthBase):
         text (str): Optional string, allows free text search among all user's attributes.
         login_ids (List[str]): Optional list of login ids
         sort (List[Sort]): Optional List[dict], allows to sort by fields.
+        from_created_time (int): Optional int, only include users who were created on or after this time (in Unix epoch seconds)
+        to_created_time (int): Optional int, only include users who were created on or before this time (in Unix epoch seconds)
+        from_modified_time (int): Optional int, only include users whose last modification/update occurred on or after this time (in Unix epoch seconds)
+        to_modified_time (int): Optional int, only include users whose last modification/update occurred on or before this time (in Unix epoch seconds)
 
         Return value (dict):
         Return dict in the format
@@ -667,6 +675,15 @@ class User(AuthBase):
         if sort is not None:
             body["sort"] = sort_to_dict(sort)
 
+        if from_created_time is not None:
+            body["fromCreatedTime"] = from_created_time
+        if to_created_time is not None:
+            body["toCreatedTime"] = to_created_time
+        if from_modified_time is not None:
+            body["fromModifiedTime"] = from_modified_time
+        if to_modified_time is not None:
+            body["toModifiedTime"] = to_modified_time
+
         response = self._auth.do_post(
             MgmtV1.users_search_path,
             body=body,
@@ -688,6 +705,10 @@ class User(AuthBase):
         sort: Optional[List[Sort]] = None,
         text: Optional[str] = None,
         login_ids: Optional[List[str]] = None,
+        from_created_time: Optional[int] = None,
+        to_created_time: Optional[int] = None,
+        from_modified_time: Optional[int] = None,
+        to_modified_time: Optional[int] = None,
     ) -> dict:
         """
         Search all test users.
@@ -705,6 +726,10 @@ class User(AuthBase):
         text (str): Optional string, allows free text search among all user's attributes.
         login_ids (List[str]): Optional list of login ids
         sort (List[Sort]): Optional List[dict], allows to sort by fields.
+        from_created_time (int): Optional int, only include users who were created on or after this time (in Unix epoch seconds)
+        to_created_time (int): Optional int, only include users who were created on or before this time (in Unix epoch seconds)
+        from_modified_time (int): Optional int, only include users whose last modification/update occurred on or after this time (in Unix epoch seconds)
+        to_modified_time (int): Optional int, only include users whose last modification/update occurred on or before this time (in Unix epoch seconds)
 
         Return value (dict):
         Return dict in the format
@@ -757,6 +782,15 @@ class User(AuthBase):
 
         if sort is not None:
             body["sort"] = sort_to_dict(sort)
+
+        if from_created_time is not None:
+            body["fromCreatedTime"] = from_created_time
+        if to_created_time is not None:
+            body["toCreatedTime"] = to_created_time
+        if from_modified_time is not None:
+            body["fromModifiedTime"] = from_modified_time
+        if to_modified_time is not None:
+            body["toModifiedTime"] = to_modified_time
 
         response = self._auth.do_post(
             MgmtV1.test_users_search_path,
