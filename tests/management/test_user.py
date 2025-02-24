@@ -985,6 +985,7 @@ class TestUser(common.DescopeTest):
             users = resp["users"]
             self.assertEqual(len(users), 2)
             self.assertEqual(users[0]["id"], "u1")
+            self.assertEqual(users[1]["id"], "u2")
             # Verify the request body includes our time parameters
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.users_search_path}",
