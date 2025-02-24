@@ -4,10 +4,5 @@
   "flake8.importStrategy": "fromEnvironment",
   "mypy-type-checker.importStrategy": "fromEnvironment",
   "isort.importStrategy": "fromEnvironment",
-  "black-formatter.importStrategy": "fromEnvironment",
-  "workbench.colorCustomizations": {
-    "activityBar.background": "#121D85",
-    "titleBar.activeBackground": "#1A28BA",
-    "titleBar.activeForeground": "#F9FAFE"
-  }
+  "black-formatter.importStrategy": "fromEnvironment"
 }
