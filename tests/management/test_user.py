@@ -1191,7 +1191,7 @@ class TestUser(common.DescopeTest):
             self.assertEqual(users[0]["id"], "u1")
             # Verify the request body includes our time parameters
             mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.users_search_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.test_users_search_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",

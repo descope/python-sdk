@@ -618,10 +618,10 @@ class User(AuthBase):
         text (str): Optional string, allows free text search among all user's attributes.
         login_ids (List[str]): Optional list of login ids
         sort (List[Sort]): Optional List[dict], allows to sort by fields.
-        from_created_time (int): Optional int, only include users who were created on or after this time (in Unix epoch seconds)
-        to_created_time (int): Optional int, only include users who were created on or before this time (in Unix epoch seconds)
-        from_modified_time (int): Optional int, only include users whose last modification/update occurred on or after this time (in Unix epoch seconds)
-        to_modified_time (int): Optional int, only include users whose last modification/update occurred on or before this time (in Unix epoch seconds)
+        from_created_time (int): Optional int, only include users who were created on or after this time (in Unix epoch milliseconds)
+        to_created_time (int): Optional int, only include users who were created on or before this time (in Unix epoch milliseconds)
+        from_modified_time (int): Optional int, only include users whose last modification/update occurred on or after this time (in Unix epoch milliseconds)
+        to_modified_time (int): Optional int, only include users whose last modification/update occurred on or before this time (in Unix epoch milliseconds)
 
         Return value (dict):
         Return dict in the format
@@ -726,10 +726,10 @@ class User(AuthBase):
         text (str): Optional string, allows free text search among all user's attributes.
         login_ids (List[str]): Optional list of login ids
         sort (List[Sort]): Optional List[dict], allows to sort by fields.
-        from_created_time (int): Optional int, only include users who were created on or after this time (in Unix epoch seconds)
-        to_created_time (int): Optional int, only include users who were created on or before this time (in Unix epoch seconds)
-        from_modified_time (int): Optional int, only include users whose last modification/update occurred on or after this time (in Unix epoch seconds)
-        to_modified_time (int): Optional int, only include users whose last modification/update occurred on or before this time (in Unix epoch seconds)
+        from_created_time (int): Optional int, only include users who were created on or after this time (in Unix epoch milliseconds)
+        to_created_time (int): Optional int, only include users who were created on or before this time (in Unix epoch milliseconds)
+        from_modified_time (int): Optional int, only include users whose last modification/update occurred on or after this time (in Unix epoch milliseconds)
+        to_modified_time (int): Optional int, only include users whose last modification/update occurred on or before this time (in Unix epoch milliseconds)
 
         Return value (dict):
         Return dict in the format
