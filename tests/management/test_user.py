@@ -965,6 +965,51 @@ class TestUser(common.DescopeTest):
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
+        
+        # Test success flow with time parameters
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads(
+                """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
+            )
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.search_all(
+                from_created_time=100,
+                to_created_time=200,
+                from_modified_time=300,
+                to_modified_time=400,
+                limit=10,
+                page=0,
+            )
+            users = resp["users"]
+            self.assertEqual(len(users), 2)
+            self.assertEqual(users[0]["id"], "u1")
+            self.assertEqual(users[1]["id"], "u2")
+            # Verify the request body includes our time parameters
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.users_search_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                json={
+                    "tenantIds": [],
+                    "roleNames": [],
+                    "limit": 10,
+                    "page": 0,
+                    "testUsersOnly": False,
+                    "withTestUser": False,
+                    "fromCreatedTime": 100,
+                    "toCreatedTime": 200,
+                    "fromModifiedTime": 300,
+                    "toModifiedTime": 400,
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
 
     def test_search_all_test_users(self):
         # Test failed flows
@@ -1121,6 +1166,48 @@ class TestUser(common.DescopeTest):
                     "statuses": ["invited"],
                     "emails": ["a@b.com"],
                     "phones": ["+111111"],
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test success flow with time parameters
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"users": [{"id": "u1"}]}""")
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.search_all_test_users(
+                from_created_time=100,
+                to_created_time=200,
+                from_modified_time=300,
+                to_modified_time=400,
+                limit=10,
+                page=0,
+            )
+            users = resp["users"]
+            self.assertEqual(len(users), 1)
+            self.assertEqual(users[0]["id"], "u1")
+            # Verify the request body includes our time parameters
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.test_users_search_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                params=None,
+                json={
+                    "tenantIds": [],
+                    "roleNames": [],
+                    "limit": 10,
+                    "page": 0,
+                    "testUsersOnly": True,
+                    "withTestUser": True,
+                    "fromCreatedTime": 100,
+                    "toCreatedTime": 200,
+                    "fromModifiedTime": 300,
+                    "toModifiedTime": 400,
                 },
                 allow_redirects=False,
                 verify=True,
