@@ -1472,6 +1472,28 @@ class User(AuthBase):
         )
         return
 
+    def remove_totp_seed(
+        self,
+        login_id: str,
+    ) -> None:
+        """
+            Removes TOTP seed for the user with the given login ID.
+            Note: The user might not be able to login anymore if they have no other authentication
+            methods or a verified email/phone.
+
+        Args:
+        login_id (str): The login ID of the user to remove totp seed for.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        self._auth.do_post(
+            MgmtV1.user_remove_totp_seed_path,
+            {"loginId": login_id},
+            pswd=self._auth.management_key,
+        )
+        return
+
     def generate_otp_for_test_user(
         self,
         method: DeliveryMethod,
