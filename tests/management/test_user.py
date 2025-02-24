@@ -965,7 +965,7 @@ class TestUser(common.DescopeTest):
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
-        
+
         # Test success flow with time parameters
         with patch("requests.post") as mock_post:
             network_resp = mock.Mock()

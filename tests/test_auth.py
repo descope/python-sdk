@@ -1,3 +1,4 @@
+from http import HTTPStatus
 import json
 import os
 import unittest
@@ -677,6 +678,57 @@ class TestAuth(common.DescopeTest):
                 the_exception.rate_limit_parameters,
                 {API_RATE_LIMIT_RETRY_AFTER_HEADER: 10},
             )
+
+    def test_api_rate_limit_invalid_response_body(self):
+        auth = Auth(self.dummy_project_id, self.public_key_dict)
+
+        # Test do_post empty body
+        with patch("requests.post") as mock_request:
+            mock_request.return_value.ok = False
+            mock_request.return_value.status_code = 429
+            mock_request.return_value.json.return_value = "aaa"
+            with self.assertRaises(RateLimitException) as cm:
+                auth.do_post("http://test.com", {}, None, None)
+            the_exception = cm.exception
+            self.assertEqual(the_exception.status_code, HTTPStatus.TOO_MANY_REQUESTS)
+            self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
+            self.assertEqual(the_exception.error_description, ERROR_TYPE_API_RATE_LIMIT)
+            self.assertEqual(the_exception.error_message, ERROR_TYPE_API_RATE_LIMIT)
+            self.assertEqual(the_exception.rate_limit_parameters, {})
+
+    def test_api_rate_limit_empty_response_body(self):
+        auth = Auth(self.dummy_project_id, self.public_key_dict)
+
+        # Test do_post empty body
+        with patch("requests.post") as mock_request:
+            mock_request.return_value.ok = False
+            mock_request.return_value.status_code = 429
+            mock_request.return_value.json.return_value = ""
+            with self.assertRaises(RateLimitException) as cm:
+                auth.do_post("http://test.com", {}, None, None)
+            the_exception = cm.exception
+            self.assertEqual(the_exception.status_code, HTTPStatus.TOO_MANY_REQUESTS)
+            self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
+            self.assertEqual(the_exception.error_description, ERROR_TYPE_API_RATE_LIMIT)
+            self.assertEqual(the_exception.error_message, ERROR_TYPE_API_RATE_LIMIT)
+            self.assertEqual(the_exception.rate_limit_parameters, {})
+
+    def test_api_rate_limit_none_response_body(self):
+        auth = Auth(self.dummy_project_id, self.public_key_dict)
+
+        # Test do_post empty body
+        with patch("requests.post") as mock_request:
+            mock_request.return_value.ok = False
+            mock_request.return_value.status_code = 429
+            mock_request.return_value.json.return_value = None
+            with self.assertRaises(RateLimitException) as cm:
+                auth.do_post("http://test.com", {}, None, None)
+            the_exception = cm.exception
+            self.assertEqual(the_exception.status_code, HTTPStatus.TOO_MANY_REQUESTS)
+            self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
+            self.assertEqual(the_exception.error_description, ERROR_TYPE_API_RATE_LIMIT)
+            self.assertEqual(the_exception.error_message, ERROR_TYPE_API_RATE_LIMIT)
+            self.assertEqual(the_exception.rate_limit_parameters, {})
 
     def test_raise_from_response(self):
         auth = Auth(self.dummy_project_id, self.public_key_dict)
