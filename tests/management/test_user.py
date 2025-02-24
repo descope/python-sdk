@@ -970,7 +970,9 @@ class TestUser(common.DescopeTest):
         with patch("requests.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
-            network_resp.json.return_value = json.loads("""{"users": [{"id": "u1"}]}""")
+            network_resp.json.return_value = json.loads(
+                """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
+            )
             mock_post.return_value = network_resp
             resp = self.client.mgmt.user.search_all(
                 from_created_time=100,
@@ -981,7 +983,7 @@ class TestUser(common.DescopeTest):
                 page=0,
             )
             users = resp["users"]
-            self.assertEqual(len(users), 1)
+            self.assertEqual(len(users), 2)
             self.assertEqual(users[0]["id"], "u1")
             # Verify the request body includes our time parameters
             mock_post.assert_called_with(
@@ -1199,8 +1201,8 @@ class TestUser(common.DescopeTest):
                     "roleNames": [],
                     "limit": 10,
                     "page": 0,
-                    "testUsersOnly": False,
-                    "withTestUser": False,
+                    "testUsersOnly": True,
+                    "withTestUser": True,
                     "fromCreatedTime": 100,
                     "toCreatedTime": 200,
                     "fromModifiedTime": 300,
