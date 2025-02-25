@@ -69,12 +69,6 @@ class TestUser(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-        # Test success flow without refresh duration
-        with patch("requests.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.ok = True
-            network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
-            mock_post.return_value = network_resp
             resp = client.mgmt.jwt.update_jwt("test", {"k1": "v1"})
             self.assertEqual(resp, "response")
             expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.update_jwt_path}"
