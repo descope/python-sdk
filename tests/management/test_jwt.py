@@ -69,6 +69,7 @@ class TestUser(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+        # Test success flow without refresh duration
         with patch("requests.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
