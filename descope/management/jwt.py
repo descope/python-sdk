@@ -13,7 +13,7 @@ from descope.management.common import (
 
 class JWT(AuthBase):
     def update_jwt(
-        self, jwt: str, custom_claims: dict, refresh_duration: Optional[int]
+        self, jwt: str, custom_claims: dict, refresh_duration: Optional[int] = 0
     ) -> str:
         """
         Given a valid JWT, update it with custom claims, and update its authz claims as well
