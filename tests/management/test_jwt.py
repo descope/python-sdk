@@ -165,7 +165,7 @@ class TestUser(common.DescopeTest):
             network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
             mock_post.return_value = network_resp
             client.mgmt.jwt.sign_in("loginId")
-            expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.mgmt_sign_in}"
+            expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.mgmt_sign_in_path}"
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
@@ -204,7 +204,7 @@ class TestUser(common.DescopeTest):
             network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
             mock_post.return_value = network_resp
             client.mgmt.jwt.sign_up("loginId")
-            expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.mgmt_sign_up}"
+            expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.mgmt_sign_up_path}"
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
@@ -253,7 +253,7 @@ class TestUser(common.DescopeTest):
             network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
             mock_post.return_value = network_resp
             client.mgmt.jwt.sign_up_or_in("loginId")
-            expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.mgmt_sign_up_or_in}"
+            expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.mgmt_sign_up_or_in_path}"
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
@@ -278,6 +278,35 @@ class TestUser(common.DescopeTest):
                     "ssoAppId": None,
                     "customClaims": None,
                 },
+                allow_redirects=False,
+                verify=True,
+                params=None,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_anonymous(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
+            mock_post.return_value = network_resp
+            client.mgmt.jwt.anonymous({"k1": "v1"}, "id")
+            expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.anonymous_path}"
+            mock_post.assert_called_with(
+                expected_uri,
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                },
+                json={"customClaims": {"k1": "v1"}, "selectedTenant": "id"},
                 allow_redirects=False,
                 verify=True,
                 params=None,
