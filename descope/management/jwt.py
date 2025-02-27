@@ -203,7 +203,7 @@ class JWT(AuthBase):
         Generate a JWT for an anonymous user.
 
         Args:
-        customClaims dict: Custom claims to add to JWT
+        custom_claims dict: Custom claims to add to JWT
         tenant_id (str): tenant id to set on DCT claim.
         """
 
