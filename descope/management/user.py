@@ -599,6 +599,7 @@ class User(AuthBase):
         to_created_time: Optional[int] = None,
         from_modified_time: Optional[int] = None,
         to_modified_time: Optional[int] = None,
+        user_ids: Optional[List[str]] = None,
     ) -> dict:
         """
         Search all users.
@@ -622,6 +623,7 @@ class User(AuthBase):
         to_created_time (int): Optional int, only include users who were created on or before this time (in Unix epoch milliseconds)
         from_modified_time (int): Optional int, only include users whose last modification/update occurred on or after this time (in Unix epoch milliseconds)
         to_modified_time (int): Optional int, only include users whose last modification/update occurred on or before this time (in Unix epoch milliseconds)
+        user_ids (List[str]): Optional list of user IDs to filter by
 
         Return value (dict):
         Return dict in the format
@@ -668,6 +670,9 @@ class User(AuthBase):
 
         if login_ids is not None:
             body["loginIds"] = login_ids
+
+        if user_ids is not None:
+            body["userIds"] = user_ids
 
         if text is not None:
             body["text"] = text
