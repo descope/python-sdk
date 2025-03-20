@@ -13,7 +13,7 @@ from descope.management.common import (
 
 class JWT(AuthBase):
     def update_jwt(
-        self, jwt: str, custom_claims: dict, refresh_duration: Optional[int]
+        self, jwt: str, custom_claims: dict, refresh_duration: int = 0
     ) -> str:
         """
         Given a valid JWT, update it with custom claims, and update its authz claims as well
@@ -108,7 +108,7 @@ class JWT(AuthBase):
             raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "JWT is required")
 
         response = self._auth.do_post(
-            MgmtV1.mgmt_sign_in,
+            MgmtV1.mgmt_sign_in_path,
             {
                 "loginId": login_id,
                 "stepup": login_options.stepup,
@@ -139,7 +139,7 @@ class JWT(AuthBase):
         """
 
         return self._sign_up_internal(
-            login_id, MgmtV1.mgmt_sign_up, user, signup_options
+            login_id, MgmtV1.mgmt_sign_up_path, user, signup_options
         )
 
     def sign_up_or_in(
@@ -157,7 +157,7 @@ class JWT(AuthBase):
         signup_options (MgmtSignUpOptions): signup options.
         """
         return self._sign_up_internal(
-            login_id, MgmtV1.mgmt_sign_up_or_in, user, signup_options
+            login_id, MgmtV1.mgmt_sign_up_or_in_path, user, signup_options
         )
 
     def _sign_up_internal(
@@ -192,4 +192,31 @@ class JWT(AuthBase):
         )
         resp = response.json()
         jwt_response = self._auth.generate_jwt_response(resp, None, None)
+        return jwt_response
+
+    def anonymous(
+        self,
+        custom_claims: Optional[dict] = None,
+        tenant_id: Optional[str] = None,
+    ) -> dict:
+        """
+        Generate a JWT for an anonymous user.
+
+        Args:
+        custom_claims dict: Custom claims to add to JWT
+        tenant_id (str): tenant id to set on DCT claim.
+        """
+
+        response = self._auth.do_post(
+            MgmtV1.anonymous_path,
+            {
+                "customClaims": custom_claims,
+                "selectedTenant": tenant_id,
+            },
+            pswd=self._auth.management_key,
+        )
+        resp = response.json()
+        jwt_response = self._auth.generate_jwt_response(resp, None, None)
+        del jwt_response["firstSeen"]
+        del jwt_response["user"]
         return jwt_response

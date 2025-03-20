@@ -282,6 +282,14 @@ refresh_token = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("jwt")
 
 The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)
 
+#### Deleting the TOTP Seed
+
+Pass the loginId to the function to remove the user's TOTP seed.
+
+```python
+response = descope_client.mgmt.user.remove_totp_seed(login_id=login_id)
+```
+
 ### Passwords
 
 The user can also authenticate with a password, though it's recommended to
