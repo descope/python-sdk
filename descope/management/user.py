@@ -326,7 +326,7 @@ class User(AuthBase):
         verified_phone: Optional[bool] = None,
         additional_login_ids: Optional[List[str]] = None,
         sso_app_ids: Optional[List[str]] = None,
-    ):
+    ) -> dict:
         """
         Update an existing user with the given various fields. IMPORTANT: All parameters are used as overrides
         to the existing user. Empty fields will override populated fields. Use carefully.
@@ -348,13 +348,18 @@ class User(AuthBase):
         custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
         sso_app_ids (List[str]): Optional, list of SSO applications IDs to be associated with the user.
 
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the updated user information.
+
         Raise:
         AuthException: raised if update operation fails
         """
         role_names = [] if role_names is None else role_names
         user_tenants = [] if user_tenants is None else user_tenants
 
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.user_update_path,
             User._compose_update_body(
                 login_id,
@@ -377,6 +382,7 @@ class User(AuthBase):
             ),
             pswd=self._auth.management_key,
         )
+        return response.json()
 
     def patch(
         self,
@@ -394,7 +400,7 @@ class User(AuthBase):
         verified_email: Optional[bool] = None,
         verified_phone: Optional[bool] = None,
         sso_app_ids: Optional[List[str]] = None,
-    ):
+    ) -> dict:
         """
         Patches an existing user with the given various fields. Only the given fields will be used to update the user.
 
@@ -414,10 +420,15 @@ class User(AuthBase):
         custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
         sso_app_ids (List[str]): Optional, list of SSO applications IDs to be associated with the user.
 
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the patched user information.
+
         Raise:
         AuthException: raised if patch operation fails
         """
-        self._auth.do_patch(
+        response = self._auth.do_patch(
             MgmtV1.user_patch_path,
             User._compose_patch_body(
                 login_id,
@@ -437,6 +448,7 @@ class User(AuthBase):
             ),
             pswd=self._auth.management_key,
         )
+        return response.json()
 
     def delete(
         self,
