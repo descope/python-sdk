@@ -445,17 +445,20 @@ class TestUser(common.DescopeTest):
 
         # Test success flow
         with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
-                self.client.mgmt.user.update(
-                    "id",
-                    display_name="new-name",
-                    role_names=["domain.com"],
-                    picture="https://test.com",
-                    custom_attributes={"ak": "av"},
-                    sso_app_ids=["app1", "app2"],
-                )
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.update(
+                "id",
+                display_name="new-name",
+                role_names=["domain.com"],
+                picture="https://test.com",
+                custom_attributes={"ak": "av"},
+                sso_app_ids=["app1", "app2"],
             )
+            user = resp["user"]
+            self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_path}",
                 headers={
@@ -482,12 +485,15 @@ class TestUser(common.DescopeTest):
             )
         # Test success flow with verified flags
         with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
-                self.client.mgmt.user.update(
-                    "id", verified_email=True, verified_phone=False
-                )
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.update(
+                "id", verified_email=True, verified_phone=False
             )
+            user = resp["user"]
+            self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_path}",
                 headers={
@@ -528,21 +534,24 @@ class TestUser(common.DescopeTest):
 
         # Test success flow with some params set
         with patch("requests.patch") as mock_patch:
-            mock_patch.return_value.ok = True
-            self.assertIsNone(
-                self.client.mgmt.user.patch(
-                    "id",
-                    display_name="new-name",
-                    email=None,
-                    phone=None,
-                    given_name=None,
-                    role_names=["domain.com"],
-                    user_tenants=None,
-                    picture="https://test.com",
-                    custom_attributes={"ak": "av"},
-                    sso_app_ids=["app1", "app2"],
-                )
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
+            mock_patch.return_value = network_resp
+            resp = self.client.mgmt.user.patch(
+                "id",
+                display_name="new-name",
+                email=None,
+                phone=None,
+                given_name=None,
+                role_names=["domain.com"],
+                user_tenants=None,
+                picture="https://test.com",
+                custom_attributes={"ak": "av"},
+                sso_app_ids=["app1", "app2"],
             )
+            user = resp["user"]
+            self.assertEqual(user["id"], "u1")
             mock_patch.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.user_patch_path}",
                 headers={
@@ -564,25 +573,28 @@ class TestUser(common.DescopeTest):
             )
         # Test success flow with other params
         with patch("requests.patch") as mock_patch:
-            mock_patch.return_value.ok = True
-            self.assertIsNone(
-                self.client.mgmt.user.patch(
-                    "id",
-                    email="a@test.com",
-                    phone="+123456789",
-                    given_name="given",
-                    middle_name="middle",
-                    family_name="family",
-                    role_names=None,
-                    user_tenants=[
-                        AssociatedTenant("tenant1"),
-                        AssociatedTenant("tenant2", ["role1", "role2"]),
-                    ],
-                    custom_attributes=None,
-                    verified_email=True,
-                    verified_phone=False,
-                )
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
+            mock_patch.return_value = network_resp
+            resp = self.client.mgmt.user.patch(
+                "id",
+                email="a@test.com",
+                phone="+123456789",
+                given_name="given",
+                middle_name="middle",
+                family_name="family",
+                role_names=None,
+                user_tenants=[
+                    AssociatedTenant("tenant1"),
+                    AssociatedTenant("tenant2", ["role1", "role2"]),
+                ],
+                custom_attributes=None,
+                verified_email=True,
+                verified_phone=False,
             )
+            user = resp["user"]
+            self.assertEqual(user["id"], "u1")
             mock_patch.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.user_patch_path}",
                 headers={
@@ -965,7 +977,7 @@ class TestUser(common.DescopeTest):
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
-        
+
         # Test success flow with time parameters
         with patch("requests.post") as mock_post:
             network_resp = mock.Mock()
