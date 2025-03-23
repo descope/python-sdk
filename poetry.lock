@@ -1304,13 +1304,13 @@ files = [
 
 [[package]]
 name = "tox"
-version = "4.23.0"
+version = "4.24.1"
 description = "tox is a generic virtualenv management and test command line tool"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "tox-4.23.0-py3-none-any.whl", hash = "sha256:46da40afb660e46238c251280eb910bdaf00b390c7557c8e4bb611f422e9db12"},
-    {file = "tox-4.23.0.tar.gz", hash = "sha256:a6bd7d54231d755348d3c3a7b450b5bf6563833716d1299a1619587a1b77a3bf"},
+    {file = "tox-4.24.1-py3-none-any.whl", hash = "sha256:57ba7df7d199002c6df8c2db9e6484f3de6ca8f42013c083ea2d4d1e5c6bdc75"},
+    {file = "tox-4.24.1.tar.gz", hash = "sha256:083a720adbc6166fff0b7d1df9d154f9d00bfccb9403b8abf6bc0ee435d6a62e"},
 ]
 
 [package.dependencies]
@@ -1318,13 +1318,16 @@ cachetools = ">=5.5"
 chardet = ">=5.2"
 colorama = ">=0.4.6"
 filelock = ">=3.16.1"
-packaging = ">=24.1"
+packaging = ">=24.2"
 platformdirs = ">=4.3.6"
 pluggy = ">=1.5"
 pyproject-api = ">=1.8"
-tomli = {version = ">=2.0.1", markers = "python_version < \"3.11\""}
+tomli = {version = ">=2.1", markers = "python_version < \"3.11\""}
 typing-extensions = {version = ">=4.12.2", markers = "python_version < \"3.11\""}
-virtualenv = ">=20.26.6"
+virtualenv = ">=20.27.1"
+
+[package.extras]
+test = ["devpi-process (>=1.0.2)", "pytest (>=8.3.3)", "pytest-mock (>=3.14)"]
 
 [[package]]
 name = "types-requests"
@@ -1441,4 +1444,4 @@ flask = ["Flask"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8.1,<4.0"
-content-hash = "561ecaaf786fb12476ae53ba9fb70d1ee03c81a3516e12753664d00c3f3afa9d"
+content-hash = "87b6e5d1e628def574cade042ac37a9bb0315b82748fbced445cc172deedf315"
