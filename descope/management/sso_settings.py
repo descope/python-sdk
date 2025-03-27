@@ -122,6 +122,7 @@ class SSOSAMLSettings:
         idp_cert: str,
         attribute_mapping: Optional[AttributeMapping] = None,
         role_mappings: Optional[List[RoleMapping]] = None,
+        default_sso_roles: Optional[List[str]] = None,
         # NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
         sp_acs_url: Optional[str] = None,
         sp_entity_id: Optional[str] = None,
@@ -131,6 +132,7 @@ class SSOSAMLSettings:
         self.idp_cert = idp_cert
         self.attribute_mapping = attribute_mapping
         self.role_mappings = role_mappings
+        self.default_sso_roles = default_sso_roles
         self.sp_acs_url = sp_acs_url
         self.sp_entity_id = sp_entity_id
 
@@ -145,6 +147,7 @@ class SSOSAMLSettingsByMetadata:
         idp_metadata_url: str,
         attribute_mapping: Optional[AttributeMapping] = None,
         role_mappings: Optional[List[RoleMapping]] = None,
+        default_sso_roles: Optional[List[str]] = None,
         # NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
         sp_acs_url: Optional[str] = None,
         sp_entity_id: Optional[str] = None,
@@ -152,6 +155,7 @@ class SSOSAMLSettingsByMetadata:
         self.idp_metadata_url = idp_metadata_url
         self.attribute_mapping = attribute_mapping
         self.role_mappings = role_mappings
+        self.default_sso_roles = default_sso_roles
         self.sp_acs_url = sp_acs_url
         self.sp_entity_id = sp_entity_id
 
@@ -548,6 +552,7 @@ class SSOSettings(AuthBase):
                 "roleMappings": SSOSettings._role_mapping_to_dict(
                     settings.role_mappings
                 ),
+                "defaultSSORoles": settings.default_sso_roles,
             },
             "redirectUrl": redirect_url,
             "domains": domains,
@@ -576,6 +581,7 @@ class SSOSettings(AuthBase):
                 "roleMappings": SSOSettings._role_mapping_to_dict(
                     settings.role_mappings
                 ),
+                "defaultSSORoles": settings.default_sso_roles,
             },
             "redirectUrl": redirect_url,
             "domains": domains,
