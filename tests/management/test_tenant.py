@@ -318,6 +318,7 @@ class TestTenant(common.DescopeTest):
                 names=["name1"],
                 custom_attributes={"k1": "v1"},
                 self_provisioning_domains=["spd1"],
+                enforce_sso=True
             )
             tenants = resp["tenants"]
             self.assertEqual(len(tenants), 2)
@@ -334,6 +335,8 @@ class TestTenant(common.DescopeTest):
                     "tenantNames": ["name1"],
                     "tenantSelfProvisioningDomains": ["spd1"],
                     "customAttributes": {"k1": "v1"},
+                    "enforceSSO": True,
+                    "disabled": None
                 },
                 allow_redirects=False,
                 verify=True,

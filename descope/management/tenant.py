@@ -156,6 +156,8 @@ class Tenant(AuthBase):
         names: Optional[List[str]] = None,
         self_provisioning_domains: Optional[List[str]] = None,
         custom_attributes: Optional[dict] = None,
+        enforce_sso: Optional[bool] = None,
+        disabled: Optional[bool] = None,
     ) -> dict:
         """
         Search all tenants.
@@ -165,6 +167,8 @@ class Tenant(AuthBase):
         names (List[str]): Optional list of names to filter by
         self_provisioning_domains (List[str]): Optional list of self provisioning domains to filter by
         custom_attributes (dict): Optional search for a attribute with a given value
+        enforce_sso (bool): Optional search to filter by enforce_sso
+        disabled (bool): Optional search to filter by disabled
 
         Return value (dict):
         Return dict in the format
@@ -181,6 +185,8 @@ class Tenant(AuthBase):
                 "tenantNames": names,
                 "tenantSelfProvisioningDomains": self_provisioning_domains,
                 "customAttributes": custom_attributes,
+                "enforceSSO": enforce_sso,
+                "disabled": disabled,
             },
             pswd=self._auth.management_key,
         )
