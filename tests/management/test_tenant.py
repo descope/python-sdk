@@ -118,7 +118,7 @@ class TestTenant(common.DescopeTest):
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
-                client.mgmt.tenant.update("t1", "new-name", ["domain.com"])
+                client.mgmt.tenant.update("t1", "new-name", ["domain.com"], enforce_sso=True, disabled=True)
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_update_path}",
@@ -131,6 +131,8 @@ class TestTenant(common.DescopeTest):
                     "name": "new-name",
                     "id": "t1",
                     "selfProvisioningDomains": ["domain.com"],
+                    "enforceSSO": True,
+                    "disabled": True,
                 },
                 allow_redirects=False,
                 verify=True,
