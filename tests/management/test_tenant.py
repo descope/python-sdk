@@ -60,6 +60,8 @@ class TestTenant(common.DescopeTest):
                     "name": "name",
                     "id": "t1",
                     "selfProvisioningDomains": ["domain.com"],
+                    "enforceSSO": None,
+                    "disabled": None,
                 },
                 allow_redirects=False,
                 verify=True,
