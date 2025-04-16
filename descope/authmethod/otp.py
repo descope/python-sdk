@@ -174,6 +174,8 @@ class OTP(AuthBase):
         add_to_login_ids: bool = False,
         on_merge_use_existing: bool = False,
         template_options: dict | None = None,
+        template_id: str | None = None,
+        provider_id: str | None = None,
     ) -> str:
         """
         Update the email address of an end user, after verifying the authenticity of the end user using OTP.
@@ -196,7 +198,8 @@ class OTP(AuthBase):
 
         uri = EndpointsV1.update_user_email_otp_path
         body = OTP._compose_update_user_email_body(
-            login_id, email, add_to_login_ids, on_merge_use_existing, template_options
+            login_id, email, add_to_login_ids, on_merge_use_existing,
+            template_options, template_id, provider_id
         )
         response = self._auth.do_post(uri, body, None, refresh_token)
         return Auth.extract_masked_address(response.json(), DeliveryMethod.EMAIL)
@@ -210,6 +213,8 @@ class OTP(AuthBase):
         add_to_login_ids: bool = False,
         on_merge_use_existing: bool = False,
         template_options: dict | None = None,
+        template_id: str | None = None,
+        provider_id: str | None = None,
     ) -> str:
         """
         Update the phone number of an existing end user, after verifying the authenticity of the end user using OTP.
@@ -236,7 +241,8 @@ class OTP(AuthBase):
 
         uri = OTP._compose_update_phone_url(method)
         body = OTP._compose_update_user_phone_body(
-            login_id, phone, add_to_login_ids, on_merge_use_existing, template_options
+            login_id, phone, add_to_login_ids, on_merge_use_existing,
+            template_options, template_id, provider_id
         )
         response = self._auth.do_post(uri, body, None, refresh_token)
         return Auth.extract_masked_address(response.json(), method)
@@ -299,6 +305,8 @@ class OTP(AuthBase):
         add_to_login_ids: bool,
         on_merge_use_existing: bool,
         template_options: dict | None = None,
+        template_id: str | None = None,
+        provider_id: str | None = None,
     ) -> dict:
         body: dict[str, str | bool | dict] = {
             "loginId": login_id,
@@ -308,6 +316,10 @@ class OTP(AuthBase):
         }
         if template_options is not None:
             body["templateOptions"] = template_options
+        if template_id is not None:
+            body["templateId"] = template_id
+        if provider_id is not None:
+            body["providerId"] = provider_id
 
         return body
 
@@ -318,6 +330,8 @@ class OTP(AuthBase):
         add_to_login_ids: bool,
         on_merge_use_existing: bool,
         template_options: dict | None = None,
+        template_id: str | None = None,
+        provider_id: str | None = None,
     ) -> dict:
         body: dict[str, str | bool | dict] = {
             "loginId": login_id,
@@ -327,5 +341,9 @@ class OTP(AuthBase):
         }
         if template_options is not None:
             body["templateOptions"] = template_options
+        if template_id is not None:
+            body["templateId"] = template_id
+        if provider_id is not None:
+            body["providerId"] = provider_id
 
         return body
