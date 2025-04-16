@@ -2,16 +2,19 @@
 
 [Full report](https://htmlpreview.github.io/?https://github.com/descope/python-sdk/blob/python-coverage-comment-action-data/htmlcov/index.html)
 
-| Name                        |    Stmts |     Miss |   Cover |   Missing |
-|---------------------------- | -------: | -------: | ------: | --------: |
-| descope/auth.py             |      317 |       14 |     96% |16-17, 53-54, 95, 461-463, 574, 606, 617, 661, 696, 710, 737 |
-| descope/common.py           |      108 |        1 |     99% |       179 |
-| descope/descope\_client.py  |      180 |        4 |     98% |68, 99, 183, 280 |
-| descope/management/audit.py |       43 |       11 |     74% |72, 74, 76, 78, 80, 82, 84, 86, 88, 90, 92 |
-| descope/management/user.py  |      329 |        9 |     97% |687, 1020, 1022, 1024, 1756, 1806, 1849, 1851, 1853 |
-|                   **TOTAL** | **2359** |   **39** | **98%** |           |
+| Name                                |    Stmts |     Miss |   Cover |   Missing |
+|------------------------------------ | -------: | -------: | ------: | --------: |
+| descope/auth.py                     |      317 |       14 |     96% |16-17, 53-54, 95, 461-463, 574, 606, 617, 661, 696, 710, 737 |
+| descope/authmethod/enchantedlink.py |       92 |        2 |     98% |  199, 201 |
+| descope/authmethod/magiclink.py     |      103 |        4 |     96% |224, 226, 249, 251 |
+| descope/authmethod/otp.py           |      110 |        4 |     96% |320, 322, 345, 347 |
+| descope/common.py                   |      108 |        1 |     99% |       179 |
+| descope/descope\_client.py          |      180 |        4 |     98% |68, 99, 183, 280 |
+| descope/management/audit.py         |       43 |       11 |     74% |72, 74, 76, 78, 80, 82, 84, 86, 88, 90, 92 |
+| descope/management/user.py          |      329 |        9 |     97% |687, 1020, 1022, 1024, 1756, 1806, 1849, 1851, 1853 |
+|                           **TOTAL** | **2379** |   **49** | **98%** |           |
 
-28 files skipped due to complete coverage.
+25 files skipped due to complete coverage.
 
 
 ## Setup coverage badge
