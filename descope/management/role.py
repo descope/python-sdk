@@ -116,6 +116,7 @@ class Role(AuthBase):
         role_names: Optional[List[str]] = None,
         role_name_like: Optional[str] = None,
         permission_names: Optional[List[str]] = None,
+        include_project_roles: Optional[bool] = None,
     ) -> dict:
         """
         Search roles based on the given filters.
@@ -134,7 +135,7 @@ class Role(AuthBase):
         Raise:
         AuthException: raised if load operation fails
         """
-        body: dict[str, str | List[str]] = {}
+        body: dict[str, str | bool | List[str]] = {}
         if tenant_ids is not None:
             body["tenantIds"] = tenant_ids
         if role_names is not None:
@@ -143,6 +144,8 @@ class Role(AuthBase):
             body["roleNameLike"] = role_name_like
         if permission_names is not None:
             body["permissionNames"] = permission_names
+        if include_project_roles is not None:
+            body["includeProjectRoles"] = include_project_roles
 
         response = self._auth.do_post(
             MgmtV1.role_search_path,
