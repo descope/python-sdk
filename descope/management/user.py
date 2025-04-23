@@ -34,6 +34,7 @@ class UserObj:
         sso_app_ids: Optional[List[str]] = None,
         password: Optional[UserPassword] = None,
         seed: Optional[str] = None,
+        status: Optional[str] = None,
     ):
         self.login_id = login_id
         self.email = email
@@ -52,6 +53,7 @@ class UserObj:
         self.sso_app_ids = sso_app_ids
         self.password = password
         self.seed = seed
+        self.status = status
 
 
 class User(AuthBase):
@@ -1797,6 +1799,8 @@ class User(AuthBase):
                 hashed_password=hashed_password,
                 seed=user.seed,
             )
+            if user.status is not None:
+                uBody["status"] = user.status
             usersBody.append(uBody)
 
         body = {"users": usersBody, "invite": True}

@@ -309,6 +309,7 @@ class TestUser(common.DescopeTest):
                     ),
                 ),
                 seed="aaa",
+                status="invited",
             )
             resp = self.client.mgmt.user.invite_batch(
                 users=[user],
@@ -349,7 +350,8 @@ class TestUser(common.DescopeTest):
                             }
                         },
                         "seed": "aaa",
-                    }
+                        "status": "invited",
+                    },
                 ],
                 "invite": True,
                 "inviteUrl": "invite.me",
