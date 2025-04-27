@@ -57,6 +57,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 json={
                     "jwt": "test",
@@ -77,6 +78,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 json={
                     "jwt": "test",
@@ -126,6 +128,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 json={
                     "loginId": "imp2",
@@ -171,6 +174,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 json={
                     "loginId": "loginId",
@@ -210,6 +214,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 json={
                     "loginId": "loginId",
@@ -259,6 +264,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 json={
                     "loginId": "loginId",
@@ -305,6 +311,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 json={"customClaims": {"k1": "v1"}, "selectedTenant": "id"},
                 allow_redirects=False,

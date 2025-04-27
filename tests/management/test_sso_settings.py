@@ -62,6 +62,7 @@ class TestSSOSettings(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 allow_redirects=False,
                 verify=True,
@@ -110,6 +111,7 @@ class TestSSOSettings(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params={"tenantId": "T2AAAA"},
                 allow_redirects=None,
@@ -176,6 +178,7 @@ class TestSSOSettings(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -277,6 +280,7 @@ class TestSSOSettings(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -361,6 +365,7 @@ class TestSSOSettings(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -428,6 +433,7 @@ class TestSSOSettings(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params={"tenantId": "tenant-id"},
                 allow_redirects=None,
@@ -475,6 +481,7 @@ class TestSSOSettings(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -507,6 +514,7 @@ class TestSSOSettings(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -540,6 +548,7 @@ class TestSSOSettings(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -591,6 +600,7 @@ class TestSSOSettings(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -618,6 +628,7 @@ class TestSSOSettings(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -665,6 +676,7 @@ class TestSSOSettings(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={

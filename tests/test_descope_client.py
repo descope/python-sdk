@@ -128,6 +128,7 @@ class TestDescopeClient(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 allow_redirects=None,
                 verify=True,
@@ -171,6 +172,7 @@ class TestDescopeClient(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 json={"dct": False, "ids": ["a"]},
                 allow_redirects=False,
@@ -224,6 +226,7 @@ class TestDescopeClient(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 allow_redirects=None,
                 verify=True,
@@ -760,6 +763,7 @@ class TestDescopeClient(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:dummy access key",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={"loginOptions": {"customClaims": {"k1": "v1"}}},
@@ -826,6 +830,7 @@ class TestDescopeClient(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{valid_jwt_token}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={

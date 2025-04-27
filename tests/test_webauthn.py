@@ -115,6 +115,7 @@ class TestWebauthN(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={"user": {"loginId": "id1"}, "origin": "https://example.com"},
@@ -164,6 +165,7 @@ class TestWebauthN(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={"transactionId": "t01", "response": "response01"},
@@ -220,6 +222,7 @@ class TestWebauthN(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -274,6 +277,7 @@ class TestWebauthN(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:refresh",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -325,6 +329,7 @@ class TestWebauthN(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={"transactionId": "t01", "response": "response01"},
@@ -374,6 +379,7 @@ class TestWebauthN(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -446,6 +452,7 @@ class TestWebauthN(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:asdasd",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={"loginId": "dummy@dummy.com", "origin": "https://example.com"},
@@ -487,6 +494,7 @@ class TestWebauthN(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={"transactionId": "t01", "response": "response01"},
