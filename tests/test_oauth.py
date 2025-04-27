@@ -74,6 +74,7 @@ class TestOAuth(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params={"provider": "facebook"},
                 json={},
@@ -107,6 +108,7 @@ class TestOAuth(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:refresh",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params={"provider": "facebook"},
                 json={"stepup": True, "customClaims": {"k1": "v1"}, "mfa": False},
@@ -145,6 +147,7 @@ class TestOAuth(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={"code": "c1"},

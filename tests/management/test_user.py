@@ -74,6 +74,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -125,6 +126,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -184,6 +186,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -245,6 +248,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -362,6 +366,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json=expectedUsers,
@@ -405,6 +410,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json=expectedUsers,
@@ -426,6 +432,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json=expectedUsers,
@@ -466,6 +473,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -501,6 +509,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -559,6 +568,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -602,6 +612,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -642,6 +653,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -671,6 +683,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -700,6 +713,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -729,6 +743,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -758,6 +773,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 allow_redirects=False,
                 verify=True,
@@ -788,6 +804,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params={"loginId": "valid-id"},
                 allow_redirects=None,
@@ -819,6 +836,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params={"userId": "user-id"},
                 allow_redirects=None,
@@ -871,6 +889,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -914,6 +933,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -961,6 +981,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1006,6 +1027,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1079,6 +1101,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1121,6 +1144,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1167,6 +1191,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1209,6 +1234,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1260,6 +1286,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params={
                     "loginId": "valid-id",
@@ -1296,6 +1323,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1331,6 +1359,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1367,6 +1396,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1403,6 +1433,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1440,6 +1471,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1477,6 +1509,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1513,6 +1546,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1552,6 +1586,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 json={
                     "loginId": "valid-id",
@@ -1589,6 +1624,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1625,6 +1661,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1661,6 +1698,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1697,6 +1735,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1733,6 +1772,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1769,6 +1809,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1805,6 +1846,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1841,6 +1883,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1880,6 +1923,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1920,6 +1964,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1960,6 +2005,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -2002,6 +2048,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -2043,6 +2090,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -2080,6 +2128,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -2117,6 +2166,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -2152,6 +2202,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -2185,6 +2236,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -2218,6 +2270,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -2259,6 +2312,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -2307,6 +2361,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -2346,6 +2401,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 json={
                     "loginId": "login-id",
@@ -2415,6 +2471,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 json=["user-id-1", "user-id-2"],
                 allow_redirects=False,

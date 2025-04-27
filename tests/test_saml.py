@@ -60,6 +60,7 @@ class TestSAML(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params={"tenant": "tenant1", "redirectURL": "http://dummy.com"},
                 json={},
@@ -105,6 +106,7 @@ class TestSAML(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:refresh",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params={"tenant": "tenant1", "redirectURL": "http://dummy.com"},
                 json={"stepup": True, "customClaims": {"k1": "v1"}, "mfa": False},
@@ -143,6 +145,7 @@ class TestSAML(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={"code": "c1"},

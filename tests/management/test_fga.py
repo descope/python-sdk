@@ -44,6 +44,7 @@ class TestFGA(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={"dsl": "model AuthZ 1.0"},
@@ -86,6 +87,7 @@ class TestFGA(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -138,6 +140,7 @@ class TestFGA(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -190,6 +193,7 @@ class TestFGA(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={

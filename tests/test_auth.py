@@ -648,6 +648,7 @@ class TestAuth(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{'pswd'}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 allow_redirects=False,
                 verify=True,
