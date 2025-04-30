@@ -155,8 +155,10 @@ class MgmtSignUpOptions:
     def __init__(
         self,
         custom_claims: Optional[dict] = None,
+        refresh_duration: Optional[int] = None,
     ):
         self.custom_claims = custom_claims
+        self.refresh_duration = refresh_duration
 
 
 class MgmtLoginOptions:
@@ -167,12 +169,14 @@ class MgmtLoginOptions:
         revoke_other_sessions: Optional[bool] = None,
         custom_claims: Optional[dict] = None,
         jwt: Optional[str] = None,
+        refresh_duration: Optional[int] = None,
     ):
         self.stepup = stepup
         self.custom_claims = custom_claims
         self.mfa = mfa
         self.revoke_other_sessions = revoke_other_sessions
         self.jwt = jwt
+        self.refresh_duration = refresh_duration
 
 
 def is_jwt_required(lgo: MgmtLoginOptions) -> bool:
