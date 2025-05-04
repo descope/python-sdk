@@ -11,8 +11,8 @@ class Tenant(AuthBase):
         id: Optional[str] = None,
         self_provisioning_domains: Optional[List[str]] = None,
         custom_attributes: Optional[dict] = None,
-        enforce_sso: Optional[bool] = None,
-        disabled: Optional[bool] = None,
+        enforce_sso: Optional[bool] = False,
+        disabled: Optional[bool] = False,
     ) -> dict:
         """
         Create a new tenant with the given name. Tenant IDs are provisioned automatically, but can be provided
@@ -54,8 +54,8 @@ class Tenant(AuthBase):
         name: str,
         self_provisioning_domains: Optional[List[str]] = None,
         custom_attributes: Optional[dict] = None,
-        enforce_sso: Optional[bool] = None,
-        disabled: Optional[bool] = None,
+        enforce_sso: Optional[bool] = False,
+        disabled: Optional[bool] = False,
     ):
         """
         Update an existing tenant with the given name and domains. IMPORTANT: All parameters are used as overrides
@@ -192,8 +192,8 @@ class Tenant(AuthBase):
         id: Optional[str],
         self_provisioning_domains: List[str],
         custom_attributes: Optional[dict] = None,
-        enforce_sso: Optional[bool] = None,
-        disabled: Optional[bool] = None,
+        enforce_sso: Optional[bool] = False,
+        disabled: Optional[bool] = False,
     ) -> dict:
         body: dict[str, Any] = {
             "name": name,
