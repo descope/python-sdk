@@ -119,6 +119,7 @@ class TestTOTP(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{refresh_token}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -168,6 +169,7 @@ class TestTOTP(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{valid_jwt_token}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={"loginId": "dummy@dummy.com"},

@@ -560,6 +560,7 @@ class Auth:
 
     def _get_default_headers(self, pswd: str | None = None):
         headers = _default_headers.copy()
+        headers["x-descope-project-id"] = self.project_id
         bearer = self.project_id
         if pswd:
             bearer = f"{self.project_id}:{pswd}"
