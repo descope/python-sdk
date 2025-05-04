@@ -29,12 +29,12 @@ repos:
       - id: pyupgrade
         args: [--py38-plus]
   - repo: https://github.com/pycqa/flake8
-    rev: 7.1.2
+    rev: 7.2.0
     hooks:
       - id: flake8
         additional_dependencies: [Flake8-pyproject]
   - repo: https://github.com/python-poetry/poetry
-    rev: 2.1.1
+    rev: 2.1.2
     hooks:
       - id: poetry-export
         files: pyproject.toml
@@ -43,7 +43,7 @@ repos:
       - id: poetry-check
         files: pyproject.toml
   - repo: https://github.com/pre-commit/pre-commit
-    rev: v4.1.0
+    rev: v4.2.0
     hooks:
       - id: validate_manifest
   - repo: https://github.com/tox-dev/tox-ini-fmt
@@ -52,7 +52,7 @@ repos:
       - id: tox-ini-fmt
         args: ["-p", "type"]
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.24.0
+    rev: v8.24.3
     hooks:
       - id: gitleaks
   - repo: local

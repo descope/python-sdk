@@ -1,8 +1,8 @@
-from http import HTTPStatus
 import json
 import os
 import unittest
 from enum import Enum
+from http import HTTPStatus
 from unittest import mock
 from unittest.mock import patch
 
@@ -456,6 +456,7 @@ class TestAuth(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:dummy access key",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={"loginOptions": {"customClaims": {"k1": "v1"}}},
@@ -647,6 +648,7 @@ class TestAuth(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{'pswd'}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 allow_redirects=False,
                 verify=True,

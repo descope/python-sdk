@@ -57,6 +57,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 json={
                     "jwt": "test",
@@ -77,6 +78,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 json={
                     "jwt": "test",
@@ -126,13 +128,15 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 json={
                     "loginId": "imp2",
                     "impersonatorId": "imp1",
                     "validateConsent": True,
-                    "cusotmClaims": None,
+                    "customClaims": None,
                     "selectedTenant": None,
+                    "refreshDuration": None,
                 },
                 allow_redirects=False,
                 verify=True,
@@ -171,6 +175,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 json={
                     "loginId": "loginId",
@@ -179,6 +184,7 @@ class TestUser(common.DescopeTest):
                     "revokeOtherSessions": None,
                     "customClaims": None,
                     "jwt": None,
+                    "refreshDuration": None,
                 },
                 allow_redirects=False,
                 verify=True,
@@ -210,6 +216,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 json={
                     "loginId": "loginId",
@@ -228,6 +235,7 @@ class TestUser(common.DescopeTest):
                     "phoneVerified": None,
                     "ssoAppId": None,
                     "customClaims": None,
+                    "refreshDuration": None,
                 },
                 allow_redirects=False,
                 verify=True,
@@ -259,6 +267,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 json={
                     "loginId": "loginId",
@@ -277,6 +286,7 @@ class TestUser(common.DescopeTest):
                     "phoneVerified": None,
                     "ssoAppId": None,
                     "customClaims": None,
+                    "refreshDuration": None,
                 },
                 allow_redirects=False,
                 verify=True,
@@ -305,8 +315,12 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
-                json={"customClaims": {"k1": "v1"}, "selectedTenant": "id"},
+                json={
+                    "customClaims": {"k1": "v1"},
+                    "selectedTenant": "id",
+                    "refreshDuration": None},
                 allow_redirects=False,
                 verify=True,
                 params=None,

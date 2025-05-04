@@ -48,6 +48,7 @@ class JWT(AuthBase):
         validate_consent: bool,
         custom_claims: Optional[dict] = None,
         tenant_id: Optional[str] = None,
+        refresh_duration: Optional[int] = None,
     ) -> str:
         """
         Impersonate to another user
@@ -78,8 +79,9 @@ class JWT(AuthBase):
                 "loginId": login_id,
                 "impersonatorId": impersonator_id,
                 "validateConsent": validate_consent,
-                "cusotmClaims": custom_claims,
+                "customClaims": custom_claims,
                 "selectedTenant": tenant_id,
+                "refreshDuration": refresh_duration,
             },
             pswd=self._auth.management_key,
         )
@@ -116,6 +118,7 @@ class JWT(AuthBase):
                 "revokeOtherSessions": login_options.revoke_other_sessions,
                 "customClaims": login_options.custom_claims,
                 "jwt": login_options.jwt,
+                "refreshDuration": login_options.refresh_duration,
             },
             pswd=self._auth.management_key,
         )
@@ -187,6 +190,7 @@ class JWT(AuthBase):
                 "phoneVerified": user.phone_verified,
                 "ssoAppId": user.sso_app_id,
                 "customClaims": signup_options.custom_claims,
+                "refreshDuration": signup_options.refresh_duration,
             },
             pswd=self._auth.management_key,
         )
@@ -198,6 +202,7 @@ class JWT(AuthBase):
         self,
         custom_claims: Optional[dict] = None,
         tenant_id: Optional[str] = None,
+        refresh_duration: Optional[int] = None,
     ) -> dict:
         """
         Generate a JWT for an anonymous user.
@@ -212,6 +217,7 @@ class JWT(AuthBase):
             {
                 "customClaims": custom_claims,
                 "selectedTenant": tenant_id,
+                "refreshDuration": refresh_duration,
             },
             pswd=self._auth.management_key,
         )

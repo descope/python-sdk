@@ -34,7 +34,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Setup python for test ${{ matrix.py }}
-        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
+        uses: actions/setup-python@8d9ed9ac5c53483de85588cdf95a591a75ab9f55 # v5.5.0
         with:
           python-version: ${{ matrix.py }}
       - name: Install tox
@@ -46,7 +46,7 @@ jobs:
         env:
           COVERAGE_FILE: "coverage.${{ matrix.os }}.${{ matrix.py }}"
       - name: Store coverage file
-        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: coverage.${{ matrix.os }}.${{ matrix.py }}
           path: coverage.${{ matrix.os }}.${{ matrix.py }}
@@ -65,7 +65,7 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4.1.9
+      - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
         id: download
         with:
           pattern: coverage.*
@@ -81,7 +81,7 @@ jobs:
           VERBOSE: true
 
       - name: Store Pull Request comment to be posted
-        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: steps.coverage_comment.outputs.COMMENT_FILE_WRITTEN == 'true'
         with:
           name: python-coverage-comment-action
