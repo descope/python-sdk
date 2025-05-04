@@ -61,19 +61,21 @@ class TestTenant(common.DescopeTest):
                     "name": "name",
                     "id": "t1",
                     "selfProvisioningDomains": ["domain.com"],
+                    "enforceSSO": False,
+                    "disabled": False,
                 },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-        # Test success flow with custom attributes
+        # Test success flow with custom attributes, enforce_sso, disabled
         with patch("requests.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"id": "t1"}""")
             mock_post.return_value = network_resp
-            resp = client.mgmt.tenant.create("name", "t1", ["domain.com"], {"k1": "v1"})
+            resp = client.mgmt.tenant.create("name", "t1", ["domain.com"], {"k1": "v1"}, enforce_sso=True, disabled=True)
             self.assertEqual(resp["id"], "t1")
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_create_path}",
@@ -88,6 +90,8 @@ class TestTenant(common.DescopeTest):
                     "id": "t1",
                     "selfProvisioningDomains": ["domain.com"],
                     "customAttributes": {"k1": "v1"},
+                    "enforceSSO": True,
+                    "disabled": True,
                 },
                 allow_redirects=False,
                 verify=True,
@@ -116,7 +120,7 @@ class TestTenant(common.DescopeTest):
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
-                client.mgmt.tenant.update("t1", "new-name", ["domain.com"])
+                client.mgmt.tenant.update("t1", "new-name", ["domain.com"], enforce_sso=True, disabled=True)
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_update_path}",
@@ -130,18 +134,20 @@ class TestTenant(common.DescopeTest):
                     "name": "new-name",
                     "id": "t1",
                     "selfProvisioningDomains": ["domain.com"],
+                    "enforceSSO": True,
+                    "disabled": True,
                 },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-        # Test success flow with custom attributes
+        # Test success flow with custom attributes, enforce_sso, disabled
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.tenant.update(
-                    "t1", "new-name", ["domain.com"], {"k1": "v1"}
+                    "t1", "new-name", ["domain.com"], {"k1": "v1"}, enforce_sso=True, disabled=True
                 )
             )
             mock_post.assert_called_with(
@@ -157,6 +163,8 @@ class TestTenant(common.DescopeTest):
                     "id": "t1",
                     "selfProvisioningDomains": ["domain.com"],
                     "customAttributes": {"k1": "v1"},
+                     "enforceSSO": True,
+                    "disabled": True,
                 },
                 allow_redirects=False,
                 verify=True,
