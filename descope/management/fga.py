@@ -138,3 +138,30 @@ class FGA(AuthBase):
                 response.json()["tuples"],
             )
         )
+
+    def load_resources_details(self, resource_identifiers: List[dict]) -> List[dict]:
+        """
+        Load details for the given resource identifiers.
+        Args:
+            resource_identifiers (List[dict]): list of dicts each containing 'resourceId' and 'resourceType'.
+        Returns:
+            List[dict]: list of resources details as returned by the server.
+        """
+        response = self._auth.do_post(
+            MgmtV1.fga_resources_load,
+            {"resourceIdentifiers": resource_identifiers},
+            pswd=self._auth.management_key,
+        )
+        return response.json().get("resourcesDetails", [])
+
+    def save_resources_details(self, resources_details: List[dict]) -> None:
+        """
+        Save details for the given resources.
+        Args:
+            resources_details (List[dict]): list of dicts each containing 'resourceId' and 'resourceType' plus optionally containing metadata fields such as 'displayName'.
+        """
+        self._auth.do_post(
+            MgmtV1.fga_resources_save,
+            {"resourcesDetails": resources_details},
+            pswd=self._auth.management_key,
+        )
