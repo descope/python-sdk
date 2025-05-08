@@ -141,6 +141,8 @@ class MgmtV1:
     fga_create_relations = "/v1/mgmt/fga/relations"
     fga_delete_relations = "/v1/mgmt/fga/relations/delete"
     fga_check = "/v1/mgmt/fga/check"
+    fga_resources_load = "/v1/mgmt/fga/resources/load"
+    fga_resources_save = "/v1/mgmt/fga/resources/save"
 
     # Project
     project_update_name = "/v1/mgmt/project/update/name"
