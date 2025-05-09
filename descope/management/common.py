@@ -80,6 +80,7 @@ class MgmtV1:
     # jwt
     update_jwt_path = "/v1/mgmt/jwt/update"
     impersonate_path = "/v1/mgmt/impersonate"
+    stop_impersonation_path = "/v1/mgmt/stop/impersonation"
     mgmt_sign_in_path = "/v1/mgmt/auth/signin"
     mgmt_sign_up_path = "/v1/mgmt/auth/signup"
     mgmt_sign_up_or_in_path = "/v1/mgmt/auth/signup-in"
