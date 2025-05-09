@@ -59,6 +59,7 @@ class JWT(AuthBase):
         validate_consent (bool): Indicate whether to allow impersonation in any case or only if a consent to this operation was granted.
         customClaims dict: Custom claims to add to JWT
         tenant_id (str): tenant id to set on DCT claim.
+        refresh_duration (int): duration in seconds for which the new JWT will be valid
 
         Return value (str): A JWT of the impersonated user
 
@@ -79,6 +80,43 @@ class JWT(AuthBase):
                 "loginId": login_id,
                 "impersonatorId": impersonator_id,
                 "validateConsent": validate_consent,
+                "customClaims": custom_claims,
+                "selectedTenant": tenant_id,
+                "refreshDuration": refresh_duration,
+            },
+            pswd=self._auth.management_key,
+        )
+        return response.json().get("jwt", "")
+    
+    def stop_impersonation(
+        self,
+        jwt: str,
+        custom_claims: Optional[dict] = None,
+        tenant_id: Optional[str] = None,
+        refresh_duration: Optional[int] = None,
+    ) -> str:
+        """
+        Stop impersonation and return to the original user
+        Args:
+        jwt (str): The impersonation jwt to stop.
+        customClaims dict: Custom claims to add to JWT
+        tenant_id (str): tenant id to set on DCT claim.
+        refresh_duration (int): duration in seconds for which the new JWT will be valid
+
+        Return value (str): A JWT of the actor
+
+        Raise:
+        AuthException: raised if update failed
+        """
+        if not jwt or jwt == "":
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "jwt cannot be empty"
+            )
+
+        response = self._auth.do_post(
+            MgmtV1.impersonate_path,
+            {
+                "jwt": jwt,
                 "customClaims": custom_claims,
                 "selectedTenant": tenant_id,
                 "refreshDuration": refresh_duration,

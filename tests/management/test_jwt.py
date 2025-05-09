@@ -144,6 +144,50 @@ class TestUser(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+    def test_stop_impersonation(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException, client.mgmt.jwt.stop_impersonation, "",
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
+            mock_post.return_value = network_resp
+            resp = client.mgmt.jwt.stop_impersonation("jwtstr")
+            self.assertEqual(resp, "response")
+            expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.impersonate_path}"
+            mock_post.assert_called_with(
+                expected_uri,
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                json={
+                    "jwt": "jwtstr",
+                    "customClaims": None,
+                    "selectedTenant": None,
+                    "refreshDuration": None,
+                },
+                allow_redirects=False,
+                verify=True,
+                params=None,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+
     def test_sign_in(self):
         client = DescopeClient(
             self.dummy_project_id,
