@@ -167,7 +167,7 @@ class TestUser(common.DescopeTest):
             mock_post.return_value = network_resp
             resp = client.mgmt.jwt.stop_impersonation("jwtstr")
             self.assertEqual(resp, "response")
-            expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.impersonate_path}"
+            expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.stop_impersonation_path}"
             mock_post.assert_called_with(
                 expected_uri,
                 headers={

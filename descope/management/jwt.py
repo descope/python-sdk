@@ -114,7 +114,7 @@ class JWT(AuthBase):
             )
 
         response = self._auth.do_post(
-            MgmtV1.impersonate_path,
+            MgmtV1.stop_impersonation_path,
             {
                 "jwt": jwt,
                 "customClaims": custom_claims,
