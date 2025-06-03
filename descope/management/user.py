@@ -56,6 +56,24 @@ class UserObj:
         self.status = status
 
 
+class CreateUserObj:
+    def __init__(
+        self,
+        email: Optional[str] = None,
+        phone: Optional[str] = None,
+        name: Optional[str] = None,
+        given_name: Optional[str] = None,
+        middle_name: Optional[str] = None,
+        family_name: Optional[str] = None,
+    ):
+        self.email = email
+        self.phone = phone
+        self.name = name
+        self.given_name = given_name
+        self.middle_name = middle_name
+        self.family_name = family_name
+
+
 class User(AuthBase):
     def create(
         self,
@@ -1655,7 +1673,7 @@ class User(AuthBase):
         return response.json()
 
     def generate_embedded_link(
-        self, login_id: str, custom_claims: Optional[dict] = None
+        self, login_id: str, custom_claims: Optional[dict] = None, timeout: int = 0
     ) -> str:
         """
         Generate Embedded Link for the given user login ID.
@@ -1673,7 +1691,44 @@ class User(AuthBase):
         """
         response = self._auth.do_post(
             MgmtV1.user_generate_embedded_link_path,
-            {"loginId": login_id, "customClaims": custom_claims},
+            {"loginId": login_id, "customClaims": custom_claims, "timeout": timeout},
+            pswd=self._auth.management_key,
+        )
+        return response.json()["token"]
+
+    def generate_sign_up_embedded_link(
+        self, login_id: str, user: Optional[CreateUserObj] = None,
+        email_verified: bool = False, phone_verified: bool = False,
+        login_options: Optional[LoginOptions] = None, timeout: int = 0
+    ) -> str:
+        """
+        Generate sign up Embedded Link for the given user login ID.
+        The return value is a token that can be verified via magic link, or using flows
+
+        Args:
+        login_id (str): The login ID of the user to authenticate with.
+        user (CreateUserObj): Optional user object to create the user with
+        email_verified (bool): Optional, set to true if the email is verified
+        phone_verified (bool): Optional, set to true if the phone is verified
+        login_options (LoginOptions): Optional login options to customize the link
+        timeout (int): Optional, the timeout in seconds for the link to be valid
+
+        Return value (str):
+        Return the token to be used in verification process
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.user_generate_sign_up_embedded_link_path,
+            {
+                "loginId": login_id,
+                "user": user.__dict__ if user else {},
+                "loginOptions": login_options.__dict__ if login_options else {},
+                "emailVerified": email_verified,
+                "phoneVerified": phone_verified,
+                "timeout": timeout
+            },
             pswd=self._auth.management_key,
         )
         return response.json()["token"]

@@ -1113,7 +1113,7 @@ Embedded links can be created to directly receive a verifiable token without sen
 This token can then be verified using the magic link 'verify' function, either directly or through a flow.
 
 ```python
-token = descope_client.mgmt.user.generate_embedded_link("desmond@descope.com", {"key1":"value1"})
+token = descope_client.mgmt.user.generate_embedded_link("desmond@descope.com", {"key1":"value1"}, 120)
 ```
 
 ### Audit
