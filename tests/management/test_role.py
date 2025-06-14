@@ -44,7 +44,7 @@ class TestRole(common.DescopeTest):
         # Test success flow
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
-            self.assertIsNone(client.mgmt.role.create("R1", "Something", ["P1"], "t1"))
+            self.assertIsNone(client.mgmt.role.create("R1", "Something", ["P1"], "t1", True))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.role_create_path}",
                 headers={
@@ -58,6 +58,7 @@ class TestRole(common.DescopeTest):
                     "description": "Something",
                     "permissionNames": ["P1"],
                     "tenantId": "t1",
+                    "default": True,
                 },
                 allow_redirects=False,
                 verify=True,
@@ -92,6 +93,7 @@ class TestRole(common.DescopeTest):
                     "new-description",
                     ["P1", "P2"],
                     "t1",
+                    True,
                 )
             )
             mock_post.assert_called_with(
@@ -108,6 +110,7 @@ class TestRole(common.DescopeTest):
                     "description": "new-description",
                     "permissionNames": ["P1", "P2"],
                     "tenantId": "t1",
+                    "default": True,
                 },
                 allow_redirects=False,
                 verify=True,

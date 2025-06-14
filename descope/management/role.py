@@ -11,6 +11,7 @@ class Role(AuthBase):
         description: Optional[str] = None,
         permission_names: Optional[List[str]] = None,
         tenant_id: Optional[str] = None,
+        default: Optional[bool] = None,
     ):
         """
         Create a new role.
@@ -19,6 +20,8 @@ class Role(AuthBase):
         name (str): role name.
         description (str): Optional description to briefly explain what this role allows.
         permission_names (List[str]): Optional list of names of permissions this role grants.
+        tenant_id (str): Optional tenant ID to create the role in.
+        default (bool): Optional marks this role as default role.
 
         Raise:
         AuthException: raised if creation operation fails
@@ -32,6 +35,7 @@ class Role(AuthBase):
                 "description": description,
                 "permissionNames": permission_names,
                 "tenantId": tenant_id,
+                "default": default,
             },
             pswd=self._auth.management_key,
         )
@@ -43,6 +47,7 @@ class Role(AuthBase):
         description: Optional[str] = None,
         permission_names: Optional[List[str]] = None,
         tenant_id: Optional[str] = None,
+        default: Optional[bool] = None,
     ):
         """
         Update an existing role with the given various fields. IMPORTANT: All parameters are used as overrides
@@ -53,6 +58,8 @@ class Role(AuthBase):
         new_name (str): role updated name.
         description (str): Optional description to briefly explain what this role allows.
         permission_names (List[str]): Optional list of names of permissions this role grants.
+        tenant_id (str): Optional tenant ID to update the role in.
+        default (bool): Optional marks this role as default role.
 
         Raise:
         AuthException: raised if update operation fails
@@ -66,6 +73,7 @@ class Role(AuthBase):
                 "description": description,
                 "permissionNames": permission_names,
                 "tenantId": tenant_id,
+                "default": default,
             },
             pswd=self._auth.management_key,
         )
