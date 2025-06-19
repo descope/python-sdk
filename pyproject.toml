@@ -62,7 +62,7 @@ black = [
 ]
 
 [tool.poetry.group.types.dependencies]
-mypy = "1.11.2"
+mypy = "1.16.0"
 types-requests = "2.32.0.20240914"
 types-setuptools = "75.1.0.20240917"
 
