@@ -70,7 +70,7 @@ These sections show how to use the SDK to perform permission and user management
 10. [Impersonate](#impersonate)
 11. [Embedded links](#embedded-links)
 12. [Audit](#audit)
-13. [Manage ReBAC Authz](#manage-rebac-authz)
+13. [Manage FGA (Fine-grained Authorization)](#manage-fga-fine-grained-authorization)
 14. [Manage Project](#manage-project)
 15. [Manage SSO Applications](#manage-sso-applications)
 
@@ -281,6 +281,14 @@ refresh_token = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("jwt")
 ```
 
 The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)
+
+#### Deleting the TOTP Seed
+
+Pass the loginId to the function to remove the user's TOTP seed.
+
+```python
+response = descope_client.mgmt.user.remove_totp_seed(login_id=login_id)
+```
 
 ### Passwords
 
@@ -586,7 +594,9 @@ descope_client.mgmt.user.invite(
     user_tenants=[
         AssociatedTenant("my-tenant-id", ["role-name1"]),
     ],
-	sso_app_ids=["appId1"],
+    sso_app_ids=["appId1"],
+# You can override the project's User Invitation Redirect URL with this parameter
+    invite_url="invite.me"
 )
 
 # Batch invite
@@ -678,7 +688,7 @@ descope_client.mgmt.user.logout_user("<login-id>")
 descope_client.mgmt.user.logout_user_by_user_id("<user-id>")
 
 # Search all users, optionally according to tenant and/or role filter
-# results can be paginated using the limit and page parameters
+# results can be paginated using the limit and page parameters, as well as by time with the from_created_time, to_created_time, from_modified_time, and to_modified_time
 users_resp = descope_client.mgmt.user.search_all(tenant_ids=["my-tenant-id"])
 users = users_resp["users"]
     for user in users:
@@ -1052,6 +1062,30 @@ updated_jwt = descope_client.mgmt.jwt.update_jwt(
 )
 ```
 
+Generate a JWT for a user, simulating a signin request.
+
+```python
+jwt_response = descope_client.mgmt.jwt.sign_in(
+    login_id="dummy"
+)
+```
+
+Generate a JWT for a user, simulating a signup request.
+
+```python
+jwt_response = descope_client.mgmt.jwt.sign_up(
+    login_id="dummy"
+)
+```
+
+Generate a JWT for a user, simulating a signup or in request.
+
+```python
+jwt_response = descope_client.mgmt.jwt.sign_up_or_in(
+    login_id="dummy"
+)
+```
+
 ### Impersonate
 
 You can impersonate to another user
@@ -1062,7 +1096,9 @@ The response would be a refresh JWT of the impersonated user
 refresh_jwt = descope_client.mgmt.jwt.impersonate(
     impersonator_id="<Login ID impersonator>",
     login_id="<Login ID of impersonated person>",
-    validate_consent=True
+    validate_consent=True,
+    custom_claims={"key1":"value1"},
+    tenant_id="<One of the tenants the impersonated user belongs to>"
 )
 ```
 
@@ -1077,7 +1113,7 @@ Embedded links can be created to directly receive a verifiable token without sen
 This token can then be verified using the magic link 'verify' function, either directly or through a flow.
 
 ```python
-token = descope_client.mgmt.user.generate_embedded_link("desmond@descope.com", {"key1":"value1"})
+token = descope_client.mgmt.user.generate_embedded_link("desmond@descope.com", {"key1":"value1"}, 120)
 ```
 
 ### Audit
@@ -1107,183 +1143,75 @@ await descopeClient.management.audit.create_event(
 )
 ```
 
-### Manage ReBAC Authz
+### Manage FGA (Fine-grained Authorization)
 
 Descope supports full relation based access control (ReBAC) using a zanzibar like schema and operations.
-A schema is comprized of namespaces (entities like documents, folders, orgs, etc.) and each namespace has relation definitions to define relations.
-Each relation definition can be simple (either you have it or not) or complex (union of nodes).
+A schema is comprized of types (entities like documents, folders, orgs, etc.) and each type has relation definitions and permission to define relations to other types.
 
 A simple example for a file system like schema would be:
 
 ```yaml
-# Example schema for the authz tests
-name: Files
-namespaces:
-  - name: org
-    relationDefinitions:
-      - name: parent
-      - name: member
-        complexDefinition:
-          nType: union
-          children:
-            - nType: child
-              expression:
-                neType: self
-            - nType: child
-              expression:
-                neType: relationLeft
-                relationDefinition: parent
-                relationDefinitionNamespace: org
-                targetRelationDefinition: member
-                targetRelationDefinitionNamespace: org
-  - name: folder
-    relationDefinitions:
-      - name: parent
-      - name: owner
-        complexDefinition:
-          nType: union
-          children:
-            - nType: child
-              expression:
-                neType: self
-            - nType: child
-              expression:
-                neType: relationRight
-                relationDefinition: parent
-                relationDefinitionNamespace: folder
-                targetRelationDefinition: owner
-                targetRelationDefinitionNamespace: folder
-      - name: editor
-        complexDefinition:
-          nType: union
-          children:
-            - nType: child
-              expression:
-                neType: self
-            - nType: child
-              expression:
-                neType: relationRight
-                relationDefinition: parent
-                relationDefinitionNamespace: folder
-                targetRelationDefinition: editor
-                targetRelationDefinitionNamespace: folder
-            - nType: child
-              expression:
-                neType: targetSet
-                targetRelationDefinition: owner
-                targetRelationDefinitionNamespace: folder
-      - name: viewer
-        complexDefinition:
-          nType: union
-          children:
-            - nType: child
-              expression:
-                neType: self
-            - nType: child
-              expression:
-                neType: relationRight
-                relationDefinition: parent
-                relationDefinitionNamespace: folder
-                targetRelationDefinition: viewer
-                targetRelationDefinitionNamespace: folder
-            - nType: child
-              expression:
-                neType: targetSet
-                targetRelationDefinition: editor
-                targetRelationDefinitionNamespace: folder
-  - name: doc
-    relationDefinitions:
-      - name: parent
-      - name: owner
-        complexDefinition:
-          nType: union
-          children:
-            - nType: child
-              expression:
-                neType: self
-            - nType: child
-              expression:
-                neType: relationRight
-                relationDefinition: parent
-                relationDefinitionNamespace: doc
-                targetRelationDefinition: owner
-                targetRelationDefinitionNamespace: folder
-      - name: editor
-        complexDefinition:
-          nType: union
-          children:
-            - nType: child
-              expression:
-                neType: self
-            - nType: child
-              expression:
-                neType: relationRight
-                relationDefinition: parent
-                relationDefinitionNamespace: doc
-                targetRelationDefinition: editor
-                targetRelationDefinitionNamespace: folder
-            - nType: child
-              expression:
-                neType: targetSet
-                targetRelationDefinition: owner
-                targetRelationDefinitionNamespace: doc
-      - name: viewer
-        complexDefinition:
-          nType: union
-          children:
-            - nType: child
-              expression:
-                neType: self
-            - nType: child
-              expression:
-                neType: relationRight
-                relationDefinition: parent
-                relationDefinitionNamespace: doc
-                targetRelationDefinition: viewer
-                targetRelationDefinitionNamespace: folder
-            - nType: child
-              expression:
-                neType: targetSet
-                targetRelationDefinition: editor
-                targetRelationDefinitionNamespace: doc
-```
+model AuthZ 1.0
+
+type user
+
+type org
+  relation member: user
+  relation parent: org
+
+type folder
+  relation parent: folder
+  relation owner: user | org#member
+  relation editor: user
+  relation viewer: user
+
+  permission can_create: owner | parent.owner
+  permission can_edit: editor | can_create
+  permission can_view: viewer | can_edit
+
+type doc
+  relation parent: folder
+  relation owner: user | org#member
+  relation editor: user
+  relation viewer: user
+
+  permission can_create: owner | parent.owner
+  permission can_edit: editor | can_create
+  permission can_view: viewer | can_edit
+  ```
 
 Descope SDK allows you to fully manage the schema and relations as well as perform simple (and not so simple) checks regarding the existence of relations.
 
 ```python
-# Load the existing schema
-schema = descope_client.mgmt.authz.load_schema()
-
-# Save schema and make sure to remove all namespaces not listed
-descope_client.mgmt.authz.save_schema(schema, True)
+# Save schema (where schema is an str as defined above)
+descope_client.mgmt.fga.save_schema(schema)
 
 # Create a relation between a resource and user
-descope_client.mgmt.authz.create_relations(
+descope_client.mgmt.fga.create_relations(
     [
         {
             "resource": "some-doc",
-            "relationDefinition": "owner",
-            "namespace": "doc",
+            "resourceType": "doc",
+            "relation": "owner",
             "target": "u1",
+            "targetType": "user",
         }
     ]
 )
 
-# Check if target has the relevant relation
-# The answer should be true because an owner is also a viewer
-relations = descope_client.mgmt.authz.has_relations(
+# Check if target has a relevant relation
+# The answer should be true because an owner can also view
+relations = descope_client.mgmt.fga.check(
     [
         {
             "resource": "some-doc",
-            "relationDefinition": "viewer",
-            "namespace": "doc",
+            "resourceType": "doc",
+            "relation": "owner",
             "target": "u1",
+            "targetType": "user",
         }
     ]
 )
-
-# Get list of targets and resources changed since the given date.
-res = descope_client.mgmt.authz.get_modified()
 ```
 
 ### Manage Project
@@ -1392,6 +1320,13 @@ descope_client.mgmt.user.create_test_user(
         AssociatedTenant("my-tenant-id", ["role-name1"]),
     ],
 )
+
+# Search all test users, optionally according to tenant and/or role filter
+# results can be paginated using the limit and page parameters
+users_resp = descope_client.mgmt.user.search_all_test_users()
+users = users_resp["users"]
+    for user in users:
+        # Do something
 
 # Now test user got created, and this user will be available until you delete it,
 # you can use any management operation for test user CRUD.

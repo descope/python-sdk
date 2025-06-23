@@ -112,6 +112,7 @@ class TestEnchantedLink(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -140,6 +141,7 @@ class TestEnchantedLink(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{refresh_token}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -162,7 +164,12 @@ class TestEnchantedLink(common.DescopeTest):
             enchantedlink.sign_in(
                 "dummy@dummy.com",
                 "http://test.me",
-                LoginOptions(stepup=True, template_options={"blue": "bla"}),
+                LoginOptions(
+                    stepup=True,
+                    template_options={"blue": "bla"},
+                    template_id="foo",
+                    revoke_other_sessions=True,
+                ),
                 refresh_token=refresh_token,
             )
             mock_post.assert_called_with(
@@ -170,6 +177,7 @@ class TestEnchantedLink(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{refresh_token}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -179,6 +187,8 @@ class TestEnchantedLink(common.DescopeTest):
                         "stepup": True,
                         "customClaims": None,
                         "templateOptions": {"blue": "bla"},
+                        "templateId": "foo",
+                        "revokeOtherSessions": True,
                         "mfa": False,
                     },
                 },
@@ -202,6 +212,7 @@ class TestEnchantedLink(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:refresh",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -246,6 +257,7 @@ class TestEnchantedLink(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -275,6 +287,7 @@ class TestEnchantedLink(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -298,13 +311,18 @@ class TestEnchantedLink(common.DescopeTest):
                 "dummy@dummy.com",
                 "http://test.me",
                 None,
-                SignUpOptions(template_options={"bla": "blue"}),
+                SignUpOptions(
+                    template_options={"bla": "blue"},
+                    template_id="foo",
+                    revoke_other_sessions=True,
+                ),
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_enchantedlink_path}/email",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -312,7 +330,11 @@ class TestEnchantedLink(common.DescopeTest):
                     "URI": "http://test.me",
                     "user": {"email": "dummy@dummy.com"},
                     "email": "dummy@dummy.com",
-                    "loginOptions": {"templateOptions": {"bla": "blue"}},
+                    "loginOptions": {
+                        "templateOptions": {"bla": "blue"},
+                        "templateId": "foo",
+                        "revokeOtherSessions": True,
+                    },
                 },
                 follow_redirects=False,
                 verify=True,
@@ -337,6 +359,7 @@ class TestEnchantedLink(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -366,6 +389,7 @@ class TestEnchantedLink(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -449,6 +473,7 @@ class TestEnchantedLink(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:refresh_token1",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 json={
                     "loginId": "id1",
@@ -481,6 +506,7 @@ class TestEnchantedLink(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:refresh_token1",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 json={
                     "loginId": "id1",

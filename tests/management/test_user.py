@@ -74,6 +74,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -125,6 +126,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -180,10 +182,11 @@ class TestUser(common.DescopeTest):
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_create_path}",
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.test_user_create_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -236,6 +239,7 @@ class TestUser(common.DescopeTest):
                 invite_url="invite.me",
                 send_sms=True,
                 sso_app_ids=["app1", "app2"],
+                template_id="tid",
             )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
@@ -244,6 +248,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -264,6 +269,7 @@ class TestUser(common.DescopeTest):
                     "sendSMS": True,
                     "additionalLoginIds": None,
                     "ssoAppIDs": ["app1", "app2"],
+                    "templateId": "tid",
                 },
                 follow_redirects=False,
                 verify=True,
@@ -307,6 +313,7 @@ class TestUser(common.DescopeTest):
                     ),
                 ),
                 seed="aaa",
+                status="invited",
             )
             resp = self.client.mgmt.user.invite_batch(
                 users=[user],
@@ -347,7 +354,8 @@ class TestUser(common.DescopeTest):
                             }
                         },
                         "seed": "aaa",
-                    }
+                        "status": "invited",
+                    },
                 ],
                 "invite": True,
                 "inviteUrl": "invite.me",
@@ -358,6 +366,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json=expectedUsers,
@@ -401,6 +410,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json=expectedUsers,
@@ -422,6 +432,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json=expectedUsers,
@@ -443,22 +454,26 @@ class TestUser(common.DescopeTest):
 
         # Test success flow
         with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
-                self.client.mgmt.user.update(
-                    "id",
-                    display_name="new-name",
-                    role_names=["domain.com"],
-                    picture="https://test.com",
-                    custom_attributes={"ak": "av"},
-                    sso_app_ids=["app1", "app2"],
-                )
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.update(
+                "id",
+                display_name="new-name",
+                role_names=["domain.com"],
+                picture="https://test.com",
+                custom_attributes={"ak": "av"},
+                sso_app_ids=["app1", "app2"],
             )
+            user = resp["user"]
+            self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -480,17 +495,21 @@ class TestUser(common.DescopeTest):
             )
         # Test success flow with verified flags
         with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
-                self.client.mgmt.user.update(
-                    "id", verified_email=True, verified_phone=False
-                )
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.update(
+                "id", verified_email=True, verified_phone=False
             )
+            user = resp["user"]
+            self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -525,27 +544,31 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow with some params set
-        with patch("httpx.patch") as mock_patch:
-            mock_patch.return_value.ok = True
-            self.assertIsNone(
-                self.client.mgmt.user.patch(
-                    "id",
-                    display_name="new-name",
-                    email=None,
-                    phone=None,
-                    given_name=None,
-                    role_names=["domain.com"],
-                    user_tenants=None,
-                    picture="https://test.com",
-                    custom_attributes={"ak": "av"},
-                    sso_app_ids=["app1", "app2"],
-                )
+        with patch("httpx.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
+            mock_patch.return_value = network_resp
+            resp = self.client.mgmt.user.patch(
+                "id",
+                display_name="new-name",
+                email=None,
+                phone=None,
+                given_name=None,
+                role_names=["domain.com"],
+                user_tenants=None,
+                picture="https://test.com",
+                custom_attributes={"ak": "av"},
+                sso_app_ids=["app1", "app2"],
             )
+            user = resp["user"]
+            self.assertEqual(user["id"], "u1")
             mock_patch.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.user_patch_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -561,31 +584,35 @@ class TestUser(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
         # Test success flow with other params
-        with patch("httpx.patch") as mock_patch:
-            mock_patch.return_value.ok = True
-            self.assertIsNone(
-                self.client.mgmt.user.patch(
-                    "id",
-                    email="a@test.com",
-                    phone="+123456789",
-                    given_name="given",
-                    middle_name="middle",
-                    family_name="family",
-                    role_names=None,
-                    user_tenants=[
-                        AssociatedTenant("tenant1"),
-                        AssociatedTenant("tenant2", ["role1", "role2"]),
-                    ],
-                    custom_attributes=None,
-                    verified_email=True,
-                    verified_phone=False,
-                )
+        with patch("httpx.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
+            mock_patch.return_value = network_resp
+            resp = self.client.mgmt.user.patch(
+                "id",
+                email="a@test.com",
+                phone="+123456789",
+                given_name="given",
+                middle_name="middle",
+                family_name="family",
+                role_names=None,
+                user_tenants=[
+                    AssociatedTenant("tenant1"),
+                    AssociatedTenant("tenant2", ["role1", "role2"]),
+                ],
+                custom_attributes=None,
+                verified_email=True,
+                verified_phone=False,
             )
+            user = resp["user"]
+            self.assertEqual(user["id"], "u1")
             mock_patch.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.user_patch_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -626,6 +653,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -655,6 +683,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -684,6 +713,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -713,6 +743,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -742,6 +773,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 follow_redirects=False,
                 verify=True,
@@ -772,6 +804,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params={"loginId": "valid-id"},
                 follow_redirects=None,
@@ -803,6 +836,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params={"userId": "user-id"},
                 follow_redirects=None,
@@ -855,6 +889,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -898,6 +933,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -945,6 +981,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -960,6 +997,259 @@ class TestUser(common.DescopeTest):
                     "phones": ["+111111"],
                 },
                 follow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test success flow with time parameters
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads(
+                """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
+            )
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.search_all(
+                from_created_time=100,
+                to_created_time=200,
+                from_modified_time=300,
+                to_modified_time=400,
+                limit=10,
+                page=0,
+            )
+            users = resp["users"]
+            self.assertEqual(len(users), 2)
+            self.assertEqual(users[0]["id"], "u1")
+            self.assertEqual(users[1]["id"], "u2")
+            # Verify the request body includes our time parameters
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.users_search_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "tenantIds": [],
+                    "roleNames": [],
+                    "limit": 10,
+                    "page": 0,
+                    "testUsersOnly": False,
+                    "withTestUser": False,
+                    "fromCreatedTime": 100,
+                    "toCreatedTime": 200,
+                    "fromModifiedTime": 300,
+                    "toModifiedTime": 400,
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_search_all_test_users(self):
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                self.client.mgmt.user.search_all_test_users,
+                ["t1, t2"],
+                ["r1", "r2"],
+            )
+
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertRaises(
+                AuthException,
+                self.client.mgmt.user.search_all_test_users,
+                [],
+                [],
+                -1,
+                0,
+            )
+
+            self.assertRaises(
+                AuthException,
+                self.client.mgmt.user.search_all_test_users,
+                [],
+                [],
+                0,
+                -1,
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads(
+                """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
+            )
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.search_all_test_users(
+                ["t1, t2"],
+                ["r1", "r2"],
+                sso_app_ids=["app1"],
+                login_ids=["l1"],
+            )
+            users = resp["users"]
+            self.assertEqual(len(users), 2)
+            self.assertEqual(users[0]["id"], "u1")
+            self.assertEqual(users[1]["id"], "u2")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.test_users_search_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "tenantIds": ["t1, t2"],
+                    "roleNames": ["r1", "r2"],
+                    "limit": 0,
+                    "page": 0,
+                    "testUsersOnly": True,
+                    "withTestUser": True,
+                    "ssoAppIds": ["app1"],
+                    "loginIds": ["l1"],
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test success flow with text and sort
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads(
+                """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
+            )
+            mock_post.return_value = network_resp
+            sort = [Sort(field="kuku", desc=True), Sort(field="bubu")]
+            resp = self.client.mgmt.user.search_all_test_users(
+                ["t1, t2"],
+                ["r1", "r2"],
+                sso_app_ids=["app1"],
+                text="blue",
+                sort=sort,
+            )
+            users = resp["users"]
+            self.assertEqual(len(users), 2)
+            self.assertEqual(users[0]["id"], "u1")
+            self.assertEqual(users[1]["id"], "u2")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.test_users_search_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "tenantIds": ["t1, t2"],
+                    "roleNames": ["r1", "r2"],
+                    "limit": 0,
+                    "page": 0,
+                    "testUsersOnly": True,
+                    "withTestUser": True,
+                    "ssoAppIds": ["app1"],
+                    "text": "blue",
+                    "sort": [
+                        {"desc": True, "field": "kuku"},
+                        {"desc": False, "field": "bubu"},
+                    ],
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test success flow with custom attributes
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads(
+                """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
+            )
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.search_all_test_users(
+                ["t1, t2"],
+                ["r1", "r2"],
+                custom_attributes={"ak": "av"},
+                statuses=["invited"],
+                phones=["+111111"],
+                emails=["a@b.com"],
+            )
+            users = resp["users"]
+            self.assertEqual(len(users), 2)
+            self.assertEqual(users[0]["id"], "u1")
+            self.assertEqual(users[1]["id"], "u2")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.test_users_search_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "tenantIds": ["t1, t2"],
+                    "roleNames": ["r1", "r2"],
+                    "limit": 0,
+                    "page": 0,
+                    "testUsersOnly": True,
+                    "withTestUser": True,
+                    "customAttributes": {"ak": "av"},
+                    "statuses": ["invited"],
+                    "emails": ["a@b.com"],
+                    "phones": ["+111111"],
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test success flow with time parameters
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"users": [{"id": "u1"}]}""")
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.search_all_test_users(
+                from_created_time=100,
+                to_created_time=200,
+                from_modified_time=300,
+                to_modified_time=400,
+                limit=10,
+                page=0,
+            )
+            users = resp["users"]
+            self.assertEqual(len(users), 1)
+            self.assertEqual(users[0]["id"], "u1")
+            # Verify the request body includes our time parameters
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.test_users_search_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "tenantIds": [],
+                    "roleNames": [],
+                    "limit": 10,
+                    "page": 0,
+                    "testUsersOnly": True,
+                    "withTestUser": True,
+                    "fromCreatedTime": 100,
+                    "toCreatedTime": 200,
+                    "fromModifiedTime": 300,
+                    "toModifiedTime": 400,
+                },
+                allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -996,6 +1286,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params={
                     "loginId": "valid-id",
@@ -1032,6 +1323,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1067,6 +1359,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1103,6 +1396,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1139,6 +1433,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1176,6 +1471,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1213,6 +1509,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1249,6 +1546,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1288,6 +1586,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 json={
                     "loginId": "valid-id",
@@ -1325,6 +1624,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1361,6 +1661,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1397,6 +1698,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1433,6 +1735,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1469,6 +1772,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1505,6 +1809,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1541,6 +1846,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1577,6 +1883,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1616,6 +1923,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1656,6 +1964,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1696,6 +2005,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1738,6 +2048,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1779,6 +2090,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1816,6 +2128,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1853,6 +2166,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1888,6 +2202,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1921,6 +2236,41 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "loginId": "login-id",
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_user_remove_totp_seed(self):
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                self.client.mgmt.user.remove_totp_seed,
+                "login-id",
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            mock_post.return_value = network_resp
+            self.client.mgmt.user.remove_totp_seed(
+                "login-id",
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_remove_totp_seed_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -1962,6 +2312,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -2010,6 +2361,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -2049,10 +2401,53 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 json={
                     "loginId": "login-id",
                     "customClaims": {"k1": "v1"},
+                    "timeout": 0,
+                },
+                allow_redirects=False,
+                verify=True,
+                params=None,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_generate_sign_up_embedded_link(self):
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                self.client.mgmt.user.generate_sign_up_embedded_link,
+                "login-id",
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"token": "some-token"}""")
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.generate_sign_up_embedded_link(
+                "login-id", email_verified=True, phone_verified=True
+            )
+            self.assertEqual(resp, "some-token")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_generate_sign_up_embedded_link_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                json={
+                    "loginId": "login-id",
+                    "phoneVerified": True,
+                    "emailVerified": True,
+                    "user": {},
+                    "loginOptions": {},
+                    "timeout": 0,
                 },
                 follow_redirects=False,
                 verify=True,
@@ -2118,6 +2513,7 @@ class TestUser(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 json=["user-id-1", "user-id-2"],
                 follow_redirects=False,

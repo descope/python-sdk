@@ -12,6 +12,8 @@ class SSO(AuthBase):
         return_url: Optional[str] = None,
         login_options: Optional[LoginOptions] = None,
         refresh_token: Optional[str] = None,
+        prompt: Optional[str] = None,
+        sso_id: Optional[str] = None,
     ) -> dict:
         """
         Start tenant sso session (saml/oidc based on tenant settings)
@@ -28,7 +30,12 @@ class SSO(AuthBase):
         validate_refresh_token_provided(login_options, refresh_token)
 
         uri = EndpointsV1.auth_sso_start_path
-        params = SSO._compose_start_params(tenant, return_url if return_url else "")
+        params = SSO._compose_start_params(
+            tenant,
+            return_url if return_url else "",
+            prompt if prompt else "",
+            sso_id if sso_id else "",
+        )
         response = self._auth.do_post(
             uri, login_options.__dict__ if login_options else {}, params, refresh_token
         )
@@ -40,8 +47,14 @@ class SSO(AuthBase):
         return self._auth.exchange_token(uri, code)
 
     @staticmethod
-    def _compose_start_params(tenant: str, return_url: str) -> dict:
+    def _compose_start_params(
+        tenant: str, return_url: str, prompt: str, sso_id: str
+    ) -> dict:
         res = {"tenant": tenant}
         if return_url is not None and return_url != "":
             res["redirectURL"] = return_url
+        if prompt is not None and prompt != "":
+            res["prompt"] = prompt
+        if sso_id is not None and sso_id != "":
+            res["ssoId"] = sso_id
         return res

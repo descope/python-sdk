@@ -21,6 +21,7 @@ class MgmtV1:
 
     # user
     user_create_path = "/v1/mgmt/user/create"
+    test_user_create_path = "/v1/mgmt/user/create/test"
     user_create_batch_path = "/v1/mgmt/user/create/batch"
     user_update_path = "/v1/mgmt/user/update"
     user_patch_path = "/v1/mgmt/user/patch"
@@ -29,6 +30,7 @@ class MgmtV1:
     user_delete_all_test_users_path = "/v1/mgmt/user/test/delete/all"
     user_load_path = "/v1/mgmt/user"
     users_search_path = "/v2/mgmt/user/search"
+    test_users_search_path = "/v2/mgmt/user/search/test"
     user_get_provider_token = "/v1/mgmt/user/provider/token"
     user_update_status_path = "/v1/mgmt/user/update/status"
     user_update_login_id_path = "/v1/mgmt/user/update/loginid"
@@ -38,7 +40,7 @@ class MgmtV1:
     user_update_picture_path = "/v1/mgmt/user/update/picture"
     user_update_custom_attribute_path = "/v1/mgmt/user/update/customAttribute"
     user_set_role_path = "/v1/mgmt/user/update/role/set"
-    user_add_role_path = "/v1/mgmt/user/update/role/add"
+    user_add_role_path = "/v2/mgmt/user/update/role/add"
     user_remove_role_path = "/v1/mgmt/user/update/role/remove"
     user_add_sso_apps = "/v1/mgmt/user/update/ssoapp/add"
     user_set_sso_apps = "/v1/mgmt/user/update/ssoapp/set"
@@ -48,12 +50,14 @@ class MgmtV1:
     user_set_active_password_path = "/v1/mgmt/user/password/set/active"
     user_expire_password_path = "/v1/mgmt/user/password/expire"
     user_remove_all_passkeys_path = "/v1/mgmt/user/passkeys/delete"
+    user_remove_totp_seed_path = "/v1/mgmt/user/totp/delete"
     user_add_tenant_path = "/v1/mgmt/user/update/tenant/add"
     user_remove_tenant_path = "/v1/mgmt/user/update/tenant/remove"
     user_generate_otp_for_test_path = "/v1/mgmt/tests/generate/otp"
     user_generate_magic_link_for_test_path = "/v1/mgmt/tests/generate/magiclink"
     user_generate_enchanted_link_for_test_path = "/v1/mgmt/tests/generate/enchantedlink"
     user_generate_embedded_link_path = "/v1/mgmt/user/signin/embeddedlink"
+    user_generate_sign_up_embedded_link_path = "/v1/mgmt/user/signup/embeddedlink"
     user_history_path = "/v1/mgmt/user/history"
 
     # access key
@@ -77,6 +81,11 @@ class MgmtV1:
     # jwt
     update_jwt_path = "/v1/mgmt/jwt/update"
     impersonate_path = "/v1/mgmt/impersonate"
+    stop_impersonation_path = "/v1/mgmt/stop/impersonation"
+    mgmt_sign_in_path = "/v1/mgmt/auth/signin"
+    mgmt_sign_up_path = "/v1/mgmt/auth/signup"
+    mgmt_sign_up_or_in_path = "/v1/mgmt/auth/signup-in"
+    anonymous_path = "/v1/mgmt/auth/anonymous"
 
     # permission
     permission_create_path = "/v1/mgmt/permission/create"
@@ -129,6 +138,14 @@ class MgmtV1:
     authz_re_target_with_relation = "/v1/mgmt/authz/re/targetwithrelation"
     authz_get_modified = "/v1/mgmt/authz/getmodified"
 
+    # FGA (new style Authz)
+    fga_save_schema = "/v1/mgmt/fga/schema"
+    fga_create_relations = "/v1/mgmt/fga/relations"
+    fga_delete_relations = "/v1/mgmt/fga/relations/delete"
+    fga_check = "/v1/mgmt/fga/check"
+    fga_resources_load = "/v1/mgmt/fga/resources/load"
+    fga_resources_save = "/v1/mgmt/fga/resources/save"
+
     # Project
     project_update_name = "/v1/mgmt/project/update/name"
     project_update_tags = "/v1/mgmt/project/update/tags"
@@ -136,6 +153,75 @@ class MgmtV1:
     project_export = "/v1/mgmt/project/export"
     project_import = "/v1/mgmt/project/import"
     project_list_projects = "/v1/mgmt/projects/list"
+
+
+class MgmtSignUpOptions:
+    def __init__(
+        self,
+        custom_claims: Optional[dict] = None,
+        refresh_duration: Optional[int] = None,
+    ):
+        self.custom_claims = custom_claims
+        self.refresh_duration = refresh_duration
+
+
+class MgmtLoginOptions:
+    def __init__(
+        self,
+        stepup: bool = False,
+        mfa: bool = False,
+        revoke_other_sessions: Optional[bool] = None,
+        custom_claims: Optional[dict] = None,
+        jwt: Optional[str] = None,
+        refresh_duration: Optional[int] = None,
+    ):
+        self.stepup = stepup
+        self.custom_claims = custom_claims
+        self.mfa = mfa
+        self.revoke_other_sessions = revoke_other_sessions
+        self.jwt = jwt
+        self.refresh_duration = refresh_duration
+
+
+def is_jwt_required(lgo: MgmtLoginOptions) -> bool:
+    return lgo is not None and (lgo.stepup or lgo.mfa)
+
+
+class MgmtUserRequest:
+    def __init__(
+        self,
+        name: Optional[str] = None,
+        given_name: Optional[str] = None,
+        middle_name: Optional[str] = None,
+        family_name: Optional[str] = None,
+        phone: Optional[str] = None,
+        email: Optional[str] = None,
+        email_verified: Optional[bool] = None,
+        phone_verified: Optional[bool] = None,
+        sso_app_id: Optional[str] = None,
+    ):
+        self.name = name
+        self.given_name = given_name
+        self.middle_name = middle_name
+        self.family_name = family_name
+        self.phone = phone
+        self.email = email
+        self.email_verified = email_verified
+        self.phone_verified = phone_verified
+        self.sso_app_id = sso_app_id
+
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "givenName": self.given_name,
+            "middleName": self.middle_name,
+            "familyName": self.family_name,
+            "phone": self.phone,
+            "email": self.email,
+            "emailVerified": self.email_verified,
+            "phoneVerified": self.phone_verified,
+            "ssoAppId": self.sso_app_id,
+        }
 
 
 class AssociatedTenant:

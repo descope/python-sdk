@@ -34,6 +34,7 @@ class UserObj:
         sso_app_ids: Optional[List[str]] = None,
         password: Optional[UserPassword] = None,
         seed: Optional[str] = None,
+        status: Optional[str] = None,
     ):
         self.login_id = login_id
         self.email = email
@@ -52,6 +53,25 @@ class UserObj:
         self.sso_app_ids = sso_app_ids
         self.password = password
         self.seed = seed
+        self.status = status
+
+
+class CreateUserObj:
+    def __init__(
+        self,
+        email: Optional[str] = None,
+        phone: Optional[str] = None,
+        name: Optional[str] = None,
+        given_name: Optional[str] = None,
+        middle_name: Optional[str] = None,
+        family_name: Optional[str] = None,
+    ):
+        self.email = email
+        self.phone = phone
+        self.name = name
+        self.given_name = given_name
+        self.middle_name = middle_name
+        self.family_name = family_name
 
 
 class User(AuthBase):
@@ -178,7 +198,7 @@ class User(AuthBase):
         user_tenants = [] if user_tenants is None else user_tenants
 
         response = self._auth.do_post(
-            MgmtV1.user_create_path,
+            MgmtV1.test_user_create_path,
             User._compose_create_body(
                 login_id,
                 email,
@@ -199,6 +219,7 @@ class User(AuthBase):
                 None,
                 None,
                 additional_login_ids,
+                sso_app_ids,
             ),
             pswd=self._auth.management_key,
         )
@@ -228,6 +249,7 @@ class User(AuthBase):
         ] = None,  # send invite via text message, default is according to project settings
         additional_login_ids: Optional[List[str]] = None,
         sso_app_ids: Optional[List[str]] = None,
+        template_id: str = "",
     ) -> dict:
         """
         Create a new user and invite them via an email / text message.
@@ -266,6 +288,7 @@ class User(AuthBase):
                 send_sms,
                 additional_login_ids,
                 sso_app_ids,
+                template_id,
             ),
             pswd=self._auth.management_key,
         )
@@ -323,7 +346,7 @@ class User(AuthBase):
         verified_phone: Optional[bool] = None,
         additional_login_ids: Optional[List[str]] = None,
         sso_app_ids: Optional[List[str]] = None,
-    ):
+    ) -> dict:
         """
         Update an existing user with the given various fields. IMPORTANT: All parameters are used as overrides
         to the existing user. Empty fields will override populated fields. Use carefully.
@@ -345,13 +368,18 @@ class User(AuthBase):
         custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
         sso_app_ids (List[str]): Optional, list of SSO applications IDs to be associated with the user.
 
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the updated user information.
+
         Raise:
         AuthException: raised if update operation fails
         """
         role_names = [] if role_names is None else role_names
         user_tenants = [] if user_tenants is None else user_tenants
 
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.user_update_path,
             User._compose_update_body(
                 login_id,
@@ -374,6 +402,7 @@ class User(AuthBase):
             ),
             pswd=self._auth.management_key,
         )
+        return response.json()
 
     def patch(
         self,
@@ -391,7 +420,7 @@ class User(AuthBase):
         verified_email: Optional[bool] = None,
         verified_phone: Optional[bool] = None,
         sso_app_ids: Optional[List[str]] = None,
-    ):
+    ) -> dict:
         """
         Patches an existing user with the given various fields. Only the given fields will be used to update the user.
 
@@ -411,10 +440,15 @@ class User(AuthBase):
         custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
         sso_app_ids (List[str]): Optional, list of SSO applications IDs to be associated with the user.
 
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the patched user information.
+
         Raise:
         AuthException: raised if patch operation fails
         """
-        self._auth.do_patch(
+        response = self._auth.do_patch(
             MgmtV1.user_patch_path,
             User._compose_patch_body(
                 login_id,
@@ -434,6 +468,7 @@ class User(AuthBase):
             ),
             pswd=self._auth.management_key,
         )
+        return response.json()
 
     def delete(
         self,
@@ -592,6 +627,11 @@ class User(AuthBase):
         sort: Optional[List[Sort]] = None,
         text: Optional[str] = None,
         login_ids: Optional[List[str]] = None,
+        from_created_time: Optional[int] = None,
+        to_created_time: Optional[int] = None,
+        from_modified_time: Optional[int] = None,
+        to_modified_time: Optional[int] = None,
+        user_ids: Optional[List[str]] = None,
     ) -> dict:
         """
         Search all users.
@@ -611,6 +651,11 @@ class User(AuthBase):
         text (str): Optional string, allows free text search among all user's attributes.
         login_ids (List[str]): Optional list of login ids
         sort (List[Sort]): Optional List[dict], allows to sort by fields.
+        from_created_time (int): Optional int, only include users who were created on or after this time (in Unix epoch milliseconds)
+        to_created_time (int): Optional int, only include users who were created on or before this time (in Unix epoch milliseconds)
+        from_modified_time (int): Optional int, only include users whose last modification/update occurred on or after this time (in Unix epoch milliseconds)
+        to_modified_time (int): Optional int, only include users whose last modification/update occurred on or before this time (in Unix epoch milliseconds)
+        user_ids (List[str]): Optional list of user IDs to filter by
 
         Return value (dict):
         Return dict in the format
@@ -658,14 +703,134 @@ class User(AuthBase):
         if login_ids is not None:
             body["loginIds"] = login_ids
 
+        if user_ids is not None:
+            body["userIds"] = user_ids
+
         if text is not None:
             body["text"] = text
 
         if sort is not None:
             body["sort"] = sort_to_dict(sort)
 
+        if from_created_time is not None:
+            body["fromCreatedTime"] = from_created_time
+        if to_created_time is not None:
+            body["toCreatedTime"] = to_created_time
+        if from_modified_time is not None:
+            body["fromModifiedTime"] = from_modified_time
+        if to_modified_time is not None:
+            body["toModifiedTime"] = to_modified_time
+
         response = self._auth.do_post(
             MgmtV1.users_search_path,
+            body=body,
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    def search_all_test_users(
+        self,
+        tenant_ids: Optional[List[str]] = None,
+        role_names: Optional[List[str]] = None,
+        limit: int = 0,
+        page: int = 0,
+        custom_attributes: Optional[dict] = None,
+        statuses: Optional[List[str]] = None,
+        emails: Optional[List[str]] = None,
+        phones: Optional[List[str]] = None,
+        sso_app_ids: Optional[List[str]] = None,
+        sort: Optional[List[Sort]] = None,
+        text: Optional[str] = None,
+        login_ids: Optional[List[str]] = None,
+        from_created_time: Optional[int] = None,
+        to_created_time: Optional[int] = None,
+        from_modified_time: Optional[int] = None,
+        to_modified_time: Optional[int] = None,
+    ) -> dict:
+        """
+        Search all test users.
+
+        Args:
+        tenant_ids (List[str]): Optional list of tenant IDs to filter by
+        role_names (List[str]): Optional list of role names to filter by
+        limit (int): Optional limit of the number of users returned. Leave empty for default.
+        page (int): Optional pagination control. Pages start at 0 and must be non-negative.
+        custom_attributes (dict): Optional search for a attribute with a given value
+        statuses (List[str]): Optional list of statuses to search for ("enabled", "disabled", "invited")
+        emails (List[str]): Optional list of emails to search for
+        phones (List[str]): Optional list of phones to search for
+        sso_app_ids (List[str]): Optional list of SSO application IDs to filter by
+        text (str): Optional string, allows free text search among all user's attributes.
+        login_ids (List[str]): Optional list of login ids
+        sort (List[Sort]): Optional List[dict], allows to sort by fields.
+        from_created_time (int): Optional int, only include users who were created on or after this time (in Unix epoch milliseconds)
+        to_created_time (int): Optional int, only include users who were created on or before this time (in Unix epoch milliseconds)
+        from_modified_time (int): Optional int, only include users whose last modification/update occurred on or after this time (in Unix epoch milliseconds)
+        to_modified_time (int): Optional int, only include users whose last modification/update occurred on or before this time (in Unix epoch milliseconds)
+
+        Return value (dict):
+        Return dict in the format
+             {"users": []}
+        "users" contains a list of all of the found users and their information
+
+        Raise:
+        AuthException: raised if search operation fails
+        """
+        tenant_ids = [] if tenant_ids is None else tenant_ids
+        role_names = [] if role_names is None else role_names
+
+        if limit < 0:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "limit must be non-negative"
+            )
+
+        if page < 0:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "page must be non-negative"
+            )
+        body = {
+            "tenantIds": tenant_ids,
+            "roleNames": role_names,
+            "limit": limit,
+            "page": page,
+            "testUsersOnly": True,
+            "withTestUser": True,
+        }
+        if statuses is not None:
+            body["statuses"] = statuses
+
+        if emails is not None:
+            body["emails"] = emails
+
+        if phones is not None:
+            body["phones"] = phones
+
+        if custom_attributes is not None:
+            body["customAttributes"] = custom_attributes
+
+        if sso_app_ids is not None:
+            body["ssoAppIds"] = sso_app_ids
+
+        if login_ids is not None:
+            body["loginIds"] = login_ids
+
+        if text is not None:
+            body["text"] = text
+
+        if sort is not None:
+            body["sort"] = sort_to_dict(sort)
+
+        if from_created_time is not None:
+            body["fromCreatedTime"] = from_created_time
+        if to_created_time is not None:
+            body["toCreatedTime"] = to_created_time
+        if from_modified_time is not None:
+            body["fromModifiedTime"] = from_modified_time
+        if to_modified_time is not None:
+            body["toModifiedTime"] = to_modified_time
+
+        response = self._auth.do_post(
+            MgmtV1.test_users_search_path,
             body=body,
             pswd=self._auth.management_key,
         )
@@ -1378,6 +1543,28 @@ class User(AuthBase):
         )
         return
 
+    def remove_totp_seed(
+        self,
+        login_id: str,
+    ) -> None:
+        """
+            Removes TOTP seed for the user with the given login ID.
+            Note: The user might not be able to login anymore if they have no other authentication
+            methods or a verified email/phone.
+
+        Args:
+        login_id (str): The login ID of the user to remove totp seed for.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        self._auth.do_post(
+            MgmtV1.user_remove_totp_seed_path,
+            {"loginId": login_id},
+            pswd=self._auth.management_key,
+        )
+        return
+
     def generate_otp_for_test_user(
         self,
         method: DeliveryMethod,
@@ -1486,7 +1673,7 @@ class User(AuthBase):
         return response.json()
 
     def generate_embedded_link(
-        self, login_id: str, custom_claims: Optional[dict] = None
+        self, login_id: str, custom_claims: Optional[dict] = None, timeout: int = 0
     ) -> str:
         """
         Generate Embedded Link for the given user login ID.
@@ -1504,7 +1691,44 @@ class User(AuthBase):
         """
         response = self._auth.do_post(
             MgmtV1.user_generate_embedded_link_path,
-            {"loginId": login_id, "customClaims": custom_claims},
+            {"loginId": login_id, "customClaims": custom_claims, "timeout": timeout},
+            pswd=self._auth.management_key,
+        )
+        return response.json()["token"]
+
+    def generate_sign_up_embedded_link(
+        self, login_id: str, user: Optional[CreateUserObj] = None,
+        email_verified: bool = False, phone_verified: bool = False,
+        login_options: Optional[LoginOptions] = None, timeout: int = 0
+    ) -> str:
+        """
+        Generate sign up Embedded Link for the given user login ID.
+        The return value is a token that can be verified via magic link, or using flows
+
+        Args:
+        login_id (str): The login ID of the user to authenticate with.
+        user (CreateUserObj): Optional user object to create the user with
+        email_verified (bool): Optional, set to true if the email is verified
+        phone_verified (bool): Optional, set to true if the phone is verified
+        login_options (LoginOptions): Optional login options to customize the link
+        timeout (int): Optional, the timeout in seconds for the link to be valid
+
+        Return value (str):
+        Return the token to be used in verification process
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._auth.do_post(
+            MgmtV1.user_generate_sign_up_embedded_link_path,
+            {
+                "loginId": login_id,
+                "user": user.__dict__ if user else {},
+                "loginOptions": login_options.__dict__ if login_options else {},
+                "emailVerified": email_verified,
+                "phoneVerified": phone_verified,
+                "timeout": timeout
+            },
             pswd=self._auth.management_key,
         )
         return response.json()["token"]
@@ -1560,6 +1784,7 @@ class User(AuthBase):
         send_sms: Optional[bool],
         additional_login_ids: Optional[List[str]],
         sso_app_ids: Optional[List[str]] = None,
+        template_id: str = "",
     ) -> dict:
         body = User._compose_update_body(
             login_id=login_id,
@@ -1588,6 +1813,8 @@ class User(AuthBase):
             body["sendMail"] = send_mail
         if send_sms is not None:
             body["sendSMS"] = send_sms
+        if template_id != "":
+            body["templateId"] = template_id
         return body
 
     @staticmethod
@@ -1627,6 +1854,8 @@ class User(AuthBase):
                 hashed_password=hashed_password,
                 seed=user.seed,
             )
+            if user.status is not None:
+                uBody["status"] = user.status
             usersBody.append(uBody)
 
         body = {"users": usersBody, "invite": True}

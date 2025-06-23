@@ -77,6 +77,7 @@ class MagicLink(AuthBase):
             login_options = LoginOptions(
                 custom_claims=signup_options.customClaims,
                 template_options=signup_options.templateOptions,
+                template_id=signup_options.templateId,
             )
         body = MagicLink._compose_signin_body(
             login_id,
@@ -105,6 +106,8 @@ class MagicLink(AuthBase):
         add_to_login_ids: bool = False,
         on_merge_use_existing: bool = False,
         template_options: dict | None = None,
+        template_id: str | None = None,
+        provider_id: str | None = None,
     ) -> str:
         if not login_id:
             raise AuthException(
@@ -114,7 +117,8 @@ class MagicLink(AuthBase):
         Auth.validate_email(email)
 
         body = MagicLink._compose_update_user_email_body(
-            login_id, email, add_to_login_ids, on_merge_use_existing, template_options
+            login_id, email, add_to_login_ids, on_merge_use_existing, 
+            template_options, template_id, provider_id
         )
         uri = EndpointsV1.update_user_email_magiclink_path
         response = self._auth.do_post(uri, body, None, refresh_token)
@@ -129,6 +133,8 @@ class MagicLink(AuthBase):
         add_to_login_ids: bool = False,
         on_merge_use_existing: bool = False,
         template_options: dict | None = None,
+        template_id: str | None = None,
+        provider_id: str | None = None,
     ) -> str:
         if not login_id:
             raise AuthException(
@@ -138,7 +144,8 @@ class MagicLink(AuthBase):
         Auth.validate_phone(method, phone)
 
         body = MagicLink._compose_update_user_phone_body(
-            login_id, phone, add_to_login_ids, on_merge_use_existing, template_options
+            login_id, phone, add_to_login_ids, on_merge_use_existing, 
+            template_options, template_id, provider_id
         )
         uri = EndpointsV1.update_user_phone_magiclink_path
         response = self._auth.do_post(uri, body, None, refresh_token)
@@ -202,6 +209,8 @@ class MagicLink(AuthBase):
         add_to_login_ids: bool,
         on_merge_use_existing: bool,
         template_options: dict | None = None,
+        template_id: str | None = None,
+        provider_id: str | None = None,
     ) -> dict:
         body: dict[str, str | bool | dict] = {
             "loginId": login_id,
@@ -211,6 +220,10 @@ class MagicLink(AuthBase):
         }
         if template_options is not None:
             body["templateOptions"] = template_options
+        if template_id is not None:
+            body["templateId"] = template_id
+        if provider_id is not None:
+            body["providerId"] = provider_id
 
         return body
 
@@ -221,6 +234,8 @@ class MagicLink(AuthBase):
         add_to_login_ids: bool,
         on_merge_use_existing: bool,
         template_options: dict | None = None,
+        template_id: str | None = None,
+        provider_id: str | None = None,
     ) -> dict:
         body: dict[str, str | bool | dict] = {
             "loginId": login_id,
@@ -230,5 +245,9 @@ class MagicLink(AuthBase):
         }
         if template_options is not None:
             body["templateOptions"] = template_options
+        if template_id is not None:
+            body["templateId"] = template_id
+        if provider_id is not None:
+            body["providerId"] = provider_id
 
         return body
