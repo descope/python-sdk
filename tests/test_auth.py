@@ -685,7 +685,7 @@ class TestAuth(common.DescopeTest):
         auth = Auth(self.dummy_project_id, self.public_key_dict)
 
         # Test do_post empty body
-        with patch("requests.post") as mock_request:
+        with patch("httpx.post") as mock_request:
             mock_request.return_value.ok = False
             mock_request.return_value.status_code = 429
             mock_request.return_value.json.return_value = {
@@ -714,7 +714,7 @@ class TestAuth(common.DescopeTest):
         auth = Auth(self.dummy_project_id, self.public_key_dict)
 
         # Test do_post empty body
-        with patch("requests.post") as mock_request:
+        with patch("httpx.post") as mock_request:
             mock_request.return_value.ok = False
             mock_request.return_value.status_code = 429
             mock_request.return_value.json.return_value = "aaa"
@@ -731,7 +731,7 @@ class TestAuth(common.DescopeTest):
         auth = Auth(self.dummy_project_id, self.public_key_dict)
 
         # Test do_post empty body
-        with patch("requests.post") as mock_request:
+        with patch("httpx.post") as mock_request:
             mock_request.return_value.ok = False
             mock_request.return_value.status_code = 429
             mock_request.return_value.json.return_value = ""
@@ -748,7 +748,7 @@ class TestAuth(common.DescopeTest):
         auth = Auth(self.dummy_project_id, self.public_key_dict)
 
         # Test do_post empty body
-        with patch("requests.post") as mock_request:
+        with patch("httpx.post") as mock_request:
             mock_request.return_value.ok = False
             mock_request.return_value.status_code = 429
             mock_request.return_value.json.return_value = None

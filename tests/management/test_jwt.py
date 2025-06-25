@@ -64,7 +64,7 @@ class TestUser(common.DescopeTest):
                     "customClaims": {"k1": "v1"},
                     "refreshDuration": 40,
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -85,7 +85,6 @@ class TestUser(common.DescopeTest):
                     "customClaims": {"k1": "v1"},
                     "refreshDuration": 0,
                 },
-                json={"jwt": "test", "customClaims": {"k1": "v1"}},
                 follow_redirects=False,
                 verify=True,
                 params=None,
@@ -154,7 +153,7 @@ class TestUser(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -163,7 +162,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
@@ -184,7 +183,7 @@ class TestUser(common.DescopeTest):
                     "selectedTenant": None,
                     "refreshDuration": None,
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -209,7 +208,7 @@ class TestUser(common.DescopeTest):
         )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
@@ -232,7 +231,7 @@ class TestUser(common.DescopeTest):
                     "jwt": None,
                     "refreshDuration": None,
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -250,7 +249,7 @@ class TestUser(common.DescopeTest):
         self.assertRaises(AuthException, client.mgmt.jwt.sign_up, "")
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
@@ -283,7 +282,7 @@ class TestUser(common.DescopeTest):
                     "customClaims": None,
                     "refreshDuration": None,
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -301,7 +300,7 @@ class TestUser(common.DescopeTest):
         self.assertRaises(AuthException, client.mgmt.jwt.sign_up_or_in, "")
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
@@ -334,7 +333,7 @@ class TestUser(common.DescopeTest):
                     "customClaims": None,
                     "refreshDuration": None,
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -349,7 +348,7 @@ class TestUser(common.DescopeTest):
         )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
@@ -368,7 +367,7 @@ class TestUser(common.DescopeTest):
                     "selectedTenant": "id",
                     "refreshDuration": None,
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
