@@ -3,6 +3,33 @@
 The Descope SDK for python provides convenient access to the Descope user management and authentication API
 for a backend written in python. You can read more on the [Descope Website](https://descope.com).
 
+## ✨ New: Async Support
+
+The SDK now supports async/await patterns alongside the existing synchronous API. Both APIs provide identical functionality with the same method signatures and error handling.
+
+```python
+# Synchronous usage (existing)
+from descope import DescopeClient, DeliveryMethod
+
+client = DescopeClient(project_id="P123")
+masked_email = client.otp.sign_up(DeliveryMethod.EMAIL, "user@example.com")
+
+# Asynchronous usage (new) - preferred with context manager
+from descope import AsyncDescopeClient, DeliveryMethod
+
+async def main():
+    async with AsyncDescopeClient(project_id="P123") as client:
+        masked_email = await client.otp.sign_up_async(DeliveryMethod.EMAIL, "user@example.com")
+
+# Or manual resource management
+async def main_manual():
+    client = AsyncDescopeClient(project_id="P123")
+    try:
+        masked_email = await client.otp.sign_up_async(DeliveryMethod.EMAIL, "user@example.com")
+    finally:
+        await client.close_async()
+```
+
 ## Requirements
 
 The SDK supports Python 3.8.1 and above.
@@ -15,7 +42,7 @@ Install the package with:
 pip install descope
 ```
 
-#### If you would like to use the Flask decorators, make sure to install the Flask extras:
+### If you would like to use the Flask decorators, make sure to install the Flask extras:
 
 ```bash
 pip install descope[Flask]
@@ -86,8 +113,12 @@ Send a user a one-time password (OTP) using your preferred delivery method (_ema
 
 The user can either `sign up`, `sign in` or `sign up or in`
 
+#### Synchronous usage
+
 ```python
-from descope import DeliveryMethod
+from descope import DescopeClient, DeliveryMethod
+
+descope_client = DescopeClient(project_id="<Project ID>")
 
 # Every user must have a login ID. All other user information is optional
 email = "desmond@descope.com"
@@ -105,6 +136,26 @@ session_token = jwt_response[SESSION_TOKEN_NAME].get("jwt")
 refresh_token = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("jwt")
 ```
 
+#### Asynchronous usage
+
+```python
+from descope import AsyncDescopeClient, DeliveryMethod
+
+async def otp_example():
+    async with AsyncDescopeClient(project_id="<Project ID>") as client:
+        # Every user must have a login ID. All other user information is optional
+        email = "desmond@descope.com"
+        user = {"name": "Desmond Copeland", "phone": "212-555-1234", "email": email}
+        masked_address = await client.otp.sign_up_async(method=DeliveryMethod.EMAIL, login_id=email, user=user)
+        
+        # Verify the code
+        jwt_response = await client.otp.verify_code_async(
+            method=DeliveryMethod.EMAIL, login_id=email, code=value
+        )
+        session_token = jwt_response[SESSION_TOKEN_NAME].get("jwt")
+        refresh_token = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("jwt")
+```
+
 The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)
 
 ### Magic Link
@@ -115,8 +166,12 @@ This redirection can be configured in code, or generally in the [Descope Console
 
 The user can either `sign up`, `sign in` or `sign up or in`
 
+#### Synchronous usage
+
 ```python
-from descope import DeliveryMethod
+from descope import DescopeClient, DeliveryMethod
+
+descope_client = DescopeClient(project_id="<Project ID>")
 
 masked_address = descope_client.magiclink.sign_up_or_in(
     method=DeliveryMethod.EMAIL,
@@ -131,6 +186,25 @@ To verify a magic link, your redirect page must call the validation function on 
 jwt_response = descope_client.magiclink.verify(token=token)
 session_token = jwt_response[SESSION_TOKEN_NAME].get("jwt")
 refresh_token = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("jwt")
+```
+
+#### Asynchronous usage
+
+```python
+from descope import AsyncDescopeClient, DeliveryMethod
+
+async def magiclink_example():
+    async with AsyncDescopeClient(project_id="<Project ID>") as client:
+        masked_address = await client.magiclink.sign_up_or_in_async(
+            method=DeliveryMethod.EMAIL,
+            login_id="desmond@descope.com",
+            uri="http://myapp.com/verify-magic-link", # Set redirect URI here or via console
+        )
+        
+        # Verify the magic link token
+        jwt_response = await client.magiclink.verify_async(token=token)
+        session_token = jwt_response[SESSION_TOKEN_NAME].get("jwt")
+        refresh_token = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("jwt")
 ```
 
 The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)

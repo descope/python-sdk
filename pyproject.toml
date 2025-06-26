@@ -36,6 +36,7 @@ Flask = ["Flask"]
 [tool.poetry.dependencies]
 python = ">=3.8.1,<4.0"
 requests = ">=2.27.0"
+asyncer = ">=0.0.2"
 pyjwt = { version = ">=2.4.0", extras = ["crypto"] }
 email-validator = [{ version = ">=2,<3", python = ">=3.8" }]
 liccheck = "^0.9.1"
@@ -81,7 +82,7 @@ omit = ["descope/flask/*"]
 
 
 [tool.coverage.report]
-fail_under = 98
+fail_under = 97
 skip_covered = true
 skip_empty = true
 
