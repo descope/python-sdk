@@ -40,7 +40,6 @@ requests = ">=2.27.0"
 asyncer = ">=0.0.2"
 pyjwt = { version = ">=2.4.0", extras = ["crypto"] }
 email-validator = [{ version = ">=2,<3", python = ">=3.8" }]
-liccheck = "^0.9.1"
 Flask = ">=2"
 
 [tool.poetry.group.dev.dependencies]
@@ -52,7 +51,6 @@ pre-commit = [
 flake8 = "7.1.2"
 flake8-pyproject = "1.2.3"
 flake8-bugbear = "24.12.12"
-liccheck = "0.9.2"
 isort = "5.13.2"
 pep8-naming = "0.14.1"
 tox = "4.25.0"
@@ -94,3 +92,6 @@ profile = "black"
 per-file-ignores = "__init__.py:F401"
 ignore = "E501,N818,W503"
 max-line-length = 120
+
+[tool.poetry.requires-plugins]
+poetry-plugin-export = ">=1.8"
