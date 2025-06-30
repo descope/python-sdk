@@ -4,7 +4,7 @@ import datetime
 import uuid
 from functools import wraps
 
-from flask import Response, _request_ctx_stack, redirect, request
+from flask import Response, redirect, request, g
 
 from .. import (
     COOKIE_DATA_NAME,
@@ -143,7 +143,7 @@ def descope_validate_auth(
                     return Response("Access denied", 401)
 
             # Save the claims on the context execute the original API
-            _request_ctx_stack.top.claims = jwt_response
+            g.claims = jwt_response
             response = f(*args, **kwargs)
 
             if jwt_response.get(COOKIE_DATA_NAME, None):
@@ -181,7 +181,7 @@ def descope_verify_code_by_email(descope_client: DescopeClient):
                 return Response("Unauthorized", 401)
 
             # Save the claims on the context execute the original API
-            _request_ctx_stack.top.claims = jwt_response
+            g.claims = jwt_response
             response = f(*args, **kwargs)
 
             set_cookie_on_response(
@@ -194,7 +194,6 @@ def descope_verify_code_by_email(descope_client: DescopeClient):
                 jwt_response[REFRESH_SESSION_TOKEN_NAME],
                 jwt_response[COOKIE_DATA_NAME],
             )
-
             return response
 
         return decorated
@@ -224,7 +223,7 @@ def descope_verify_code_by_phone_sms(descope_client: DescopeClient):
                 return Response("Unauthorized", 401)
 
             # Save the claims on the context execute the original API
-            _request_ctx_stack.top.claims = jwt_response
+            g.claims = jwt_response
             response = f(*args, **kwargs)
 
             set_cookie_on_response(
@@ -267,7 +266,7 @@ def descope_verify_code_by_phone_voice_call(descope_client: DescopeClient):
                 return Response("Unauthorized", 401)
 
             # Save the claims on the context execute the original API
-            _request_ctx_stack.top.claims = jwt_response
+            g.claims = jwt_response
             response = f(*args, **kwargs)
 
             set_cookie_on_response(
@@ -310,7 +309,7 @@ def descope_verify_code_by_phone_whatsapp(descope_client: DescopeClient):
                 return Response("Unauthorized", 401)
 
             # Save the claims on the context execute the original API
-            _request_ctx_stack.top.claims = jwt_response
+            g.claims = jwt_response
             response = f(*args, **kwargs)
 
             set_cookie_on_response(
@@ -400,7 +399,7 @@ def descope_verify_magiclink_token(descope_client: DescopeClient):
                 return Response("Unauthorized", 401)
 
             # Save the claims on the context execute the original API
-            _request_ctx_stack.top.claims = jwt_response
+            g.claims = jwt_response
             response = f(*args, **kwargs)
 
             set_cookie_on_response(
