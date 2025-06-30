@@ -31,12 +31,12 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed save_schema
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(AuthException, client.mgmt.authz.save_schema, {}, True)
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.authz.save_schema({"name": "kuku"}, True))
             mock_post.assert_called_with(
@@ -48,7 +48,7 @@ class TestAuthz(common.DescopeTest):
                 },
                 params=None,
                 json={"schema": {"name": "kuku"}, "upgrade": True},
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -62,12 +62,12 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed delete_schema
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(AuthException, client.mgmt.authz.delete_schema)
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.authz.delete_schema())
             mock_post.assert_called_with(
@@ -79,7 +79,7 @@ class TestAuthz(common.DescopeTest):
                 },
                 params=None,
                 json=None,
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -93,12 +93,12 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed load_schema
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(AuthException, client.mgmt.authz.load_schema)
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(client.mgmt.authz.load_schema())
             mock_post.assert_called_with(
@@ -110,7 +110,7 @@ class TestAuthz(common.DescopeTest):
                 },
                 params=None,
                 json=None,
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -124,12 +124,12 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed save_namespace
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(AuthException, client.mgmt.authz.save_namespace, {})
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.authz.save_namespace({"name": "kuku"}, "old", "v1")
@@ -147,7 +147,7 @@ class TestAuthz(common.DescopeTest):
                     "oldName": "old",
                     "schemaName": "v1",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -161,12 +161,12 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed delete_namespace
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(AuthException, client.mgmt.authz.delete_namespace, "a")
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.authz.delete_namespace("a", "b"))
             mock_post.assert_called_with(
@@ -178,7 +178,7 @@ class TestAuthz(common.DescopeTest):
                 },
                 params=None,
                 json={"name": "a", "schemaName": "b"},
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -192,14 +192,14 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed save_relation_definition
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException, client.mgmt.authz.save_relation_definition, {}, "a"
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.authz.save_relation_definition(
@@ -220,7 +220,7 @@ class TestAuthz(common.DescopeTest):
                     "oldName": "old",
                     "schemaName": "v1",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -234,14 +234,14 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed delete_relation_definition
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException, client.mgmt.authz.delete_relation_definition, "a", "b"
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.authz.delete_relation_definition("a", "b", "c")
@@ -255,7 +255,7 @@ class TestAuthz(common.DescopeTest):
                 },
                 params=None,
                 json={"name": "a", "namespace": "b", "schemaName": "c"},
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -269,12 +269,12 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed create_relations
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(AuthException, client.mgmt.authz.create_relations, [])
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.authz.create_relations(
@@ -306,7 +306,7 @@ class TestAuthz(common.DescopeTest):
                         }
                     ]
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -320,12 +320,12 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed delete_relations
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(AuthException, client.mgmt.authz.delete_relations, [])
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.authz.delete_relations(
@@ -357,7 +357,7 @@ class TestAuthz(common.DescopeTest):
                         }
                     ]
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -371,14 +371,14 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed delete_relations_for_resources
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException, client.mgmt.authz.delete_relations_for_resources, []
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.authz.delete_relations_for_resources(["r"]))
             mock_post.assert_called_with(
@@ -390,7 +390,7 @@ class TestAuthz(common.DescopeTest):
                 },
                 params=None,
                 json={"resources": ["r"]},
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -404,12 +404,12 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed has_relations
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(AuthException, client.mgmt.authz.has_relations, [])
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(
                 client.mgmt.authz.has_relations(
@@ -441,7 +441,7 @@ class TestAuthz(common.DescopeTest):
                         }
                     ]
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -455,14 +455,14 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed who_can_access
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException, client.mgmt.authz.who_can_access, "a", "b", "c"
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(client.mgmt.authz.who_can_access("a", "b", "c"))
             mock_post.assert_called_with(
@@ -474,7 +474,7 @@ class TestAuthz(common.DescopeTest):
                 },
                 params=None,
                 json={"resource": "a", "relationDefinition": "b", "namespace": "c"},
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -488,12 +488,12 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed resource_relations
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(AuthException, client.mgmt.authz.resource_relations, "a")
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(client.mgmt.authz.resource_relations("a"))
             mock_post.assert_called_with(
@@ -505,7 +505,7 @@ class TestAuthz(common.DescopeTest):
                 },
                 params=None,
                 json={"resource": "a"},
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -519,12 +519,12 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed targets_relations
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(AuthException, client.mgmt.authz.targets_relations, ["a"])
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(client.mgmt.authz.targets_relations(["a"]))
             mock_post.assert_called_with(
@@ -536,7 +536,7 @@ class TestAuthz(common.DescopeTest):
                 },
                 params=None,
                 json={"targets": ["a"]},
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -550,14 +550,14 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed what_can_target_access
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException, client.mgmt.authz.what_can_target_access, "a"
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(client.mgmt.authz.what_can_target_access("a"))
             mock_post.assert_called_with(
@@ -569,7 +569,7 @@ class TestAuthz(common.DescopeTest):
                 },
                 params=None,
                 json={"target": "a"},
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -583,7 +583,7 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed what_can_target_access_with_relation
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -594,7 +594,7 @@ class TestAuthz(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(
                 client.mgmt.authz.what_can_target_access_with_relation("a", "b", "c")
@@ -608,7 +608,7 @@ class TestAuthz(common.DescopeTest):
                 },
                 params=None,
                 json={"target": "a", "relationDefinition": "b", "namespace": "c"},
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -622,12 +622,12 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed get_modified
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(AuthException, client.mgmt.authz.get_modified)
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(client.mgmt.authz.get_modified())
             mock_post.assert_called_with(
@@ -639,7 +639,7 @@ class TestAuthz(common.DescopeTest):
                 },
                 params=None,
                 json={"since": 0},
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

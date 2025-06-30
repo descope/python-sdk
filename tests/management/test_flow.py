@@ -31,7 +31,7 @@ class TestFlow(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -39,7 +39,7 @@ class TestFlow(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(client.mgmt.flow.list_flows())
             mock_post.assert_called_with(
@@ -51,7 +51,7 @@ class TestFlow(common.DescopeTest):
                 },
                 params=None,
                 json=None,
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -65,7 +65,7 @@ class TestFlow(common.DescopeTest):
         )
 
         # Test failed delete flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -74,7 +74,7 @@ class TestFlow(common.DescopeTest):
             )
 
         # Test success delete flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(client.mgmt.flow.delete_flows(["flow-1", "flow-2"]))
             mock_post.assert_called_with(
@@ -86,7 +86,7 @@ class TestFlow(common.DescopeTest):
                 },
                 params=None,
                 json={"ids": ["flow-1", "flow-2"]},
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -100,7 +100,7 @@ class TestFlow(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -109,7 +109,7 @@ class TestFlow(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(client.mgmt.flow.export_flow("test"))
             mock_post.assert_called_with(
@@ -123,7 +123,7 @@ class TestFlow(common.DescopeTest):
                 json={
                     "flowId": "test",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -137,7 +137,7 @@ class TestFlow(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -148,7 +148,7 @@ class TestFlow(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(
                 client.mgmt.flow.import_flow("name", {"name": "test"}, [{"id": "test"}])
@@ -166,7 +166,7 @@ class TestFlow(common.DescopeTest):
                     "flow": {"name": "test"},
                     "screens": [{"id": "test"}],
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -180,12 +180,12 @@ class TestFlow(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(AuthException, client.mgmt.flow.export_theme)
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(client.mgmt.flow.export_theme())
             mock_post.assert_called_with(
@@ -197,7 +197,7 @@ class TestFlow(common.DescopeTest):
                 },
                 params=None,
                 json={},
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -211,14 +211,14 @@ class TestFlow(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException, client.mgmt.flow.import_theme, {"id": "test"}
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(client.mgmt.flow.import_theme({"id": "test"}))
             mock_post.assert_called_with(
@@ -230,7 +230,7 @@ class TestFlow(common.DescopeTest):
                 },
                 params=None,
                 json={"theme": {"id": "test"}},
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

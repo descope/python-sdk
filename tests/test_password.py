@@ -67,7 +67,7 @@ class TestPassword(common.DescopeTest):
             signup_user_details,
         )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -78,7 +78,7 @@ class TestPassword(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
@@ -111,7 +111,7 @@ class TestPassword(common.DescopeTest):
                         "email": "dummy@dummy.com",
                     },
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -148,7 +148,7 @@ class TestPassword(common.DescopeTest):
             None,
         )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -158,7 +158,7 @@ class TestPassword(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
@@ -183,7 +183,7 @@ class TestPassword(common.DescopeTest):
                     "loginId": "dummy@dummy.com",
                     "password": "123456",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -204,7 +204,7 @@ class TestPassword(common.DescopeTest):
             None,
         )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -213,7 +213,7 @@ class TestPassword(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
@@ -240,13 +240,13 @@ class TestPassword(common.DescopeTest):
                     "loginId": "dummy@dummy.com",
                     "redirectUrl": "https://redirect.here.com",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Test success flow with template options
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
@@ -278,7 +278,7 @@ class TestPassword(common.DescopeTest):
                     "redirectUrl": "https://redirect.here.com",
                     "templateOptions": {"bla": "blue"},
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -335,7 +335,7 @@ class TestPassword(common.DescopeTest):
             None,
         )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -346,7 +346,7 @@ class TestPassword(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkVGVuYW50cyI6eyIiOm51bGx9LCJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwNjc5MjA4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MjA5MDA4NzIwOCwiaWF0IjoxNjU4MDg3MjA4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQzU1dnl4dzBzUkw2RmRNNjhxUnNDRGRST1YifQ.cWP5up4R5xeIl2qoG2NtfLH3Q5nRJVKdz-FDoAXctOQW9g3ceZQi6rZQ-TPBaXMKw68bijN3bLJTqxWW5WHzqRUeopfuzTcMYmC0wP2XGJkrdF6A8D5QW6acSGqglFgu"
             self.assertIsNone(
@@ -364,7 +364,7 @@ class TestPassword(common.DescopeTest):
                     "loginId": "dummy@dummy.com",
                     "newPassword": "123456",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -421,7 +421,7 @@ class TestPassword(common.DescopeTest):
             None,
         )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -432,7 +432,7 @@ class TestPassword(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
@@ -460,7 +460,7 @@ class TestPassword(common.DescopeTest):
                     "oldPassword": "123456",
                     "newPassword": "1234567",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -468,7 +468,7 @@ class TestPassword(common.DescopeTest):
     def test_policy(self):
         password = Password(Auth(self.dummy_project_id, self.public_key_dict))
 
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             mock_get.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -476,7 +476,7 @@ class TestPassword(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             mock_get.return_value.ok = True
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
@@ -493,7 +493,7 @@ class TestPassword(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
-                allow_redirects=None,
+                follow_redirects=None,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

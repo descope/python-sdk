@@ -182,7 +182,7 @@ class TestOTP(common.DescopeTest):
             invalid_signup_user_details,
         )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -193,7 +193,7 @@ class TestOTP(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
@@ -213,7 +213,7 @@ class TestOTP(common.DescopeTest):
             "email": "dummy@dummy.com",
         }
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
@@ -242,13 +242,13 @@ class TestOTP(common.DescopeTest):
                     },
                     "email": "dummy@dummy.com",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Test success flow with sign up options
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
@@ -284,13 +284,13 @@ class TestOTP(common.DescopeTest):
                         "templateId": "foo",
                     },
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Test user is None so using the login_id as default
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
@@ -312,7 +312,7 @@ class TestOTP(common.DescopeTest):
                     "user": {"email": "dummy@dummy.com"},
                     "email": "dummy@dummy.com",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -330,7 +330,7 @@ class TestOTP(common.DescopeTest):
         self.assertRaises(AuthException, client.otp.sign_in, DeliveryMethod.EMAIL, "")
         self.assertRaises(AuthException, client.otp.sign_in, DeliveryMethod.EMAIL, None)
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -340,7 +340,7 @@ class TestOTP(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
@@ -358,7 +358,7 @@ class TestOTP(common.DescopeTest):
             )
 
         # Validate refresh token used while provided
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             refresh_token = "dummy refresh token"
             client.otp.sign_in(
                 DeliveryMethod.EMAIL,
@@ -382,13 +382,13 @@ class TestOTP(common.DescopeTest):
                         "mfa": False,
                     },
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # With template options
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             refresh_token = "dummy refresh token"
             client.otp.sign_in(
                 DeliveryMethod.EMAIL,
@@ -416,7 +416,7 @@ class TestOTP(common.DescopeTest):
                         "mfa": False,
                     },
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -429,7 +429,7 @@ class TestOTP(common.DescopeTest):
             AuthException, client.otp.sign_up_or_in, DeliveryMethod.EMAIL, ""
         )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -439,7 +439,7 @@ class TestOTP(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
@@ -450,7 +450,7 @@ class TestOTP(common.DescopeTest):
             )
 
         # Test success flow with sign up options
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
@@ -480,7 +480,7 @@ class TestOTP(common.DescopeTest):
                         "templateId": "foo",
                     },
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
                 params=None,
@@ -498,7 +498,7 @@ class TestOTP(common.DescopeTest):
             AuthException, client.otp.verify_code, DeliveryMethod.EMAIL, None, code
         )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -510,7 +510,7 @@ class TestOTP(common.DescopeTest):
 
         # Test success flow
         valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3R6VWhkcXBJRjJ5czlnZzdtczA2VXZ0QzQiLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0Mzc1OTYsImlhdCI6MTY1OTYzNzU5NiwiaXNzIjoiUDJDdHpVaGRxcElGMnlzOWdnN21zMDZVdnRDNCIsInN1YiI6IlUyQ3UwajBXUHczWU9pUElTSmI1Mkwwd1VWTWcifQ.WLnlHugvzZtrV9OzBB7SjpCLNRvKF3ImFpVyIN5orkrjO2iyAKg_Rb4XHk9sXGC1aW8puYzLbhE1Jv3kk2hDcKggfE8OaRNRm8byhGFZHnvPJwcP_Ya-aRmfAvCLcKOL"
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
             my_mock_response.json.return_value = {}
@@ -543,7 +543,7 @@ class TestOTP(common.DescopeTest):
             "refresh_token1",
         )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -554,7 +554,7 @@ class TestOTP(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
@@ -578,14 +578,14 @@ class TestOTP(common.DescopeTest):
                     "addToLoginIDs": False,
                     "onMergeUseExisting": False,
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
                 params=None,
             )
 
         # Test success flow with template options
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
@@ -613,7 +613,7 @@ class TestOTP(common.DescopeTest):
                     "onMergeUseExisting": False,
                     "templateOptions": {"bla": "blue"},
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
                 params=None,
@@ -648,7 +648,7 @@ class TestOTP(common.DescopeTest):
             "refresh_token1",
         )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -660,7 +660,7 @@ class TestOTP(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
             my_mock_response.json.return_value = {"maskedPhone": "*****111"}
@@ -684,13 +684,13 @@ class TestOTP(common.DescopeTest):
                     "addToLoginIDs": False,
                     "onMergeUseExisting": False,
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
                 params=None,
             )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
             my_mock_response.json.return_value = {"maskedPhone": "*****111"}
@@ -714,13 +714,13 @@ class TestOTP(common.DescopeTest):
                     "addToLoginIDs": False,
                     "onMergeUseExisting": False,
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
                 params=None,
             )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
             my_mock_response.json.return_value = {"maskedPhone": "*****111"}
@@ -744,14 +744,14 @@ class TestOTP(common.DescopeTest):
                     "addToLoginIDs": False,
                     "onMergeUseExisting": False,
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
                 params=None,
             )
 
         # Test success flow with template options
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
             my_mock_response.json.return_value = {"maskedPhone": "*****111"}
@@ -780,7 +780,7 @@ class TestOTP(common.DescopeTest):
                     "onMergeUseExisting": False,
                     "templateOptions": {"bla": "blue"},
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
                 params=None,
