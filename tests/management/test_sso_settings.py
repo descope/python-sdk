@@ -62,6 +62,7 @@ class TestSSOSettings(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 follow_redirects=False,
                 verify=True,
@@ -90,7 +91,7 @@ class TestSSOSettings(common.DescopeTest):
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads(
-                """{"tenant": {"id": "T2AAAA", "name": "myTenantName", "selfProvisioningDomains": [], "customAttributes": {}, "authType": "saml", "domains": ["lulu", "kuku"]}, "saml": {"idpEntityId": "", "idpSSOUrl": "", "idpCertificate": "", "idpMetadataUrl": "https://dummy.com/metadata", "spEntityId": "", "spACSUrl": "", "spCertificate": "", "attributeMapping": {"name": "name", "email": "email", "username": "", "phoneNumber": "phone", "group": "", "givenName": "", "middleName": "", "familyName": "", "picture": "", "customAttributes": {}}, "groupsMapping": [], "redirectUrl": ""}, "oidc": {"name": "", "clientId": "", "clientSecret": "", "redirectUrl": "", "authUrl": "", "tokenUrl": "", "userDataUrl": "", "scope": [], "JWKsUrl": "", "userAttrMapping": {"loginId": "sub", "username": "", "name": "name", "email": "email", "phoneNumber": "phone_number", "verifiedEmail": "email_verified", "verifiedPhone": "phone_number_verified", "picture": "picture", "givenName": "given_name", "middleName": "middle_name", "familyName": "family_name"}, "manageProviderTokens": false, "callbackDomain": "", "prompt": [], "grantType": "authorization_code", "issuer": ""}}"""
+                """{"tenant": {"id": "T2AAAA", "name": "myTenantName", "selfProvisioningDomains": [], "customAttributes": {}, "authType": "saml", "domains": ["lulu", "kuku"]}, "saml": {"idpEntityId": "", "idpSSOUrl": "", "idpCertificate": "", "defaultSSORoles": ["aa", "bb"], "idpMetadataUrl": "https://dummy.com/metadata", "spEntityId": "", "spACSUrl": "", "spCertificate": "", "attributeMapping": {"name": "name", "email": "email", "username": "", "phoneNumber": "phone", "group": "", "givenName": "", "middleName": "", "familyName": "", "picture": "", "customAttributes": {}}, "groupsMapping": [], "redirectUrl": ""}, "oidc": {"name": "", "clientId": "", "clientSecret": "", "redirectUrl": "", "authUrl": "", "tokenUrl": "", "userDataUrl": "", "scope": [], "JWKsUrl": "", "userAttrMapping": {"loginId": "sub", "username": "", "name": "name", "email": "email", "phoneNumber": "phone_number", "verifiedEmail": "email_verified", "verifiedPhone": "phone_number_verified", "picture": "picture", "givenName": "given_name", "middleName": "middle_name", "familyName": "family_name"}, "manageProviderTokens": false, "callbackDomain": "", "prompt": [], "grantType": "authorization_code", "issuer": ""}}"""
             )
             mock_get.return_value = network_resp
             resp = client.mgmt.sso.load_settings("T2AAAA")
@@ -101,11 +102,16 @@ class TestSSOSettings(common.DescopeTest):
             self.assertEqual(
                 saml_settings.get("idpMetadataUrl", ""), "https://dummy.com/metadata"
             )
+            self.assertEqual(
+                saml_settings.get("defaultSSORoles", ""),
+                ["aa", "bb"],
+            )
             mock_get.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_load_settings_path}",
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params={"tenantId": "T2AAAA"},
                 follow_redirects=None,
@@ -172,6 +178,7 @@ class TestSSOSettings(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -233,6 +240,7 @@ class TestSSOSettings(common.DescopeTest):
                     idp_cert="cert",
                     sp_acs_url="http://spacsurl.com",
                     sp_entity_id="spentityid",
+                    default_sso_roles=["aa", "bb"],
                 ),
                 "https://redirect.com",
                 ["domain.com"],
@@ -261,6 +269,7 @@ class TestSSOSettings(common.DescopeTest):
                         role_mappings=[RoleMapping(groups=["grp1"], role_name="rl1")],
                         sp_acs_url="http://spacsurl.com",
                         sp_entity_id="spentityid",
+                        default_sso_roles=["aa", "bb"],
                     ),
                     "https://redirect.com",
                     ["domain.com"],
@@ -271,6 +280,7 @@ class TestSSOSettings(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -293,6 +303,7 @@ class TestSSOSettings(common.DescopeTest):
                         "roleMappings": [{"groups": ["grp1"], "roleName": "rl1"}],
                         "spACSUrl": "http://spacsurl.com",
                         "spEntityId": "spentityid",
+                        "defaultSSORoles": ["aa", "bb"],
                     },
                     "redirectUrl": "https://redirect.com",
                     "domains": ["domain.com"],
@@ -343,6 +354,7 @@ class TestSSOSettings(common.DescopeTest):
                         role_mappings=[RoleMapping(groups=["grp1"], role_name="rl1")],
                         sp_acs_url="http://spacsurl.com",
                         sp_entity_id="spentityid",
+                        default_sso_roles=["aa", "bb"],
                     ),
                     "https://redirect.com",
                     ["domain.com"],
@@ -353,6 +365,7 @@ class TestSSOSettings(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -373,6 +386,7 @@ class TestSSOSettings(common.DescopeTest):
                         "roleMappings": [{"groups": ["grp1"], "roleName": "rl1"}],
                         "spACSUrl": "http://spacsurl.com",
                         "spEntityId": "spentityid",
+                        "defaultSSORoles": ["aa", "bb"],
                     },
                     "redirectUrl": "https://redirect.com",
                     "domains": ["domain.com"],
@@ -419,6 +433,7 @@ class TestSSOSettings(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params={"tenantId": "tenant-id"},
                 follow_redirects=None,
@@ -466,6 +481,7 @@ class TestSSOSettings(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -498,6 +514,7 @@ class TestSSOSettings(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -531,6 +548,7 @@ class TestSSOSettings(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -582,6 +600,7 @@ class TestSSOSettings(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -609,6 +628,7 @@ class TestSSOSettings(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -656,6 +676,7 @@ class TestSSOSettings(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={

@@ -105,18 +105,34 @@ class Auth:
                 self.public_keys = {kid: (pub_key, alg)}
 
     def _raise_rate_limit_exception(self, response):
-        resp = response.json()
-        raise RateLimitException(
-            resp.get("errorCode", HTTPStatus.TOO_MANY_REQUESTS),
-            ERROR_TYPE_API_RATE_LIMIT,
-            resp.get("errorDescription", ""),
-            resp.get("errorMessage", ""),
-            rate_limit_parameters={
-                API_RATE_LIMIT_RETRY_AFTER_HEADER: int(
-                    response.headers.get(API_RATE_LIMIT_RETRY_AFTER_HEADER, 0)
-                )
-            },
-        )
+        try:
+            resp = response.json()
+            raise RateLimitException(
+                resp.get("errorCode", HTTPStatus.TOO_MANY_REQUESTS),
+                ERROR_TYPE_API_RATE_LIMIT,
+                resp.get("errorDescription", ""),
+                resp.get("errorMessage", ""),
+                rate_limit_parameters={
+                    API_RATE_LIMIT_RETRY_AFTER_HEADER: self._parse_retry_after(
+                        response.headers
+                    )
+                },
+            )
+        except RateLimitException:
+            raise
+        except Exception as e:
+            raise RateLimitException(
+                status_code=HTTPStatus.TOO_MANY_REQUESTS,
+                error_type=ERROR_TYPE_API_RATE_LIMIT,
+                error_message=ERROR_TYPE_API_RATE_LIMIT,
+                error_description=ERROR_TYPE_API_RATE_LIMIT,
+            )
+
+    def _parse_retry_after(self, headers):
+        try:
+            return int(headers.get(API_RATE_LIMIT_RETRY_AFTER_HEADER, 0))
+        except (ValueError, TypeError):
+            return 0
 
     def do_get(
         self,
@@ -544,6 +560,7 @@ class Auth:
 
     def _get_default_headers(self, pswd: str | None = None):
         headers = _default_headers.copy()
+        headers["x-descope-project-id"] = self.project_id
         bearer = self.project_id
         if pswd:
             bearer = f"{self.project_id}:{pswd}"

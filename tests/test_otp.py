@@ -229,6 +229,7 @@ class TestOTP(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -258,7 +259,7 @@ class TestOTP(common.DescopeTest):
                     DeliveryMethod.EMAIL,
                     "dummy@dummy.com",
                     signup_user_details,
-                    SignUpOptions(template_options={"bla": "blue"}),
+                    SignUpOptions(template_options={"bla": "blue"}, template_id="foo"),
                 ),
             )
             mock_post.assert_called_with(
@@ -266,6 +267,7 @@ class TestOTP(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -277,7 +279,10 @@ class TestOTP(common.DescopeTest):
                         "email": "dummy@dummy.com",
                     },
                     "email": "dummy@dummy.com",
-                    "loginOptions": {"templateOptions": {"bla": "blue"}},
+                    "loginOptions": {
+                        "templateOptions": {"bla": "blue"},
+                        "templateId": "foo",
+                    },
                 },
                 follow_redirects=False,
                 verify=True,
@@ -299,6 +304,7 @@ class TestOTP(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -365,6 +371,7 @@ class TestOTP(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{refresh_token}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -386,7 +393,9 @@ class TestOTP(common.DescopeTest):
             client.otp.sign_in(
                 DeliveryMethod.EMAIL,
                 "dummy@dummy.com",
-                LoginOptions(stepup=True, template_options={"blue": "bla"}),
+                LoginOptions(
+                    stepup=True, template_options={"blue": "bla"}, template_id="foo"
+                ),
                 refresh_token=refresh_token,
             )
             mock_post.assert_called_with(
@@ -394,6 +403,7 @@ class TestOTP(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{refresh_token}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
                 json={
@@ -402,6 +412,7 @@ class TestOTP(common.DescopeTest):
                         "stepup": True,
                         "customClaims": None,
                         "templateOptions": {"blue": "bla"},
+                        "templateId": "foo",
                         "mfa": False,
                     },
                 },
@@ -449,7 +460,7 @@ class TestOTP(common.DescopeTest):
                 client.otp.sign_up_or_in(
                     DeliveryMethod.EMAIL,
                     "dummy@dummy.com",
-                    SignUpOptions(template_options={"bla": "blue"}),
+                    SignUpOptions(template_options={"bla": "blue"}, template_id="foo"),
                 ),
             )
             mock_post.assert_called_with(
@@ -457,6 +468,7 @@ class TestOTP(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 json={
                     "loginId": "dummy@dummy.com",
@@ -465,6 +477,7 @@ class TestOTP(common.DescopeTest):
                         "customClaims": None,
                         "mfa": False,
                         "templateOptions": {"bla": "blue"},
+                        "templateId": "foo",
                     },
                 },
                 follow_redirects=False,
@@ -557,6 +570,7 @@ class TestOTP(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:refresh_token1",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 json={
                     "loginId": "id1",
@@ -590,6 +604,7 @@ class TestOTP(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:refresh_token1",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 json={
                     "loginId": "id1",
@@ -661,6 +676,7 @@ class TestOTP(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:refresh_token1",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 json={
                     "loginId": "id1",
@@ -690,6 +706,7 @@ class TestOTP(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:refresh_token1",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 json={
                     "loginId": "id1",
@@ -719,6 +736,7 @@ class TestOTP(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:refresh_token1",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 json={
                     "loginId": "id1",
@@ -753,6 +771,7 @@ class TestOTP(common.DescopeTest):
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:refresh_token1",
+                    "x-descope-project-id": self.dummy_project_id,
                 },
                 json={
                     "loginId": "id1",
