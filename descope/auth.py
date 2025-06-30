@@ -14,7 +14,7 @@ import jwt
 try:
     from importlib.metadata import version
 except ImportError:
-    from pkg_resources import get_distribution
+    from pkg_resources import get_distribution  # type: ignore
 
 import requests
 from email_validator import EmailNotValidError, validate_email
@@ -120,7 +120,7 @@ class Auth:
             )
         except RateLimitException:
             raise
-        except Exception as e:
+        except Exception:
             raise RateLimitException(
                 status_code=HTTPStatus.TOO_MANY_REQUESTS,
                 error_type=ERROR_TYPE_API_RATE_LIMIT,

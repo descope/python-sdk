@@ -156,7 +156,9 @@ class TestUser(common.DescopeTest):
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
-                AuthException, client.mgmt.jwt.stop_impersonation, "",
+                AuthException,
+                client.mgmt.jwt.stop_impersonation,
+                "",
             )
 
         # Test success flow
@@ -186,7 +188,6 @@ class TestUser(common.DescopeTest):
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
-
 
     def test_sign_in(self):
         client = DescopeClient(
@@ -364,7 +365,8 @@ class TestUser(common.DescopeTest):
                 json={
                     "customClaims": {"k1": "v1"},
                     "selectedTenant": "id",
-                    "refreshDuration": None},
+                    "refreshDuration": None,
+                },
                 allow_redirects=False,
                 verify=True,
                 params=None,

@@ -10,6 +10,7 @@ from descope.common import (
     SignUpOptions,
 )
 from descope.descope_client import DescopeClient
+from descope.descope_client_async import AsyncDescopeClient
 from descope.exceptions import (
     API_RATE_LIMIT_RETRY_AFTER_HEADER,
     ERROR_TYPE_API_RATE_LIMIT,
@@ -39,3 +40,35 @@ from descope.management.user_pwd import (
     UserPasswordFirebase,
     UserPasswordPbkdf2,
 )
+
+__all__ = [
+    "COOKIE_DATA_NAME",
+    "REFRESH_SESSION_COOKIE_NAME",
+    "REFRESH_SESSION_TOKEN_NAME",
+    "SESSION_COOKIE_NAME",
+    "SESSION_TOKEN_NAME",
+    "AccessKeyLoginOptions",
+    "DeliveryMethod",
+    "LoginOptions",
+    "SignUpOptions",
+    "DescopeClient",
+    "AsyncDescopeClient",
+    "AuthException",
+    "RateLimitException",
+    "AssociatedTenant",
+    "SAMLIDPAttributeMappingInfo",
+    "SAMLIDPGroupsMappingInfo",
+    "SAMLIDPRoleGroupMappingInfo",
+    "AttributeMapping",
+    "OIDCAttributeMapping",
+    "RoleMapping",
+    "SSOOIDCSettings",
+    "SSOSAMLSettings",
+    "SSOSAMLSettingsByMetadata",
+    "UserObj",
+    "UserPassword",
+    "UserPasswordBcrypt",
+    "UserPasswordDjango",
+    "UserPasswordFirebase",
+    "UserPasswordPbkdf2",
+]

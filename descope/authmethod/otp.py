@@ -198,8 +198,13 @@ class OTP(AuthBase):
 
         uri = EndpointsV1.update_user_email_otp_path
         body = OTP._compose_update_user_email_body(
-            login_id, email, add_to_login_ids, on_merge_use_existing,
-            template_options, template_id, provider_id
+            login_id,
+            email,
+            add_to_login_ids,
+            on_merge_use_existing,
+            template_options,
+            template_id,
+            provider_id,
         )
         response = self._auth.do_post(uri, body, None, refresh_token)
         return Auth.extract_masked_address(response.json(), DeliveryMethod.EMAIL)
@@ -241,8 +246,13 @@ class OTP(AuthBase):
 
         uri = OTP._compose_update_phone_url(method)
         body = OTP._compose_update_user_phone_body(
-            login_id, phone, add_to_login_ids, on_merge_use_existing,
-            template_options, template_id, provider_id
+            login_id,
+            phone,
+            add_to_login_ids,
+            on_merge_use_existing,
+            template_options,
+            template_id,
+            provider_id,
         )
         response = self._auth.do_post(uri, body, None, refresh_token)
         return Auth.extract_masked_address(response.json(), method)

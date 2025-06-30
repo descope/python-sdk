@@ -1697,9 +1697,13 @@ class User(AuthBase):
         return response.json()["token"]
 
     def generate_sign_up_embedded_link(
-        self, login_id: str, user: Optional[CreateUserObj] = None,
-        email_verified: bool = False, phone_verified: bool = False,
-        login_options: Optional[LoginOptions] = None, timeout: int = 0
+        self,
+        login_id: str,
+        user: Optional[CreateUserObj] = None,
+        email_verified: bool = False,
+        phone_verified: bool = False,
+        login_options: Optional[LoginOptions] = None,
+        timeout: int = 0,
     ) -> str:
         """
         Generate sign up Embedded Link for the given user login ID.
@@ -1727,7 +1731,7 @@ class User(AuthBase):
                 "loginOptions": login_options.__dict__ if login_options else {},
                 "emailVerified": email_verified,
                 "phoneVerified": phone_verified,
-                "timeout": timeout
+                "timeout": timeout,
             },
             pswd=self._auth.management_key,
         )

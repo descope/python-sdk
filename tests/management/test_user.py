@@ -2419,7 +2419,9 @@ class TestUser(common.DescopeTest):
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
-                AuthException, self.client.mgmt.user.generate_sign_up_embedded_link, "login-id"
+                AuthException,
+                self.client.mgmt.user.generate_sign_up_embedded_link,
+                "login-id",
             )
 
         # Test success flow

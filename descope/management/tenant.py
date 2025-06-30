@@ -25,7 +25,7 @@ class Tenant(AuthBase):
             Users authenticating from these domains will be associated with this tenant.
         custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
         enforce_sso (bool): Optional, login to the tenant is possible only using the configured sso
-        disabled (bool): Optional, login to the tenant will be disabled 
+        disabled (bool): Optional, login to the tenant will be disabled
 
         Return value (dict):
         Return dict in the format
@@ -42,7 +42,12 @@ class Tenant(AuthBase):
         response = self._auth.do_post(
             uri,
             Tenant._compose_create_update_body(
-                name, id, self_provisioning_domains, custom_attributes, enforce_sso, disabled
+                name,
+                id,
+                self_provisioning_domains,
+                custom_attributes,
+                enforce_sso,
+                disabled,
             ),
             pswd=self._auth.management_key,
         )
@@ -68,7 +73,7 @@ class Tenant(AuthBase):
             Users authenticating from these domains will be associated with this tenant.
         custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
         enforce_sso (bool): Optional, login to the tenant is possible only using the configured sso
-        disabled (bool): Optional, login to the tenant will be disabled 
+        disabled (bool): Optional, login to the tenant will be disabled
 
         Raise:
         AuthException: raised if creation operation fails
@@ -81,7 +86,12 @@ class Tenant(AuthBase):
         self._auth.do_post(
             uri,
             Tenant._compose_create_update_body(
-                name, id, self_provisioning_domains, custom_attributes, enforce_sso, disabled
+                name,
+                id,
+                self_provisioning_domains,
+                custom_attributes,
+                enforce_sso,
+                disabled,
             ),
             pswd=self._auth.management_key,
         )
@@ -200,7 +210,7 @@ class Tenant(AuthBase):
             "id": id,
             "selfProvisioningDomains": self_provisioning_domains,
             "enforceSSO": enforce_sso,
-            "disabled": disabled
+            "disabled": disabled,
         }
         if custom_attributes is not None:
             body["customAttributes"] = custom_attributes
