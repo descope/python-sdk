@@ -2419,7 +2419,9 @@ class TestUser(common.DescopeTest):
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
-                AuthException, self.client.mgmt.user.generate_sign_up_embedded_link, "login-id"
+                AuthException,
+                self.client.mgmt.user.generate_sign_up_embedded_link,
+                "login-id",
             )
 
         # Test success flow
@@ -2517,5 +2519,75 @@ class TestUser(common.DescopeTest):
                 allow_redirects=False,
                 verify=True,
                 params=None,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_update_test_user(self):
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads('{"user": {"id": "u1"}}')
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.update(
+                "id",
+                display_name="test-user",
+                test=True,
+            )
+            user = resp["user"]
+            self.assertEqual(user["id"], "u1")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "loginId": "id",
+                    "email": None,
+                    "phone": None,
+                    "displayName": "test-user",
+                    "roleNames": [],
+                    "userTenants": [],
+                    "test": True,
+                    "picture": None,
+                    "customAttributes": None,
+                    "additionalLoginIds": None,
+                    "ssoAppIDs": None,
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_patch_test_user(self):
+        with patch("requests.patch") as mock_patch:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads('{"user": {"id": "u1"}}')
+            mock_patch.return_value = network_resp
+            resp = self.client.mgmt.user.patch(
+                "id",
+                display_name="test-user",
+                test=True,
+            )
+            user = resp["user"]
+            self.assertEqual(user["id"], "u1")
+            mock_patch.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_patch_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "loginId": "id",
+                    "displayName": "test-user",
+                    "test": True,
+                },
+                allow_redirects=False,
+                verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
