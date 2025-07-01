@@ -250,6 +250,7 @@ class User(AuthBase):
         additional_login_ids: Optional[List[str]] = None,
         sso_app_ids: Optional[List[str]] = None,
         template_id: str = "",
+        test: bool = False,
     ) -> dict:
         """
         Create a new user and invite them via an email / text message.
@@ -278,7 +279,7 @@ class User(AuthBase):
                 role_names,
                 user_tenants,
                 True,
-                False,
+                test,
                 picture,
                 custom_attributes,
                 verified_email,
