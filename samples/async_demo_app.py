@@ -113,7 +113,7 @@ class AsyncDescopeDemo:
             print(f"❌ Authentication error: {e.error_message}")
         finally:
             # Always clean up resources
-            await client.close_async()
+            await client.close()
             print("🧹 Resources cleaned up manually")
 
     async def run_session_management_demo(self):

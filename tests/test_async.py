@@ -92,7 +92,7 @@ class TestMonkeyPatchAsync(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(hasattr(client.otp, "verify_code"))
 
         # Verify client-level async methods
-        self.assertTrue(hasattr(client, "close_async"))
+        self.assertTrue(hasattr(client, "close"))
         self.assertTrue(hasattr(client, "validate_session_async"))
         self.assertTrue(hasattr(client, "refresh_session_async"))
         self.assertTrue(hasattr(client, "validate_and_refresh_session_async"))
@@ -622,12 +622,12 @@ class TestMonkeyPatchAsync(unittest.IsolatedAsyncioTestCase):
         """Test async client close method."""
         client = AsyncDescopeClient(project_id=self.project_id)
 
-        # Close should not raise an exception
-        await client.close_async()
-
         # Verify the method exists and is callable
-        self.assertTrue(hasattr(client, "close_async"))
-        self.assertTrue(callable(client.close_async))
+        self.assertTrue(hasattr(client, "close"))
+        self.assertTrue(callable(client.close))
+
+        # Close should not raise an exception
+        await client.close()
 
 
 if __name__ == "__main__":

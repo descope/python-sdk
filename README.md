@@ -27,7 +27,7 @@ async def main_manual():
     try:
         masked_email = await client.otp.sign_up_async(DeliveryMethod.EMAIL, "user@example.com")
     finally:
-        await client.close_async()
+        await client.close()
 ```
 
 ## Requirements
@@ -147,7 +147,7 @@ async def otp_example():
         email = "desmond@descope.com"
         user = {"name": "Desmond Copeland", "phone": "212-555-1234", "email": email}
         masked_address = await client.otp.sign_up_async(method=DeliveryMethod.EMAIL, login_id=email, user=user)
-        
+
         # Verify the code
         jwt_response = await client.otp.verify_code_async(
             method=DeliveryMethod.EMAIL, login_id=email, code=value
@@ -200,7 +200,7 @@ async def magiclink_example():
             login_id="desmond@descope.com",
             uri="http://myapp.com/verify-magic-link", # Set redirect URI here or via console
         )
-        
+
         # Verify the magic link token
         jwt_response = await client.magiclink.verify_async(token=token)
         session_token = jwt_response[SESSION_TOKEN_NAME].get("jwt")
@@ -1252,7 +1252,7 @@ type doc
   permission can_create: owner | parent.owner
   permission can_edit: editor | can_create
   permission can_view: viewer | can_edit
-  ```
+```
 
 Descope SDK allows you to fully manage the schema and relations as well as perform simple (and not so simple) checks regarding the existence of relations.
 
