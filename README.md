@@ -54,7 +54,7 @@ These sections show how to use the SDK to perform various authentication/authori
 12. [History](#history)
 13. [My Tenants](#my-tenants)
 
-## API Managment Function
+## API Management Function
 
 These sections show how to use the SDK to perform permission and user management functions. You will need to create an instance of `DescopeClient` by following the [Setup](#setup-1) guide, before you can use any of these functions:
 
@@ -908,7 +908,7 @@ Note: Certificates should have a similar structure to:
 
 ```
 -----BEGIN CERTIFICATE-----
-Certifcate contents
+Certificate contents
 -----END CERTIFICATE-----
 ```
 
