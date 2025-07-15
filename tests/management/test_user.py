@@ -2556,13 +2556,13 @@ class TestUser(common.DescopeTest):
                     "additionalLoginIds": None,
                     "ssoAppIDs": None,
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_patch_test_user(self):
-        with patch("httpx.post") as mock_patch:
+        with patch("httpx.patch") as mock_patch:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads('{"user": {"id": "u1"}}')
@@ -2587,7 +2587,7 @@ class TestUser(common.DescopeTest):
                     "displayName": "test-user",
                     "test": True,
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
