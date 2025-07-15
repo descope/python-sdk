@@ -26,6 +26,27 @@ class Permission(AuthBase):
             pswd=self._auth.management_key,
         )
 
+    async def create_async(
+        self,
+        name: str,
+        description: Optional[str] = None,
+    ):
+        """
+        Create a new permission.
+
+        Args:
+        name (str): permission name.
+        description (str): Optional description to briefly explain what this permission allows.
+
+        Raise:
+        AuthException: raised if creation operation fails
+        """
+        await self._auth.do_post_async(
+            MgmtV1.permission_create_path,
+            {"name": name, "description": description},
+            pswd=self._auth.management_key,
+        )
+
     def update(
         self,
         name: str,
@@ -50,6 +71,30 @@ class Permission(AuthBase):
             pswd=self._auth.management_key,
         )
 
+    async def update_async(
+        self,
+        name: str,
+        new_name: str,
+        description: Optional[str] = None,
+    ):
+        """
+        Update an existing permission with the given various fields. IMPORTANT: All parameters are used as overrides
+        to the existing permission. Empty fields will override populated fields. Use carefully.
+
+        Args:
+        name (str): permission name.
+        new_name (str): permission updated name.
+        description (str): Optional description to briefly explain what this permission allows.
+
+        Raise:
+        AuthException: raised if update operation fails
+        """
+        await self._auth.do_post_async(
+            MgmtV1.permission_update_path,
+            {"name": name, "newName": new_name, "description": description},
+            pswd=self._auth.management_key,
+        )
+
     def delete(
         self,
         name: str,
@@ -64,6 +109,25 @@ class Permission(AuthBase):
         AuthException: raised if creation operation fails
         """
         self._auth.do_post(
+            MgmtV1.permission_delete_path,
+            {"name": name},
+            pswd=self._auth.management_key,
+        )
+
+    async def delete_async(
+        self,
+        name: str,
+    ):
+        """
+        Delete an existing permission. IMPORTANT: This action is irreversible. Use carefully.
+
+        Args:
+        name (str): The name of the permission to be deleted.
+
+        Raise:
+        AuthException: raised if creation operation fails
+        """
+        await self._auth.do_post_async(
             MgmtV1.permission_delete_path,
             {"name": name},
             pswd=self._auth.management_key,
@@ -84,6 +148,26 @@ class Permission(AuthBase):
         AuthException: raised if load operation fails
         """
         response = self._auth.do_get(
+            uri=MgmtV1.permission_load_all_path,
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    async def load_all_async(
+        self,
+    ) -> dict:
+        """
+        Load all permissions.
+
+        Return value (dict):
+        Return dict in the format
+             {"permissions": [{"name": <name>, "description": <description>, "systemDefault":<True/False>}]}
+        Containing the loaded permission information.
+
+        Raise:
+        AuthException: raised if load operation fails
+        """
+        response = await self._auth.do_get_async(
             uri=MgmtV1.permission_load_all_path,
             pswd=self._auth.management_key,
         )

@@ -317,6 +317,29 @@ class DescopeClient:
         """
         return self._auth.validate_session(session_token, audience)
 
+    async def validate_session_async(
+        self, session_token: str, audience: str | Iterable[str] | None = None
+    ) -> dict:
+        """
+        Validate a session token. Call this function for every incoming request to your
+        private endpoints. Alternatively, use validate_and_refresh_session_async in order to
+        automatically refresh expired sessions. If you need to use these specific claims
+        [amr, drn, exp, iss, rexp, sub, jwt] in the top level of the response dict, please use
+        them from the sessionToken key instead, as these claims will soon be deprecated from the top level
+        of the response dict.
+
+        Args:
+        session_token (str): The session token to be validated
+        audience (str|Iterable[str]|None): Optional recipients that the JWT is intended for (must be equal to the 'aud' claim on the provided token)
+
+        Return value (dict):
+        Return dict includes the session token and all JWT claims
+
+        Raise:
+        AuthException: Exception is raised if session is not authorized or any other error occurs
+        """
+        return await self._auth.validate_session_async(session_token, audience)
+
     def refresh_session(
         self, refresh_token: str, audience: str | Iterable[str] | None = None
     ) -> dict:
@@ -334,6 +357,24 @@ class DescopeClient:
         AuthException: Exception is raised if refresh token is not authorized or any other error occurs
         """
         return self._auth.refresh_session(refresh_token, audience)
+
+    async def refresh_session_async(
+        self, refresh_token: str, audience: str | Iterable[str] | None = None
+    ) -> dict:
+        """
+        Refresh a session. Call this function when a session expires and needs to be refreshed.
+
+        Args:
+        refresh_token (str): The refresh token that will be used to refresh the session
+        audience (str|Iterable[str]|None): Optional recipients that the JWT is intended for (must be equal to the 'aud' claim on the provided token)
+
+        Return value (dict):
+        Return dict includes the session token, refresh token, and all JWT claims
+
+        Raise:
+        AuthException: Exception is raised if refresh token is not authorized or any other error occurs
+        """
+        return await self._auth.refresh_session_async(refresh_token, audience)
 
     def validate_and_refresh_session(
         self,
@@ -362,6 +403,33 @@ class DescopeClient:
             session_token, refresh_token, audience
         )
 
+    async def validate_and_refresh_session_async(
+        self,
+        session_token: str,
+        refresh_token: str,
+        audience: str | Iterable[str] | None = None,
+    ) -> dict:
+        """
+        Validate the session token and refresh it if it has expired, the session token will automatically be refreshed.
+        Either the session_token or the refresh_token must be provided.
+        Call this function for every incoming request to your
+        private endpoints. Alternatively, use validate_session_async to only validate the session.
+
+        Args:
+        session_token (str): The session token to be validated
+        refresh_token (str): The refresh token that will be used to refresh the session token, if needed
+        audience (str|Iterable[str]|None): Optional recipients that the JWT is intended for (must be equal to the 'aud' claim on the provided token)
+
+        Return value (dict):
+        Return dict includes the session token, refresh token, and all JWT claims
+
+        Raise:
+        AuthException: Exception is raised if session is not authorized or another error occurs
+        """
+        return await self._auth.validate_and_refresh_session_async(
+            session_token, refresh_token, audience
+        )
+
     def logout(self, refresh_token: str) -> httpx.Response:
         """
         Logout user from current session and revoke the refresh_token. After calling this function,
@@ -384,6 +452,29 @@ class DescopeClient:
 
         uri = EndpointsV1.logout_path
         return self._auth.do_post(uri, {}, None, refresh_token)
+
+    async def logout_async(self, refresh_token: str) -> httpx.Response:
+        """
+        Logout user from current session and revoke the refresh_token. After calling this function,
+            you must invalidate or remove any cookies you have created.
+
+        Args:
+        refresh_token (str): The refresh token
+
+        Return value (httpx.Response): returns the response from the Descope server
+
+        Raise:
+        AuthException: Exception is raised if session is not authorized or another error occurs
+        """
+        if refresh_token is None:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                f"signed refresh token {refresh_token} is empty",
+            )
+
+        uri = EndpointsV1.logout_path
+        return await self._auth.do_post_async(uri, {}, None, refresh_token)
 
     def logout_all(self, refresh_token: str) -> httpx.Response:
         """
@@ -408,6 +499,29 @@ class DescopeClient:
         uri = EndpointsV1.logout_all_path
         return self._auth.do_post(uri, {}, None, refresh_token)
 
+    async def logout_all_async(self, refresh_token: str) -> httpx.Response:
+        """
+        Logout user from all active sessions and revoke the refresh_token. After calling this function,
+            you must invalidate or remove any cookies you have created.
+
+        Args:
+        refresh_token (str): The refresh token
+
+        Return value (httpx.Response): returns the response from the Descope server
+
+        Raise:
+        AuthException: Exception is raised if session is not authorized or another error occurs
+        """
+        if refresh_token is None:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                f"signed refresh token {refresh_token} is empty",
+            )
+
+        uri = EndpointsV1.logout_all_path
+        return await self._auth.do_post_async(uri, {}, None, refresh_token)
+
     def me(self, refresh_token: str) -> dict:
         """
         Retrieve user details for the refresh token. The returned data includes email, name, phone,
@@ -431,6 +545,33 @@ class DescopeClient:
 
         uri = EndpointsV1.me_path
         response = self._auth.do_get(
+            uri=uri, params=None, follow_redirects=None, pswd=refresh_token
+        )
+        return response.json()
+
+    async def me_async(self, refresh_token: str) -> dict:
+        """
+        Retrieve user details for the refresh token. The returned data includes email, name, phone,
+            list of loginIds and boolean flags for verifiedEmail, verifiedPhone.
+
+        Args:
+        refresh_token (str): The refresh token
+
+        Return value (dict): returns the user details from the server
+            (email:str, name:str, phone:str, loginIds[str], verifiedEmail:bool, verifiedPhone:bool)
+
+        Raise:
+        AuthException: Exception is raised if session is not authorized or another error occurs
+        """
+        if refresh_token is None:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                f"signed refresh token {refresh_token} is empty",
+            )
+
+        uri = EndpointsV1.me_path
+        response = await self._auth.do_get_async(
             uri=uri, params=None, follow_redirects=None, pswd=refresh_token
         )
         return response.json()
@@ -482,6 +623,53 @@ class DescopeClient:
         response = self._auth.do_post(uri, body, None, refresh_token)
         return response.json()
 
+    async def my_tenants_async(
+        self,
+        refresh_token: str,
+        dct: bool = False,
+        ids: list[str] | None = None,
+    ) -> dict:
+        """
+        Retrieve tenant attributes that user belongs to, one of dct/ids must be populated .
+
+        Args:
+        dct (bool): Get only the selected tenant from jwt
+        ids (List[str]): Get the list of tenants
+        refresh_token (str): The refresh token
+
+        Return value (dict): returns the tenant requested from the server
+            (id:str, name:str, customAttributes:dict)
+
+        Raise:
+        AuthException: Exception is raised if session is not authorized or another error occurs
+        """
+        if refresh_token is None:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                f"signed refresh token {refresh_token} is empty",
+            )
+        if dct is True and ids is not None and len(ids) > 0:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                "Only one of 'dct' or 'ids' should be supplied",
+            )
+        if dct is False and (ids is None or len(ids) == 0):
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                "Only one of 'dct' or 'ids' should be supplied",
+            )
+
+        body: dict[str, bool | list[str]] = {"dct": dct}
+        if ids is not None:
+            body["ids"] = ids
+
+        uri = EndpointsV1.my_tenants_path
+        response = await self._auth.do_post_async(uri, body, None, refresh_token)
+        return response.json()
+
     def history(self, refresh_token: str) -> list[dict]:
         """
         Retrieve user authentication history for the refresh token
@@ -517,6 +705,41 @@ class DescopeClient:
         )
         return response.json()
 
+    async def history_async(self, refresh_token: str) -> list[dict]:
+        """
+        Retrieve user authentication history for the refresh token
+
+        Args:
+        refresh_token (str): The refresh token
+
+        Return value (List[dict]):
+        Return List in the format
+             [
+                {
+                    "userId": "User's ID",
+                    "loginTime": "User'sLogin time",
+                    "city": "User's city",
+                    "country": "User's country",
+                    "ip": User's IP
+                }
+            ]
+
+        Raise:
+        AuthException: Exception is raised if session is not authorized or another error occurs
+        """
+        if refresh_token is None:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                f"signed refresh token {refresh_token} is empty",
+            )
+
+        uri = EndpointsV1.history_path
+        response = await self._auth.do_get_async(
+            uri=uri, params=None, follow_redirects=None, pswd=refresh_token
+        )
+        return response.json()
+
     def exchange_access_key(
         self,
         access_key: str,
@@ -543,6 +766,34 @@ class DescopeClient:
 
         return self._auth.exchange_access_key(access_key, audience, login_options)
 
+    async def exchange_access_key_async(
+        self,
+        access_key: str,
+        audience: str | Iterable[str] | None = None,
+        login_options: AccessKeyLoginOptions | None = None,
+    ) -> dict:
+        """
+        Return a new session token for the given access key
+
+        Args:
+        access_key (str): The access key
+        audience (str|Iterable[str]|None): Optional recipients that the JWT is intended for (must be equal to the 'aud' claim on the provided token)
+        login_options (AccessKeyLoginOptions): Optional advanced controls over login parameters
+
+        Return dict includes the session token and all JWT claims
+
+        Raise:
+        AuthException: Exception is raised if access key is not valid or another error occurs
+        """
+        if not access_key:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Access key cannot be empty"
+            )
+
+        return await self._auth.exchange_access_key_async(
+            access_key, audience, login_options
+        )
+
     def select_tenant(
         self,
         tenant_id: str,
@@ -562,3 +813,23 @@ class DescopeClient:
         AuthException: Exception is raised if session is not authorized or another error occurs
         """
         return self._auth.select_tenant(tenant_id, refresh_token)
+
+    async def select_tenant_async(
+        self,
+        tenant_id: str,
+        refresh_token: str,
+    ) -> dict:
+        """
+        Add to JWT a selected tenant claim
+
+        Args:
+        refresh_token (str): The refresh token that will be used to refresh the session token, if needed
+        tenant_id (str): The tenant id to place on JWT
+
+        Return value (dict):
+        Return dict includes the session token, refresh token, with the tenant id on the jwt
+
+        Raise:
+        AuthException: Exception is raised if session is not authorized or another error occurs
+        """
+        return await self._auth.select_tenant_async(tenant_id, refresh_token)

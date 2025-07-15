@@ -186,6 +186,31 @@ class SSOSettings(AuthBase):
         )
         return response.json()
 
+    async def load_settings_async(
+        self,
+        tenant_id: str,
+    ) -> dict:
+        """
+        Load SSO setting for the provided tenant_id.
+
+        Args:
+        tenant_id (str): The tenant ID of the desired SSO Settings
+
+        Return value (dict):
+        Containing the loaded SSO settings information.
+        Return dict in the format:
+             {"tenant": {"id": "T2AAAA", "name": "myTenantName", "selfProvisioningDomains": [], "customAttributes": {}, "authType": "saml", "domains": ["lulu", "kuku"]}, "saml": {"idpEntityId": "", "idpSSOUrl": "", "idpCertificate": "", "idpMetadataUrl": "https://dummy.com/metadata", "spEntityId": "", "spACSUrl": "", "spCertificate": "", "attributeMapping": {"name": "name", "email": "email", "username": "", "phoneNumber": "phone", "group": "", "givenName": "", "middleName": "", "familyName": "", "picture": "", "customAttributes": {}}, "groupsMapping": [], "redirectUrl": ""}, "oidc": {"name": "", "clientId": "", "clientSecret": "", "redirectUrl": "", "authUrl": "", "tokenUrl": "", "userDataUrl": "", "scope": [], "JWKsUrl": "", "userAttrMapping": {"loginId": "sub", "username": "", "name": "name", "email": "email", "phoneNumber": "phone_number", "verifiedEmail": "email_verified", "verifiedPhone": "phone_number_verified", "picture": "picture", "givenName": "given_name", "middleName": "middle_name", "familyName": "family_name"}, "manageProviderTokens": False, "callbackDomain": "", "prompt": [], "grantType": "authorization_code", "issuer": ""}}
+
+        Raise:
+        AuthException: raised if load configuration operation fails
+        """
+        response = await self._auth.do_get_async(
+            uri=MgmtV1.sso_load_settings_path,
+            params={"tenantId": tenant_id},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
     def delete_settings(
         self,
         tenant_id: str,
@@ -200,6 +225,25 @@ class SSOSettings(AuthBase):
         AuthException: raised if delete operation fails
         """
         self._auth.do_delete(
+            MgmtV1.sso_settings_path,
+            {"tenantId": tenant_id},
+            pswd=self._auth.management_key,
+        )
+
+    async def delete_settings_async(
+        self,
+        tenant_id: str,
+    ):
+        """
+        Delete SSO setting for the provided tenant_id.
+
+        Args:
+        tenant_id (str): The tenant ID of the desired SSO Settings to delete
+
+        Raise:
+        AuthException: raised if delete operation fails
+        """
+        await self._auth.do_delete_async(
             MgmtV1.sso_settings_path,
             {"tenantId": tenant_id},
             pswd=self._auth.management_key,
@@ -224,6 +268,32 @@ class SSOSettings(AuthBase):
         """
 
         self._auth.do_post(
+            MgmtV1.sso_configure_oidc_settings,
+            SSOSettings._compose_configure_oidc_settings_body(
+                tenant_id, settings, domains
+            ),
+            pswd=self._auth.management_key,
+        )
+
+    async def configure_oidc_settings_async(
+        self,
+        tenant_id: str,
+        settings: SSOOIDCSettings,
+        domains: Optional[List[str]] = None,
+    ):
+        """
+        Configure SSO OIDC settings for a tenant.
+
+        Args:
+        tenant_id (str): The tenant ID to be configured
+        settings (SSOOIDCSettings): The OIDC settings to be configured for this tenant (all settings parameters are required).
+        domains (List[str]): Optional,domains used to associate users authenticating via SSO with this tenant. Use empty list or None to reset them.
+
+        Raise:
+        AuthException: raised if configuration operation fails
+        """
+
+        await self._auth.do_post_async(
             MgmtV1.sso_configure_oidc_settings,
             SSOSettings._compose_configure_oidc_settings_body(
                 tenant_id, settings, domains
@@ -259,6 +329,34 @@ class SSOSettings(AuthBase):
             pswd=self._auth.management_key,
         )
 
+    async def configure_saml_settings_async(
+        self,
+        tenant_id: str,
+        settings: SSOSAMLSettings,
+        redirect_url: Optional[str] = None,
+        domains: Optional[List[str]] = None,
+    ):
+        """
+        Configure SSO SAML settings for a tenant.
+
+        Args:
+        tenant_id (str): The tenant ID to be configured
+        settings (SSOSAMLSettings): The SAML settings to be configured for this tenant (all settings parameters are required).
+        redirect_url (str): Optional,the Redirect URL to use after successful authentication, or empty string to reset it (if not given it has to be set when starting an SSO authentication via the request).
+        domains (List[str]): Optional, domains used to associate users authenticating via SSO with this tenant. Use empty list or None to reset them.
+
+        Raise:
+        AuthException: raised if configuration operation fails
+        """
+
+        await self._auth.do_post_async(
+            MgmtV1.sso_configure_saml_settings,
+            SSOSettings._compose_configure_saml_settings_body(
+                tenant_id, settings, redirect_url, domains
+            ),
+            pswd=self._auth.management_key,
+        )
+
     def configure_saml_settings_by_metadata(
         self,
         tenant_id: str,
@@ -287,6 +385,34 @@ class SSOSettings(AuthBase):
             pswd=self._auth.management_key,
         )
 
+    async def configure_saml_settings_by_metadata_async(
+        self,
+        tenant_id: str,
+        settings: SSOSAMLSettingsByMetadata,
+        redirect_url: Optional[str] = None,
+        domains: Optional[List[str]] = None,
+    ):
+        """
+        Configure SSO SAML settings for a tenant by fetching them from an IDP metadata URL.
+
+        Args:
+        tenant_id (str): The tenant ID to be configured
+        settings (SSOSAMLSettingsByMetadata): The SAML settings to be configured for this tenant (all settings parameters are required).
+        redirect_url (str): Optional, the Redirect URL to use after successful authentication, or empty string to reset it (if not given it has to be set when starting an SSO authentication via the request).
+        domains (List[str]): Optional, domains used to associate users authenticating via SSO with this tenant. Use empty list or None to reset them.
+
+        Raise:
+        AuthException: raised if configuration operation fails
+        """
+
+        await self._auth.do_post_async(
+            MgmtV1.sso_configure_saml_by_metadata_settings,
+            SSOSettings._compose_configure_saml_settings_by_metadata_body(
+                tenant_id, settings, redirect_url, domains
+            ),
+            pswd=self._auth.management_key,
+        )
+
     # DEPRECATED
     def get_settings(
         self,
@@ -307,6 +433,32 @@ class SSOSettings(AuthBase):
         AuthException: raised if configuration operation fails
         """
         response = self._auth.do_get(
+            uri=MgmtV1.sso_settings_path,
+            params={"tenantId": tenant_id},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
+    # DEPRECATED
+    async def get_settings_async(
+        self,
+        tenant_id: str,
+    ) -> dict:
+        """
+        DEPRECATED (use load_settings(..) function instead)
+
+        Get SSO setting for the provided tenant_id.
+
+        Args:
+        tenant_id (str): The tenant ID of the desired SSO Settings
+
+        Return value (dict):
+        Containing the loaded SSO settings information.
+
+        Raise:
+        AuthException: raised if configuration operation fails
+        """
+        response = await self._auth.do_get_async(
             uri=MgmtV1.sso_settings_path,
             params={"tenantId": tenant_id},
             pswd=self._auth.management_key,
@@ -348,31 +500,35 @@ class SSOSettings(AuthBase):
         )
 
     # DEPRECATED
-    def configure_via_metadata(
+    async def configure_async(
         self,
         tenant_id: str,
-        idp_metadata_url: str,
-        redirect_url: Optional[str] = None,
+        idp_url: str,
+        entity_id: str,
+        idp_cert: str,
+        redirect_url: str,
         domains: Optional[List[str]] = None,
-    ):
+    ) -> None:
         """
-        DEPRECATED (use configure_saml_settings_by_metadata(..) function instead)
+        DEPRECATED (use configure_saml_settings(..) function instead)
 
-        Configure SSO setting for am IDP metadata URL. Alternatively, `configure` can be used instead.
+        Configure SSO setting for a tenant manually. Alternatively, `configure_via_metadata` can be used instead.
 
         Args:
         tenant_id (str): The tenant ID to be configured
-        idp_metadata_url (str): The URL to fetch SSO settings from.
+        idp_url (str): The URL for the identity provider.
+        entity_id (str): The entity ID (in the IDP).
+        idp_cert (str): The certificate provided by the IDP.
         redirect_url (str): The Redirect URL to use after successful authentication, or empty string to reset it.
-        domains (List[str]): domains used to associate users authenticating via SSO with this tenant. Use empty list or None to reset them.
+        domain (List[str]): domains used to associate users authenticating via SSO with this tenant. Use empty list or None to reset them.
 
         Raise:
         AuthException: raised if configuration operation fails
         """
-        self._auth.do_post(
-            MgmtV1.sso_metadata_path,
-            SSOSettings._compose_metadata_body(
-                tenant_id, idp_metadata_url, redirect_url, domains
+        await self._auth.do_post_async(
+            MgmtV1.sso_settings_path,
+            SSOSettings._compose_configure_body(
+                tenant_id, idp_url, entity_id, idp_cert, redirect_url, domains
             ),
             pswd=self._auth.management_key,
         )
@@ -398,6 +554,34 @@ class SSOSettings(AuthBase):
         AuthException: raised if configuration operation fails
         """
         self._auth.do_post(
+            MgmtV1.sso_mapping_path,
+            SSOSettings._compose_mapping_body(
+                tenant_id, role_mappings, attribute_mapping
+            ),
+            pswd=self._auth.management_key,
+        )
+
+    # DEPRECATED
+    async def mapping_async(
+        self,
+        tenant_id: str,
+        role_mappings: Optional[List[RoleMapping]] = None,
+        attribute_mapping: Optional[AttributeMapping] = None,
+    ):
+        """
+        DEPRECATED (use configure_saml_settings(..) or configure_saml_settings_by_metadata(..) functions instead)
+
+        Configure SSO role mapping from the IDP groups to the Descope roles.
+
+        Args:
+        tenant_id (str): The tenant ID to be configured
+        role_mappings (List[RoleMapping]): A mapping between IDP groups and Descope roles.
+        attribute_mapping (AttributeMapping): A mapping between IDP user attributes and descope attributes.
+
+        Raise:
+        AuthException: raised if configuration operation fails
+        """
+        await self._auth.do_post_async(
             MgmtV1.sso_mapping_path,
             SSOSettings._compose_mapping_body(
                 tenant_id, role_mappings, attribute_mapping
@@ -586,3 +770,63 @@ class SSOSettings(AuthBase):
             "redirectUrl": redirect_url,
             "domains": domains,
         }
+
+    # DEPRECATED
+    def configure_via_metadata(
+        self,
+        tenant_id: str,
+        idp_metadata_url: str,
+        redirect_url: Optional[str] = None,
+        domains: Optional[List[str]] = None,
+    ):
+        """
+        DEPRECATED (use configure_saml_settings_by_metadata(..) function instead)
+
+        Configure SSO setting for am IDP metadata URL. Alternatively, `configure` can be used instead.
+
+        Args:
+        tenant_id (str): The tenant ID to be configured
+        idp_metadata_url (str): The URL to fetch SSO settings from.
+        redirect_url (str): The Redirect URL to use after successful authentication, or empty string to reset it.
+        domains (List[str]): domains used to associate users authenticating via SSO with this tenant. Use empty list or None to reset them.
+
+        Raise:
+        AuthException: raised if configuration operation fails
+        """
+        self._auth.do_post(
+            MgmtV1.sso_metadata_path,
+            SSOSettings._compose_metadata_body(
+                tenant_id, idp_metadata_url, redirect_url, domains
+            ),
+            pswd=self._auth.management_key,
+        )
+
+    # DEPRECATED
+    async def configure_via_metadata_async(
+        self,
+        tenant_id: str,
+        idp_metadata_url: str,
+        redirect_url: Optional[str] = None,
+        domains: Optional[List[str]] = None,
+    ):
+        """
+        DEPRECATED (use configure_saml_settings_by_metadata(..) function instead)
+
+        Configure SSO setting for am IDP metadata URL. Alternatively, `configure` can be used instead.
+
+        Args:
+        tenant_id (str): The tenant ID to be configured
+        idp_metadata_url (str): The URL to fetch SSO settings from.
+        redirect_url (str): The Redirect URL to use after successful authentication, or empty string to reset it.
+        domains (List[str]): domains used to associate users authenticating via SSO with this tenant. Use empty list or None to reset them.
+
+        Raise:
+        AuthException: raised if configuration operation fails
+        """
+        await self._auth.do_post_async(
+            MgmtV1.sso_metadata_path,
+            SSOSettings._compose_metadata_body(
+                tenant_id, idp_metadata_url, redirect_url, domains
+            ),
+            pswd=self._auth.management_key,
+        )
