@@ -85,3 +85,14 @@ e7f5ad4253ad82236a5cff5f8c06878bfb190b00:tests/test_descope_client.py:jwt:185
 e7f5ad4253ad82236a5cff5f8c06878bfb190b00:tests/test_descope_client.py:jwt:197
 ece761372c78a9ad8a57da5f6d13431d298a99db:tests/test_auth.py:jwt:562
 f3ec873c83a7067a1226d8b712b756b1b599fb3b:tests/test_descope_client.py:jwt:519
+89cb537dc7eca2cf2cfe97d23010c2a75808baa2:tests/test_password.py:jwt:99
+89cb537dc7eca2cf2cfe97d23010c2a75808baa2:tests/test_password.py:jwt:194
+89cb537dc7eca2cf2cfe97d23010c2a75808baa2:tests/test_totp.py:jwt:140
+89cb537dc7eca2cf2cfe97d23010c2a75808baa2:tests/test_sso.py:jwt:228
+89cb537dc7eca2cf2cfe97d23010c2a75808baa2:tests/test_webauthn.py:jwt:211
+89cb537dc7eca2cf2cfe97d23010c2a75808baa2:tests/test_webauthn.py:jwt:419
+89cb537dc7eca2cf2cfe97d23010c2a75808baa2:tests/test_totp.py:jwt:309
+89cb537dc7eca2cf2cfe97d23010c2a75808baa2:tests/test_password.py:jwt:403
+89cb537dc7eca2cf2cfe97d23010c2a75808baa2:tests/test_oauth.py:jwt:204
+89cb537dc7eca2cf2cfe97d23010c2a75808baa2:tests/test_password.py:jwt:516
+89cb537dc7eca2cf2cfe97d23010c2a75808baa2:tests/test_webauthn.py:jwt:654
