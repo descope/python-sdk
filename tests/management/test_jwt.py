@@ -7,6 +7,11 @@ from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtLoginOptions, MgmtV1
 
 from .. import common
+from ..async_test_base import (
+    parameterized_sync_async_subcase,
+    HTTPMockHelper,
+    MethodTestHelper,
+)
 
 
 class TestUser(common.DescopeTest):
@@ -24,7 +29,8 @@ class TestUser(common.DescopeTest):
             "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
         }
 
-    def test_update_jwt(self):
+    @parameterized_sync_async_subcase("update_jwt", "update_jwt_async")
+    def test_update_jwt(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -33,26 +39,44 @@ class TestUser(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_post:
             self.assertRaises(
-                AuthException, client.mgmt.jwt.update_jwt, "jwt", {"k1": "v1"}, 0
+                AuthException,
+                MethodTestHelper.call_method,
+                client.mgmt.jwt,
+                method_name,
+                "jwt",
+                {"k1": "v1"},
+                0,
             )
 
             self.assertRaises(
-                AuthException, client.mgmt.jwt.update_jwt, "", {"k1": "v1"}, 0
+                AuthException,
+                MethodTestHelper.call_method,
+                client.mgmt.jwt,
+                method_name,
+                "",
+                {"k1": "v1"},
+                0,
             )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.ok = True
-            network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
-            mock_post.return_value = network_resp
-            resp = client.mgmt.jwt.update_jwt("test", {"k1": "v1"}, 40)
+        with HTTPMockHelper.mock_http_call(
+            is_async,
+            method="post",
+            ok=True,
+            json=lambda: json.loads("""{"jwt": "response"}"""),
+        ) as mock_post:
+            resp = MethodTestHelper.call_method(
+                client.mgmt.jwt, method_name, "test", {"k1": "v1"}, 40
+            )
             self.assertEqual(resp, "response")
             expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.update_jwt_path}"
-            mock_post.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 expected_uri,
                 headers={
                     **common.default_headers,
@@ -70,10 +94,14 @@ class TestUser(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-            resp = client.mgmt.jwt.update_jwt("test", {"k1": "v1"})
+            resp = MethodTestHelper.call_method(
+                client.mgmt.jwt, method_name, "test", {"k1": "v1"}
+            )
             self.assertEqual(resp, "response")
             expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.update_jwt_path}"
-            mock_post.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 expected_uri,
                 headers={
                     **common.default_headers,
@@ -91,7 +119,8 @@ class TestUser(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_impersonate(self):
+    @parameterized_sync_async_subcase("impersonate", "impersonate_async")
+    def test_impersonate(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -100,30 +129,54 @@ class TestUser(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_post:
             self.assertRaises(
-                AuthException, client.mgmt.jwt.impersonate, "imp1", "imp2", False
+                AuthException,
+                MethodTestHelper.call_method,
+                client.mgmt.jwt,
+                method_name,
+                "imp1",
+                "imp2",
+                False,
             )
 
             self.assertRaises(
-                AuthException, client.mgmt.jwt.impersonate, "", "imp2", False
+                AuthException,
+                MethodTestHelper.call_method,
+                client.mgmt.jwt,
+                method_name,
+                "",
+                "imp2",
+                False,
             )
 
             self.assertRaises(
-                AuthException, client.mgmt.jwt.impersonate, "imp1", "", False
+                AuthException,
+                MethodTestHelper.call_method,
+                client.mgmt.jwt,
+                method_name,
+                "imp1",
+                "",
+                False,
             )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.ok = True
-            network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
-            mock_post.return_value = network_resp
-            resp = client.mgmt.jwt.impersonate("imp1", "imp2", True)
+        with HTTPMockHelper.mock_http_call(
+            is_async,
+            method="post",
+            ok=True,
+            json=lambda: json.loads("""{"jwt": "response"}"""),
+        ) as mock_post:
+            resp = MethodTestHelper.call_method(
+                client.mgmt.jwt, method_name, "imp1", "imp2", True
+            )
             self.assertEqual(resp, "response")
             expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.impersonate_path}"
-            mock_post.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 expected_uri,
                 headers={
                     **common.default_headers,
@@ -144,7 +197,8 @@ class TestUser(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_stop_impersonation(self):
+    @parameterized_sync_async_subcase("stop_impersonation", "stop_impersonation_async")
+    def test_stop_impersonation(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -153,24 +207,30 @@ class TestUser(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_post:
             self.assertRaises(
                 AuthException,
-                client.mgmt.jwt.stop_impersonation,
+                MethodTestHelper.call_method,
+                client.mgmt.jwt,
+                method_name,
                 "",
             )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.ok = True
-            network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
-            mock_post.return_value = network_resp
-            resp = client.mgmt.jwt.stop_impersonation("jwtstr")
+        with HTTPMockHelper.mock_http_call(
+            is_async,
+            method="post",
+            ok=True,
+            json=lambda: json.loads("""{"jwt": "response"}"""),
+        ) as mock_post:
+            resp = MethodTestHelper.call_method(client.mgmt.jwt, method_name, "jwtstr")
             self.assertEqual(resp, "response")
             expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.stop_impersonation_path}"
-            mock_post.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 expected_uri,
                 headers={
                     **common.default_headers,
@@ -189,7 +249,8 @@ class TestUser(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_sign_in(self):
+    @parameterized_sync_async_subcase("sign_in", "sign_in_async")
+    def test_sign_in(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -198,24 +259,35 @@ class TestUser(common.DescopeTest):
         )
 
         # Test failed flows
-        self.assertRaises(AuthException, client.mgmt.jwt.sign_in, "")
+        self.assertRaises(
+            AuthException,
+            MethodTestHelper.call_method,
+            client.mgmt.jwt,
+            method_name,
+            "",
+        )
 
         self.assertRaises(
             AuthException,
-            client.mgmt.jwt.sign_in,
+            MethodTestHelper.call_method,
+            client.mgmt.jwt,
+            method_name,
             "loginId",
             MgmtLoginOptions(mfa=True),
         )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.ok = True
-            network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
-            mock_post.return_value = network_resp
-            client.mgmt.jwt.sign_in("loginId")
+        with HTTPMockHelper.mock_http_call(
+            is_async,
+            method="post",
+            ok=True,
+            json=lambda: json.loads("""{"jwt": "response"}"""),
+        ) as mock_post:
+            MethodTestHelper.call_method(client.mgmt.jwt, method_name, "loginId")
             expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.mgmt_sign_in_path}"
-            mock_post.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 expected_uri,
                 headers={
                     **common.default_headers,
@@ -237,7 +309,8 @@ class TestUser(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_sign_up(self):
+    @parameterized_sync_async_subcase("sign_up", "sign_up_async")
+    def test_sign_up(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -246,17 +319,26 @@ class TestUser(common.DescopeTest):
         )
 
         # Test failed flows
-        self.assertRaises(AuthException, client.mgmt.jwt.sign_up, "")
+        self.assertRaises(
+            AuthException,
+            MethodTestHelper.call_method,
+            client.mgmt.jwt,
+            method_name,
+            "",
+        )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.ok = True
-            network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
-            mock_post.return_value = network_resp
-            client.mgmt.jwt.sign_up("loginId")
+        with HTTPMockHelper.mock_http_call(
+            is_async,
+            method="post",
+            ok=True,
+            json=lambda: json.loads("""{"jwt": "response"}"""),
+        ) as mock_post:
+            MethodTestHelper.call_method(client.mgmt.jwt, method_name, "loginId")
             expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.mgmt_sign_up_path}"
-            mock_post.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 expected_uri,
                 headers={
                     **common.default_headers,
@@ -288,7 +370,8 @@ class TestUser(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_sign_up_or_in(self):
+    @parameterized_sync_async_subcase("sign_up_or_in", "sign_up_or_in_async")
+    def test_sign_up_or_in(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -297,17 +380,26 @@ class TestUser(common.DescopeTest):
         )
 
         # Test failed flows
-        self.assertRaises(AuthException, client.mgmt.jwt.sign_up_or_in, "")
+        self.assertRaises(
+            AuthException,
+            MethodTestHelper.call_method,
+            client.mgmt.jwt,
+            method_name,
+            "",
+        )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.ok = True
-            network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
-            mock_post.return_value = network_resp
-            client.mgmt.jwt.sign_up_or_in("loginId")
+        with HTTPMockHelper.mock_http_call(
+            is_async,
+            method="post",
+            ok=True,
+            json=lambda: json.loads("""{"jwt": "response"}"""),
+        ) as mock_post:
+            MethodTestHelper.call_method(client.mgmt.jwt, method_name, "loginId")
             expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.mgmt_sign_up_or_in_path}"
-            mock_post.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 expected_uri,
                 headers={
                     **common.default_headers,
@@ -339,7 +431,8 @@ class TestUser(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_anonymous(self):
+    @parameterized_sync_async_subcase("anonymous", "anonymous_async")
+    def test_anonymous(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -348,14 +441,19 @@ class TestUser(common.DescopeTest):
         )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.ok = True
-            network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
-            mock_post.return_value = network_resp
-            client.mgmt.jwt.anonymous({"k1": "v1"}, "id")
+        with HTTPMockHelper.mock_http_call(
+            is_async,
+            method="post",
+            ok=True,
+            json=lambda: json.loads("""{"jwt": "response"}"""),
+        ) as mock_post:
+            MethodTestHelper.call_method(
+                client.mgmt.jwt, method_name, {"k1": "v1"}, "id"
+            )
             expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.anonymous_path}"
-            mock_post.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 expected_uri,
                 headers={
                     **common.default_headers,

@@ -9,6 +9,11 @@ from descope.authmethod.sso import SSO
 from descope.common import DEFAULT_TIMEOUT_SECONDS, EndpointsV1, LoginOptions
 
 from . import common
+from .async_test_base import (
+    parameterized_sync_async_subcase,
+    HTTPMockHelper,
+    MethodTestHelper,
+)
 
 
 class TestSSO(common.DescopeTest):
@@ -41,27 +46,61 @@ class TestSSO(common.DescopeTest):
             },
         )
 
-    def test_sso_start(self):
+    @parameterized_sync_async_subcase("start", "start_async")
+    def test_sso_start(self, method_name, is_async):
         sso = SSO(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
-        self.assertRaises(AuthException, sso.start, "", "http://dummy.com")
-        self.assertRaises(AuthException, sso.start, None, "http://dummy.com")
+        self.assertRaises(
+            AuthException,
+            MethodTestHelper.call_method,
+            sso,
+            method_name,
+            "",
+            "http://dummy.com",
+        )
+        self.assertRaises(
+            AuthException,
+            MethodTestHelper.call_method,
+            sso,
+            method_name,
+            None,
+            "http://dummy.com",
+        )
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(AuthException, sso.start, "tenant1", "http://dummy.com")
+        with HTTPMockHelper.mock_http_call(is_async, method="post", ok=False):
+            self.assertRaises(
+                AuthException,
+                MethodTestHelper.call_method,
+                sso,
+                method_name,
+                "tenant1",
+                "http://dummy.com",
+            )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNotNone(sso.start("tenant1", "http://dummy.com"))
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True
+        ) as mock_post:
+            result = MethodTestHelper.call_method(
+                sso, method_name, "tenant1", "http://dummy.com"
+            )
+            self.assertIsNotNone(result)
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            sso.start("tenant1", "http://dummy.com", sso_id="some-sso-id")
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True
+        ) as mock_post:
+            MethodTestHelper.call_method(
+                sso,
+                method_name,
+                "tenant1",
+                "http://dummy.com",
+                sso_id="some-sso-id",
+            )
             expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.auth_sso_start_path}"
-            mock_post.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 expected_uri,
                 headers={
                     **common.default_headers,
@@ -80,34 +119,66 @@ class TestSSO(common.DescopeTest):
             )
             self.assertRaises(
                 AuthException,
-                sso.start,
+                MethodTestHelper.call_method,
+                sso,
+                method_name,
                 "tenant",
                 "http://dummy.com",
                 LoginOptions(mfa=True),
             )
 
-    def test_sso_start_with_login_options(self):
+    @parameterized_sync_async_subcase("start", "start_async")
+    def test_sso_start_with_login_options(self, method_name, is_async):
         sso = SSO(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
-        self.assertRaises(AuthException, sso.start, "", "http://dummy.com")
-        self.assertRaises(AuthException, sso.start, None, "http://dummy.com")
+        self.assertRaises(
+            AuthException,
+            MethodTestHelper.call_method,
+            sso,
+            method_name,
+            "",
+            "http://dummy.com",
+        )
+        self.assertRaises(
+            AuthException,
+            MethodTestHelper.call_method,
+            sso,
+            method_name,
+            None,
+            "http://dummy.com",
+        )
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(AuthException, sso.start, "tenant1", "http://dummy.com")
+        with HTTPMockHelper.mock_http_call(is_async, method="post", ok=False):
+            self.assertRaises(
+                AuthException,
+                MethodTestHelper.call_method,
+                sso,
+                method_name,
+                "tenant1",
+                "http://dummy.com",
+            )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNotNone(sso.start("tenant1", "http://dummy.com"))
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True
+        ) as mock_post:
+            result = MethodTestHelper.call_method(
+                sso, method_name, "tenant1", "http://dummy.com"
+            )
+            self.assertIsNotNone(result)
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True
+        ) as mock_post:
             lo = LoginOptions(stepup=True, custom_claims={"k1": "v1"})
-            sso.start("tenant1", "http://dummy.com", lo, "refresh")
+            MethodTestHelper.call_method(
+                sso, method_name, "tenant1", "http://dummy.com", lo, "refresh"
+            )
             expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.auth_sso_start_path}"
-            mock_post.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 expected_uri,
                 headers={
                     **common.default_headers,
@@ -124,29 +195,47 @@ class TestSSO(common.DescopeTest):
     def test_compose_exchange_params(self):
         self.assertEqual(Auth._compose_exchange_body("c1"), {"code": "c1"})
 
-    def test_exchange_token(self):
+    @parameterized_sync_async_subcase("exchange_token", "exchange_token_async")
+    def test_exchange_token(self, method_name, is_async):
         sso = SSO(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
-        self.assertRaises(AuthException, sso.exchange_token, "")
-        self.assertRaises(AuthException, sso.exchange_token, None)
+        self.assertRaises(
+            AuthException, MethodTestHelper.call_method, sso, method_name, ""
+        )
+        self.assertRaises(
+            AuthException,
+            MethodTestHelper.call_method,
+            sso,
+            method_name,
+            None,
+        )
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(AuthException, sso.exchange_token, "c1")
+        with HTTPMockHelper.mock_http_call(is_async, method="post", ok=False):
+            self.assertRaises(
+                AuthException,
+                MethodTestHelper.call_method,
+                sso,
+                method_name,
+                "c1",
+            )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            my_mock_response = mock.Mock()
-            my_mock_response.ok = True
-            my_mock_response.cookies = {}
-            data = json.loads(
-                """{"jwts": ["eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg4MDc4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MTY2MDIxNTI3OCwiaWF0IjoxNjU3Nzk2MDc4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQnRFSGtnT3UwMmxtTXh6UElleGRNdFV3MU0ifQ.oAnvJ7MJvCyL_33oM7YCF12JlQ0m6HWRuteUVAdaswfnD4rHEBmPeuVHGljN6UvOP4_Cf0559o39UHVgm3Fwb-q7zlBbsu_nP1-PRl-F8NJjvBgC5RsAYabtJq7LlQmh"], "user": {"loginIds": ["guyp@descope.com"], "name": "", "email": "guyp@descope.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false}, "firstSeen": false}"""
-            )
-            my_mock_response.json.return_value = data
-            mock_post.return_value = my_mock_response
-            sso.exchange_token("c1")
-            mock_post.assert_called_with(
+        my_mock_response = mock.Mock()
+        my_mock_response.ok = True
+        my_mock_response.cookies = {}
+        data = json.loads(
+            """{"jwts": ["eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg4MDc4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MTY2MDIxNTI3OCwiaWF0IjoxNjU3Nzk2MDc4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQnRFSGtnT3UwMmxtTXh6UElleGRNdFV3MU0ifQ.oAnvJ7MJvCyL_33oM7YCF12JlQ0m6HWRuteUVAdaswfnD4rHEBmPeuVHGljN6UvOP4_Cf0559o39UHVgm3Fwb-q7zlBbsu_nP1-PRl-F8NJjvBgC5RsAYabtJq7LlQmh"], "user": {"loginIds": ["guyp@descope.com"], "name": "", "email": "guyp@descope.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false}, "firstSeen": false}"""
+        )
+        my_mock_response.json.return_value = data
+
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True, cookies={}, json=lambda: data
+        ) as mock_post:
+            MethodTestHelper.call_method(sso, method_name, "c1")
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.sso_exchange_token_path}",
                 headers={
                     **common.default_headers,

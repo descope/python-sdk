@@ -7,6 +7,11 @@ from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
 from .. import common
+from ..async_test_base import (
+    parameterized_sync_async_subcase,
+    HTTPMockHelper,
+    MethodTestHelper,
+)
 
 
 class TestProject(common.DescopeTest):
@@ -24,7 +29,8 @@ class TestProject(common.DescopeTest):
             "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
         }
 
-    def test_update_name(self):
+    @parameterized_sync_async_subcase("update_name", "update_name_async")
+    def test_update_name(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -33,19 +39,28 @@ class TestProject(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_post:
             self.assertRaises(
                 AuthException,
-                client.mgmt.project.update_name,
+                MethodTestHelper.call_method,
+                client.mgmt.project,
+                method_name,
                 "name",
             )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(client.mgmt.project.update_name("new-name"))
-            mock_post.assert_called_with(
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True
+        ) as mock_post:
+            result = MethodTestHelper.call_method(
+                client.mgmt.project, method_name, "new-name"
+            )
+            self.assertIsNone(result)
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.project_update_name}",
                 headers={
                     **common.default_headers,
@@ -61,7 +76,8 @@ class TestProject(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_update_tags(self):
+    @parameterized_sync_async_subcase("update_tags", "update_tags_async")
+    def test_update_tags(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -70,19 +86,28 @@ class TestProject(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_post:
             self.assertRaises(
                 AuthException,
-                client.mgmt.project.update_tags,
+                MethodTestHelper.call_method,
+                client.mgmt.project,
+                method_name,
                 "tags",
             )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(client.mgmt.project.update_tags(["tag1", "tag2"]))
-            mock_post.assert_called_with(
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True
+        ) as mock_post:
+            result = MethodTestHelper.call_method(
+                client.mgmt.project, method_name, ["tag1", "tag2"]
+            )
+            self.assertIsNone(result)
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.project_update_tags}",
                 headers={
                     **common.default_headers,
@@ -98,7 +123,8 @@ class TestProject(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_list_projects(self):
+    @parameterized_sync_async_subcase("list_projects", "list_projects_async")
+    def test_list_projects(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -107,36 +133,40 @@ class TestProject(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_post:
             self.assertRaises(
                 AuthException,
-                client.mgmt.project.list_projects,
+                MethodTestHelper.call_method,
+                client.mgmt.project,
+                method_name,
             )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.ok = True
-            json_str = """
-            {
-                "projects": [
-                    {
-                        "id": "dummy",
-                        "name": "hey",
-                        "environment": "",
-                        "tags": ["tag1", "tag2"]
-                    }
-                ]
-            }
-            """
-            network_resp.json.return_value = json.loads(json_str)
-            mock_post.return_value = network_resp
-            resp = client.mgmt.project.list_projects()
+        response_data = {
+            "projects": [
+                {
+                    "id": "dummy",
+                    "name": "hey",
+                    "environment": "",
+                    "tags": ["tag1", "tag2"],
+                }
+            ]
+        }
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True, json=lambda: response_data
+        ) as mock_post:
+            resp = MethodTestHelper.call_method(
+                client.mgmt.project,
+                method_name,
+            )
             projects = resp["projects"]
             self.assertEqual(len(projects), 1)
             self.assertEqual(projects[0]["id"], "dummy")
-            mock_post.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.project_list_projects}",
                 headers={
                     **common.default_headers,
@@ -150,7 +180,8 @@ class TestProject(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_clone(self):
+    @parameterized_sync_async_subcase("clone", "clone_async")
+    def test_clone(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -159,35 +190,35 @@ class TestProject(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_post:
             self.assertRaises(
                 AuthException,
-                client.mgmt.project.clone,
+                MethodTestHelper.call_method,
+                client.mgmt.project,
+                method_name,
                 "new-name",
                 "production",
                 ["apple", "banana", "cherry"],
             )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.ok = True
-            network_resp.json.return_value = json.loads(
-                """
-                {
-                   "id":"dummy"
-                }
-                """
-            )
-            mock_post.return_value = network_resp
-            resp = client.mgmt.project.clone(
+        response_data = {"id": "dummy"}
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True, json=lambda: response_data
+        ) as mock_post:
+            resp = MethodTestHelper.call_method(
+                client.mgmt.project,
+                method_name,
                 "new-name",
                 "production",
                 ["apple", "banana", "cherry"],
             )
             self.assertEqual(resp["id"], "dummy")
-            mock_post.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.project_clone}",
                 headers={
                     **common.default_headers,
@@ -205,7 +236,8 @@ class TestProject(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_export_project(self):
+    @parameterized_sync_async_subcase("export_project", "export_project_async")
+    def test_export_project(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -214,29 +246,30 @@ class TestProject(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_post:
             self.assertRaises(
                 AuthException,
-                client.mgmt.project.export_project,
+                MethodTestHelper.call_method,
+                client.mgmt.project,
+                method_name,
             )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.ok = True
-            network_resp.json.return_value = json.loads(
-                """
-                {
-                   "files":{"foo":"bar"}
-                }
-                """
+        response_data = {"files": {"foo": "bar"}}
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True, json=lambda: response_data
+        ) as mock_post:
+            resp = MethodTestHelper.call_method(
+                client.mgmt.project,
+                method_name,
             )
-            mock_post.return_value = network_resp
-            resp = client.mgmt.project.export_project()
             self.assertIsNotNone(resp)
             self.assertEqual(resp["foo"], "bar")
-            mock_post.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.project_export}",
                 headers={
                     **common.default_headers,
@@ -250,7 +283,8 @@ class TestProject(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_import_project(self):
+    @parameterized_sync_async_subcase("import_project", "import_project_async")
+    def test_import_project(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -259,26 +293,30 @@ class TestProject(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_post:
             self.assertRaises(
                 AuthException,
-                client.mgmt.project.import_project,
+                MethodTestHelper.call_method,
+                client.mgmt.project,
+                method_name,
                 {
                     "foo": "bar",
                 },
             )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.ok = True
-            mock_post.return_value = network_resp
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True
+        ) as mock_post:
             files = {
                 "foo": "bar",
             }
-            client.mgmt.project.import_project(files)
-            mock_post.assert_called_with(
+            MethodTestHelper.call_method(client.mgmt.project, method_name, files)
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.project_import}",
                 headers={
                     **common.default_headers,

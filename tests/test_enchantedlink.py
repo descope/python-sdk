@@ -15,6 +15,13 @@ from descope.common import (
 )
 
 from . import common
+from .async_test_base import (
+    parameterized_sync_async_subcase,
+    HTTPMockHelper,
+    MethodTestHelper,
+)
+
+from . import common
 
 
 class TestEnchantedLink(common.DescopeTest):
@@ -95,35 +102,46 @@ class TestEnchantedLink(common.DescopeTest):
             {"pendingRef": "pending_ref1"},
         )
 
-    def test_sign_in(self):
+    @parameterized_sync_async_subcase("sign_in", "sign_in_async")
+    def test_sign_in(self, method_name, is_async):
         enchantedlink = EnchantedLink(Auth(self.dummy_project_id, self.public_key_dict))
-        with patch("httpx.post") as mock_post:
-            my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True
+        ) as mock_post:
             # Test failed flows
             with self.assertRaises(AuthException):
-                enchantedlink.sign_in("", "http://test.me")
+                MethodTestHelper.call_method(
+                    enchantedlink, method_name, "", "http://test.me"
+                )
             data = json.loads("""{"pendingRef": "aaaa","linkId":"24"}""")
-            my_mock_response.json.return_value = data
-            mock_post.return_value = my_mock_response
-            res = enchantedlink.sign_in("dummy@dummy.com", "http://test.me")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_enchantedlink_path}/email",
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
-                params=None,
-                json={
-                    "loginId": "dummy@dummy.com",
-                    "URI": "http://test.me",
-                    "loginOptions": {},
-                },
-                follow_redirects=False,
-                verify=True,
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )
+            with HTTPMockHelper.mock_http_call(
+                is_async, method="post", ok=True, json=lambda: data
+            ) as mock_post:
+                res = MethodTestHelper.call_method(
+                    enchantedlink,
+                    method_name,
+                    "dummy@dummy.com",
+                    "http://test.me",
+                )
+                HTTPMockHelper.assert_http_call(
+                    mock_post,
+                    is_async,
+                    f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_enchantedlink_path}/email",
+                    headers={
+                        **common.default_headers,
+                        "Authorization": f"Bearer {self.dummy_project_id}",
+                        "x-descope-project-id": self.dummy_project_id,
+                    },
+                    params=None,
+                    json={
+                        "loginId": "dummy@dummy.com",
+                        "URI": "http://test.me",
+                        "loginOptions": {},
+                    },
+                    follow_redirects=False,
+                    verify=True,
+                    timeout=DEFAULT_TIMEOUT_SECONDS,
+                )
             self.assertEqual(res["pendingRef"], "aaaa")
             self.assertEqual(res["linkId"], "24")
 
@@ -229,30 +247,38 @@ class TestEnchantedLink(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_sign_up(self):
+    @parameterized_sync_async_subcase("sign_up", "sign_up_async")
+    def test_sign_up(self, method_name, is_async):
         enchantedlink = EnchantedLink(Auth(self.dummy_project_id, self.public_key_dict))
-        with patch("httpx.post") as mock_post:
-            my_mock_response = mock.Mock()
-            my_mock_response.ok = True
 
-            # Test failed flows
+        # Test failed flows
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True
+        ) as mock_post:
             self.assertRaises(
                 AuthException,
-                enchantedlink.sign_up,
+                MethodTestHelper.call_method,
+                enchantedlink,
+                method_name,
                 "",
                 "http://test.me",
                 {"name": "john"},
             )
 
-            data = json.loads("""{"pendingRef": "aaaa"}""")
-            my_mock_response.json.return_value = data
-            mock_post.return_value = my_mock_response
-            res = enchantedlink.sign_up(
+        data = json.loads("""{"pendingRef": "aaaa"}""")
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True, json=lambda: data
+        ) as mock_post:
+            res = MethodTestHelper.call_method(
+                enchantedlink,
+                method_name,
                 "dummy@dummy.com",
                 "http://test.me",
                 {"username": "user1", "email": "dummy@dummy.com"},
             )
-            mock_post.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_enchantedlink_path}/email",
                 headers={
                     **common.default_headers,
@@ -273,16 +299,20 @@ class TestEnchantedLink(common.DescopeTest):
             self.assertEqual(res["pendingRef"], "aaaa")
 
         # Test user is None so using the login_id as default
-        with patch("httpx.post") as mock_post:
-            data = json.loads("""{"pendingRef": "aaaa"}""")
-            my_mock_response.json.return_value = data
-            mock_post.return_value = my_mock_response
-            res = enchantedlink.sign_up(
+        data_none = json.loads("""{"pendingRef": "aaaa"}""")
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True, json=lambda: data_none
+        ) as mock_post:
+            res = MethodTestHelper.call_method(
+                enchantedlink,
+                method_name,
                 "dummy@dummy.com",
                 "http://test.me",
                 None,
             )
-            mock_post.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_enchantedlink_path}/email",
                 headers={
                     **common.default_headers,
@@ -303,11 +333,13 @@ class TestEnchantedLink(common.DescopeTest):
             self.assertEqual(res["pendingRef"], "aaaa")
 
         # Test success flow with sign up options
-        with patch("httpx.post") as mock_post:
-            data = json.loads("""{"pendingRef": "aaaa"}""")
-            my_mock_response.json.return_value = data
-            mock_post.return_value = my_mock_response
-            res = enchantedlink.sign_up(
+        data_options = json.loads("""{"pendingRef": "aaaa"}""")
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True, json=lambda: data_options
+        ) as mock_post:
+            res = MethodTestHelper.call_method(
+                enchantedlink,
+                method_name,
                 "dummy@dummy.com",
                 "http://test.me",
                 None,
@@ -317,7 +349,9 @@ class TestEnchantedLink(common.DescopeTest):
                     revoke_other_sessions=True,
                 ),
             )
-            mock_post.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_enchantedlink_path}/email",
                 headers={
                     **common.default_headers,
@@ -342,19 +376,24 @@ class TestEnchantedLink(common.DescopeTest):
             )
             self.assertEqual(res["pendingRef"], "aaaa")
 
-    def test_sign_up_or_in(self):
+    @parameterized_sync_async_subcase("sign_up_or_in", "sign_up_or_in_async")
+    def test_sign_up_or_in(self, method_name, is_async):
         enchantedlink = EnchantedLink(Auth(self.dummy_project_id, self.public_key_dict))
-        with patch("httpx.post") as mock_post:
-            my_mock_response = mock.Mock()
-            my_mock_response.ok = True
-            data = json.loads("""{"pendingRef": "aaaa"}""")
-            my_mock_response.json.return_value = data
-            mock_post.return_value = my_mock_response
-            enchantedlink.sign_up_or_in(
+
+        # Test basic flow
+        data = json.loads("""{"pendingRef": "aaaa"}""")
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True, json=lambda: data
+        ) as mock_post:
+            res = MethodTestHelper.call_method(
+                enchantedlink,
+                method_name,
                 "dummy@dummy.com",
                 "http://test.me",
             )
-            mock_post.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_or_in_auth_enchantedlink_path}/email",
                 headers={
                     **common.default_headers,
@@ -371,20 +410,23 @@ class TestEnchantedLink(common.DescopeTest):
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
+            self.assertEqual(res["pendingRef"], "aaaa")
 
         # Test success flow with sign up options
-        with patch("httpx.post") as mock_post:
-            my_mock_response = mock.Mock()
-            my_mock_response.ok = True
-            data = json.loads("""{"pendingRef": "aaaa"}""")
-            my_mock_response.json.return_value = data
-            mock_post.return_value = my_mock_response
-            enchantedlink.sign_up_or_in(
+        data_options = json.loads("""{"pendingRef": "aaaa"}""")
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True, json=lambda: data_options
+        ) as mock_post:
+            res = MethodTestHelper.call_method(
+                enchantedlink,
+                method_name,
                 "dummy@dummy.com",
                 "http://test.me",
                 SignUpOptions(template_options={"bla": "blue"}),
             )
-            mock_post.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_or_in_auth_enchantedlink_path}/email",
                 headers={
                     **common.default_headers,
@@ -406,69 +448,128 @@ class TestEnchantedLink(common.DescopeTest):
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
+            self.assertEqual(res["pendingRef"], "aaaa")
 
-    def test_verify(self):
+    @parameterized_sync_async_subcase("verify", "verify_async")
+    def test_verify(self, method_name, is_async):
         token = "1234"
-
         enchantedlink = EnchantedLink(Auth(self.dummy_project_id, self.public_key_dict))
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
+        # Test failed flow
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_post:
             self.assertRaises(
                 AuthException,
-                enchantedlink.verify,
+                MethodTestHelper.call_method,
+                enchantedlink,
+                method_name,
                 token,
             )
 
         # Test success flow
         valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3R6VWhkcXBJRjJ5czlnZzdtczA2VXZ0QzQiLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0Mzc1OTYsImlhdCI6MTY1OTYzNzU5NiwiaXNzIjoiUDJDdHpVaGRxcElGMnlzOWdnN21zMDZVdnRDNCIsInN1YiI6IlUyQ3UwajBXUHczWU9pUElTSmI1Mkwwd1VWTWcifQ.WLnlHugvzZtrV9OzBB7SjpCLNRvKF3ImFpVyIN5orkrjO2iyAKg_Rb4XHk9sXGC1aW8puYzLbhE1Jv3kk2hDcKggfE8OaRNRm8byhGFZHnvPJwcP_Ya-aRmfAvCLcKOL"
-        with patch("httpx.post") as mock_post:
-            my_mock_response = mock.Mock()
-            my_mock_response.ok = True
-            my_mock_response.json.return_value = {}
-            mock_post.return_value = my_mock_response
-            mock_post.return_value.cookies = {
-                SESSION_COOKIE_NAME: "dummy session token",
-                REFRESH_SESSION_COOKIE_NAME: valid_jwt_token,
-            }
-            self.assertIsNone(enchantedlink.verify(token))
 
-    def test_get_session(self):
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True, json=lambda: {}
+        ) as mock_post:
+            # Create a mock response with cookies
+            if is_async:
+                # For async, we need to set up the mock differently
+                async def mock_response_func(*args, **kwargs):
+                    response = mock.Mock()
+                    response.ok = True
+                    response.json.return_value = {}
+                    response.cookies = {
+                        SESSION_COOKIE_NAME: "dummy session token",
+                        REFRESH_SESSION_COOKIE_NAME: valid_jwt_token,
+                    }
+                    return response
+
+                mock_post.side_effect = mock_response_func
+            else:
+                response = mock.Mock()
+                response.ok = True
+                response.json.return_value = {}
+                response.cookies = {
+                    SESSION_COOKIE_NAME: "dummy session token",
+                    REFRESH_SESSION_COOKIE_NAME: valid_jwt_token,
+                }
+                mock_post.return_value = response
+
+            result = MethodTestHelper.call_method(enchantedlink, method_name, token)
+            self.assertIsNone(result)
+
+    @parameterized_sync_async_subcase("get_session", "get_session_async")
+    def test_get_session(self, method_name, is_async):
         enchantedlink = EnchantedLink(Auth(self.dummy_project_id, self.public_key_dict))
 
         valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3R6VWhkcXBJRjJ5czlnZzdtczA2VXZ0QzQiLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0Mzc1OTYsImlhdCI6MTY1OTYzNzU5NiwiaXNzIjoiUDJDdHpVaGRxcElGMnlzOWdnN21zMDZVdnRDNCIsInN1YiI6IlUyQ3UwajBXUHczWU9pUElTSmI1Mkwwd1VWTWcifQ.WLnlHugvzZtrV9OzBB7SjpCLNRvKF3ImFpVyIN5orkrjO2iyAKg_Rb4XHk9sXGC1aW8puYzLbhE1Jv3kk2hDcKggfE8OaRNRm8byhGFZHnvPJwcP_Ya-aRmfAvCLcKOL"
-        with patch("httpx.post") as mock_post:
-            my_mock_response = mock.Mock()
-            my_mock_response.ok = True
-            my_mock_response.json.return_value = {}
-            mock_post.return_value = my_mock_response
-            mock_post.return_value.cookies = {
-                SESSION_COOKIE_NAME: "dummy session token",
-                REFRESH_SESSION_COOKIE_NAME: valid_jwt_token,
-            }
-            self.assertIsNotNone(enchantedlink.get_session("aaaaaa"))
 
-    def test_update_user_email(self):
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True, json=lambda: {}
+        ) as mock_post:
+            # Create a mock response with cookies
+            if is_async:
+                # For async, we need to set up the mock differently
+                async def mock_response_func(*args, **kwargs):
+                    response = mock.Mock()
+                    response.ok = True
+                    response.json.return_value = {}
+                    response.cookies = {
+                        SESSION_COOKIE_NAME: "dummy session token",
+                        REFRESH_SESSION_COOKIE_NAME: valid_jwt_token,
+                    }
+                    return response
+
+                mock_post.side_effect = mock_response_func
+            else:
+                response = mock.Mock()
+                response.ok = True
+                response.json.return_value = {}
+                response.cookies = {
+                    SESSION_COOKIE_NAME: "dummy session token",
+                    REFRESH_SESSION_COOKIE_NAME: valid_jwt_token,
+                }
+                mock_post.return_value = response
+
+            result = MethodTestHelper.call_method(enchantedlink, method_name, "aaaaaa")
+            self.assertIsNotNone(result)
+
+    @parameterized_sync_async_subcase("update_user_email", "update_user_email_async")
+    def test_update_user_email(self, method_name, is_async):
         enchantedlink = EnchantedLink(Auth(self.dummy_project_id, self.public_key_dict))
-        with patch("httpx.post") as mock_post:
-            my_mock_response = mock.Mock()
-            my_mock_response.ok = True
-            # Test failed flows
+
+        # Test failed flows
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True
+        ) as mock_post:
             self.assertRaises(
                 AuthException,
-                enchantedlink.update_user_email,
+                MethodTestHelper.call_method,
+                enchantedlink,
+                method_name,
                 "",
                 "dummy@dummy.com",
                 "refresh_token1",
             )
-            data = json.loads("""{"pendingRef": "aaaa"}""")
-            my_mock_response.json.return_value = data
-            mock_post.return_value = my_mock_response
-            res = enchantedlink.update_user_email(
-                "id1", "dummy@dummy.com", "refresh_token1"
+
+        # Test success flow
+        data = json.loads("""{"pendingRef": "aaaa"}""")
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True, json=lambda: data
+        ) as mock_post:
+            res = MethodTestHelper.call_method(
+                enchantedlink,
+                method_name,
+                "id1",
+                "dummy@dummy.com",
+                "refresh_token1",
             )
             self.assertEqual(res["pendingRef"], "aaaa")
-            mock_post.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_user_email_enchantedlink_path}",
                 headers={
                     **common.default_headers,
@@ -487,21 +588,23 @@ class TestEnchantedLink(common.DescopeTest):
                 params=None,
             )
 
-        # with template options
-        with patch("httpx.post") as mock_post:
-            my_mock_response = mock.Mock()
-            my_mock_response.ok = True
-            data = json.loads("""{"pendingRef": "aaaa"}""")
-            my_mock_response.json.return_value = data
-            mock_post.return_value = my_mock_response
-            res = enchantedlink.update_user_email(
+        # Test with template options
+        data_options = json.loads("""{"pendingRef": "aaaa"}""")
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True, json=lambda: data_options
+        ) as mock_post:
+            res = MethodTestHelper.call_method(
+                enchantedlink,
+                method_name,
                 "id1",
                 "dummy@dummy.com",
                 "refresh_token1",
                 template_options={"bla": "blue"},
             )
             self.assertEqual(res["pendingRef"], "aaaa")
-            mock_post.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_user_email_enchantedlink_path}",
                 headers={
                     **common.default_headers,

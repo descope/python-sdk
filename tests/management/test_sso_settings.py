@@ -14,6 +14,11 @@ from descope.management.sso_settings import (
 )
 
 from .. import common
+from ..async_test_base import (
+    parameterized_sync_async_subcase,
+    HTTPMockHelper,
+    MethodTestHelper,
+)
 
 
 class TestSSOSettings(common.DescopeTest):
@@ -31,7 +36,8 @@ class TestSSOSettings(common.DescopeTest):
             "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
         }
 
-    def test_delete_settings(self):
+    @parameterized_sync_async_subcase("delete_settings", "delete_settings_async")
+    def test_delete_settings(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -40,23 +46,26 @@ class TestSSOSettings(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.delete") as mock_delete:
-            mock_delete.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="delete", ok=False
+        ) as mock_delete:
             self.assertRaises(
                 AuthException,
-                client.mgmt.sso.delete_settings,
+                MethodTestHelper.call_method,
+                client.mgmt.sso,
+                method_name,
                 "tenant-id",
             )
 
         # Test success flow
-        with patch("httpx.delete") as mock_delete:
-            network_resp = mock.Mock()
-            network_resp.ok = True
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="delete", ok=True
+        ) as mock_delete:
+            MethodTestHelper.call_method(client.mgmt.sso, method_name, "tenant-id")
 
-            mock_delete.return_value = network_resp
-            client.mgmt.sso.delete_settings("tenant-id")
-
-            mock_delete.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_delete,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_settings_path}",
                 params={"tenantId": "tenant-id"},
                 headers={
@@ -69,7 +78,8 @@ class TestSSOSettings(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_load_settings(self):
+    @parameterized_sync_async_subcase("load_settings", "load_settings_async")
+    def test_load_settings(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -78,23 +88,85 @@ class TestSSOSettings(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.get") as mock_get:
-            mock_get.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="get", ok=False
+        ) as mock_get:
             self.assertRaises(
                 AuthException,
-                client.mgmt.sso.load_settings,
+                MethodTestHelper.call_method,
+                client.mgmt.sso,
+                method_name,
                 "tenant-id",
             )
 
         # Test success flow
-        with patch("httpx.get") as mock_get:
-            network_resp = mock.Mock()
-            network_resp.ok = True
-            network_resp.json.return_value = json.loads(
-                """{"tenant": {"id": "T2AAAA", "name": "myTenantName", "selfProvisioningDomains": [], "customAttributes": {}, "authType": "saml", "domains": ["lulu", "kuku"]}, "saml": {"idpEntityId": "", "idpSSOUrl": "", "idpCertificate": "", "defaultSSORoles": ["aa", "bb"], "idpMetadataUrl": "https://dummy.com/metadata", "spEntityId": "", "spACSUrl": "", "spCertificate": "", "attributeMapping": {"name": "name", "email": "email", "username": "", "phoneNumber": "phone", "group": "", "givenName": "", "middleName": "", "familyName": "", "picture": "", "customAttributes": {}}, "groupsMapping": [], "redirectUrl": ""}, "oidc": {"name": "", "clientId": "", "clientSecret": "", "redirectUrl": "", "authUrl": "", "tokenUrl": "", "userDataUrl": "", "scope": [], "JWKsUrl": "", "userAttrMapping": {"loginId": "sub", "username": "", "name": "name", "email": "email", "phoneNumber": "phone_number", "verifiedEmail": "email_verified", "verifiedPhone": "phone_number_verified", "picture": "picture", "givenName": "given_name", "middleName": "middle_name", "familyName": "family_name"}, "manageProviderTokens": false, "callbackDomain": "", "prompt": [], "grantType": "authorization_code", "issuer": ""}}"""
-            )
-            mock_get.return_value = network_resp
-            resp = client.mgmt.sso.load_settings("T2AAAA")
+        response_data = {
+            "tenant": {
+                "id": "T2AAAA",
+                "name": "myTenantName",
+                "selfProvisioningDomains": [],
+                "customAttributes": {},
+                "authType": "saml",
+                "domains": ["lulu", "kuku"],
+            },
+            "saml": {
+                "idpEntityId": "",
+                "idpSSOUrl": "",
+                "idpCertificate": "",
+                "defaultSSORoles": ["aa", "bb"],
+                "idpMetadataUrl": "https://dummy.com/metadata",
+                "spEntityId": "",
+                "spACSUrl": "",
+                "spCertificate": "",
+                "attributeMapping": {
+                    "name": "name",
+                    "email": "email",
+                    "username": "",
+                    "phoneNumber": "phone",
+                    "group": "",
+                    "givenName": "",
+                    "middleName": "",
+                    "familyName": "",
+                    "picture": "",
+                    "customAttributes": {},
+                },
+                "groupsMapping": [],
+                "redirectUrl": "",
+            },
+            "oidc": {
+                "name": "",
+                "clientId": "",
+                "clientSecret": "",
+                "redirectUrl": "",
+                "authUrl": "",
+                "tokenUrl": "",
+                "userDataUrl": "",
+                "scope": [],
+                "JWKsUrl": "",
+                "userAttrMapping": {
+                    "loginId": "sub",
+                    "username": "",
+                    "name": "name",
+                    "email": "email",
+                    "phoneNumber": "phone_number",
+                    "verifiedEmail": "email_verified",
+                    "verifiedPhone": "phone_number_verified",
+                    "picture": "picture",
+                    "givenName": "given_name",
+                    "middleName": "middle_name",
+                    "familyName": "family_name",
+                },
+                "manageProviderTokens": False,
+                "callbackDomain": "",
+                "prompt": [],
+                "grantType": "authorization_code",
+                "issuer": "",
+            },
+        }
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="get", ok=True, json=lambda: response_data
+        ) as mock_get:
+            resp = MethodTestHelper.call_method(client.mgmt.sso, method_name, "T2AAAA")
             tenant = resp.get("tenant", {})
             self.assertEqual(tenant.get("id", ""), "T2AAAA")
             self.assertEqual(tenant.get("domains", []), ["lulu", "kuku"])
@@ -106,7 +178,9 @@ class TestSSOSettings(common.DescopeTest):
                 saml_settings.get("defaultSSORoles", ""),
                 ["aa", "bb"],
             )
-            mock_get.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_get,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_load_settings_path}",
                 headers={
                     **common.default_headers,
@@ -119,7 +193,10 @@ class TestSSOSettings(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_configure_oidc_settings(self):
+    @parameterized_sync_async_subcase(
+        "configure_oidc_settings", "configure_oidc_settings_async"
+    )
+    def test_configure_oidc_settings(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -128,11 +205,14 @@ class TestSSOSettings(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_post:
             self.assertRaises(
                 AuthException,
-                client.mgmt.sso.configure_oidc_settings,
+                MethodTestHelper.call_method,
+                client.mgmt.sso,
+                method_name,
                 "tenant-id",
                 SSOOIDCSettings(
                     name="myName",
@@ -142,38 +222,42 @@ class TestSSOSettings(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
-                client.mgmt.sso.configure_oidc_settings(
-                    "tenant-id",
-                    SSOOIDCSettings(
-                        name="myName",
-                        client_id="cid",
-                        client_secret="secret",
-                        redirect_url="http://dummy.com/",
-                        auth_url="http://dummy.com/auth",
-                        token_url="http://dummy.com/token",
-                        user_data_url="http://dummy.com/userInfo",
-                        scope=["openid", "profile", "email"],
-                        attribute_mapping=OIDCAttributeMapping(
-                            login_id="my-id",
-                            name="name",
-                            given_name="givenName",
-                            middle_name="middleName",
-                            family_name="familyName",
-                            email="email",
-                            verified_email="verifiedEmail",
-                            username="username",
-                            phone_number="phoneNumber",
-                            verified_phone="verifiedPhone",
-                            picture="picture",
-                        ),
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True
+        ) as mock_post:
+            result = MethodTestHelper.call_method(
+                client.mgmt.sso,
+                method_name,
+                "tenant-id",
+                SSOOIDCSettings(
+                    name="myName",
+                    client_id="cid",
+                    client_secret="secret",
+                    redirect_url="http://dummy.com/",
+                    auth_url="http://dummy.com/auth",
+                    token_url="http://dummy.com/token",
+                    user_data_url="http://dummy.com/userInfo",
+                    scope=["openid", "profile", "email"],
+                    attribute_mapping=OIDCAttributeMapping(
+                        login_id="my-id",
+                        name="name",
+                        given_name="givenName",
+                        middle_name="middleName",
+                        family_name="familyName",
+                        email="email",
+                        verified_email="verifiedEmail",
+                        username="username",
+                        phone_number="phoneNumber",
+                        verified_phone="verifiedPhone",
+                        picture="picture",
                     ),
-                    ["domain.com"],
-                )
+                ),
+                ["domain.com"],
             )
-            mock_post.assert_called_with(
+            self.assertIsNone(result)
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_configure_oidc_settings}",
                 headers={
                     **common.default_headers,
@@ -219,7 +303,10 @@ class TestSSOSettings(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_configure_saml_settings(self):
+    @parameterized_sync_async_subcase(
+        "configure_saml_settings", "configure_saml_settings_async"
+    )
+    def test_configure_saml_settings(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -228,11 +315,14 @@ class TestSSOSettings(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_post:
             self.assertRaises(
                 AuthException,
-                client.mgmt.sso.configure_saml_settings,
+                MethodTestHelper.call_method,
+                client.mgmt.sso,
+                method_name,
                 "tenant-id",
                 SSOSAMLSettings(
                     idp_url="http://dummy.com",
@@ -247,35 +337,39 @@ class TestSSOSettings(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
-                client.mgmt.sso.configure_saml_settings(
-                    "tenant-id",
-                    SSOSAMLSettings(
-                        idp_url="http://dummy.com",
-                        idp_entity_id="ent1234",
-                        idp_cert="cert",
-                        attribute_mapping=AttributeMapping(
-                            name="name",
-                            given_name="givenName",
-                            middle_name="middleName",
-                            family_name="familyName",
-                            picture="picture",
-                            email="email",
-                            phone_number="phoneNumber",
-                            group="groups",
-                        ),
-                        role_mappings=[RoleMapping(groups=["grp1"], role_name="rl1")],
-                        sp_acs_url="http://spacsurl.com",
-                        sp_entity_id="spentityid",
-                        default_sso_roles=["aa", "bb"],
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True
+        ) as mock_post:
+            result = MethodTestHelper.call_method(
+                client.mgmt.sso,
+                method_name,
+                "tenant-id",
+                SSOSAMLSettings(
+                    idp_url="http://dummy.com",
+                    idp_entity_id="ent1234",
+                    idp_cert="cert",
+                    attribute_mapping=AttributeMapping(
+                        name="name",
+                        given_name="givenName",
+                        middle_name="middleName",
+                        family_name="familyName",
+                        picture="picture",
+                        email="email",
+                        phone_number="phoneNumber",
+                        group="groups",
                     ),
-                    "https://redirect.com",
-                    ["domain.com"],
-                )
+                    role_mappings=[RoleMapping(groups=["grp1"], role_name="rl1")],
+                    sp_acs_url="http://spacsurl.com",
+                    sp_entity_id="spentityid",
+                    default_sso_roles=["aa", "bb"],
+                ),
+                "https://redirect.com",
+                ["domain.com"],
             )
-            mock_post.assert_called_with(
+            self.assertIsNone(result)
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_configure_saml_settings}",
                 headers={
                     **common.default_headers,
@@ -313,7 +407,11 @@ class TestSSOSettings(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_configure_saml_settings_by_metadata(self):
+    @parameterized_sync_async_subcase(
+        "configure_saml_settings_by_metadata",
+        "configure_saml_settings_by_metadata_async",
+    )
+    def test_configure_saml_settings_by_metadata(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -322,11 +420,14 @@ class TestSSOSettings(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_post:
             self.assertRaises(
                 AuthException,
-                client.mgmt.sso.configure_saml_settings_by_metadata,
+                MethodTestHelper.call_method,
+                client.mgmt.sso,
+                method_name,
                 "tenant-id",
                 SSOSAMLSettingsByMetadata(idp_metadata_url="http://dummy.com/metadata"),
                 "https://redirect.com",
@@ -334,33 +435,37 @@ class TestSSOSettings(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
-                client.mgmt.sso.configure_saml_settings_by_metadata(
-                    "tenant-id",
-                    SSOSAMLSettingsByMetadata(
-                        idp_metadata_url="http://dummy.com/metadata",
-                        attribute_mapping=AttributeMapping(
-                            name="name",
-                            given_name="givenName",
-                            middle_name="middleName",
-                            family_name="familyName",
-                            picture="picture",
-                            email="email",
-                            phone_number="phoneNumber",
-                            group="groups",
-                        ),
-                        role_mappings=[RoleMapping(groups=["grp1"], role_name="rl1")],
-                        sp_acs_url="http://spacsurl.com",
-                        sp_entity_id="spentityid",
-                        default_sso_roles=["aa", "bb"],
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True
+        ) as mock_post:
+            result = MethodTestHelper.call_method(
+                client.mgmt.sso,
+                method_name,
+                "tenant-id",
+                SSOSAMLSettingsByMetadata(
+                    idp_metadata_url="http://dummy.com/metadata",
+                    attribute_mapping=AttributeMapping(
+                        name="name",
+                        given_name="givenName",
+                        middle_name="middleName",
+                        family_name="familyName",
+                        picture="picture",
+                        email="email",
+                        phone_number="phoneNumber",
+                        group="groups",
                     ),
-                    "https://redirect.com",
-                    ["domain.com"],
-                )
+                    role_mappings=[RoleMapping(groups=["grp1"], role_name="rl1")],
+                    sp_acs_url="http://spacsurl.com",
+                    sp_entity_id="spentityid",
+                    default_sso_roles=["aa", "bb"],
+                ),
+                "https://redirect.com",
+                ["domain.com"],
             )
-            mock_post.assert_called_with(
+            self.assertIsNone(result)
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_configure_saml_by_metadata_settings}",
                 headers={
                     **common.default_headers,
@@ -400,7 +505,8 @@ class TestSSOSettings(common.DescopeTest):
         self.assertRaises(ValueError, SSOSettings._attribute_mapping_to_dict, None)
 
     # Testing DEPRECATED functions
-    def test_get_settings(self):
+    @parameterized_sync_async_subcase("get_settings", "get_settings_async")
+    def test_get_settings(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -409,26 +515,30 @@ class TestSSOSettings(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.get") as mock_get:
-            mock_get.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="get", ok=False
+        ) as mock_get:
             self.assertRaises(
                 AuthException,
-                client.mgmt.sso.get_settings,
+                MethodTestHelper.call_method,
+                client.mgmt.sso,
+                method_name,
                 "tenant-id",
             )
 
         # Test success flow
-        with patch("httpx.get") as mock_get:
-            network_resp = mock.Mock()
-            network_resp.ok = True
-            network_resp.json.return_value = json.loads(
-                """{"domains": ["lulu", "kuku"], "tenantId": "tenant-id"}"""
+        response_data = {"domains": ["lulu", "kuku"], "tenantId": "tenant-id"}
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="get", ok=True, json=lambda: response_data
+        ) as mock_get:
+            resp = MethodTestHelper.call_method(
+                client.mgmt.sso, method_name, "tenant-id"
             )
-            mock_get.return_value = network_resp
-            resp = client.mgmt.sso.get_settings("tenant-id")
             self.assertEqual(resp["tenantId"], "tenant-id")
             self.assertEqual(resp["domains"], ["lulu", "kuku"])
-            mock_get.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_get,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_settings_path}",
                 headers={
                     **common.default_headers,
@@ -441,7 +551,8 @@ class TestSSOSettings(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_configure(self):
+    @parameterized_sync_async_subcase("configure", "configure_async")
+    def test_configure(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -450,11 +561,14 @@ class TestSSOSettings(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_post:
             self.assertRaises(
                 AuthException,
-                client.mgmt.sso.configure,
+                MethodTestHelper.call_method,
+                client.mgmt.sso,
+                method_name,
                 "tenant-id",
                 "https://idp.com",
                 "entity-id",
@@ -464,19 +578,23 @@ class TestSSOSettings(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
-                client.mgmt.sso.configure(
-                    "tenant-id",
-                    "https://idp.com",
-                    "entity-id",
-                    "cert",
-                    "https://redirect.com",
-                    ["domain.com"],
-                )
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True
+        ) as mock_post:
+            result = MethodTestHelper.call_method(
+                client.mgmt.sso,
+                method_name,
+                "tenant-id",
+                "https://idp.com",
+                "entity-id",
+                "cert",
+                "https://redirect.com",
+                ["domain.com"],
             )
-            mock_post.assert_called_with(
+            self.assertIsNone(result)
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_settings_path}",
                 headers={
                     **common.default_headers,
@@ -498,18 +616,22 @@ class TestSSOSettings(common.DescopeTest):
             )
 
         # Domain is optional
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
-                client.mgmt.sso.configure(
-                    "tenant-id",
-                    "https://idp.com",
-                    "entity-id",
-                    "cert",
-                    "https://redirect.com",
-                )
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True
+        ) as mock_post:
+            result = MethodTestHelper.call_method(
+                client.mgmt.sso,
+                method_name,
+                "tenant-id",
+                "https://idp.com",
+                "entity-id",
+                "cert",
+                "https://redirect.com",
             )
-            mock_post.assert_called_with(
+            self.assertIsNone(result)
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_settings_path}",
                 headers={
                     **common.default_headers,
@@ -531,19 +653,23 @@ class TestSSOSettings(common.DescopeTest):
             )
 
         # Redirect is optional
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
-                client.mgmt.sso.configure(
-                    "tenant-id",
-                    "https://idp.com",
-                    "entity-id",
-                    "cert",
-                    "",
-                    ["domain.com"],
-                )
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True
+        ) as mock_post:
+            result = MethodTestHelper.call_method(
+                client.mgmt.sso,
+                method_name,
+                "tenant-id",
+                "https://idp.com",
+                "entity-id",
+                "cert",
+                "",
+                ["domain.com"],
             )
-            mock_post.assert_called_with(
+            self.assertIsNone(result)
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_settings_path}",
                 headers={
                     **common.default_headers,
@@ -564,7 +690,10 @@ class TestSSOSettings(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_configure_via_metadata(self):
+    @parameterized_sync_async_subcase(
+        "configure_via_metadata", "configure_via_metadata_async"
+    )
+    def test_configure_via_metadata(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -573,11 +702,14 @@ class TestSSOSettings(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_post:
             self.assertRaises(
                 AuthException,
-                client.mgmt.sso.configure_via_metadata,
+                MethodTestHelper.call_method,
+                client.mgmt.sso,
+                method_name,
                 "tenant-id",
                 "https://idp-meta.com",
                 "https://redirect.com",
@@ -585,17 +717,21 @@ class TestSSOSettings(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
-                client.mgmt.sso.configure_via_metadata(
-                    "tenant-id",
-                    "https://idp-meta.com",
-                    "https://redirect.com",
-                    ["domain.com"],
-                )
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True
+        ) as mock_post:
+            result = MethodTestHelper.call_method(
+                client.mgmt.sso,
+                method_name,
+                "tenant-id",
+                "https://idp-meta.com",
+                "https://redirect.com",
+                ["domain.com"],
             )
-            mock_post.assert_called_with(
+            self.assertIsNone(result)
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_metadata_path}",
                 headers={
                     **common.default_headers,
@@ -615,15 +751,19 @@ class TestSSOSettings(common.DescopeTest):
             )
 
         # Test partial arguments
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
-                client.mgmt.sso.configure_via_metadata(
-                    "tenant-id",
-                    "https://idp-meta.com",
-                )
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True
+        ) as mock_post:
+            result = MethodTestHelper.call_method(
+                client.mgmt.sso,
+                method_name,
+                "tenant-id",
+                "https://idp-meta.com",
             )
-            mock_post.assert_called_with(
+            self.assertIsNone(result)
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_metadata_path}",
                 headers={
                     **common.default_headers,
@@ -642,7 +782,8 @@ class TestSSOSettings(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_mapping(self):
+    @parameterized_sync_async_subcase("mapping", "mapping_async")
+    def test_mapping(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -651,27 +792,34 @@ class TestSSOSettings(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_post:
             self.assertRaises(
                 AuthException,
-                client.mgmt.sso.mapping,
+                MethodTestHelper.call_method,
+                client.mgmt.sso,
+                method_name,
                 "tenant-id",
                 [RoleMapping(["a", "b"], "role")],
                 AttributeMapping(name="UName"),
             )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
-                client.mgmt.sso.mapping(
-                    "tenant-id",
-                    [RoleMapping(["a", "b"], "role")],
-                    AttributeMapping(name="UName"),
-                )
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True
+        ) as mock_post:
+            result = MethodTestHelper.call_method(
+                client.mgmt.sso,
+                method_name,
+                "tenant-id",
+                [RoleMapping(["a", "b"], "role")],
+                AttributeMapping(name="UName"),
             )
-            mock_post.assert_called_with(
+            self.assertIsNone(result)
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_mapping_path}",
                 headers={
                     **common.default_headers,
