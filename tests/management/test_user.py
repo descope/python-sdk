@@ -2523,7 +2523,7 @@ class TestUser(common.DescopeTest):
             )
 
     def test_update_test_user(self):
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads('{"user": {"id": "u1"}}')
@@ -2562,7 +2562,7 @@ class TestUser(common.DescopeTest):
             )
 
     def test_patch_test_user(self):
-        with patch("requests.patch") as mock_patch:
+        with patch("httpx.post") as mock_patch:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads('{"user": {"id": "u1"}}')
