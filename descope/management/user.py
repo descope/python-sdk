@@ -401,6 +401,7 @@ class User(AuthBase):
         additional_login_ids: Optional[List[str]] = None,
         sso_app_ids: Optional[List[str]] = None,
         template_id: str = "",
+        test: bool = False,
     ) -> dict:
         """
         Create a new user and invite them via an email / text message.
@@ -429,7 +430,7 @@ class User(AuthBase):
                 role_names,
                 user_tenants,
                 True,
-                False,
+                test,
                 picture,
                 custom_attributes,
                 verified_email,
@@ -601,6 +602,7 @@ class User(AuthBase):
         verified_phone: Optional[bool] = None,
         additional_login_ids: Optional[List[str]] = None,
         sso_app_ids: Optional[List[str]] = None,
+        test: bool = False,
     ) -> dict:
         """
         Update an existing user with the given various fields. IMPORTANT: All parameters are used as overrides
@@ -622,6 +624,7 @@ class User(AuthBase):
         picture (str): Optional url for user picture
         custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
         sso_app_ids (List[str]): Optional, list of SSO applications IDs to be associated with the user.
+        test (bool, optional): Set to True to update a test user. Defaults to False.
 
         Return value (dict):
         Return dict in the format
@@ -646,7 +649,7 @@ class User(AuthBase):
                 family_name,
                 role_names,
                 user_tenants,
-                False,
+                test,
                 picture,
                 custom_attributes,
                 verified_email,
@@ -750,6 +753,7 @@ class User(AuthBase):
         verified_email: Optional[bool] = None,
         verified_phone: Optional[bool] = None,
         sso_app_ids: Optional[List[str]] = None,
+        test: bool = False,
     ) -> dict:
         """
         Patches an existing user with the given various fields. Only the given fields will be used to update the user.
@@ -769,6 +773,7 @@ class User(AuthBase):
         picture (str): Optional url for user picture
         custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
         sso_app_ids (List[str]): Optional, list of SSO applications IDs to be associated with the user.
+        test (bool, optional): Set to True to update a test user. Defaults to False.
 
         Return value (dict):
         Return dict in the format
@@ -795,6 +800,7 @@ class User(AuthBase):
                 verified_email,
                 verified_phone,
                 sso_app_ids,
+                test,
             ),
             pswd=self._auth.management_key,
         )
