@@ -364,3 +364,8 @@ def sort_to_dict(sort: List[Sort]) -> list:
                 }
             )
     return sort_list
+
+def map_to_values_object(input_map: dict):
+    if not input_map:
+        return {}
+    return {k: {"values": v} for k, v in input_map.items()}

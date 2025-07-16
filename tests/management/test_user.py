@@ -1047,6 +1047,45 @@ class TestUser(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+        # Test success flow with tenant_role_ids and tenant_role_names
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads(
+                """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
+            )
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.search_all(
+                tenant_role_ids={"tenant1": ["roleA", "roleB"]},
+                tenant_role_names={"tenant2": ["admin", "user"]},
+            )
+            users = resp["users"]
+            self.assertEqual(len(users), 2)
+            self.assertEqual(users[0]["id"], "u1")
+            self.assertEqual(users[1]["id"], "u2")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.users_search_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "tenantIds": [],
+                    "roleNames": [],
+                    "limit": 0,
+                    "page": 0,
+                    "testUsersOnly": False,
+                    "withTestUser": False,
+                    "tenantRoleIds": {"tenant1": {"values": ["roleA", "roleB"]}},
+                    "tenantRoleNames": {"tenant2": {"values": ["admin", "user"]}},
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
     def test_search_all_test_users(self):
         # Test failed flows
         with patch("httpx.post") as mock_post:
@@ -1250,6 +1289,45 @@ class TestUser(common.DescopeTest):
                     "toModifiedTime": 400,
                 },
                 follow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test success flow with tenant_role_ids and tenant_role_names
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads(
+                """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
+            )
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.search_all_test_users(
+                tenant_role_ids={"tenant1": ["roleA", "roleB"]},
+                tenant_role_names={"tenant2": ["admin", "user"]},
+            )
+            users = resp["users"]
+            self.assertEqual(len(users), 2)
+            self.assertEqual(users[0]["id"], "u1")
+            self.assertEqual(users[1]["id"], "u2")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.test_users_search_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "tenantIds": [],
+                    "roleNames": [],
+                    "limit": 0,
+                    "page": 0,
+                    "testUsersOnly": True,
+                    "withTestUser": True,
+                    "tenantRoleIds": {"tenant1": {"values": ["roleA", "roleB"]}},
+                    "tenantRoleNames": {"tenant2": {"values": ["admin", "user"]}},
+                },
+                allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

@@ -10,6 +10,7 @@ from descope.management.common import (
     Sort,
     associated_tenants_to_dict,
     sort_to_dict,
+    map_to_values_object,
 )
 from descope.management.user_pwd import UserPassword
 
@@ -638,6 +639,8 @@ class User(AuthBase):
         from_modified_time: Optional[int] = None,
         to_modified_time: Optional[int] = None,
         user_ids: Optional[List[str]] = None,
+        tenant_role_ids: Optional[dict] = None,
+        tenant_role_names: Optional[dict] = None,
     ) -> dict:
         """
         Search all users.
@@ -662,6 +665,8 @@ class User(AuthBase):
         from_modified_time (int): Optional int, only include users whose last modification/update occurred on or after this time (in Unix epoch milliseconds)
         to_modified_time (int): Optional int, only include users whose last modification/update occurred on or before this time (in Unix epoch milliseconds)
         user_ids (List[str]): Optional list of user IDs to filter by
+        tenant_role_ids (dict): Optional mapping of tenant ID to list of role IDs.
+        tenant_role_names (dict): Optional mapping of tenant ID to list of role names.
 
         Return value (dict):
         Return dict in the format
@@ -726,7 +731,12 @@ class User(AuthBase):
             body["fromModifiedTime"] = from_modified_time
         if to_modified_time is not None:
             body["toModifiedTime"] = to_modified_time
-
+            
+        if tenant_role_ids is not None:
+            body["tenantRoleIds"] = map_to_values_object(tenant_role_ids)
+        if tenant_role_names is not None:
+            body["tenantRoleNames"] = map_to_values_object(tenant_role_names)
+        
         response = self._auth.do_post(
             MgmtV1.users_search_path,
             body=body,
@@ -752,6 +762,8 @@ class User(AuthBase):
         to_created_time: Optional[int] = None,
         from_modified_time: Optional[int] = None,
         to_modified_time: Optional[int] = None,
+        tenant_role_ids: Optional[dict] = None,
+        tenant_role_names: Optional[dict] = None,
     ) -> dict:
         """
         Search all test users.
@@ -773,6 +785,8 @@ class User(AuthBase):
         to_created_time (int): Optional int, only include users who were created on or before this time (in Unix epoch milliseconds)
         from_modified_time (int): Optional int, only include users whose last modification/update occurred on or after this time (in Unix epoch milliseconds)
         to_modified_time (int): Optional int, only include users whose last modification/update occurred on or before this time (in Unix epoch milliseconds)
+        tenant_role_ids (dict): Optional mapping of tenant ID to list of role IDs.
+        tenant_role_names (dict): Optional mapping of tenant ID to list of role names.
 
         Return value (dict):
         Return dict in the format
@@ -834,6 +848,11 @@ class User(AuthBase):
             body["fromModifiedTime"] = from_modified_time
         if to_modified_time is not None:
             body["toModifiedTime"] = to_modified_time
+            
+        if tenant_role_ids is not None:
+            body["tenantRoleIds"] = map_to_values_object(tenant_role_ids)
+        if tenant_role_names is not None:
+            body["tenantRoleNames"] = map_to_values_object(tenant_role_names)
 
         response = self._auth.do_post(
             MgmtV1.test_users_search_path,
