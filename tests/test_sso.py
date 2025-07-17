@@ -48,16 +48,16 @@ class TestSSO(common.DescopeTest):
         self.assertRaises(AuthException, sso.start, "", "http://dummy.com")
         self.assertRaises(AuthException, sso.start, None, "http://dummy.com")
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(AuthException, sso.start, "tenant1", "http://dummy.com")
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(sso.start("tenant1", "http://dummy.com"))
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             sso.start("tenant1", "http://dummy.com", sso_id="some-sso-id")
             expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.auth_sso_start_path}"
@@ -74,7 +74,7 @@ class TestSSO(common.DescopeTest):
                     "ssoId": "some-sso-id",
                 },
                 json={},
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -93,16 +93,16 @@ class TestSSO(common.DescopeTest):
         self.assertRaises(AuthException, sso.start, "", "http://dummy.com")
         self.assertRaises(AuthException, sso.start, None, "http://dummy.com")
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(AuthException, sso.start, "tenant1", "http://dummy.com")
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(sso.start("tenant1", "http://dummy.com"))
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             lo = LoginOptions(stepup=True, custom_claims={"k1": "v1"})
             sso.start("tenant1", "http://dummy.com", lo, "refresh")
@@ -116,7 +116,7 @@ class TestSSO(common.DescopeTest):
                 },
                 params={"tenant": "tenant1", "redirectURL": "http://dummy.com"},
                 json={"stepup": True, "customClaims": {"k1": "v1"}, "mfa": False},
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -131,12 +131,12 @@ class TestSSO(common.DescopeTest):
         self.assertRaises(AuthException, sso.exchange_token, "")
         self.assertRaises(AuthException, sso.exchange_token, None)
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(AuthException, sso.exchange_token, "c1")
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
             my_mock_response.cookies = {}
@@ -155,7 +155,7 @@ class TestSSO(common.DescopeTest):
                 },
                 params=None,
                 json={"code": "c1"},
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

@@ -39,7 +39,7 @@ class TestSSOApplication(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -49,7 +49,7 @@ class TestSSOApplication(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"id": "app1"}""")
@@ -77,7 +77,7 @@ class TestSSOApplication(common.DescopeTest):
                     "logo": None,
                     "forceAuthentication": True,
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -109,7 +109,7 @@ class TestSSOApplication(common.DescopeTest):
             entity_id="",
         )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -121,7 +121,7 @@ class TestSSOApplication(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"id": "app1"}""")
@@ -188,7 +188,7 @@ class TestSSOApplication(common.DescopeTest):
                     "forceAuthentication": True,
                     "logoutRedirectUrl": "http://dummy.com/logout",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -202,7 +202,7 @@ class TestSSOApplication(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -213,7 +213,7 @@ class TestSSOApplication(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             self.assertIsNone(
@@ -238,7 +238,7 @@ class TestSSOApplication(common.DescopeTest):
                     "logo": None,
                     "forceAuthentication": False,
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -272,7 +272,7 @@ class TestSSOApplication(common.DescopeTest):
             entity_id="",
         )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -285,7 +285,7 @@ class TestSSOApplication(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             self.assertIsNone(
@@ -352,7 +352,7 @@ class TestSSOApplication(common.DescopeTest):
                     "forceAuthentication": False,
                     "logoutRedirectUrl": None,
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -366,7 +366,7 @@ class TestSSOApplication(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -375,7 +375,7 @@ class TestSSOApplication(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.sso_application.delete("app1"))
             mock_post.assert_called_with(
@@ -389,7 +389,7 @@ class TestSSOApplication(common.DescopeTest):
                 json={
                     "id": "app1",
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -403,7 +403,7 @@ class TestSSOApplication(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             mock_get.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -412,7 +412,7 @@ class TestSSOApplication(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads(
@@ -453,7 +453,7 @@ class TestSSOApplication(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 params={"id": "app1"},
-                allow_redirects=None,
+                follow_redirects=None,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -467,12 +467,12 @@ class TestSSOApplication(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             mock_get.return_value.ok = False
             self.assertRaises(AuthException, client.mgmt.sso_application.load_all)
 
         # Test success flow
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads(
@@ -534,7 +534,7 @@ class TestSSOApplication(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
-                allow_redirects=None,
+                follow_redirects=None,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

@@ -112,17 +112,17 @@ class TestAuth(common.DescopeTest):
         """
 
         # Test failed flows
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             mock_get.return_value.ok = False
             self.assertRaises(AuthException, auth._fetch_public_keys)
 
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             mock_get.return_value.ok = True
             mock_get.return_value.text = "invalid json"
             self.assertRaises(AuthException, auth._fetch_public_keys)
 
         # test success flow
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             mock_get.return_value.ok = True
             mock_get.return_value.text = valid_keys_response
             self.assertIsNone(auth._fetch_public_keys())
@@ -354,7 +354,7 @@ class TestAuth(common.DescopeTest):
         auth = Auth(self.dummy_project_id, self.public_key_dict)
 
         # Test fail flow
-        with patch("requests.post") as mock_request:
+        with patch("httpx.post") as mock_request:
             mock_request.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -370,7 +370,7 @@ class TestAuth(common.DescopeTest):
             auth.validate_and_refresh_session(None, None)
 
         # Test validate_session with Ratelimit exception
-        with patch("requests.get") as mock_request:
+        with patch("httpx.get") as mock_request:
             mock_request.return_value.ok = False
             mock_request.return_value.status_code = 429
             mock_request.return_value.json.return_value = {
@@ -397,7 +397,7 @@ class TestAuth(common.DescopeTest):
             )
 
         # Test refresh_session with Ratelimit exception
-        with patch("requests.get") as mock_request:
+        with patch("httpx.get") as mock_request:
             mock_request.return_value.ok = False
             mock_request.return_value.status_code = 429
             mock_request.return_value.json.return_value = {
@@ -428,7 +428,7 @@ class TestAuth(common.DescopeTest):
         auth = Auth(self.dummy_project_id, self.public_key_dict)
 
         # Test fail flow
-        with patch("requests.post") as mock_request:
+        with patch("httpx.post") as mock_request:
             mock_request.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -438,7 +438,7 @@ class TestAuth(common.DescopeTest):
 
         # Test success flow
         valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3R6VWhkcXBJRjJ5czlnZzdtczA2VXZ0QzQiLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0Mzc1OTYsImlhdCI6MTY1OTYzNzU5NiwiaXNzIjoiUDJDdHpVaGRxcElGMnlzOWdnN21zMDZVdnRDNCIsInN1YiI6IlUyQ3UwajBXUHczWU9pUElTSmI1Mkwwd1VWTWcifQ.WLnlHugvzZtrV9OzBB7SjpCLNRvKF3ImFpVyIN5orkrjO2iyAKg_Rb4XHk9sXGC1aW8puYzLbhE1Jv3kk2hDcKggfE8OaRNRm8byhGFZHnvPJwcP_Ya-aRmfAvCLcKOL"
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
             data = {"sessionJwt": valid_jwt_token}
@@ -460,7 +460,7 @@ class TestAuth(common.DescopeTest):
                 },
                 params=None,
                 json={"loginOptions": {"customClaims": {"k1": "v1"}}},
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -557,7 +557,7 @@ class TestAuth(common.DescopeTest):
         auth = Auth(self.dummy_project_id, self.public_key_dict)
 
         # Test do_post
-        with patch("requests.post") as mock_request:
+        with patch("httpx.post") as mock_request:
             mock_request.return_value.ok = False
             mock_request.return_value.status_code = 429
             mock_request.return_value.json.return_value = {
@@ -583,7 +583,7 @@ class TestAuth(common.DescopeTest):
             )
 
         # Test do_get
-        with patch("requests.get") as mock_request:
+        with patch("httpx.get") as mock_request:
             mock_request.return_value.ok = False
             mock_request.return_value.status_code = 429
             mock_request.return_value.json.return_value = {
@@ -595,7 +595,7 @@ class TestAuth(common.DescopeTest):
                 API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"
             }
             with self.assertRaises(RateLimitException) as cm:
-                auth.do_get(uri="http://test.com", params=False, allow_redirects=None)
+                auth.do_get(uri="http://test.com", params=False, follow_redirects=None)
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, "E130429")
             self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
@@ -609,7 +609,7 @@ class TestAuth(common.DescopeTest):
             )
 
         # Test do_delete
-        with patch("requests.delete") as mock_request:
+        with patch("httpx.delete") as mock_request:
             mock_request.return_value.ok = False
             mock_request.return_value.status_code = 429
             mock_request.return_value.json.return_value = {
@@ -635,7 +635,7 @@ class TestAuth(common.DescopeTest):
             )
 
         # Test do_delete with params and pswd
-        with patch("requests.delete") as mock_delete:
+        with patch("httpx.delete") as mock_delete:
             network_resp = mock.Mock()
             network_resp.ok = True
 
@@ -650,13 +650,13 @@ class TestAuth(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{'pswd'}",
                     "x-descope-project-id": self.dummy_project_id,
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Test _fetch_public_keys rate limit
-        with patch("requests.get") as mock_request:
+        with patch("httpx.get") as mock_request:
             mock_request.return_value.ok = False
             mock_request.return_value.status_code = 429
             mock_request.return_value.json.return_value = {
@@ -685,7 +685,7 @@ class TestAuth(common.DescopeTest):
         auth = Auth(self.dummy_project_id, self.public_key_dict)
 
         # Test do_post empty body
-        with patch("requests.post") as mock_request:
+        with patch("httpx.post") as mock_request:
             mock_request.return_value.ok = False
             mock_request.return_value.status_code = 429
             mock_request.return_value.json.return_value = {
@@ -714,7 +714,7 @@ class TestAuth(common.DescopeTest):
         auth = Auth(self.dummy_project_id, self.public_key_dict)
 
         # Test do_post empty body
-        with patch("requests.post") as mock_request:
+        with patch("httpx.post") as mock_request:
             mock_request.return_value.ok = False
             mock_request.return_value.status_code = 429
             mock_request.return_value.json.return_value = "aaa"
@@ -731,7 +731,7 @@ class TestAuth(common.DescopeTest):
         auth = Auth(self.dummy_project_id, self.public_key_dict)
 
         # Test do_post empty body
-        with patch("requests.post") as mock_request:
+        with patch("httpx.post") as mock_request:
             mock_request.return_value.ok = False
             mock_request.return_value.status_code = 429
             mock_request.return_value.json.return_value = ""
@@ -748,7 +748,7 @@ class TestAuth(common.DescopeTest):
         auth = Auth(self.dummy_project_id, self.public_key_dict)
 
         # Test do_post empty body
-        with patch("requests.post") as mock_request:
+        with patch("httpx.post") as mock_request:
             mock_request.return_value.ok = False
             mock_request.return_value.status_code = 429
             mock_request.return_value.json.return_value = None
@@ -763,13 +763,13 @@ class TestAuth(common.DescopeTest):
 
     def test_raise_from_response(self):
         auth = Auth(self.dummy_project_id, self.public_key_dict)
-        with patch("requests.get") as mock_request:
+        with patch("httpx.get") as mock_request:
             mock_request.return_value.ok = False
             mock_request.return_value.status_code = 400
             mock_request.return_value.error_type = ERROR_TYPE_SERVER_ERROR
             mock_request.return_value.text = """{"errorCode":"E062108","errorDescription":"User not found","errorMessage":"Cannot find user"}"""
             with self.assertRaises(AuthException) as cm:
-                auth.do_get(uri="http://test.com", params=False, allow_redirects=None)
+                auth.do_get(uri="http://test.com", params=False, follow_redirects=None)
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, 400)
             self.assertEqual(the_exception.error_type, ERROR_TYPE_SERVER_ERROR)
