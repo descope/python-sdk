@@ -1202,6 +1202,49 @@ class TestUser(common.DescopeTest):
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
+        
+        # TODO this!
+        # Test success flow with tenant_role_ids and tenant_role_names
+        with HTTPMockHelper.mock_http_call(
+            is_async,
+            method="post",
+            ok=True,
+            json=lambda: {"users": [{"id": "u1"}, {"id": "u2"}]},
+        ) as mock_post:
+            resp = MethodTestHelper.call_method(
+                self.client.mgmt.user,
+                method_name,
+                tenant_role_ids={"tenant1": ["roleA", "roleB"]},
+                tenant_role_names={"tenant2": ["admin", "user"]},
+            )
+            users = resp["users"]
+            self.assertEqual(len(users), 2)
+            self.assertEqual(users[0]["id"], "u1")
+            self.assertEqual(users[1]["id"], "u2")
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.users_search_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "tenantIds": [],
+                    "roleNames": [],
+                    "limit": 0,
+                    "page": 0,
+                    "testUsersOnly": False,
+                    "withTestUser": False,
+                    "tenantRoleIds": {"tenant1": {"values": ["roleA", "roleB"]}},
+                    "tenantRoleNames": {"tenant2": {"values": ["admin", "user"]}},
+                },
+                follow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
 
     @parameterized_sync_async_subcase(
         "search_all_test_users", "search_all_test_users_async"
@@ -1426,6 +1469,48 @@ class TestUser(common.DescopeTest):
                     "toCreatedTime": 200,
                     "fromModifiedTime": 300,
                     "toModifiedTime": 400,
+                },
+                follow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+        # TODO this!
+        # Test success flow with tenant_role_ids and tenant_role_names
+        with HTTPMockHelper.mock_http_call(
+            is_async,
+            method="post",
+            ok=True,
+            json=lambda: {"users": [{"id": "u1"}, {"id": "u2"}]},
+        ) as mock_post:
+            resp = MethodTestHelper.call_method(
+                self.client.mgmt.user,
+                method_name,
+                tenant_role_ids={"tenant1": ["roleA", "roleB"]},
+                tenant_role_names={"tenant2": ["admin", "user"]},
+            )
+            users = resp["users"]
+            self.assertEqual(len(users), 2)
+            self.assertEqual(users[0]["id"], "u1")
+            self.assertEqual(users[1]["id"], "u2")
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.test_users_search_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "tenantIds": [],
+                    "roleNames": [],
+                    "limit": 0,
+                    "page": 0,
+                    "testUsersOnly": True,
+                    "withTestUser": True,
+                    "tenantRoleIds": {"tenant1": {"values": ["roleA", "roleB"]}},
+                    "tenantRoleNames": {"tenant2": {"values": ["admin", "user"]}},
                 },
                 follow_redirects=False,
                 verify=True,
