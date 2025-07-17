@@ -5,6 +5,11 @@ from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
 from .. import common
+from ..async_test_base import (
+    parameterized_sync_async_subcase,
+    HTTPMockHelper,
+    MethodTestHelper,
+)
 
 
 class TestGroup(common.DescopeTest):
@@ -22,7 +27,8 @@ class TestGroup(common.DescopeTest):
             "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
         }
 
-    def test_load_all_groups(self):
+    @parameterized_sync_async_subcase("load_all_groups", "load_all_groups_async")
+    def test_load_all_groups(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -31,19 +37,28 @@ class TestGroup(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_post:
             self.assertRaises(
                 AuthException,
-                client.mgmt.group.load_all_groups,
+                MethodTestHelper.call_method,
+                client.mgmt.group,
+                method_name,
                 "tenant_id",
             )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNotNone(client.mgmt.group.load_all_groups("someTenantId"))
-            mock_post.assert_called_with(
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True
+        ) as mock_post:
+            result = MethodTestHelper.call_method(
+                client.mgmt.group, method_name, "someTenantId"
+            )
+            self.assertIsNotNone(result)
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.group_load_all_path}",
                 headers={
                     **common.default_headers,
@@ -59,7 +74,10 @@ class TestGroup(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_load_all_groups_for_members(self):
+    @parameterized_sync_async_subcase(
+        "load_all_groups_for_members", "load_all_groups_for_members_async"
+    )
+    def test_load_all_groups_for_members(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -68,23 +86,32 @@ class TestGroup(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_post:
             self.assertRaises(
                 AuthException,
-                client.mgmt.group.load_all_groups_for_members,
+                MethodTestHelper.call_method,
+                client.mgmt.group,
+                method_name,
                 "tenant_id",
             )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNotNone(
-                client.mgmt.group.load_all_groups_for_members(
-                    "someTenantId", ["one", "two"], ["three", "four"]
-                )
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True
+        ) as mock_post:
+            result = MethodTestHelper.call_method(
+                client.mgmt.group,
+                method_name,
+                "someTenantId",
+                ["one", "two"],
+                ["three", "four"],
             )
-            mock_post.assert_called_with(
+            self.assertIsNotNone(result)
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.group_load_all_for_member_path}",
                 headers={
                     **common.default_headers,
@@ -102,7 +129,10 @@ class TestGroup(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_load_all_group_members(self):
+    @parameterized_sync_async_subcase(
+        "load_all_group_members", "load_all_group_members_async"
+    )
+    def test_load_all_group_members(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -111,22 +141,29 @@ class TestGroup(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_post:
             self.assertRaises(
                 AuthException,
-                client.mgmt.group.load_all_group_members,
+                MethodTestHelper.call_method,
+                client.mgmt.group,
+                method_name,
                 "tenant_id",
                 "group_id",
             )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNotNone(
-                client.mgmt.group.load_all_group_members("someTenantId", "someGroupId")
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True
+        ) as mock_post:
+            result = MethodTestHelper.call_method(
+                client.mgmt.group, method_name, "someTenantId", "someGroupId"
             )
-            mock_post.assert_called_with(
+            self.assertIsNotNone(result)
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.group_load_all_group_members_path}",
                 headers={
                     **common.default_headers,

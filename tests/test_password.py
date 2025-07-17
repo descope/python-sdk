@@ -8,6 +8,11 @@ from descope.authmethod.password import Password  # noqa: F401
 from descope.common import DEFAULT_TIMEOUT_SECONDS, EndpointsV1
 
 from . import common
+from .async_test_base import (
+    parameterized_sync_async_subcase,
+    HTTPMockHelper,
+    MethodTestHelper,
+)
 
 
 class TestPassword(common.DescopeTest):
@@ -24,7 +29,8 @@ class TestPassword(common.DescopeTest):
             "y": "N5n5jKZA5Wu7_b4B36KKjJf-VRfJ-XqczfCSYy9GeQLqF-b63idfE0SYaYk9cFqg",
         }
 
-    def test_sign_up(self):
+    @parameterized_sync_async_subcase("sign_up", "sign_up_async")
+    def test_sign_up(self, method_name, is_async):
         signup_user_details = {
             "username": "jhon",
             "name": "john",
@@ -37,7 +43,9 @@ class TestPassword(common.DescopeTest):
         # Test failed flows
         self.assertRaises(
             AuthException,
-            password.sign_up,
+            MethodTestHelper.call_method,
+            password,
+            method_name,
             "",
             None,
             signup_user_details,
@@ -45,7 +53,9 @@ class TestPassword(common.DescopeTest):
 
         self.assertRaises(
             AuthException,
-            password.sign_up,
+            MethodTestHelper.call_method,
+            password,
+            method_name,
             None,
             None,
             signup_user_details,
@@ -53,7 +63,9 @@ class TestPassword(common.DescopeTest):
 
         self.assertRaises(
             AuthException,
-            password.sign_up,
+            MethodTestHelper.call_method,
+            password,
+            method_name,
             "login_id",
             "",
             signup_user_details,
@@ -61,39 +73,47 @@ class TestPassword(common.DescopeTest):
 
         self.assertRaises(
             AuthException,
-            password.sign_up,
+            MethodTestHelper.call_method,
+            password,
+            method_name,
             "login_id",
             None,
             signup_user_details,
         )
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_post:
             self.assertRaises(
                 AuthException,
-                password.sign_up,
+                MethodTestHelper.call_method,
+                password,
+                method_name,
                 "dummy@dummy.com",
                 "123456",
                 signup_user_details,
             )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            my_mock_response = mock.Mock()
-            my_mock_response.ok = True
-            my_mock_response.cookies = {}
-            data = json.loads(
-                """{"jwts": ["eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg4MDc4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MTY2MDIxNTI3OCwiaWF0IjoxNjU3Nzk2MDc4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQnRFSGtnT3UwMmxtTXh6UElleGRNdFV3MU0ifQ.oAnvJ7MJvCyL_33oM7YCF12JlQ0m6HWRuteUVAdaswfnD4rHEBmPeuVHGljN6UvOP4_Cf0559o39UHVgm3Fwb-q7zlBbsu_nP1-PRl-F8NJjvBgC5RsAYabtJq7LlQmh"], "user": {"loginIds": ["guyp@descope.com"], "name": "", "email": "guyp@descope.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false}, "firstSeen": false}"""
-            )
-            my_mock_response.json.return_value = data
-            mock_post.return_value = my_mock_response
+        data = json.loads(
+            """{"jwts": ["eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg4MDc4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MTY2MDIxNTI3OCwiaWF0IjoxNjU3Nzk2MDc4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQnRFSGtnT3UwMmxtTXh6UElleGRNdFV3MU0ifQ.oAnvJ7MJvCyL_33oM7YCF12JlQ0m6HWRuteUVAdaswfnD4rHEBmPeuVHGljN6UvOP4_Cf0559o39UHVgm3Fwb-q7zlBbsu_nP1-PRl-F8NJjvBgC5RsAYabtJq7LlQmh"], "user": {"loginIds": ["guyp@descope.com"], "name": "", "email": "guyp@descope.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false}, "firstSeen": false}"""
+        )
 
-            self.assertIsNotNone(
-                password.sign_up("dummy@dummy.com", "123456", signup_user_details)
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True, json=lambda: data, cookies={}
+        ) as mock_post:
+            result = MethodTestHelper.call_method(
+                password,
+                method_name,
+                "dummy@dummy.com",
+                "123456",
+                signup_user_details,
             )
+            self.assertIsNotNone(result)
 
-            mock_post.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_password_path}",
                 headers={
                     **common.default_headers,
@@ -116,62 +136,75 @@ class TestPassword(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_sign_in(self):
+    @parameterized_sync_async_subcase("sign_in", "sign_in_async")
+    def test_sign_in(self, method_name, is_async):
         password = Password(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
         self.assertRaises(
             AuthException,
-            password.sign_in,
+            MethodTestHelper.call_method,
+            password,
+            method_name,
             "",
             None,
         )
 
         self.assertRaises(
             AuthException,
-            password.sign_in,
+            MethodTestHelper.call_method,
+            password,
+            method_name,
             None,
             None,
         )
 
         self.assertRaises(
             AuthException,
-            password.sign_in,
+            MethodTestHelper.call_method,
+            password,
+            method_name,
             "login_id",
             "",
         )
 
         self.assertRaises(
             AuthException,
-            password.sign_in,
+            MethodTestHelper.call_method,
+            password,
+            method_name,
             "login_id",
             None,
         )
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_post:
             self.assertRaises(
                 AuthException,
-                password.sign_in,
+                MethodTestHelper.call_method,
+                password,
+                method_name,
                 "dummy@dummy.com",
                 "123456",
             )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            my_mock_response = mock.Mock()
-            my_mock_response.ok = True
-            my_mock_response.cookies = {}
-            data = json.loads(
-                """{"jwts": ["eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg4MDc4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MTY2MDIxNTI3OCwiaWF0IjoxNjU3Nzk2MDc4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQnRFSGtnT3UwMmxtTXh6UElleGRNdFV3MU0ifQ.oAnvJ7MJvCyL_33oM7YCF12JlQ0m6HWRuteUVAdaswfnD4rHEBmPeuVHGljN6UvOP4_Cf0559o39UHVgm3Fwb-q7zlBbsu_nP1-PRl-F8NJjvBgC5RsAYabtJq7LlQmh"], "user": {"loginIds": ["guyp@descope.com"], "name": "", "email": "guyp@descope.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false}, "firstSeen": false}"""
+        data = json.loads(
+            """{"jwts": ["eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg4MDc4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MTY2MDIxNTI3OCwiaWF0IjoxNjU3Nzk2MDc4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQnRFSGtnT3UwMmxtTXh6UElleGRNdFV3MU0ifQ.oAnvJ7MJvCyL_33oM7YCF12JlQ0m6HWRuteUVAdaswfnD4rHEBmPeuVHGljN6UvOP4_Cf0559o39UHVgm3Fwb-q7zlBbsu_nP1-PRl-F8NJjvBgC5RsAYabtJq7LlQmh"], "user": {"loginIds": ["guyp@descope.com"], "name": "", "email": "guyp@descope.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false}, "firstSeen": false}"""
+        )
+
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True, json=lambda: data, cookies={}
+        ) as mock_post:
+            result = MethodTestHelper.call_method(
+                password, method_name, "dummy@dummy.com", "123456"
             )
-            my_mock_response.json.return_value = data
-            mock_post.return_value = my_mock_response
+            self.assertIsNotNone(result)
 
-            self.assertIsNotNone(password.sign_in("dummy@dummy.com", "123456"))
-
-            mock_post.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_in_password_path}",
                 headers={
                     **common.default_headers,
@@ -188,47 +221,57 @@ class TestPassword(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_send_reset(self):
+    @parameterized_sync_async_subcase("send_reset", "send_reset_async")
+    def test_send_reset(self, method_name, is_async):
         password = Password(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
         self.assertRaises(
             AuthException,
-            password.send_reset,
+            MethodTestHelper.call_method,
+            password,
+            method_name,
             "",
         )
 
         self.assertRaises(
             AuthException,
-            password.send_reset,
+            MethodTestHelper.call_method,
+            password,
+            method_name,
             None,
         )
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_post:
             self.assertRaises(
                 AuthException,
-                password.send_reset,
+                MethodTestHelper.call_method,
+                password,
+                method_name,
                 "dummy@dummy.com",
             )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            my_mock_response = mock.Mock()
-            my_mock_response.ok = True
-            my_mock_response.cookies = {}
-            data = json.loads(
-                """{"resetMethod": "magiclink", "maskedEmail": "du***@***my.com"}"""
-            )
-            my_mock_response.json.return_value = data
-            mock_post.return_value = my_mock_response
+        data = json.loads(
+            """{"resetMethod": "magiclink", "maskedEmail": "du***@***my.com"}"""
+        )
 
-            self.assertIsNotNone(
-                password.send_reset("dummy@dummy.com", "https://redirect.here.com")
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True, json=lambda: data, cookies={}
+        ) as mock_post:
+            result = MethodTestHelper.call_method(
+                password,
+                method_name,
+                "dummy@dummy.com",
+                "https://redirect.here.com",
             )
+            self.assertIsNotNone(result)
 
-            mock_post.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.send_reset_password_path}",
                 headers={
                     **common.default_headers,
@@ -246,26 +289,21 @@ class TestPassword(common.DescopeTest):
             )
 
         # Test success flow with template options
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            my_mock_response = mock.Mock()
-            my_mock_response.ok = True
-            my_mock_response.cookies = {}
-            data = json.loads(
-                """{"resetMethod": "magiclink", "maskedEmail": "du***@***my.com"}"""
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True, json=lambda: data, cookies={}
+        ) as mock_post:
+            result = MethodTestHelper.call_method(
+                password,
+                method_name,
+                "dummy@dummy.com",
+                "https://redirect.here.com",
+                {"bla": "blue"},
             )
-            my_mock_response.json.return_value = data
-            mock_post.return_value = my_mock_response
+            self.assertIsNotNone(result)
 
-            self.assertIsNotNone(
-                password.send_reset(
-                    "dummy@dummy.com",
-                    "https://redirect.here.com",
-                    {"bla": "blue"},
-                )
-            )
-
-            mock_post.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.send_reset_password_path}",
                 headers={
                     **common.default_headers,
@@ -283,13 +321,16 @@ class TestPassword(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_update(self):
+    @parameterized_sync_async_subcase("update", "update_async")
+    def test_update(self, method_name, is_async):
         password = Password(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
         self.assertRaises(
             AuthException,
-            password.update,
+            MethodTestHelper.call_method,
+            password,
+            method_name,
             "",
             None,
             None,
@@ -297,7 +338,9 @@ class TestPassword(common.DescopeTest):
 
         self.assertRaises(
             AuthException,
-            password.update,
+            MethodTestHelper.call_method,
+            password,
+            method_name,
             None,
             None,
             None,
@@ -305,7 +348,9 @@ class TestPassword(common.DescopeTest):
 
         self.assertRaises(
             AuthException,
-            password.update,
+            MethodTestHelper.call_method,
+            password,
+            method_name,
             "login_id",
             "",
             None,
@@ -313,7 +358,9 @@ class TestPassword(common.DescopeTest):
 
         self.assertRaises(
             AuthException,
-            password.update,
+            MethodTestHelper.call_method,
+            password,
+            method_name,
             "login_id",
             None,
             None,
@@ -321,7 +368,9 @@ class TestPassword(common.DescopeTest):
 
         self.assertRaises(
             AuthException,
-            password.update,
+            MethodTestHelper.call_method,
+            password,
+            method_name,
             "login_id",
             "123456",
             "",
@@ -329,30 +378,45 @@ class TestPassword(common.DescopeTest):
 
         self.assertRaises(
             AuthException,
-            password.update,
+            MethodTestHelper.call_method,
+            password,
+            method_name,
             "login_id",
             "123456",
             None,
         )
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_post:
             self.assertRaises(
                 AuthException,
-                password.update,
+                MethodTestHelper.call_method,
+                password,
+                method_name,
                 "dummy@dummy.com",
                 "1234567",
                 "refresh_token",
             )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkVGVuYW50cyI6eyIiOm51bGx9LCJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwNjc5MjA4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MjA5MDA4NzIwOCwiaWF0IjoxNjU4MDg3MjA4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQzU1dnl4dzBzUkw2RmRNNjhxUnNDRGRST1YifQ.cWP5up4R5xeIl2qoG2NtfLH3Q5nRJVKdz-FDoAXctOQW9g3ceZQi6rZQ-TPBaXMKw68bijN3bLJTqxWW5WHzqRUeopfuzTcMYmC0wP2XGJkrdF6A8D5QW6acSGqglFgu"
-            self.assertIsNone(
-                password.update("dummy@dummy.com", "123456", valid_jwt_token)
+        valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkVGVuYW50cyI6eyIiOm51bGx9LCJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwNjc5MjA4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MjA5MDA4NzIwOCwiaWF0IjoxNjU4MDg3MjA4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQzU1dnl4dzBzUkw2RmRNNjhxUnNDRGRST1YifQ.cWP5up4R5xeIl2qoG2NtfLH3Q5nRJVKdz-FDoAXctOQW9g3ceZQi6rZQ-TPBaXMKw68bijN3bLJTqxWW5WHzqRUeopfuzTcMYmC0wP2XGJkrdF6A8D5QW6acSGqglFgu"
+
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True
+        ) as mock_post:
+            result = MethodTestHelper.call_method(
+                password,
+                method_name,
+                "dummy@dummy.com",
+                "123456",
+                valid_jwt_token,
             )
-            mock_post.assert_called_with(
+            self.assertIsNone(result)
+
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_password_path}",
                 headers={
                     **common.default_headers,
@@ -369,13 +433,16 @@ class TestPassword(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_replace(self):
+    @parameterized_sync_async_subcase("replace", "replace_async")
+    def test_replace(self, method_name, is_async):
         password = Password(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
         self.assertRaises(
             AuthException,
-            password.replace,
+            MethodTestHelper.call_method,
+            password,
+            method_name,
             "",
             None,
             None,
@@ -383,7 +450,9 @@ class TestPassword(common.DescopeTest):
 
         self.assertRaises(
             AuthException,
-            password.replace,
+            MethodTestHelper.call_method,
+            password,
+            method_name,
             None,
             None,
             None,
@@ -391,7 +460,9 @@ class TestPassword(common.DescopeTest):
 
         self.assertRaises(
             AuthException,
-            password.replace,
+            MethodTestHelper.call_method,
+            password,
+            method_name,
             "login_id",
             "",
             None,
@@ -399,7 +470,9 @@ class TestPassword(common.DescopeTest):
 
         self.assertRaises(
             AuthException,
-            password.replace,
+            MethodTestHelper.call_method,
+            password,
+            method_name,
             "login_id",
             None,
             None,
@@ -407,7 +480,9 @@ class TestPassword(common.DescopeTest):
 
         self.assertRaises(
             AuthException,
-            password.replace,
+            MethodTestHelper.call_method,
+            password,
+            method_name,
             "login_id",
             "123456",
             "",
@@ -415,39 +490,45 @@ class TestPassword(common.DescopeTest):
 
         self.assertRaises(
             AuthException,
-            password.replace,
+            MethodTestHelper.call_method,
+            password,
+            method_name,
             "login_id",
             "123456",
             None,
         )
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_post:
             self.assertRaises(
                 AuthException,
-                password.replace,
+                MethodTestHelper.call_method,
+                password,
+                method_name,
                 "dummy@dummy.com",
                 "123456",
                 "1234567",
             )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            my_mock_response = mock.Mock()
-            my_mock_response.ok = True
-            my_mock_response.cookies = {}
-            data = json.loads(
-                """{"jwts": ["eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg4MDc4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MTY2MDIxNTI3OCwiaWF0IjoxNjU3Nzk2MDc4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQnRFSGtnT3UwMmxtTXh6UElleGRNdFV3MU0ifQ.oAnvJ7MJvCyL_33oM7YCF12JlQ0m6HWRuteUVAdaswfnD4rHEBmPeuVHGljN6UvOP4_Cf0559o39UHVgm3Fwb-q7zlBbsu_nP1-PRl-F8NJjvBgC5RsAYabtJq7LlQmh"], "user": {"loginIds": ["test@company.com"], "name": "", "email": "test@company.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false}, "firstSeen": false}"""
-            )
-            my_mock_response.json.return_value = data
-            mock_post.return_value = my_mock_response
+        data = json.loads(
+            """{"jwts": ["eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg4MDc4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MTY2MDIxNTI3OCwiaWF0IjoxNjU3Nzk2MDc4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQnRFSGtnT3UwMmxtTXh6UElleGRNdFV3MU0ifQ.oAnvJ7MJvCyL_33oM7YCF12JlQ0m6HWRuteUVAdaswfnD4rHEBmPeuVHGljN6UvOP4_Cf0559o39UHVgm3Fwb-q7zlBbsu_nP1-PRl-F8NJjvBgC5RsAYabtJq7LlQmh"], "user": {"loginIds": ["test@company.com"], "name": "", "email": "test@company.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false}, "firstSeen": false}"""
+        )
 
-            jwt_response = password.replace("dummy@dummy.com", "123456", "1234567")
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True, json=lambda: data, cookies={}
+        ) as mock_post:
+            jwt_response = MethodTestHelper.call_method(
+                password, method_name, "dummy@dummy.com", "123456", "1234567"
+            )
             self.assertIsNotNone(jwt_response)
             self.assertIsNotNone(jwt_response["user"])
             self.assertEqual(jwt_response["user"]["loginIds"], ["test@company.com"])
-            mock_post.assert_called_with(
+
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.replace_password_path}",
                 headers={
                     **common.default_headers,
@@ -465,27 +546,32 @@ class TestPassword(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_policy(self):
+    @parameterized_sync_async_subcase("get_policy", "get_policy_async")
+    def test_policy(self, method_name, is_async):
         password = Password(Auth(self.dummy_project_id, self.public_key_dict))
 
-        with patch("httpx.get") as mock_get:
-            mock_get.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="get", ok=False
+        ) as mock_get:
             self.assertRaises(
                 AuthException,
-                password.get_policy,
+                MethodTestHelper.call_method,
+                password,
+                method_name,
             )
 
         # Test success flow
-        with patch("httpx.get") as mock_get:
-            mock_get.return_value.ok = True
-            my_mock_response = mock.Mock()
-            my_mock_response.ok = True
-            my_mock_response.cookies = {}
-            data = json.loads("""{"minLength": 8, "lowercase": true}""")
-            my_mock_response.json.return_value = data
-            mock_get.return_value = my_mock_response
-            self.assertIsNotNone(password.get_policy())
-            mock_get.assert_called_with(
+        data = json.loads("""{"minLength": 8, "lowercase": true}""")
+
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="get", ok=True, json=lambda: data, cookies={}
+        ) as mock_get:
+            result = MethodTestHelper.call_method(password, method_name)
+            self.assertIsNotNone(result)
+
+            HTTPMockHelper.assert_http_call(
+                mock_get,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.password_policy_path}",
                 headers={
                     **common.default_headers,

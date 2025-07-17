@@ -7,6 +7,11 @@ from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
 from .. import common
+from ..async_test_base import (
+    parameterized_sync_async_subcase,
+    HTTPMockHelper,
+    MethodTestHelper,
+)
 
 
 class TestPermission(common.DescopeTest):
@@ -24,7 +29,8 @@ class TestPermission(common.DescopeTest):
             "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
         }
 
-    def test_create(self):
+    @parameterized_sync_async_subcase("create", "create_async")
+    def test_create(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -33,19 +39,28 @@ class TestPermission(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_post:
             self.assertRaises(
                 AuthException,
-                client.mgmt.permission.create,
+                MethodTestHelper.call_method,
+                client.mgmt.permission,
+                method_name,
                 "name",
             )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(client.mgmt.permission.create("P1", "Something"))
-            mock_post.assert_called_with(
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True
+        ) as mock_post:
+            result = MethodTestHelper.call_method(
+                client.mgmt.permission, method_name, "P1", "Something"
+            )
+            self.assertIsNone(result)
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.permission_create_path}",
                 headers={
                     **common.default_headers,
@@ -62,7 +77,8 @@ class TestPermission(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_update(self):
+    @parameterized_sync_async_subcase("update", "update_async")
+    def test_update(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -71,26 +87,33 @@ class TestPermission(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_post:
             self.assertRaises(
                 AuthException,
-                client.mgmt.permission.update,
+                MethodTestHelper.call_method,
+                client.mgmt.permission,
+                method_name,
                 "name",
                 "new-name",
             )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
-                client.mgmt.permission.update(
-                    "name",
-                    "new-name",
-                    "new-description",
-                )
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True
+        ) as mock_post:
+            result = MethodTestHelper.call_method(
+                client.mgmt.permission,
+                method_name,
+                "name",
+                "new-name",
+                "new-description",
             )
-            mock_post.assert_called_with(
+            self.assertIsNone(result)
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.permission_update_path}",
                 headers={
                     **common.default_headers,
@@ -108,7 +131,8 @@ class TestPermission(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_delete(self):
+    @parameterized_sync_async_subcase("delete", "delete_async")
+    def test_delete(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -117,19 +141,28 @@ class TestPermission(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_post:
             self.assertRaises(
                 AuthException,
-                client.mgmt.permission.delete,
+                MethodTestHelper.call_method,
+                client.mgmt.permission,
+                method_name,
                 "name",
             )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(client.mgmt.permission.delete("name"))
-            mock_post.assert_called_with(
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True
+        ) as mock_post:
+            result = MethodTestHelper.call_method(
+                client.mgmt.permission, method_name, "name"
+            )
+            self.assertIsNone(result)
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.permission_delete_path}",
                 headers={
                     **common.default_headers,
@@ -145,7 +178,8 @@ class TestPermission(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_load_all(self):
+    @parameterized_sync_async_subcase("load_all", "load_all_async")
+    def test_load_all(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -154,24 +188,31 @@ class TestPermission(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.get") as mock_get:
-            mock_get.return_value.ok = False
-            self.assertRaises(AuthException, client.mgmt.permission.load_all)
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="get", ok=False
+        ) as mock_get:
+            self.assertRaises(
+                AuthException,
+                MethodTestHelper.call_method,
+                client.mgmt.permission,
+                method_name,
+            )
 
         # Test success flow
-        with patch("httpx.get") as mock_get:
-            network_resp = mock.Mock()
-            network_resp.ok = True
-            network_resp.json.return_value = json.loads(
-                """{"permissions": [{"name": "p1"}, {"name": "p2"}]}"""
-            )
-            mock_get.return_value = network_resp
-            resp = client.mgmt.permission.load_all()
+        with HTTPMockHelper.mock_http_call(
+            is_async,
+            method="get",
+            ok=True,
+            json=lambda: {"permissions": [{"name": "p1"}, {"name": "p2"}]},
+        ) as mock_get:
+            resp = MethodTestHelper.call_method(client.mgmt.permission, method_name)
             permissions = resp["permissions"]
             self.assertEqual(len(permissions), 2)
             self.assertEqual(permissions[0]["name"], "p1")
             self.assertEqual(permissions[1]["name"], "p2")
-            mock_get.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_get,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.permission_load_all_path}",
                 headers={
                     **common.default_headers,

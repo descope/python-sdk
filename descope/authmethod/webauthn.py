@@ -41,6 +41,34 @@ class WebAuthn(AuthBase):
 
         return response.json()
 
+    async def sign_up_start_async(
+        self,
+        login_id: Optional[str],
+        origin: Optional[str],
+        user: Optional[dict] = None,
+    ) -> dict:
+        """
+        Docs
+        """
+        if not login_id:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
+            )
+
+        if not origin:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Origin cannot be empty"
+            )
+
+        if not user:
+            user = {}
+
+        uri = EndpointsV1.sign_up_auth_webauthn_start_path
+        body = WebAuthn._compose_sign_up_start_body(login_id, user, origin)
+        response = await self._auth.do_post_async(uri, body)
+
+        return response.json()
+
     def sign_up_finish(
         self,
         transaction_id: str,
@@ -66,6 +94,35 @@ class WebAuthn(AuthBase):
 
         resp = response.json()
         jwt_response = self._auth.generate_jwt_response(
+            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
+        )
+        return jwt_response
+
+    async def sign_up_finish_async(
+        self,
+        transaction_id: str,
+        response: Response,
+        audience: Union[str, None, Iterable[str]] = None,
+    ) -> dict:
+        """
+        Docs
+        """
+        if not transaction_id:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Transaction id cannot be empty"
+            )
+
+        if not response:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Response cannot be empty"
+            )
+
+        uri = EndpointsV1.sign_up_auth_webauthn_finish_path
+        body = WebAuthn._compose_sign_up_in_finish_body(transaction_id, response)
+        response = await self._auth.do_post_async(uri, body, None, "")
+
+        resp = response.json()
+        jwt_response = await self._auth.generate_jwt_response_async(
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
         )
         return jwt_response
@@ -98,6 +155,34 @@ class WebAuthn(AuthBase):
 
         return response.json()
 
+    async def sign_in_start_async(
+        self,
+        login_id: str,
+        origin: str,
+        login_options: Optional[LoginOptions] = None,
+        refresh_token: Optional[str] = None,
+    ) -> dict:
+        """
+        Docs
+        """
+        if not login_id:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
+            )
+
+        if not origin:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Origin cannot be empty"
+            )
+
+        validate_refresh_token_provided(login_options, refresh_token)
+
+        uri = EndpointsV1.sign_in_auth_webauthn_start_path
+        body = WebAuthn._compose_sign_in_start_body(login_id, origin, login_options)
+        response = await self._auth.do_post_async(uri, body, pswd=refresh_token)
+
+        return response.json()
+
     def sign_in_finish(
         self,
         transaction_id: str,
@@ -127,6 +212,35 @@ class WebAuthn(AuthBase):
         )
         return jwt_response
 
+    async def sign_in_finish_async(
+        self,
+        transaction_id: str,
+        response: Response,
+        audience: Union[str, None, Iterable[str]] = None,
+    ) -> dict:
+        """
+        Docs
+        """
+        if not transaction_id:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Transaction id cannot be empty"
+            )
+
+        if not response:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Response cannot be empty"
+            )
+
+        uri = EndpointsV1.sign_in_auth_webauthn_finish_path
+        body = WebAuthn._compose_sign_up_in_finish_body(transaction_id, response)
+        response = await self._auth.do_post_async(uri, body, None)
+
+        resp = response.json()
+        jwt_response = await self._auth.generate_jwt_response_async(
+            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
+        )
+        return jwt_response
+
     def sign_up_or_in_start(
         self,
         login_id: str,
@@ -151,6 +265,30 @@ class WebAuthn(AuthBase):
 
         return response.json()
 
+    async def sign_up_or_in_start_async(
+        self,
+        login_id: str,
+        origin: str,
+    ) -> dict:
+        """
+        Docs
+        """
+        if not login_id:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
+            )
+
+        if not origin:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Origin cannot be empty"
+            )
+
+        uri = EndpointsV1.sign_up_or_in_auth_webauthn_start_path
+        body = WebAuthn._compose_sign_up_or_in_start_body(login_id, origin)
+        response = await self._auth.do_post_async(uri, body)
+
+        return response.json()
+
     def update_start(self, login_id: str, refresh_token: str, origin: str):
         """
         Docs
@@ -171,6 +309,26 @@ class WebAuthn(AuthBase):
 
         return response.json()
 
+    async def update_start_async(self, login_id: str, refresh_token: str, origin: str):
+        """
+        Docs
+        """
+        if not login_id:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
+            )
+
+        if not refresh_token:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Refresh token cannot be empty"
+            )
+
+        uri = EndpointsV1.update_auth_webauthn_start_path
+        body = WebAuthn._compose_update_start_body(login_id, origin)
+        response = await self._auth.do_post_async(uri, body, None, refresh_token)
+
+        return response.json()
+
     def update_finish(self, transaction_id: str, response: str) -> None:
         """
         Docs
@@ -188,6 +346,24 @@ class WebAuthn(AuthBase):
         uri = EndpointsV1.update_auth_webauthn_finish_path
         body = WebAuthn._compose_update_finish_body(transaction_id, response)
         self._auth.do_post(uri, body)
+
+    async def update_finish_async(self, transaction_id: str, response: str) -> None:
+        """
+        Docs
+        """
+        if not transaction_id:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Transaction id cannot be empty"
+            )
+
+        if not response:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Response cannot be empty"
+            )
+
+        uri = EndpointsV1.update_auth_webauthn_finish_path
+        body = WebAuthn._compose_update_finish_body(transaction_id, response)
+        await self._auth.do_post_async(uri, body)
 
     @staticmethod
     def _compose_sign_up_start_body(login_id: str, user: dict, origin: str) -> dict:

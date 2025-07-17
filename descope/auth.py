@@ -104,6 +104,22 @@ class Auth:
                 kid, pub_key, alg = self._validate_and_load_public_key(public_key)
                 self.public_keys = {kid: (pub_key, alg)}
 
+        # Initialize async client as None - will be created when needed
+        self._async_client = None
+
+    async def __aenter__(self):
+        """Async context manager entry - initialize async client"""
+        self._async_client = httpx.AsyncClient(
+            verify=self.secure, timeout=self.timeout_seconds
+        )
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit - cleanup async client"""
+        if self._async_client:
+            await self._async_client.aclose()
+            self._async_client = None
+
     def _raise_rate_limit_exception(self, response):
         try:
             resp = response.json()
@@ -152,6 +168,33 @@ class Auth:
         self._raise_from_response(response)
         return response
 
+    async def do_get_async(
+        self,
+        uri: str,
+        params=None,
+        follow_redirects=None,
+        pswd: str | None = None,
+    ) -> httpx.Response:
+        if self._async_client:
+            response = await self._async_client.get(
+                f"{self.base_url}{uri}",
+                headers=self._get_default_headers(pswd),
+                params=params,
+                follow_redirects=follow_redirects,
+            )
+        else:
+            async with httpx.AsyncClient(
+                verify=self.secure, timeout=self.timeout_seconds
+            ) as client:
+                response = await client.get(
+                    f"{self.base_url}{uri}",
+                    headers=self._get_default_headers(pswd),
+                    params=params,
+                    follow_redirects=follow_redirects,
+                )
+        self._raise_from_response(response)
+        return response
+
     def do_post(
         self,
         uri: str,
@@ -168,6 +211,35 @@ class Auth:
             params=params,
             timeout=self.timeout_seconds,
         )
+        self._raise_from_response(response)
+        return response
+
+    async def do_post_async(
+        self,
+        uri: str,
+        body: dict | list[dict] | list[str] | None,
+        params=None,
+        pswd: str | None = None,
+    ) -> httpx.Response:
+        if self._async_client:
+            response = await self._async_client.post(
+                f"{self.base_url}{uri}",
+                headers=self._get_default_headers(pswd),
+                json=body,
+                follow_redirects=False,
+                params=params,
+            )
+        else:
+            async with httpx.AsyncClient(
+                verify=self.secure, timeout=self.timeout_seconds
+            ) as client:
+                response = await client.post(
+                    f"{self.base_url}{uri}",
+                    headers=self._get_default_headers(pswd),
+                    json=body,
+                    follow_redirects=False,
+                    params=params,
+                )
         self._raise_from_response(response)
         return response
 
@@ -190,6 +262,35 @@ class Auth:
         self._raise_from_response(response)
         return response
 
+    async def do_patch_async(
+        self,
+        uri: str,
+        body: dict | list[dict] | list[str] | None,
+        params=None,
+        pswd: str | None = None,
+    ) -> httpx.Response:
+        if self._async_client:
+            response = await self._async_client.patch(
+                f"{self.base_url}{uri}",
+                headers=self._get_default_headers(pswd),
+                json=body,
+                follow_redirects=False,
+                params=params,
+            )
+        else:
+            async with httpx.AsyncClient(
+                verify=self.secure, timeout=self.timeout_seconds
+            ) as client:
+                response = await client.patch(
+                    f"{self.base_url}{uri}",
+                    headers=self._get_default_headers(pswd),
+                    json=body,
+                    follow_redirects=False,
+                    params=params,
+                )
+        self._raise_from_response(response)
+        return response
+
     def do_delete(
         self, uri: str, params=None, pswd: str | None = None
     ) -> httpx.Response:
@@ -201,6 +302,29 @@ class Auth:
             verify=self.secure,
             timeout=self.timeout_seconds,
         )
+        self._raise_from_response(response)
+        return response
+
+    async def do_delete_async(
+        self, uri: str, params=None, pswd: str | None = None
+    ) -> httpx.Response:
+        if self._async_client:
+            response = await self._async_client.delete(
+                f"{self.base_url}{uri}",
+                params=params,
+                headers=self._get_default_headers(pswd),
+                follow_redirects=False,
+            )
+        else:
+            async with httpx.AsyncClient(
+                verify=self.secure, timeout=self.timeout_seconds
+            ) as client:
+                response = await client.delete(
+                    f"{self.base_url}{uri}",
+                    params=params,
+                    headers=self._get_default_headers(pswd),
+                    follow_redirects=False,
+                )
         self._raise_from_response(response)
         return response
 
@@ -218,6 +342,24 @@ class Auth:
         response = self.do_post(uri=uri, body=body, params=None)
         resp = response.json()
         jwt_response = self.generate_jwt_response(
+            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME), audience
+        )
+        return jwt_response
+
+    async def exchange_token_async(
+        self, uri, code: str, audience: str | None | Iterable[str] = None
+    ) -> dict:
+        if not code:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                "exchange code is empty",
+            )
+
+        body = Auth._compose_exchange_body(code)
+        response = await self.do_post_async(uri=uri, body=body, params=None)
+        resp = response.json()
+        jwt_response = await self.generate_jwt_response_async(
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME), audience
         )
         return jwt_response
@@ -371,6 +513,24 @@ class Auth:
             response_body=json, refresh_token=None, user_jwt=False, audience=audience
         )
 
+    async def exchange_access_key_async(
+        self,
+        access_key: str,
+        audience: str | Iterable[str] | None = None,
+        login_options: AccessKeyLoginOptions | None = None,
+    ) -> dict:
+        uri = EndpointsV1.exchange_auth_access_key_path
+        body = {
+            "loginOptions": login_options.__dict__ if login_options else {},
+        }
+        server_response = await self.do_post_async(
+            uri=uri, body=body, params=None, pswd=access_key
+        )
+        json = server_response.json()
+        return await self._generate_auth_info_async(
+            response_body=json, refresh_token=None, user_jwt=False, audience=audience
+        )
+
     @staticmethod
     def _compose_exchange_body(code: str) -> dict:
         return {"code": code}
@@ -442,6 +602,31 @@ class Auth:
             timeout=self.timeout_seconds,
         )
         self._raise_from_response(response)
+
+        jwks_data = response.text
+        try:
+            jwkeys_wrapper = json.loads(jwks_data)
+            jwkeys = jwkeys_wrapper["keys"]
+        except (ValueError, TypeError, KeyError) as e:
+            raise AuthException(
+                500, ERROR_TYPE_INVALID_PUBLIC_KEY, f"Unable to load jwks. Error: {e}"
+            )
+
+        # Load all public keys for this project
+        self.public_keys = {}
+        for key in jwkeys:
+            try:
+                loaded_kid, pub_key, alg = Auth._validate_and_load_public_key(key)
+                self.public_keys[loaded_kid] = (pub_key, alg)
+            except AuthException:
+                # just continue to the next key
+                pass
+
+    async def _fetch_public_keys_async(self) -> None:
+        # This function called under mutex protection so no need to acquire it once again
+        response = await self.do_get_async(
+            f"{EndpointsV2.public_key_path}/{self.project_id}"
+        )
 
         jwks_data = response.text
         try:
@@ -544,6 +729,41 @@ class Auth:
 
         return jwt_response
 
+    async def _generate_auth_info_async(
+        self,
+        response_body: dict,
+        refresh_token: str | None,
+        user_jwt: bool,
+        audience: str | None | Iterable[str] = None,
+    ) -> dict:
+        jwt_response = {}
+        st_jwt = response_body.get("sessionJwt", "")
+        if st_jwt:
+            jwt_response[SESSION_TOKEN_NAME] = await self._validate_token_async(
+                st_jwt, audience
+            )
+        rt_jwt = response_body.get("refreshJwt", "")
+        if rt_jwt:
+            jwt_response[REFRESH_SESSION_TOKEN_NAME] = await self._validate_token_async(
+                rt_jwt, audience
+            )
+        elif refresh_token:
+            jwt_response[REFRESH_SESSION_TOKEN_NAME] = await self._validate_token_async(
+                refresh_token, audience
+            )
+
+        jwt_response = self.adjust_properties(jwt_response, user_jwt)
+
+        if user_jwt:
+            jwt_response[COOKIE_DATA_NAME] = {
+                "exp": response_body.get("cookieExpiration", 0),
+                "maxAge": response_body.get("cookieMaxAge", 0),
+                "domain": response_body.get("cookieDomain", ""),
+                "path": response_body.get("cookiePath", "/"),
+            }
+
+        return jwt_response
+
     def generate_jwt_response(
         self,
         response_body: dict,
@@ -551,6 +771,20 @@ class Auth:
         audience: str | None | Iterable[str] = None,
     ) -> dict:
         jwt_response = self._generate_auth_info(
+            response_body, refresh_cookie, True, audience
+        )
+
+        jwt_response["user"] = response_body.get("user", {})
+        jwt_response["firstSeen"] = response_body.get("firstSeen", True)
+        return jwt_response
+
+    async def generate_jwt_response_async(
+        self,
+        response_body: dict,
+        refresh_cookie: str | None,
+        audience: str | None | Iterable[str] = None,
+    ) -> dict:
+        jwt_response = await self._generate_auth_info_async(
             response_body, refresh_cookie, True, audience
         )
 
@@ -639,6 +873,77 @@ class Auth:
         claims["jwt"] = token
         return claims
 
+    async def _validate_token_async(
+        self, token: str, audience: str | None | Iterable[str] = None
+    ) -> dict:
+        if not token:
+            raise AuthException(
+                500,
+                ERROR_TYPE_INVALID_TOKEN,
+                "Token validation received empty token",
+            )
+        try:
+            unverified_header = jwt.get_unverified_header(token)
+        except jwt.exceptions.PyJWTError as e:
+            raise AuthException(
+                500,
+                ERROR_TYPE_INVALID_TOKEN,
+                f"Unable to parse token header. Error: {e}",
+            ) from e
+
+        alg_header = unverified_header.get(Auth.ALGORITHM_KEY, None)
+        if alg_header is None or alg_header == "none":
+            raise AuthException(
+                500, ERROR_TYPE_INVALID_TOKEN, "Token header is missing property: alg"
+            )
+
+        kid = unverified_header.get("kid", None)
+        if kid is None:
+            raise AuthException(
+                500, ERROR_TYPE_INVALID_TOKEN, "Token header is missing property: kid"
+            )
+
+        with self.lock_public_keys:
+            if self.public_keys == {} or self.public_keys.get(kid, None) is None:
+                await self._fetch_public_keys_async()
+
+            found_key = self.public_keys.get(kid, None)
+            if found_key is None:
+                raise AuthException(
+                    500,
+                    ERROR_TYPE_INVALID_PUBLIC_KEY,
+                    "Unable to validate public key. Public key not found.",
+                )
+            # save reference to the founded key
+            # (as another thread can change the self.public_keys dict)
+            copy_key = found_key
+
+        alg_from_key = copy_key[1]
+        if alg_header != alg_from_key:
+            raise AuthException(
+                500,
+                ERROR_TYPE_INVALID_PUBLIC_KEY,
+                "Algorithm signature in JWT header does not match the algorithm signature in the public key",
+            )
+
+        try:
+            claims = jwt.decode(
+                jwt=token,
+                key=copy_key[0].key,
+                algorithms=[alg_header],
+                audience=audience,
+                leeway=self.jwt_validation_leeway,
+            )
+        except (ImmatureSignatureError, ExpiredSignatureError):
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_TOKEN,
+                "Received Invalid token times error due to time glitch (between machines) during jwt validation, try to set the jwt_validation_leeway parameter (in DescopeClient) to higher value than 5sec which is the default",
+            )
+
+        claims["jwt"] = token
+        return claims
+
     def validate_session(
         self, session_token: str, audience: str | None | Iterable[str] = None
     ) -> dict:
@@ -650,6 +955,22 @@ class Auth:
             )
 
         res = self._validate_token(session_token, audience)
+        res[SESSION_TOKEN_NAME] = copy.deepcopy(
+            res
+        )  # Duplicate for saving backward compatibility but keep the same structure as the refresh operation response
+        return self.adjust_properties(res, True)
+
+    async def validate_session_async(
+        self, session_token: str, audience: str | None | Iterable[str] = None
+    ) -> dict:
+        if not session_token:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_TOKEN,
+                "Session token is required for validation",
+            )
+
+        res = await self._validate_token_async(session_token, audience)
         res[SESSION_TOKEN_NAME] = copy.deepcopy(
             res
         )  # Duplicate for saving backward compatibility but keep the same structure as the refresh operation response
@@ -676,6 +997,29 @@ class Auth:
         )
         return self.generate_jwt_response(resp, refresh_token, audience)
 
+    async def refresh_session_async(
+        self, refresh_token: str, audience: str | None | Iterable[str] = None
+    ) -> dict:
+        if not refresh_token:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_TOKEN,
+                "Refresh token is required to refresh a session",
+            )
+
+        await self._validate_token_async(refresh_token, audience)
+
+        uri = EndpointsV1.refresh_token_path
+        response = await self.do_post_async(
+            uri=uri, body={}, params=None, pswd=refresh_token
+        )
+
+        resp = response.json()
+        refresh_token = (
+            response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None) or refresh_token
+        )
+        return await self.generate_jwt_response_async(resp, refresh_token, audience)
+
     def validate_and_refresh_session(
         self,
         session_token: str,
@@ -701,6 +1045,31 @@ class Auth:
                 )
             return self.refresh_session(refresh_token, audience)
 
+    async def validate_and_refresh_session_async(
+        self,
+        session_token: str,
+        refresh_token: str,
+        audience: str | None | Iterable[str] = None,
+    ) -> dict:
+        if not session_token:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_TOKEN,
+                "Session token is missing",
+            )
+
+        try:
+            return await self.validate_session_async(session_token, audience)
+        except AuthException:
+            # Session is invalid - try to refresh it
+            if not refresh_token:
+                raise AuthException(
+                    400,
+                    ERROR_TYPE_INVALID_TOKEN,
+                    "Refresh token is missing",
+                )
+            return await self.refresh_session_async(refresh_token, audience)
+
     def select_tenant(
         self,
         tenant_id: str,
@@ -721,6 +1090,30 @@ class Auth:
 
         resp = response.json()
         jwt_response = self.generate_jwt_response(
+            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
+        )
+        return jwt_response
+
+    async def select_tenant_async(
+        self,
+        tenant_id: str,
+        refresh_token: str,
+        audience: str | None | Iterable[str] = None,
+    ) -> dict:
+        if not refresh_token:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_TOKEN,
+                "Refresh token is required to refresh a session",
+            )
+
+        uri = EndpointsV1.select_tenant_path
+        response = await self.do_post_async(
+            uri=uri, body={"tenant": tenant_id}, params=None, pswd=refresh_token
+        )
+
+        resp = response.json()
+        jwt_response = await self.generate_jwt_response_async(
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
         )
         return jwt_response

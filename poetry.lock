@@ -1134,6 +1134,21 @@ tomli = {version = ">=1", markers = "python_version < \"3.11\""}
 dev = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "pygments (>=2.7.2)", "requests", "setuptools", "xmlschema"]
 
 [[package]]
+name = "pytest-subtests"
+version = "0.14.2"
+description = "unittest subTest() support and subtests fixture"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "pytest_subtests-0.14.2-py3-none-any.whl", hash = "sha256:8da0787c994ab372a13a0ad7d390533ad2e4385cac167b3ac501258c885d0b66"},
+    {file = "pytest_subtests-0.14.2.tar.gz", hash = "sha256:7154a8665fd528ee70a76d00216a44d139dc3c9c83521a0f779f7b0ad4f800de"},
+]
+
+[package.dependencies]
+attrs = ">=19.2.0"
+pytest = ">=7.4"
+
+[[package]]
 name = "pyyaml"
 version = "6.0.2"
 description = "YAML parser and emitter for Python"
@@ -1415,4 +1430,4 @@ flask = ["Flask"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8.1,<4.0"
-content-hash = "73cb23d1359dda704acdbe6bcb47ee3534aec385e00b7cdcc46778670a7444e3"
+content-hash = "ed52fc9f72dcd46247302a68e199282ecfdeb274d6373215d8be1711c8262250"

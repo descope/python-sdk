@@ -1,3 +1,4 @@
+import asyncio
 import json
 import os
 import unittest
@@ -24,6 +25,11 @@ from descope.common import (
 )
 
 from . import common
+from .async_test_base import (
+    parameterized_sync_async_subcase,
+    HTTPMockHelper,
+    MethodTestHelper,
+)
 
 
 class TestAuth(common.DescopeTest):
@@ -96,7 +102,8 @@ class TestAuth(common.DescopeTest):
             public_key={"kid": "dummy"},
         )
 
-    def test_fetch_public_key(self):
+    @parameterized_sync_async_subcase("_fetch_public_keys", "_fetch_public_keys_async")
+    def test_fetch_public_key(self, method_name, is_async):
         auth = Auth(self.dummy_project_id, self.public_key_dict)
         valid_keys_response = """{"keys":[
     {
@@ -112,20 +119,25 @@ class TestAuth(common.DescopeTest):
         """
 
         # Test failed flows
-        with patch("httpx.get") as mock_get:
-            mock_get.return_value.ok = False
-            self.assertRaises(AuthException, auth._fetch_public_keys)
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="get", ok=False
+        ) as mock_get:
+            self.assertRaises(
+                AuthException, MethodTestHelper.call_method, auth, method_name
+            )
 
-        with patch("httpx.get") as mock_get:
-            mock_get.return_value.ok = True
-            mock_get.return_value.text = "invalid json"
-            self.assertRaises(AuthException, auth._fetch_public_keys)
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="get", ok=True, text="invalid json"
+        ) as mock_get:
+            self.assertRaises(
+                AuthException, MethodTestHelper.call_method, auth, method_name
+            )
 
         # test success flow
-        with patch("httpx.get") as mock_get:
-            mock_get.return_value.ok = True
-            mock_get.return_value.text = valid_keys_response
-            self.assertIsNone(auth._fetch_public_keys())
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="get", ok=True, text=valid_keys_response
+        ) as mock_get:
+            self.assertIsNone(MethodTestHelper.call_method(auth, method_name))
 
     def test_project_id_from_env(self):
         os.environ["DESCOPE_PROJECT_ID"] = self.dummy_project_id
@@ -349,41 +361,52 @@ class TestAuth(common.DescopeTest):
 
         self.assertRaises(AuthException, Auth.get_method_string, AAA.DUMMY)
 
-    def test_refresh_session(self):
+    @parameterized_sync_async_subcase("refresh_session", "refresh_session_async")
+    def test_refresh_session(self, method_name, is_async):
         dummy_refresh_token = "dummy refresh token"
         auth = Auth(self.dummy_project_id, self.public_key_dict)
 
         # Test fail flow
-        with patch("httpx.post") as mock_request:
-            mock_request.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_request:
             self.assertRaises(
                 AuthException,
-                auth.refresh_session,
+                MethodTestHelper.call_method,
+                auth,
+                method_name,
                 dummy_refresh_token,
             )
 
-    def test_validate_session_and_refresh_input(self):
+    @parameterized_sync_async_subcase("validate_session", "validate_session_async")
+    def test_validate_session_and_refresh_input(self, method_name, is_async):
         auth = Auth(self.dummy_project_id, self.public_key_dict)
 
-        # Bad input for session
+        # Bad input for session - this should test validate_and_refresh_session
         with self.assertRaises(AuthException):
-            auth.validate_and_refresh_session(None, None)
+            MethodTestHelper.call_method(
+                auth,
+                "validate_and_refresh_session" + ("_async" if is_async else ""),
+                None,
+                None,
+            )
 
         # Test validate_session with Ratelimit exception
-        with patch("httpx.get") as mock_request:
-            mock_request.return_value.ok = False
-            mock_request.return_value.status_code = 429
-            mock_request.return_value.json.return_value = {
+        with HTTPMockHelper.mock_http_call(
+            is_async,
+            method="get",
+            ok=False,
+            status_code=429,
+            json=lambda: {
                 "errorCode": "E130429",
                 "errorDescription": "https://docs.descope.com/rate-limit",
                 "errorMessage": "API rate limit exceeded.",
-            }
-            mock_request.return_value.headers = {
-                API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"
-            }
+            },
+            headers={API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"},
+        ) as mock_request:
             ds = "eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg5NzI4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEUyIsImNvb2tpZVBhdGgiOiIvIiwiZXhwIjoxNjU3Nzk4MzI4LCJpYXQiOjE2NTc3OTc3MjgsImlzcyI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInN1YiI6IjJCdEVIa2dPdTAybG1NeHpQSWV4ZE10VXcxTSJ9.i-JoPoYmXl3jeLTARvYnInBiRdTT4uHZ3X3xu_n1dhUb1Qy_gqK7Ru8ErYXeENdfPOe4mjShc_HsVyb5PjE2LMFmb58WR8wixtn0R-u_MqTpuI_422Dk6hMRjTFEVRWu"
             with self.assertRaises(RateLimitException) as cm:
-                auth.validate_session(ds)
+                MethodTestHelper.call_method(auth, method_name, ds)
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, "E130429")
             self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
@@ -396,21 +419,25 @@ class TestAuth(common.DescopeTest):
                 {API_RATE_LIMIT_RETRY_AFTER_HEADER: 10},
             )
 
+    @parameterized_sync_async_subcase("refresh_session", "refresh_session_async")
+    def test_refresh_session_and_refresh_input(self, method_name, is_async):
+        auth = Auth(self.dummy_project_id, self.public_key_dict)
         # Test refresh_session with Ratelimit exception
-        with patch("httpx.get") as mock_request:
-            mock_request.return_value.ok = False
-            mock_request.return_value.status_code = 429
-            mock_request.return_value.json.return_value = {
+        with HTTPMockHelper.mock_http_call(
+            is_async,
+            method="get",
+            ok=False,
+            status_code=429,
+            json=lambda: {
                 "errorCode": "E130429",
                 "errorDescription": "https://docs.descope.com/rate-limit",
                 "errorMessage": "API rate limit exceeded.",
-            }
-            mock_request.return_value.headers = {
-                API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"
-            }
+            },
+            headers={API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"},
+        ):
             dsr = "eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg5NzI4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEUyIsImNvb2tpZVBhdGgiOiIvIiwiZXhwIjoxNjU3Nzk4MzI4LCJpYXQiOjE2NTc3OTc3MjgsImlzcyI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInN1YiI6IjJCdEVIa2dPdTAybG1NeHpQSWV4ZE10VXcxTSJ9.i-JoPoYmXl3jeLTARvYnInBiRdTT4uHZ3X3xu_n1dhUb1Qy_gqK7Ru8ErYXeENdfPOe4mjShc_HsVyb5PjE2LMFmb58WR8wixtn0R-u_MqTpuI_422Dk6hMRjTFEVRWu"
             with self.assertRaises(RateLimitException) as cm:
-                auth.refresh_session(dsr)
+                MethodTestHelper.call_method(auth, method_name, dsr)
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, "E130429")
             self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
@@ -423,35 +450,45 @@ class TestAuth(common.DescopeTest):
                 {API_RATE_LIMIT_RETRY_AFTER_HEADER: 10},
             )
 
-    def test_exchange_access_key(self):
+    @parameterized_sync_async_subcase(
+        "exchange_access_key", "exchange_access_key_async"
+    )
+    def test_exchange_access_key(self, method_name, is_async):
         dummy_access_key = "dummy access key"
         auth = Auth(self.dummy_project_id, self.public_key_dict)
 
         # Test fail flow
-        with patch("httpx.post") as mock_request:
-            mock_request.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_request:
             self.assertRaises(
                 AuthException,
-                auth.exchange_access_key,
+                MethodTestHelper.call_method,
+                auth,
+                method_name,
                 dummy_access_key,
             )
 
         # Test success flow
         valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3R6VWhkcXBJRjJ5czlnZzdtczA2VXZ0QzQiLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0Mzc1OTYsImlhdCI6MTY1OTYzNzU5NiwiaXNzIjoiUDJDdHpVaGRxcElGMnlzOWdnN21zMDZVdnRDNCIsInN1YiI6IlUyQ3UwajBXUHczWU9pUElTSmI1Mkwwd1VWTWcifQ.WLnlHugvzZtrV9OzBB7SjpCLNRvKF3ImFpVyIN5orkrjO2iyAKg_Rb4XHk9sXGC1aW8puYzLbhE1Jv3kk2hDcKggfE8OaRNRm8byhGFZHnvPJwcP_Ya-aRmfAvCLcKOL"
-        with patch("httpx.post") as mock_post:
-            my_mock_response = mock.Mock()
-            my_mock_response.ok = True
-            data = {"sessionJwt": valid_jwt_token}
-            my_mock_response.json.return_value = data
-            mock_post.return_value = my_mock_response
-            jwt_response = auth.exchange_access_key(
+        with HTTPMockHelper.mock_http_call(
+            is_async,
+            method="post",
+            ok=True,
+            json=lambda: {"sessionJwt": valid_jwt_token},
+        ) as mock_post:
+            jwt_response = MethodTestHelper.call_method(
+                auth,
+                method_name,
                 access_key=dummy_access_key,
                 login_options=AccessKeyLoginOptions(custom_claims={"k1": "v1"}),
             )
             self.assertEqual(jwt_response["keyId"], "U2Cu0j0WPw3YOiPISJb52L0wUVMg")
             self.assertEqual(jwt_response["projectId"], "P2CtzUhdqpIF2ys9gg7ms06UvtC4")
 
-            mock_post.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.exchange_auth_access_key_path}",
                 headers={
                     **common.default_headers,
@@ -553,23 +590,27 @@ class TestAuth(common.DescopeTest):
             },
         )
 
-    def test_api_rate_limit_exception(self):
+    @parameterized_sync_async_subcase("do_post", "do_post_async")
+    def test_api_rate_limit_exception_post(self, method_name, is_async):
         auth = Auth(self.dummy_project_id, self.public_key_dict)
 
         # Test do_post
-        with patch("httpx.post") as mock_request:
-            mock_request.return_value.ok = False
-            mock_request.return_value.status_code = 429
-            mock_request.return_value.json.return_value = {
+        with HTTPMockHelper.mock_http_call(
+            is_async,
+            method="post",
+            ok=False,
+            status_code=429,
+            json=lambda: {
                 "errorCode": "E130429",
                 "errorDescription": "https://docs.descope.com/rate-limit",
                 "errorMessage": "API rate limit exceeded.",
-            }
-            mock_request.return_value.headers = {
-                API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"
-            }
+            },
+            headers={API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"},
+        ) as mock_request:
             with self.assertRaises(RateLimitException) as cm:
-                auth.do_post("http://test.com", {}, None, None)
+                MethodTestHelper.call_method(
+                    auth, method_name, "http://test.com", {}, None, None
+                )
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, "E130429")
             self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
@@ -581,21 +622,32 @@ class TestAuth(common.DescopeTest):
                 the_exception.rate_limit_parameters,
                 {API_RATE_LIMIT_RETRY_AFTER_HEADER: 10},
             )
+
+    @parameterized_sync_async_subcase("do_get", "do_get_async")
+    def test_api_rate_limit_exception_get(self, method_name, is_async):
+        auth = Auth(self.dummy_project_id, self.public_key_dict)
 
         # Test do_get
-        with patch("httpx.get") as mock_request:
-            mock_request.return_value.ok = False
-            mock_request.return_value.status_code = 429
-            mock_request.return_value.json.return_value = {
+        with HTTPMockHelper.mock_http_call(
+            is_async,
+            method="get",
+            ok=False,
+            status_code=429,
+            json=lambda: {
                 "errorCode": "E130429",
                 "errorDescription": "https://docs.descope.com/rate-limit",
                 "errorMessage": "API rate limit exceeded.",
-            }
-            mock_request.return_value.headers = {
-                API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"
-            }
+            },
+            headers={API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"},
+        ) as mock_request:
             with self.assertRaises(RateLimitException) as cm:
-                auth.do_get(uri="http://test.com", params=False, follow_redirects=None)
+                MethodTestHelper.call_method(
+                    auth,
+                    method_name,
+                    uri="http://test.com",
+                    params=False,
+                    follow_redirects=None,
+                )
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, "E130429")
             self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
@@ -607,21 +659,26 @@ class TestAuth(common.DescopeTest):
                 the_exception.rate_limit_parameters,
                 {API_RATE_LIMIT_RETRY_AFTER_HEADER: 10},
             )
+
+    @parameterized_sync_async_subcase("do_delete", "do_delete_async")
+    def test_api_rate_limit_exception_delete(self, method_name, is_async):
+        auth = Auth(self.dummy_project_id, self.public_key_dict)
 
         # Test do_delete
-        with patch("httpx.delete") as mock_request:
-            mock_request.return_value.ok = False
-            mock_request.return_value.status_code = 429
-            mock_request.return_value.json.return_value = {
+        with HTTPMockHelper.mock_http_call(
+            is_async,
+            method="delete",
+            ok=False,
+            status_code=429,
+            json=lambda: {
                 "errorCode": "E130429",
                 "errorDescription": "https://docs.descope.com/rate-limit",
                 "errorMessage": "API rate limit exceeded.",
-            }
-            mock_request.return_value.headers = {
-                API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"
-            }
+            },
+            headers={API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"},
+        ) as mock_request:
             with self.assertRaises(RateLimitException) as cm:
-                auth.do_delete("http://test.com")
+                MethodTestHelper.call_method(auth, method_name, "http://test.com")
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, "E130429")
             self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
@@ -634,15 +691,25 @@ class TestAuth(common.DescopeTest):
                 {API_RATE_LIMIT_RETRY_AFTER_HEADER: 10},
             )
 
+    @parameterized_sync_async_subcase("do_delete", "do_delete_async")
+    def test_api_rate_limit_exception_delete_with_params(self, method_name, is_async):
+        auth = Auth(self.dummy_project_id, self.public_key_dict)
+
         # Test do_delete with params and pswd
-        with patch("httpx.delete") as mock_delete:
-            network_resp = mock.Mock()
-            network_resp.ok = True
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="delete", ok=True
+        ) as mock_delete:
+            MethodTestHelper.call_method(
+                auth,
+                method_name,
+                "/a/b",
+                params={"key": "value"},
+                pswd="pswd",
+            )
 
-            mock_delete.return_value = network_resp
-            auth.do_delete("/a/b", params={"key": "value"}, pswd="pswd")
-
-            mock_delete.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_delete,
+                is_async,
                 "http://127.0.0.1/a/b",
                 params={"key": "value"},
                 headers={
@@ -655,20 +722,25 @@ class TestAuth(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+    @parameterized_sync_async_subcase("_fetch_public_keys", "_fetch_public_keys_async")
+    def test_fetch_public_keys_rate_limit(self, method_name, is_async):
+        auth = Auth(self.dummy_project_id, self.public_key_dict)
+
         # Test _fetch_public_keys rate limit
-        with patch("httpx.get") as mock_request:
-            mock_request.return_value.ok = False
-            mock_request.return_value.status_code = 429
-            mock_request.return_value.json.return_value = {
+        with HTTPMockHelper.mock_http_call(
+            is_async,
+            method="get",
+            ok=False,
+            status_code=429,
+            json=lambda: {
                 "errorCode": "E130429",
                 "errorDescription": "https://docs.descope.com/rate-limit",
                 "errorMessage": "API rate limit exceeded.",
-            }
-            mock_request.return_value.headers = {
-                API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"
-            }
+            },
+            headers={API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"},
+        ) as mock_request:
             with self.assertRaises(RateLimitException) as cm:
-                auth._fetch_public_keys()
+                MethodTestHelper.call_method(auth, method_name)
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, "E130429")
             self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
@@ -681,23 +753,27 @@ class TestAuth(common.DescopeTest):
                 {API_RATE_LIMIT_RETRY_AFTER_HEADER: 10},
             )
 
-    def test_api_rate_limit_invalid_header(self):
+    @parameterized_sync_async_subcase("do_post", "do_post_async")
+    def test_api_rate_limit_invalid_header(self, method_name, is_async):
         auth = Auth(self.dummy_project_id, self.public_key_dict)
 
         # Test do_post empty body
-        with patch("httpx.post") as mock_request:
-            mock_request.return_value.ok = False
-            mock_request.return_value.status_code = 429
-            mock_request.return_value.json.return_value = {
+        with HTTPMockHelper.mock_http_call(
+            is_async,
+            method="post",
+            ok=False,
+            status_code=429,
+            json=lambda: {
                 "errorCode": "E130429",
                 "errorDescription": "https://docs.descope.com/rate-limit",
                 "errorMessage": "API rate limit exceeded.",
-            }
-            mock_request.return_value.headers = {
-                API_RATE_LIMIT_RETRY_AFTER_HEADER: "hello"
-            }
+            },
+            headers={API_RATE_LIMIT_RETRY_AFTER_HEADER: "hello"},
+        ) as mock_request:
             with self.assertRaises(RateLimitException) as cm:
-                auth.do_post("http://test.com", {}, None, None)
+                MethodTestHelper.call_method(
+                    auth, method_name, "http://test.com", {}, None, None
+                )
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, "E130429")
             self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
@@ -710,16 +786,18 @@ class TestAuth(common.DescopeTest):
                 {API_RATE_LIMIT_RETRY_AFTER_HEADER: 0},
             )
 
-    def test_api_rate_limit_invalid_response_body(self):
+    @parameterized_sync_async_subcase("do_post", "do_post_async")
+    def test_api_rate_limit_invalid_response_body(self, method_name, is_async):
         auth = Auth(self.dummy_project_id, self.public_key_dict)
 
         # Test do_post empty body
-        with patch("httpx.post") as mock_request:
-            mock_request.return_value.ok = False
-            mock_request.return_value.status_code = 429
-            mock_request.return_value.json.return_value = "aaa"
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False, status_code=429, json=lambda: "aaa"
+        ) as mock_request:
             with self.assertRaises(RateLimitException) as cm:
-                auth.do_post("http://test.com", {}, None, None)
+                MethodTestHelper.call_method(
+                    auth, method_name, "http://test.com", {}, None, None
+                )
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, HTTPStatus.TOO_MANY_REQUESTS)
             self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
@@ -727,16 +805,18 @@ class TestAuth(common.DescopeTest):
             self.assertEqual(the_exception.error_message, ERROR_TYPE_API_RATE_LIMIT)
             self.assertEqual(the_exception.rate_limit_parameters, {})
 
-    def test_api_rate_limit_empty_response_body(self):
+    @parameterized_sync_async_subcase("do_post", "do_post_async")
+    def test_api_rate_limit_empty_response_body(self, method_name, is_async):
         auth = Auth(self.dummy_project_id, self.public_key_dict)
 
         # Test do_post empty body
-        with patch("httpx.post") as mock_request:
-            mock_request.return_value.ok = False
-            mock_request.return_value.status_code = 429
-            mock_request.return_value.json.return_value = ""
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False, status_code=429, json=lambda: ""
+        ) as mock_request:
             with self.assertRaises(RateLimitException) as cm:
-                auth.do_post("http://test.com", {}, None, None)
+                MethodTestHelper.call_method(
+                    auth, method_name, "http://test.com", {}, None, None
+                )
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, HTTPStatus.TOO_MANY_REQUESTS)
             self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
@@ -744,16 +824,18 @@ class TestAuth(common.DescopeTest):
             self.assertEqual(the_exception.error_message, ERROR_TYPE_API_RATE_LIMIT)
             self.assertEqual(the_exception.rate_limit_parameters, {})
 
-    def test_api_rate_limit_none_response_body(self):
+    @parameterized_sync_async_subcase("do_post", "do_post_async")
+    def test_api_rate_limit_none_response_body(self, method_name, is_async):
         auth = Auth(self.dummy_project_id, self.public_key_dict)
 
         # Test do_post empty body
-        with patch("httpx.post") as mock_request:
-            mock_request.return_value.ok = False
-            mock_request.return_value.status_code = 429
-            mock_request.return_value.json.return_value = None
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False, status_code=429, json=lambda: None
+        ) as mock_request:
             with self.assertRaises(RateLimitException) as cm:
-                auth.do_post("http://test.com", {}, None, None)
+                MethodTestHelper.call_method(
+                    auth, method_name, "http://test.com", {}, None, None
+                )
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, HTTPStatus.TOO_MANY_REQUESTS)
             self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
@@ -761,15 +843,25 @@ class TestAuth(common.DescopeTest):
             self.assertEqual(the_exception.error_message, ERROR_TYPE_API_RATE_LIMIT)
             self.assertEqual(the_exception.rate_limit_parameters, {})
 
-    def test_raise_from_response(self):
+    @parameterized_sync_async_subcase("do_get", "do_get_async")
+    def test_raise_from_response(self, method_name, is_async):
         auth = Auth(self.dummy_project_id, self.public_key_dict)
-        with patch("httpx.get") as mock_request:
-            mock_request.return_value.ok = False
-            mock_request.return_value.status_code = 400
-            mock_request.return_value.error_type = ERROR_TYPE_SERVER_ERROR
-            mock_request.return_value.text = """{"errorCode":"E062108","errorDescription":"User not found","errorMessage":"Cannot find user"}"""
+        with HTTPMockHelper.mock_http_call(
+            is_async,
+            method="get",
+            ok=False,
+            status_code=400,
+            error_type=ERROR_TYPE_SERVER_ERROR,
+            text="""{"errorCode":"E062108","errorDescription":"User not found","errorMessage":"Cannot find user"}""",
+        ) as mock_request:
             with self.assertRaises(AuthException) as cm:
-                auth.do_get(uri="http://test.com", params=False, follow_redirects=None)
+                MethodTestHelper.call_method(
+                    auth,
+                    method_name,
+                    uri="http://test.com",
+                    params=False,
+                    follow_redirects=None,
+                )
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, 400)
             self.assertEqual(the_exception.error_type, ERROR_TYPE_SERVER_ERROR)
@@ -777,6 +869,174 @@ class TestAuth(common.DescopeTest):
                 the_exception.error_message,
                 """{"errorCode":"E062108","errorDescription":"User not found","errorMessage":"Cannot find user"}""",
             )
+
+    @parameterized_sync_async_subcase("do_patch", "do_patch_async")
+    def test_do_patch_method(self, method_name, is_async):
+        auth = Auth(self.dummy_project_id, self.public_key_dict)
+
+        # Test do_patch method with successful response
+        with HTTPMockHelper.mock_http_call(
+            is_async,
+            method="patch",
+            ok=True,
+            status_code=200,
+            json=lambda: {"success": True},
+        ) as mock_patch:
+            result = MethodTestHelper.call_method(
+                auth,
+                method_name,
+                "http://test.com",
+                {"data": "test"},
+                None,
+                None,
+            )
+            self.assertIsNotNone(result)
+
+        # Test do_patch method with rate limit exception
+        with HTTPMockHelper.mock_http_call(
+            is_async,
+            method="patch",
+            ok=False,
+            status_code=429,
+            json=lambda: {
+                "errorCode": "E130429",
+                "errorDescription": "https://docs.descope.com/rate-limit",
+                "errorMessage": "API rate limit exceeded.",
+            },
+            headers={API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"},
+        ) as mock_patch:
+            with self.assertRaises(RateLimitException) as cm:
+                MethodTestHelper.call_method(
+                    auth,
+                    method_name,
+                    "http://test.com",
+                    {"data": "test"},
+                    None,
+                    None,
+                )
+            the_exception = cm.exception
+            self.assertEqual(the_exception.status_code, "E130429")
+            self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
+            self.assertEqual(
+                the_exception.error_description, "https://docs.descope.com/rate-limit"
+            )
+            self.assertEqual(the_exception.error_message, "API rate limit exceeded.")
+            self.assertEqual(
+                the_exception.rate_limit_parameters,
+                {API_RATE_LIMIT_RETRY_AFTER_HEADER: 10},
+            )
+
+    def test_async_context_manager_lifecycle(self):
+        """Test that async context manager properly manages client lifecycle"""
+        auth = Auth(self.dummy_project_id, self.public_key_str)
+
+        async def _test():
+            # Initially no async client
+            self.assertIsNone(auth._async_client)
+
+            # Test __aenter__
+            enter_result = await auth.__aenter__()
+            self.assertEqual(enter_result, auth)  # Should return self
+            self.assertIsNotNone(auth._async_client)  # Client should be created
+
+            # Test __aexit__
+            await auth.__aexit__(None, None, None)
+            self.assertIsNone(auth._async_client)  # Client should be cleaned up
+
+        asyncio.run(_test())
+
+    def test_async_context_manager_with_statement(self):
+        """Test async context manager using 'async with' statement"""
+        auth = Auth(self.dummy_project_id, self.public_key_str)
+
+        async def _test():
+            self.assertIsNone(auth._async_client)
+
+            async with auth as auth_ctx:
+                # Inside context: client should be created
+                self.assertIsNotNone(auth._async_client)
+                self.assertEqual(auth_ctx, auth)
+
+            # After context: client should be cleaned up
+            self.assertIsNone(auth._async_client)
+
+        asyncio.run(_test())
+
+    def test_async_context_manager_exception_handling(self):
+        """Test async context manager properly cleans up on exception"""
+        auth = Auth(self.dummy_project_id, self.public_key_str)
+
+        async def _test():
+            try:
+                async with auth:
+                    # Inside context: client should be created
+                    self.assertIsNotNone(auth._async_client)
+                    raise ValueError("Test exception")
+            except ValueError:
+                pass  # Expected exception
+
+            # After exception: client should still be cleaned up
+            self.assertIsNone(auth._async_client)
+
+        asyncio.run(_test())
+
+    def test_async_context_manager_multiple_entries(self):
+        """Test async context manager can be used multiple times"""
+        auth = Auth(self.dummy_project_id, self.public_key_str)
+
+        async def _test():
+            # First use
+            async with auth:
+                self.assertIsNotNone(auth._async_client)
+
+            self.assertIsNone(auth._async_client)
+
+            # Second use
+            async with auth:
+                self.assertIsNotNone(auth._async_client)
+
+            self.assertIsNone(auth._async_client)
+
+        asyncio.run(_test())
+
+    @patch("httpx.AsyncClient")
+    def test_async_context_manager_client_creation(self, mock_async_client):
+        """Test that async context manager creates client with correct parameters"""
+        auth = Auth(self.dummy_project_id, self.public_key_str)
+        mock_client_instance = mock.AsyncMock()
+        mock_async_client.return_value = mock_client_instance
+
+        async def _test():
+            async with auth:
+                # Verify client was created with correct parameters
+                mock_async_client.assert_called_once_with(
+                    verify=auth.secure, timeout=auth.timeout_seconds
+                )
+
+                # Verify client is set
+                self.assertEqual(auth._async_client, mock_client_instance)
+
+            # Verify cleanup was called
+            mock_client_instance.aclose.assert_called_once()
+
+        asyncio.run(_test())
+
+    @patch("httpx.AsyncClient")
+    def test_async_context_manager_cleanup_on_none_client(self, mock_async_client):
+        """Test async context manager handles None client gracefully"""
+        auth = Auth(self.dummy_project_id, self.public_key_str)
+        mock_client_instance = mock.AsyncMock()
+        mock_async_client.return_value = mock_client_instance
+
+        async def _test():
+            # Manually set client to None before exit
+            await auth.__aenter__()
+            auth._async_client = None
+
+            # Should not raise exception
+            await auth.__aexit__(None, None, None)
+
+        asyncio.run(_test())
 
 
 if __name__ == "__main__":

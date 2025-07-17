@@ -39,6 +39,28 @@ class EnchantedLink(AuthBase):
         response = self._auth.do_post(uri, body, None, refresh_token)
         return EnchantedLink._get_pending_ref_from_response(response)
 
+    async def sign_in_async(
+        self,
+        login_id: str,
+        uri: str,
+        login_options: LoginOptions | None = None,
+        refresh_token: str | None = None,
+    ) -> dict:
+        if not login_id:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                "login_id is empty",
+            )
+
+        validate_refresh_token_provided(login_options, refresh_token)
+
+        body = EnchantedLink._compose_signin_body(login_id, uri, login_options)
+        uri = EnchantedLink._compose_signin_url()
+
+        response = await self._auth.do_post_async(uri, body, None, refresh_token)
+        return EnchantedLink._get_pending_ref_from_response(response)
+
     def sign_up(
         self,
         login_id: str,
@@ -63,6 +85,30 @@ class EnchantedLink(AuthBase):
         response = self._auth.do_post(uri, body, None)
         return EnchantedLink._get_pending_ref_from_response(response)
 
+    async def sign_up_async(
+        self,
+        login_id: str,
+        uri: str,
+        user: dict | None,
+        signup_options: SignUpOptions | None = None,
+    ) -> dict:
+        if not user:
+            user = {}
+
+        if not self._auth.adjust_and_verify_delivery_method(
+            DeliveryMethod.EMAIL, login_id, user
+        ):
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                f"Login ID {login_id} is not valid for email",
+            )
+
+        body = EnchantedLink._compose_signup_body(login_id, uri, user, signup_options)
+        uri = EnchantedLink._compose_signup_url()
+        response = await self._auth.do_post_async(uri, body, None)
+        return EnchantedLink._get_pending_ref_from_response(response)
+
     def sign_up_or_in(
         self, login_id: str, uri: str, signup_options: SignUpOptions | None = None
     ) -> dict:
@@ -83,6 +129,26 @@ class EnchantedLink(AuthBase):
         response = self._auth.do_post(uri, body, None)
         return EnchantedLink._get_pending_ref_from_response(response)
 
+    async def sign_up_or_in_async(
+        self, login_id: str, uri: str, signup_options: SignUpOptions | None = None
+    ) -> dict:
+        login_options: LoginOptions | None = None
+        if signup_options is not None:
+            login_options = LoginOptions(
+                custom_claims=signup_options.customClaims,
+                template_options=signup_options.templateOptions,
+                template_id=signup_options.templateId,
+            )
+
+        body = EnchantedLink._compose_signin_body(
+            login_id,
+            uri,
+            login_options,
+        )
+        uri = EnchantedLink._compose_sign_up_or_in_url()
+        response = await self._auth.do_post_async(uri, body, None)
+        return EnchantedLink._get_pending_ref_from_response(response)
+
     def get_session(self, pending_ref: str) -> dict:
         uri = EndpointsV1.get_session_enchantedlink_auth_path
         body = EnchantedLink._compose_get_session_body(pending_ref)
@@ -94,10 +160,26 @@ class EnchantedLink(AuthBase):
         )
         return jwt_response
 
+    async def get_session_async(self, pending_ref: str) -> dict:
+        uri = EndpointsV1.get_session_enchantedlink_auth_path
+        body = EnchantedLink._compose_get_session_body(pending_ref)
+        response = await self._auth.do_post_async(uri, body, None)
+
+        resp = response.json()
+        jwt_response = await self._auth.generate_jwt_response_async(
+            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), None
+        )
+        return jwt_response
+
     def verify(self, token: str):
         uri = EndpointsV1.verify_enchantedlink_auth_path
         body = EnchantedLink._compose_verify_body(token)
         self._auth.do_post(uri, body, None)
+
+    async def verify_async(self, token: str):
+        uri = EndpointsV1.verify_enchantedlink_auth_path
+        body = EnchantedLink._compose_verify_body(token)
+        await self._auth.do_post_async(uri, body, None)
 
     def update_user_email(
         self,
@@ -118,11 +200,47 @@ class EnchantedLink(AuthBase):
         Auth.validate_email(email)
 
         body = EnchantedLink._compose_update_user_email_body(
-            login_id, email, add_to_login_ids, on_merge_use_existing,
-            template_options, template_id, provider_id
+            login_id,
+            email,
+            add_to_login_ids,
+            on_merge_use_existing,
+            template_options,
+            template_id,
+            provider_id,
         )
         uri = EndpointsV1.update_user_email_enchantedlink_path
         response = self._auth.do_post(uri, body, None, refresh_token)
+        return EnchantedLink._get_pending_ref_from_response(response)
+
+    async def update_user_email_async(
+        self,
+        login_id: str,
+        email: str,
+        refresh_token: str,
+        add_to_login_ids: bool = False,
+        on_merge_use_existing: bool = False,
+        template_options: dict | None = None,
+        template_id: str | None = None,
+        provider_id: str | None = None,
+    ) -> dict:
+        if not login_id:
+            raise AuthException(
+                400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
+            )
+
+        Auth.validate_email(email)
+
+        body = EnchantedLink._compose_update_user_email_body(
+            login_id,
+            email,
+            add_to_login_ids,
+            on_merge_use_existing,
+            template_options,
+            template_id,
+            provider_id,
+        )
+        uri = EndpointsV1.update_user_email_enchantedlink_path
+        response = await self._auth.do_post_async(uri, body, None, refresh_token)
         return EnchantedLink._get_pending_ref_from_response(response)
 
     @staticmethod

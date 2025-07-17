@@ -7,6 +7,11 @@ from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
 from .. import common
+from ..async_test_base import (
+    parameterized_sync_async_subcase,
+    HTTPMockHelper,
+    MethodTestHelper,
+)
 
 
 class TestRole(common.DescopeTest):
@@ -24,7 +29,8 @@ class TestRole(common.DescopeTest):
             "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
         }
 
-    def test_create(self):
+    @parameterized_sync_async_subcase("create", "create_async")
+    def test_create(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -33,21 +39,35 @@ class TestRole(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_post:
             self.assertRaises(
                 AuthException,
-                client.mgmt.role.create,
+                MethodTestHelper.call_method,
+                client.mgmt.role,
+                method_name,
                 "name",
             )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True
+        ) as mock_post:
             self.assertIsNone(
-                client.mgmt.role.create("R1", "Something", ["P1"], "t1", True)
+                MethodTestHelper.call_method(
+                    client.mgmt.role,
+                    method_name,
+                    "R1",
+                    "Something",
+                    ["P1"],
+                    "t1",
+                    True,
+                )
             )
-            mock_post.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.role_create_path}",
                 headers={
                     **common.default_headers,
@@ -67,7 +87,8 @@ class TestRole(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_update(self):
+    @parameterized_sync_async_subcase("update", "update_async")
+    def test_update(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -76,20 +97,26 @@ class TestRole(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_post:
             self.assertRaises(
                 AuthException,
-                client.mgmt.role.update,
+                MethodTestHelper.call_method,
+                client.mgmt.role,
+                method_name,
                 "name",
                 "new-name",
             )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True
+        ) as mock_post:
             self.assertIsNone(
-                client.mgmt.role.update(
+                MethodTestHelper.call_method(
+                    client.mgmt.role,
+                    method_name,
                     "name",
                     "new-name",
                     "new-description",
@@ -98,7 +125,9 @@ class TestRole(common.DescopeTest):
                     True,
                 )
             )
-            mock_post.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.role_update_path}",
                 headers={
                     **common.default_headers,
@@ -119,7 +148,8 @@ class TestRole(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_delete(self):
+    @parameterized_sync_async_subcase("delete", "delete_async")
+    def test_delete(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -128,19 +158,31 @@ class TestRole(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_post:
             self.assertRaises(
                 AuthException,
-                client.mgmt.role.delete,
+                MethodTestHelper.call_method,
+                client.mgmt.role,
+                method_name,
                 "name",
             )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(client.mgmt.role.delete("name"))
-            mock_post.assert_called_with(
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=True
+        ) as mock_post:
+            self.assertIsNone(
+                MethodTestHelper.call_method(
+                    client.mgmt.role,
+                    method_name,
+                    "name",
+                )
+            )
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.role_delete_path}",
                 headers={
                     **common.default_headers,
@@ -154,7 +196,8 @@ class TestRole(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_load_all(self):
+    @parameterized_sync_async_subcase("load_all", "load_all_async")
+    def test_load_all(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -163,15 +206,22 @@ class TestRole(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.get") as mock_get:
-            mock_get.return_value.ok = False
-            self.assertRaises(AuthException, client.mgmt.role.load_all)
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="get", ok=False
+        ) as mock_get:
+            self.assertRaises(
+                AuthException,
+                MethodTestHelper.call_method,
+                client.mgmt.role,
+                method_name,
+            )
 
         # Test success flow
-        with patch("httpx.get") as mock_get:
-            network_resp = mock.Mock()
-            network_resp.ok = True
-            network_resp.json.return_value = json.loads(
+        with HTTPMockHelper.mock_http_call(
+            is_async,
+            method="get",
+            ok=True,
+            json=lambda: json.loads(
                 """
                 {
                     "roles": [
@@ -180,9 +230,12 @@ class TestRole(common.DescopeTest):
                     ]
                 }
                 """
+            ),
+        ) as mock_get:
+            resp = MethodTestHelper.call_method(
+                client.mgmt.role,
+                method_name,
             )
-            mock_get.return_value = network_resp
-            resp = client.mgmt.role.load_all()
             roles = resp["roles"]
             self.assertEqual(len(roles), 2)
             self.assertEqual(roles[0]["name"], "R1")
@@ -191,7 +244,9 @@ class TestRole(common.DescopeTest):
             self.assertEqual(len(permissions), 2)
             self.assertEqual(permissions[0], "P1")
             self.assertEqual(permissions[1], "P2")
-            mock_get.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_get,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.role_load_all_path}",
                 headers={
                     **common.default_headers,
@@ -204,7 +259,8 @@ class TestRole(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_search(self):
+    @parameterized_sync_async_subcase("search", "search_async")
+    def test_search(self, method_name, is_async):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -213,20 +269,24 @@ class TestRole(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
+        with HTTPMockHelper.mock_http_call(
+            is_async, method="post", ok=False
+        ) as mock_post:
             self.assertRaises(
                 AuthException,
-                client.mgmt.role.search,
+                MethodTestHelper.call_method,
+                client.mgmt.role,
+                method_name,
                 ["t"],
                 ["r"],
             )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.ok = True
-            network_resp.json.return_value = json.loads(
+        with HTTPMockHelper.mock_http_call(
+            is_async,
+            method="post",
+            ok=True,
+            json=lambda: json.loads(
                 """
                 {
                     "roles": [
@@ -235,9 +295,16 @@ class TestRole(common.DescopeTest):
                     ]
                 }
                 """
+            ),
+        ) as mock_post:
+            resp = MethodTestHelper.call_method(
+                client.mgmt.role,
+                method_name,
+                ["t"],
+                ["r"],
+                "x",
+                ["p1", "p2"],
             )
-            mock_post.return_value = network_resp
-            resp = client.mgmt.role.search(["t"], ["r"], "x", ["p1", "p2"])
             roles = resp["roles"]
             self.assertEqual(len(roles), 2)
             self.assertEqual(roles[0]["name"], "R1")
@@ -246,7 +313,9 @@ class TestRole(common.DescopeTest):
             self.assertEqual(len(permissions), 2)
             self.assertEqual(permissions[0], "P1")
             self.assertEqual(permissions[1], "P2")
-            mock_post.assert_called_with(
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.role_search_path}",
                 headers={
                     **common.default_headers,
@@ -259,6 +328,55 @@ class TestRole(common.DescopeTest):
                     "roleNames": ["r"],
                     "roleNameLike": "x",
                     "permissionNames": ["p1", "p2"],
+                },
+                follow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test success flow with include_project_roles parameter for full coverage
+        with HTTPMockHelper.mock_http_call(
+            is_async,
+            method="post",
+            ok=True,
+            json=lambda: json.loads(
+                """
+                {
+                    "roles": [
+                        {"name": "R1", "permissionNames": ["P1", "P2"]},
+                        {"name": "R2"}
+                    ]
+                }
+                """
+            ),
+        ) as mock_post:
+            resp = MethodTestHelper.call_method(
+                client.mgmt.role,
+                method_name,
+                ["t"],
+                ["r"],
+                "x",
+                ["p1", "p2"],
+                True,  # include_project_roles
+            )
+            roles = resp["roles"]
+            self.assertEqual(len(roles), 2)
+            HTTPMockHelper.assert_http_call(
+                mock_post,
+                is_async,
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.role_search_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "tenantIds": ["t"],
+                    "roleNames": ["r"],
+                    "roleNameLike": "x",
+                    "permissionNames": ["p1", "p2"],
+                    "includeProjectRoles": True,
                 },
                 follow_redirects=False,
                 verify=True,

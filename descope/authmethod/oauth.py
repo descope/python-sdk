@@ -31,9 +31,37 @@ class OAuth(AuthBase):
 
         return response.json()
 
+    async def start_async(
+        self,
+        provider: str,
+        return_url: str = "",
+        login_options: Optional[LoginOptions] = None,
+        refresh_token: Optional[str] = None,
+    ) -> dict:
+        if not self._verify_provider(provider):
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                f"Unknown OAuth provider: {provider}",
+            )
+
+        validate_refresh_token_provided(login_options, refresh_token)
+
+        uri = EndpointsV1.oauth_start_path
+        params = OAuth._compose_start_params(provider, return_url)
+        response = await self._auth.do_post_async(
+            uri, login_options.__dict__ if login_options else {}, params, refresh_token
+        )
+
+        return response.json()
+
     def exchange_token(self, code: str) -> dict:
         uri = EndpointsV1.oauth_exchange_token_path
         return self._auth.exchange_token(uri, code)
+
+    async def exchange_token_async(self, code: str) -> dict:
+        uri = EndpointsV1.oauth_exchange_token_path
+        return await self._auth.exchange_token_async(uri, code)
 
     @staticmethod
     def _verify_provider(oauth_provider: str) -> bool:
