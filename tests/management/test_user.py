@@ -1081,7 +1081,7 @@ class TestUser(common.DescopeTest):
                     "tenantRoleIds": {"tenant1": {"values": ["roleA", "roleB"]}},
                     "tenantRoleNames": {"tenant2": {"values": ["admin", "user"]}},
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -1327,7 +1327,7 @@ class TestUser(common.DescopeTest):
                     "tenantRoleIds": {"tenant1": {"values": ["roleA", "roleB"]}},
                     "tenantRoleNames": {"tenant2": {"values": ["admin", "user"]}},
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
