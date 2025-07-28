@@ -73,6 +73,7 @@ These sections show how to use the SDK to perform permission and user management
 13. [Manage FGA (Fine-grained Authorization)](#manage-fga-fine-grained-authorization)
 14. [Manage Project](#manage-project)
 15. [Manage SSO Applications](#manage-sso-applications)
+16. [Manage Outbound Applications](#manage-outbound-applications)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -1178,7 +1179,7 @@ type doc
   permission can_create: owner | parent.owner
   permission can_edit: editor | can_create
   permission can_view: viewer | can_edit
-  ```
+```
 
 Descope SDK allows you to fully manage the schema and relations as well as perform simple (and not so simple) checks regarding the existence of relations.
 
@@ -1299,6 +1300,76 @@ apps_resp = descope_client.mgmt.sso_application.load_all()
 apps = apps_resp["apps"]
     for app in apps:
         # Do something
+```
+
+### Manage Outbound Applications
+
+You can create, update, delete, load outbound applications and fetch tokens for them:
+
+```python
+# Create an outbound application
+response = descope_client.mgmt.outbound_application.create_application(
+    name="my new app",
+    description="my desc",
+    client_secret="secret123",  # Optional
+    id="my-custom-id",  # Optional
+)
+app_id = response["app"]["id"]
+
+# Update an outbound application
+# Update will override all fields as is. Use carefully.
+descope_client.mgmt.outbound_application.update_application(
+    id="my-app-id",
+    name="my updated app",
+    description="updated description",
+    logo="https://example.com/logo.png",
+    client_secret="new-secret",  # Optional
+)
+
+# Delete an outbound application by id
+# Outbound application deletion cannot be undone. Use carefully.
+descope_client.mgmt.outbound_application.delete_application("my-app-id")
+
+# Load an outbound application by id
+app = descope_client.mgmt.outbound_application.load_application("my-app-id")
+
+# Load all outbound applications
+apps_resp = descope_client.mgmt.outbound_application.load_all_applications()
+apps = apps_resp["apps"]
+for app in apps:
+    # Do something with each app
+
+# Fetch user token with specific scopes
+user_token = descope_client.mgmt.outbound_application.fetch_token_by_scopes(
+    "my-app-id",
+    "user-id",
+    ["read", "write"],
+    {"refreshToken": True},  # Optional
+    "tenant-id"  # Optional
+)
+
+# Fetch latest user token
+latest_user_token = descope_client.mgmt.outbound_application.fetch_token(
+    "my-app-id",
+    "user-id",
+    "tenant-id",  # Optional
+    {"forceRefresh": True}  # Optional
+)
+
+# Fetch tenant token with specific scopes
+tenant_token = descope_client.mgmt.outbound_application.fetch_tenant_token_by_scopes(
+    "my-app-id",
+    "tenant-id",
+    ["read", "write"],
+    {"refreshToken": True}  # Optional
+)
+
+# Fetch latest tenant token
+latest_tenant_token = descope_client.mgmt.outbound_application.fetch_tenant_token(
+    "my-app-id",
+    "tenant-id",
+    {"forceRefresh": True}  # Optional
+)
 ```
 
 ### Utils for your end to end (e2e) tests and integration tests
