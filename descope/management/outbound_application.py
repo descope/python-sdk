@@ -410,17 +410,17 @@ class OutboundApplication(AuthBase):
             body["discoveryUrl"] = discovery_url
         if authorization_url:
             body["authorizationUrl"] = authorization_url
-        if authorization_url_params:
+        if authorization_url_params is not None:
             body["authorizationUrlParams"] = url_params_to_dict(
                 authorization_url_params
             )
         if token_url:
             body["tokenUrl"] = token_url
-        if token_url_params:
+        if token_url_params is not None:
             body["tokenUrlParams"] = url_params_to_dict(token_url_params)
         if revocation_url:
             body["revocationUrl"] = revocation_url
-        if default_scopes:
+        if default_scopes is not None:
             body["defaultScopes"] = default_scopes
         if default_redirect_url:
             body["defaultRedirectUrl"] = default_redirect_url
@@ -430,6 +430,6 @@ class OutboundApplication(AuthBase):
             body["pkce"] = pkce
         if access_type:
             body["accessType"] = access_type.value
-        if prompt:
+        if prompt is not None:
             body["prompt"] = [p.value for p in prompt]
         return body

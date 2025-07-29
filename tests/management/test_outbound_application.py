@@ -5,7 +5,7 @@ from unittest.mock import patch
 from descope import AuthException, DescopeClient
 from descope.management.outbound_application import OutboundApplication
 from descope.common import DEFAULT_TIMEOUT_SECONDS
-from descope.management.common import MgmtV1
+from descope.management.common import MgmtV1, URLParam, AccessType, PromptType
 
 from .. import common
 
@@ -37,7 +37,11 @@ class TestOutboundApplication(common.DescopeTest):
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = {
-                "app": {"id": "app123", "name": "Test App", "description": "Test Description"}
+                "app": {
+                    "id": "app123",
+                    "name": "Test App",
+                    "description": "Test Description",
+                }
             }
             mock_post.return_value = network_resp
             response = client.mgmt.outbound_application.create_application(
@@ -45,7 +49,67 @@ class TestOutboundApplication(common.DescopeTest):
             )
 
             assert response == {
-                "app": {"id": "app123", "name": "Test App", "description": "Test Description"}
+                "app": {
+                    "id": "app123",
+                    "name": "Test App",
+                    "description": "Test Description",
+                }
+            }
+
+    def test_create_application_with_all_parameters_success(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Create test data for all new parameters
+        auth_params = [
+            URLParam("response_type", "code"),
+            URLParam("client_id", "test-client"),
+        ]
+        token_params = [URLParam("grant_type", "authorization_code")]
+        prompts = [PromptType.LOGIN, PromptType.CONSENT]
+
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = {
+                "app": {
+                    "id": "app123",
+                    "name": "Test OAuth App",
+                    "description": "Test Description",
+                }
+            }
+            mock_post.return_value = network_resp
+            response = client.mgmt.outbound_application.create_application(
+                name="Test OAuth App",
+                description="Test Description",
+                logo="https://example.com/logo.png",
+                id="app123",
+                client_secret="secret",
+                client_id="test-client-id",
+                discovery_url="https://accounts.google.com/.well-known/openid_configuration",
+                authorization_url="https://accounts.google.com/o/oauth2/v2/auth",
+                authorization_url_params=auth_params,
+                token_url="https://oauth2.googleapis.com/token",
+                token_url_params=token_params,
+                revocation_url="https://oauth2.googleapis.com/revoke",
+                default_scopes=["https://www.googleapis.com/auth/userinfo.profile"],
+                default_redirect_url="https://myapp.com/callback",
+                callback_domain="myapp.com",
+                pkce=True,
+                access_type=AccessType.OFFLINE,
+                prompt=prompts,
+            )
+
+            assert response == {
+                "app": {
+                    "id": "app123",
+                    "name": "Test OAuth App",
+                    "description": "Test Description",
+                }
             }
 
     def test_create_application_failure(self):
@@ -76,15 +140,85 @@ class TestOutboundApplication(common.DescopeTest):
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = {
-                "app": {"id": "app123", "name": "Updated App", "description": "Updated Description"}
+                "app": {
+                    "id": "app123",
+                    "name": "Updated App",
+                    "description": "Updated Description",
+                }
             }
             mock_post.return_value = network_resp
             response = client.mgmt.outbound_application.update_application(
-                "app123", "Updated App", description="Updated Description", client_secret="new-secret"
+                "app123",
+                "Updated App",
+                description="Updated Description",
+                client_secret="new-secret",
             )
 
             assert response == {
-                "app": {"id": "app123", "name": "Updated App", "description": "Updated Description"}
+                "app": {
+                    "id": "app123",
+                    "name": "Updated App",
+                    "description": "Updated Description",
+                }
+            }
+
+    def test_update_application_with_all_parameters_success(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Create test data for all new parameters
+        auth_params = [
+            URLParam("response_type", "code"),
+            URLParam("client_id", "test-client"),
+        ]
+        token_params = [URLParam("grant_type", "authorization_code")]
+        prompts = [PromptType.LOGIN, PromptType.CONSENT, PromptType.SELECT_ACCOUNT]
+
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = {
+                "app": {
+                    "id": "app123",
+                    "name": "Updated OAuth App",
+                    "description": "Updated Description",
+                }
+            }
+            mock_post.return_value = network_resp
+            response = client.mgmt.outbound_application.update_application(
+                id="app123",
+                name="Updated OAuth App",
+                description="Updated Description",
+                logo="https://example.com/new-logo.png",
+                client_secret="new-secret",
+                client_id="new-client-id",
+                discovery_url="https://accounts.google.com/.well-known/openid_configuration",
+                authorization_url="https://accounts.google.com/o/oauth2/v2/auth",
+                authorization_url_params=auth_params,
+                token_url="https://oauth2.googleapis.com/token",
+                token_url_params=token_params,
+                revocation_url="https://oauth2.googleapis.com/revoke",
+                default_scopes=[
+                    "https://www.googleapis.com/auth/userinfo.profile",
+                    "https://www.googleapis.com/auth/userinfo.email",
+                ],
+                default_redirect_url="https://myapp.com/updated-callback",
+                callback_domain="myapp.com",
+                pkce=True,
+                access_type=AccessType.OFFLINE,
+                prompt=prompts,
+            )
+
+            assert response == {
+                "app": {
+                    "id": "app123",
+                    "name": "Updated OAuth App",
+                    "description": "Updated Description",
+                }
             }
 
     def test_update_application_failure(self):
@@ -146,13 +280,21 @@ class TestOutboundApplication(common.DescopeTest):
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = {
-                "app": {"id": "app123", "name": "Test App", "description": "Test Description"}
+                "app": {
+                    "id": "app123",
+                    "name": "Test App",
+                    "description": "Test Description",
+                }
             }
             mock_get.return_value = network_resp
             response = client.mgmt.outbound_application.load_application("app123")
 
             assert response == {
-                "app": {"id": "app123", "name": "Test App", "description": "Test Description"}
+                "app": {
+                    "id": "app123",
+                    "name": "Test App",
+                    "description": "Test Description",
+                }
             }
 
     def test_load_application_failure(self):
@@ -235,7 +377,11 @@ class TestOutboundApplication(common.DescopeTest):
             }
             mock_post.return_value = network_resp
             response = client.mgmt.outbound_application.fetch_token_by_scopes(
-                "app123", "user456", ["read", "write"], {"refreshToken": True}, "tenant789"
+                "app123",
+                "user456",
+                ["read", "write"],
+                {"refreshToken": True},
+                "tenant789",
             )
 
             assert response == {
@@ -425,7 +571,11 @@ class TestOutboundApplication(common.DescopeTest):
 
     def test_compose_create_update_body(self):
         body = OutboundApplication._compose_create_update_body(
-            "Test App", "Test Description", "https://example.com/logo.png", "app123", "secret"
+            "Test App",
+            "Test Description",
+            "https://example.com/logo.png",
+            "app123",
+            "secret",
         )
 
         expected_body = {
@@ -450,4 +600,192 @@ class TestOutboundApplication(common.DescopeTest):
             "logo": "https://example.com/logo.png",
         }
 
-        assert body == expected_body 
+        assert body == expected_body
+
+    def test_compose_create_update_body_with_all_new_parameters(self):
+        # Create test data for all new parameters
+        auth_params = [
+            URLParam("response_type", "code"),
+            URLParam("client_id", "test-client"),
+        ]
+        token_params = [URLParam("grant_type", "authorization_code")]
+        prompts = [PromptType.LOGIN, PromptType.CONSENT]
+
+        body = OutboundApplication._compose_create_update_body(
+            name="Test OAuth App",
+            description="Test Description",
+            logo="https://example.com/logo.png",
+            id="app123",
+            client_secret="secret",
+            client_id="test-client-id",
+            discovery_url="https://accounts.google.com/.well-known/openid_configuration",
+            authorization_url="https://accounts.google.com/o/oauth2/v2/auth",
+            authorization_url_params=auth_params,
+            token_url="https://oauth2.googleapis.com/token",
+            token_url_params=token_params,
+            revocation_url="https://oauth2.googleapis.com/revoke",
+            default_scopes=["https://www.googleapis.com/auth/userinfo.profile"],
+            default_redirect_url="https://myapp.com/callback",
+            callback_domain="myapp.com",
+            pkce=True,
+            access_type=AccessType.OFFLINE,
+            prompt=prompts,
+        )
+
+        expected_body = {
+            "name": "Test OAuth App",
+            "id": "app123",
+            "description": "Test Description",
+            "logo": "https://example.com/logo.png",
+            "clientSecret": "secret",
+            "clientId": "test-client-id",
+            "discoveryUrl": "https://accounts.google.com/.well-known/openid_configuration",
+            "authorizationUrl": "https://accounts.google.com/o/oauth2/v2/auth",
+            "authorizationUrlParams": [
+                {"name": "response_type", "value": "code"},
+                {"name": "client_id", "value": "test-client"},
+            ],
+            "tokenUrl": "https://oauth2.googleapis.com/token",
+            "tokenUrlParams": [{"name": "grant_type", "value": "authorization_code"}],
+            "revocationUrl": "https://oauth2.googleapis.com/revoke",
+            "defaultScopes": ["https://www.googleapis.com/auth/userinfo.profile"],
+            "defaultRedirectUrl": "https://myapp.com/callback",
+            "callbackDomain": "myapp.com",
+            "pkce": True,
+            "accessType": "offline",
+            "prompt": ["login", "consent"],
+        }
+
+        assert body == expected_body
+
+    def test_compose_create_update_body_with_partial_new_parameters(self):
+        # Test with only some of the new parameters
+        body = OutboundApplication._compose_create_update_body(
+            name="Test App",
+            description="Test Description",
+            logo="https://example.com/logo.png",
+            id="app123",
+            client_secret="secret",
+            client_id="test-client-id",
+            discovery_url="https://accounts.google.com/.well-known/openid_configuration",
+            pkce=False,
+            access_type=AccessType.ONLINE,
+        )
+
+        expected_body = {
+            "name": "Test App",
+            "id": "app123",
+            "description": "Test Description",
+            "logo": "https://example.com/logo.png",
+            "clientSecret": "secret",
+            "clientId": "test-client-id",
+            "discoveryUrl": "https://accounts.google.com/.well-known/openid_configuration",
+            "pkce": False,
+            "accessType": "online",
+        }
+
+        assert body == expected_body
+
+    def test_compose_create_update_body_with_url_params_only(self):
+        # Test with only URL parameters
+        auth_params = [URLParam("response_type", "code")]
+        token_params = [URLParam("grant_type", "authorization_code")]
+
+        body = OutboundApplication._compose_create_update_body(
+            name="Test App",
+            description="Test Description",
+            authorization_url_params=auth_params,
+            token_url_params=token_params,
+        )
+
+        expected_body = {
+            "name": "Test App",
+            "id": None,
+            "description": "Test Description",
+            "logo": None,
+            "authorizationUrlParams": [{"name": "response_type", "value": "code"}],
+            "tokenUrlParams": [{"name": "grant_type", "value": "authorization_code"}],
+        }
+
+        assert body == expected_body
+
+    def test_compose_create_update_body_with_prompt_types(self):
+        # Test with different prompt type combinations
+        prompts = [PromptType.LOGIN, PromptType.CONSENT, PromptType.SELECT_ACCOUNT]
+
+        body = OutboundApplication._compose_create_update_body(
+            name="Test App", description="Test Description", prompt=prompts
+        )
+
+        expected_body = {
+            "name": "Test App",
+            "id": None,
+            "description": "Test Description",
+            "logo": None,
+            "prompt": ["login", "consent", "select_account"],
+        }
+
+        assert body == expected_body
+
+    def test_compose_create_update_body_with_none_values(self):
+        # Test that None values are handled correctly
+        body = OutboundApplication._compose_create_update_body(
+            name="Test App",
+            description="Test Description",
+            pkce=None,  # Should not be included in body
+            access_type=None,  # Should not be included in body
+            prompt=None,  # Should not be included in body
+        )
+
+        expected_body = {
+            "name": "Test App",
+            "id": None,
+            "description": "Test Description",
+            "logo": None,
+        }
+
+        assert body == expected_body
+
+    def test_compose_create_update_body_with_empty_lists(self):
+        # Test with empty lists for URL parameters and prompts
+        body = OutboundApplication._compose_create_update_body(
+            name="Test App",
+            description="Test Description",
+            authorization_url_params=[],
+            token_url_params=[],
+            default_scopes=[],
+            prompt=[],
+        )
+
+        expected_body = {
+            "name": "Test App",
+            "id": None,
+            "description": "Test Description",
+            "logo": None,
+            "authorizationUrlParams": [],
+            "tokenUrlParams": [],
+            "defaultScopes": [],
+            "prompt": [],
+        }
+
+        assert body == expected_body
+
+    def test_url_param_to_dict(self):
+        # Test URLParam to_dict method
+        param = URLParam("test_name", "test_value")
+        param_dict = param.to_dict()
+
+        expected_dict = {"name": "test_name", "value": "test_value"}
+        assert param_dict == expected_dict
+
+    def test_access_type_enum_values(self):
+        # Test AccessType enum values
+        assert AccessType.OFFLINE.value == "offline"
+        assert AccessType.ONLINE.value == "online"
+
+    def test_prompt_type_enum_values(self):
+        # Test PromptType enum values
+        assert PromptType.NONE.value == "none"
+        assert PromptType.LOGIN.value == "login"
+        assert PromptType.CONSENT.value == "consent"
+        assert PromptType.SELECT_ACCOUNT.value == "select_account"
