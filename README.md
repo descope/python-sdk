@@ -1307,7 +1307,7 @@ apps = apps_resp["apps"]
 You can create, update, delete, load outbound applications and fetch tokens for them:
 
 ```python
-# Create an outbound application
+# Create a basic outbound application
 response = descope_client.mgmt.outbound_application.create_application(
     name="my new app",
     description="my desc",
@@ -1316,7 +1316,47 @@ response = descope_client.mgmt.outbound_application.create_application(
 )
 app_id = response["app"]["id"]
 
-# Update an outbound application
+# Create a full OAuth outbound application with all parameters
+from descope.management.common import URLParam, AccessType, PromptType
+
+# Create URL parameters for authorization
+auth_params = [
+    URLParam("response_type", "code"),
+    URLParam("client_id", "my-client-id"),
+    URLParam("redirect_uri", "https://myapp.com/callback")
+]
+
+# Create URL parameters for token endpoint
+token_params = [
+    URLParam("grant_type", "authorization_code"),
+    URLParam("client_id", "my-client-id")
+]
+
+# Create prompt types
+prompts = [PromptType.LOGIN, PromptType.CONSENT]
+
+full_app = descope_client.mgmt.outbound_application.create_application(
+    name="My OAuth App",
+    description="A full OAuth outbound application",
+    logo="https://example.com/logo.png",
+    id="my-custom-id",  # Optional custom ID
+    client_secret="my-secret-key",
+    client_id="my-client-id",
+    discovery_url="https://accounts.google.com/.well-known/openid_configuration",
+    authorization_url="https://accounts.google.com/o/oauth2/v2/auth",
+    authorization_url_params=auth_params,
+    token_url="https://oauth2.googleapis.com/token",
+    token_url_params=token_params,
+    revocation_url="https://oauth2.googleapis.com/revoke",
+    default_scopes=["https://www.googleapis.com/auth/userinfo.profile"],
+    default_redirect_url="https://myapp.com/callback",
+    callback_domain="myapp.com",
+    pkce=True,  # Enable PKCE
+    access_type=AccessType.OFFLINE,  # Request refresh tokens
+    prompt=prompts
+)
+
+# Update an outbound application with all parameters
 # Update will override all fields as is. Use carefully.
 descope_client.mgmt.outbound_application.update_application(
     id="my-app-id",
@@ -1324,6 +1364,19 @@ descope_client.mgmt.outbound_application.update_application(
     description="updated description",
     logo="https://example.com/logo.png",
     client_secret="new-secret",  # Optional
+    client_id="new-client-id",
+    discovery_url="https://accounts.google.com/.well-known/openid_configuration",
+    authorization_url="https://accounts.google.com/o/oauth2/v2/auth",
+    authorization_url_params=auth_params,
+    token_url="https://oauth2.googleapis.com/token",
+    token_url_params=token_params,
+    revocation_url="https://oauth2.googleapis.com/revoke",
+    default_scopes=["https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email"],
+    default_redirect_url="https://myapp.com/updated-callback",
+    callback_domain="myapp.com",
+    pkce=True,
+    access_type=AccessType.OFFLINE,
+    prompt=[PromptType.LOGIN, PromptType.CONSENT, PromptType.SELECT_ACCOUNT]
 )
 
 # Delete an outbound application by id
