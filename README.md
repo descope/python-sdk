@@ -73,6 +73,7 @@ These sections show how to use the SDK to perform permission and user management
 13. [Manage FGA (Fine-grained Authorization)](#manage-fga-fine-grained-authorization)
 14. [Manage Project](#manage-project)
 15. [Manage SSO Applications](#manage-sso-applications)
+16. [Manage Outbound Applications](#manage-outbound-applications)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -1299,6 +1300,61 @@ apps_resp = descope_client.mgmt.sso_application.load_all()
 apps = apps_resp["apps"]
     for app in apps:
         # Do something
+```
+
+### Manage Outbound Applications
+
+You can create, update, delete or load outbound applications, as well as manage user tokens:
+
+```python
+# Create OIDC outbound application
+descope_client.mgmt.outbound_application.create_application(
+    name="My Google App",
+    client_id="google-client-id",
+    client_secret="google-client-secret",
+    template_id="google",  # Use pre-configured Google template
+    default_scopes=["openid", "profile", "email"],
+    pkce=True,
+    access_type="offline",
+)
+
+# Update outbound application
+# Update will override all fields as is. Use carefully.
+descope_client.mgmt.outbound_application.update_application(
+    id="app-id",
+    name="My Updated Google App",
+    client_id="updated-client-id",
+    description="Updated description",
+    default_scopes=["openid", "profile"],
+)
+
+# Outbound application deletion cannot be undone. Use carefully.
+descope_client.mgmt.outbound_application.delete_application("app-id")
+
+# Load outbound application by id
+app_resp = descope_client.mgmt.outbound_application.load_application("app-id")
+
+# Load all outbound applications
+apps_resp = descope_client.mgmt.outbound_application.load_all_applications()
+apps = apps_resp["apps"]
+    for app in apps:
+        # Do something
+
+# Fetch user token for outbound application
+token_resp = descope_client.mgmt.outbound_application.fetch_outbound_app_user_token(
+    user_id="user-id",
+    app_id="app-id",
+    scopes=["openid", "profile"],
+)
+
+# Delete specific token by ID
+descope_client.mgmt.outbound_application.delete_outbound_app_token_by_id("token-id")
+
+# Delete all user tokens for a specific app
+descope_client.mgmt.outbound_application.delete_outbound_app_user_tokens(
+    user_id="user-id",
+    app_id="app-id",
+)
 ```
 
 ### Utils for your end to end (e2e) tests and integration tests

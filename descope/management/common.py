@@ -154,6 +154,16 @@ class MgmtV1:
     project_import = "/v1/mgmt/project/import"
     project_list_projects = "/v1/mgmt/projects/list"
 
+    # outbound application
+    outbound_application_create_path = "/v1/mgmt/outbound/application/create"
+    outbound_application_update_path = "/v1/mgmt/outbound/application/update"
+    outbound_application_delete_path = "/v1/mgmt/outbound/application/delete"
+    outbound_application_load_path = "/v1/mgmt/outbound/application/load"
+    outbound_application_load_all_path = "/v1/mgmt/outbound/application/all"
+    outbound_application_fetch_user_token_path = "/v1/mgmt/outbound/application/token/fetch"
+    outbound_application_delete_token_by_id_path = "/v1/mgmt/outbound/application/token/delete"
+    outbound_application_delete_user_tokens_path = "/v1/mgmt/outbound/application/user/tokens/delete"
+
 
 class MgmtSignUpOptions:
     def __init__(
