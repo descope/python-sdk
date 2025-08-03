@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import asyncio
 from typing import Iterable
 
 from descope._auth_base import AuthBase
-from descope.auth import Auth
+from descope.auth import Auth, handle_async_result
 from descope.common import (
     REFRESH_SESSION_COOKIE_NAME,
     DeliveryMethod,
@@ -49,7 +50,10 @@ class OTP(AuthBase):
         uri = OTP._compose_signin_url(method)
         body = OTP._compose_signin_body(login_id, login_options)
         response = self._auth.do_post(uri, body, None, refresh_token)
-        return Auth.extract_masked_address(response.json(), method)
+        return handle_async_result(
+            response, 
+            lambda response: Auth.extract_masked_address(response.json(), method)
+        )
 
     def sign_up(
         self,
@@ -86,7 +90,10 @@ class OTP(AuthBase):
         uri = OTP._compose_signup_url(method)
         body = OTP._compose_signup_body(method, login_id, user, signup_options)
         response = self._auth.do_post(uri, body)
-        return Auth.extract_masked_address(response.json(), method)
+        return handle_async_result(
+            response,
+            lambda response: Auth.extract_masked_address(response.json(), method)
+        )
 
     def sign_up_or_in(
         self,
@@ -125,7 +132,10 @@ class OTP(AuthBase):
             login_options,
         )
         response = self._auth.do_post(uri, body)
-        return Auth.extract_masked_address(response.json(), method)
+        return handle_async_result(
+            response,
+            lambda response: Auth.extract_masked_address(response.json(), method)
+        )
 
     def verify_code(
         self,
@@ -159,12 +169,14 @@ class OTP(AuthBase):
         uri = OTP._compose_verify_code_url(method)
         body = OTP._compose_verify_code_body(login_id, code)
         response = self._auth.do_post(uri, body, None)
-
-        resp = response.json()
-        jwt_response = self._auth.generate_jwt_response(
-            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
+        return handle_async_result(
+            response,
+            lambda response: self._auth.generate_jwt_response(
+                response.json(),
+                response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None),
+                audience
+            )
         )
-        return jwt_response
 
     def update_user_email(
         self,
@@ -202,7 +214,10 @@ class OTP(AuthBase):
             template_options, template_id, provider_id
         )
         response = self._auth.do_post(uri, body, None, refresh_token)
-        return Auth.extract_masked_address(response.json(), DeliveryMethod.EMAIL)
+        return handle_async_result(
+            response,
+            lambda response: Auth.extract_masked_address(response.json(), DeliveryMethod.EMAIL)
+        )
 
     def update_user_phone(
         self,
@@ -245,7 +260,10 @@ class OTP(AuthBase):
             template_options, template_id, provider_id
         )
         response = self._auth.do_post(uri, body, None, refresh_token)
-        return Auth.extract_masked_address(response.json(), method)
+        return handle_async_result(
+            response,
+            lambda response: Auth.extract_masked_address(response.json(), method)
+        )
 
     @staticmethod
     def _compose_signup_url(method: DeliveryMethod) -> str:

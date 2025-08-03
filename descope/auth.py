@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import copy
 import json
 import os
@@ -62,6 +63,29 @@ _default_headers = {
 }
 
 
+def handle_async_result(result_or_coro, modifier):
+    """Handle both coroutine and simple result with a modifier function."""
+    # Check if it's a coroutine
+    if asyncio.iscoroutine(result_or_coro):
+        loop = asyncio.get_event_loop()
+        original_future = asyncio.ensure_future(result_or_coro)
+
+        wrapped_future = loop.create_future()
+
+        def on_done(fut):
+            try:
+                result = fut.result()
+                wrapped_future.set_result(modifier(result))
+            except Exception as e:
+                wrapped_future.set_exception(e)
+
+        original_future.add_done_callback(on_done)
+        return wrapped_future
+    else:
+        # It's a simple result, apply modifier directly
+        return modifier(result_or_coro)
+
+
 class Auth:
     ALGORITHM_KEY = "alg"
 
@@ -73,6 +97,7 @@ class Auth:
         management_key: str | None = None,
         timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
         jwt_validation_leeway: int = 5,
+        async_mode: bool = False,
     ):
         self.lock_public_keys = Lock()
         # validate project id
@@ -89,6 +114,7 @@ class Auth:
         self.project_id = project_id
         self.jwt_validation_leeway = jwt_validation_leeway
         self.secure = not skip_verify
+        self.async_mode = async_mode
 
         self.base_url = os.getenv("DESCOPE_BASE_URI")
         if not self.base_url:
@@ -141,16 +167,32 @@ class Auth:
         follow_redirects=None,
         pswd: str | None = None,
     ) -> httpx.Response:
-        response = httpx.get(
-            f"{self.base_url}{uri}",
-            headers=self._get_default_headers(pswd),
-            params=params,
-            follow_redirects=follow_redirects,
-            verify=self.secure,
-            timeout=self.timeout_seconds,
-        )
-        self._raise_from_response(response)
-        return response
+        if self.async_mode:
+            async def async_request():
+                async with httpx.AsyncClient(
+                    verify=self.secure,
+                    timeout=self.timeout_seconds
+                ) as client:
+                    response = await client.get(
+                        f"{self.base_url}{uri}",
+                        headers=self._get_default_headers(pswd),
+                        params=params,
+                        follow_redirects=follow_redirects
+                    )
+                    self._raise_from_response(response)
+                    return response
+            return async_request()
+        else:
+            response = httpx.get(
+                f"{self.base_url}{uri}",
+                headers=self._get_default_headers(pswd),
+                params=params,
+                follow_redirects=follow_redirects,
+                verify=self.secure,
+                timeout=self.timeout_seconds,
+            )
+            self._raise_from_response(response)
+            return response
 
     def do_post(
         self,
@@ -159,17 +201,34 @@ class Auth:
         params=None,
         pswd: str | None = None,
     ) -> httpx.Response:
-        response = httpx.post(
-            f"{self.base_url}{uri}",
-            headers=self._get_default_headers(pswd),
-            json=body,
-            follow_redirects=False,
-            verify=self.secure,
-            params=params,
-            timeout=self.timeout_seconds,
-        )
-        self._raise_from_response(response)
-        return response
+        if self.async_mode:
+            async def async_request():
+                async with httpx.AsyncClient(
+                    verify=self.secure,
+                    timeout=self.timeout_seconds,
+                ) as client:
+                    response = await client.post(
+                        f"{self.base_url}{uri}",
+                        headers=self._get_default_headers(pswd),
+                        json=body,
+                        params=params,
+                        follow_redirects=False
+                    )
+                    self._raise_from_response(response)
+                    return response
+            return async_request()
+        else:
+            response = httpx.post(
+                f"{self.base_url}{uri}",
+                headers=self._get_default_headers(pswd),
+                json=body,
+                follow_redirects=False,
+                verify=self.secure,
+                params=params,
+                timeout=self.timeout_seconds,
+            )
+            self._raise_from_response(response)
+            return response
 
     def do_patch(
         self,
@@ -178,31 +237,64 @@ class Auth:
         params=None,
         pswd: str | None = None,
     ) -> httpx.Response:
-        response = httpx.patch(
-            f"{self.base_url}{uri}",
-            headers=self._get_default_headers(pswd),
-            json=body,
-            follow_redirects=False,
-            verify=self.secure,
-            params=params,
-            timeout=self.timeout_seconds,
-        )
-        self._raise_from_response(response)
-        return response
+        if self.async_mode:
+            async def async_request():
+                async with httpx.AsyncClient(
+                    verify=self.secure,
+                    timeout=self.timeout_seconds,
+                ) as client:
+                    response = await client.patch(
+                        f"{self.base_url}{uri}",
+                        headers=self._get_default_headers(pswd),
+                        json=body,
+                        params=params,
+                        follow_redirects=False
+                    )
+                    self._raise_from_response(response)
+                    return response
+            return async_request()
+        else:
+            response = httpx.patch(
+                f"{self.base_url}{uri}",
+                headers=self._get_default_headers(pswd),
+                json=body,
+                follow_redirects=False,
+                verify=self.secure,
+                params=params,
+                timeout=self.timeout_seconds,
+            )
+            self._raise_from_response(response)
+            return response
 
     def do_delete(
         self, uri: str, params=None, pswd: str | None = None
     ) -> httpx.Response:
-        response = httpx.delete(
-            f"{self.base_url}{uri}",
-            params=params,
-            headers=self._get_default_headers(pswd),
-            follow_redirects=False,
-            verify=self.secure,
-            timeout=self.timeout_seconds,
-        )
-        self._raise_from_response(response)
-        return response
+        if self.async_mode:
+            async def async_request():
+                async with httpx.AsyncClient(
+                    verify=self.secure,
+                    timeout=self.timeout_seconds,
+                ) as client:
+                    response = await client.delete(
+                        f"{self.base_url}{uri}",
+                        params=params,
+                        headers=self._get_default_headers(pswd),
+                        follow_redirects=False
+                    )
+                    self._raise_from_response(response)
+                    return response
+            return async_request()
+        else:
+            response = httpx.delete(
+                f"{self.base_url}{uri}",
+                params=params,
+                headers=self._get_default_headers(pswd),
+                follow_redirects=False,
+                verify=self.secure,
+                timeout=self.timeout_seconds,
+            )
+            self._raise_from_response(response)
+            return response
 
     def exchange_token(
         self, uri, code: str, audience: str | None | Iterable[str] = None
