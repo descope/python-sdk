@@ -14,7 +14,12 @@ from descope import (
     DescopeClient,
     RateLimitException,
 )
-from descope.common import DEFAULT_TIMEOUT_SECONDS, SESSION_TOKEN_NAME, EndpointsV1
+from descope.common import (
+    DEFAULT_TIMEOUT_SECONDS,
+    SESSION_TOKEN_NAME,
+    DeliveryMethod,
+    EndpointsV1,
+)
 
 from . import common
 
@@ -838,6 +843,183 @@ class TestDescopeClient(common.DescopeTest):
                 },
                 allow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_auth_management_key_with_functions(self):
+        """Test auth_management_key with functions that require and don't require refresh tokens"""
+        auth_mgmt_key = "test-auth-mgmt-key"
+
+        # Test 1: Direct auth_management_key setting (without refresh token)
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            auth_management_key=auth_mgmt_key,
+        )
+
+        with patch("requests.post") as mock_post:
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
+            mock_post.return_value = my_mock_response
+
+            client.otp.sign_up(DeliveryMethod.EMAIL, "test@example.com")
+
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_otp_path}/email",
+                headers={
+                    **common.default_headers,
+                    "x-descope-project-id": self.dummy_project_id,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{auth_mgmt_key}",
+                },
+                json={
+                    "loginId": "test@example.com",
+                    "user": {"email": "test@example.com"},
+                    "email": "test@example.com",
+                },
+                params=None,
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test 2: Environment variable auth_management_key setting
+        env_auth_mgmt_key = "env-auth-mgmt-key"
+        with patch.dict(
+            "os.environ", {"DESCOPE_AUTH_MANAGEMENT_KEY": env_auth_mgmt_key}
+        ):
+            client_env = DescopeClient(self.dummy_project_id, self.public_key_dict)
+
+            with patch("requests.post") as mock_post:
+                my_mock_response = mock.Mock()
+                my_mock_response.ok = True
+                my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
+                mock_post.return_value = my_mock_response
+
+                client_env.otp.sign_up(DeliveryMethod.EMAIL, "test@example.com")
+
+                mock_post.assert_called_with(
+                    f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_otp_path}/email",
+                    headers={
+                        **common.default_headers,
+                        "x-descope-project-id": self.dummy_project_id,
+                        "Authorization": f"Bearer {self.dummy_project_id}:{env_auth_mgmt_key}",
+                    },
+                    json={
+                        "loginId": "test@example.com",
+                        "user": {"email": "test@example.com"},
+                        "email": "test@example.com",
+                    },
+                    allow_redirects=False,
+                    verify=True,
+                    params=None,
+                    timeout=DEFAULT_TIMEOUT_SECONDS,
+                )
+
+        # Test 3: Direct parameter takes priority over environment variable
+        direct_auth_mgmt_key = "direct-auth-mgmt-key"
+        with patch.dict(
+            "os.environ", {"DESCOPE_AUTH_MANAGEMENT_KEY": env_auth_mgmt_key}
+        ):
+            client_priority = DescopeClient(
+                self.dummy_project_id,
+                self.public_key_dict,
+                auth_management_key=direct_auth_mgmt_key,
+            )
+
+            with patch("requests.post") as mock_post:
+                my_mock_response = mock.Mock()
+                my_mock_response.ok = True
+                my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
+                mock_post.return_value = my_mock_response
+
+                client_priority.otp.sign_up(DeliveryMethod.EMAIL, "test@example.com")
+
+                mock_post.assert_called_with(
+                    f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_otp_path}/email",
+                    headers={
+                        **common.default_headers,
+                        "x-descope-project-id": self.dummy_project_id,
+                        "Authorization": f"Bearer {self.dummy_project_id}:{direct_auth_mgmt_key}",
+                    },
+                    json={
+                        "loginId": "test@example.com",
+                        "user": {"email": "test@example.com"},
+                        "email": "test@example.com",
+                    },
+                    params=None,
+                    allow_redirects=False,
+                    verify=True,
+                    timeout=DEFAULT_TIMEOUT_SECONDS,
+                )
+
+    def test_auth_management_key_with_refresh_token(self):
+        auth_mgmt_key = "test-auth-mgmt-key"
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            auth_management_key=auth_mgmt_key,
+        )
+
+        # Test with refresh token function
+        refresh_token = "test_refresh_token"
+        with patch("requests.post") as mock_post:
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.json.return_value = {"maskedEmail": "n***@example.com"}
+            mock_post.return_value = my_mock_response
+
+            client.otp.update_user_email(
+                "old@example.com", "new@example.com", refresh_token
+            )
+
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_user_email_otp_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{refresh_token}:{auth_mgmt_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                json={
+                    "loginId": "old@example.com",
+                    "email": "new@example.com",
+                    "addToLoginIDs": False,
+                    "onMergeUseExisting": False,
+                },
+                allow_redirects=False,
+                verify=True,
+                params=None,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test without auth_management_key for comparison
+        client_no_auth = DescopeClient(self.dummy_project_id, self.public_key_dict)
+        with patch("requests.post") as mock_post:
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.json.return_value = {"maskedEmail": "n***@example.com"}
+            mock_post.return_value = my_mock_response
+
+            client_no_auth.otp.update_user_email(
+                "old@example.com", "new@example.com", refresh_token
+            )
+
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_user_email_otp_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{refresh_token}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                json={
+                    "loginId": "old@example.com",
+                    "email": "new@example.com",
+                    "addToLoginIDs": False,
+                    "onMergeUseExisting": False,
+                },
+                allow_redirects=False,
+                verify=True,
+                params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
