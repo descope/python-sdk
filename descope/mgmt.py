@@ -12,7 +12,8 @@ from descope.management.role import Role  # noqa: F401
 from descope.management.sso_application import SSOApplication  # noqa: F401
 from descope.management.sso_settings import SSOSettings  # noqa: F401
 from descope.management.tenant import Tenant  # noqa: F401
-from descope.management.user import User  # noqa: F401
+from descope.management.user import User
+from descope.management.outbound_application import OutboundApplication  # noqa: F401  # noqa: F401
 
 
 class MGMT:
@@ -34,6 +35,7 @@ class MGMT:
         self._authz = Authz(auth)
         self._fga = FGA(auth)
         self._project = Project(auth)
+        self._outbound_application = OutboundApplication(auth)
 
     @property
     def tenant(self):
@@ -90,3 +92,7 @@ class MGMT:
     @property
     def project(self):
         return self._project
+
+    @property
+    def outbound_application(self):
+        return self._outbound_application

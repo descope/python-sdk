@@ -85,3 +85,5 @@ e7f5ad4253ad82236a5cff5f8c06878bfb190b00:tests/test_descope_client.py:jwt:185
 e7f5ad4253ad82236a5cff5f8c06878bfb190b00:tests/test_descope_client.py:jwt:197
 ece761372c78a9ad8a57da5f6d13431d298a99db:tests/test_auth.py:jwt:562
 f3ec873c83a7067a1226d8b712b756b1b599fb3b:tests/test_descope_client.py:jwt:519
+b6a2e217be5dceb6c85332d2e193619894d3a36e:README.md:generic-api-key:1349
+b6a2e217be5dceb6c85332d2e193619894d3a36e:README.md:generic-api-key:1372
