@@ -6,6 +6,7 @@ from descope.management.fga import FGA  # noqa: F401
 from descope.management.flow import Flow  # noqa: F401
 from descope.management.group import Group  # noqa: F401
 from descope.management.jwt import JWT  # noqa: F401
+from descope.management.outbound_application import OutboundApplication  # noqa: F401
 from descope.management.permission import Permission  # noqa: F401
 from descope.management.project import Project  # noqa: F401
 from descope.management.role import Role  # noqa: F401
@@ -22,6 +23,7 @@ class MGMT:
         self._auth = auth
         self._tenant = Tenant(auth)
         self._sso_application = SSOApplication(auth)
+        self._outbound_application = OutboundApplication(auth)
         self._user = User(auth)
         self._access_key = AccessKey(auth)
         self._sso = SSOSettings(auth)
@@ -42,6 +44,10 @@ class MGMT:
     @property
     def sso_application(self):
         return self._sso_application
+
+    @property
+    def outbound_application(self):
+        return self._outbound_application
 
     @property
     def user(self):
