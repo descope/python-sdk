@@ -26,14 +26,23 @@ pip install descope[Flask]
 A Descope `Project ID` is required to initialize the SDK. Find it on the
 [project page in the Descope Console](https://app.descope.com/settings/project).
 
+**Note:** Authentication APIs public access can be disabled via the Descope console.
+If disabled, it's still possible to use the authentication API by providing a management key with
+the appropriate access (`Authentication` / `Full Access`).
+If not provided directly, this value is retrieved from the `DESCOPE_AUTH_MANAGEMENT_KEY` environment variable instead.
+If neither values are set then any disabled authentication methods API calls will fail.
+
 ```python
 from descope import DescopeClient
 
-# Initialized after setting the DESCOPE_PROJECT_ID env var
+# Initialized after setting the DESCOPE_PROJECT_ID and DESCOPE_AUTH_MANAGEMENT_KEY env vars
 descope_client = DescopeClient()
 
 # ** Or directly **
-descope_client = DescopeClient(project_id="<Project ID>")
+descope_client = DescopeClient(
+    project_id="<Project ID>"
+    auth_management_key="<Auth Managemet Key>
+)
 ```
 
 ## Authentication Functions
