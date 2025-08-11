@@ -1,6 +1,7 @@
 from typing import Any, List, Optional
 
 from descope._auth_base import AuthBase
+from descope.auth import Auth
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException  # noqa: F401
 from descope.management.common import (
     AccessType,
@@ -16,7 +17,7 @@ class _OutboundApplicationTokenFetcher:
 
     @staticmethod
     def fetch_token_by_scopes(
-        auth_instance,
+        auth_instance: Auth,
         token: str,
         app_id: str,
         user_id: str,
@@ -41,7 +42,7 @@ class _OutboundApplicationTokenFetcher:
 
     @staticmethod
     def fetch_token(
-        auth_instance,
+        auth_instance: Auth,
         token: str,
         app_id: str,
         user_id: str,
@@ -64,7 +65,7 @@ class _OutboundApplicationTokenFetcher:
 
     @staticmethod
     def fetch_tenant_token_by_scopes(
-        auth_instance,
+        auth_instance: Auth,
         token: str,
         app_id: str,
         tenant_id: str,
@@ -87,7 +88,7 @@ class _OutboundApplicationTokenFetcher:
 
     @staticmethod
     def fetch_tenant_token(
-        auth_instance,
+        auth_instance: Auth,
         token: str,
         app_id: str,
         tenant_id: str,
@@ -355,12 +356,12 @@ class OutboundApplication(AuthBase):
         """
         return _OutboundApplicationTokenFetcher.fetch_token_by_scopes(
             self._auth,
+            self._auth.management_key,  # type: ignore[arg-type] # will never get here with None value
             app_id,
             user_id,
             scopes,
             options,
             tenant_id,
-            self._auth.management_key,
         )
 
     def fetch_token(
@@ -369,7 +370,6 @@ class OutboundApplication(AuthBase):
         user_id: str,
         tenant_id: Optional[str] = None,
         options: Optional[dict] = None,
-        token: Optional[str] = None,
     ) -> dict:
         """
         Fetch an outbound application token for a user.
@@ -379,7 +379,6 @@ class OutboundApplication(AuthBase):
         user_id (str): The ID of the user.
         tenant_id (str): Optional tenant ID.
         options (dict): Optional token options.
-        token (str): Optional token to use instead of management key.
 
         Return value (dict):
         Return dict in the format
@@ -390,11 +389,11 @@ class OutboundApplication(AuthBase):
         """
         return _OutboundApplicationTokenFetcher.fetch_token(
             self._auth,
+            self._auth.management_key,  # type: ignore[arg-type] # will never get here with None value
             app_id,
             user_id,
             tenant_id,
             options,
-            token if token is not None else self._auth.management_key,
         )
 
     def fetch_tenant_token_by_scopes(
@@ -421,7 +420,12 @@ class OutboundApplication(AuthBase):
         AuthException: raised if fetch operation fails
         """
         return _OutboundApplicationTokenFetcher.fetch_tenant_token_by_scopes(
-            self._auth, app_id, tenant_id, scopes, options, self._auth.management_key
+            self._auth,
+            self._auth.management_key,  # type: ignore[arg-type] # will never get here with None value
+            app_id,
+            tenant_id,
+            scopes,
+            options,
         )
 
     def fetch_tenant_token(
@@ -446,7 +450,11 @@ class OutboundApplication(AuthBase):
         AuthException: raised if fetch operation fails
         """
         return _OutboundApplicationTokenFetcher.fetch_tenant_token(
-            self._auth, app_id, tenant_id, options, self._auth.management_key
+            self._auth,
+            self._auth.management_key,  # type: ignore[arg-type] # will never get here with None value
+            app_id,
+            tenant_id,
+            options,
         )
 
     @staticmethod
