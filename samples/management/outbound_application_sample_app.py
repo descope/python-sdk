@@ -34,8 +34,10 @@ def main():
 
         try:
             logging.info("Loading outbound application by id")
-            outbound_app_resp = descope_client.mgmt.outbound_application.load_application(
-                outbound_app_id
+            outbound_app_resp = (
+                descope_client.mgmt.outbound_application.load_application(
+                    outbound_app_id
+                )
             )
             logging.info(f"Found outbound application {outbound_app_resp}")
 
@@ -46,7 +48,9 @@ def main():
 
         try:
             logging.info("Loading all outbound applications")
-            outbound_app_resp = descope_client.mgmt.outbound_application.load_all_applications()
+            outbound_app_resp = (
+                descope_client.mgmt.outbound_application.load_all_applications()
+            )
             apps = outbound_app_resp["apps"]
             for app in apps:
                 logging.info(f"LoadAll Found outbound application: {app}")
@@ -105,11 +109,13 @@ def main():
 
         try:
             logging.info("Going to fetch tenant token by scopes")
-            token_resp = descope_client.mgmt.outbound_application.fetch_tenant_token_by_scopes(
-                outbound_app_id,
-                "tenant456",
-                ["read", "write"],
-                options={"refreshToken": True},
+            token_resp = (
+                descope_client.mgmt.outbound_application.fetch_tenant_token_by_scopes(
+                    outbound_app_id,
+                    "tenant456",
+                    ["read", "write"],
+                    options={"refreshToken": True},
+                )
             )
             logging.info(f"Tenant token fetch response: {token_resp}")
 
@@ -145,4 +151,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main() 
+    main()

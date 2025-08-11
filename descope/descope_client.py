@@ -53,10 +53,6 @@ class DescopeClient:
 
     @property
     def mgmt(self):
-        if not self._auth.management_key:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "management_key cannot be empty"
-            )
         return self._mgmt
 
     @property

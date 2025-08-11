@@ -75,7 +75,14 @@ class TestTenant(common.DescopeTest):
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"id": "t1"}""")
             mock_post.return_value = network_resp
-            resp = client.mgmt.tenant.create("name", "t1", ["domain.com"], {"k1": "v1"}, enforce_sso=True, disabled=True)
+            resp = client.mgmt.tenant.create(
+                "name",
+                "t1",
+                ["domain.com"],
+                {"k1": "v1"},
+                enforce_sso=True,
+                disabled=True,
+            )
             self.assertEqual(resp["id"], "t1")
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_create_path}",
@@ -120,7 +127,9 @@ class TestTenant(common.DescopeTest):
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
-                client.mgmt.tenant.update("t1", "new-name", ["domain.com"], enforce_sso=True, disabled=True)
+                client.mgmt.tenant.update(
+                    "t1", "new-name", ["domain.com"], enforce_sso=True, disabled=True
+                )
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_update_path}",
@@ -147,7 +156,12 @@ class TestTenant(common.DescopeTest):
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.tenant.update(
-                    "t1", "new-name", ["domain.com"], {"k1": "v1"}, enforce_sso=True, disabled=True
+                    "t1",
+                    "new-name",
+                    ["domain.com"],
+                    {"k1": "v1"},
+                    enforce_sso=True,
+                    disabled=True,
                 )
             )
             mock_post.assert_called_with(
@@ -163,7 +177,7 @@ class TestTenant(common.DescopeTest):
                     "id": "t1",
                     "selfProvisioningDomains": ["domain.com"],
                     "customAttributes": {"k1": "v1"},
-                     "enforceSSO": True,
+                    "enforceSSO": True,
                     "disabled": True,
                 },
                 allow_redirects=False,

@@ -1,13 +1,110 @@
 from typing import Any, List, Optional
 
 from descope._auth_base import AuthBase
+from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException  # noqa: F401
 from descope.management.common import (
-    MgmtV1,
-    URLParam,
     AccessType,
+    MgmtV1,
     PromptType,
+    URLParam,
     url_params_to_dict,
 )
+
+
+class _OutboundApplicationTokenFetcher:
+    """Internal helper class for shared token fetching logic."""
+
+    @staticmethod
+    def fetch_token_by_scopes(
+        auth_instance,
+        token: str,
+        app_id: str,
+        user_id: str,
+        scopes: List[str],
+        options: Optional[dict] = None,
+        tenant_id: Optional[str] = None,
+    ) -> dict:
+        """Internal implementation for fetching token by scopes."""
+        uri = MgmtV1.outbound_application_fetch_token_by_scopes_path
+        response = auth_instance.do_post(
+            uri,
+            {
+                "appId": app_id,
+                "userId": user_id,
+                "scopes": scopes,
+                "options": options,
+                "tenantId": tenant_id,
+            },
+            pswd=token,
+        )
+        return response.json()
+
+    @staticmethod
+    def fetch_token(
+        auth_instance,
+        token: str,
+        app_id: str,
+        user_id: str,
+        tenant_id: Optional[str] = None,
+        options: Optional[dict] = None,
+    ) -> dict:
+        """Internal implementation for fetching token."""
+        uri = MgmtV1.outbound_application_fetch_token_path
+        response = auth_instance.do_post(
+            uri,
+            {
+                "appId": app_id,
+                "userId": user_id,
+                "tenantId": tenant_id,
+                "options": options,
+            },
+            pswd=token,
+        )
+        return response.json()
+
+    @staticmethod
+    def fetch_tenant_token_by_scopes(
+        auth_instance,
+        token: str,
+        app_id: str,
+        tenant_id: str,
+        scopes: List[str],
+        options: Optional[dict] = None,
+    ) -> dict:
+        """Internal implementation for fetching tenant token by scopes."""
+        uri = MgmtV1.outbound_application_fetch_tenant_token_by_scopes_path
+        response = auth_instance.do_post(
+            uri,
+            {
+                "appId": app_id,
+                "tenantId": tenant_id,
+                "scopes": scopes,
+                "options": options,
+            },
+            pswd=token,
+        )
+        return response.json()
+
+    @staticmethod
+    def fetch_tenant_token(
+        auth_instance,
+        token: str,
+        app_id: str,
+        tenant_id: str,
+        options: Optional[dict] = None,
+    ) -> dict:
+        """Internal implementation for fetching tenant token."""
+        uri = MgmtV1.outbound_application_fetch_tenant_token_path
+        response = auth_instance.do_post(
+            uri,
+            {
+                "appId": app_id,
+                "tenantId": tenant_id,
+                "options": options,
+            },
+            pswd=token,
+        )
+        return response.json()
 
 
 class OutboundApplication(AuthBase):
@@ -256,19 +353,15 @@ class OutboundApplication(AuthBase):
         Raise:
         AuthException: raised if fetch operation fails
         """
-        uri = MgmtV1.outbound_application_fetch_token_by_scopes_path
-        response = self._auth.do_post(
-            uri,
-            {
-                "appId": app_id,
-                "userId": user_id,
-                "scopes": scopes,
-                "options": options,
-                "tenantId": tenant_id,
-            },
-            pswd=self._auth.management_key,
+        return _OutboundApplicationTokenFetcher.fetch_token_by_scopes(
+            self._auth,
+            app_id,
+            user_id,
+            scopes,
+            options,
+            tenant_id,
+            self._auth.management_key,
         )
-        return response.json()
 
     def fetch_token(
         self,
@@ -276,6 +369,7 @@ class OutboundApplication(AuthBase):
         user_id: str,
         tenant_id: Optional[str] = None,
         options: Optional[dict] = None,
+        token: Optional[str] = None,
     ) -> dict:
         """
         Fetch an outbound application token for a user.
@@ -285,6 +379,7 @@ class OutboundApplication(AuthBase):
         user_id (str): The ID of the user.
         tenant_id (str): Optional tenant ID.
         options (dict): Optional token options.
+        token (str): Optional token to use instead of management key.
 
         Return value (dict):
         Return dict in the format
@@ -293,18 +388,14 @@ class OutboundApplication(AuthBase):
         Raise:
         AuthException: raised if fetch operation fails
         """
-        uri = MgmtV1.outbound_application_fetch_token_path
-        response = self._auth.do_post(
-            uri,
-            {
-                "appId": app_id,
-                "userId": user_id,
-                "tenantId": tenant_id,
-                "options": options,
-            },
-            pswd=self._auth.management_key,
+        return _OutboundApplicationTokenFetcher.fetch_token(
+            self._auth,
+            app_id,
+            user_id,
+            tenant_id,
+            options,
+            token if token is not None else self._auth.management_key,
         )
-        return response.json()
 
     def fetch_tenant_token_by_scopes(
         self,
@@ -329,18 +420,9 @@ class OutboundApplication(AuthBase):
         Raise:
         AuthException: raised if fetch operation fails
         """
-        uri = MgmtV1.outbound_application_fetch_tenant_token_by_scopes_path
-        response = self._auth.do_post(
-            uri,
-            {
-                "appId": app_id,
-                "tenantId": tenant_id,
-                "scopes": scopes,
-                "options": options,
-            },
-            pswd=self._auth.management_key,
+        return _OutboundApplicationTokenFetcher.fetch_tenant_token_by_scopes(
+            self._auth, app_id, tenant_id, scopes, options, self._auth.management_key
         )
-        return response.json()
 
     def fetch_tenant_token(
         self,
@@ -363,17 +445,9 @@ class OutboundApplication(AuthBase):
         Raise:
         AuthException: raised if fetch operation fails
         """
-        uri = MgmtV1.outbound_application_fetch_tenant_token_path
-        response = self._auth.do_post(
-            uri,
-            {
-                "appId": app_id,
-                "tenantId": tenant_id,
-                "options": options,
-            },
-            pswd=self._auth.management_key,
+        return _OutboundApplicationTokenFetcher.fetch_tenant_token(
+            self._auth, app_id, tenant_id, options, self._auth.management_key
         )
-        return response.json()
 
     @staticmethod
     def _compose_create_update_body(
@@ -433,3 +507,134 @@ class OutboundApplication(AuthBase):
         if prompt is not None:
             body["prompt"] = [p.value for p in prompt]
         return body
+
+
+class OutboundApplicationByToken(AuthBase):
+
+    # Methods for fetching outbound application tokens using an inbound application token
+    # that includes the "outbound.token.fetch" scope (no management key required)
+
+    def _check_inbound_app_token(self, token: str):
+        """Check if inbound app token is available for the given property."""
+        if not token:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                "Inbound app token is required for perform this functionality",
+            )
+
+    def fetch_token_by_scopes(
+        self,
+        token: str,
+        app_id: str,
+        user_id: str,
+        scopes: List[str],
+        options: Optional[dict] = None,
+        tenant_id: Optional[str] = None,
+    ) -> dict:
+        """
+        Fetch an outbound application token for a user with specific scopes.
+
+        Args:
+        token (str): The Inbound Application token to use for authentication.
+        app_id (str): The ID of the outbound application.
+        user_id (str): The ID of the user.
+        scopes (List[str]): List of scopes to include in the token.
+        options (dict): Optional token options.
+        tenant_id (str): Optional tenant ID.
+
+        Return value (dict):
+        Return dict in the format
+             {"token": {"token": <access_token>, "refreshToken": <refresh_token>, "expiresIn": <expires_in>, "tokenType": <token_type>, "scopes": <scopes>}}
+
+        Raise:
+        AuthException: raised if fetch operation fails
+        """
+        self._check_inbound_app_token(token)
+        return _OutboundApplicationTokenFetcher.fetch_token_by_scopes(
+            self._auth, token, app_id, user_id, scopes, options, tenant_id
+        )
+
+    def fetch_token(
+        self,
+        token: str,
+        app_id: str,
+        user_id: str,
+        tenant_id: Optional[str] = None,
+        options: Optional[dict] = None,
+    ) -> dict:
+        """
+        Fetch an outbound application token for a user.
+
+        Args:
+        token (str): The Inbound Application token to use for authentication.
+        app_id (str): The ID of the outbound application.
+        user_id (str): The ID of the user.
+        tenant_id (str): Optional tenant ID.
+        options (dict): Optional token options.
+
+        Return value (dict):
+        Return dict in the format
+             {"token": {"token": <access_token>, "refreshToken": <refresh_token>, "expiresIn": <expires_in>, "tokenType": <token_type>, "scopes": <scopes>}}
+
+        Raise:
+        AuthException: raised if fetch operation fails
+        """
+        self._check_inbound_app_token(token)
+        return _OutboundApplicationTokenFetcher.fetch_token(
+            self._auth, token, app_id, user_id, tenant_id, options
+        )
+
+    def fetch_tenant_token_by_scopes(
+        self,
+        token: str,
+        app_id: str,
+        tenant_id: str,
+        scopes: List[str],
+        options: Optional[dict] = None,
+    ) -> dict:
+        """
+        Fetch an outbound application token for a tenant with specific scopes.
+
+        Args:
+        token (str): The Inbound Application token to use for authentication.
+        app_id (str): The ID of the outbound application.
+        tenant_id (str): The ID of the tenant.
+        scopes (List[str]): List of scopes to include in the token.
+        options (dict): Optional token options.
+
+        Return value (dict):
+        Return dict in the format
+             {"token": {"token": <access_token>, "refreshToken": <refresh_token>, "expiresIn": <expires_in>, "tokenType": <token_type>, "scopes": <scopes>}}
+
+        Raise:
+        AuthException: raised if fetch operation fails
+        """
+        self._check_inbound_app_token(token)
+        return _OutboundApplicationTokenFetcher.fetch_tenant_token_by_scopes(
+            self._auth, token, app_id, tenant_id, scopes, options
+        )
+
+    def fetch_tenant_token(
+        self, token: str, app_id: str, tenant_id: str, options: Optional[dict] = None
+    ) -> dict:
+        """
+        Fetch an outbound application token for a tenant.
+
+        Args:
+        token (str): The Inbound Application token to use for authentication.
+        app_id (str): The ID of the outbound application.
+        tenant_id (str): The ID of the tenant.
+        options (dict): Optional token options.
+
+        Return value (dict):
+        Return dict in the format
+             {"token": {"token": <access_token>, "refreshToken": <refresh_token>, "expiresIn": <expires_in>, "tokenType": <token_type>, "scopes": <scopes>}}
+
+        Raise:
+        AuthException: raised if fetch operation fails
+        """
+        self._check_inbound_app_token(token)
+        return _OutboundApplicationTokenFetcher.fetch_tenant_token(
+            self._auth, token, app_id, tenant_id, options
+        )

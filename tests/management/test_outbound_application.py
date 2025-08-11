@@ -1,11 +1,9 @@
-import json
 from unittest import mock
 from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
+from descope.management.common import AccessType, PromptType, URLParam
 from descope.management.outbound_application import OutboundApplication
-from descope.common import DEFAULT_TIMEOUT_SECONDS
-from descope.management.common import MgmtV1, URLParam, AccessType, PromptType
 
 from .. import common
 
@@ -789,3 +787,258 @@ class TestOutboundApplication(common.DescopeTest):
         assert PromptType.LOGIN.value == "login"
         assert PromptType.CONSENT.value == "consent"
         assert PromptType.SELECT_ACCOUNT.value == "select_account"
+
+
+class TestOutboundApplicationByToken(common.DescopeTest):
+    def setUp(self) -> None:
+        super().setUp()
+        self.dummy_project_id = "dummy"
+        self.dummy_token = "inbound-app-token"
+        self.public_key_dict = {
+            "alg": "ES384",
+            "crv": "P-384",
+            "kid": "P2CtzUhdqpIF2ys9gg7ms06UvtC4",
+            "kty": "EC",
+            "use": "sig",
+            "x": "pX1l7nT2turcK5_Cdzos8SKIhpLh1Wy9jmKAVyMFiOCURoj-WQX1J0OUQqMsQO0s",
+            "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
+        }
+
+    def test_fetch_token_by_scopes_success(self):
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
+
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = {
+                "token": {
+                    "token": "access-token",
+                    "refreshToken": "refresh-token",
+                    "expiresIn": 3600,
+                    "tokenType": "Bearer",
+                    "scopes": ["read", "write"],
+                }
+            }
+            mock_post.return_value = network_resp
+            response = client.mgmt.outbound_application_by_token.fetch_token_by_scopes(
+                self.dummy_token,
+                "app123",
+                "user456",
+                ["read", "write"],
+                {"refreshToken": True},
+                "tenant789",
+            )
+
+            assert response == {
+                "token": {
+                    "token": "access-token",
+                    "refreshToken": "refresh-token",
+                    "expiresIn": 3600,
+                    "tokenType": "Bearer",
+                    "scopes": ["read", "write"],
+                }
+            }
+
+    def test_fetch_token_by_scopes_failure(self):
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
+
+        # Test failure of empty token
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.outbound_application_by_token.fetch_token_by_scopes,
+                "",  # empty token
+                "app123",
+                "user456",
+                ["read"],
+            )
+
+        # Test invalid response failure
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.outbound_application_by_token.fetch_token_by_scopes,
+                self.dummy_token,
+                "app123",
+                "user456",
+                ["read"],
+            )
+
+    def test_fetch_token_success(self):
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
+
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = {
+                "token": {
+                    "token": "access-token",
+                    "refreshToken": "refresh-token",
+                    "expiresIn": 3600,
+                    "tokenType": "Bearer",
+                    "scopes": ["read", "write"],
+                }
+            }
+            mock_post.return_value = network_resp
+            response = client.mgmt.outbound_application_by_token.fetch_token(
+                self.dummy_token,
+                "app123",
+                "user456",
+                "tenant789",
+                {"forceRefresh": True},
+            )
+
+            assert response == {
+                "token": {
+                    "token": "access-token",
+                    "refreshToken": "refresh-token",
+                    "expiresIn": 3600,
+                    "tokenType": "Bearer",
+                    "scopes": ["read", "write"],
+                }
+            }
+
+    def test_fetch_token_failure(self):
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
+
+        # Test failure of empty token
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertRaises(
+                AuthException,
+                client.mgmt.outbound_application_by_token.fetch_token,
+                "",  # empty token
+                "app123",
+                "user456",
+            )
+
+        # Test invalid response failure
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.outbound_application_by_token.fetch_token,
+                self.dummy_token,
+                "app123",
+                "user456",
+            )
+
+    def test_fetch_tenant_token_by_scopes_success(self):
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
+
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = {
+                "token": {
+                    "token": "access-token",
+                    "refreshToken": "refresh-token",
+                    "expiresIn": 3600,
+                    "tokenType": "Bearer",
+                    "scopes": ["read", "write"],
+                }
+            }
+            mock_post.return_value = network_resp
+            response = (
+                client.mgmt.outbound_application_by_token.fetch_tenant_token_by_scopes(
+                    self.dummy_token,
+                    "app123",
+                    "tenant789",
+                    ["read", "write"],
+                    {"refreshToken": True},
+                )
+            )
+
+            assert response == {
+                "token": {
+                    "token": "access-token",
+                    "refreshToken": "refresh-token",
+                    "expiresIn": 3600,
+                    "tokenType": "Bearer",
+                    "scopes": ["read", "write"],
+                }
+            }
+
+    def test_fetch_tenant_token_by_scopes_failure(self):
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
+
+        # Test failure of empty token
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertRaises(
+                AuthException,
+                client.mgmt.outbound_application_by_token.fetch_tenant_token_by_scopes,
+                "",  # empty token
+                "app123",
+                "tenant789",
+                ["read"],
+            )
+
+        # Test invalid response failure
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.outbound_application_by_token.fetch_tenant_token_by_scopes,
+                self.dummy_token,
+                "app123",
+                "tenant789",
+                ["read"],
+            )
+
+    def test_fetch_tenant_token_success(self):
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
+
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = {
+                "token": {
+                    "token": "access-token",
+                    "refreshToken": "refresh-token",
+                    "expiresIn": 3600,
+                    "tokenType": "Bearer",
+                    "scopes": ["read", "write"],
+                }
+            }
+            mock_post.return_value = network_resp
+            response = client.mgmt.outbound_application_by_token.fetch_tenant_token(
+                self.dummy_token, "app123", "tenant789", {"forceRefresh": True}
+            )
+
+            assert response == {
+                "token": {
+                    "token": "access-token",
+                    "refreshToken": "refresh-token",
+                    "expiresIn": 3600,
+                    "tokenType": "Bearer",
+                    "scopes": ["read", "write"],
+                }
+            }
+
+    def test_fetch_tenant_token_failure(self):
+        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
+
+        # Test failure of empty token
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertRaises(
+                AuthException,
+                client.mgmt.outbound_application_by_token.fetch_tenant_token,
+                "",  # empty token
+                "app123",
+                "tenant789",
+            )
+
+        # Test invalid response failure
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.outbound_application_by_token.fetch_tenant_token,
+                self.dummy_token,
+                "app123",
+                "tenant789",
+            )

@@ -87,7 +87,7 @@ class JWT(AuthBase):
             pswd=self._auth.management_key,
         )
         return response.json().get("jwt", "")
-    
+
     def stop_impersonation(
         self,
         jwt: str,
@@ -109,9 +109,7 @@ class JWT(AuthBase):
         AuthException: raised if update failed
         """
         if not jwt or jwt == "":
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "jwt cannot be empty"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "jwt cannot be empty")
 
         response = self._auth.do_post(
             MgmtV1.stop_impersonation_path,

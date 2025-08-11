@@ -1425,6 +1425,46 @@ latest_tenant_token = descope_client.mgmt.outbound_application.fetch_tenant_toke
 )
 ```
 
+Fetch outbound application tokens using an inbound application token that includes the "outbound.token.fetch" scope (no management key required)
+
+```python
+# Fetch user token with specific scopes
+user_token = descope_client.mgmt.outbound_application_by_token.fetch_token_by_scopes(
+	"inbound-app-token",
+    "my-app-id",
+    "user-id",
+    ["read", "write"],
+    {"refreshToken": True},  # Optional
+    "tenant-id"  # Optional
+)
+
+# Fetch latest user token
+latest_user_token = descope_client.mgmt.outbound_application_by_token.fetch_token(
+	"inbound-app-token",
+    "my-app-id",
+    "user-id",
+    "tenant-id",  # Optional
+    {"forceRefresh": True}  # Optional
+)
+
+# Fetch tenant token with specific scopes
+tenant_token = descope_client.mgmt.outbound_application_by_token.fetch_tenant_token_by_scopes(
+	"inbound-app-token",
+    "my-app-id",
+    "tenant-id",
+    ["read", "write"],
+    {"refreshToken": True}  # Optional
+)
+
+# Fetch latest tenant token
+latest_tenant_token = descope_client.mgmt.outbound_application_by_token.fetch_tenant_token(
+	"inbound-app-token",
+    "my-app-id",
+    "tenant-id",
+    {"forceRefresh": True}  # Optional
+)
+```
+
 ### Utils for your end to end (e2e) tests and integration tests
 
 To ease your e2e tests, we exposed dedicated management methods,
