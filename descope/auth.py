@@ -502,7 +502,9 @@ class Auth:
         ]  # support both url issuer and project ID issuer
 
         sub = (
-            jwt_response.get(SESSION_TOKEN_NAME, {}).get("sub", None)
+            jwt_response.get(SESSION_TOKEN_NAME, {}).get("dsub", None)
+            or jwt_response.get(SESSION_TOKEN_NAME, {}).get("sub", None)
+            or jwt_response.get(REFRESH_SESSION_TOKEN_NAME, {}).get("dsub", None)
             or jwt_response.get(REFRESH_SESSION_TOKEN_NAME, {}).get("sub", None)
             or jwt_response.get("sub", "")
         )
