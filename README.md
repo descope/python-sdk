@@ -82,6 +82,7 @@ These sections show how to use the SDK to perform permission and user management
 13. [Manage FGA (Fine-grained Authorization)](#manage-fga-fine-grained-authorization)
 14. [Manage Project](#manage-project)
 15. [Manage SSO Applications](#manage-sso-applications)
+16. [Manage Outbound Applications](#manage-outbound-applications)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -1308,6 +1309,169 @@ apps_resp = descope_client.mgmt.sso_application.load_all()
 apps = apps_resp["apps"]
     for app in apps:
         # Do something
+```
+
+### Manage Outbound Applications
+
+You can create, update, delete, load outbound applications and fetch tokens for them:
+
+```python
+# Create a basic outbound application
+response = descope_client.mgmt.outbound_application.create_application(
+    name="my new app",
+    description="my desc",
+    client_secret="secret123",  # Optional
+    id="my-custom-id",  # Optional
+)
+app_id = response["app"]["id"]
+
+# Create a full OAuth outbound application with all parameters
+from descope.management.common import URLParam, AccessType, PromptType
+
+# Create URL parameters for authorization
+auth_params = [
+    URLParam("response_type", "code"),
+    URLParam("client_id", "my-client-id"),
+    URLParam("redirect_uri", "https://myapp.com/callback")
+]
+
+# Create URL parameters for token endpoint
+token_params = [
+    URLParam("grant_type", "authorization_code"),
+    URLParam("client_id", "my-client-id")
+]
+
+# Create prompt types
+prompts = [PromptType.LOGIN, PromptType.CONSENT]
+
+full_app = descope_client.mgmt.outbound_application.create_application(
+    name="My OAuth App",
+    description="A full OAuth outbound application",
+    logo="https://example.com/logo.png",
+    id="my-custom-id",  # Optional custom ID
+    client_secret="my-secret-key",
+    client_id="my-client-id",
+    discovery_url="https://accounts.google.com/.well-known/openid_configuration",
+    authorization_url="https://accounts.google.com/o/oauth2/v2/auth",
+    authorization_url_params=auth_params,
+    token_url="https://oauth2.googleapis.com/token",
+    token_url_params=token_params,
+    revocation_url="https://oauth2.googleapis.com/revoke",
+    default_scopes=["https://www.googleapis.com/auth/userinfo.profile"],
+    default_redirect_url="https://myapp.com/callback",
+    callback_domain="myapp.com",
+    pkce=True,  # Enable PKCE
+    access_type=AccessType.OFFLINE,  # Request refresh tokens
+    prompt=prompts
+)
+
+# Update an outbound application with all parameters
+# Update will override all fields as is. Use carefully.
+descope_client.mgmt.outbound_application.update_application(
+    id="my-app-id",
+    name="my updated app",
+    description="updated description",
+    logo="https://example.com/logo.png",
+    client_secret="new-secret",  # Optional
+    client_id="new-client-id",
+    discovery_url="https://accounts.google.com/.well-known/openid_configuration",
+    authorization_url="https://accounts.google.com/o/oauth2/v2/auth",
+    authorization_url_params=auth_params,
+    token_url="https://oauth2.googleapis.com/token",
+    token_url_params=token_params,
+    revocation_url="https://oauth2.googleapis.com/revoke",
+    default_scopes=["https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email"],
+    default_redirect_url="https://myapp.com/updated-callback",
+    callback_domain="myapp.com",
+    pkce=True,
+    access_type=AccessType.OFFLINE,
+    prompt=[PromptType.LOGIN, PromptType.CONSENT, PromptType.SELECT_ACCOUNT]
+)
+
+# Delete an outbound application by id
+# Outbound application deletion cannot be undone. Use carefully.
+descope_client.mgmt.outbound_application.delete_application("my-app-id")
+
+# Load an outbound application by id
+app = descope_client.mgmt.outbound_application.load_application("my-app-id")
+
+# Load all outbound applications
+apps_resp = descope_client.mgmt.outbound_application.load_all_applications()
+apps = apps_resp["apps"]
+for app in apps:
+    # Do something with each app
+
+# Fetch user token with specific scopes
+user_token = descope_client.mgmt.outbound_application.fetch_token_by_scopes(
+    "my-app-id",
+    "user-id",
+    ["read", "write"],
+    {"refreshToken": True},  # Optional
+    "tenant-id"  # Optional
+)
+
+# Fetch latest user token
+latest_user_token = descope_client.mgmt.outbound_application.fetch_token(
+    "my-app-id",
+    "user-id",
+    "tenant-id",  # Optional
+    {"forceRefresh": True}  # Optional
+)
+
+# Fetch tenant token with specific scopes
+tenant_token = descope_client.mgmt.outbound_application.fetch_tenant_token_by_scopes(
+    "my-app-id",
+    "tenant-id",
+    ["read", "write"],
+    {"refreshToken": True}  # Optional
+)
+
+# Fetch latest tenant token
+latest_tenant_token = descope_client.mgmt.outbound_application.fetch_tenant_token(
+    "my-app-id",
+    "tenant-id",
+    {"forceRefresh": True}  # Optional
+)
+```
+
+Fetch outbound application tokens using an inbound application token that includes the "outbound.token.fetch" scope (no management key required)
+
+```python
+# Fetch user token with specific scopes
+user_token = descope_client.mgmt.outbound_application_by_token.fetch_token_by_scopes(
+	"inbound-app-token",
+    "my-app-id",
+    "user-id",
+    ["read", "write"],
+    {"refreshToken": True},  # Optional
+    "tenant-id"  # Optional
+)
+
+# Fetch latest user token
+latest_user_token = descope_client.mgmt.outbound_application_by_token.fetch_token(
+	"inbound-app-token",
+    "my-app-id",
+    "user-id",
+    "tenant-id",  # Optional
+    {"forceRefresh": True}  # Optional
+)
+
+# Fetch tenant token with specific scopes
+tenant_token = descope_client.mgmt.outbound_application_by_token.fetch_tenant_token_by_scopes(
+	"inbound-app-token",
+    "my-app-id",
+    "tenant-id",
+    ["read", "write"],
+    {"refreshToken": True}  # Optional
+)
+
+# Fetch latest tenant token
+latest_tenant_token = descope_client.mgmt.outbound_application_by_token.fetch_tenant_token(
+	"inbound-app-token",
+    "my-app-id",
+    "tenant-id",
+    {"forceRefresh": True}  # Optional
+)
 ```
 
 ### Utils for your end to end (e2e) tests and integration tests

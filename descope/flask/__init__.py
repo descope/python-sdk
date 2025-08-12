@@ -4,7 +4,7 @@ import datetime
 import uuid
 from functools import wraps
 
-from flask import Response, redirect, request, g
+from flask import Response, g, redirect, request
 
 from .. import (
     COOKIE_DATA_NAME,

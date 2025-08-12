@@ -124,7 +124,7 @@ class Auth:
             )
         except RateLimitException:
             raise
-        except Exception as e:
+        except Exception:
             raise RateLimitException(
                 status_code=HTTPStatus.TOO_MANY_REQUESTS,
                 error_type=ERROR_TYPE_API_RATE_LIMIT,

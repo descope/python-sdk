@@ -71,7 +71,31 @@ class TestDescopeClient(common.DescopeTest):
 
     def test_mgmt(self):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)
-        self.assertRaises(AuthException, lambda: client.mgmt)
+
+        # Validate that any invocation of specific mgmt object raises AuthException as mgmt key was not set
+        self.assertRaises(AuthException, lambda: client.mgmt.tenant)
+        self.assertRaises(AuthException, lambda: client.mgmt.sso_application)
+        self.assertRaises(AuthException, lambda: client.mgmt.user)
+        self.assertRaises(AuthException, lambda: client.mgmt.access_key)
+        self.assertRaises(AuthException, lambda: client.mgmt.sso)
+        self.assertRaises(AuthException, lambda: client.mgmt.jwt)
+        self.assertRaises(AuthException, lambda: client.mgmt.permission)
+        self.assertRaises(AuthException, lambda: client.mgmt.role)
+        self.assertRaises(AuthException, lambda: client.mgmt.group)
+        self.assertRaises(AuthException, lambda: client.mgmt.flow)
+        self.assertRaises(AuthException, lambda: client.mgmt.audit)
+        self.assertRaises(AuthException, lambda: client.mgmt.authz)
+        self.assertRaises(AuthException, lambda: client.mgmt.fga)
+        self.assertRaises(AuthException, lambda: client.mgmt.project)
+        self.assertRaises(AuthException, lambda: client.mgmt.outbound_application)
+
+        # Validate that outbound_application_by_token doesnt require mgmt key
+        try:
+            client.mgmt.outbound_application_by_token
+        except AuthException:
+            self.fail(
+                "failed to initiate outbound_application_by_token without management key"
+            )
 
     def test_logout(self):
         dummy_refresh_token = ""

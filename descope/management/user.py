@@ -9,8 +9,8 @@ from descope.management.common import (
     MgmtV1,
     Sort,
     associated_tenants_to_dict,
-    sort_to_dict,
     map_to_values_object,
+    sort_to_dict,
 )
 from descope.management.user_pwd import UserPassword
 
@@ -731,12 +731,12 @@ class User(AuthBase):
             body["fromModifiedTime"] = from_modified_time
         if to_modified_time is not None:
             body["toModifiedTime"] = to_modified_time
-            
+
         if tenant_role_ids is not None:
             body["tenantRoleIds"] = map_to_values_object(tenant_role_ids)
         if tenant_role_names is not None:
             body["tenantRoleNames"] = map_to_values_object(tenant_role_names)
-        
+
         response = self._auth.do_post(
             MgmtV1.users_search_path,
             body=body,
@@ -848,7 +848,7 @@ class User(AuthBase):
             body["fromModifiedTime"] = from_modified_time
         if to_modified_time is not None:
             body["toModifiedTime"] = to_modified_time
-            
+
         if tenant_role_ids is not None:
             body["tenantRoleIds"] = map_to_values_object(tenant_role_ids)
         if tenant_role_names is not None:
@@ -1722,9 +1722,13 @@ class User(AuthBase):
         return response.json()["token"]
 
     def generate_sign_up_embedded_link(
-        self, login_id: str, user: Optional[CreateUserObj] = None,
-        email_verified: bool = False, phone_verified: bool = False,
-        login_options: Optional[LoginOptions] = None, timeout: int = 0
+        self,
+        login_id: str,
+        user: Optional[CreateUserObj] = None,
+        email_verified: bool = False,
+        phone_verified: bool = False,
+        login_options: Optional[LoginOptions] = None,
+        timeout: int = 0,
     ) -> str:
         """
         Generate sign up Embedded Link for the given user login ID.
@@ -1752,7 +1756,7 @@ class User(AuthBase):
                 "loginOptions": login_options.__dict__ if login_options else {},
                 "emailVerified": email_verified,
                 "phoneVerified": phone_verified,
-                "timeout": timeout
+                "timeout": timeout,
             },
             pswd=self._auth.management_key,
         )
