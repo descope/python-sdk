@@ -32,7 +32,13 @@ class TestSAML(common.DescopeTest):
         )
 
     def test_saml_start(self):
-        saml = SAML(Auth(self.dummy_project_id, self.public_key_dict))
+        saml = SAML(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
 
         # Test failed flows
         self.assertRaises(AuthException, saml.start, "", "http://dummy.com")
@@ -77,7 +83,13 @@ class TestSAML(common.DescopeTest):
             )
 
     def test_saml_start_with_login_options(self):
-        saml = SAML(Auth(self.dummy_project_id, self.public_key_dict))
+        saml = SAML(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
 
         # Test failed flows
         self.assertRaises(AuthException, saml.start, "", "http://dummy.com")
@@ -119,7 +131,13 @@ class TestSAML(common.DescopeTest):
         self.assertEqual(Auth._compose_exchange_body("c1"), {"code": "c1"})
 
     def test_exchange_token(self):
-        saml = SAML(Auth(self.dummy_project_id, self.public_key_dict))
+        saml = SAML(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
 
         # Test failed flows
         self.assertRaises(AuthException, saml.exchange_token, "")

@@ -35,9 +35,8 @@ class MagicLink(AuthBase):
         validate_refresh_token_provided(login_options, refresh_token)
 
         body = MagicLink._compose_signin_body(login_id, uri, login_options)
-        uri = MagicLink._compose_signin_url(method)
-
-        response = self._auth.do_post(uri, body, None, refresh_token)
+        url = MagicLink._compose_signin_url(method)
+        response = self._http.post(url, body=body, pswd=refresh_token)
         return Auth.extract_masked_address(response.json(), method)
 
     def sign_up(
@@ -61,8 +60,8 @@ class MagicLink(AuthBase):
         body = MagicLink._compose_signup_body(
             method, login_id, uri, user, signup_options
         )
-        uri = MagicLink._compose_signup_url(method)
-        response = self._auth.do_post(uri, body, None)
+        url = MagicLink._compose_signup_url(method)
+        response = self._http.post(url, body=body)
         return Auth.extract_masked_address(response.json(), method)
 
     def sign_up_or_in(
@@ -84,14 +83,14 @@ class MagicLink(AuthBase):
             uri,
             login_options,
         )
-        uri = MagicLink._compose_sign_up_or_in_url(method)
-        response = self._auth.do_post(uri, body, None)
+        url = MagicLink._compose_sign_up_or_in_url(method)
+        response = self._http.post(url, body=body)
         return Auth.extract_masked_address(response.json(), method)
 
     def verify(self, token: str, audience: str | None | Iterable[str] = None) -> dict:
-        uri = EndpointsV1.verify_magiclink_auth_path
+        url = EndpointsV1.verify_magiclink_auth_path
         body = MagicLink._compose_verify_body(token)
-        response = self._auth.do_post(uri, body, None)
+        response = self._http.post(url, body=body)
         resp = response.json()
         jwt_response = self._auth.generate_jwt_response(
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
@@ -125,8 +124,8 @@ class MagicLink(AuthBase):
             template_id,
             provider_id,
         )
-        uri = EndpointsV1.update_user_email_magiclink_path
-        response = self._auth.do_post(uri, body, None, refresh_token)
+        url = EndpointsV1.update_user_email_magiclink_path
+        response = self._http.post(url, body=body, pswd=refresh_token)
         return Auth.extract_masked_address(response.json(), DeliveryMethod.EMAIL)
 
     def update_user_phone(
@@ -157,8 +156,8 @@ class MagicLink(AuthBase):
             template_id,
             provider_id,
         )
-        uri = EndpointsV1.update_user_phone_magiclink_path
-        response = self._auth.do_post(uri, body, None, refresh_token)
+        url = EndpointsV1.update_user_phone_magiclink_path
+        response = self._http.post(url, body=body, pswd=refresh_token)
         return Auth.extract_masked_address(response.json(), DeliveryMethod.SMS)
 
     @staticmethod

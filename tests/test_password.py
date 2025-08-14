@@ -32,7 +32,13 @@ class TestPassword(common.DescopeTest):
             "email": "dummy@dummy.com",
         }
 
-        password = Password(Auth(self.dummy_project_id, self.public_key_dict))
+        password = Password(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
 
         # Test failed flows
         self.assertRaises(
@@ -117,7 +123,13 @@ class TestPassword(common.DescopeTest):
             )
 
     def test_sign_in(self):
-        password = Password(Auth(self.dummy_project_id, self.public_key_dict))
+        password = Password(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
 
         # Test failed flows
         self.assertRaises(
@@ -189,7 +201,13 @@ class TestPassword(common.DescopeTest):
             )
 
     def test_send_reset(self):
-        password = Password(Auth(self.dummy_project_id, self.public_key_dict))
+        password = Password(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
 
         # Test failed flows
         self.assertRaises(
@@ -284,7 +302,13 @@ class TestPassword(common.DescopeTest):
             )
 
     def test_update(self):
-        password = Password(Auth(self.dummy_project_id, self.public_key_dict))
+        password = Password(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
 
         # Test failed flows
         self.assertRaises(
@@ -370,7 +394,13 @@ class TestPassword(common.DescopeTest):
             )
 
     def test_replace(self):
-        password = Password(Auth(self.dummy_project_id, self.public_key_dict))
+        password = Password(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
 
         # Test failed flows
         self.assertRaises(
@@ -466,7 +496,13 @@ class TestPassword(common.DescopeTest):
             )
 
     def test_policy(self):
-        password = Password(Auth(self.dummy_project_id, self.public_key_dict))
+        password = Password(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
 
         with patch("requests.get") as mock_get:
             mock_get.return_value.ok = False

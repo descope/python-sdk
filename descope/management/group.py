@@ -1,10 +1,10 @@
 from typing import List, Optional
 
-from descope._auth_base import AuthBase
+from descope._http_base import HTTPBase
 from descope.management.common import MgmtV1
 
 
-class Group(AuthBase):
+class Group(HTTPBase):
     def load_all_groups(
         self,
         tenant_id: str,
@@ -35,12 +35,11 @@ class Group(AuthBase):
         Raise:
         AuthException: raised if load operation fails
         """
-        response = self._auth.do_post(
+        response = self._http.post(
             MgmtV1.group_load_all_path,
-            {
+            body={
                 "tenantId": tenant_id,
             },
-            pswd=self._auth.management_key,
         )
         return response.json()
 
@@ -81,14 +80,13 @@ class Group(AuthBase):
         user_ids = [] if user_ids is None else user_ids
         login_ids = [] if login_ids is None else login_ids
 
-        response = self._auth.do_post(
+        response = self._http.post(
             MgmtV1.group_load_all_for_member_path,
-            {
+            body={
                 "tenantId": tenant_id,
                 "loginIds": login_ids,
                 "userIds": user_ids,
             },
-            pswd=self._auth.management_key,
         )
         return response.json()
 
@@ -124,12 +122,11 @@ class Group(AuthBase):
         Raise:
         AuthException: raised if load operation fails
         """
-        response = self._auth.do_post(
+        response = self._http.post(
             MgmtV1.group_load_all_group_members_path,
-            {
+            body={
                 "tenantId": tenant_id,
                 "groupId": group_id,
             },
-            pswd=self._auth.management_key,
         )
         return response.json()

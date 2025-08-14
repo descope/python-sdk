@@ -16,7 +16,6 @@ try:
 except ImportError:
     from pkg_resources import get_distribution
 
-import requests
 from email_validator import EmailNotValidError, validate_email
 from jwt import ExpiredSignatureError, ImmatureSignatureError
 
@@ -24,7 +23,6 @@ from descope.common import (
     COOKIE_DATA_NAME,
     DEFAULT_BASE_URL,
     DEFAULT_DOMAIN,
-    DEFAULT_TIMEOUT_SECONDS,
     DEFAULT_URL_PREFIX,
     PHONE_REGEX,
     REFRESH_SESSION_COOKIE_NAME,
@@ -45,6 +43,7 @@ from descope.exceptions import (
     AuthException,
     RateLimitException,
 )
+from descope.http_client import HTTPClient
 
 
 def sdk_version():
@@ -69,11 +68,9 @@ class Auth:
         self,
         project_id: str | None = None,
         public_key: dict | str | None = None,
-        skip_verify: bool = False,
-        management_key: str | None = None,
-        timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
         jwt_validation_leeway: int = 5,
-        auth_management_key: str | None = None,
+        *,
+        http_client: HTTPClient,
     ):
         self.lock_public_keys = Lock()
         # validate project id
@@ -89,16 +86,9 @@ class Auth:
             )
         self.project_id = project_id
         self.jwt_validation_leeway = jwt_validation_leeway
-        self.secure = not skip_verify
 
-        self.base_url = os.getenv("DESCOPE_BASE_URI")
-        if not self.base_url:
-            self.base_url = self.base_url_for_project_id(self.project_id)
-        self.timeout_seconds = timeout_seconds
-        self.management_key = management_key or os.getenv("DESCOPE_MANAGEMENT_KEY")
-        self.auth_management_key = auth_management_key or os.getenv(
-            "DESCOPE_AUTH_MANAGEMENT_KEY"
-        )
+        # Internal HTTP client for all network traffic (must be injected)
+        self._http = http_client
 
         public_key = public_key or os.getenv("DESCOPE_PUBLIC_KEY")
         with self.lock_public_keys:
@@ -138,75 +128,9 @@ class Auth:
         except (ValueError, TypeError):
             return 0
 
-    def do_get(
-        self,
-        uri: str,
-        params=None,
-        allow_redirects=None,
-        pswd: str | None = None,
-    ) -> requests.Response:
-        response = requests.get(
-            f"{self.base_url}{uri}",
-            headers=self._get_default_headers(pswd),
-            params=params,
-            allow_redirects=allow_redirects,
-            verify=self.secure,
-            timeout=self.timeout_seconds,
-        )
-        self._raise_from_response(response)
-        return response
-
-    def do_post(
-        self,
-        uri: str,
-        body: dict | list[dict] | list[str] | None,
-        params=None,
-        pswd: str | None = None,
-    ) -> requests.Response:
-        response = requests.post(
-            f"{self.base_url}{uri}",
-            headers=self._get_default_headers(pswd),
-            json=body,
-            allow_redirects=False,
-            verify=self.secure,
-            params=params,
-            timeout=self.timeout_seconds,
-        )
-        self._raise_from_response(response)
-        return response
-
-    def do_patch(
-        self,
-        uri: str,
-        body: dict | list[dict] | list[str] | None,
-        params=None,
-        pswd: str | None = None,
-    ) -> requests.Response:
-        response = requests.patch(
-            f"{self.base_url}{uri}",
-            headers=self._get_default_headers(pswd),
-            json=body,
-            allow_redirects=False,
-            verify=self.secure,
-            params=params,
-            timeout=self.timeout_seconds,
-        )
-        self._raise_from_response(response)
-        return response
-
-    def do_delete(
-        self, uri: str, params=None, pswd: str | None = None
-    ) -> requests.Response:
-        response = requests.delete(
-            f"{self.base_url}{uri}",
-            params=params,
-            headers=self._get_default_headers(pswd),
-            allow_redirects=False,
-            verify=self.secure,
-            timeout=self.timeout_seconds,
-        )
-        self._raise_from_response(response)
-        return response
+    @property
+    def http_client(self) -> HTTPClient:
+        return self._http
 
     def exchange_token(
         self, uri, code: str, audience: str | None | Iterable[str] = None
@@ -219,7 +143,7 @@ class Auth:
             )
 
         body = Auth._compose_exchange_body(code)
-        response = self.do_post(uri=uri, body=body, params=None)
+        response = self._http.post(uri, body=body)
         resp = response.json()
         jwt_response = self.generate_jwt_response(
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME), audience
@@ -304,23 +228,6 @@ class Auth:
         return login_id
 
     @staticmethod
-    def get_method_string(method: DeliveryMethod) -> str:
-        name = {
-            DeliveryMethod.EMAIL: "email",
-            DeliveryMethod.SMS: "sms",
-            DeliveryMethod.VOICE: "voice",
-            DeliveryMethod.WHATSAPP: "whatsapp",
-            DeliveryMethod.EMBEDDED: "Embedded",
-        }.get(method)
-
-        if not name:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, f"Unknown delivery method: {method}"
-            )
-
-        return name
-
-    @staticmethod
     def validate_email(email: str):
         if email == "":
             raise AuthException(
@@ -369,10 +276,13 @@ class Auth:
         body = {
             "loginOptions": login_options.__dict__ if login_options else {},
         }
-        server_response = self.do_post(uri=uri, body=body, params=None, pswd=access_key)
-        json = server_response.json()
+        server_response = self._http.post(uri, body=body, pswd=access_key)
+        json_body = server_response.json()
         return self._generate_auth_info(
-            response_body=json, refresh_token=None, user_jwt=False, audience=audience
+            response_body=json_body,
+            refresh_token=None,
+            user_jwt=False,
+            audience=audience,
         )
 
     @staticmethod
@@ -439,13 +349,9 @@ class Auth:
 
     def _fetch_public_keys(self) -> None:
         # This function called under mutex protection so no need to acquire it once again
-        response = requests.get(
-            f"{self.base_url}{EndpointsV2.public_key_path}/{self.project_id}",
-            headers=self._get_default_headers(),
-            verify=self.secure,
-            timeout=self.timeout_seconds,
+        response = self._http.get(
+            f"{EndpointsV2.public_key_path}/{self.project_id}",
         )
-        self._raise_from_response(response)
 
         jwks_data = response.text
         try:
@@ -565,15 +471,7 @@ class Auth:
         return jwt_response
 
     def _get_default_headers(self, pswd: str | None = None):
-        headers = _default_headers.copy()
-        headers["x-descope-project-id"] = self.project_id
-        bearer = self.project_id
-        if pswd:
-            bearer = f"{self.project_id}:{pswd}"
-        if self.auth_management_key:
-            bearer = f"{bearer}:{self.auth_management_key}"
-        headers["Authorization"] = f"Bearer {bearer}"
-        return headers
+        return self._http.get_default_headers(pswd)
 
     # Validate a token and load the public key if needed
     def _validate_token(
@@ -676,7 +574,7 @@ class Auth:
         self._validate_token(refresh_token, audience)
 
         uri = EndpointsV1.refresh_token_path
-        response = self.do_post(uri=uri, body={}, params=None, pswd=refresh_token)
+        response = self._http.post(uri, body={}, pswd=refresh_token)
 
         resp = response.json()
         refresh_token = (
@@ -723,9 +621,7 @@ class Auth:
             )
 
         uri = EndpointsV1.select_tenant_path
-        response = self.do_post(
-            uri=uri, body={"tenant": tenant_id}, params=None, pswd=refresh_token
-        )
+        response = self._http.post(uri, body={"tenant": tenant_id}, pswd=refresh_token)
 
         resp = response.json()
         jwt_response = self.generate_jwt_response(
