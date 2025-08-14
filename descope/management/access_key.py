@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from descope._auth_base import AuthBase
+from descope._http_base import HTTPBase
 from descope.management.common import (
     AssociatedTenant,
     MgmtV1,
@@ -8,7 +8,7 @@ from descope.management.common import (
 )
 
 
-class AccessKey(AuthBase):
+class AccessKey(HTTPBase):
     def create(
         self,
         name: str,
@@ -51,9 +51,9 @@ class AccessKey(AuthBase):
         role_names = [] if role_names is None else role_names
         key_tenants = [] if key_tenants is None else key_tenants
 
-        response = self._auth.do_post(
+        response = self._http.post(
             MgmtV1.access_key_create_path,
-            AccessKey._compose_create_body(
+            body=AccessKey._compose_create_body(
                 name,
                 expire_time,
                 role_names,
@@ -63,7 +63,6 @@ class AccessKey(AuthBase):
                 description,
                 permitted_ips,
             ),
-            pswd=self._auth.management_key,
         )
         return response.json()
 
@@ -85,10 +84,9 @@ class AccessKey(AuthBase):
         Raise:
         AuthException: raised if load operation fails
         """
-        response = self._auth.do_get(
+        response = self._http.get(
             uri=MgmtV1.access_key_load_path,
             params={"id": id},
-            pswd=self._auth.management_key,
         )
         return response.json()
 
@@ -112,10 +110,9 @@ class AccessKey(AuthBase):
         """
         tenant_ids = [] if tenant_ids is None else tenant_ids
 
-        response = self._auth.do_post(
+        response = self._http.post(
             MgmtV1.access_keys_search_path,
-            {"tenantIds": tenant_ids},
-            pswd=self._auth.management_key,
+            body={"tenantIds": tenant_ids},
         )
         return response.json()
 
@@ -136,10 +133,9 @@ class AccessKey(AuthBase):
         Raise:
         AuthException: raised if update operation fails
         """
-        self._auth.do_post(
+        self._http.post(
             MgmtV1.access_key_update_path,
-            {"id": id, "name": name, "description": description},
-            pswd=self._auth.management_key,
+            body={"id": id, "name": name, "description": description},
         )
 
     def deactivate(
@@ -156,10 +152,9 @@ class AccessKey(AuthBase):
         Raise:
         AuthException: raised if deactivation operation fails
         """
-        self._auth.do_post(
+        self._http.post(
             MgmtV1.access_key_deactivate_path,
-            {"id": id},
-            pswd=self._auth.management_key,
+            body={"id": id},
         )
 
     def activate(
@@ -176,10 +171,9 @@ class AccessKey(AuthBase):
         Raise:
         AuthException: raised if activation operation fails
         """
-        self._auth.do_post(
+        self._http.post(
             MgmtV1.access_key_activate_path,
-            {"id": id},
-            pswd=self._auth.management_key,
+            body={"id": id},
         )
 
     def delete(
@@ -195,10 +189,9 @@ class AccessKey(AuthBase):
         Raise:
         AuthException: raised if creation operation fails
         """
-        self._auth.do_post(
+        self._http.post(
             MgmtV1.access_key_delete_path,
-            {"id": id},
-            pswd=self._auth.management_key,
+            body={"id": id},
         )
 
     @staticmethod

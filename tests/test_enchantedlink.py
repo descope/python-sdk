@@ -96,7 +96,13 @@ class TestEnchantedLink(common.DescopeTest):
         )
 
     def test_sign_in(self):
-        enchantedlink = EnchantedLink(Auth(self.dummy_project_id, self.public_key_dict))
+        enchantedlink = EnchantedLink(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
         with patch("requests.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
@@ -198,7 +204,13 @@ class TestEnchantedLink(common.DescopeTest):
             )
 
     def test_sign_in_with_login_options(self):
-        enchantedlink = EnchantedLink(Auth(self.dummy_project_id, self.public_key_dict))
+        enchantedlink = EnchantedLink(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
         with patch("requests.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
@@ -230,7 +242,13 @@ class TestEnchantedLink(common.DescopeTest):
             )
 
     def test_sign_up(self):
-        enchantedlink = EnchantedLink(Auth(self.dummy_project_id, self.public_key_dict))
+        enchantedlink = EnchantedLink(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
         with patch("requests.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
@@ -343,7 +361,13 @@ class TestEnchantedLink(common.DescopeTest):
             self.assertEqual(res["pendingRef"], "aaaa")
 
     def test_sign_up_or_in(self):
-        enchantedlink = EnchantedLink(Auth(self.dummy_project_id, self.public_key_dict))
+        enchantedlink = EnchantedLink(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
         with patch("requests.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
@@ -410,7 +434,13 @@ class TestEnchantedLink(common.DescopeTest):
     def test_verify(self):
         token = "1234"
 
-        enchantedlink = EnchantedLink(Auth(self.dummy_project_id, self.public_key_dict))
+        enchantedlink = EnchantedLink(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
 
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = False
@@ -434,7 +464,13 @@ class TestEnchantedLink(common.DescopeTest):
             self.assertIsNone(enchantedlink.verify(token))
 
     def test_get_session(self):
-        enchantedlink = EnchantedLink(Auth(self.dummy_project_id, self.public_key_dict))
+        enchantedlink = EnchantedLink(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
 
         valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3R6VWhkcXBJRjJ5czlnZzdtczA2VXZ0QzQiLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0Mzc1OTYsImlhdCI6MTY1OTYzNzU5NiwiaXNzIjoiUDJDdHpVaGRxcElGMnlzOWdnN21zMDZVdnRDNCIsInN1YiI6IlUyQ3UwajBXUHczWU9pUElTSmI1Mkwwd1VWTWcifQ.WLnlHugvzZtrV9OzBB7SjpCLNRvKF3ImFpVyIN5orkrjO2iyAKg_Rb4XHk9sXGC1aW8puYzLbhE1Jv3kk2hDcKggfE8OaRNRm8byhGFZHnvPJwcP_Ya-aRmfAvCLcKOL"
         with patch("requests.post") as mock_post:
@@ -449,7 +485,13 @@ class TestEnchantedLink(common.DescopeTest):
             self.assertIsNotNone(enchantedlink.get_session("aaaaaa"))
 
     def test_update_user_email(self):
-        enchantedlink = EnchantedLink(Auth(self.dummy_project_id, self.public_key_dict))
+        enchantedlink = EnchantedLink(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
         with patch("requests.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True

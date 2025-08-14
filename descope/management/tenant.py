@@ -1,10 +1,10 @@
 from typing import Any, List, Optional
 
-from descope._auth_base import AuthBase
+from descope._http_base import HTTPBase
 from descope.management.common import MgmtV1
 
 
-class Tenant(AuthBase):
+class Tenant(HTTPBase):
     def create(
         self,
         name: str,
@@ -38,10 +38,9 @@ class Tenant(AuthBase):
             [] if self_provisioning_domains is None else self_provisioning_domains
         )
 
-        uri = MgmtV1.tenant_create_path
-        response = self._auth.do_post(
-            uri,
-            Tenant._compose_create_update_body(
+        response = self._http.post(
+            MgmtV1.tenant_create_path,
+            body=Tenant._compose_create_update_body(
                 name,
                 id,
                 self_provisioning_domains,
@@ -49,7 +48,6 @@ class Tenant(AuthBase):
                 enforce_sso,
                 disabled,
             ),
-            pswd=self._auth.management_key,
         )
         return response.json()
 
@@ -82,10 +80,9 @@ class Tenant(AuthBase):
             [] if self_provisioning_domains is None else self_provisioning_domains
         )
 
-        uri = MgmtV1.tenant_update_path
-        self._auth.do_post(
-            uri,
-            Tenant._compose_create_update_body(
+        self._http.post(
+            MgmtV1.tenant_update_path,
+            body=Tenant._compose_create_update_body(
                 name,
                 id,
                 self_provisioning_domains,
@@ -93,7 +90,6 @@ class Tenant(AuthBase):
                 enforce_sso,
                 disabled,
             ),
-            pswd=self._auth.management_key,
         )
 
     def delete(
@@ -110,9 +106,9 @@ class Tenant(AuthBase):
         Raise:
         AuthException: raised if creation operation fails
         """
-        uri = MgmtV1.tenant_delete_path
-        self._auth.do_post(
-            uri, {"id": id, "cascade": cascade}, pswd=self._auth.management_key
+        self._http.post(
+            MgmtV1.tenant_delete_path,
+            body={"id": id, "cascade": cascade},
         )
 
     def load(
@@ -133,10 +129,9 @@ class Tenant(AuthBase):
         Raise:
         AuthException: raised if load operation fails
         """
-        response = self._auth.do_get(
-            uri=MgmtV1.tenant_load_path,
+        response = self._http.get(
+            MgmtV1.tenant_load_path,
             params={"id": id},
-            pswd=self._auth.management_key,
         )
         return response.json()
 
@@ -154,9 +149,8 @@ class Tenant(AuthBase):
         Raise:
         AuthException: raised if load operation fails
         """
-        response = self._auth.do_get(
-            uri=MgmtV1.tenant_load_all_path,
-            pswd=self._auth.management_key,
+        response = self._http.get(
+            MgmtV1.tenant_load_all_path,
         )
         return response.json()
 
@@ -184,15 +178,14 @@ class Tenant(AuthBase):
         Raise:
         AuthException: raised if load operation fails
         """
-        response = self._auth.do_post(
-            uri=MgmtV1.tenant_search_all_path,
+        response = self._http.post(
+            MgmtV1.tenant_search_all_path,
             body={
                 "tenantIds": ids,
                 "tenantNames": names,
                 "tenantSelfProvisioningDomains": self_provisioning_domains,
                 "customAttributes": custom_attributes,
             },
-            pswd=self._auth.management_key,
         )
         return response.json()
 

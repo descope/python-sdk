@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from descope._auth_base import AuthBase
+from descope._http_base import HTTPBase
 from descope.management.common import MgmtV1
 
 
@@ -160,7 +160,7 @@ class SSOSAMLSettingsByMetadata:
         self.sp_entity_id = sp_entity_id
 
 
-class SSOSettings(AuthBase):
+class SSOSettings(HTTPBase):
     def load_settings(
         self,
         tenant_id: str,
@@ -179,10 +179,9 @@ class SSOSettings(AuthBase):
         Raise:
         AuthException: raised if load configuration operation fails
         """
-        response = self._auth.do_get(
+        response = self._http.get(
             uri=MgmtV1.sso_load_settings_path,
             params={"tenantId": tenant_id},
-            pswd=self._auth.management_key,
         )
         return response.json()
 
@@ -199,10 +198,9 @@ class SSOSettings(AuthBase):
         Raise:
         AuthException: raised if delete operation fails
         """
-        self._auth.do_delete(
+        self._http.delete(
             MgmtV1.sso_settings_path,
-            {"tenantId": tenant_id},
-            pswd=self._auth.management_key,
+            params={"tenantId": tenant_id},
         )
 
     def configure_oidc_settings(
@@ -223,12 +221,11 @@ class SSOSettings(AuthBase):
         AuthException: raised if configuration operation fails
         """
 
-        self._auth.do_post(
+        self._http.post(
             MgmtV1.sso_configure_oidc_settings,
-            SSOSettings._compose_configure_oidc_settings_body(
+            body=SSOSettings._compose_configure_oidc_settings_body(
                 tenant_id, settings, domains
             ),
-            pswd=self._auth.management_key,
         )
 
     def configure_saml_settings(
@@ -251,12 +248,11 @@ class SSOSettings(AuthBase):
         AuthException: raised if configuration operation fails
         """
 
-        self._auth.do_post(
+        self._http.post(
             MgmtV1.sso_configure_saml_settings,
-            SSOSettings._compose_configure_saml_settings_body(
+            body=SSOSettings._compose_configure_saml_settings_body(
                 tenant_id, settings, redirect_url, domains
             ),
-            pswd=self._auth.management_key,
         )
 
     def configure_saml_settings_by_metadata(
@@ -279,12 +275,11 @@ class SSOSettings(AuthBase):
         AuthException: raised if configuration operation fails
         """
 
-        self._auth.do_post(
+        self._http.post(
             MgmtV1.sso_configure_saml_by_metadata_settings,
-            SSOSettings._compose_configure_saml_settings_by_metadata_body(
+            body=SSOSettings._compose_configure_saml_settings_by_metadata_body(
                 tenant_id, settings, redirect_url, domains
             ),
-            pswd=self._auth.management_key,
         )
 
     # DEPRECATED
@@ -306,10 +301,9 @@ class SSOSettings(AuthBase):
         Raise:
         AuthException: raised if configuration operation fails
         """
-        response = self._auth.do_get(
+        response = self._http.get(
             uri=MgmtV1.sso_settings_path,
             params={"tenantId": tenant_id},
-            pswd=self._auth.management_key,
         )
         return response.json()
 
@@ -339,12 +333,11 @@ class SSOSettings(AuthBase):
         Raise:
         AuthException: raised if configuration operation fails
         """
-        self._auth.do_post(
+        self._http.post(
             MgmtV1.sso_settings_path,
-            SSOSettings._compose_configure_body(
+            body=SSOSettings._compose_configure_body(
                 tenant_id, idp_url, entity_id, idp_cert, redirect_url, domains
             ),
-            pswd=self._auth.management_key,
         )
 
     # DEPRECATED
@@ -369,12 +362,11 @@ class SSOSettings(AuthBase):
         Raise:
         AuthException: raised if configuration operation fails
         """
-        self._auth.do_post(
+        self._http.post(
             MgmtV1.sso_metadata_path,
-            SSOSettings._compose_metadata_body(
+            body=SSOSettings._compose_metadata_body(
                 tenant_id, idp_metadata_url, redirect_url, domains
             ),
-            pswd=self._auth.management_key,
         )
 
     # DEPRECATED
@@ -397,12 +389,11 @@ class SSOSettings(AuthBase):
         Raise:
         AuthException: raised if configuration operation fails
         """
-        self._auth.do_post(
+        self._http.post(
             MgmtV1.sso_mapping_path,
-            SSOSettings._compose_mapping_body(
+            body=SSOSettings._compose_mapping_body(
                 tenant_id, role_mappings, attribute_mapping
             ),
-            pswd=self._auth.management_key,
         )
 
     @staticmethod

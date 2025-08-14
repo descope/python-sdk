@@ -1,10 +1,10 @@
 from typing import Optional
 
-from descope._auth_base import AuthBase
+from descope._http_base import HTTPBase
 from descope.management.common import MgmtV1
 
 
-class Permission(AuthBase):
+class Permission(HTTPBase):
     def create(
         self,
         name: str,
@@ -20,10 +20,9 @@ class Permission(AuthBase):
         Raise:
         AuthException: raised if creation operation fails
         """
-        self._auth.do_post(
+        self._http.post(
             MgmtV1.permission_create_path,
-            {"name": name, "description": description},
-            pswd=self._auth.management_key,
+            body={"name": name, "description": description},
         )
 
     def update(
@@ -44,10 +43,9 @@ class Permission(AuthBase):
         Raise:
         AuthException: raised if update operation fails
         """
-        self._auth.do_post(
+        self._http.post(
             MgmtV1.permission_update_path,
-            {"name": name, "newName": new_name, "description": description},
-            pswd=self._auth.management_key,
+            body={"name": name, "newName": new_name, "description": description},
         )
 
     def delete(
@@ -63,10 +61,9 @@ class Permission(AuthBase):
         Raise:
         AuthException: raised if creation operation fails
         """
-        self._auth.do_post(
+        self._http.post(
             MgmtV1.permission_delete_path,
-            {"name": name},
-            pswd=self._auth.management_key,
+            body={"name": name},
         )
 
     def load_all(
@@ -83,8 +80,7 @@ class Permission(AuthBase):
         Raise:
         AuthException: raised if load operation fails
         """
-        response = self._auth.do_get(
-            uri=MgmtV1.permission_load_all_path,
-            pswd=self._auth.management_key,
+        response = self._http.get(
+            MgmtV1.permission_load_all_path,
         )
         return response.json()

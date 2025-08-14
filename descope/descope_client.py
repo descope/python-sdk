@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from typing import Iterable
 
 import requests
@@ -16,6 +17,7 @@ from descope.authmethod.totp import TOTP  # noqa: F401
 from descope.authmethod.webauthn import WebAuthn  # noqa: F401
 from descope.common import DEFAULT_TIMEOUT_SECONDS, AccessKeyLoginOptions, EndpointsV1
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
+from descope.http_client import HTTPClient
 from descope.mgmt import MGMT  # noqa: F401
 
 
@@ -28,30 +30,45 @@ class DescopeClient:
         public_key: dict | None = None,
         skip_verify: bool = False,
         management_key: str | None = None,
+        auth_management_key: str | None = None,
         timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
         jwt_validation_leeway: int = 5,
-        auth_management_key: str | None = None,
     ):
-        auth = Auth(
+        # Auth Initialization
+        auth_http_client = HTTPClient(
+            project_id=project_id,
+            timeout_seconds=timeout_seconds,
+            secure=not skip_verify,
+            management_key=auth_management_key
+            or os.getenv("DESCOPE_AUTH_MANAGEMENT_KEY"),
+        )
+        self._auth = Auth(
             project_id,
             public_key,
-            skip_verify,
-            management_key,
-            timeout_seconds,
             jwt_validation_leeway,
-            auth_management_key,
+            http_client=auth_http_client,
         )
-        self._auth = auth
-        self._mgmt = MGMT(auth)
-        self._magiclink = MagicLink(auth)
-        self._enchantedlink = EnchantedLink(auth)
-        self._oauth = OAuth(auth)
-        self._saml = SAML(auth)  # deprecated
-        self._sso = SSO(auth)
-        self._otp = OTP(auth)
-        self._totp = TOTP(auth)
-        self._webauthn = WebAuthn(auth)
-        self._password = Password(auth)
+        self._magiclink = MagicLink(self._auth)
+        self._enchantedlink = EnchantedLink(self._auth)
+        self._oauth = OAuth(self._auth)
+        self._saml = SAML(self._auth)  # deprecated
+        self._sso = SSO(self._auth)
+        self._otp = OTP(self._auth)
+        self._totp = TOTP(self._auth)
+        self._webauthn = WebAuthn(self._auth)
+        self._password = Password(self._auth)
+
+        # Management Initialization
+        mgmt_http_client = HTTPClient(
+            project_id=project_id,
+            base_url=auth_http_client.base_url,
+            timeout_seconds=auth_http_client.timeout_seconds,
+            secure=auth_http_client.secure,
+            management_key=management_key or os.getenv("DESCOPE_MANAGEMENT_KEY"),
+        )
+        self._mgmt = MGMT(
+            http_client=mgmt_http_client,
+        )
 
     @property
     def mgmt(self):
@@ -381,7 +398,7 @@ class DescopeClient:
             )
 
         uri = EndpointsV1.logout_path
-        return self._auth.do_post(uri, {}, None, refresh_token)
+        return self._auth.http_client.post(uri, body={}, pswd=refresh_token)
 
     def logout_all(self, refresh_token: str) -> requests.Response:
         """
@@ -404,7 +421,7 @@ class DescopeClient:
             )
 
         uri = EndpointsV1.logout_all_path
-        return self._auth.do_post(uri, {}, None, refresh_token)
+        return self._auth.http_client.post(uri, body={}, pswd=refresh_token)
 
     def me(self, refresh_token: str) -> dict:
         """
@@ -428,8 +445,8 @@ class DescopeClient:
             )
 
         uri = EndpointsV1.me_path
-        response = self._auth.do_get(
-            uri=uri, params=None, allow_redirects=None, pswd=refresh_token
+        response = self._auth.http_client.get(
+            uri=uri, allow_redirects=None, pswd=refresh_token
         )
         return response.json()
 
@@ -477,7 +494,7 @@ class DescopeClient:
             body["ids"] = ids
 
         uri = EndpointsV1.my_tenants_path
-        response = self._auth.do_post(uri, body, None, refresh_token)
+        response = self._auth.http_client.post(uri, body=body, pswd=refresh_token)
         return response.json()
 
     def history(self, refresh_token: str) -> list[dict]:
@@ -510,8 +527,8 @@ class DescopeClient:
             )
 
         uri = EndpointsV1.history_path
-        response = self._auth.do_get(
-            uri=uri, params=None, allow_redirects=None, pswd=refresh_token
+        response = self._auth.http_client.get(
+            uri=uri, allow_redirects=None, pswd=refresh_token
         )
         return response.json()
 

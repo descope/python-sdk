@@ -97,7 +97,11 @@ class TestAuth(common.DescopeTest):
         )
 
     def test_fetch_public_key(self):
-        auth = Auth(self.dummy_project_id, self.public_key_dict)
+        auth = Auth(
+            self.dummy_project_id,
+            self.public_key_dict,
+            http_client=self.make_http_client(),
+        )
         valid_keys_response = """{"keys":[
     {
         "alg": "ES384",
@@ -129,11 +133,11 @@ class TestAuth(common.DescopeTest):
 
     def test_project_id_from_env(self):
         os.environ["DESCOPE_PROJECT_ID"] = self.dummy_project_id
-        Auth()
+        Auth(http_client=self.make_http_client())
 
     def test_project_id_from_env_without_env(self):
         os.environ["DESCOPE_PROJECT_ID"] = ""
-        self.assertRaises(AuthException, Auth)
+        self.assertRaises(AuthException, Auth, http_client=self.make_http_client())
 
     def test_base_url_for_project_id(self):
         self.assertEqual("https://api.descope.com", Auth.base_url_for_project_id(""))
@@ -322,36 +326,13 @@ class TestAuth(common.DescopeTest):
 
         self.assertRaises(AuthException, Auth.get_login_id_by_method, AAA.DUMMY, user)
 
-    def test_get_method_string(self):
-        self.assertEqual(
-            Auth.get_method_string(DeliveryMethod.EMAIL),
-            "email",
-        )
-        self.assertEqual(
-            Auth.get_method_string(DeliveryMethod.SMS),
-            "sms",
-        )
-        self.assertEqual(
-            Auth.get_method_string(DeliveryMethod.VOICE),
-            "voice",
-        )
-        self.assertEqual(
-            Auth.get_method_string(DeliveryMethod.WHATSAPP),
-            "whatsapp",
-        )
-        self.assertEqual(
-            Auth.get_method_string(DeliveryMethod.EMBEDDED),
-            "Embedded",
-        )
-
-        class AAA(Enum):
-            DUMMY = 4
-
-        self.assertRaises(AuthException, Auth.get_method_string, AAA.DUMMY)
-
     def test_refresh_session(self):
         dummy_refresh_token = "dummy refresh token"
-        auth = Auth(self.dummy_project_id, self.public_key_dict)
+        auth = Auth(
+            self.dummy_project_id,
+            self.public_key_dict,
+            http_client=self.make_http_client(),
+        )
 
         # Test fail flow
         with patch("requests.post") as mock_request:
@@ -363,7 +344,11 @@ class TestAuth(common.DescopeTest):
             )
 
     def test_validate_session_and_refresh_input(self):
-        auth = Auth(self.dummy_project_id, self.public_key_dict)
+        auth = Auth(
+            self.dummy_project_id,
+            self.public_key_dict,
+            http_client=self.make_http_client(),
+        )
 
         # Bad input for session
         with self.assertRaises(AuthException):
@@ -425,7 +410,11 @@ class TestAuth(common.DescopeTest):
 
     def test_exchange_access_key(self):
         dummy_access_key = "dummy access key"
-        auth = Auth(self.dummy_project_id, self.public_key_dict)
+        auth = Auth(
+            self.dummy_project_id,
+            self.public_key_dict,
+            http_client=self.make_http_client(),
+        )
 
         # Test fail flow
         with patch("requests.post") as mock_request:
@@ -554,7 +543,11 @@ class TestAuth(common.DescopeTest):
         )
 
     def test_api_rate_limit_exception(self):
-        auth = Auth(self.dummy_project_id, self.public_key_dict)
+        auth = Auth(
+            self.dummy_project_id,
+            self.public_key_dict,
+            http_client=self.make_http_client(),
+        )
 
         # Test do_post
         with patch("requests.post") as mock_request:
@@ -569,7 +562,9 @@ class TestAuth(common.DescopeTest):
                 API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"
             }
             with self.assertRaises(RateLimitException) as cm:
-                auth.do_post("http://test.com", {}, None, None)
+                auth.http_client.post(
+                    "http://test.com", body={}, params=None, pswd=None
+                )
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, "E130429")
             self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
@@ -595,7 +590,9 @@ class TestAuth(common.DescopeTest):
                 API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"
             }
             with self.assertRaises(RateLimitException) as cm:
-                auth.do_get(uri="http://test.com", params=False, allow_redirects=None)
+                auth.http_client.get(
+                    uri="http://test.com", params=False, allow_redirects=None
+                )
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, "E130429")
             self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
@@ -621,7 +618,7 @@ class TestAuth(common.DescopeTest):
                 API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"
             }
             with self.assertRaises(RateLimitException) as cm:
-                auth.do_delete("http://test.com")
+                auth.http_client.delete("http://test.com")
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, "E130429")
             self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
@@ -640,7 +637,7 @@ class TestAuth(common.DescopeTest):
             network_resp.ok = True
 
             mock_delete.return_value = network_resp
-            auth.do_delete("/a/b", params={"key": "value"}, pswd="pswd")
+            auth.http_client.delete("/a/b", params={"key": "value"}, pswd="pswd")
 
             mock_delete.assert_called_with(
                 "http://127.0.0.1/a/b",
@@ -682,7 +679,11 @@ class TestAuth(common.DescopeTest):
             )
 
     def test_api_rate_limit_invalid_header(self):
-        auth = Auth(self.dummy_project_id, self.public_key_dict)
+        auth = Auth(
+            self.dummy_project_id,
+            self.public_key_dict,
+            http_client=self.make_http_client(),
+        )
 
         # Test do_post empty body
         with patch("requests.post") as mock_request:
@@ -697,7 +698,9 @@ class TestAuth(common.DescopeTest):
                 API_RATE_LIMIT_RETRY_AFTER_HEADER: "hello"
             }
             with self.assertRaises(RateLimitException) as cm:
-                auth.do_post("http://test.com", {}, None, None)
+                auth.http_client.post(
+                    "http://test.com", body={}, params=None, pswd=None
+                )
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, "E130429")
             self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
@@ -711,7 +714,11 @@ class TestAuth(common.DescopeTest):
             )
 
     def test_api_rate_limit_invalid_response_body(self):
-        auth = Auth(self.dummy_project_id, self.public_key_dict)
+        auth = Auth(
+            self.dummy_project_id,
+            self.public_key_dict,
+            http_client=self.make_http_client(),
+        )
 
         # Test do_post empty body
         with patch("requests.post") as mock_request:
@@ -719,7 +726,9 @@ class TestAuth(common.DescopeTest):
             mock_request.return_value.status_code = 429
             mock_request.return_value.json.return_value = "aaa"
             with self.assertRaises(RateLimitException) as cm:
-                auth.do_post("http://test.com", {}, None, None)
+                auth.http_client.post(
+                    "http://test.com", body={}, params=None, pswd=None
+                )
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, HTTPStatus.TOO_MANY_REQUESTS)
             self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
@@ -728,7 +737,11 @@ class TestAuth(common.DescopeTest):
             self.assertEqual(the_exception.rate_limit_parameters, {})
 
     def test_api_rate_limit_empty_response_body(self):
-        auth = Auth(self.dummy_project_id, self.public_key_dict)
+        auth = Auth(
+            self.dummy_project_id,
+            self.public_key_dict,
+            http_client=self.make_http_client(),
+        )
 
         # Test do_post empty body
         with patch("requests.post") as mock_request:
@@ -736,7 +749,9 @@ class TestAuth(common.DescopeTest):
             mock_request.return_value.status_code = 429
             mock_request.return_value.json.return_value = ""
             with self.assertRaises(RateLimitException) as cm:
-                auth.do_post("http://test.com", {}, None, None)
+                auth.http_client.post(
+                    "http://test.com", body={}, params=None, pswd=None
+                )
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, HTTPStatus.TOO_MANY_REQUESTS)
             self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
@@ -745,7 +760,11 @@ class TestAuth(common.DescopeTest):
             self.assertEqual(the_exception.rate_limit_parameters, {})
 
     def test_api_rate_limit_none_response_body(self):
-        auth = Auth(self.dummy_project_id, self.public_key_dict)
+        auth = Auth(
+            self.dummy_project_id,
+            self.public_key_dict,
+            http_client=self.make_http_client(),
+        )
 
         # Test do_post empty body
         with patch("requests.post") as mock_request:
@@ -753,7 +772,9 @@ class TestAuth(common.DescopeTest):
             mock_request.return_value.status_code = 429
             mock_request.return_value.json.return_value = None
             with self.assertRaises(RateLimitException) as cm:
-                auth.do_post("http://test.com", {}, None, None)
+                auth.http_client.post(
+                    "http://test.com", body={}, params=None, pswd=None
+                )
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, HTTPStatus.TOO_MANY_REQUESTS)
             self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
@@ -762,14 +783,20 @@ class TestAuth(common.DescopeTest):
             self.assertEqual(the_exception.rate_limit_parameters, {})
 
     def test_raise_from_response(self):
-        auth = Auth(self.dummy_project_id, self.public_key_dict)
+        auth = Auth(
+            self.dummy_project_id,
+            self.public_key_dict,
+            http_client=self.make_http_client(),
+        )
         with patch("requests.get") as mock_request:
             mock_request.return_value.ok = False
             mock_request.return_value.status_code = 400
             mock_request.return_value.error_type = ERROR_TYPE_SERVER_ERROR
             mock_request.return_value.text = """{"errorCode":"E062108","errorDescription":"User not found","errorMessage":"Cannot find user"}"""
             with self.assertRaises(AuthException) as cm:
-                auth.do_get(uri="http://test.com", params=False, allow_redirects=None)
+                auth.http_client.get(
+                    uri="http://test.com", params=False, allow_redirects=None
+                )
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, 400)
             self.assertEqual(the_exception.error_type, ERROR_TYPE_SERVER_ERROR)

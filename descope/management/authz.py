@@ -1,11 +1,11 @@
 from datetime import datetime, timezone
 from typing import Any, List, Optional
 
-from descope._auth_base import AuthBase
+from descope._http_base import HTTPBase
 from descope.management.common import MgmtV1
 
 
-class Authz(AuthBase):
+class Authz(HTTPBase):
     def save_schema(self, schema: dict, upgrade: bool = False):
         """
         Create or update the ReBAC schema.
@@ -40,10 +40,9 @@ class Authz(AuthBase):
         Raise:
         AuthException: raised if saving fails
         """
-        self._auth.do_post(
+        self._http.post(
             MgmtV1.authz_schema_save,
-            {"schema": schema, "upgrade": upgrade},
-            pswd=self._auth.management_key,
+            body={"schema": schema, "upgrade": upgrade},
         )
 
     def delete_schema(self):
@@ -52,10 +51,8 @@ class Authz(AuthBase):
         Raise:
         AuthException: raised if delete schema fails
         """
-        self._auth.do_post(
+        self._http.post(
             MgmtV1.authz_schema_delete,
-            None,
-            pswd=self._auth.management_key,
         )
 
     def load_schema(self) -> dict:
@@ -66,10 +63,8 @@ class Authz(AuthBase):
         Raise:
         AuthException: raised if load schema fails
         """
-        response = self._auth.do_post(
+        response = self._http.post(
             MgmtV1.authz_schema_load,
-            None,
-            pswd=self._auth.management_key,
         )
         return response.json()["schema"]
 
@@ -91,10 +86,9 @@ class Authz(AuthBase):
             body["oldName"] = old_name
         if schema_name != "":
             body["schemaName"] = schema_name
-        self._auth.do_post(
+        self._http.post(
             MgmtV1.authz_ns_save,
-            body,
-            pswd=self._auth.management_key,
+            body=body,
         )
 
     def delete_namespace(self, name: str, schema_name: str = ""):
@@ -109,10 +103,9 @@ class Authz(AuthBase):
         body: dict[str, Any] = {"name": name}
         if schema_name != "":
             body["schemaName"] = schema_name
-        self._auth.do_post(
+        self._http.post(
             MgmtV1.authz_ns_delete,
-            body,
-            pswd=self._auth.management_key,
+            body=body,
         )
 
     def save_relation_definition(
@@ -141,10 +134,9 @@ class Authz(AuthBase):
             body["oldName"] = old_name
         if schema_name != "":
             body["schemaName"] = schema_name
-        self._auth.do_post(
+        self._http.post(
             MgmtV1.authz_rd_save,
-            body,
-            pswd=self._auth.management_key,
+            body=body,
         )
 
     def delete_relation_definition(
@@ -162,10 +154,9 @@ class Authz(AuthBase):
         body: dict[str, Any] = {"name": name, "namespace": namespace}
         if schema_name != "":
             body["schemaName"] = schema_name
-        self._auth.do_post(
+        self._http.post(
             MgmtV1.authz_rd_delete,
-            body,
-            pswd=self._auth.management_key,
+            body=body,
         )
 
     def create_relations(
@@ -202,12 +193,9 @@ class Authz(AuthBase):
         Raise:
         AuthException: raised if create relations fails
         """
-        self._auth.do_post(
+        self._http.post(
             MgmtV1.authz_re_create,
-            {
-                "relations": relations,
-            },
-            pswd=self._auth.management_key,
+            body={"relations": relations},
         )
 
     def delete_relations(
@@ -221,12 +209,9 @@ class Authz(AuthBase):
         Raise:
         AuthException: raised if delete relations fails
         """
-        self._auth.do_post(
+        self._http.post(
             MgmtV1.authz_re_delete,
-            {
-                "relations": relations,
-            },
-            pswd=self._auth.management_key,
+            body={"relations": relations},
         )
 
     def delete_relations_for_resources(
@@ -240,12 +225,9 @@ class Authz(AuthBase):
         Raise:
         AuthException: raised if delete relations for resources fails
         """
-        self._auth.do_post(
+        self._http.post(
             MgmtV1.authz_re_delete_resources,
-            {
-                "resources": resources,
-            },
-            pswd=self._auth.management_key,
+            body={"resources": resources},
         )
 
     def has_relations(
@@ -277,12 +259,9 @@ class Authz(AuthBase):
         Raise:
         AuthException: raised if query fails
         """
-        response = self._auth.do_post(
+        response = self._http.post(
             MgmtV1.authz_re_has_relations,
-            {
-                "relationQueries": relation_queries,
-            },
-            pswd=self._auth.management_key,
+            body={"relationQueries": relation_queries},
         )
         return response.json()["relationQueries"]
 
@@ -300,14 +279,13 @@ class Authz(AuthBase):
         Raise:
         AuthException: raised if query fails
         """
-        response = self._auth.do_post(
+        response = self._http.post(
             MgmtV1.authz_re_who,
-            {
+            body={
                 "resource": resource,
                 "relationDefinition": relation_definition,
                 "namespace": namespace,
             },
-            pswd=self._auth.management_key,
         )
         return response.json()["targets"]
 
@@ -322,10 +300,9 @@ class Authz(AuthBase):
         Raise:
         AuthException: raised if query fails
         """
-        response = self._auth.do_post(
+        response = self._http.post(
             MgmtV1.authz_re_resource,
-            {"resource": resource},
-            pswd=self._auth.management_key,
+            body={"resource": resource},
         )
         return response.json()["relations"]
 
@@ -340,10 +317,9 @@ class Authz(AuthBase):
         Raise:
         AuthException: raised if query fails
         """
-        response = self._auth.do_post(
+        response = self._http.post(
             MgmtV1.authz_re_targets,
-            {"targets": targets},
-            pswd=self._auth.management_key,
+            body={"targets": targets},
         )
         return response.json()["relations"]
 
@@ -358,10 +334,9 @@ class Authz(AuthBase):
         Raise:
         AuthException: raised if query fails
         """
-        response = self._auth.do_post(
+        response = self._http.post(
             MgmtV1.authz_re_target_all,
-            {"target": target},
-            pswd=self._auth.management_key,
+            body={"target": target},
         )
         return response.json()["relations"]
 
@@ -380,14 +355,13 @@ class Authz(AuthBase):
         Raise:
         AuthException: raised if query fails
         """
-        response = self._auth.do_post(
+        response = self._http.post(
             MgmtV1.authz_re_target_with_relation,
-            {
+            body={
                 "target": target,
                 "relationDefinition": relation_definition,
                 "namespace": namespace,
             },
-            pswd=self._auth.management_key,
         )
         return response.json()["relations"]
 
@@ -402,15 +376,14 @@ class Authz(AuthBase):
         Raise:
         AuthException: raised if query fails
         """
-        response = self._auth.do_post(
+        response = self._http.post(
             MgmtV1.authz_get_modified,
-            {
+            body={
                 "since": (
                     int(since.replace(tzinfo=timezone.utc).timestamp() * 1000)
                     if since
                     else 0
                 )
             },
-            pswd=self._auth.management_key,
         )
         return response.json()["relations"]
