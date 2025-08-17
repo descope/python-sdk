@@ -80,19 +80,9 @@ relative_files = true
 source = ["descope"]
 omit = ["descope/flask/*"]
 
-[tool.coverage.paths]
-# Normalize paths across OSes so combined reports resolve to the same files
-source = [
-    "descope",
-    "*/descope",
-    "*\\descope",
-]
-
 
 [tool.coverage.report]
-# Don't enforce threshold during JSON export used by the GitHub Action.
-# Enforce thresholds explicitly in CI if desired.
-fail_under = 0
+fail_under = 98
 skip_covered = true
 skip_empty = true
 
