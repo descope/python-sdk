@@ -824,7 +824,7 @@ class TestDescopeClient(common.DescopeTest):
         self.assertEqual(cm.exception.status_code, 400)
         self.assertEqual(
             cm.exception.error_message,
-            "Received Invalid token times error due to time glitch (between machines) during jwt validation, try to set the jwt_validation_leeway parameter (in DescopeClient) to higher value than 5sec which is the default",
+            "Received Invalid token (nbf in future) during jwt validation. Error can be due to time glitch (between machines), try to set the jwt_validation_leeway parameter (in DescopeClient) to higher value than 5sec which is the default",
         )
 
     def test_select_tenant(self):
