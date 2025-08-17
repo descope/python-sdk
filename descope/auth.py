@@ -637,11 +637,17 @@ class Auth:
                 audience=audience,
                 leeway=self.jwt_validation_leeway,
             )
-        except (ImmatureSignatureError, ExpiredSignatureError):
+        except (ImmatureSignatureError):
             raise AuthException(
                 400,
                 ERROR_TYPE_INVALID_TOKEN,
-                "Received Invalid token times error due to time glitch (between machines) during jwt validation, try to set the jwt_validation_leeway parameter (in DescopeClient) to higher value than 5sec which is the default",
+                "Received Invalid token (nbf in future) during jwt validation. Error can be due to time glitch (between machines), try to set the jwt_validation_leeway parameter (in DescopeClient) to higher value than 5sec which is the default",
+            )
+        except (ExpiredSignatureError):
+            raise AuthException(
+                401,
+                ERROR_TYPE_INVALID_TOKEN,
+                "Received expired token (exp in past) during jwt validation. (sometimes can be due to time glitch (between machines), try to set the jwt_validation_leeway parameter (in DescopeClient) to higher value than 5sec which is the default)",
             )
 
         claims["jwt"] = token
