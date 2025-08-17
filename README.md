@@ -4,7 +4,7 @@
 
 | Name                                |    Stmts |     Miss |   Cover |   Missing |
 |------------------------------------ | -------: | -------: | ------: | --------: |
-| descope/auth.py                     |      321 |       14 |     96% |16-17, 53-54, 96, 465-467, 583, 615, 626, 670, 705, 719, 746 |
+| descope/auth.py                     |      323 |       14 |     96% |16-17, 53-54, 96, 465-467, 583, 615, 626, 676, 711, 725, 752 |
 | descope/authmethod/enchantedlink.py |       92 |        2 |     98% |  204, 206 |
 | descope/authmethod/magiclink.py     |      103 |        4 |     96% |234, 236, 259, 261 |
 | descope/authmethod/otp.py           |      110 |        4 |     96% |330, 332, 355, 357 |
@@ -14,7 +14,7 @@
 | descope/management/common.py        |      237 |        2 |     99% |   28, 414 |
 | descope/management/role.py          |       29 |        1 |     97% |       156 |
 | descope/management/user.py          |      353 |       15 |     96% |70-75, 718, 1065, 1067, 1069, 1842, 1894, 1937, 1939, 1941 |
-|                           **TOTAL** | **2582** |   **58** | **98%** |           |
+|                           **TOTAL** | **2584** |   **58** | **98%** |           |
 
 24 files skipped due to complete coverage.
 
