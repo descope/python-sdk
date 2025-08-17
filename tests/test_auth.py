@@ -3,6 +3,7 @@ import os
 import unittest
 from enum import Enum
 from http import HTTPStatus
+from types import SimpleNamespace
 from unittest import mock
 from unittest.mock import patch
 
@@ -454,6 +455,148 @@ class TestAuth(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+    def test_exchange_token_success_and_empty_code(self):
+        auth = Auth(
+            self.dummy_project_id,
+            self.public_key_dict,
+            http_client=self.make_http_client(),
+        )
+
+        # Empty code -> error
+        with self.assertRaises(AuthException):
+            auth.exchange_token("/oauth/exchange", "")
+
+        # Success path
+        with patch("requests.post") as mock_post:
+            net_resp = mock.Mock()
+            net_resp.ok = True
+            net_resp.cookies = {"DSR": "cookie_token"}
+            # Make validator return claims
+            auth._validate_token = lambda token, audience=None: {
+                "iss": "https://issuer/PX",
+                "sub": "user-x",
+            }
+            net_resp.json.return_value = {
+                "sessionJwt": "s1",
+                "refreshJwt": "r1",
+                "user": {"id": "user-x"},
+                "firstSeen": True,
+            }
+            mock_post.return_value = net_resp
+            out = auth.exchange_token("/oauth/exchange", code="abc")
+            self.assertEqual(out["projectId"], "PX")
+            self.assertEqual(out["userId"], "user-x")
+
+    def test_validate_session_success(self):
+        auth = Auth(
+            self.dummy_project_id,
+            self.public_key_dict,
+            http_client=self.make_http_client(),
+        )
+        # Stub validator to bypass network
+        auth._validate_token = lambda token, audience=None: {
+            "iss": "P123",
+            "sub": "u123",
+            "permissions": ["p1"],
+            "roles": ["r1"],
+            "tenants": {"t1": {}},
+        }
+        res = auth.validate_session("token-session")
+        self.assertEqual(res["projectId"], "P123")
+        self.assertEqual(res["userId"], "u123")
+        self.assertEqual(res["permissions"], ["p1"])
+        self.assertIn(SESSION_TOKEN_NAME, res)
+
+    def test_select_tenant_success(self):
+        auth = Auth(
+            self.dummy_project_id,
+            self.public_key_dict,
+            http_client=self.make_http_client(),
+        )
+        # Missing refresh token
+        with self.assertRaises(AuthException):
+            auth.select_tenant("tenant1", "")
+
+        # Success network path
+        with patch("requests.post") as mock_post:
+            net_resp = mock.Mock()
+            net_resp.ok = True
+            net_resp.cookies = {"DSR": "cookie_r"}
+            # validator stub
+            auth._validate_token = lambda token, audience=None: {
+                "iss": "P77",
+                "sub": "u77",
+            }
+            net_resp.json.return_value = {
+                "sessionJwt": "s77",
+                "refreshJwt": "r77",
+            }
+            mock_post.return_value = net_resp
+            out = auth.select_tenant("tenant1", refresh_token="r0")
+            self.assertEqual(out["projectId"], "P77")
+            self.assertIn(SESSION_TOKEN_NAME, out)
+
+    def test_compose_url_invalid_method(self):
+        class Dummy(Enum):
+            X = 1
+
+        with self.assertRaises(AuthException):
+            Auth.compose_url("/base", Dummy.X)
+
+    def test_validate_token_header_errors(self):
+        auth = Auth(
+            self.dummy_project_id,
+            self.public_key_dict,
+            http_client=self.make_http_client(),
+        )
+        # Empty token
+        with self.assertRaises(AuthException):
+            auth._validate_token("")
+
+        # Garbage token -> header parse error
+        with self.assertRaises(AuthException):
+            auth._validate_token("not-a-jwt")
+
+        # Missing alg -> mock header dict without alg
+        with patch("descope.auth.jwt.get_unverified_header") as mock_hdr:
+            mock_hdr.return_value = {"kid": "kid1"}
+            with self.assertRaises(AuthException) as cm:
+                auth._validate_token("any.token.value")
+            self.assertIn("missing property: alg", str(cm.exception).lower())
+
+        # Missing kid -> mock header dict without kid
+        with patch("descope.auth.jwt.get_unverified_header") as mock_hdr:
+            mock_hdr.return_value = {"alg": "ES384"}
+            with self.assertRaises(AuthException) as cm2:
+                auth._validate_token("any.token.value")
+            self.assertIn("missing property: kid", str(cm2.exception).lower())
+
+        # Algorithm mismatch after fetching keys (kid found but alg different)
+        with patch("descope.auth.jwt.get_unverified_header") as mock_hdr:
+            mock_hdr.return_value = {
+                "alg": "RS256",
+                "kid": self.public_key_dict["kid"],
+            }
+            with self.assertRaises(AuthException) as cm3:
+                auth._validate_token("any.token.value")
+            self.assertIn("does not match", str(cm3.exception))
+
+    def test_extract_masked_address_default(self):
+        # Unknown method should return empty string
+        class DummyMethod(Enum):
+            OTHER = 999
+
+        self.assertEqual(Auth.extract_masked_address({}, DummyMethod.OTHER), "")
+
+    def test_extract_masked_address_known_methods(self):
+        resp = {"maskedPhone": "+1-***-***-1234", "maskedEmail": "a***@b.com"}
+        self.assertEqual(
+            Auth.extract_masked_address(resp, DeliveryMethod.SMS), "+1-***-***-1234"
+        )
+        self.assertEqual(
+            Auth.extract_masked_address(resp, DeliveryMethod.EMAIL), "a***@b.com"
+        )
+
     def test_adjust_properties(self):
         self.assertEqual(
             Auth.adjust_properties(self, jwt_response={}, user_jwt={}),
@@ -804,6 +947,193 @@ class TestAuth(common.DescopeTest):
                 the_exception.error_message,
                 """{"errorCode":"E062108","errorDescription":"User not found","errorMessage":"Cannot find user"}""",
             )
+
+    def test_http_client_authorization_header_variants(self):
+        # Base client without management key
+        client = self.make_http_client()
+        headers = client.get_default_headers()
+        self.assertEqual(headers["Authorization"], f"Bearer {self.dummy_project_id}")
+
+        # With password/pswd only
+        headers = client.get_default_headers(pswd="sekret")
+        self.assertEqual(
+            headers["Authorization"], f"Bearer {self.dummy_project_id}:sekret"
+        )
+
+        # With management key only
+        client2 = self.make_http_client(management_key="mkey")
+        headers2 = client2.get_default_headers()
+        self.assertEqual(
+            headers2["Authorization"], f"Bearer {self.dummy_project_id}:mkey"
+        )
+
+        # With both pswd and management key
+        headers3 = client2.get_default_headers(pswd="sekret")
+        self.assertEqual(
+            headers3["Authorization"],
+            f"Bearer {self.dummy_project_id}:sekret:mkey",
+        )
+
+    def test_compose_url_success(self):
+        base = "/otp/send"
+        self.assertEqual(Auth.compose_url(base, DeliveryMethod.EMAIL), f"{base}/email")
+        self.assertEqual(Auth.compose_url(base, DeliveryMethod.SMS), f"{base}/sms")
+        self.assertEqual(Auth.compose_url(base, DeliveryMethod.VOICE), f"{base}/voice")
+        self.assertEqual(
+            Auth.compose_url(base, DeliveryMethod.WHATSAPP), f"{base}/whatsapp"
+        )
+
+    def test_internal_rate_limit_helpers(self):
+        auth = Auth(
+            self.dummy_project_id,
+            self.public_key_dict,
+            http_client=self.make_http_client(),
+        )
+
+        class Resp:
+            def __init__(self, ok, status_code, body, headers):
+                self.ok = ok
+                self.status_code = status_code
+                self._body = body
+                self.headers = headers
+                self.text = "txt"
+
+            def json(self):
+                return self._body
+
+        # _parse_retry_after
+        self.assertEqual(
+            auth._parse_retry_after({API_RATE_LIMIT_RETRY_AFTER_HEADER: "7"}), 7
+        )
+        self.assertEqual(
+            auth._parse_retry_after({API_RATE_LIMIT_RETRY_AFTER_HEADER: "x"}), 0
+        )
+
+        # _raise_rate_limit_exception with valid JSON
+        r1 = Resp(
+            ok=False,
+            status_code=429,
+            body={
+                "errorCode": "E130429",
+                "errorDescription": "https://docs",
+                "errorMessage": "rate",
+            },
+            headers={API_RATE_LIMIT_RETRY_AFTER_HEADER: "3"},
+        )
+        with self.assertRaises(RateLimitException) as cm:
+            auth._raise_rate_limit_exception(r1)
+        ex = cm.exception
+        self.assertEqual(ex.status_code, "E130429")
+        self.assertEqual(ex.error_type, ERROR_TYPE_API_RATE_LIMIT)
+        self.assertEqual(ex.error_description, "https://docs")
+        self.assertEqual(ex.error_message, "rate")
+        self.assertEqual(
+            ex.rate_limit_parameters, {API_RATE_LIMIT_RETRY_AFTER_HEADER: 3}
+        )
+
+        # _raise_rate_limit_exception with invalid JSON
+        r2 = Resp(False, 429, "not-a-dict", {API_RATE_LIMIT_RETRY_AFTER_HEADER: "x"})
+        with self.assertRaises(RateLimitException) as cm2:
+            auth._raise_rate_limit_exception(r2)
+        ex2 = cm2.exception
+        self.assertEqual(ex2.status_code, HTTPStatus.TOO_MANY_REQUESTS)
+        self.assertEqual(ex2.error_type, ERROR_TYPE_API_RATE_LIMIT)
+        self.assertEqual(ex2.error_description, ERROR_TYPE_API_RATE_LIMIT)
+        self.assertEqual(ex2.error_message, ERROR_TYPE_API_RATE_LIMIT)
+
+        # _raise_from_response with non-429
+        r3 = Resp(False, 400, {}, {})
+        with self.assertRaises(AuthException):
+            auth._raise_from_response(r3)
+
+        # _raise_from_response with 429 invokes rate-limit handler
+        r4 = Resp(
+            False,
+            429,
+            {"errorCode": "E130", "errorDescription": "d", "errorMessage": "m"},
+            {API_RATE_LIMIT_RETRY_AFTER_HEADER: "2"},
+        )
+        with self.assertRaises(RateLimitException):
+            auth._raise_from_response(r4)
+
+    def test_validate_and_refresh_session_refresh_path(self):
+        auth = Auth(
+            self.dummy_project_id,
+            self.public_key_dict,
+            http_client=self.make_http_client(),
+        )
+        # Force validate_session to fail
+        with patch.object(
+            Auth,
+            "validate_session",
+            side_effect=AuthException(400, ERROR_TYPE_SERVER_ERROR, "e"),
+        ):
+            # Stub refresh network
+            with patch("requests.post") as mock_post:
+                net_resp = mock.Mock()
+                net_resp.ok = True
+                net_resp.cookies = {"DSR": "cookie"}
+                auth._validate_token = lambda token, audience=None: {
+                    "iss": "P1",
+                    "sub": "u1",
+                }
+                net_resp.json.return_value = {"sessionJwt": "s", "refreshJwt": "r"}
+                mock_post.return_value = net_resp
+                out = auth.validate_and_refresh_session("bad", refresh_token="r0")
+                self.assertEqual(out["projectId"], "P1")
+
+    def test_validate_token_public_key_not_found(self):
+        auth = Auth(
+            self.dummy_project_id,
+            None,
+            http_client=self.make_http_client(),
+        )
+        # ensure public keys empty and fetching sets nothing
+        auth.public_keys = {}
+        with patch.object(
+            Auth,
+            "_fetch_public_keys",
+            side_effect=lambda self=auth: setattr(auth, "public_keys", {}),
+        ):
+            with patch("descope.auth.jwt.get_unverified_header") as mock_hdr:
+                mock_hdr.return_value = {"alg": "ES384", "kid": "unknown"}
+                with self.assertRaises(AuthException) as cm:
+                    auth._validate_token("any")
+                self.assertIn("public key not found", str(cm.exception).lower())
+
+    def test_validate_token_decode_time_errors(self):
+        auth = Auth(
+            self.dummy_project_id,
+            None,
+            http_client=self.make_http_client(),
+        )
+        # Prepare a fake key entry and matching header
+        auth.public_keys = {"kid": (SimpleNamespace(key="k"), "ES384")}
+        with patch("descope.auth.jwt.get_unverified_header") as mock_hdr, patch(
+            "descope.auth.jwt.decode"
+        ) as mock_dec:
+            mock_hdr.return_value = {"alg": "ES384", "kid": "kid"}
+            from jwt import ImmatureSignatureError
+
+            mock_dec.side_effect = ImmatureSignatureError("early")
+            with self.assertRaises(AuthException) as cm:
+                auth._validate_token("tok")
+            self.assertEqual(cm.exception.status_code, 400)
+
+    def test_validate_token_success(self):
+        auth = Auth(
+            self.dummy_project_id,
+            None,
+            http_client=self.make_http_client(),
+        )
+        auth.public_keys = {"kid": (SimpleNamespace(key="k"), "ES384")}
+        with patch("descope.auth.jwt.get_unverified_header") as mock_hdr, patch(
+            "descope.auth.jwt.decode"
+        ) as mock_dec:
+            mock_hdr.return_value = {"alg": "ES384", "kid": "kid"}
+            mock_dec.return_value = {"sub": "u"}
+            out = auth._validate_token("tok")
+            self.assertEqual(out["jwt"], "tok")
 
 
 if __name__ == "__main__":

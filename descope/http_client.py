@@ -7,7 +7,7 @@ from typing import Optional, Union, cast
 
 try:
     from importlib.metadata import version
-except ImportError:
+except ImportError:  # pragma: no cover
     from pkg_resources import get_distribution
 
 import requests
