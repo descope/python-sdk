@@ -385,9 +385,6 @@ class Auth:
             token_validator=self._validate_token,
         )
 
-    def _get_default_headers(self, pswd: str | None = None):
-        return self._http.get_default_headers(pswd)
-
     # Validate a token and load the public key if needed
     def _validate_token(
         self, token: str, audience: str | None | Iterable[str] = None
