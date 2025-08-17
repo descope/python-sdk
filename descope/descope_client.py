@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from typing import Iterable
+from typing import Iterable, Optional
 
 import requests
 
@@ -27,10 +27,10 @@ class DescopeClient:
     def __init__(
         self,
         project_id: str,
-        public_key: dict | None = None,
+        public_key: Optional[dict] = None,
         skip_verify: bool = False,
-        management_key: str | None = None,
-        auth_management_key: str | None = None,
+        management_key: Optional[str] = None,
+        auth_management_key: Optional[str] = None,
         timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
         jwt_validation_leeway: int = 5,
     ):
@@ -310,7 +310,7 @@ class DescopeClient:
         return matched
 
     def validate_session(
-        self, session_token: str, audience: str | Iterable[str] | None = None
+        self, session_token: str, audience: Optional[Iterable[str] | str] = None
     ) -> dict:
         """
         Validate a session token. Call this function for every incoming request to your
@@ -333,7 +333,7 @@ class DescopeClient:
         return self._auth.validate_session(session_token, audience)
 
     def refresh_session(
-        self, refresh_token: str, audience: str | Iterable[str] | None = None
+        self, refresh_token: str, audience: Optional[Iterable[str] | str] = None
     ) -> dict:
         """
         Refresh a session. Call this function when a session expires and needs to be refreshed.
@@ -354,7 +354,7 @@ class DescopeClient:
         self,
         session_token: str,
         refresh_token: str,
-        audience: str | Iterable[str] | None = None,
+        audience: Optional[Iterable[str] | str] = None,
     ) -> dict:
         """
         Validate the session token and refresh it if it has expired, the session token will automatically be refreshed.
@@ -454,7 +454,7 @@ class DescopeClient:
         self,
         refresh_token: str,
         dct: bool = False,
-        ids: list[str] | None = None,
+        ids: Optional[list[str]] = None,
     ) -> dict:
         """
         Retrieve tenant attributes that user belongs to, one of dct/ids must be populated .
@@ -535,8 +535,8 @@ class DescopeClient:
     def exchange_access_key(
         self,
         access_key: str,
-        audience: str | Iterable[str] | None = None,
-        login_options: AccessKeyLoginOptions | None = None,
+        audience: Optional[Iterable[str] | str] = None,
+        login_options: Optional[AccessKeyLoginOptions] = None,
     ) -> dict:
         """
         Return a new session token for the given access key

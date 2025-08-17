@@ -591,7 +591,7 @@ class TestAuth(common.DescopeTest):
             }
             with self.assertRaises(RateLimitException) as cm:
                 auth.http_client.get(
-                    uri="http://test.com", params=False, allow_redirects=None
+                    uri="http://test.com", params=False, allow_redirects=True
                 )
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, "E130429")
@@ -795,7 +795,7 @@ class TestAuth(common.DescopeTest):
             mock_request.return_value.text = """{"errorCode":"E062108","errorDescription":"User not found","errorMessage":"Cannot find user"}"""
             with self.assertRaises(AuthException) as cm:
                 auth.http_client.get(
-                    uri="http://test.com", params=False, allow_redirects=None
+                    uri="http://test.com", params=False, allow_redirects=True
                 )
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, 400)

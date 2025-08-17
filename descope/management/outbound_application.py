@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Any, List, Optional
 
 from descope._http_base import HTTPBase
@@ -19,7 +21,7 @@ class _OutboundApplicationTokenFetcher:
     def fetch_token_by_scopes(
         *,
         http: HTTPClient,
-        token: str | None = None,
+        token: Optional[str] = None,
         app_id: str,
         user_id: str,
         scopes: List[str],
@@ -45,7 +47,7 @@ class _OutboundApplicationTokenFetcher:
     def fetch_token(
         *,
         http: HTTPClient,
-        token: str | None = None,
+        token: Optional[str] = None,
         app_id: str,
         user_id: str,
         tenant_id: Optional[str] = None,
@@ -69,7 +71,7 @@ class _OutboundApplicationTokenFetcher:
     def fetch_tenant_token_by_scopes(
         *,
         http: HTTPClient,
-        token: str | None = None,
+        token: Optional[str] = None,
         app_id: str,
         tenant_id: str,
         scopes: List[str],
@@ -93,7 +95,7 @@ class _OutboundApplicationTokenFetcher:
     def fetch_tenant_token(
         *,
         http: HTTPClient,
-        token: str | None = None,
+        token: Optional[str] = None,
         app_id: str,
         tenant_id: str,
         options: Optional[dict] = None,

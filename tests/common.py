@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import platform
 import unittest
@@ -47,7 +49,7 @@ class DescopeTest(unittest.TestCase):
         )
 
     # Test helper to build a default HTTP client
-    def make_http_client(self, management_key: str | None = None):
+    def make_http_client(self, management_key: "str | None" = None):
         from descope.http_client import HTTPClient
 
         return HTTPClient(

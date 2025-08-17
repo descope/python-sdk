@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import platform
 from http import HTTPStatus
+from typing import Optional, Union, cast
 
 try:
     from importlib.metadata import version
@@ -45,11 +46,11 @@ class HTTPClient:
     def __init__(
         self,
         project_id: str,
-        base_url: str | None = None,
+        base_url: Optional[str] = None,
         *,
         timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
         secure: bool = True,
-        management_key: str | None = None,
+        management_key: Optional[str] = None,
     ) -> None:
         if not project_id:
             raise AuthException(
@@ -73,14 +74,14 @@ class HTTPClient:
         uri: str,
         *,
         params=None,
-        allow_redirects: bool | None = None,
-        pswd: str | None = None,
+        allow_redirects: Optional[bool] = True,
+        pswd: Optional[str] = None,
     ) -> requests.Response:
         response = requests.get(
             f"{self.base_url}{uri}",
             headers=self._get_default_headers(pswd),
             params=params,
-            allow_redirects=allow_redirects,
+            allow_redirects=cast(bool, allow_redirects),
             verify=self.secure,
             timeout=self.timeout_seconds,
         )
@@ -91,9 +92,9 @@ class HTTPClient:
         self,
         uri: str,
         *,
-        body: dict | list[dict] | list[str] | None = None,
+        body: Optional[Union[dict, list[dict], list[str]]] = None,
         params=None,
-        pswd: str | None = None,
+        pswd: Optional[str] = None,
     ) -> requests.Response:
         response = requests.post(
             f"{self.base_url}{uri}",
@@ -111,9 +112,9 @@ class HTTPClient:
         self,
         uri: str,
         *,
-        body: dict | list[dict] | list[str] | None,
+        body: Optional[Union[dict, list[dict], list[str]]],
         params=None,
-        pswd: str | None = None,
+        pswd: Optional[str] = None,
     ) -> requests.Response:
         response = requests.patch(
             f"{self.base_url}{uri}",
@@ -132,7 +133,7 @@ class HTTPClient:
         uri: str,
         *,
         params=None,
-        pswd: str | None = None,
+        pswd: Optional[str] = None,
     ) -> requests.Response:
         response = requests.delete(
             f"{self.base_url}{uri}",
@@ -145,7 +146,7 @@ class HTTPClient:
         self._raise_from_response(response)
         return response
 
-    def get_default_headers(self, pswd: str | None = None) -> dict:
+    def get_default_headers(self, pswd: Optional[str] = None) -> dict:
         return self._get_default_headers(pswd)
 
     # ------------- helpers -------------
@@ -197,7 +198,7 @@ class HTTPClient:
             response.text,
         )
 
-    def _get_default_headers(self, pswd: str | None = None):
+    def _get_default_headers(self, pswd: Optional[str] = None):
         headers = _default_headers.copy()
         headers["x-descope-project-id"] = self.project_id
         bearer = self.project_id

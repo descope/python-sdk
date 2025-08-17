@@ -114,7 +114,7 @@ class TestSSOSettings(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 params={"tenantId": "T2AAAA"},
-                allow_redirects=None,
+                allow_redirects=True,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -436,7 +436,7 @@ class TestSSOSettings(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 params={"tenantId": "tenant-id"},
-                allow_redirects=None,
+                allow_redirects=True,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

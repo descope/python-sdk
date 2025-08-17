@@ -453,7 +453,7 @@ class TestSSOApplication(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 params={"id": "app1"},
-                allow_redirects=None,
+                allow_redirects=True,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -534,7 +534,7 @@ class TestSSOApplication(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
-                allow_redirects=None,
+                allow_redirects=True,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

@@ -6,20 +6,18 @@ import os
 import re
 from http import HTTPStatus
 from threading import Lock
-from typing import Iterable
+from typing import Iterable, Optional
 
 import jwt
 from email_validator import EmailNotValidError, validate_email
 from jwt import ExpiredSignatureError, ImmatureSignatureError
 
 from descope.common import (
-    COOKIE_DATA_NAME,
     DEFAULT_BASE_URL,
     DEFAULT_DOMAIN,
     DEFAULT_URL_PREFIX,
     PHONE_REGEX,
     REFRESH_SESSION_COOKIE_NAME,
-    REFRESH_SESSION_TOKEN_NAME,
     SESSION_TOKEN_NAME,
     AccessKeyLoginOptions,
     DeliveryMethod,
@@ -47,8 +45,8 @@ class Auth:
 
     def __init__(
         self,
-        project_id: str | None = None,
-        public_key: dict | str | None = None,
+        project_id: Optional[str] = None,
+        public_key: Optional[dict | str] = None,
         jwt_validation_leeway: int = 5,
         *,
         http_client: HTTPClient,
@@ -114,7 +112,7 @@ class Auth:
         return self._http
 
     def exchange_token(
-        self, uri, code: str, audience: str | None | Iterable[str] = None
+        self, uri, code: str, audience: Optional[Iterable[str] | str] = None
     ) -> dict:
         if not code:
             raise AuthException(
