@@ -2,7 +2,7 @@ exclude: "docs/"
 
 repos:
   - repo: https://github.com/floatingpurr/sync_with_poetry
-    rev: 1.2.0
+    rev: 1.2.1
     hooks:
       - id: sync_with_poetry
   - repo: https://github.com/pre-commit/pre-commit-hooks
