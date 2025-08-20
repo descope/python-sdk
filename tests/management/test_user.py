@@ -1302,8 +1302,8 @@ class TestUser(common.DescopeTest):
             )
             mock_post.return_value = network_resp
             resp = self.client.mgmt.user.search_all_test_users(
-                tenant_role_ids={"tenant1": ["roleA", "roleB"]},
-                tenant_role_names={"tenant2": ["admin", "user"]},
+                tenant_role_ids={"tenant1": {"values": ["roleA", "roleB"], "and": True}},
+                tenant_role_names={"tenant2": {"values": ["admin", "user"], "and": False}},
             )
             users = resp["users"]
             self.assertEqual(len(users), 2)
