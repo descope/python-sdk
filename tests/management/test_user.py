@@ -323,7 +323,7 @@ class TestUser(common.DescopeTest):
             users = resp["users"]
             self.assertEqual(users[0]["id"], "u1")
 
-            expectedUsers = {
+            expected_users = {
                 "users": [
                     {
                         "loginId": "name@mail.com",
@@ -369,7 +369,7 @@ class TestUser(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
-                json=expectedUsers,
+                json=expected_users,
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -403,8 +403,8 @@ class TestUser(common.DescopeTest):
                 send_sms=True,
             )
 
-            del expectedUsers["users"][0]["hashedPassword"]
-            expectedUsers["users"][0]["password"] = "clear"
+            del expected_users["users"][0]["hashedPassword"]
+            expected_users["users"][0]["password"] = "clear"
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.user_create_batch_path}",
                 headers={
@@ -413,7 +413,7 @@ class TestUser(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
-                json=expectedUsers,
+                json=expected_users,
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -426,7 +426,7 @@ class TestUser(common.DescopeTest):
                 send_sms=True,
             )
 
-            del expectedUsers["users"][0]["password"]
+            del expected_users["users"][0]["password"]
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.user_create_batch_path}",
                 headers={
@@ -435,7 +435,7 @@ class TestUser(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
-                json=expectedUsers,
+                json=expected_users,
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -1056,8 +1056,8 @@ class TestUser(common.DescopeTest):
             )
             mock_post.return_value = network_resp
             resp = self.client.mgmt.user.search_all(
-                tenant_role_ids={"tenant1": ["roleA", "roleB"]},
-                tenant_role_names={"tenant2": ["admin", "user"]},
+                tenant_role_ids={"tenant1": {"values": ["roleA", "roleB"], "and": True}},
+                tenant_role_names={"tenant2": {"values": ["admin", "user"], "and": False}},
             )
             users = resp["users"]
             self.assertEqual(len(users), 2)
@@ -1078,8 +1078,8 @@ class TestUser(common.DescopeTest):
                     "page": 0,
                     "testUsersOnly": False,
                     "withTestUser": False,
-                    "tenantRoleIds": {"tenant1": {"values": ["roleA", "roleB"]}},
-                    "tenantRoleNames": {"tenant2": {"values": ["admin", "user"]}},
+                    "tenantRoleIds": {"tenant1": {"values": ["roleA", "roleB"], "and": True}},
+                    "tenantRoleNames": {"tenant2": {"values": ["admin", "user"], "and": False}},
                 },
                 allow_redirects=False,
                 verify=True,
@@ -1302,8 +1302,8 @@ class TestUser(common.DescopeTest):
             )
             mock_post.return_value = network_resp
             resp = self.client.mgmt.user.search_all_test_users(
-                tenant_role_ids={"tenant1": ["roleA", "roleB"]},
-                tenant_role_names={"tenant2": ["admin", "user"]},
+                tenant_role_ids={"tenant1": {"values": ["roleA", "roleB"], "and": True}},
+                tenant_role_names={"tenant2": {"values": ["admin", "user"], "and": False}},
             )
             users = resp["users"]
             self.assertEqual(len(users), 2)
@@ -1324,8 +1324,8 @@ class TestUser(common.DescopeTest):
                     "page": 0,
                     "testUsersOnly": True,
                     "withTestUser": True,
-                    "tenantRoleIds": {"tenant1": {"values": ["roleA", "roleB"]}},
-                    "tenantRoleNames": {"tenant2": {"values": ["admin", "user"]}},
+                    "tenantRoleIds": {"tenant1": {"values": ["roleA", "roleB"], "and": True}},
+                    "tenantRoleNames": {"tenant2": {"values": ["admin", "user"], "and": False}},
                 },
                 allow_redirects=False,
                 verify=True,

@@ -9,7 +9,6 @@ from descope.management.common import (
     MgmtV1,
     Sort,
     associated_tenants_to_dict,
-    map_to_values_object,
     sort_to_dict,
 )
 from descope.management.user_pwd import UserPassword
@@ -666,7 +665,9 @@ class User(AuthBase):
         to_modified_time (int): Optional int, only include users whose last modification/update occurred on or before this time (in Unix epoch milliseconds)
         user_ids (List[str]): Optional list of user IDs to filter by
         tenant_role_ids (dict): Optional mapping of tenant ID to list of role IDs.
+            Dict value is in the form of {"tenant_id": {"values":["role_id1", "role_id2"], "and": True}} if you want to match all roles (AND) or any role (OR).
         tenant_role_names (dict): Optional mapping of tenant ID to list of role names.
+            Dict value is in the form of {"tenant_id": {"values":["role_name1", "role_name2"], "and": True}} if you want to match all roles (AND) or any role (OR).
 
         Return value (dict):
         Return dict in the format
@@ -733,9 +734,9 @@ class User(AuthBase):
             body["toModifiedTime"] = to_modified_time
 
         if tenant_role_ids is not None:
-            body["tenantRoleIds"] = map_to_values_object(tenant_role_ids)
+            body["tenantRoleIds"] = tenant_role_ids
         if tenant_role_names is not None:
-            body["tenantRoleNames"] = map_to_values_object(tenant_role_names)
+            body["tenantRoleNames"] = tenant_role_names
 
         response = self._auth.do_post(
             MgmtV1.users_search_path,
@@ -786,7 +787,9 @@ class User(AuthBase):
         from_modified_time (int): Optional int, only include users whose last modification/update occurred on or after this time (in Unix epoch milliseconds)
         to_modified_time (int): Optional int, only include users whose last modification/update occurred on or before this time (in Unix epoch milliseconds)
         tenant_role_ids (dict): Optional mapping of tenant ID to list of role IDs.
+            Dict value is in the form of {"tenant_id": {"values":["role_id1", "role_id2"], "and": True}} if you want to match all roles (AND) or any role (OR).
         tenant_role_names (dict): Optional mapping of tenant ID to list of role names.
+            Dict value is in the form of {"tenant_id": {"values":["role_name1", "role_name2"], "and": True}} if you want to match all roles (AND) or any role (OR).
 
         Return value (dict):
         Return dict in the format
@@ -850,9 +853,9 @@ class User(AuthBase):
             body["toModifiedTime"] = to_modified_time
 
         if tenant_role_ids is not None:
-            body["tenantRoleIds"] = map_to_values_object(tenant_role_ids)
+            body["tenantRoleIds"] = tenant_role_ids
         if tenant_role_names is not None:
-            body["tenantRoleNames"] = map_to_values_object(tenant_role_names)
+            body["tenantRoleNames"] = tenant_role_names
 
         response = self._auth.do_post(
             MgmtV1.test_users_search_path,
