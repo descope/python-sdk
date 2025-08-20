@@ -9,7 +9,6 @@ from descope.management.common import (
     MgmtV1,
     Sort,
     associated_tenants_to_dict,
-    map_to_values_object,
     sort_to_dict,
 )
 from descope.management.user_pwd import UserPassword
