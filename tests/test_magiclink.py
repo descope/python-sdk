@@ -112,7 +112,13 @@ class TestMagicLink(common.DescopeTest):
         )
 
     def test_sign_in(self):
-        magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
+        magiclink = MagicLink(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
 
         # Test failed flows
         self.assertRaises(
@@ -231,7 +237,13 @@ class TestMagicLink(common.DescopeTest):
             "email": "dummy@dummy.com",
         }
 
-        magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
+        magiclink = MagicLink(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
 
         # Test failed flows
         self.assertRaises(
@@ -392,7 +404,13 @@ class TestMagicLink(common.DescopeTest):
             )
 
     def test_sign_up_or_in(self):
-        magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
+        magiclink = MagicLink(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
 
         # Test failed flows
 
@@ -461,7 +479,13 @@ class TestMagicLink(common.DescopeTest):
     def test_verify(self):
         token = "1234"
 
-        magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
+        magiclink = MagicLink(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
 
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = False
@@ -487,7 +511,7 @@ class TestMagicLink(common.DescopeTest):
     def test_verify_with_get_keys_mock(self):
         token = "1234"
         magiclink = MagicLink(
-            Auth(self.dummy_project_id, None)
+            Auth(self.dummy_project_id, None, http_client=self.make_http_client())
         )  # public key will be "fetched" by Get mock
 
         # Test success flow
@@ -508,7 +532,13 @@ class TestMagicLink(common.DescopeTest):
                 self.assertIsNotNone(magiclink.verify(token))
 
     def test_update_user_email(self):
-        magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
+        magiclink = MagicLink(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
 
         self.assertRaises(
             AuthException,
@@ -593,7 +623,13 @@ class TestMagicLink(common.DescopeTest):
             )
 
     def test_update_user_phone(self):
-        magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
+        magiclink = MagicLink(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
 
         self.assertRaises(
             AuthException,
