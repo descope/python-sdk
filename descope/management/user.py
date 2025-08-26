@@ -250,6 +250,7 @@ class User(AuthBase):
         additional_login_ids: Optional[List[str]] = None,
         sso_app_ids: Optional[List[str]] = None,
         template_id: str = "",
+        test: bool = False,
     ) -> dict:
         """
         Create a new user and invite them via an email / text message.
@@ -278,7 +279,7 @@ class User(AuthBase):
                 role_names,
                 user_tenants,
                 True,
-                False,
+                test,
                 picture,
                 custom_attributes,
                 verified_email,
@@ -346,6 +347,7 @@ class User(AuthBase):
         verified_phone: Optional[bool] = None,
         additional_login_ids: Optional[List[str]] = None,
         sso_app_ids: Optional[List[str]] = None,
+        test: bool = False,
     ) -> dict:
         """
         Update an existing user with the given various fields. IMPORTANT: All parameters are used as overrides
@@ -367,6 +369,7 @@ class User(AuthBase):
         picture (str): Optional url for user picture
         custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
         sso_app_ids (List[str]): Optional, list of SSO applications IDs to be associated with the user.
+        test (bool, optional): Set to True to update a test user. Defaults to False.
 
         Return value (dict):
         Return dict in the format
@@ -391,7 +394,7 @@ class User(AuthBase):
                 family_name,
                 role_names,
                 user_tenants,
-                False,
+                test,
                 picture,
                 custom_attributes,
                 verified_email,
@@ -420,6 +423,7 @@ class User(AuthBase):
         verified_email: Optional[bool] = None,
         verified_phone: Optional[bool] = None,
         sso_app_ids: Optional[List[str]] = None,
+        test: bool = False,
     ) -> dict:
         """
         Patches an existing user with the given various fields. Only the given fields will be used to update the user.
@@ -439,6 +443,7 @@ class User(AuthBase):
         picture (str): Optional url for user picture
         custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
         sso_app_ids (List[str]): Optional, list of SSO applications IDs to be associated with the user.
+        test (bool, optional): Set to True to update a test user. Defaults to False.
 
         Return value (dict):
         Return dict in the format
@@ -465,6 +470,7 @@ class User(AuthBase):
                 verified_email,
                 verified_phone,
                 sso_app_ids,
+                test,
             ),
             pswd=self._auth.management_key,
         )
@@ -632,6 +638,8 @@ class User(AuthBase):
         from_modified_time: Optional[int] = None,
         to_modified_time: Optional[int] = None,
         user_ids: Optional[List[str]] = None,
+        tenant_role_ids: Optional[dict] = None,
+        tenant_role_names: Optional[dict] = None,
     ) -> dict:
         """
         Search all users.
@@ -656,6 +664,10 @@ class User(AuthBase):
         from_modified_time (int): Optional int, only include users whose last modification/update occurred on or after this time (in Unix epoch milliseconds)
         to_modified_time (int): Optional int, only include users whose last modification/update occurred on or before this time (in Unix epoch milliseconds)
         user_ids (List[str]): Optional list of user IDs to filter by
+        tenant_role_ids (dict): Optional mapping of tenant ID to list of role IDs.
+            Dict value is in the form of {"tenant_id": {"values":["role_id1", "role_id2"], "and": True}} if you want to match all roles (AND) or any role (OR).
+        tenant_role_names (dict): Optional mapping of tenant ID to list of role names.
+            Dict value is in the form of {"tenant_id": {"values":["role_name1", "role_name2"], "and": True}} if you want to match all roles (AND) or any role (OR).
 
         Return value (dict):
         Return dict in the format
@@ -721,6 +733,11 @@ class User(AuthBase):
         if to_modified_time is not None:
             body["toModifiedTime"] = to_modified_time
 
+        if tenant_role_ids is not None:
+            body["tenantRoleIds"] = tenant_role_ids
+        if tenant_role_names is not None:
+            body["tenantRoleNames"] = tenant_role_names
+
         response = self._auth.do_post(
             MgmtV1.users_search_path,
             body=body,
@@ -746,6 +763,8 @@ class User(AuthBase):
         to_created_time: Optional[int] = None,
         from_modified_time: Optional[int] = None,
         to_modified_time: Optional[int] = None,
+        tenant_role_ids: Optional[dict] = None,
+        tenant_role_names: Optional[dict] = None,
     ) -> dict:
         """
         Search all test users.
@@ -767,6 +786,10 @@ class User(AuthBase):
         to_created_time (int): Optional int, only include users who were created on or before this time (in Unix epoch milliseconds)
         from_modified_time (int): Optional int, only include users whose last modification/update occurred on or after this time (in Unix epoch milliseconds)
         to_modified_time (int): Optional int, only include users whose last modification/update occurred on or before this time (in Unix epoch milliseconds)
+        tenant_role_ids (dict): Optional mapping of tenant ID to list of role IDs.
+            Dict value is in the form of {"tenant_id": {"values":["role_id1", "role_id2"], "and": True}} if you want to match all roles (AND) or any role (OR).
+        tenant_role_names (dict): Optional mapping of tenant ID to list of role names.
+            Dict value is in the form of {"tenant_id": {"values":["role_name1", "role_name2"], "and": True}} if you want to match all roles (AND) or any role (OR).
 
         Return value (dict):
         Return dict in the format
@@ -828,6 +851,11 @@ class User(AuthBase):
             body["fromModifiedTime"] = from_modified_time
         if to_modified_time is not None:
             body["toModifiedTime"] = to_modified_time
+
+        if tenant_role_ids is not None:
+            body["tenantRoleIds"] = tenant_role_ids
+        if tenant_role_names is not None:
+            body["tenantRoleNames"] = tenant_role_names
 
         response = self._auth.do_post(
             MgmtV1.test_users_search_path,
@@ -1697,9 +1725,13 @@ class User(AuthBase):
         return response.json()["token"]
 
     def generate_sign_up_embedded_link(
-        self, login_id: str, user: Optional[CreateUserObj] = None,
-        email_verified: bool = False, phone_verified: bool = False,
-        login_options: Optional[LoginOptions] = None, timeout: int = 0
+        self,
+        login_id: str,
+        user: Optional[CreateUserObj] = None,
+        email_verified: bool = False,
+        phone_verified: bool = False,
+        login_options: Optional[LoginOptions] = None,
+        timeout: int = 0,
     ) -> str:
         """
         Generate sign up Embedded Link for the given user login ID.
@@ -1727,7 +1759,7 @@ class User(AuthBase):
                 "loginOptions": login_options.__dict__ if login_options else {},
                 "emailVerified": email_verified,
                 "phoneVerified": phone_verified,
-                "timeout": timeout
+                "timeout": timeout,
             },
             pswd=self._auth.management_key,
         )
@@ -1936,6 +1968,7 @@ class User(AuthBase):
         verified_email: Optional[bool],
         verified_phone: Optional[bool],
         sso_app_ids: Optional[List[str]],
+        test: bool = False,
     ) -> dict:
         res: dict[str, Any] = {
             "loginId": login_id,
@@ -1966,4 +1999,6 @@ class User(AuthBase):
             res["verifiedPhone"] = verified_phone
         if sso_app_ids is not None:
             res["ssoAppIds"] = sso_app_ids
+        if test:
+            res["test"] = test
         return res

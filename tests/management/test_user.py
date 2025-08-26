@@ -1047,6 +1047,45 @@ class TestUser(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+        # Test success flow with tenant_role_ids and tenant_role_names
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads(
+                """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
+            )
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.search_all(
+                tenant_role_ids={"tenant1": {"values": ["roleA", "roleB"], "and": True}},
+                tenant_role_names={"tenant2": {"values": ["admin", "user"], "and": False}},
+            )
+            users = resp["users"]
+            self.assertEqual(len(users), 2)
+            self.assertEqual(users[0]["id"], "u1")
+            self.assertEqual(users[1]["id"], "u2")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.users_search_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "tenantIds": [],
+                    "roleNames": [],
+                    "limit": 0,
+                    "page": 0,
+                    "testUsersOnly": False,
+                    "withTestUser": False,
+                    "tenantRoleIds": {"tenant1": {"values": ["roleA", "roleB"], "and": True}},
+                    "tenantRoleNames": {"tenant2": {"values": ["admin", "user"], "and": False}},
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
     def test_search_all_test_users(self):
         # Test failed flows
         with patch("httpx.post") as mock_post:
@@ -1250,6 +1289,45 @@ class TestUser(common.DescopeTest):
                     "toModifiedTime": 400,
                 },
                 follow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test success flow with tenant_role_ids and tenant_role_names
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads(
+                """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
+            )
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.search_all_test_users(
+                tenant_role_ids={"tenant1": {"values": ["roleA", "roleB"], "and": True}},
+                tenant_role_names={"tenant2": {"values": ["admin", "user"], "and": False}},
+            )
+            users = resp["users"]
+            self.assertEqual(len(users), 2)
+            self.assertEqual(users[0]["id"], "u1")
+            self.assertEqual(users[1]["id"], "u2")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.test_users_search_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "tenantIds": [],
+                    "roleNames": [],
+                    "limit": 0,
+                    "page": 0,
+                    "testUsersOnly": True,
+                    "withTestUser": True,
+                    "tenantRoleIds": {"tenant1": {"values": ["roleA", "roleB"], "and": True}},
+                    "tenantRoleNames": {"tenant2": {"values": ["admin", "user"], "and": False}},
+                },
+                allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -2519,5 +2597,75 @@ class TestUser(common.DescopeTest):
                 follow_redirects=False,
                 verify=True,
                 params=None,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_update_test_user(self):
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads('{"user": {"id": "u1"}}')
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.update(
+                "id",
+                display_name="test-user",
+                test=True,
+            )
+            user = resp["user"]
+            self.assertEqual(user["id"], "u1")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "loginId": "id",
+                    "email": None,
+                    "phone": None,
+                    "displayName": "test-user",
+                    "roleNames": [],
+                    "userTenants": [],
+                    "test": True,
+                    "picture": None,
+                    "customAttributes": None,
+                    "additionalLoginIds": None,
+                    "ssoAppIDs": None,
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_patch_test_user(self):
+        with patch("requests.patch") as mock_patch:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads('{"user": {"id": "u1"}}')
+            mock_patch.return_value = network_resp
+            resp = self.client.mgmt.user.patch(
+                "id",
+                display_name="test-user",
+                test=True,
+            )
+            user = resp["user"]
+            self.assertEqual(user["id"], "u1")
+            mock_patch.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_patch_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "loginId": "id",
+                    "displayName": "test-user",
+                    "test": True,
+                },
+                allow_redirects=False,
+                verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

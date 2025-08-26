@@ -1,4 +1,32 @@
+from enum import Enum
 from typing import List, Optional
+
+
+class AccessType(Enum):
+    OFFLINE = "offline"
+    ONLINE = "online"
+
+
+class PromptType(Enum):
+    NONE = "none"
+    LOGIN = "login"
+    CONSENT = "consent"
+    SELECT_ACCOUNT = "select_account"
+
+
+class URLParam:
+    def __init__(self, name: str, value: str):
+        self.name = name
+        self.value = value
+
+    def to_dict(self) -> dict:
+        return {"name": self.name, "value": self.value}
+
+
+def url_params_to_dict(url_params: Optional[List[URLParam]] = None) -> list:
+    if url_params is None:
+        return []
+    return [param.to_dict() for param in url_params]
 
 
 class MgmtV1:
@@ -18,6 +46,21 @@ class MgmtV1:
     sso_application_delete_path = "/v1/mgmt/sso/idp/app/delete"
     sso_application_load_path = "/v1/mgmt/sso/idp/app/load"
     sso_application_load_all_path = "/v1/mgmt/sso/idp/apps/load"
+
+    # outbound application
+    outbound_application_create_path = "/v1/mgmt/outbound/app/create"
+    outbound_application_update_path = "/v1/mgmt/outbound/app/update"
+    outbound_application_delete_path = "/v1/mgmt/outbound/app/delete"
+    outbound_application_load_path = "/v1/mgmt/outbound/app"
+    outbound_application_load_all_path = "/v1/mgmt/outbound/apps"
+    outbound_application_fetch_token_by_scopes_path = "/v1/mgmt/outbound/app/user/token"
+    outbound_application_fetch_token_path = "/v1/mgmt/outbound/app/user/token/latest"
+    outbound_application_fetch_tenant_token_by_scopes_path = (
+        "/v1/mgmt/outbound/app/tenant/token"
+    )
+    outbound_application_fetch_tenant_token_path = (
+        "/v1/mgmt/outbound/app/tenant/token/latest"
+    )
 
     # user
     user_create_path = "/v1/mgmt/user/create"

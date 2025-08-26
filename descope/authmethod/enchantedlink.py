@@ -118,8 +118,13 @@ class EnchantedLink(AuthBase):
         Auth.validate_email(email)
 
         body = EnchantedLink._compose_update_user_email_body(
-            login_id, email, add_to_login_ids, on_merge_use_existing,
-            template_options, template_id, provider_id
+            login_id,
+            email,
+            add_to_login_ids,
+            on_merge_use_existing,
+            template_options,
+            template_id,
+            provider_id,
         )
         uri = EndpointsV1.update_user_email_enchantedlink_path
         response = self._auth.do_post(uri, body, None, refresh_token)

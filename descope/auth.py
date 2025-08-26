@@ -73,6 +73,7 @@ class Auth:
         management_key: str | None = None,
         timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
         jwt_validation_leeway: int = 5,
+        auth_management_key: str | None = None,
     ):
         self.lock_public_keys = Lock()
         # validate project id
@@ -95,6 +96,9 @@ class Auth:
             self.base_url = self.base_url_for_project_id(self.project_id)
         self.timeout_seconds = timeout_seconds
         self.management_key = management_key or os.getenv("DESCOPE_MANAGEMENT_KEY")
+        self.auth_management_key = auth_management_key or os.getenv(
+            "DESCOPE_AUTH_MANAGEMENT_KEY"
+        )
 
         public_key = public_key or os.getenv("DESCOPE_PUBLIC_KEY")
         with self.lock_public_keys:
@@ -120,7 +124,7 @@ class Auth:
             )
         except RateLimitException:
             raise
-        except Exception as e:
+        except Exception:
             raise RateLimitException(
                 status_code=HTTPStatus.TOO_MANY_REQUESTS,
                 error_type=ERROR_TYPE_API_RATE_LIMIT,
@@ -498,7 +502,9 @@ class Auth:
         ]  # support both url issuer and project ID issuer
 
         sub = (
-            jwt_response.get(SESSION_TOKEN_NAME, {}).get("sub", None)
+            jwt_response.get(SESSION_TOKEN_NAME, {}).get("dsub", None)
+            or jwt_response.get(SESSION_TOKEN_NAME, {}).get("sub", None)
+            or jwt_response.get(REFRESH_SESSION_TOKEN_NAME, {}).get("dsub", None)
             or jwt_response.get(REFRESH_SESSION_TOKEN_NAME, {}).get("sub", None)
             or jwt_response.get("sub", "")
         )
@@ -564,6 +570,8 @@ class Auth:
         bearer = self.project_id
         if pswd:
             bearer = f"{self.project_id}:{pswd}"
+        if self.auth_management_key:
+            bearer = f"{bearer}:{self.auth_management_key}"
         headers["Authorization"] = f"Bearer {bearer}"
         return headers
 
@@ -629,11 +637,17 @@ class Auth:
                 audience=audience,
                 leeway=self.jwt_validation_leeway,
             )
-        except (ImmatureSignatureError, ExpiredSignatureError):
+        except (ImmatureSignatureError):
             raise AuthException(
                 400,
                 ERROR_TYPE_INVALID_TOKEN,
-                "Received Invalid token times error due to time glitch (between machines) during jwt validation, try to set the jwt_validation_leeway parameter (in DescopeClient) to higher value than 5sec which is the default",
+                "Received Invalid token (nbf in future) during jwt validation. Error can be due to time glitch (between machines), try to set the jwt_validation_leeway parameter (in DescopeClient) to higher value than 5sec which is the default",
+            )
+        except (ExpiredSignatureError):
+            raise AuthException(
+                401,
+                ERROR_TYPE_INVALID_TOKEN,
+                "Received expired token (exp in past) during jwt validation. (sometimes can be due to time glitch (between machines), try to set the jwt_validation_leeway parameter (in DescopeClient) to higher value than 5sec which is the default)",
             )
 
         claims["jwt"] = token

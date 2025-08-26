@@ -14,7 +14,12 @@ from descope import (
     DescopeClient,
     RateLimitException,
 )
-from descope.common import DEFAULT_TIMEOUT_SECONDS, SESSION_TOKEN_NAME, EndpointsV1
+from descope.common import (
+    DEFAULT_TIMEOUT_SECONDS,
+    SESSION_TOKEN_NAME,
+    DeliveryMethod,
+    EndpointsV1,
+)
 
 from . import common
 
@@ -66,7 +71,31 @@ class TestDescopeClient(common.DescopeTest):
 
     def test_mgmt(self):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)
-        self.assertRaises(AuthException, lambda: client.mgmt)
+
+        # Validate that any invocation of specific mgmt object raises AuthException as mgmt key was not set
+        self.assertRaises(AuthException, lambda: client.mgmt.tenant)
+        self.assertRaises(AuthException, lambda: client.mgmt.sso_application)
+        self.assertRaises(AuthException, lambda: client.mgmt.user)
+        self.assertRaises(AuthException, lambda: client.mgmt.access_key)
+        self.assertRaises(AuthException, lambda: client.mgmt.sso)
+        self.assertRaises(AuthException, lambda: client.mgmt.jwt)
+        self.assertRaises(AuthException, lambda: client.mgmt.permission)
+        self.assertRaises(AuthException, lambda: client.mgmt.role)
+        self.assertRaises(AuthException, lambda: client.mgmt.group)
+        self.assertRaises(AuthException, lambda: client.mgmt.flow)
+        self.assertRaises(AuthException, lambda: client.mgmt.audit)
+        self.assertRaises(AuthException, lambda: client.mgmt.authz)
+        self.assertRaises(AuthException, lambda: client.mgmt.fga)
+        self.assertRaises(AuthException, lambda: client.mgmt.project)
+        self.assertRaises(AuthException, lambda: client.mgmt.outbound_application)
+
+        # Validate that outbound_application_by_token doesnt require mgmt key
+        try:
+            client.mgmt.outbound_application_by_token
+        except AuthException:
+            self.fail(
+                "failed to initiate outbound_application_by_token without management key"
+            )
 
     def test_logout(self):
         dummy_refresh_token = ""
@@ -795,7 +824,7 @@ class TestDescopeClient(common.DescopeTest):
         self.assertEqual(cm.exception.status_code, 400)
         self.assertEqual(
             cm.exception.error_message,
-            "Received Invalid token times error due to time glitch (between machines) during jwt validation, try to set the jwt_validation_leeway parameter (in DescopeClient) to higher value than 5sec which is the default",
+            "Received Invalid token (nbf in future) during jwt validation. Error can be due to time glitch (between machines), try to set the jwt_validation_leeway parameter (in DescopeClient) to higher value than 5sec which is the default",
         )
 
     def test_select_tenant(self):
@@ -838,6 +867,183 @@ class TestDescopeClient(common.DescopeTest):
                 },
                 follow_redirects=False,
                 verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_auth_management_key_with_functions(self):
+        """Test auth_management_key with functions that require and don't require refresh tokens"""
+        auth_mgmt_key = "test-auth-mgmt-key"
+
+        # Test 1: Direct auth_management_key setting (without refresh token)
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            auth_management_key=auth_mgmt_key,
+        )
+
+        with patch("requests.post") as mock_post:
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
+            mock_post.return_value = my_mock_response
+
+            client.otp.sign_up(DeliveryMethod.EMAIL, "test@example.com")
+
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_otp_path}/email",
+                headers={
+                    **common.default_headers,
+                    "x-descope-project-id": self.dummy_project_id,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{auth_mgmt_key}",
+                },
+                json={
+                    "loginId": "test@example.com",
+                    "user": {"email": "test@example.com"},
+                    "email": "test@example.com",
+                },
+                params=None,
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test 2: Environment variable auth_management_key setting
+        env_auth_mgmt_key = "env-auth-mgmt-key"
+        with patch.dict(
+            "os.environ", {"DESCOPE_AUTH_MANAGEMENT_KEY": env_auth_mgmt_key}
+        ):
+            client_env = DescopeClient(self.dummy_project_id, self.public_key_dict)
+
+            with patch("requests.post") as mock_post:
+                my_mock_response = mock.Mock()
+                my_mock_response.ok = True
+                my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
+                mock_post.return_value = my_mock_response
+
+                client_env.otp.sign_up(DeliveryMethod.EMAIL, "test@example.com")
+
+                mock_post.assert_called_with(
+                    f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_otp_path}/email",
+                    headers={
+                        **common.default_headers,
+                        "x-descope-project-id": self.dummy_project_id,
+                        "Authorization": f"Bearer {self.dummy_project_id}:{env_auth_mgmt_key}",
+                    },
+                    json={
+                        "loginId": "test@example.com",
+                        "user": {"email": "test@example.com"},
+                        "email": "test@example.com",
+                    },
+                    allow_redirects=False,
+                    verify=True,
+                    params=None,
+                    timeout=DEFAULT_TIMEOUT_SECONDS,
+                )
+
+        # Test 3: Direct parameter takes priority over environment variable
+        direct_auth_mgmt_key = "direct-auth-mgmt-key"
+        with patch.dict(
+            "os.environ", {"DESCOPE_AUTH_MANAGEMENT_KEY": env_auth_mgmt_key}
+        ):
+            client_priority = DescopeClient(
+                self.dummy_project_id,
+                self.public_key_dict,
+                auth_management_key=direct_auth_mgmt_key,
+            )
+
+            with patch("requests.post") as mock_post:
+                my_mock_response = mock.Mock()
+                my_mock_response.ok = True
+                my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
+                mock_post.return_value = my_mock_response
+
+                client_priority.otp.sign_up(DeliveryMethod.EMAIL, "test@example.com")
+
+                mock_post.assert_called_with(
+                    f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_otp_path}/email",
+                    headers={
+                        **common.default_headers,
+                        "x-descope-project-id": self.dummy_project_id,
+                        "Authorization": f"Bearer {self.dummy_project_id}:{direct_auth_mgmt_key}",
+                    },
+                    json={
+                        "loginId": "test@example.com",
+                        "user": {"email": "test@example.com"},
+                        "email": "test@example.com",
+                    },
+                    params=None,
+                    allow_redirects=False,
+                    verify=True,
+                    timeout=DEFAULT_TIMEOUT_SECONDS,
+                )
+
+    def test_auth_management_key_with_refresh_token(self):
+        auth_mgmt_key = "test-auth-mgmt-key"
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            auth_management_key=auth_mgmt_key,
+        )
+
+        # Test with refresh token function
+        refresh_token = "test_refresh_token"
+        with patch("requests.post") as mock_post:
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.json.return_value = {"maskedEmail": "n***@example.com"}
+            mock_post.return_value = my_mock_response
+
+            client.otp.update_user_email(
+                "old@example.com", "new@example.com", refresh_token
+            )
+
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_user_email_otp_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{refresh_token}:{auth_mgmt_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                json={
+                    "loginId": "old@example.com",
+                    "email": "new@example.com",
+                    "addToLoginIDs": False,
+                    "onMergeUseExisting": False,
+                },
+                allow_redirects=False,
+                verify=True,
+                params=None,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test without auth_management_key for comparison
+        client_no_auth = DescopeClient(self.dummy_project_id, self.public_key_dict)
+        with patch("requests.post") as mock_post:
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            my_mock_response.json.return_value = {"maskedEmail": "n***@example.com"}
+            mock_post.return_value = my_mock_response
+
+            client_no_auth.otp.update_user_email(
+                "old@example.com", "new@example.com", refresh_token
+            )
+
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_user_email_otp_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{refresh_token}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                json={
+                    "loginId": "old@example.com",
+                    "email": "new@example.com",
+                    "addToLoginIDs": False,
+                    "onMergeUseExisting": False,
+                },
+                allow_redirects=False,
+                verify=True,
+                params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
