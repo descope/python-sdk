@@ -1,10 +1,10 @@
 from typing import List
 
-from descope._auth_base import AuthBase
+from descope._http_base import HTTPBase
 from descope.management.common import MgmtV1
 
 
-class Flow(AuthBase):
+class Flow(HTTPBase):
     def list_flows(
         self,
     ) -> dict:
@@ -18,11 +18,7 @@ class Flow(AuthBase):
         Raise:
         AuthException: raised if list operation fails
         """
-        response = self._auth.do_post(
-            MgmtV1.flow_list_path,
-            None,
-            pswd=self._auth.management_key,
-        )
+        response = self._http.post(MgmtV1.flow_list_path)
         return response.json()
 
     def delete_flows(
@@ -38,12 +34,11 @@ class Flow(AuthBase):
         Raise:
         AuthException: raised if delete operation fails
         """
-        response = self._auth.do_post(
+        response = self._http.post(
             MgmtV1.flow_delete_path,
-            {
+            body={
                 "ids": flow_ids,
             },
-            pswd=self._auth.management_key,
         )
         return response.json()
 
@@ -64,12 +59,11 @@ class Flow(AuthBase):
         Raise:
         AuthException: raised if export operation fails
         """
-        response = self._auth.do_post(
+        response = self._http.post(
             MgmtV1.flow_export_path,
-            {
+            body={
                 "flowId": flow_id,
             },
-            pswd=self._auth.management_key,
         )
         return response.json()
 
@@ -97,14 +91,13 @@ class Flow(AuthBase):
         Raise:
         AuthException: raised if import operation fails
         """
-        response = self._auth.do_post(
+        response = self._http.post(
             MgmtV1.flow_import_path,
-            {
+            body={
                 "flowId": flow_id,
                 "flow": flow,
                 "screens": screens,
             },
-            pswd=self._auth.management_key,
         )
         return response.json()
 
@@ -121,10 +114,9 @@ class Flow(AuthBase):
         Raise:
         AuthException: raised if export operation fails
         """
-        response = self._auth.do_post(
+        response = self._http.post(
             MgmtV1.theme_export_path,
-            {},
-            pswd=self._auth.management_key,
+            body={},
         )
         return response.json()
 
@@ -147,11 +139,10 @@ class Flow(AuthBase):
         Raise:
         AuthException: raised if import operation fails
         """
-        response = self._auth.do_post(
+        response = self._http.post(
             MgmtV1.theme_import_path,
-            {
+            body={
                 "theme": theme,
             },
-            pswd=self._auth.management_key,
         )
         return response.json()
