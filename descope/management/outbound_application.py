@@ -188,6 +188,31 @@ class OutboundApplication(AuthBase):
         )
         return response.json()
 
+    def create_application_by_dcr_preset(
+        self,
+        dcr_preset_id: str,
+    ) -> dict:
+        """
+        Create a new outbound application using a DCR (Dynamic Client Registration) preset.
+
+        Args:
+        dcr_preset_id (str): The ID of the DCR preset to use for creating the application.
+
+        Return value (dict):
+        Return dict in the format
+             {"app": {"id": <id>, "name": <name>, "description": <description>, "logo": <logo>}}
+
+        Raise:
+        AuthException: raised if create operation fails
+        """
+        uri = MgmtV1.outbound_application_create_by_dcr_preset_path
+        response = self._auth.do_post(
+            uri,
+            {"dcrPresetId": dcr_preset_id},
+            pswd=self._auth.management_key,
+        )
+        return response.json()
+
     def update_application(
         self,
         id: str,

@@ -126,6 +126,53 @@ class TestOutboundApplication(common.DescopeTest):
                 "Test App",
             )
 
+    def test_create_application_by_dcr_preset_success(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = {
+                "app": {
+                    "id": "app123",
+                    "name": "DCR Preset App",
+                    "description": "App created from DCR preset",
+                }
+            }
+            mock_post.return_value = network_resp
+            response = client.mgmt.outbound_application.create_application_by_dcr_preset(
+                "dcr-preset-456"
+            )
+
+            assert response == {
+                "app": {
+                    "id": "app123",
+                    "name": "DCR Preset App",
+                    "description": "App created from DCR preset",
+                }
+            }
+
+    def test_create_application_by_dcr_preset_failure(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.outbound_application.create_application_by_dcr_preset,
+                "dcr-preset-456",
+            )
+
     def test_update_application_success(self):
         client = DescopeClient(
             self.dummy_project_id,
