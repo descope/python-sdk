@@ -1048,7 +1048,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow with tenant_role_ids and tenant_role_names
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads(
@@ -1056,8 +1056,12 @@ class TestUser(common.DescopeTest):
             )
             mock_post.return_value = network_resp
             resp = self.client.mgmt.user.search_all(
-                tenant_role_ids={"tenant1": {"values": ["roleA", "roleB"], "and": True}},
-                tenant_role_names={"tenant2": {"values": ["admin", "user"], "and": False}},
+                tenant_role_ids={
+                    "tenant1": {"values": ["roleA", "roleB"], "and": True}
+                },
+                tenant_role_names={
+                    "tenant2": {"values": ["admin", "user"], "and": False}
+                },
             )
             users = resp["users"]
             self.assertEqual(len(users), 2)
@@ -1078,10 +1082,14 @@ class TestUser(common.DescopeTest):
                     "page": 0,
                     "testUsersOnly": False,
                     "withTestUser": False,
-                    "tenantRoleIds": {"tenant1": {"values": ["roleA", "roleB"], "and": True}},
-                    "tenantRoleNames": {"tenant2": {"values": ["admin", "user"], "and": False}},
+                    "tenantRoleIds": {
+                        "tenant1": {"values": ["roleA", "roleB"], "and": True}
+                    },
+                    "tenantRoleNames": {
+                        "tenant2": {"values": ["admin", "user"], "and": False}
+                    },
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -1294,7 +1302,7 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow with tenant_role_ids and tenant_role_names
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads(
@@ -1302,8 +1310,12 @@ class TestUser(common.DescopeTest):
             )
             mock_post.return_value = network_resp
             resp = self.client.mgmt.user.search_all_test_users(
-                tenant_role_ids={"tenant1": {"values": ["roleA", "roleB"], "and": True}},
-                tenant_role_names={"tenant2": {"values": ["admin", "user"], "and": False}},
+                tenant_role_ids={
+                    "tenant1": {"values": ["roleA", "roleB"], "and": True}
+                },
+                tenant_role_names={
+                    "tenant2": {"values": ["admin", "user"], "and": False}
+                },
             )
             users = resp["users"]
             self.assertEqual(len(users), 2)
@@ -1324,10 +1336,14 @@ class TestUser(common.DescopeTest):
                     "page": 0,
                     "testUsersOnly": True,
                     "withTestUser": True,
-                    "tenantRoleIds": {"tenant1": {"values": ["roleA", "roleB"], "and": True}},
-                    "tenantRoleNames": {"tenant2": {"values": ["admin", "user"], "and": False}},
+                    "tenantRoleIds": {
+                        "tenant1": {"values": ["roleA", "roleB"], "and": True}
+                    },
+                    "tenantRoleNames": {
+                        "tenant2": {"values": ["admin", "user"], "and": False}
+                    },
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -2601,7 +2617,7 @@ class TestUser(common.DescopeTest):
             )
 
     def test_update_test_user(self):
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads('{"user": {"id": "u1"}}')
@@ -2634,13 +2650,13 @@ class TestUser(common.DescopeTest):
                     "additionalLoginIds": None,
                     "ssoAppIDs": None,
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_patch_test_user(self):
-        with patch("requests.patch") as mock_patch:
+        with patch("httpx.patch") as mock_patch:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads('{"user": {"id": "u1"}}')
@@ -2665,7 +2681,7 @@ class TestUser(common.DescopeTest):
                     "displayName": "test-user",
                     "test": True,
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

@@ -31,7 +31,7 @@ class TestOutboundApplication(common.DescopeTest):
             self.dummy_management_key,
         )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = {
@@ -70,7 +70,7 @@ class TestOutboundApplication(common.DescopeTest):
         token_params = [URLParam("grant_type", "authorization_code")]
         prompts = [PromptType.LOGIN, PromptType.CONSENT]
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = {
@@ -118,7 +118,7 @@ class TestOutboundApplication(common.DescopeTest):
             self.dummy_management_key,
         )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -134,7 +134,7 @@ class TestOutboundApplication(common.DescopeTest):
             self.dummy_management_key,
         )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = {
@@ -176,7 +176,7 @@ class TestOutboundApplication(common.DescopeTest):
         token_params = [URLParam("grant_type", "authorization_code")]
         prompts = [PromptType.LOGIN, PromptType.CONSENT, PromptType.SELECT_ACCOUNT]
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = {
@@ -227,7 +227,7 @@ class TestOutboundApplication(common.DescopeTest):
             self.dummy_management_key,
         )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -244,7 +244,7 @@ class TestOutboundApplication(common.DescopeTest):
             self.dummy_management_key,
         )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             mock_post.return_value = network_resp
@@ -258,7 +258,7 @@ class TestOutboundApplication(common.DescopeTest):
             self.dummy_management_key,
         )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -274,7 +274,7 @@ class TestOutboundApplication(common.DescopeTest):
             self.dummy_management_key,
         )
 
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = {
@@ -303,7 +303,7 @@ class TestOutboundApplication(common.DescopeTest):
             self.dummy_management_key,
         )
 
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             mock_get.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -319,7 +319,7 @@ class TestOutboundApplication(common.DescopeTest):
             self.dummy_management_key,
         )
 
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = {
@@ -346,7 +346,7 @@ class TestOutboundApplication(common.DescopeTest):
             self.dummy_management_key,
         )
 
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             mock_get.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -361,7 +361,7 @@ class TestOutboundApplication(common.DescopeTest):
             self.dummy_management_key,
         )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = {
@@ -400,7 +400,7 @@ class TestOutboundApplication(common.DescopeTest):
             self.dummy_management_key,
         )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -418,7 +418,7 @@ class TestOutboundApplication(common.DescopeTest):
             self.dummy_management_key,
         )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = {
@@ -453,7 +453,7 @@ class TestOutboundApplication(common.DescopeTest):
             self.dummy_management_key,
         )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -470,7 +470,7 @@ class TestOutboundApplication(common.DescopeTest):
             self.dummy_management_key,
         )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = {
@@ -505,7 +505,7 @@ class TestOutboundApplication(common.DescopeTest):
             self.dummy_management_key,
         )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -523,7 +523,7 @@ class TestOutboundApplication(common.DescopeTest):
             self.dummy_management_key,
         )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = {
@@ -558,7 +558,7 @@ class TestOutboundApplication(common.DescopeTest):
             self.dummy_management_key,
         )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -807,7 +807,7 @@ class TestOutboundApplicationByToken(common.DescopeTest):
     def test_fetch_token_by_scopes_success(self):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = {
@@ -843,7 +843,7 @@ class TestOutboundApplicationByToken(common.DescopeTest):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
 
         # Test failure of empty token
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -855,7 +855,7 @@ class TestOutboundApplicationByToken(common.DescopeTest):
             )
 
         # Test invalid response failure
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -869,7 +869,7 @@ class TestOutboundApplicationByToken(common.DescopeTest):
     def test_fetch_token_success(self):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = {
@@ -904,7 +904,7 @@ class TestOutboundApplicationByToken(common.DescopeTest):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
 
         # Test failure of empty token
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertRaises(
                 AuthException,
@@ -915,7 +915,7 @@ class TestOutboundApplicationByToken(common.DescopeTest):
             )
 
         # Test invalid response failure
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -928,7 +928,7 @@ class TestOutboundApplicationByToken(common.DescopeTest):
     def test_fetch_tenant_token_by_scopes_success(self):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = {
@@ -965,7 +965,7 @@ class TestOutboundApplicationByToken(common.DescopeTest):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
 
         # Test failure of empty token
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertRaises(
                 AuthException,
@@ -977,7 +977,7 @@ class TestOutboundApplicationByToken(common.DescopeTest):
             )
 
         # Test invalid response failure
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,
@@ -991,7 +991,7 @@ class TestOutboundApplicationByToken(common.DescopeTest):
     def test_fetch_tenant_token_success(self):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = {
@@ -1022,7 +1022,7 @@ class TestOutboundApplicationByToken(common.DescopeTest):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
 
         # Test failure of empty token
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertRaises(
                 AuthException,
@@ -1033,7 +1033,7 @@ class TestOutboundApplicationByToken(common.DescopeTest):
             )
 
         # Test invalid response failure
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             mock_post.return_value.ok = False
             self.assertRaises(
                 AuthException,

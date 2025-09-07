@@ -881,7 +881,7 @@ class TestDescopeClient(common.DescopeTest):
             auth_management_key=auth_mgmt_key,
         )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
@@ -902,7 +902,7 @@ class TestDescopeClient(common.DescopeTest):
                     "email": "test@example.com",
                 },
                 params=None,
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -914,7 +914,7 @@ class TestDescopeClient(common.DescopeTest):
         ):
             client_env = DescopeClient(self.dummy_project_id, self.public_key_dict)
 
-            with patch("requests.post") as mock_post:
+            with patch("httpx.post") as mock_post:
                 my_mock_response = mock.Mock()
                 my_mock_response.ok = True
                 my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
@@ -934,7 +934,7 @@ class TestDescopeClient(common.DescopeTest):
                         "user": {"email": "test@example.com"},
                         "email": "test@example.com",
                     },
-                    allow_redirects=False,
+                    follow_redirects=False,
                     verify=True,
                     params=None,
                     timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -951,7 +951,7 @@ class TestDescopeClient(common.DescopeTest):
                 auth_management_key=direct_auth_mgmt_key,
             )
 
-            with patch("requests.post") as mock_post:
+            with patch("httpx.post") as mock_post:
                 my_mock_response = mock.Mock()
                 my_mock_response.ok = True
                 my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
@@ -972,7 +972,7 @@ class TestDescopeClient(common.DescopeTest):
                         "email": "test@example.com",
                     },
                     params=None,
-                    allow_redirects=False,
+                    follow_redirects=False,
                     verify=True,
                     timeout=DEFAULT_TIMEOUT_SECONDS,
                 )
@@ -987,7 +987,7 @@ class TestDescopeClient(common.DescopeTest):
 
         # Test with refresh token function
         refresh_token = "test_refresh_token"
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
             my_mock_response.json.return_value = {"maskedEmail": "n***@example.com"}
@@ -1010,7 +1010,7 @@ class TestDescopeClient(common.DescopeTest):
                     "addToLoginIDs": False,
                     "onMergeUseExisting": False,
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -1018,7 +1018,7 @@ class TestDescopeClient(common.DescopeTest):
 
         # Test without auth_management_key for comparison
         client_no_auth = DescopeClient(self.dummy_project_id, self.public_key_dict)
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
             my_mock_response.json.return_value = {"maskedEmail": "n***@example.com"}
@@ -1041,7 +1041,7 @@ class TestDescopeClient(common.DescopeTest):
                     "addToLoginIDs": False,
                     "onMergeUseExisting": False,
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 verify=True,
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
