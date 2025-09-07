@@ -6,6 +6,7 @@ from descope import AuthException, DescopeClient
 from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
+from tests.testutils import SSLMatcher
 from .. import common
 
 
@@ -65,7 +66,7 @@ class TestTenant(common.DescopeTest):
                     "disabled": False,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -101,7 +102,7 @@ class TestTenant(common.DescopeTest):
                     "disabled": True,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -147,7 +148,7 @@ class TestTenant(common.DescopeTest):
                     "disabled": True,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -181,7 +182,7 @@ class TestTenant(common.DescopeTest):
                     "disabled": True,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -216,7 +217,7 @@ class TestTenant(common.DescopeTest):
                 params=None,
                 json={"id": "t1", "cascade": True},
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -259,7 +260,7 @@ class TestTenant(common.DescopeTest):
                 },
                 params={"id": "t1"},
                 follow_redirects=None,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -306,7 +307,7 @@ class TestTenant(common.DescopeTest):
                 },
                 params=None,
                 follow_redirects=None,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -362,7 +363,7 @@ class TestTenant(common.DescopeTest):
                     "customAttributes": {"k1": "v1"},
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

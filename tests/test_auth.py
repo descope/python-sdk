@@ -22,6 +22,7 @@ from descope.common import (
     SESSION_TOKEN_NAME,
     EndpointsV1,
 )
+from tests.testutils import SSLMatcher
 
 from . import common
 
@@ -461,7 +462,7 @@ class TestAuth(common.DescopeTest):
                 params=None,
                 json={"loginOptions": {"customClaims": {"k1": "v1"}}},
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -651,7 +652,7 @@ class TestAuth(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 

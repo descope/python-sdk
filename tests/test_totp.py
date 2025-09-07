@@ -7,6 +7,7 @@ from descope.auth import Auth
 from descope.authmethod.totp import TOTP  # noqa: F401
 from descope.common import DEFAULT_TIMEOUT_SECONDS, EndpointsV1, LoginOptions
 
+from tests.testutils import SSLMatcher
 from . import common
 
 
@@ -132,7 +133,7 @@ class TestTOTP(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -174,7 +175,7 @@ class TestTOTP(common.DescopeTest):
                 params=None,
                 json={"loginId": "dummy@dummy.com"},
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(res, valid_response)

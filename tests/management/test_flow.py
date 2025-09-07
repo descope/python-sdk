@@ -4,6 +4,7 @@ from descope import AuthException, DescopeClient
 from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
+from tests.testutils import SSLMatcher
 from .. import common
 
 
@@ -52,7 +53,7 @@ class TestFlow(common.DescopeTest):
                 params=None,
                 json=None,
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -87,7 +88,7 @@ class TestFlow(common.DescopeTest):
                 params=None,
                 json={"ids": ["flow-1", "flow-2"]},
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -124,7 +125,7 @@ class TestFlow(common.DescopeTest):
                     "flowId": "test",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -167,7 +168,7 @@ class TestFlow(common.DescopeTest):
                     "screens": [{"id": "test"}],
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -198,7 +199,7 @@ class TestFlow(common.DescopeTest):
                 params=None,
                 json={},
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -231,6 +232,6 @@ class TestFlow(common.DescopeTest):
                 params=None,
                 json={"theme": {"id": "test"}},
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

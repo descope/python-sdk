@@ -6,6 +6,7 @@ from descope import AssociatedTenant, AuthException, DescopeClient
 from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
+from tests.testutils import SSLMatcher
 from .. import common
 
 
@@ -85,7 +86,7 @@ class TestAccessKey(common.DescopeTest):
                     "permittedIps": ["10.0.0.1", "192.168.1.0/24"],
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -124,7 +125,7 @@ class TestAccessKey(common.DescopeTest):
                 },
                 params={"id": "key-id"},
                 follow_redirects=None,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -170,7 +171,7 @@ class TestAccessKey(common.DescopeTest):
                     "tenantIds": ["t1, t2"],
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -214,7 +215,7 @@ class TestAccessKey(common.DescopeTest):
                     "description": None,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -251,7 +252,7 @@ class TestAccessKey(common.DescopeTest):
                     "id": "ak1",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -288,7 +289,7 @@ class TestAccessKey(common.DescopeTest):
                     "id": "ak1",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -325,6 +326,6 @@ class TestAccessKey(common.DescopeTest):
                     "id": "ak1",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

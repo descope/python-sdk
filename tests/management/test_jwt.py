@@ -6,6 +6,7 @@ from descope import AuthException, DescopeClient
 from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtLoginOptions, MgmtV1
 from tests import common
+from tests.testutils import SSLMatcher
 
 
 class TestUser(common.DescopeTest):
@@ -64,7 +65,7 @@ class TestUser(common.DescopeTest):
                     "refreshDuration": 40,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -85,7 +86,7 @@ class TestUser(common.DescopeTest):
                     "refreshDuration": 0,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -138,7 +139,7 @@ class TestUser(common.DescopeTest):
                     "refreshDuration": None,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -183,7 +184,7 @@ class TestUser(common.DescopeTest):
                     "refreshDuration": None,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -231,7 +232,7 @@ class TestUser(common.DescopeTest):
                     "refreshDuration": None,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -282,7 +283,7 @@ class TestUser(common.DescopeTest):
                     "refreshDuration": None,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -333,7 +334,7 @@ class TestUser(common.DescopeTest):
                     "refreshDuration": None,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -367,7 +368,7 @@ class TestUser(common.DescopeTest):
                     "refreshDuration": None,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

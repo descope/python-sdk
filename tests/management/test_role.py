@@ -6,6 +6,7 @@ from descope import AuthException, DescopeClient
 from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
+from tests.testutils import SSLMatcher
 from .. import common
 
 
@@ -63,7 +64,7 @@ class TestRole(common.DescopeTest):
                     "default": True,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -115,7 +116,7 @@ class TestRole(common.DescopeTest):
                     "default": True,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -150,7 +151,7 @@ class TestRole(common.DescopeTest):
                 params=None,
                 json={"name": "name", "tenantId": None},
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -200,7 +201,7 @@ class TestRole(common.DescopeTest):
                 },
                 params=None,
                 follow_redirects=None,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -261,6 +262,6 @@ class TestRole(common.DescopeTest):
                     "permissionNames": ["p1", "p2"],
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

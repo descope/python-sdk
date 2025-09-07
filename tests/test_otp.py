@@ -12,6 +12,7 @@ from descope.common import (
     SignUpOptions,
 )
 
+from tests.testutils import SSLMatcher
 from . import common
 
 
@@ -243,7 +244,7 @@ class TestOTP(common.DescopeTest):
                     "email": "dummy@dummy.com",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -285,7 +286,7 @@ class TestOTP(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -313,7 +314,7 @@ class TestOTP(common.DescopeTest):
                     "email": "dummy@dummy.com",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -383,7 +384,7 @@ class TestOTP(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -417,7 +418,7 @@ class TestOTP(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -481,7 +482,7 @@ class TestOTP(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
                 params=None,
             )
@@ -579,7 +580,7 @@ class TestOTP(common.DescopeTest):
                     "onMergeUseExisting": False,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
                 params=None,
             )
@@ -614,7 +615,7 @@ class TestOTP(common.DescopeTest):
                     "templateOptions": {"bla": "blue"},
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
                 params=None,
             )
@@ -685,7 +686,7 @@ class TestOTP(common.DescopeTest):
                     "onMergeUseExisting": False,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
                 params=None,
             )
@@ -715,7 +716,7 @@ class TestOTP(common.DescopeTest):
                     "onMergeUseExisting": False,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
                 params=None,
             )
@@ -745,7 +746,7 @@ class TestOTP(common.DescopeTest):
                     "onMergeUseExisting": False,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
                 params=None,
             )
@@ -781,7 +782,7 @@ class TestOTP(common.DescopeTest):
                     "templateOptions": {"bla": "blue"},
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
                 params=None,
             )

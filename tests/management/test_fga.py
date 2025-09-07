@@ -4,6 +4,7 @@ from descope import AuthException, DescopeClient
 from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
+from tests.testutils import SSLMatcher
 from .. import common
 
 
@@ -49,7 +50,7 @@ class TestFGA(common.DescopeTest):
                 params=None,
                 json={"dsl": "model AuthZ 1.0"},
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -102,7 +103,7 @@ class TestFGA(common.DescopeTest):
                     ]
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -155,7 +156,7 @@ class TestFGA(common.DescopeTest):
                     ]
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -208,7 +209,7 @@ class TestFGA(common.DescopeTest):
                     ]
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -244,7 +245,7 @@ class TestFGA(common.DescopeTest):
                 params=None,
                 json={"resourceIdentifiers": ids},
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -287,7 +288,7 @@ class TestFGA(common.DescopeTest):
                 params=None,
                 json={"resourcesDetails": details},
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 

@@ -7,6 +7,7 @@ from descope.auth import Auth
 from descope.authmethod.password import Password  # noqa: F401
 from descope.common import DEFAULT_TIMEOUT_SECONDS, EndpointsV1
 
+from tests.testutils import SSLMatcher
 from . import common
 
 
@@ -112,7 +113,7 @@ class TestPassword(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -184,7 +185,7 @@ class TestPassword(common.DescopeTest):
                     "password": "123456",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -241,7 +242,7 @@ class TestPassword(common.DescopeTest):
                     "redirectUrl": "https://redirect.here.com",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -279,7 +280,7 @@ class TestPassword(common.DescopeTest):
                     "templateOptions": {"bla": "blue"},
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -365,7 +366,7 @@ class TestPassword(common.DescopeTest):
                     "newPassword": "123456",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -461,7 +462,7 @@ class TestPassword(common.DescopeTest):
                     "newPassword": "1234567",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -494,6 +495,6 @@ class TestPassword(common.DescopeTest):
                 },
                 params=None,
                 follow_redirects=None,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

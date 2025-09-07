@@ -13,6 +13,7 @@ from descope.management.sso_settings import (
     SSOSettings,
 )
 
+from tests.testutils import SSLMatcher
 from .. import common
 
 
@@ -65,7 +66,7 @@ class TestSSOSettings(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -115,7 +116,7 @@ class TestSSOSettings(common.DescopeTest):
                 },
                 params={"tenantId": "T2AAAA"},
                 follow_redirects=None,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -215,7 +216,7 @@ class TestSSOSettings(common.DescopeTest):
                     "domains": ["domain.com"],
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -309,7 +310,7 @@ class TestSSOSettings(common.DescopeTest):
                     "domains": ["domain.com"],
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -392,7 +393,7 @@ class TestSSOSettings(common.DescopeTest):
                     "domains": ["domain.com"],
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -437,7 +438,7 @@ class TestSSOSettings(common.DescopeTest):
                 },
                 params={"tenantId": "tenant-id"},
                 follow_redirects=None,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -493,7 +494,7 @@ class TestSSOSettings(common.DescopeTest):
                     "domains": ["domain.com"],
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -526,7 +527,7 @@ class TestSSOSettings(common.DescopeTest):
                     "domains": None,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -560,7 +561,7 @@ class TestSSOSettings(common.DescopeTest):
                     "domains": ["domain.com"],
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -610,7 +611,7 @@ class TestSSOSettings(common.DescopeTest):
                     "domains": ["domain.com"],
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -638,7 +639,7 @@ class TestSSOSettings(common.DescopeTest):
                     "domains": None,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -695,6 +696,6 @@ class TestSSOSettings(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

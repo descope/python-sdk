@@ -12,6 +12,7 @@ from descope import (
 from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
+from tests.testutils import SSLMatcher
 from .. import common
 
 
@@ -78,7 +79,7 @@ class TestSSOApplication(common.DescopeTest):
                     "forceAuthentication": True,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -189,7 +190,7 @@ class TestSSOApplication(common.DescopeTest):
                     "logoutRedirectUrl": "http://dummy.com/logout",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -239,7 +240,7 @@ class TestSSOApplication(common.DescopeTest):
                     "forceAuthentication": False,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -353,7 +354,7 @@ class TestSSOApplication(common.DescopeTest):
                     "logoutRedirectUrl": None,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -390,7 +391,7 @@ class TestSSOApplication(common.DescopeTest):
                     "id": "app1",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -454,7 +455,7 @@ class TestSSOApplication(common.DescopeTest):
                 },
                 params={"id": "app1"},
                 follow_redirects=None,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -535,6 +536,6 @@ class TestSSOApplication(common.DescopeTest):
                 },
                 params=None,
                 follow_redirects=None,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

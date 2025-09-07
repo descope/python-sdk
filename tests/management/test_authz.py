@@ -4,6 +4,7 @@ from descope import AuthException, DescopeClient
 from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
+from tests.testutils import SSLMatcher
 from .. import common
 
 
@@ -49,7 +50,7 @@ class TestAuthz(common.DescopeTest):
                 params=None,
                 json={"schema": {"name": "kuku"}, "upgrade": True},
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -80,7 +81,7 @@ class TestAuthz(common.DescopeTest):
                 params=None,
                 json=None,
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -111,7 +112,7 @@ class TestAuthz(common.DescopeTest):
                 params=None,
                 json=None,
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -148,7 +149,7 @@ class TestAuthz(common.DescopeTest):
                     "schemaName": "v1",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -179,7 +180,7 @@ class TestAuthz(common.DescopeTest):
                 params=None,
                 json={"name": "a", "schemaName": "b"},
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -221,7 +222,7 @@ class TestAuthz(common.DescopeTest):
                     "schemaName": "v1",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -256,7 +257,7 @@ class TestAuthz(common.DescopeTest):
                 params=None,
                 json={"name": "a", "namespace": "b", "schemaName": "c"},
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -307,7 +308,7 @@ class TestAuthz(common.DescopeTest):
                     ]
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -358,7 +359,7 @@ class TestAuthz(common.DescopeTest):
                     ]
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -391,7 +392,7 @@ class TestAuthz(common.DescopeTest):
                 params=None,
                 json={"resources": ["r"]},
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -442,7 +443,7 @@ class TestAuthz(common.DescopeTest):
                     ]
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -475,7 +476,7 @@ class TestAuthz(common.DescopeTest):
                 params=None,
                 json={"resource": "a", "relationDefinition": "b", "namespace": "c"},
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -506,7 +507,7 @@ class TestAuthz(common.DescopeTest):
                 params=None,
                 json={"resource": "a"},
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -537,7 +538,7 @@ class TestAuthz(common.DescopeTest):
                 params=None,
                 json={"targets": ["a"]},
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -570,7 +571,7 @@ class TestAuthz(common.DescopeTest):
                 params=None,
                 json={"target": "a"},
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -609,7 +610,7 @@ class TestAuthz(common.DescopeTest):
                 params=None,
                 json={"target": "a", "relationDefinition": "b", "namespace": "c"},
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -640,6 +641,6 @@ class TestAuthz(common.DescopeTest):
                 params=None,
                 json={"since": 0},
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

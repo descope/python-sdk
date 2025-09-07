@@ -14,6 +14,7 @@ from descope.management.user_pwd import (
     UserPasswordPbkdf2,
 )
 
+from tests.testutils import SSLMatcher
 from .. import common
 
 
@@ -95,7 +96,7 @@ class TestUser(common.DescopeTest):
                     "ssoAppIDs": ["app1", "app2"],
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -149,7 +150,7 @@ class TestUser(common.DescopeTest):
                     "ssoAppIDs": None,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -207,7 +208,7 @@ class TestUser(common.DescopeTest):
                     "ssoAppIDs": None,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -272,7 +273,7 @@ class TestUser(common.DescopeTest):
                     "templateId": "tid",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -371,7 +372,7 @@ class TestUser(common.DescopeTest):
                 params=None,
                 json=expected_users,
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -415,7 +416,7 @@ class TestUser(common.DescopeTest):
                 params=None,
                 json=expected_users,
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -437,7 +438,7 @@ class TestUser(common.DescopeTest):
                 params=None,
                 json=expected_users,
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -490,7 +491,7 @@ class TestUser(common.DescopeTest):
                     "ssoAppIDs": ["app1", "app2"],
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
         # Test success flow with verified flags
@@ -528,7 +529,7 @@ class TestUser(common.DescopeTest):
                     "ssoAppIDs": None,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -580,7 +581,7 @@ class TestUser(common.DescopeTest):
                     "ssoAppIds": ["app1", "app2"],
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
         # Test success flow with other params
@@ -630,7 +631,7 @@ class TestUser(common.DescopeTest):
                     ],
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -660,7 +661,7 @@ class TestUser(common.DescopeTest):
                     "loginId": "u1",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -690,7 +691,7 @@ class TestUser(common.DescopeTest):
                     "userId": "u1",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -720,7 +721,7 @@ class TestUser(common.DescopeTest):
                     "loginId": "u1",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -750,7 +751,7 @@ class TestUser(common.DescopeTest):
                     "userId": "u1",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -776,7 +777,7 @@ class TestUser(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -808,7 +809,7 @@ class TestUser(common.DescopeTest):
                 },
                 params={"loginId": "valid-id"},
                 follow_redirects=None,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -840,7 +841,7 @@ class TestUser(common.DescopeTest):
                 },
                 params={"userId": "user-id"},
                 follow_redirects=None,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -903,7 +904,7 @@ class TestUser(common.DescopeTest):
                     "loginIds": ["l1"],
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -951,7 +952,7 @@ class TestUser(common.DescopeTest):
                     ],
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -997,7 +998,7 @@ class TestUser(common.DescopeTest):
                     "phones": ["+111111"],
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -1043,7 +1044,7 @@ class TestUser(common.DescopeTest):
                     "toModifiedTime": 400,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -1090,7 +1091,7 @@ class TestUser(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -1162,7 +1163,7 @@ class TestUser(common.DescopeTest):
                     "loginIds": ["l1"],
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -1209,7 +1210,7 @@ class TestUser(common.DescopeTest):
                     ],
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -1254,7 +1255,7 @@ class TestUser(common.DescopeTest):
                     "phones": ["+111111"],
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -1297,7 +1298,7 @@ class TestUser(common.DescopeTest):
                     "toModifiedTime": 400,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -1344,7 +1345,7 @@ class TestUser(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -1389,7 +1390,7 @@ class TestUser(common.DescopeTest):
                     "forceRefresh": True,
                 },
                 follow_redirects=None,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -1425,7 +1426,7 @@ class TestUser(common.DescopeTest):
                     "status": "enabled",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -1461,7 +1462,7 @@ class TestUser(common.DescopeTest):
                     "status": "disabled",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -1498,7 +1499,7 @@ class TestUser(common.DescopeTest):
                     "newLoginId": "a@b.c",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -1536,7 +1537,7 @@ class TestUser(common.DescopeTest):
                     "verified": None,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -1574,7 +1575,7 @@ class TestUser(common.DescopeTest):
                     "verified": True,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -1611,7 +1612,7 @@ class TestUser(common.DescopeTest):
                     "displayName": "foo",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -1648,7 +1649,7 @@ class TestUser(common.DescopeTest):
                     "picture": "foo",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -1688,7 +1689,7 @@ class TestUser(common.DescopeTest):
                     "attributeValue": "bar",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -1726,7 +1727,7 @@ class TestUser(common.DescopeTest):
                     "roleNames": ["foo", "bar"],
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -1763,7 +1764,7 @@ class TestUser(common.DescopeTest):
                     "roleNames": ["foo", "bar"],
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -1800,7 +1801,7 @@ class TestUser(common.DescopeTest):
                     "roleNames": ["foo", "bar"],
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -1837,7 +1838,7 @@ class TestUser(common.DescopeTest):
                     "ssoAppIds": ["foo", "bar"],
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -1874,7 +1875,7 @@ class TestUser(common.DescopeTest):
                     "ssoAppIds": ["foo", "bar"],
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -1911,7 +1912,7 @@ class TestUser(common.DescopeTest):
                     "ssoAppIds": ["foo", "bar"],
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -1948,7 +1949,7 @@ class TestUser(common.DescopeTest):
                     "tenantId": "tid",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -1985,7 +1986,7 @@ class TestUser(common.DescopeTest):
                     "tenantId": "tid",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -2026,7 +2027,7 @@ class TestUser(common.DescopeTest):
                     "roleNames": ["foo", "bar"],
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -2067,7 +2068,7 @@ class TestUser(common.DescopeTest):
                     "roleNames": ["foo", "bar"],
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -2108,7 +2109,7 @@ class TestUser(common.DescopeTest):
                     "roleNames": ["foo", "bar"],
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -2155,7 +2156,7 @@ class TestUser(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -2193,7 +2194,7 @@ class TestUser(common.DescopeTest):
                     "setActive": False,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -2231,7 +2232,7 @@ class TestUser(common.DescopeTest):
                     "setActive": True,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -2269,7 +2270,7 @@ class TestUser(common.DescopeTest):
                     "setActive": False,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -2303,7 +2304,7 @@ class TestUser(common.DescopeTest):
                     "loginId": "login-id",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -2337,7 +2338,7 @@ class TestUser(common.DescopeTest):
                     "loginId": "login-id",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -2371,7 +2372,7 @@ class TestUser(common.DescopeTest):
                     "loginId": "login-id",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -2420,7 +2421,7 @@ class TestUser(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -2468,7 +2469,7 @@ class TestUser(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -2503,7 +2504,7 @@ class TestUser(common.DescopeTest):
                     "timeout": 0,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -2544,7 +2545,7 @@ class TestUser(common.DescopeTest):
                     "timeout": 0,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -2611,7 +2612,7 @@ class TestUser(common.DescopeTest):
                 },
                 json=["user-id-1", "user-id-2"],
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -2651,7 +2652,7 @@ class TestUser(common.DescopeTest):
                     "ssoAppIDs": None,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -2682,6 +2683,6 @@ class TestUser(common.DescopeTest):
                     "test": True,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

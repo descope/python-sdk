@@ -9,6 +9,7 @@ from descope.authmethod.sso import SSO
 from descope.common import DEFAULT_TIMEOUT_SECONDS, EndpointsV1, LoginOptions
 
 from . import common
+from tests.testutils import SSLMatcher
 
 
 class TestSSO(common.DescopeTest):
@@ -75,7 +76,7 @@ class TestSSO(common.DescopeTest):
                 },
                 json={},
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertRaises(
@@ -117,7 +118,7 @@ class TestSSO(common.DescopeTest):
                 params={"tenant": "tenant1", "redirectURL": "http://dummy.com"},
                 json={"stepup": True, "customClaims": {"k1": "v1"}, "mfa": False},
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -156,7 +157,7 @@ class TestSSO(common.DescopeTest):
                 params=None,
                 json={"code": "c1"},
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 

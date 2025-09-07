@@ -6,8 +6,10 @@ import os
 import platform
 import re
 from http import HTTPStatus
+import ssl
 from threading import Lock
 from typing import Iterable
+import certifi
 
 import jwt
 
@@ -108,6 +110,19 @@ class Auth:
                 kid, pub_key, alg = self._validate_and_load_public_key(public_key)
                 self.public_keys = {kid: (pub_key, alg)}
 
+        if skip_verify:
+            self.ssl_ctx = False
+        else:
+            # Backwards compatibility with requests
+            self.ssl_ctx = ssl.create_default_context(
+                cafile=os.environ.get("SSL_CERT_FILE", certifi.where()),
+                capath=os.environ.get("SSL_CERT_DIR"),
+            )
+            if os.environ.get("REQUESTS_CA_BUNDLE"):
+                self.ssl_ctx.load_cert_chain(
+                    certfile=os.environ.get("REQUESTS_CA_BUNDLE")
+                )
+
     def _raise_rate_limit_exception(self, response):
         try:
             resp = response.json()
@@ -150,7 +165,7 @@ class Auth:
             headers=self._get_default_headers(pswd),
             params=params,
             follow_redirects=follow_redirects,
-            verify=self.secure,
+            verify=self.ssl_ctx,
             timeout=self.timeout_seconds,
         )
         self._raise_from_response(response)
@@ -168,7 +183,7 @@ class Auth:
             headers=self._get_default_headers(pswd),
             json=body,
             follow_redirects=False,
-            verify=self.secure,
+            verify=self.ssl_ctx,
             params=params,
             timeout=self.timeout_seconds,
         )
@@ -187,7 +202,7 @@ class Auth:
             headers=self._get_default_headers(pswd),
             json=body,
             follow_redirects=False,
-            verify=self.secure,
+            verify=self.ssl_ctx,
             params=params,
             timeout=self.timeout_seconds,
         )
@@ -202,7 +217,7 @@ class Auth:
             params=params,
             headers=self._get_default_headers(pswd),
             follow_redirects=False,
-            verify=self.secure,
+            verify=self.ssl_ctx,
             timeout=self.timeout_seconds,
         )
         self._raise_from_response(response)
@@ -442,7 +457,7 @@ class Auth:
         response = httpx.get(
             f"{self.base_url}{EndpointsV2.public_key_path}/{self.project_id}",
             headers=self._get_default_headers(),
-            verify=self.secure,
+            verify=self.ssl_ctx,
             timeout=self.timeout_seconds,
         )
         self._raise_from_response(response)
@@ -637,13 +652,13 @@ class Auth:
                 audience=audience,
                 leeway=self.jwt_validation_leeway,
             )
-        except (ImmatureSignatureError):
+        except ImmatureSignatureError:
             raise AuthException(
                 400,
                 ERROR_TYPE_INVALID_TOKEN,
                 "Received Invalid token (nbf in future) during jwt validation. Error can be due to time glitch (between machines), try to set the jwt_validation_leeway parameter (in DescopeClient) to higher value than 5sec which is the default",
             )
-        except (ExpiredSignatureError):
+        except ExpiredSignatureError:
             raise AuthException(
                 401,
                 ERROR_TYPE_INVALID_TOKEN,

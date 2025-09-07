@@ -14,6 +14,7 @@ from descope.common import (
     SignUpOptions,
 )
 
+from tests.testutils import SSLMatcher
 from . import common
 
 
@@ -184,7 +185,7 @@ class TestMagicLink(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -219,7 +220,7 @@ class TestMagicLink(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -306,7 +307,7 @@ class TestMagicLink(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
                 params=None,
             )
@@ -352,7 +353,7 @@ class TestMagicLink(common.DescopeTest):
                     "email": "dummy@dummy.com",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
                 params=None,
             )
@@ -386,7 +387,7 @@ class TestMagicLink(common.DescopeTest):
                     "email": "dummy@dummy.com",
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
                 params=None,
             )
@@ -453,7 +454,7 @@ class TestMagicLink(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
                 params=None,
             )
@@ -552,7 +553,7 @@ class TestMagicLink(common.DescopeTest):
                     "onMergeUseExisting": False,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
                 params=None,
             )
@@ -587,7 +588,7 @@ class TestMagicLink(common.DescopeTest):
                     "templateOptions": {"bla": "blue"},
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
                 params=None,
             )
@@ -641,7 +642,7 @@ class TestMagicLink(common.DescopeTest):
                     "onMergeUseExisting": False,
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
                 params=None,
             )
@@ -677,7 +678,7 @@ class TestMagicLink(common.DescopeTest):
                     "templateOptions": {"bla": "blue"},
                 },
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
                 params=None,
             )

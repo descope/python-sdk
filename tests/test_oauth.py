@@ -9,6 +9,7 @@ from descope.authmethod.oauth import OAuth
 from descope.common import DEFAULT_TIMEOUT_SECONDS, EndpointsV1, LoginOptions
 
 from . import common
+from tests.testutils import SSLMatcher
 
 
 class TestOAuth(common.DescopeTest):
@@ -79,7 +80,7 @@ class TestOAuth(common.DescopeTest):
                 params={"provider": "facebook"},
                 json={},
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -113,7 +114,7 @@ class TestOAuth(common.DescopeTest):
                 params={"provider": "facebook"},
                 json={"stepup": True, "customClaims": {"k1": "v1"}, "mfa": False},
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -152,7 +153,7 @@ class TestOAuth(common.DescopeTest):
                 params=None,
                 json={"code": "c1"},
                 follow_redirects=False,
-                verify=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
