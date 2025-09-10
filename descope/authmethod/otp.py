@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable
+from typing import Awaitable, Iterable, Union
 
 from descope._auth_base import AuthBase
 from descope.auth import Auth
@@ -14,6 +14,7 @@ from descope.common import (
     validate_refresh_token_provided,
 )
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
+from descope.future_utils import futu_apply
 
 
 class OTP(AuthBase):
@@ -23,7 +24,7 @@ class OTP(AuthBase):
         login_id: str,
         login_options: LoginOptions | None = None,
         refresh_token: str | None = None,
-    ) -> str:
+    ) -> Union[str, Awaitable[str]]:
         """
         Sign in (log in) an existing user with the unique login_id you provide. (See 'sign_up' function for an explanation of the
             login_id field.) Provide the DeliveryMethod required for this user. If the login_id value cannot be used for the
@@ -35,6 +36,9 @@ class OTP(AuthBase):
         login_id (str): The login ID of the user being validated for example phone or email
         login_options (LoginOptions): Optional advanced controls over login parameters
         refresh_token: Optional refresh token is needed for specific login options
+
+        Returns:
+        str or Awaitable[str]: Masked address for OTP delivery
 
         Raise:
         AuthException: raised if sign-in operation fails
@@ -49,7 +53,10 @@ class OTP(AuthBase):
         uri = OTP._compose_signin_url(method)
         body = OTP._compose_signin_body(login_id, login_options)
         response = self._auth.do_post(uri, body, None, refresh_token)
-        return Auth.extract_masked_address(response.json(), method)
+        return futu_apply(
+            response,
+            lambda response: Auth.extract_masked_address(response.json(), method),
+        )
 
     def sign_up(
         self,
@@ -57,7 +64,7 @@ class OTP(AuthBase):
         login_id: str,
         user: dict | None = None,
         signup_options: SignUpOptions | None = None,
-    ) -> str:
+    ) -> Union[str, Awaitable[str]]:
         """
         Sign up (create) a new user using their email or phone number. Choose a delivery method for OTP
             verification, for example Email, SMS, Voice call, or WhatsApp.
@@ -68,6 +75,9 @@ class OTP(AuthBase):
         login_id (str): The login ID of the user being validated
         user (dict) optional: Preserve additional user metadata in the form of
              {"name": "Joe Person", "phone": "2125551212", "email": "joe@somecompany.com"}
+
+        Returns:
+        str or Awaitable[str]: Masked address for OTP delivery
 
         Raise:
         AuthException: raised if sign-up operation fails
@@ -86,14 +96,17 @@ class OTP(AuthBase):
         uri = OTP._compose_signup_url(method)
         body = OTP._compose_signup_body(method, login_id, user, signup_options)
         response = self._auth.do_post(uri, body)
-        return Auth.extract_masked_address(response.json(), method)
+        return futu_apply(
+            response,
+            lambda response: Auth.extract_masked_address(response.json(), method),
+        )
 
     def sign_up_or_in(
         self,
         method: DeliveryMethod,
         login_id: str,
         signup_options: SignUpOptions | None = None,
-    ) -> str:
+    ) -> Union[str, Awaitable[str]]:
         """
         Sign_up_or_in lets you handle both sign up and sign in with a single call. Sign-up_or_in will first determine if
             login_id is a new or existing end user. If login_id is new, a new end user user will be created and then
@@ -125,7 +138,10 @@ class OTP(AuthBase):
             login_options,
         )
         response = self._auth.do_post(uri, body)
-        return Auth.extract_masked_address(response.json(), method)
+        return futu_apply(
+            response,
+            lambda response: Auth.extract_masked_address(response.json(), method),
+        )
 
     def verify_code(
         self,
@@ -133,7 +149,7 @@ class OTP(AuthBase):
         login_id: str,
         code: str,
         audience: str | None | Iterable[str] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Verify the validity of an OTP code entered by an end user during sign_in or sign_up.
         (This function is not needed if you are using the sign_up_or_in function.
@@ -142,11 +158,10 @@ class OTP(AuthBase):
         method (DeliveryMethod): The method to use for delivering the OTP verification code, for example Email, SMS, Voice call, or WhatsApp
         login_id (str): The Login ID of the user being validated
         code (str): The authorization code enter by the end user during signup/signin
+        audience (str|Iterable[str]|None): Optional recipients that the JWT is intended for
 
-        Return value (dict):
-        Return dict in the format
-             {"jwts": [], "user": "", "firstSeen": "", "error": ""}
-        Includes all the jwts tokens (session token, refresh token), token claims, and user information
+        Returns:
+        dict or Awaitable[dict]: Authentication response with JWT tokens and user information
 
         Raise:
         AuthException: raised if the OTP code is not valid or if token verification failed
@@ -159,12 +174,14 @@ class OTP(AuthBase):
         uri = OTP._compose_verify_code_url(method)
         body = OTP._compose_verify_code_body(login_id, code)
         response = self._auth.do_post(uri, body, None)
-
-        resp = response.json()
-        jwt_response = self._auth.generate_jwt_response(
-            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
+        return futu_apply(
+            response,
+            lambda response: self._auth.generate_jwt_response(
+                response.json(),
+                response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None),
+                audience,
+            ),
         )
-        return jwt_response
 
     def update_user_email(
         self,
@@ -176,7 +193,7 @@ class OTP(AuthBase):
         template_options: dict | None = None,
         template_id: str | None = None,
         provider_id: str | None = None,
-    ) -> str:
+    ) -> Union[str, Awaitable[str]]:
         """
         Update the email address of an end user, after verifying the authenticity of the end user using OTP.
 
@@ -207,7 +224,12 @@ class OTP(AuthBase):
             provider_id,
         )
         response = self._auth.do_post(uri, body, None, refresh_token)
-        return Auth.extract_masked_address(response.json(), DeliveryMethod.EMAIL)
+        return futu_apply(
+            response,
+            lambda response: Auth.extract_masked_address(
+                response.json(), DeliveryMethod.EMAIL
+            ),
+        )
 
     def update_user_phone(
         self,
@@ -220,7 +242,7 @@ class OTP(AuthBase):
         template_options: dict | None = None,
         template_id: str | None = None,
         provider_id: str | None = None,
-    ) -> str:
+    ) -> Union[str, Awaitable[str]]:
         """
         Update the phone number of an existing end user, after verifying the authenticity of the end user using OTP.
 
@@ -255,7 +277,10 @@ class OTP(AuthBase):
             provider_id,
         )
         response = self._auth.do_post(uri, body, None, refresh_token)
-        return Auth.extract_masked_address(response.json(), method)
+        return futu_apply(
+            response,
+            lambda response: Auth.extract_masked_address(response.json(), method),
+        )
 
     @staticmethod
     def _compose_signup_url(method: DeliveryMethod) -> str:
