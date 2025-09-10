@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from descope import AttributeMapping, AuthException, DescopeClient, RoleMapping
 from descope.common import DEFAULT_TIMEOUT_SECONDS
+from descope.future_utils import futu_await
 from descope.management.common import MgmtV1
 from descope.management.sso_settings import (
     OIDCAttributeMapping,
@@ -13,7 +14,7 @@ from descope.management.sso_settings import (
     SSOSettings,
 )
 
-from tests.testutils import SSLMatcher
+from tests.testutils import SSLMatcher, mock_http_call
 from .. import common
 
 
@@ -32,7 +33,7 @@ class TestSSOSettings(common.DescopeTest):
             "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
         }
 
-    def test_delete_settings(self):
+    async def test_delete_settings(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -41,16 +42,17 @@ class TestSSOSettings(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.delete") as mock_delete:
+        with mock_http_call(self.async_mode, "delete") as mock_delete:
             mock_delete.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.sso.delete_settings,
-                "tenant-id",
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.sso.delete_settings(
+                        "tenant-id",
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.delete") as mock_delete:
+        with mock_http_call(self.async_mode, "delete") as mock_delete:
             network_resp = mock.Mock()
             network_resp.ok = True
 
@@ -70,7 +72,7 @@ class TestSSOSettings(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_load_settings(self):
+    async def test_load_settings(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -79,16 +81,17 @@ class TestSSOSettings(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.get") as mock_get:
+        with mock_http_call(self.async_mode, "get") as mock_get:
             mock_get.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.sso.load_settings,
-                "tenant-id",
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.sso.load_settings(
+                        "tenant-id",
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.get") as mock_get:
+        with mock_http_call(self.async_mode, "get") as mock_get:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads(
@@ -120,7 +123,7 @@ class TestSSOSettings(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_configure_oidc_settings(self):
+    async def test_configure_oidc_settings(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -129,21 +132,22 @@ class TestSSOSettings(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.sso.configure_oidc_settings,
-                "tenant-id",
-                SSOOIDCSettings(
-                    name="myName",
-                    client_id="cid",
-                ),
-                ["domain.com"],
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.sso.configure_oidc_settings(
+                        "tenant-id",
+                        SSOOIDCSettings(
+                            name="myName",
+                            client_id="cid",
+                        ),
+                    ),
+                    ["domain.com"],
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.sso.configure_oidc_settings(
@@ -220,7 +224,7 @@ class TestSSOSettings(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_configure_saml_settings(self):
+    async def test_configure_saml_settings(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -229,26 +233,27 @@ class TestSSOSettings(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.sso.configure_saml_settings,
-                "tenant-id",
-                SSOSAMLSettings(
-                    idp_url="http://dummy.com",
-                    idp_entity_id="ent1234",
-                    idp_cert="cert",
-                    sp_acs_url="http://spacsurl.com",
-                    sp_entity_id="spentityid",
-                    default_sso_roles=["aa", "bb"],
-                ),
-                "https://redirect.com",
-                ["domain.com"],
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.sso.configure_saml_settings(
+                        "tenant-id",
+                        SSOSAMLSettings(
+                            idp_url="http://dummy.com",
+                            idp_entity_id="ent1234",
+                            idp_cert="cert",
+                            sp_acs_url="http://spacsurl.com",
+                            sp_entity_id="spentityid",
+                            default_sso_roles=["aa", "bb"],
+                        ),
+                    ),
+                    "https://redirect.com",
+                    ["domain.com"],
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.sso.configure_saml_settings(
@@ -314,7 +319,7 @@ class TestSSOSettings(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_configure_saml_settings_by_metadata(self):
+    async def test_configure_saml_settings_by_metadata(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -323,19 +328,22 @@ class TestSSOSettings(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.sso.configure_saml_settings_by_metadata,
-                "tenant-id",
-                SSOSAMLSettingsByMetadata(idp_metadata_url="http://dummy.com/metadata"),
-                "https://redirect.com",
-                ["domain.com"],
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.sso.configure_saml_settings_by_metadata(
+                        "tenant-id",
+                        SSOSAMLSettingsByMetadata(
+                            idp_metadata_url="http://dummy.com/metadata"
+                        ),
+                    ),
+                    "https://redirect.com",
+                    ["domain.com"],
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.sso.configure_saml_settings_by_metadata(
@@ -397,11 +405,12 @@ class TestSSOSettings(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_attribute_mapping_to_dict(self):
-        self.assertRaises(ValueError, SSOSettings._attribute_mapping_to_dict, None)
+    async def test_attribute_mapping_to_dict(self):
+        with self.assertRaises(ValueError):
+            await futu_await(SSOSettings._attribute_mapping_to_dict(None))
 
     # Testing DEPRECATED functions
-    def test_get_settings(self):
+    async def test_get_settings(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -410,16 +419,17 @@ class TestSSOSettings(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.get") as mock_get:
+        with mock_http_call(self.async_mode, "get") as mock_get:
             mock_get.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.sso.get_settings,
-                "tenant-id",
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.sso.get_settings(
+                        "tenant-id",
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.get") as mock_get:
+        with mock_http_call(self.async_mode, "get") as mock_get:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads(
@@ -442,7 +452,7 @@ class TestSSOSettings(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_configure(self):
+    async def test_configure(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -451,21 +461,22 @@ class TestSSOSettings(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.sso.configure,
-                "tenant-id",
-                "https://idp.com",
-                "entity-id",
-                "cert",
-                "https://redirect.com",
-                ["domain.com"],
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.sso.configure(
+                        "tenant-id",
+                        "https://idp.com",
+                        "entity-id",
+                        "cert",
+                        "https://redirect.com",
+                        ["domain.com"],
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.sso.configure(
@@ -499,7 +510,7 @@ class TestSSOSettings(common.DescopeTest):
             )
 
         # Domain is optional
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.sso.configure(
@@ -532,7 +543,7 @@ class TestSSOSettings(common.DescopeTest):
             )
 
         # Redirect is optional
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.sso.configure(
@@ -565,7 +576,7 @@ class TestSSOSettings(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_configure_via_metadata(self):
+    async def test_configure_via_metadata(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -574,19 +585,20 @@ class TestSSOSettings(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.sso.configure_via_metadata,
-                "tenant-id",
-                "https://idp-meta.com",
-                "https://redirect.com",
-                ["domain.com"],
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.sso.configure_via_metadata(
+                        "tenant-id",
+                        "https://idp-meta.com",
+                        "https://redirect.com",
+                        ["domain.com"],
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.sso.configure_via_metadata(
@@ -616,7 +628,7 @@ class TestSSOSettings(common.DescopeTest):
             )
 
         # Test partial arguments
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.sso.configure_via_metadata(
@@ -643,7 +655,7 @@ class TestSSOSettings(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_mapping(self):
+    async def test_mapping(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -652,18 +664,17 @@ class TestSSOSettings(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.sso.mapping,
-                "tenant-id",
-                [RoleMapping(["a", "b"], "role")],
-                AttributeMapping(name="UName"),
-            )
+            with self.assertRaises(AuthException):
+                client.mgmt.sso.mapping(
+                    "tenant-id",
+                    [RoleMapping(["a", "b"], "role")],
+                    AttributeMapping(name="UName"),
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.sso.mapping(

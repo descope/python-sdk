@@ -2,9 +2,10 @@ from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
 from descope.common import DEFAULT_TIMEOUT_SECONDS
+from descope.future_utils import futu_await
 from descope.management.common import MgmtV1
 
-from tests.testutils import SSLMatcher
+from tests.testutils import SSLMatcher, mock_http_call
 from .. import common
 
 
@@ -23,7 +24,7 @@ class TestAuthz(common.DescopeTest):
             "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
         }
 
-    def test_save_schema(self):
+    async def test_save_schema(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -32,12 +33,13 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed save_schema
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(AuthException, client.mgmt.authz.save_schema, {}, True)
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.authz.save_schema({}, True))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.authz.save_schema({"name": "kuku"}, True))
             mock_post.assert_called_with(
@@ -54,7 +56,7 @@ class TestAuthz(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_delete_schema(self):
+    async def test_delete_schema(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -63,12 +65,13 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed delete_schema
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(AuthException, client.mgmt.authz.delete_schema)
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.authz.delete_schema())
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.authz.delete_schema())
             mock_post.assert_called_with(
@@ -85,7 +88,7 @@ class TestAuthz(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_load_schema(self):
+    async def test_load_schema(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -94,12 +97,13 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed load_schema
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(AuthException, client.mgmt.authz.load_schema)
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.authz.load_schema())
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(client.mgmt.authz.load_schema())
             mock_post.assert_called_with(
@@ -116,7 +120,7 @@ class TestAuthz(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_save_namespace(self):
+    async def test_save_namespace(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -125,12 +129,13 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed save_namespace
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(AuthException, client.mgmt.authz.save_namespace, {})
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.authz.save_namespace({}))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.authz.save_namespace({"name": "kuku"}, "old", "v1")
@@ -153,7 +158,7 @@ class TestAuthz(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_delete_namespace(self):
+    async def test_delete_namespace(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -162,12 +167,13 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed delete_namespace
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(AuthException, client.mgmt.authz.delete_namespace, "a")
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.authz.delete_namespace("a"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.authz.delete_namespace("a", "b"))
             mock_post.assert_called_with(
@@ -184,7 +190,7 @@ class TestAuthz(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_save_relation_definition(self):
+    async def test_save_relation_definition(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -193,14 +199,13 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed save_relation_definition
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException, client.mgmt.authz.save_relation_definition, {}, "a"
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.authz.save_relation_definition({}, "a"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.authz.save_relation_definition(
@@ -226,7 +231,7 @@ class TestAuthz(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_delete_relation_definition(self):
+    async def test_delete_relation_definition(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -235,14 +240,13 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed delete_relation_definition
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException, client.mgmt.authz.delete_relation_definition, "a", "b"
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.authz.delete_relation_definition("a", "b"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.authz.delete_relation_definition("a", "b", "c")
@@ -261,7 +265,7 @@ class TestAuthz(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_create_relations(self):
+    async def test_create_relations(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -270,12 +274,13 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed create_relations
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(AuthException, client.mgmt.authz.create_relations, [])
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.authz.create_relations([]))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.authz.create_relations(
@@ -312,7 +317,7 @@ class TestAuthz(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_delete_relations(self):
+    async def test_delete_relations(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -321,12 +326,13 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed delete_relations
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(AuthException, client.mgmt.authz.delete_relations, [])
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.authz.delete_relations([]))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.authz.delete_relations(
@@ -363,7 +369,7 @@ class TestAuthz(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_delete_relations_for_resources(self):
+    async def test_delete_relations_for_resources(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -372,14 +378,13 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed delete_relations_for_resources
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException, client.mgmt.authz.delete_relations_for_resources, []
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.authz.delete_relations_for_resources([]))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.authz.delete_relations_for_resources(["r"]))
             mock_post.assert_called_with(
@@ -396,7 +401,7 @@ class TestAuthz(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_has_relations(self):
+    async def test_has_relations(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -405,12 +410,13 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed has_relations
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(AuthException, client.mgmt.authz.has_relations, [])
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.authz.has_relations([]))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(
                 client.mgmt.authz.has_relations(
@@ -447,7 +453,7 @@ class TestAuthz(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_who_can_access(self):
+    async def test_who_can_access(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -456,14 +462,13 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed who_can_access
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException, client.mgmt.authz.who_can_access, "a", "b", "c"
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.authz.who_can_access("a", "b", "c"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(client.mgmt.authz.who_can_access("a", "b", "c"))
             mock_post.assert_called_with(
@@ -480,7 +485,7 @@ class TestAuthz(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_resource_relations(self):
+    async def test_resource_relations(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -489,12 +494,13 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed resource_relations
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(AuthException, client.mgmt.authz.resource_relations, "a")
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.authz.resource_relations("a"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(client.mgmt.authz.resource_relations("a"))
             mock_post.assert_called_with(
@@ -511,7 +517,7 @@ class TestAuthz(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_targets_relations(self):
+    async def test_targets_relations(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -520,12 +526,13 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed targets_relations
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(AuthException, client.mgmt.authz.targets_relations, ["a"])
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.authz.targets_relations(["a"]))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(client.mgmt.authz.targets_relations(["a"]))
             mock_post.assert_called_with(
@@ -542,7 +549,7 @@ class TestAuthz(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_what_can_target_access(self):
+    async def test_what_can_target_access(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -551,14 +558,13 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed what_can_target_access
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException, client.mgmt.authz.what_can_target_access, "a"
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.authz.what_can_target_access("a"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(client.mgmt.authz.what_can_target_access("a"))
             mock_post.assert_called_with(
@@ -575,7 +581,7 @@ class TestAuthz(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_what_can_target_access_with_relation(self):
+    async def test_what_can_target_access_with_relation(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -584,18 +590,19 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed what_can_target_access_with_relation
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.authz.what_can_target_access_with_relation,
-                "a",
-                "b",
-                "c",
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.authz.what_can_target_access_with_relation(
+                        "a",
+                        "b",
+                        "c",
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(
                 client.mgmt.authz.what_can_target_access_with_relation("a", "b", "c")
@@ -614,7 +621,7 @@ class TestAuthz(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_get_modified(self):
+    async def test_get_modified(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -623,12 +630,13 @@ class TestAuthz(common.DescopeTest):
         )
 
         # Test failed get_modified
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(AuthException, client.mgmt.authz.get_modified)
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.authz.get_modified())
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(client.mgmt.authz.get_modified())
             mock_post.assert_called_with(

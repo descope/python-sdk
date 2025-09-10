@@ -7,7 +7,8 @@ from descope.auth import Auth
 from descope.authmethod.password import Password  # noqa: F401
 from descope.common import DEFAULT_TIMEOUT_SECONDS, EndpointsV1
 
-from tests.testutils import SSLMatcher
+from descope.future_utils import futu_await
+from tests.testutils import SSLMatcher, mock_http_call
 from . import common
 
 
@@ -25,7 +26,7 @@ class TestPassword(common.DescopeTest):
             "y": "N5n5jKZA5Wu7_b4B36KKjJf-VRfJ-XqczfCSYy9GeQLqF-b63idfE0SYaYk9cFqg",
         }
 
-    def test_sign_up(self):
+    async def test_sign_up(self):
         signup_user_details = {
             "username": "jhon",
             "name": "john",
@@ -36,50 +37,58 @@ class TestPassword(common.DescopeTest):
         password = Password(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
-        self.assertRaises(
-            AuthException,
-            password.sign_up,
-            "",
-            None,
-            signup_user_details,
-        )
-
-        self.assertRaises(
-            AuthException,
-            password.sign_up,
-            None,
-            None,
-            signup_user_details,
-        )
-
-        self.assertRaises(
-            AuthException,
-            password.sign_up,
-            "login_id",
-            "",
-            signup_user_details,
-        )
-
-        self.assertRaises(
-            AuthException,
-            password.sign_up,
-            "login_id",
-            None,
-            signup_user_details,
-        )
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                password.sign_up,
-                "dummy@dummy.com",
-                "123456",
-                signup_user_details,
+        with self.assertRaises(AuthException):
+            await futu_await(
+                password.sign_up(
+                    "",
+                    None,
+                    signup_user_details,
+                )
             )
 
+        with self.assertRaises(AuthException):
+
+            await futu_await(
+                password.sign_up(
+                    None,
+                    None,
+                    signup_user_details,
+                )
+            )
+
+        with self.assertRaises(AuthException):
+
+            await futu_await(
+                password.sign_up(
+                    "login_id",
+                    "",
+                    signup_user_details,
+                )
+            )
+
+        with self.assertRaises(AuthException):
+
+            await futu_await(
+                password.sign_up(
+                    "login_id",
+                    None,
+                    signup_user_details,
+                )
+            )
+
+        with mock_http_call(self.async_mode, "post") as mock_post:
+            mock_post.return_value.ok = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    password.sign_up(
+                        "dummy@dummy.com",
+                        "123456",
+                        signup_user_details,
+                    )
+                )
+
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
@@ -117,49 +126,57 @@ class TestPassword(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_sign_in(self):
+    async def test_sign_in(self):
         password = Password(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
-        self.assertRaises(
-            AuthException,
-            password.sign_in,
-            "",
-            None,
-        )
-
-        self.assertRaises(
-            AuthException,
-            password.sign_in,
-            None,
-            None,
-        )
-
-        self.assertRaises(
-            AuthException,
-            password.sign_in,
-            "login_id",
-            "",
-        )
-
-        self.assertRaises(
-            AuthException,
-            password.sign_in,
-            "login_id",
-            None,
-        )
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                password.sign_in,
-                "dummy@dummy.com",
-                "123456",
+        with self.assertRaises(AuthException):
+            await futu_await(
+                password.sign_in(
+                    "",
+                    None,
+                )
             )
 
+        with self.assertRaises(AuthException):
+
+            await futu_await(
+                password.sign_in(
+                    None,
+                    None,
+                )
+            )
+
+        with self.assertRaises(AuthException):
+
+            await futu_await(
+                password.sign_in(
+                    "login_id",
+                    "",
+                )
+            )
+
+        with self.assertRaises(AuthException):
+
+            await futu_await(
+                password.sign_in(
+                    "login_id",
+                    None,
+                )
+            )
+
+        with mock_http_call(self.async_mode, "post") as mock_post:
+            mock_post.return_value.ok = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    password.sign_in(
+                        "dummy@dummy.com",
+                        "123456",
+                    )
+                )
+
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
@@ -189,32 +206,36 @@ class TestPassword(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_send_reset(self):
+    async def test_send_reset(self):
         password = Password(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
-        self.assertRaises(
-            AuthException,
-            password.send_reset,
-            "",
-        )
-
-        self.assertRaises(
-            AuthException,
-            password.send_reset,
-            None,
-        )
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                password.send_reset,
-                "dummy@dummy.com",
+        with self.assertRaises(AuthException):
+            await futu_await(
+                password.send_reset(
+                    "",
+                )
             )
 
+        with self.assertRaises(AuthException):
+
+            await futu_await(
+                password.send_reset(
+                    None,
+                )
+            )
+
+        with mock_http_call(self.async_mode, "post") as mock_post:
+            mock_post.return_value.ok = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    password.send_reset(
+                        "dummy@dummy.com",
+                    )
+                )
+
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
@@ -247,7 +268,7 @@ class TestPassword(common.DescopeTest):
             )
 
         # Test success flow with template options
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
@@ -284,70 +305,82 @@ class TestPassword(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_update(self):
+    async def test_update(self):
         password = Password(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
-        self.assertRaises(
-            AuthException,
-            password.update,
-            "",
-            None,
-            None,
-        )
-
-        self.assertRaises(
-            AuthException,
-            password.update,
-            None,
-            None,
-            None,
-        )
-
-        self.assertRaises(
-            AuthException,
-            password.update,
-            "login_id",
-            "",
-            None,
-        )
-
-        self.assertRaises(
-            AuthException,
-            password.update,
-            "login_id",
-            None,
-            None,
-        )
-
-        self.assertRaises(
-            AuthException,
-            password.update,
-            "login_id",
-            "123456",
-            "",
-        )
-
-        self.assertRaises(
-            AuthException,
-            password.update,
-            "login_id",
-            "123456",
-            None,
-        )
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                password.update,
-                "dummy@dummy.com",
-                "1234567",
-                "refresh_token",
+        with self.assertRaises(AuthException):
+            await futu_await(
+                password.update(
+                    "",
+                    None,
+                    None,
+                )
             )
 
+        with self.assertRaises(AuthException):
+
+            await futu_await(
+                password.update(
+                    None,
+                    None,
+                    None,
+                )
+            )
+
+        with self.assertRaises(AuthException):
+
+            await futu_await(
+                password.update(
+                    "login_id",
+                    "",
+                    None,
+                )
+            )
+
+        with self.assertRaises(AuthException):
+
+            await futu_await(
+                password.update(
+                    "login_id",
+                    None,
+                    None,
+                )
+            )
+
+        with self.assertRaises(AuthException):
+
+            await futu_await(
+                password.update(
+                    "login_id",
+                    "123456",
+                    "",
+                )
+            )
+
+        with self.assertRaises(AuthException):
+
+            await futu_await(
+                password.update(
+                    "login_id",
+                    "123456",
+                    None,
+                )
+            )
+
+        with mock_http_call(self.async_mode, "post") as mock_post:
+            mock_post.return_value.ok = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    password.update(
+                        "dummy@dummy.com",
+                        "1234567",
+                        "refresh_token",
+                    )
+                )
+
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkVGVuYW50cyI6eyIiOm51bGx9LCJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwNjc5MjA4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MjA5MDA4NzIwOCwiaWF0IjoxNjU4MDg3MjA4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQzU1dnl4dzBzUkw2RmRNNjhxUnNDRGRST1YifQ.cWP5up4R5xeIl2qoG2NtfLH3Q5nRJVKdz-FDoAXctOQW9g3ceZQi6rZQ-TPBaXMKw68bijN3bLJTqxWW5WHzqRUeopfuzTcMYmC0wP2XGJkrdF6A8D5QW6acSGqglFgu"
             self.assertIsNone(
@@ -370,70 +403,82 @@ class TestPassword(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_replace(self):
+    async def test_replace(self):
         password = Password(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
-        self.assertRaises(
-            AuthException,
-            password.replace,
-            "",
-            None,
-            None,
-        )
-
-        self.assertRaises(
-            AuthException,
-            password.replace,
-            None,
-            None,
-            None,
-        )
-
-        self.assertRaises(
-            AuthException,
-            password.replace,
-            "login_id",
-            "",
-            None,
-        )
-
-        self.assertRaises(
-            AuthException,
-            password.replace,
-            "login_id",
-            None,
-            None,
-        )
-
-        self.assertRaises(
-            AuthException,
-            password.replace,
-            "login_id",
-            "123456",
-            "",
-        )
-
-        self.assertRaises(
-            AuthException,
-            password.replace,
-            "login_id",
-            "123456",
-            None,
-        )
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                password.replace,
-                "dummy@dummy.com",
-                "123456",
-                "1234567",
+        with self.assertRaises(AuthException):
+            await futu_await(
+                password.replace(
+                    "",
+                    None,
+                    None,
+                )
             )
 
+        with self.assertRaises(AuthException):
+
+            await futu_await(
+                password.replace(
+                    None,
+                    None,
+                    None,
+                )
+            )
+
+        with self.assertRaises(AuthException):
+
+            await futu_await(
+                password.replace(
+                    "login_id",
+                    "",
+                    None,
+                )
+            )
+
+        with self.assertRaises(AuthException):
+
+            await futu_await(
+                password.replace(
+                    "login_id",
+                    None,
+                    None,
+                )
+            )
+
+        with self.assertRaises(AuthException):
+
+            await futu_await(
+                password.replace(
+                    "login_id",
+                    "123456",
+                    "",
+                )
+            )
+
+        with self.assertRaises(AuthException):
+
+            await futu_await(
+                password.replace(
+                    "login_id",
+                    "123456",
+                    None,
+                )
+            )
+
+        with mock_http_call(self.async_mode, "post") as mock_post:
+            mock_post.return_value.ok = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    password.replace(
+                        "dummy@dummy.com",
+                        "123456",
+                        "1234567",
+                    )
+                )
+
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
@@ -466,18 +511,16 @@ class TestPassword(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_policy(self):
+    async def test_policy(self):
         password = Password(Auth(self.dummy_project_id, self.public_key_dict))
 
-        with patch("httpx.get") as mock_get:
+        with mock_http_call(self.async_mode, "get") as mock_get:
             mock_get.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                password.get_policy,
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(password.get_policy())
 
         # Test success flow
-        with patch("httpx.get") as mock_get:
+        with mock_http_call(self.async_mode, "get") as mock_get:
             mock_get.return_value.ok = True
             my_mock_response = mock.Mock()
             my_mock_response.ok = True

@@ -4,9 +4,10 @@ from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
 from descope.common import DEFAULT_TIMEOUT_SECONDS
+from descope.future_utils import futu_await
 from descope.management.common import MgmtV1
 
-from tests.testutils import SSLMatcher
+from tests.testutils import SSLMatcher, mock_http_call
 from .. import common
 
 
@@ -25,7 +26,7 @@ class TestRole(common.DescopeTest):
             "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
         }
 
-    def test_create(self):
+    async def test_create(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -34,16 +35,17 @@ class TestRole(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.role.create,
-                "name",
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.role.create(
+                        "name",
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.role.create("R1", "Something", ["P1"], "t1", True)
@@ -68,7 +70,7 @@ class TestRole(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_update(self):
+    async def test_update(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -77,17 +79,18 @@ class TestRole(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.role.update,
-                "name",
-                "new-name",
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.role.update(
+                        "name",
+                        "new-name",
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.role.update(
@@ -120,7 +123,7 @@ class TestRole(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_delete(self):
+    async def test_delete(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -129,16 +132,17 @@ class TestRole(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.role.delete,
-                "name",
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.role.delete(
+                        "name",
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.role.delete("name"))
             mock_post.assert_called_with(
@@ -155,7 +159,7 @@ class TestRole(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_load_all(self):
+    async def test_load_all(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -164,12 +168,13 @@ class TestRole(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.get") as mock_get:
+        with mock_http_call(self.async_mode, "get") as mock_get:
             mock_get.return_value.ok = False
-            self.assertRaises(AuthException, client.mgmt.role.load_all)
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.role.load_all())
 
         # Test success flow
-        with patch("httpx.get") as mock_get:
+        with mock_http_call(self.async_mode, "get") as mock_get:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads(
@@ -205,7 +210,7 @@ class TestRole(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_search(self):
+    async def test_search(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -214,17 +219,18 @@ class TestRole(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.role.search,
-                ["t"],
-                ["r"],
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.role.search(
+                        ["t"],
+                        ["r"],
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads(

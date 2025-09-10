@@ -4,9 +4,10 @@ from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
 from descope.common import DEFAULT_TIMEOUT_SECONDS
+from descope.future_utils import futu_await
 from descope.management.common import MgmtV1
 
-from tests.testutils import SSLMatcher
+from tests.testutils import SSLMatcher, mock_http_call
 from .. import common
 
 
@@ -25,7 +26,7 @@ class TestAudit(common.DescopeTest):
             "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
         }
 
-    def test_search(self):
+    async def test_search(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -34,16 +35,17 @@ class TestAudit(common.DescopeTest):
         )
 
         # Test failed search
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.audit.search,
-                "data",
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.audit.search(
+                        "data",
+                    )
+                )
 
         # Test success search
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = {
@@ -83,7 +85,7 @@ class TestAudit(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_create_event(self):
+    async def test_create_event(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -92,14 +94,13 @@ class TestAudit(common.DescopeTest):
         )
 
         # Test failed search
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException, client.mgmt.audit.create_event, "a", "b", "c", "d"
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.audit.create_event("a", "b", "c", "d"))
 
         # Test success search
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = {}

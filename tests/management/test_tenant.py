@@ -4,9 +4,10 @@ from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
 from descope.common import DEFAULT_TIMEOUT_SECONDS
+from descope.future_utils import futu_await
 from descope.management.common import MgmtV1
 
-from tests.testutils import SSLMatcher
+from tests.testutils import SSLMatcher, mock_http_call
 from .. import common
 
 
@@ -25,7 +26,7 @@ class TestTenant(common.DescopeTest):
             "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
         }
 
-    def test_create(self):
+    async def test_create(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -34,16 +35,17 @@ class TestTenant(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.tenant.create,
-                "valid-name",
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.tenant.create(
+                        "valid-name",
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"id": "t1"}""")
@@ -71,7 +73,7 @@ class TestTenant(common.DescopeTest):
             )
 
         # Test success flow with custom attributes, enforce_sso, disabled
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"id": "t1"}""")
@@ -106,7 +108,7 @@ class TestTenant(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_update(self):
+    async def test_update(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -115,17 +117,18 @@ class TestTenant(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.tenant.update,
-                "valid-id",
-                "valid-name",
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.tenant.update(
+                        "valid-id",
+                        "valid-name",
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.tenant.update(
@@ -153,7 +156,7 @@ class TestTenant(common.DescopeTest):
             )
 
         # Test success flow with custom attributes, enforce_sso, disabled
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.tenant.update(
@@ -186,7 +189,7 @@ class TestTenant(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_delete(self):
+    async def test_delete(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -195,16 +198,17 @@ class TestTenant(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.tenant.delete,
-                "valid-id",
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.tenant.delete(
+                        "valid-id",
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.tenant.delete("t1", True))
             mock_post.assert_called_with(
@@ -221,7 +225,7 @@ class TestTenant(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_load(self):
+    async def test_load(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -230,16 +234,17 @@ class TestTenant(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.get") as mock_get:
+        with mock_http_call(self.async_mode, "get") as mock_get:
             mock_get.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.tenant.load,
-                "valid-id",
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.tenant.load(
+                        "valid-id",
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.get") as mock_get:
+        with mock_http_call(self.async_mode, "get") as mock_get:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads(
@@ -264,7 +269,7 @@ class TestTenant(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_load_all(self):
+    async def test_load_all(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -273,12 +278,13 @@ class TestTenant(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.get") as mock_get:
+        with mock_http_call(self.async_mode, "get") as mock_get:
             mock_get.return_value.ok = False
-            self.assertRaises(AuthException, client.mgmt.tenant.load_all)
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.tenant.load_all())
 
         # Test success flow
-        with patch("httpx.get") as mock_get:
+        with mock_http_call(self.async_mode, "get") as mock_get:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads(
@@ -311,7 +317,7 @@ class TestTenant(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_search_all(self):
+    async def test_search_all(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -320,12 +326,13 @@ class TestTenant(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(AuthException, client.mgmt.tenant.search_all)
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.tenant.search_all())
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads(

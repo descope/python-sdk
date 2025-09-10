@@ -10,9 +10,10 @@ from descope import (
     SAMLIDPRoleGroupMappingInfo,
 )
 from descope.common import DEFAULT_TIMEOUT_SECONDS
+from descope.future_utils import futu_await
 from descope.management.common import MgmtV1
 
-from tests.testutils import SSLMatcher
+from tests.testutils import SSLMatcher, mock_http_call
 from .. import common
 
 
@@ -31,7 +32,7 @@ class TestSSOApplication(common.DescopeTest):
             "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
         }
 
-    def test_create_oidc_application(self):
+    async def test_create_oidc_application(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -40,17 +41,18 @@ class TestSSOApplication(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.sso_application.create_oidc_application,
-                "valid-name",
-                "http://dummy.com",
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.sso_application.create_oidc_application(
+                        "valid-name",
+                        "http://dummy.com",
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"id": "app1"}""")
@@ -83,7 +85,7 @@ class TestSSOApplication(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_create_saml_application(self):
+    async def test_create_saml_application(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -92,37 +94,41 @@ class TestSSOApplication(common.DescopeTest):
         )
 
         # Test failed flows
-        self.assertRaises(
-            Exception,
-            client.mgmt.sso_application.create_saml_application,
-            name="valid-name",
-            login_page_url="http://dummy.com",
-            use_metadata_info=True,
-            metadata_url="",
-        )
-
-        self.assertRaises(
-            Exception,
-            client.mgmt.sso_application.create_saml_application,
-            name="valid-name",
-            login_page_url="http://dummy.com",
-            use_metadata_info=False,
-            entity_id="",
-        )
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.sso_application.create_saml_application,
-                name="valid-name",
-                login_page_url="http://dummy.com",
-                use_metadata_info=True,
-                metadata_url="http://dummy.com/md",
+        with self.assertRaises(Exception):
+            await futu_await(
+                client.mgmt.sso_application.create_saml_application(
+                    name="valid-name",
+                    login_page_url="http://dummy.com",
+                    use_metadata_info=True,
+                    metadata_url="",
+                )
             )
 
+        with self.assertRaises(Exception):
+
+            await futu_await(
+                client.mgmt.sso_application.create_saml_application(
+                    name="valid-name",
+                    login_page_url="http://dummy.com",
+                    use_metadata_info=False,
+                    entity_id="",
+                )
+            )
+
+        with mock_http_call(self.async_mode, "post") as mock_post:
+            mock_post.return_value.ok = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.sso_application.create_saml_application(
+                        name="valid-name",
+                        login_page_url="http://dummy.com",
+                        use_metadata_info=True,
+                        metadata_url="http://dummy.com/md",
+                    )
+                )
+
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"id": "app1"}""")
@@ -194,7 +200,7 @@ class TestSSOApplication(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_update_oidc_application(self):
+    async def test_update_oidc_application(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -203,18 +209,19 @@ class TestSSOApplication(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.sso_application.update_oidc_application,
-                "id1",
-                "valid-name",
-                "http://dummy.com",
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.sso_application.update_oidc_application(
+                        "id1",
+                        "valid-name",
+                        "http://dummy.com",
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             self.assertIsNone(
@@ -244,7 +251,7 @@ class TestSSOApplication(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_update_saml_application(self):
+    async def test_update_saml_application(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -253,40 +260,44 @@ class TestSSOApplication(common.DescopeTest):
         )
 
         # Test failed flows
-        self.assertRaises(
-            Exception,
-            client.mgmt.sso_application.update_saml_application,
-            id="id1",
-            name="valid-name",
-            login_page_url="http://dummy.com",
-            use_metadata_info=True,
-            metadata_url="",
-        )
-
-        self.assertRaises(
-            Exception,
-            client.mgmt.sso_application.update_saml_application,
-            id="id1",
-            name="valid-name",
-            login_page_url="http://dummy.com",
-            use_metadata_info=False,
-            entity_id="",
-        )
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.sso_application.update_saml_application,
-                id="id1",
-                name="valid-name",
-                login_page_url="http://dummy.com",
-                use_metadata_info=True,
-                metadata_url="http://dummy.com/md",
+        with self.assertRaises(Exception):
+            await futu_await(
+                client.mgmt.sso_application.update_saml_application(
+                    id="id1",
+                    name="valid-name",
+                    login_page_url="http://dummy.com",
+                    use_metadata_info=True,
+                    metadata_url="",
+                )
             )
 
+        with self.assertRaises(Exception):
+
+            await futu_await(
+                client.mgmt.sso_application.update_saml_application(
+                    id="id1",
+                    name="valid-name",
+                    login_page_url="http://dummy.com",
+                    use_metadata_info=False,
+                    entity_id="",
+                )
+            )
+
+        with mock_http_call(self.async_mode, "post") as mock_post:
+            mock_post.return_value.ok = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.sso_application.update_saml_application(
+                        id="id1",
+                        name="valid-name",
+                        login_page_url="http://dummy.com",
+                        use_metadata_info=True,
+                        metadata_url="http://dummy.com/md",
+                    )
+                )
+
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             self.assertIsNone(
@@ -358,7 +369,7 @@ class TestSSOApplication(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_delete(self):
+    async def test_delete(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -367,16 +378,17 @@ class TestSSOApplication(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.sso_application.delete,
-                "valid-id",
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.sso_application.delete(
+                        "valid-id",
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.sso_application.delete("app1"))
             mock_post.assert_called_with(
@@ -395,7 +407,7 @@ class TestSSOApplication(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_load(self):
+    async def test_load(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -404,16 +416,17 @@ class TestSSOApplication(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.get") as mock_get:
+        with mock_http_call(self.async_mode, "get") as mock_get:
             mock_get.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.sso_application.load,
-                "valid-id",
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.sso_application.load(
+                        "valid-id",
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.get") as mock_get:
+        with mock_http_call(self.async_mode, "get") as mock_get:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads(
@@ -459,7 +472,7 @@ class TestSSOApplication(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_load_all(self):
+    async def test_load_all(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -468,12 +481,13 @@ class TestSSOApplication(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.get") as mock_get:
+        with mock_http_call(self.async_mode, "get") as mock_get:
             mock_get.return_value.ok = False
-            self.assertRaises(AuthException, client.mgmt.sso_application.load_all)
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.sso_application.load_all())
 
         # Test success flow
-        with patch("httpx.get") as mock_get:
+        with mock_http_call(self.async_mode, "get") as mock_get:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads(

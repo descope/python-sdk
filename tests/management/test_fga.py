@@ -2,9 +2,10 @@ from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
 from descope.common import DEFAULT_TIMEOUT_SECONDS
+from descope.future_utils import futu_await
 from descope.management.common import MgmtV1
 
-from tests.testutils import SSLMatcher
+from tests.testutils import SSLMatcher, mock_http_call
 from .. import common
 
 
@@ -23,7 +24,7 @@ class TestFGA(common.DescopeTest):
             "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
         }
 
-    def test_save_schema(self):
+    async def test_save_schema(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -32,12 +33,13 @@ class TestFGA(common.DescopeTest):
         )
 
         # Test failed save_schema
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(AuthException, client.mgmt.fga.save_schema, "")
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.fga.save_schema(""))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(client.mgmt.fga.save_schema("model AuthZ 1.0"))
             mock_post.assert_called_with(
@@ -54,7 +56,7 @@ class TestFGA(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_create_relations(self):
+    async def test_create_relations(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -63,12 +65,13 @@ class TestFGA(common.DescopeTest):
         )
 
         # Test failed create_relations
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(AuthException, client.mgmt.fga.create_relations, [])
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.fga.create_relations([]))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.fga.create_relations(
@@ -107,7 +110,7 @@ class TestFGA(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_delete_relations(self):
+    async def test_delete_relations(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -116,12 +119,13 @@ class TestFGA(common.DescopeTest):
         )
 
         # Test failed delete_relations
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(AuthException, client.mgmt.fga.delete_relations, [])
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.fga.delete_relations([]))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.fga.delete_relations(
@@ -160,7 +164,7 @@ class TestFGA(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_check(self):
+    async def test_check(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -169,12 +173,13 @@ class TestFGA(common.DescopeTest):
         )
 
         # Test failed has_relations
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(AuthException, client.mgmt.fga.check, [])
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.fga.check([]))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(
                 client.mgmt.fga.check(
@@ -213,7 +218,7 @@ class TestFGA(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_load_resources_details_success(self):
+    async def test_load_resources_details_success(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -226,7 +231,7 @@ class TestFGA(common.DescopeTest):
                 {"resourceId": "r2", "resourceType": "type2", "displayName": "Name2"},
             ]
         }
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             mock_post.return_value.json.return_value = response_body
             ids = [
@@ -249,23 +254,24 @@ class TestFGA(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_load_resources_details_error(self):
+    async def test_load_resources_details_error(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
         )
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
             ids = [{"resourceId": "r1", "resourceType": "type1"}]
-            self.assertRaises(
-                AuthException,
-                client.mgmt.fga.load_resources_details,
-                ids,
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.fga.load_resources_details(
+                        ids,
+                    )
+                )
 
-    def test_save_resources_details_success(self):
+    async def test_save_resources_details_success(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -275,7 +281,7 @@ class TestFGA(common.DescopeTest):
         details = [
             {"resourceId": "r1", "resourceType": "type1", "displayName": "Name1"}
         ]
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             client.mgmt.fga.save_resources_details(details)
             mock_post.assert_called_with(
@@ -292,7 +298,7 @@ class TestFGA(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_save_resources_details_error(self):
+    async def test_save_resources_details_error(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -302,10 +308,11 @@ class TestFGA(common.DescopeTest):
         details = [
             {"resourceId": "r1", "resourceType": "type1", "displayName": "Name1"}
         ]
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.fga.save_resources_details,
-                details,
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.fga.save_resources_details(
+                        details,
+                    )
+                )

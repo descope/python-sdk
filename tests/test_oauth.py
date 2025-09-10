@@ -7,9 +7,10 @@ from descope import AuthException
 from descope.auth import Auth
 from descope.authmethod.oauth import OAuth
 from descope.common import DEFAULT_TIMEOUT_SECONDS, EndpointsV1, LoginOptions
+from descope.future_utils import futu_await
 
 from . import common
-from tests.testutils import SSLMatcher
+from tests.testutils import SSLMatcher, mock_http_call
 
 
 class TestOAuth(common.DescopeTest):
@@ -26,13 +27,13 @@ class TestOAuth(common.DescopeTest):
             "y": "N5n5jKZA5Wu7_b4B36KKjJf-VRfJ-XqczfCSYy9GeQLqF-b63idfE0SYaYk9cFqg",
         }
 
-    def test_compose_start_params(self):
+    async def test_compose_start_params(self):
         self.assertEqual(
             OAuth._compose_start_params("google", "http://example.com"),
             {"provider": "google", "redirectURL": "http://example.com"},
         )
 
-    def test_verify_oauth_providers(self):
+    async def test_verify_oauth_providers(self):
         self.assertEqual(
             OAuth._verify_provider(""),
             False,
@@ -43,30 +44,30 @@ class TestOAuth(common.DescopeTest):
             False,
         )
 
-    def test_oauth_start(self):
+    async def test_oauth_start(self):
         oauth = OAuth(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
-        self.assertRaises(AuthException, oauth.start, "")
+        with self.assertRaises(AuthException):
+            await futu_await(oauth.start(""))
 
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(AuthException, oauth.start, "google")
+            with self.assertRaises(AuthException):
+                await futu_await(oauth.start("google"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(oauth.start("google"))
 
-            self.assertRaises(
-                AuthException,
-                oauth.start,
-                "facebook",
-                "http://test.me",
-                LoginOptions(mfa=True),
-            )
+            with self.assertRaises(AuthException):
 
-        with patch("httpx.post") as mock_post:
+                await futu_await(
+                    oauth.start("facebook", "http://test.me", LoginOptions(mfa=True)),
+                )
+
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             oauth.start("facebook")
             expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.oauth_start_path}"
@@ -84,22 +85,24 @@ class TestOAuth(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_oauth_start_with_login_options(self):
+    async def test_oauth_start_with_login_options(self):
         oauth = OAuth(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
-        self.assertRaises(AuthException, oauth.start, "")
+        with self.assertRaises(AuthException):
+            await futu_await(oauth.start(""))
 
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(AuthException, oauth.start, "google")
+            with self.assertRaises(AuthException):
+                await futu_await(oauth.start("google"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNotNone(oauth.start("google"))
 
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = True
             lo = LoginOptions(stepup=True, custom_claims={"k1": "v1"})
             oauth.start("facebook", login_options=lo, refresh_token="refresh")
@@ -118,22 +121,25 @@ class TestOAuth(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_compose_exchange_params(self):
+    async def test_compose_exchange_params(self):
         self.assertEqual(Auth._compose_exchange_body("c1"), {"code": "c1"})
 
-    def test_exchange_token(self):
+    async def test_exchange_token(self):
         oauth = OAuth(Auth(self.dummy_project_id, self.public_key_dict))
 
         # Test failed flows
-        self.assertRaises(AuthException, oauth.exchange_token, "")
-        self.assertRaises(AuthException, oauth.exchange_token, None)
+        with self.assertRaises(AuthException):
+            await futu_await(oauth.exchange_token(""))
+        with self.assertRaises(AuthException):
+            await futu_await(oauth.exchange_token(None))
 
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(AuthException, oauth.exchange_token, "c1")
+            with self.assertRaises(AuthException):
+                await futu_await(oauth.exchange_token("c1"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.ok = True
             my_mock_response.cookies = {}

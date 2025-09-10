@@ -4,9 +4,10 @@ from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
 from descope.common import DEFAULT_TIMEOUT_SECONDS
+from descope.future_utils import futu_await
 from descope.management.common import MgmtLoginOptions, MgmtV1
 from tests import common
-from tests.testutils import SSLMatcher
+from tests.testutils import SSLMatcher, mock_http_call
 
 
 class TestUser(common.DescopeTest):
@@ -24,7 +25,7 @@ class TestUser(common.DescopeTest):
             "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
         }
 
-    def test_update_jwt(self):
+    async def test_update_jwt(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -33,18 +34,17 @@ class TestUser(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException, client.mgmt.jwt.update_jwt, "jwt", {"k1": "v1"}, 0
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.jwt.update_jwt("jwt", {"k1": "v1"}, 0))
 
-            self.assertRaises(
-                AuthException, client.mgmt.jwt.update_jwt, "", {"k1": "v1"}, 0
-            )
+            with self.assertRaises(AuthException):
+
+                await futu_await(client.mgmt.jwt.update_jwt("", {"k1": "v1"}, 0))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
@@ -91,7 +91,7 @@ class TestUser(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_impersonate(self):
+    async def test_impersonate(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -100,22 +100,21 @@ class TestUser(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException, client.mgmt.jwt.impersonate, "imp1", "imp2", False
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.jwt.impersonate("imp1", "imp2", False))
 
-            self.assertRaises(
-                AuthException, client.mgmt.jwt.impersonate, "", "imp2", False
-            )
+            with self.assertRaises(AuthException):
 
-            self.assertRaises(
-                AuthException, client.mgmt.jwt.impersonate, "imp1", "", False
-            )
+                await futu_await(client.mgmt.jwt.impersonate("", "imp2", False))
+
+            with self.assertRaises(AuthException):
+
+                await futu_await(client.mgmt.jwt.impersonate("imp1", "", False))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
@@ -144,7 +143,7 @@ class TestUser(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_stop_impersonation(self):
+    async def test_stop_impersonation(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -153,16 +152,17 @@ class TestUser(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.jwt.stop_impersonation,
-                "",
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.jwt.stop_impersonation(
+                        "",
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
@@ -189,7 +189,7 @@ class TestUser(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_sign_in(self):
+    async def test_sign_in(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -198,17 +198,17 @@ class TestUser(common.DescopeTest):
         )
 
         # Test failed flows
-        self.assertRaises(AuthException, client.mgmt.jwt.sign_in, "")
+        with self.assertRaises(AuthException):
+            await futu_await(client.mgmt.jwt.sign_in(""))
 
-        self.assertRaises(
-            AuthException,
-            client.mgmt.jwt.sign_in,
-            "loginId",
-            MgmtLoginOptions(mfa=True),
-        )
+        with self.assertRaises(AuthException):
+
+            await futu_await(
+                client.mgmt.jwt.sign_in("loginId", MgmtLoginOptions(mfa=True)),
+            )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
@@ -237,7 +237,7 @@ class TestUser(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_sign_up(self):
+    async def test_sign_up(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -246,10 +246,11 @@ class TestUser(common.DescopeTest):
         )
 
         # Test failed flows
-        self.assertRaises(AuthException, client.mgmt.jwt.sign_up, "")
+        with self.assertRaises(AuthException):
+            await futu_await(client.mgmt.jwt.sign_up(""))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
@@ -288,7 +289,7 @@ class TestUser(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_sign_up_or_in(self):
+    async def test_sign_up_or_in(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -297,10 +298,11 @@ class TestUser(common.DescopeTest):
         )
 
         # Test failed flows
-        self.assertRaises(AuthException, client.mgmt.jwt.sign_up_or_in, "")
+        with self.assertRaises(AuthException):
+            await futu_await(client.mgmt.jwt.sign_up_or_in(""))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
@@ -339,7 +341,7 @@ class TestUser(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_anonymous(self):
+    async def test_anonymous(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -348,7 +350,7 @@ class TestUser(common.DescopeTest):
         )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             network_resp = mock.Mock()
             network_resp.ok = True
             network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
