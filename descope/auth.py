@@ -562,6 +562,7 @@ class Auth:
 
         jwt_response["user"] = response_body.get("user", {})
         jwt_response["firstSeen"] = response_body.get("firstSeen", True)
+        jwt_response["claims"] = response_body.get("claims", {})
         return jwt_response
 
     def _get_default_headers(self, pswd: str | None = None):
