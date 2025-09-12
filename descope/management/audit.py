@@ -1,11 +1,13 @@
+from __future__ import annotations
+
 from datetime import datetime
 from typing import Any, List, Optional
 
-from descope._auth_base import AuthBase
+from descope._http_base import HTTPBase
 from descope.management.common import MgmtV1
 
 
-class Audit(AuthBase):
+class Audit(HTTPBase):
     def search(
         self,
         user_ids: Optional[List[str]] = None,
@@ -91,11 +93,7 @@ class Audit(AuthBase):
         if to_ts is not None:
             body["to"] = int(to_ts.timestamp() * 1000)
 
-        response = self._auth.do_post(
-            MgmtV1.audit_search,
-            body=body,
-            pswd=self._auth.management_key,
-        )
+        response = self._http.post(MgmtV1.audit_search, body=body)
         return {
             "audits": list(map(Audit._convert_audit_record, response.json()["audits"]))
         }
@@ -134,11 +132,7 @@ class Audit(AuthBase):
         if data is not None:
             body["data"] = data
 
-        self._auth.do_post(
-            MgmtV1.audit_create_event,
-            body=body,
-            pswd=self._auth.management_key,
-        )
+        self._http.post(MgmtV1.audit_create_event, body=body)
 
     @staticmethod
     def _convert_audit_record(a: dict) -> dict:

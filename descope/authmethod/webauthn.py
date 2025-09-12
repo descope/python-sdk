@@ -37,8 +37,7 @@ class WebAuthn(AuthBase):
 
         uri = EndpointsV1.sign_up_auth_webauthn_start_path
         body = WebAuthn._compose_sign_up_start_body(login_id, user, origin)
-        response = self._auth.do_post(uri, body)
-
+        response = self._http.post(uri, body=body)
         return response.json()
 
     def sign_up_finish(
@@ -59,11 +58,9 @@ class WebAuthn(AuthBase):
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Response cannot be empty"
             )
-
         uri = EndpointsV1.sign_up_auth_webauthn_finish_path
         body = WebAuthn._compose_sign_up_in_finish_body(transaction_id, response)
-        response = self._auth.do_post(uri, body, None, "")
-
+        response = self._http.post(uri, body=body)
         resp = response.json()
         jwt_response = self._auth.generate_jwt_response(
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
@@ -94,8 +91,7 @@ class WebAuthn(AuthBase):
 
         uri = EndpointsV1.sign_in_auth_webauthn_start_path
         body = WebAuthn._compose_sign_in_start_body(login_id, origin, login_options)
-        response = self._auth.do_post(uri, body, pswd=refresh_token)
-
+        response = self._http.post(uri, body=body, pswd=refresh_token)
         return response.json()
 
     def sign_in_finish(
@@ -119,8 +115,7 @@ class WebAuthn(AuthBase):
 
         uri = EndpointsV1.sign_in_auth_webauthn_finish_path
         body = WebAuthn._compose_sign_up_in_finish_body(transaction_id, response)
-        response = self._auth.do_post(uri, body, None)
-
+        response = self._http.post(uri, body=body)
         resp = response.json()
         jwt_response = self._auth.generate_jwt_response(
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
@@ -147,8 +142,7 @@ class WebAuthn(AuthBase):
 
         uri = EndpointsV1.sign_up_or_in_auth_webauthn_start_path
         body = WebAuthn._compose_sign_up_or_in_start_body(login_id, origin)
-        response = self._auth.do_post(uri, body)
-
+        response = self._http.post(uri, body=body)
         return response.json()
 
     def update_start(self, login_id: str, refresh_token: str, origin: str):
@@ -167,8 +161,7 @@ class WebAuthn(AuthBase):
 
         uri = EndpointsV1.update_auth_webauthn_start_path
         body = WebAuthn._compose_update_start_body(login_id, origin)
-        response = self._auth.do_post(uri, body, None, refresh_token)
-
+        response = self._http.post(uri, body=body, pswd=refresh_token)
         return response.json()
 
     def update_finish(self, transaction_id: str, response: str) -> None:
@@ -187,7 +180,7 @@ class WebAuthn(AuthBase):
 
         uri = EndpointsV1.update_auth_webauthn_finish_path
         body = WebAuthn._compose_update_finish_body(transaction_id, response)
-        self._auth.do_post(uri, body)
+        self._http.post(uri, body=body)
 
     @staticmethod
     def _compose_sign_up_start_body(login_id: str, user: dict, origin: str) -> dict:

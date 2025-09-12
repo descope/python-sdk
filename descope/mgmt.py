@@ -1,129 +1,135 @@
-from descope.auth import Auth
-from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException  # noqa: F401
-from descope.management.access_key import AccessKey  # noqa: F401
-from descope.management.audit import Audit  # noqa: F401
-from descope.management.authz import Authz  # noqa: F401
-from descope.management.fga import FGA  # noqa: F401
-from descope.management.flow import Flow  # noqa: F401
-from descope.management.group import Group  # noqa: F401
-from descope.management.jwt import JWT  # noqa: F401
-from descope.management.outbound_application import (  # noqa: F401  # noqa: F401
+from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
+from descope.http_client import HTTPClient
+from descope.management.access_key import AccessKey
+from descope.management.audit import Audit
+from descope.management.authz import Authz
+from descope.management.fga import FGA
+from descope.management.flow import Flow
+from descope.management.group import Group
+from descope.management.jwt import JWT
+from descope.management.outbound_application import (
     OutboundApplication,
     OutboundApplicationByToken,
 )
-from descope.management.permission import Permission  # noqa: F401
-from descope.management.project import Project  # noqa: F401
-from descope.management.role import Role  # noqa: F401
-from descope.management.sso_application import SSOApplication  # noqa: F401
-from descope.management.sso_settings import SSOSettings  # noqa: F401
-from descope.management.tenant import Tenant  # noqa: F401
+from descope.management.permission import Permission
+from descope.management.project import Project
+from descope.management.role import Role
+from descope.management.sso_application import SSOApplication
+from descope.management.sso_settings import SSOSettings
+
+# Import management modules after adapter to avoid circularities
+from descope.management.tenant import Tenant
 from descope.management.user import User
 
 
 class MGMT:
-    _auth: Auth
+    _http: HTTPClient
 
-    def __init__(self, auth: Auth):
-        self._auth = auth
-        self._tenant = Tenant(auth)
-        self._sso_application = SSOApplication(auth)
-        self._user = User(auth)
-        self._access_key = AccessKey(auth)
-        self._sso = SSOSettings(auth)
-        self._jwt = JWT(auth)
-        self._permission = Permission(auth)
-        self._role = Role(auth)
-        self._group = Group(auth)
-        self._flow = Flow(auth)
-        self._audit = Audit(auth)
-        self._authz = Authz(auth)
-        self._fga = FGA(auth)
-        self._project = Project(auth)
-        self._outbound_application = OutboundApplication(auth)
-        self._outbound_application_by_token = OutboundApplicationByToken(auth)
+    def __init__(self, http_client: HTTPClient):
+        """Create a management API facade.
 
-    def _check_management_key(self, property_name: str):
+        Args:
+            http_client: HTTP client to use for all management HTTP calls.
+        """
+        self._http = http_client
+        self._access_key = AccessKey(http_client)
+        self._audit = Audit(http_client)
+        self._authz = Authz(http_client)
+        self._fga = FGA(http_client)
+        self._flow = Flow(http_client)
+        self._group = Group(http_client)
+        self._jwt = JWT(http_client)
+        self._outbound_application = OutboundApplication(http_client)
+        self._outbound_application_by_token = OutboundApplicationByToken(http_client)
+        self._permission = Permission(http_client)
+        self._project = Project(http_client)
+        self._role = Role(http_client)
+        self._sso = SSOSettings(http_client)
+        self._sso_application = SSOApplication(http_client)
+        self._tenant = Tenant(http_client)
+        self._user = User(http_client)
+
+    def _ensure_management_key(self, property_name: str):
         """Check if management key is available for the given property."""
-        if not self._auth.management_key:
+        if not self._http.management_key:
             raise AuthException(
-                400,
-                ERROR_TYPE_INVALID_ARGUMENT,
-                f"Management key is required to access '{property_name}' functionality",
+                error_type=ERROR_TYPE_INVALID_ARGUMENT,
+                error_message=f"Management key is required to access '{property_name}' functionality",
             )
 
     @property
     def tenant(self):
-        self._check_management_key("tenant")
+        self._ensure_management_key("tenant")
         return self._tenant
 
     @property
     def sso_application(self):
-        self._check_management_key("sso_application")
+        self._ensure_management_key("sso_application")
         return self._sso_application
 
     @property
     def user(self):
-        self._check_management_key("user")
+        self._ensure_management_key("user")
         return self._user
 
     @property
     def access_key(self):
-        self._check_management_key("access_key")
+        self._ensure_management_key("access_key")
         return self._access_key
 
     @property
     def sso(self):
-        self._check_management_key("sso")
+        self._ensure_management_key("sso")
         return self._sso
 
     @property
     def jwt(self):
-        self._check_management_key("jwt")
+        self._ensure_management_key("jwt")
         return self._jwt
 
     @property
     def permission(self):
-        self._check_management_key("permission")
+        self._ensure_management_key("permission")
         return self._permission
 
     @property
     def role(self):
-        self._check_management_key("role")
+        self._ensure_management_key("role")
         return self._role
 
     @property
     def group(self):
-        self._check_management_key("group")
+        self._ensure_management_key("group")
         return self._group
 
     @property
     def flow(self):
-        self._check_management_key("flow")
+        self._ensure_management_key("flow")
         return self._flow
 
     @property
     def audit(self):
-        self._check_management_key("audit")
+        self._ensure_management_key("audit")
         return self._audit
 
     @property
     def authz(self):
-        self._check_management_key("authz")
+        self._ensure_management_key("authz")
         return self._authz
 
     @property
     def fga(self):
-        self._check_management_key("fga")
+        self._ensure_management_key("fga")
         return self._fga
 
     @property
     def project(self):
-        self._check_management_key("project")
+        self._ensure_management_key("project")
         return self._project
 
     @property
     def outbound_application(self):
-        self._check_management_key("outbound_application")
+        self._ensure_management_key("outbound_application")
         return self._outbound_application
 
     @property

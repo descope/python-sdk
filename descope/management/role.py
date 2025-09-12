@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 from typing import List, Optional
 
-from descope._auth_base import AuthBase
+from descope._http_base import HTTPBase
 from descope.management.common import MgmtV1
 
 
-class Role(AuthBase):
+class Role(HTTPBase):
     def create(
         self,
         name: str,
@@ -28,16 +30,15 @@ class Role(AuthBase):
         """
         permission_names = [] if permission_names is None else permission_names
 
-        self._auth.do_post(
+        self._http.post(
             MgmtV1.role_create_path,
-            {
+            body={
                 "name": name,
                 "description": description,
                 "permissionNames": permission_names,
                 "tenantId": tenant_id,
                 "default": default,
             },
-            pswd=self._auth.management_key,
         )
 
     def update(
@@ -65,9 +66,9 @@ class Role(AuthBase):
         AuthException: raised if update operation fails
         """
         permission_names = [] if permission_names is None else permission_names
-        self._auth.do_post(
+        self._http.post(
             MgmtV1.role_update_path,
-            {
+            body={
                 "name": name,
                 "newName": new_name,
                 "description": description,
@@ -75,7 +76,6 @@ class Role(AuthBase):
                 "tenantId": tenant_id,
                 "default": default,
             },
-            pswd=self._auth.management_key,
         )
 
     def delete(
@@ -92,10 +92,9 @@ class Role(AuthBase):
         Raise:
         AuthException: raised if creation operation fails
         """
-        self._auth.do_post(
+        self._http.post(
             MgmtV1.role_delete_path,
-            {"name": name, "tenantId": tenant_id},
-            pswd=self._auth.management_key,
+            body={"name": name, "tenantId": tenant_id},
         )
 
     def load_all(
@@ -112,9 +111,8 @@ class Role(AuthBase):
         Raise:
         AuthException: raised if load operation fails
         """
-        response = self._auth.do_get(
-            uri=MgmtV1.role_load_all_path,
-            pswd=self._auth.management_key,
+        response = self._http.get(
+            MgmtV1.role_load_all_path,
         )
         return response.json()
 
@@ -155,9 +153,8 @@ class Role(AuthBase):
         if include_project_roles is not None:
             body["includeProjectRoles"] = include_project_roles
 
-        response = self._auth.do_post(
+        response = self._http.post(
             MgmtV1.role_search_path,
-            body,
-            pswd=self._auth.management_key,
+            body=body,
         )
         return response.json()
