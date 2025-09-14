@@ -25,8 +25,11 @@ class OAuth(AuthBase):
 
         uri = EndpointsV1.oauth_start_path
         params = OAuth._compose_start_params(provider, return_url)
-        response = self._auth.do_post(
-            uri, login_options.__dict__ if login_options else {}, params, refresh_token
+        response = self._http.post(
+            uri,
+            body=login_options.__dict__ if login_options else {},
+            params=params,
+            pswd=refresh_token,
         )
 
         return response.json()

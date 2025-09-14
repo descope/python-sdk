@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import platform
 import unittest
@@ -29,4 +31,30 @@ class DescopeTest(unittest.TestCase):
     def setUp(self) -> None:
         os.environ["DESCOPE_BASE_URI"] = (
             DEFAULT_BASE_URL  # Make sure tests always running against localhost
+        )
+        # Some tests instantiate Auth directly; provide defaults they can use
+        self.dummy_project_id = getattr(self, "dummy_project_id", "dummy")
+        self.public_key_dict = getattr(
+            self,
+            "public_key_dict",
+            {
+                "alg": "ES384",
+                "crv": "P-384",
+                "kid": "testkid",
+                "kty": "EC",
+                "use": "sig",
+                "x": "x",
+                "y": "y",
+            },
+        )
+
+    # Test helper to build a default HTTP client
+    def make_http_client(self, management_key: "str | None" = None):
+        from descope.http_client import HTTPClient
+
+        return HTTPClient(
+            project_id=self.dummy_project_id,
+            timeout_seconds=60,
+            secure=True,
+            management_key=management_key,
         )

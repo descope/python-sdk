@@ -80,7 +80,13 @@ class TestWebauthN(common.DescopeTest):
         )
 
     def test_sign_up_start(self):
-        webauthn = WebAuthn(Auth(self.dummy_project_id, self.public_key_dict))
+        webauthn = WebAuthn(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
 
         # Test failed flows
         self.assertRaises(
@@ -126,7 +132,13 @@ class TestWebauthN(common.DescopeTest):
             self.assertEqual(res, valid_response)
 
     def test_sign_up_finish(self):
-        webauthn = WebAuthn(Auth(self.dummy_project_id, self.public_key_dict))
+        webauthn = WebAuthn(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
 
         # Test failed flows
         self.assertRaises(AuthException, webauthn.sign_up_finish, "", "response01")
@@ -176,7 +188,13 @@ class TestWebauthN(common.DescopeTest):
             self.assertIsNotNone(webauthn.sign_up_finish("t01", "response01"))
 
     def test_sign_in_start(self):
-        webauthn = WebAuthn(Auth(self.dummy_project_id, self.public_key_dict))
+        webauthn = WebAuthn(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
 
         # Test failed flows
         self.assertRaises(
@@ -237,7 +255,13 @@ class TestWebauthN(common.DescopeTest):
             self.assertEqual(res, valid_response)
 
     def test_sign_in_start_with_login_options(self):
-        webauthn = WebAuthn(Auth(self.dummy_project_id, self.public_key_dict))
+        webauthn = WebAuthn(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
 
         # Test failed flows
         self.assertRaises(
@@ -296,7 +320,13 @@ class TestWebauthN(common.DescopeTest):
             self.assertEqual(res, valid_response)
 
     def test_sign_in_finish(self):
-        webauthn = WebAuthn(Auth(self.dummy_project_id, self.public_key_dict))
+        webauthn = WebAuthn(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
 
         # Test failed flows
         self.assertRaises(AuthException, webauthn.sign_in_finish, "", "response01")
@@ -340,7 +370,13 @@ class TestWebauthN(common.DescopeTest):
             self.assertIsNotNone(webauthn.sign_up_finish("t01", "response01"))
 
     def test_sign_up_or_in_start(self):
-        webauthn = WebAuthn(Auth(self.dummy_project_id, self.public_key_dict))
+        webauthn = WebAuthn(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
 
         # Test failed flows
         self.assertRaises(
@@ -394,7 +430,13 @@ class TestWebauthN(common.DescopeTest):
 
     def test_update_start(self):
         valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkVGVuYW50cyI6eyIiOm51bGx9LCJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwNjc5MjA4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MjA5MDA4NzIwOCwiaWF0IjoxNjU4MDg3MjA4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQzU1dnl4dzBzUkw2RmRNNjhxUnNDRGRST1YifQ.cWP5up4R5xeIl2qoG2NtfLH3Q5nRJVKdz-FDoAXctOQW9g3ceZQi6rZQ-TPBaXMKw68bijN3bLJTqxWW5WHzqRUeopfuzTcMYmC0wP2XGJkrdF6A8D5QW6acSGqglFgu"
-        webauthn = WebAuthn(Auth(self.dummy_project_id, self.public_key_dict))
+        webauthn = WebAuthn(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
 
         # Test failed flows
         self.assertRaises(
@@ -463,7 +505,13 @@ class TestWebauthN(common.DescopeTest):
             self.assertEqual(res, valid_response)
 
     def test_update_finish(self):
-        webauthn = WebAuthn(Auth(self.dummy_project_id, self.public_key_dict))
+        webauthn = WebAuthn(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
 
         # Test failed flows
         self.assertRaises(AuthException, webauthn.update_finish, "", "response01")

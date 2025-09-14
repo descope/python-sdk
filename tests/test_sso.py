@@ -42,7 +42,13 @@ class TestSSO(common.DescopeTest):
         )
 
     def test_sso_start(self):
-        sso = SSO(Auth(self.dummy_project_id, self.public_key_dict))
+        sso = SSO(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
 
         # Test failed flows
         self.assertRaises(AuthException, sso.start, "", "http://dummy.com")
@@ -87,7 +93,13 @@ class TestSSO(common.DescopeTest):
             )
 
     def test_sso_start_with_login_options(self):
-        sso = SSO(Auth(self.dummy_project_id, self.public_key_dict))
+        sso = SSO(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
 
         # Test failed flows
         self.assertRaises(AuthException, sso.start, "", "http://dummy.com")
@@ -125,7 +137,13 @@ class TestSSO(common.DescopeTest):
         self.assertEqual(Auth._compose_exchange_body("c1"), {"code": "c1"})
 
     def test_exchange_token(self):
-        sso = SSO(Auth(self.dummy_project_id, self.public_key_dict))
+        sso = SSO(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
 
         # Test failed flows
         self.assertRaises(AuthException, sso.exchange_token, "")
