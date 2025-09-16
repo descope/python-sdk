@@ -38,12 +38,13 @@ class TestUser(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
     async def test_create(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.create(
@@ -52,23 +53,25 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.create(
-                login_id="name@mail.com",
-                email="name@mail.com",
-                display_name="Name",
-                user_tenants=[
-                    AssociatedTenant("tenant1"),
-                    AssociatedTenant("tenant2", ["role1", "role2"]),
-                ],
-                picture="https://test.com",
-                custom_attributes={"ak": "av"},
-                additional_login_ids=["id-1", "id-2"],
-                sso_app_ids=["app1", "app2"],
+            resp = await futu_await(
+                self.client.mgmt.user.create(
+                    login_id="name@mail.com",
+                    email="name@mail.com",
+                    display_name="Name",
+                    user_tenants=[
+                        AssociatedTenant("tenant1"),
+                        AssociatedTenant("tenant2", ["role1", "role2"]),
+                    ],
+                    picture="https://test.com",
+                    custom_attributes={"ak": "av"},
+                    additional_login_ids=["id-1", "id-2"],
+                    sso_app_ids=["app1", "app2"],
+                )
             )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
@@ -104,23 +107,25 @@ class TestUser(common.DescopeTest):
 
     async def test_create_with_verified_parameters(self):
         # Test success flow with verified email and phone
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.create(
-                login_id="name@mail.com",
-                email="name@mail.com",
-                display_name="Name",
-                user_tenants=[
-                    AssociatedTenant("tenant1"),
-                    AssociatedTenant("tenant2", ["role1", "role2"]),
-                ],
-                picture="https://test.com",
-                custom_attributes={"ak": "av"},
-                verified_email=True,
-                verified_phone=False,
+            resp = await futu_await(
+                self.client.mgmt.user.create(
+                    login_id="name@mail.com",
+                    email="name@mail.com",
+                    display_name="Name",
+                    user_tenants=[
+                        AssociatedTenant("tenant1"),
+                        AssociatedTenant("tenant2", ["role1", "role2"]),
+                    ],
+                    picture="https://test.com",
+                    custom_attributes={"ak": "av"},
+                    verified_email=True,
+                    verified_phone=False,
+                )
             )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
@@ -158,8 +163,8 @@ class TestUser(common.DescopeTest):
 
     async def test_create_test_user(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.create(
@@ -168,20 +173,22 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.create_test_user(
-                login_id="name@mail.com",
-                email="name@mail.com",
-                display_name="Name",
-                user_tenants=[
-                    AssociatedTenant("tenant1"),
-                    AssociatedTenant("tenant2", ["role1", "role2"]),
-                ],
-                custom_attributes={"ak": "av"},
+            resp = await futu_await(
+                self.client.mgmt.user.create_test_user(
+                    login_id="name@mail.com",
+                    email="name@mail.com",
+                    display_name="Name",
+                    user_tenants=[
+                        AssociatedTenant("tenant1"),
+                        AssociatedTenant("tenant2", ["role1", "role2"]),
+                    ],
+                    custom_attributes={"ak": "av"},
+                )
             )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
@@ -217,8 +224,8 @@ class TestUser(common.DescopeTest):
 
     async def test_invite(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.invite(
@@ -227,24 +234,26 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.invite(
-                login_id="name@mail.com",
-                email="name@mail.com",
-                display_name="Name",
-                user_tenants=[
-                    AssociatedTenant("tenant1"),
-                    AssociatedTenant("tenant2", ["role1", "role2"]),
-                ],
-                custom_attributes={"ak": "av"},
-                invite_url="invite.me",
-                send_sms=True,
-                sso_app_ids=["app1", "app2"],
-                template_id="tid",
+            resp = await futu_await(
+                self.client.mgmt.user.invite(
+                    login_id="name@mail.com",
+                    email="name@mail.com",
+                    display_name="Name",
+                    user_tenants=[
+                        AssociatedTenant("tenant1"),
+                        AssociatedTenant("tenant2", ["role1", "role2"]),
+                    ],
+                    custom_attributes={"ak": "av"},
+                    invite_url="invite.me",
+                    send_sms=True,
+                    sso_app_ids=["app1", "app2"],
+                    template_id="tid",
+                )
             )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
@@ -283,8 +292,8 @@ class TestUser(common.DescopeTest):
 
     async def test_invite_batch(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.invite_batch(
@@ -293,9 +302,9 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"users": [{"id": "u1"}]}""")
             mock_post.return_value = network_resp
             user = UserObj(
@@ -321,10 +330,12 @@ class TestUser(common.DescopeTest):
                 seed="aaa",
                 status="invited",
             )
-            resp = self.client.mgmt.user.invite_batch(
-                users=[user],
-                invite_url="invite.me",
-                send_sms=True,
+            resp = await futu_await(
+                self.client.mgmt.user.invite_batch(
+                    users=[user],
+                    invite_url="invite.me",
+                    send_sms=True,
+                )
             )
             users = resp["users"]
             self.assertEqual(users[0]["id"], "u1")
@@ -403,10 +414,12 @@ class TestUser(common.DescopeTest):
             self.assertEqual(django.to_dict(), {"django": {"hash": "h"}})
 
             user.password = UserPassword(cleartext="clear")
-            resp = self.client.mgmt.user.invite_batch(
-                users=[user],
-                invite_url="invite.me",
-                send_sms=True,
+            resp = await futu_await(
+                self.client.mgmt.user.invite_batch(
+                    users=[user],
+                    invite_url="invite.me",
+                    send_sms=True,
+                )
             )
 
             del expected_users["users"][0]["hashedPassword"]
@@ -426,10 +439,12 @@ class TestUser(common.DescopeTest):
             )
 
             user.password = None
-            resp = self.client.mgmt.user.invite_batch(
-                users=[user],
-                invite_url="invite.me",
-                send_sms=True,
+            resp = await futu_await(
+                self.client.mgmt.user.invite_batch(
+                    users=[user],
+                    invite_url="invite.me",
+                    send_sms=True,
+                )
             )
 
             del expected_users["users"][0]["password"]
@@ -449,8 +464,8 @@ class TestUser(common.DescopeTest):
 
     async def test_update(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.update(
@@ -460,18 +475,20 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.update(
-                "id",
-                display_name="new-name",
-                role_names=["domain.com"],
-                picture="https://test.com",
-                custom_attributes={"ak": "av"},
-                sso_app_ids=["app1", "app2"],
+            resp = await futu_await(
+                self.client.mgmt.user.update(
+                    "id",
+                    display_name="new-name",
+                    role_names=["domain.com"],
+                    picture="https://test.com",
+                    custom_attributes={"ak": "av"},
+                    sso_app_ids=["app1", "app2"],
+                )
             )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
@@ -501,13 +518,15 @@ class TestUser(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
         # Test success flow with verified flags
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.update(
-                "id", verified_email=True, verified_phone=False
+            resp = await futu_await(
+                self.client.mgmt.user.update(
+                    "id", verified_email=True, verified_phone=False
+                )
             )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
@@ -541,8 +560,8 @@ class TestUser(common.DescopeTest):
 
     async def test_patch(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "patch") as mock_patch:
-            mock_patch.return_value.ok = False
+        with mock_http_call(self.async_test, "patch") as mock_patch:
+            mock_patch.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.patch(
@@ -552,22 +571,24 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow with some params set
-        with mock_http_call(self.async_mode, "patch") as mock_patch:
+        with mock_http_call(self.async_test, "patch") as mock_patch:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_patch.return_value = network_resp
-            resp = self.client.mgmt.user.patch(
-                "id",
-                display_name="new-name",
-                email=None,
-                phone=None,
-                given_name=None,
-                role_names=["domain.com"],
-                user_tenants=None,
-                picture="https://test.com",
-                custom_attributes={"ak": "av"},
-                sso_app_ids=["app1", "app2"],
+            resp = await futu_await(
+                self.client.mgmt.user.patch(
+                    "id",
+                    display_name="new-name",
+                    email=None,
+                    phone=None,
+                    given_name=None,
+                    role_names=["domain.com"],
+                    user_tenants=None,
+                    picture="https://test.com",
+                    custom_attributes={"ak": "av"},
+                    sso_app_ids=["app1", "app2"],
+                )
             )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
@@ -592,26 +613,28 @@ class TestUser(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
         # Test success flow with other params
-        with mock_http_call(self.async_mode, "patch") as mock_patch:
+        with mock_http_call(self.async_test, "patch") as mock_patch:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_patch.return_value = network_resp
-            resp = self.client.mgmt.user.patch(
-                "id",
-                email="a@test.com",
-                phone="+123456789",
-                given_name="given",
-                middle_name="middle",
-                family_name="family",
-                role_names=None,
-                user_tenants=[
-                    AssociatedTenant("tenant1"),
-                    AssociatedTenant("tenant2", ["role1", "role2"]),
-                ],
-                custom_attributes=None,
-                verified_email=True,
-                verified_phone=False,
+            resp = await futu_await(
+                self.client.mgmt.user.patch(
+                    "id",
+                    email="a@test.com",
+                    phone="+123456789",
+                    given_name="given",
+                    middle_name="middle",
+                    family_name="family",
+                    role_names=None,
+                    user_tenants=[
+                        AssociatedTenant("tenant1"),
+                        AssociatedTenant("tenant2", ["role1", "role2"]),
+                    ],
+                    custom_attributes=None,
+                    verified_email=True,
+                    verified_phone=False,
+                )
             )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
@@ -644,8 +667,8 @@ class TestUser(common.DescopeTest):
 
     async def test_delete(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.delete(
@@ -654,9 +677,9 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(self.client.mgmt.user.delete("u1"))
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            self.assertIsNone(await futu_await(self.client.mgmt.user.delete("u1")))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.user_delete_path}",
                 headers={
@@ -675,8 +698,8 @@ class TestUser(common.DescopeTest):
 
     async def test_delete_by_user_id(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.delete_by_user_id(
@@ -685,9 +708,11 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(self.client.mgmt.user.delete_by_user_id("u1"))
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            self.assertIsNone(
+                await futu_await(self.client.mgmt.user.delete_by_user_id("u1"))
+            )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.user_delete_path}",
                 headers={
@@ -706,8 +731,8 @@ class TestUser(common.DescopeTest):
 
     async def test_logout(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.logout_user(
@@ -716,9 +741,9 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(self.client.mgmt.user.logout_user("u1"))
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            self.assertIsNone(await futu_await(self.client.mgmt.user.logout_user("u1")))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.user_logout_path}",
                 headers={
@@ -737,8 +762,8 @@ class TestUser(common.DescopeTest):
 
     async def test_logout_by_user_id(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.logout_user_by_user_id(
@@ -747,9 +772,11 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(self.client.mgmt.user.logout_user_by_user_id("u1"))
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            self.assertIsNone(
+                await futu_await(self.client.mgmt.user.logout_user_by_user_id("u1"))
+            )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.user_logout_path}",
                 headers={
@@ -768,15 +795,17 @@ class TestUser(common.DescopeTest):
 
     async def test_delete_all_test_users(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "delete") as mock_delete:
-            mock_delete.return_value.ok = False
+        with mock_http_call(self.async_test, "delete") as mock_delete:
+            mock_delete.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(self.client.mgmt.user.delete_all_test_users())
 
         # Test success flow
-        with mock_http_call(self.async_mode, "delete") as mock_delete:
-            mock_delete.return_value.ok = True
-            self.assertIsNone(self.client.mgmt.user.delete_all_test_users())
+        with mock_http_call(self.async_test, "delete") as mock_delete:
+            mock_delete.return_value.is_success = True
+            self.assertIsNone(
+                await futu_await(self.client.mgmt.user.delete_all_test_users())
+            )
             mock_delete.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.user_delete_all_test_users_path}",
                 params=None,
@@ -792,8 +821,8 @@ class TestUser(common.DescopeTest):
 
     async def test_load(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "get") as mock_get:
-            mock_get.return_value.ok = False
+        with mock_http_call(self.async_test, "get") as mock_get:
+            mock_get.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.load(
@@ -802,12 +831,12 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "get") as mock_get:
+        with mock_http_call(self.async_test, "get") as mock_get:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_get.return_value = network_resp
-            resp = self.client.mgmt.user.load("valid-id")
+            resp = await futu_await(self.client.mgmt.user.load("valid-id"))
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_get.assert_called_with(
@@ -825,8 +854,8 @@ class TestUser(common.DescopeTest):
 
     async def test_load_by_user_id(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "get") as mock_get:
-            mock_get.return_value.ok = False
+        with mock_http_call(self.async_test, "get") as mock_get:
+            mock_get.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.load_by_user_id(
@@ -835,12 +864,12 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "get") as mock_get:
+        with mock_http_call(self.async_test, "get") as mock_get:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_get.return_value = network_resp
-            resp = self.client.mgmt.user.load_by_user_id("user-id")
+            resp = await futu_await(self.client.mgmt.user.load_by_user_id("user-id"))
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_get.assert_called_with(
@@ -858,8 +887,8 @@ class TestUser(common.DescopeTest):
 
     async def test_search_all(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.search_all(
@@ -868,8 +897,8 @@ class TestUser(common.DescopeTest):
                     )
                 )
 
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
             with self.assertRaises(AuthException):
                 await futu_await(self.client.mgmt.user.search_all([], [], -1, 0))
 
@@ -878,19 +907,21 @@ class TestUser(common.DescopeTest):
                 await futu_await(self.client.mgmt.user.search_all([], [], 0, -1))
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
             )
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.search_all(
-                ["t1, t2"],
-                ["r1", "r2"],
-                with_test_user=True,
-                sso_app_ids=["app1"],
-                login_ids=["l1"],
+            resp = await futu_await(
+                self.client.mgmt.user.search_all(
+                    ["t1, t2"],
+                    ["r1", "r2"],
+                    with_test_user=True,
+                    sso_app_ids=["app1"],
+                    login_ids=["l1"],
+                )
             )
             users = resp["users"]
             self.assertEqual(len(users), 2)
@@ -920,21 +951,23 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow with text and sort
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
             )
             mock_post.return_value = network_resp
             sort = [Sort(field="kuku", desc=True), Sort(field="bubu")]
-            resp = self.client.mgmt.user.search_all(
-                ["t1, t2"],
-                ["r1", "r2"],
-                with_test_user=True,
-                sso_app_ids=["app1"],
-                text="blue",
-                sort=sort,
+            resp = await futu_await(
+                self.client.mgmt.user.search_all(
+                    ["t1, t2"],
+                    ["r1", "r2"],
+                    with_test_user=True,
+                    sso_app_ids=["app1"],
+                    text="blue",
+                    sort=sort,
+                )
             )
             users = resp["users"]
             self.assertEqual(len(users), 2)
@@ -968,21 +1001,23 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow with custom attributes
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
             )
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.search_all(
-                ["t1, t2"],
-                ["r1", "r2"],
-                with_test_user=True,
-                custom_attributes={"ak": "av"},
-                statuses=["invited"],
-                phones=["+111111"],
-                emails=["a@b.com"],
+            resp = await futu_await(
+                self.client.mgmt.user.search_all(
+                    ["t1, t2"],
+                    ["r1", "r2"],
+                    with_test_user=True,
+                    custom_attributes={"ak": "av"},
+                    statuses=["invited"],
+                    phones=["+111111"],
+                    emails=["a@b.com"],
+                )
             )
             users = resp["users"]
             self.assertEqual(len(users), 2)
@@ -1014,20 +1049,22 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow with time parameters
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
             )
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.search_all(
-                from_created_time=100,
-                to_created_time=200,
-                from_modified_time=300,
-                to_modified_time=400,
-                limit=10,
-                page=0,
+            resp = await futu_await(
+                self.client.mgmt.user.search_all(
+                    from_created_time=100,
+                    to_created_time=200,
+                    from_modified_time=300,
+                    to_modified_time=400,
+                    limit=10,
+                    page=0,
+                )
             )
             users = resp["users"]
             self.assertEqual(len(users), 2)
@@ -1060,20 +1097,22 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow with tenant_role_ids and tenant_role_names
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
             )
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.search_all(
-                tenant_role_ids={
-                    "tenant1": {"values": ["roleA", "roleB"], "and": True}
-                },
-                tenant_role_names={
-                    "tenant2": {"values": ["admin", "user"], "and": False}
-                },
+            resp = await futu_await(
+                self.client.mgmt.user.search_all(
+                    tenant_role_ids={
+                        "tenant1": {"values": ["roleA", "roleB"], "and": True}
+                    },
+                    tenant_role_names={
+                        "tenant2": {"values": ["admin", "user"], "and": False}
+                    },
+                )
             )
             users = resp["users"]
             self.assertEqual(len(users), 2)
@@ -1108,8 +1147,8 @@ class TestUser(common.DescopeTest):
 
     async def test_search_all_test_users(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.search_all_test_users(
@@ -1118,8 +1157,8 @@ class TestUser(common.DescopeTest):
                     )
                 )
 
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.search_all_test_users(
@@ -1142,18 +1181,20 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
             )
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.search_all_test_users(
-                ["t1, t2"],
-                ["r1", "r2"],
-                sso_app_ids=["app1"],
-                login_ids=["l1"],
+            resp = await futu_await(
+                self.client.mgmt.user.search_all_test_users(
+                    ["t1, t2"],
+                    ["r1", "r2"],
+                    sso_app_ids=["app1"],
+                    login_ids=["l1"],
+                )
             )
             users = resp["users"]
             self.assertEqual(len(users), 2)
@@ -1183,20 +1224,22 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow with text and sort
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
             )
             mock_post.return_value = network_resp
             sort = [Sort(field="kuku", desc=True), Sort(field="bubu")]
-            resp = self.client.mgmt.user.search_all_test_users(
-                ["t1, t2"],
-                ["r1", "r2"],
-                sso_app_ids=["app1"],
-                text="blue",
-                sort=sort,
+            resp = await futu_await(
+                self.client.mgmt.user.search_all_test_users(
+                    ["t1, t2"],
+                    ["r1", "r2"],
+                    sso_app_ids=["app1"],
+                    text="blue",
+                    sort=sort,
+                )
             )
             users = resp["users"]
             self.assertEqual(len(users), 2)
@@ -1230,20 +1273,22 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow with custom attributes
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
             )
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.search_all_test_users(
-                ["t1, t2"],
-                ["r1", "r2"],
-                custom_attributes={"ak": "av"},
-                statuses=["invited"],
-                phones=["+111111"],
-                emails=["a@b.com"],
+            resp = await futu_await(
+                self.client.mgmt.user.search_all_test_users(
+                    ["t1, t2"],
+                    ["r1", "r2"],
+                    custom_attributes={"ak": "av"},
+                    statuses=["invited"],
+                    phones=["+111111"],
+                    emails=["a@b.com"],
+                )
             )
             users = resp["users"]
             self.assertEqual(len(users), 2)
@@ -1275,18 +1320,20 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow with time parameters
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"users": [{"id": "u1"}]}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.search_all_test_users(
-                from_created_time=100,
-                to_created_time=200,
-                from_modified_time=300,
-                to_modified_time=400,
-                limit=10,
-                page=0,
+            resp = await futu_await(
+                self.client.mgmt.user.search_all_test_users(
+                    from_created_time=100,
+                    to_created_time=200,
+                    from_modified_time=300,
+                    to_modified_time=400,
+                    limit=10,
+                    page=0,
+                )
             )
             users = resp["users"]
             self.assertEqual(len(users), 1)
@@ -1318,20 +1365,22 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow with tenant_role_ids and tenant_role_names
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
             )
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.search_all_test_users(
-                tenant_role_ids={
-                    "tenant1": {"values": ["roleA", "roleB"], "and": True}
-                },
-                tenant_role_names={
-                    "tenant2": {"values": ["admin", "user"], "and": False}
-                },
+            resp = await futu_await(
+                self.client.mgmt.user.search_all_test_users(
+                    tenant_role_ids={
+                        "tenant1": {"values": ["roleA", "roleB"], "and": True}
+                    },
+                    tenant_role_names={
+                        "tenant2": {"values": ["admin", "user"], "and": False}
+                    },
+                )
             )
             users = resp["users"]
             self.assertEqual(len(users), 2)
@@ -1366,8 +1415,8 @@ class TestUser(common.DescopeTest):
 
     async def test_get_provider_token(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "get") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "get") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.get_provider_token(
@@ -1376,15 +1425,15 @@ class TestUser(common.DescopeTest):
                     )
                 )
             # Test success flow
-        with mock_http_call(self.async_mode, "get") as mock_get:
+        with mock_http_call(self.async_test, "get") as mock_get:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """{"provider": "p1", "providerUserId": "puid", "accessToken": "access123", "refreshToken": "refresh456", "expiration": "123123123", "scopes": ["s1", "s2"]}"""
             )
             mock_get.return_value = network_resp
-            resp = self.client.mgmt.user.get_provider_token(
-                "valid-id", "p1", True, True
+            resp = await futu_await(
+                self.client.mgmt.user.get_provider_token("valid-id", "p1", True, True)
             )
             self.assertEqual(resp["provider"], "p1")
             self.assertEqual(resp["providerUserId"], "puid")
@@ -1412,8 +1461,8 @@ class TestUser(common.DescopeTest):
 
     async def test_activate(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.activate(
@@ -1422,12 +1471,12 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.activate("valid-id")
+            resp = await futu_await(self.client.mgmt.user.activate("valid-id"))
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
@@ -1449,8 +1498,8 @@ class TestUser(common.DescopeTest):
 
     async def test_deactivate(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.deactivate(
@@ -1459,12 +1508,12 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.deactivate("valid-id")
+            resp = await futu_await(self.client.mgmt.user.deactivate("valid-id"))
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
@@ -1486,8 +1535,8 @@ class TestUser(common.DescopeTest):
 
     async def test_update_login_id(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.update_login_id(
@@ -1497,12 +1546,14 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "a@b.c"}}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.update_login_id("valid-id", "a@b.c")
+            resp = await futu_await(
+                self.client.mgmt.user.update_login_id("valid-id", "a@b.c")
+            )
             user = resp["user"]
             self.assertEqual(user["id"], "a@b.c")
             mock_post.assert_called_with(
@@ -1524,8 +1575,8 @@ class TestUser(common.DescopeTest):
 
     async def test_update_email(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.update_email(
@@ -1535,12 +1586,14 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.update_email("valid-id", "a@b.c")
+            resp = await futu_await(
+                self.client.mgmt.user.update_email("valid-id", "a@b.c")
+            )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
@@ -1563,8 +1616,8 @@ class TestUser(common.DescopeTest):
 
     async def test_update_phone(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.update_phone(
@@ -1574,12 +1627,14 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.update_phone("valid-id", "+18005551234", True)
+            resp = await futu_await(
+                self.client.mgmt.user.update_phone("valid-id", "+18005551234", True)
+            )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
@@ -1602,8 +1657,8 @@ class TestUser(common.DescopeTest):
 
     async def test_update_display_name(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.update_display_name(
@@ -1613,12 +1668,14 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.update_display_name("valid-id", "foo")
+            resp = await futu_await(
+                self.client.mgmt.user.update_display_name("valid-id", "foo")
+            )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
@@ -1640,8 +1697,8 @@ class TestUser(common.DescopeTest):
 
     async def test_update_picture(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.update_picture(
@@ -1651,12 +1708,14 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.update_picture("valid-id", "foo")
+            resp = await futu_await(
+                self.client.mgmt.user.update_picture("valid-id", "foo")
+            )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
@@ -1678,8 +1737,8 @@ class TestUser(common.DescopeTest):
 
     async def test_update_custom_attribute(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.update_custom_attribute(
@@ -1690,13 +1749,13 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.update_custom_attribute(
-                "valid-id", "foo", "bar"
+            resp = await futu_await(
+                self.client.mgmt.user.update_custom_attribute("valid-id", "foo", "bar")
             )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
@@ -1720,8 +1779,8 @@ class TestUser(common.DescopeTest):
 
     async def test_set_roles(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.set_roles(
@@ -1731,12 +1790,14 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.set_roles("valid-id", ["foo", "bar"])
+            resp = await futu_await(
+                self.client.mgmt.user.set_roles("valid-id", ["foo", "bar"])
+            )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
@@ -1758,8 +1819,8 @@ class TestUser(common.DescopeTest):
 
     async def test_add_roles(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.add_roles(
@@ -1769,12 +1830,14 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.add_roles("valid-id", ["foo", "bar"])
+            resp = await futu_await(
+                self.client.mgmt.user.add_roles("valid-id", ["foo", "bar"])
+            )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
@@ -1796,8 +1859,8 @@ class TestUser(common.DescopeTest):
 
     async def test_remove_roles(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.remove_roles(
@@ -1807,12 +1870,14 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.remove_roles("valid-id", ["foo", "bar"])
+            resp = await futu_await(
+                self.client.mgmt.user.remove_roles("valid-id", ["foo", "bar"])
+            )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
@@ -1834,8 +1899,8 @@ class TestUser(common.DescopeTest):
 
     async def test_add_sso_apps(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.add_sso_apps(
@@ -1845,12 +1910,14 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.add_sso_apps("valid-id", ["foo", "bar"])
+            resp = await futu_await(
+                self.client.mgmt.user.add_sso_apps("valid-id", ["foo", "bar"])
+            )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
@@ -1872,8 +1939,8 @@ class TestUser(common.DescopeTest):
 
     async def test_set_sso_apps(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.set_sso_apps(
@@ -1883,12 +1950,14 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.set_sso_apps("valid-id", ["foo", "bar"])
+            resp = await futu_await(
+                self.client.mgmt.user.set_sso_apps("valid-id", ["foo", "bar"])
+            )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
@@ -1910,8 +1979,8 @@ class TestUser(common.DescopeTest):
 
     async def test_remove_sso_apps(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.remove_sso_apps(
@@ -1921,12 +1990,14 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.remove_sso_apps("valid-id", ["foo", "bar"])
+            resp = await futu_await(
+                self.client.mgmt.user.remove_sso_apps("valid-id", ["foo", "bar"])
+            )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
@@ -1948,8 +2019,8 @@ class TestUser(common.DescopeTest):
 
     async def test_add_tenant(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.add_tenant(
@@ -1959,12 +2030,12 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.add_tenant("valid-id", "tid")
+            resp = await futu_await(self.client.mgmt.user.add_tenant("valid-id", "tid"))
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
@@ -1986,8 +2057,8 @@ class TestUser(common.DescopeTest):
 
     async def test_remove_tenant(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.remove_tenant(
@@ -1997,12 +2068,14 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.remove_tenant("valid-id", "tid")
+            resp = await futu_await(
+                self.client.mgmt.user.remove_tenant("valid-id", "tid")
+            )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
@@ -2024,8 +2097,8 @@ class TestUser(common.DescopeTest):
 
     async def test_set_tenant_roles(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.set_tenant_roles(
@@ -2036,13 +2109,15 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.set_tenant_roles(
-                "valid-id", "tid", ["foo", "bar"]
+            resp = await futu_await(
+                self.client.mgmt.user.set_tenant_roles(
+                    "valid-id", "tid", ["foo", "bar"]
+                )
             )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
@@ -2066,8 +2141,8 @@ class TestUser(common.DescopeTest):
 
     async def test_add_tenant_roles(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.add_tenant_roles(
@@ -2078,13 +2153,15 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.add_tenant_roles(
-                "valid-id", "tid", ["foo", "bar"]
+            resp = await futu_await(
+                self.client.mgmt.user.add_tenant_roles(
+                    "valid-id", "tid", ["foo", "bar"]
+                )
             )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
@@ -2108,8 +2185,8 @@ class TestUser(common.DescopeTest):
 
     async def test_remove_tenant_roles(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.remove_tenant_roles(
@@ -2120,13 +2197,15 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.remove_tenant_roles(
-                "valid-id", "tid", ["foo", "bar"]
+            resp = await futu_await(
+                self.client.mgmt.user.remove_tenant_roles(
+                    "valid-id", "tid", ["foo", "bar"]
+                )
             )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
@@ -2150,8 +2229,8 @@ class TestUser(common.DescopeTest):
 
     async def test_generate_otp_for_test_user(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.generate_otp_for_test_user(
@@ -2161,16 +2240,18 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """{"code": "123456", "loginId": "login-id"}"""
             )
             mock_post.return_value = network_resp
             login_options = LoginOptions(stepup=True)
-            resp = self.client.mgmt.user.generate_otp_for_test_user(
-                DeliveryMethod.EMAIL, "login-id", login_options
+            resp = await futu_await(
+                self.client.mgmt.user.generate_otp_for_test_user(
+                    DeliveryMethod.EMAIL, "login-id", login_options
+                )
             )
             self.assertEqual(resp["code"], "123456")
             self.assertEqual(resp["loginId"], "login-id")
@@ -2198,8 +2279,8 @@ class TestUser(common.DescopeTest):
 
     async def test_user_set_temporary_password(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.set_temporary_password(
@@ -2209,13 +2290,15 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             mock_post.return_value = network_resp
-            self.client.mgmt.user.set_temporary_password(
-                "login-id",
-                "some-password",
+            await futu_await(
+                self.client.mgmt.user.set_temporary_password(
+                    "login-id",
+                    "some-password",
+                )
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.user_set_temporary_password_path}",
@@ -2237,8 +2320,8 @@ class TestUser(common.DescopeTest):
 
     async def test_user_set_active_password(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.set_active_password(
@@ -2248,13 +2331,15 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             mock_post.return_value = network_resp
-            self.client.mgmt.user.set_active_password(
-                "login-id",
-                "some-password",
+            await futu_await(
+                self.client.mgmt.user.set_active_password(
+                    "login-id",
+                    "some-password",
+                )
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.user_set_active_password_path}",
@@ -2276,8 +2361,8 @@ class TestUser(common.DescopeTest):
 
     async def test_user_set_password(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.set_password(
@@ -2287,13 +2372,15 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             mock_post.return_value = network_resp
-            self.client.mgmt.user.set_password(
-                "login-id",
-                "some-password",
+            await futu_await(
+                self.client.mgmt.user.set_password(
+                    "login-id",
+                    "some-password",
+                )
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.user_set_password_path}",
@@ -2315,8 +2402,8 @@ class TestUser(common.DescopeTest):
 
     async def test_user_expire_password(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.expire_password(
@@ -2325,12 +2412,14 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             mock_post.return_value = network_resp
-            self.client.mgmt.user.expire_password(
-                "login-id",
+            await futu_await(
+                self.client.mgmt.user.expire_password(
+                    "login-id",
+                )
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.user_expire_password_path}",
@@ -2350,8 +2439,8 @@ class TestUser(common.DescopeTest):
 
     async def test_user_remove_all_passkeys(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.remove_all_passkeys(
@@ -2360,12 +2449,14 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             mock_post.return_value = network_resp
-            self.client.mgmt.user.remove_all_passkeys(
-                "login-id",
+            await futu_await(
+                self.client.mgmt.user.remove_all_passkeys(
+                    "login-id",
+                )
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.user_remove_all_passkeys_path}",
@@ -2385,8 +2476,8 @@ class TestUser(common.DescopeTest):
 
     async def test_user_remove_totp_seed(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.remove_totp_seed(
@@ -2395,12 +2486,14 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             mock_post.return_value = network_resp
-            self.client.mgmt.user.remove_totp_seed(
-                "login-id",
+            await futu_await(
+                self.client.mgmt.user.remove_totp_seed(
+                    "login-id",
+                )
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.user_remove_totp_seed_path}",
@@ -2420,8 +2513,8 @@ class TestUser(common.DescopeTest):
 
     async def test_generate_magic_link_for_test_user(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.generate_magic_link_for_test_user(
@@ -2432,16 +2525,18 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """{"link": "some-link", "loginId": "login-id"}"""
             )
             mock_post.return_value = network_resp
             login_options = LoginOptions(stepup=True)
-            resp = self.client.mgmt.user.generate_magic_link_for_test_user(
-                DeliveryMethod.EMAIL, "login-id", "bla", login_options
+            resp = await futu_await(
+                self.client.mgmt.user.generate_magic_link_for_test_user(
+                    DeliveryMethod.EMAIL, "login-id", "bla", login_options
+                )
             )
             self.assertEqual(resp["link"], "some-link")
             self.assertEqual(resp["loginId"], "login-id")
@@ -2470,8 +2565,8 @@ class TestUser(common.DescopeTest):
 
     async def test_generate_enchanted_link_for_test_user(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.generate_enchanted_link_for_test_user(
@@ -2481,16 +2576,18 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """{"link": "some-link", "loginId": "login-id", "pendingRef": "some-ref"}"""
             )
             mock_post.return_value = network_resp
             login_options = LoginOptions(stepup=True)
-            resp = self.client.mgmt.user.generate_enchanted_link_for_test_user(
-                "login-id", "bla", login_options
+            resp = await futu_await(
+                self.client.mgmt.user.generate_enchanted_link_for_test_user(
+                    "login-id", "bla", login_options
+                )
             )
             self.assertEqual(resp["link"], "some-link")
             self.assertEqual(resp["loginId"], "login-id")
@@ -2519,21 +2616,21 @@ class TestUser(common.DescopeTest):
 
     async def test_generate_embedded_link(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.generate_embedded_link("login-id")
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"token": "some-token"}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.generate_embedded_link(
-                "login-id", {"k1": "v1"}
+            resp = await futu_await(
+                self.client.mgmt.user.generate_embedded_link("login-id", {"k1": "v1"})
             )
             self.assertEqual(resp, "some-token")
             mock_post.assert_called_with(
@@ -2556,8 +2653,8 @@ class TestUser(common.DescopeTest):
 
     async def test_generate_sign_up_embedded_link(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.generate_sign_up_embedded_link(
@@ -2566,13 +2663,15 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"token": "some-token"}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.generate_sign_up_embedded_link(
-                "login-id", email_verified=True, phone_verified=True
+            resp = await futu_await(
+                self.client.mgmt.user.generate_sign_up_embedded_link(
+                    "login-id", email_verified=True, phone_verified=True
+                )
             )
             self.assertEqual(resp, "some-token")
             mock_post.assert_called_with(
@@ -2598,17 +2697,17 @@ class TestUser(common.DescopeTest):
 
     async def test_history(self):
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     self.client.mgmt.user.history(["user-id-1", "user-id-2"])
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """
                 [
@@ -2630,7 +2729,9 @@ class TestUser(common.DescopeTest):
                 """
             )
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.history(["user-id-1", "user-id-2"])
+            resp = await futu_await(
+                self.client.mgmt.user.history(["user-id-1", "user-id-2"])
+            )
             self.assertEqual(
                 resp,
                 [
@@ -2665,15 +2766,17 @@ class TestUser(common.DescopeTest):
             )
 
     async def test_update_test_user(self):
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads('{"user": {"id": "u1"}}')
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.update(
-                "id",
-                display_name="test-user",
-                test=True,
+            resp = await futu_await(
+                self.client.mgmt.user.update(
+                    "id",
+                    display_name="test-user",
+                    test=True,
+                )
             )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
@@ -2704,15 +2807,17 @@ class TestUser(common.DescopeTest):
             )
 
     async def test_patch_test_user(self):
-        with mock_http_call(self.async_mode, "patch") as mock_patch:
+        with mock_http_call(self.async_test, "patch") as mock_patch:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads('{"user": {"id": "u1"}}')
             mock_patch.return_value = network_resp
-            resp = self.client.mgmt.user.patch(
-                "id",
-                display_name="test-user",
-                test=True,
+            resp = await futu_await(
+                self.client.mgmt.user.patch(
+                    "id",
+                    display_name="test-user",
+                    test=True,
+                )
             )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")

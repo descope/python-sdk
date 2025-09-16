@@ -3,7 +3,7 @@ import unittest
 from unittest import mock
 from unittest.mock import patch
 
-from descope import SESSION_COOKIE_NAME, AuthException
+from descope import SESSION_COOKIE_NAME, AuthException, DescopeClient
 from descope.auth import Auth
 from descope.authmethod.enchantedlink import EnchantedLink  # noqa: F401
 from descope.common import (
@@ -98,17 +98,25 @@ class TestEnchantedLink(common.DescopeTest):
         )
 
     async def test_sign_in(self):
-        enchantedlink = EnchantedLink(Auth(self.dummy_project_id, self.public_key_dict))
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        client = DescopeClient(
+            self.dummy_project_id, self.public_key_dict, async_mode=self.async_test
+        )
+        with mock_http_call(self.async_test, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             # Test failed flows
             with self.assertRaises(AuthException):
-                enchantedlink.sign_in("", "http://test.me")
+                await futu_await(client.enchantedlink.sign_in("", "http://test.me"))
             data = json.loads("""{"pendingRef": "aaaa","linkId":"24"}""")
-            my_mock_response.json.return_value = data
+            if self.async_test:
+                # In async mode, json() should return the data directly without being a mock call
+                my_mock_response.json = mock.Mock(return_value=data)
+            else:
+                my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
-            res = enchantedlink.sign_in("dummy@dummy.com", "http://test.me")
+            res = await futu_await(
+                client.enchantedlink.sign_in("dummy@dummy.com", "http://test.me")
+            )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_enchantedlink_path}/email",
                 headers={
@@ -130,13 +138,15 @@ class TestEnchantedLink(common.DescopeTest):
             self.assertEqual(res["linkId"], "24")
 
         # Validate refresh token used while provided
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             refresh_token = "dummy refresh token"
-            enchantedlink.sign_in(
-                "dummy@dummy.com",
-                "http://test.me",
-                LoginOptions(stepup=True),
-                refresh_token=refresh_token,
+            await futu_await(
+                client.enchantedlink.sign_in(
+                    "dummy@dummy.com",
+                    "http://test.me",
+                    LoginOptions(stepup=True),
+                    refresh_token=refresh_token,
+                )
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_enchantedlink_path}/email",
@@ -161,18 +171,20 @@ class TestEnchantedLink(common.DescopeTest):
             )
 
         # With template options
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             refresh_token = "dummy refresh token"
-            enchantedlink.sign_in(
-                "dummy@dummy.com",
-                "http://test.me",
-                LoginOptions(
-                    stepup=True,
-                    template_options={"blue": "bla"},
-                    template_id="foo",
-                    revoke_other_sessions=True,
-                ),
-                refresh_token=refresh_token,
+            await futu_await(
+                client.enchantedlink.sign_in(
+                    "dummy@dummy.com",
+                    "http://test.me",
+                    LoginOptions(
+                        stepup=True,
+                        template_options={"blue": "bla"},
+                        template_id="foo",
+                        revoke_other_sessions=True,
+                    ),
+                    refresh_token=refresh_token,
+                )
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_enchantedlink_path}/email",
@@ -200,15 +212,23 @@ class TestEnchantedLink(common.DescopeTest):
             )
 
     async def test_sign_in_with_login_options(self):
-        enchantedlink = EnchantedLink(Auth(self.dummy_project_id, self.public_key_dict))
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        enchantedlink = EnchantedLink(
+            Auth(
+                self.dummy_project_id, self.public_key_dict, async_mode=self.async_test
+            )
+        )
+        with mock_http_call(self.async_test, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             data = json.loads("""{"pendingRef": "aaaa", "linkId":"24"}""")
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
             lo = LoginOptions(stepup=True, custom_claims={"k1": "v1"})
-            enchantedlink.sign_in("dummy@dummy.com", "http://test.me", lo, "refresh")
+            await futu_await(
+                enchantedlink.sign_in(
+                    "dummy@dummy.com", "http://test.me", lo, "refresh"
+                )
+            )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_enchantedlink_path}/email",
                 headers={
@@ -232,10 +252,14 @@ class TestEnchantedLink(common.DescopeTest):
             )
 
     async def test_sign_up(self):
-        enchantedlink = EnchantedLink(Auth(self.dummy_project_id, self.public_key_dict))
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        enchantedlink = EnchantedLink(
+            Auth(
+                self.dummy_project_id, self.public_key_dict, async_mode=self.async_test
+            )
+        )
+        with mock_http_call(self.async_test, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
 
             # Test failed flows
             with self.assertRaises(AuthException):
@@ -250,10 +274,12 @@ class TestEnchantedLink(common.DescopeTest):
             data = json.loads("""{"pendingRef": "aaaa"}""")
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
-            res = enchantedlink.sign_up(
-                "dummy@dummy.com",
-                "http://test.me",
-                {"username": "user1", "email": "dummy@dummy.com"},
+            res = await futu_await(
+                enchantedlink.sign_up(
+                    "dummy@dummy.com",
+                    "http://test.me",
+                    {"username": "user1", "email": "dummy@dummy.com"},
+                )
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_enchantedlink_path}/email",
@@ -276,14 +302,16 @@ class TestEnchantedLink(common.DescopeTest):
             self.assertEqual(res["pendingRef"], "aaaa")
 
         # Test user is None so using the login_id as default
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             data = json.loads("""{"pendingRef": "aaaa"}""")
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
-            res = enchantedlink.sign_up(
-                "dummy@dummy.com",
-                "http://test.me",
-                None,
+            res = await futu_await(
+                enchantedlink.sign_up(
+                    "dummy@dummy.com",
+                    "http://test.me",
+                    None,
+                )
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_enchantedlink_path}/email",
@@ -306,19 +334,21 @@ class TestEnchantedLink(common.DescopeTest):
             self.assertEqual(res["pendingRef"], "aaaa")
 
         # Test success flow with sign up options
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             data = json.loads("""{"pendingRef": "aaaa"}""")
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
-            res = enchantedlink.sign_up(
-                "dummy@dummy.com",
-                "http://test.me",
-                None,
-                SignUpOptions(
-                    template_options={"bla": "blue"},
-                    template_id="foo",
-                    revoke_other_sessions=True,
-                ),
+            res = await futu_await(
+                enchantedlink.sign_up(
+                    "dummy@dummy.com",
+                    "http://test.me",
+                    None,
+                    SignUpOptions(
+                        template_options={"bla": "blue"},
+                        template_id="foo",
+                        revoke_other_sessions=True,
+                    ),
+                )
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_enchantedlink_path}/email",
@@ -346,16 +376,22 @@ class TestEnchantedLink(common.DescopeTest):
             self.assertEqual(res["pendingRef"], "aaaa")
 
     async def test_sign_up_or_in(self):
-        enchantedlink = EnchantedLink(Auth(self.dummy_project_id, self.public_key_dict))
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        enchantedlink = EnchantedLink(
+            Auth(
+                self.dummy_project_id, self.public_key_dict, async_mode=self.async_test
+            )
+        )
+        with mock_http_call(self.async_test, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             data = json.loads("""{"pendingRef": "aaaa"}""")
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
-            enchantedlink.sign_up_or_in(
-                "dummy@dummy.com",
-                "http://test.me",
+            await futu_await(
+                enchantedlink.sign_up_or_in(
+                    "dummy@dummy.com",
+                    "http://test.me",
+                )
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_or_in_auth_enchantedlink_path}/email",
@@ -376,16 +412,18 @@ class TestEnchantedLink(common.DescopeTest):
             )
 
         # Test success flow with sign up options
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             data = json.loads("""{"pendingRef": "aaaa"}""")
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
-            enchantedlink.sign_up_or_in(
-                "dummy@dummy.com",
-                "http://test.me",
-                SignUpOptions(template_options={"bla": "blue"}),
+            await futu_await(
+                enchantedlink.sign_up_or_in(
+                    "dummy@dummy.com",
+                    "http://test.me",
+                    SignUpOptions(template_options={"bla": "blue"}),
+                )
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_or_in_auth_enchantedlink_path}/email",
@@ -413,10 +451,14 @@ class TestEnchantedLink(common.DescopeTest):
     async def test_verify(self):
         token = "1234"
 
-        enchantedlink = EnchantedLink(Auth(self.dummy_project_id, self.public_key_dict))
+        enchantedlink = EnchantedLink(
+            Auth(
+                self.dummy_project_id, self.public_key_dict, async_mode=self.async_test
+            )
+        )
 
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     enchantedlink.verify(
@@ -426,37 +468,45 @@ class TestEnchantedLink(common.DescopeTest):
 
         # Test success flow
         valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3R6VWhkcXBJRjJ5czlnZzdtczA2VXZ0QzQiLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0Mzc1OTYsImlhdCI6MTY1OTYzNzU5NiwiaXNzIjoiUDJDdHpVaGRxcElGMnlzOWdnN21zMDZVdnRDNCIsInN1YiI6IlUyQ3UwajBXUHczWU9pUElTSmI1Mkwwd1VWTWcifQ.WLnlHugvzZtrV9OzBB7SjpCLNRvKF3ImFpVyIN5orkrjO2iyAKg_Rb4XHk9sXGC1aW8puYzLbhE1Jv3kk2hDcKggfE8OaRNRm8byhGFZHnvPJwcP_Ya-aRmfAvCLcKOL"
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {}
             mock_post.return_value = my_mock_response
             mock_post.return_value.cookies = {
                 SESSION_COOKIE_NAME: "dummy session token",
                 REFRESH_SESSION_COOKIE_NAME: valid_jwt_token,
             }
-            self.assertIsNone(enchantedlink.verify(token))
+            self.assertIsNone(await futu_await(enchantedlink.verify(token)))
 
     async def test_get_session(self):
-        enchantedlink = EnchantedLink(Auth(self.dummy_project_id, self.public_key_dict))
+        enchantedlink = EnchantedLink(
+            Auth(
+                self.dummy_project_id, self.public_key_dict, async_mode=self.async_test
+            )
+        )
 
         valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3R6VWhkcXBJRjJ5czlnZzdtczA2VXZ0QzQiLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0Mzc1OTYsImlhdCI6MTY1OTYzNzU5NiwiaXNzIjoiUDJDdHpVaGRxcElGMnlzOWdnN21zMDZVdnRDNCIsInN1YiI6IlUyQ3UwajBXUHczWU9pUElTSmI1Mkwwd1VWTWcifQ.WLnlHugvzZtrV9OzBB7SjpCLNRvKF3ImFpVyIN5orkrjO2iyAKg_Rb4XHk9sXGC1aW8puYzLbhE1Jv3kk2hDcKggfE8OaRNRm8byhGFZHnvPJwcP_Ya-aRmfAvCLcKOL"
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {}
             mock_post.return_value = my_mock_response
             mock_post.return_value.cookies = {
                 SESSION_COOKIE_NAME: "dummy session token",
                 REFRESH_SESSION_COOKIE_NAME: valid_jwt_token,
             }
-            self.assertIsNotNone(enchantedlink.get_session("aaaaaa"))
+            self.assertIsNotNone(await futu_await(enchantedlink.get_session("aaaaaa")))
 
     async def test_update_user_email(self):
-        enchantedlink = EnchantedLink(Auth(self.dummy_project_id, self.public_key_dict))
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        enchantedlink = EnchantedLink(
+            Auth(
+                self.dummy_project_id, self.public_key_dict, async_mode=self.async_test
+            )
+        )
+        with mock_http_call(self.async_test, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             # Test failed flows
             with self.assertRaises(AuthException):
                 await futu_await(
@@ -469,8 +519,10 @@ class TestEnchantedLink(common.DescopeTest):
             data = json.loads("""{"pendingRef": "aaaa"}""")
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
-            res = enchantedlink.update_user_email(
-                "id1", "dummy@dummy.com", "refresh_token1"
+            res = await futu_await(
+                enchantedlink.update_user_email(
+                    "id1", "dummy@dummy.com", "refresh_token1"
+                )
             )
             self.assertEqual(res["pendingRef"], "aaaa")
             mock_post.assert_called_with(
@@ -493,17 +545,19 @@ class TestEnchantedLink(common.DescopeTest):
             )
 
         # with template options
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             data = json.loads("""{"pendingRef": "aaaa"}""")
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
-            res = enchantedlink.update_user_email(
-                "id1",
-                "dummy@dummy.com",
-                "refresh_token1",
-                template_options={"bla": "blue"},
+            res = await futu_await(
+                enchantedlink.update_user_email(
+                    "id1",
+                    "dummy@dummy.com",
+                    "refresh_token1",
+                    template_options={"bla": "blue"},
+                )
             )
             self.assertEqual(res["pendingRef"], "aaaa")
             mock_post.assert_called_with(

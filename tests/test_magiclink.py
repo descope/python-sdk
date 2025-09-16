@@ -114,7 +114,11 @@ class TestMagicLink(common.DescopeTest):
         )
 
     async def test_sign_in(self):
-        magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
+        magiclink = MagicLink(
+            Auth(
+                self.dummy_project_id, self.public_key_dict, async_mode=self.async_test
+            )
+        )
 
         # Test failed flows
         with self.assertRaises(AuthException):
@@ -126,8 +130,8 @@ class TestMagicLink(common.DescopeTest):
                 )
             )
 
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     magiclink.sign_in(
@@ -138,16 +142,18 @@ class TestMagicLink(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
 
             mock_post.return_value = my_mock_response
             self.assertEqual(
                 "t***@example.com",
-                magiclink.sign_in(
-                    DeliveryMethod.EMAIL, "dummy@dummy.com", "http://test.me"
+                await futu_await(
+                    magiclink.sign_in(
+                        DeliveryMethod.EMAIL, "dummy@dummy.com", "http://test.me"
+                    )
                 ),
             )
 
@@ -163,14 +169,21 @@ class TestMagicLink(common.DescopeTest):
                 )
 
         # Validate refresh token used while provided
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
+            my_mock_response = mock.Mock()
+            my_mock_response.is_success = True
+            my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
+            mock_post.return_value = my_mock_response
+
             refresh_token = "dummy refresh token"
-            magiclink.sign_in(
-                DeliveryMethod.EMAIL,
-                "dummy@dummy.com",
-                "http://test.me",
-                LoginOptions(stepup=True),
-                refresh_token=refresh_token,
+            await futu_await(
+                magiclink.sign_in(
+                    DeliveryMethod.EMAIL,
+                    "dummy@dummy.com",
+                    "http://test.me",
+                    LoginOptions(stepup=True),
+                    refresh_token=refresh_token,
+                )
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_magiclink_path}/email",
@@ -195,16 +208,23 @@ class TestMagicLink(common.DescopeTest):
             )
 
         # With template options
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
+            my_mock_response = mock.Mock()
+            my_mock_response.is_success = True
+            my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
+            mock_post.return_value = my_mock_response
+
             refresh_token = "dummy refresh token"
-            magiclink.sign_in(
-                DeliveryMethod.EMAIL,
-                "dummy@dummy.com",
-                "http://test.me",
-                LoginOptions(
-                    stepup=True, template_options={"blue": "bla"}, template_id=None
-                ),
-                refresh_token=refresh_token,
+            await futu_await(
+                magiclink.sign_in(
+                    DeliveryMethod.EMAIL,
+                    "dummy@dummy.com",
+                    "http://test.me",
+                    LoginOptions(
+                        stepup=True, template_options={"blue": "bla"}, template_id=None
+                    ),
+                    refresh_token=refresh_token,
+                )
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_magiclink_path}/email",
@@ -237,7 +257,11 @@ class TestMagicLink(common.DescopeTest):
             "email": "dummy@dummy.com",
         }
 
-        magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
+        magiclink = MagicLink(
+            Auth(
+                self.dummy_project_id, self.public_key_dict, async_mode=self.async_test
+            )
+        )
 
         # Test failed flows
         with self.assertRaises(AuthException):
@@ -250,8 +274,8 @@ class TestMagicLink(common.DescopeTest):
                 )
             )
 
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     magiclink.sign_up(
@@ -263,31 +287,35 @@ class TestMagicLink(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
             mock_post.return_value = my_mock_response
-            resp = magiclink.sign_up(
-                DeliveryMethod.EMAIL,
-                "dummy@dummy.com",
-                "http://test.me",
-                signup_user_details,
+            resp = await futu_await(
+                magiclink.sign_up(
+                    DeliveryMethod.EMAIL,
+                    "dummy@dummy.com",
+                    "http://test.me",
+                    signup_user_details,
+                )
             )
             self.assertEqual("t***@example.com", resp)
 
         # Test success flow with sign up options
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
             mock_post.return_value = my_mock_response
-            resp = magiclink.sign_up(
-                DeliveryMethod.EMAIL,
-                "dummy@dummy.com",
-                "http://test.me",
-                signup_user_details,
-                SignUpOptions(template_options={"bla": "blue"}, template_id="foo"),
+            resp = await futu_await(
+                magiclink.sign_up(
+                    DeliveryMethod.EMAIL,
+                    "dummy@dummy.com",
+                    "http://test.me",
+                    signup_user_details,
+                    SignUpOptions(template_options={"bla": "blue"}, template_id="foo"),
+                )
             )
             self.assertEqual("t***@example.com", resp)
 
@@ -327,18 +355,20 @@ class TestMagicLink(common.DescopeTest):
             "email": "dummy@dummy.com",
         }
 
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
                 "t***@example.com",
-                magiclink.sign_up(
-                    DeliveryMethod.EMAIL,
-                    "dummy@dummy.com",
-                    "http://test.me",
-                    signup_user_details,
+                await futu_await(
+                    magiclink.sign_up(
+                        DeliveryMethod.EMAIL,
+                        "dummy@dummy.com",
+                        "http://test.me",
+                        signup_user_details,
+                    )
                 ),
             )
             mock_post.assert_called_with(
@@ -366,18 +396,20 @@ class TestMagicLink(common.DescopeTest):
             )
 
         # Test user is None so using the login_id as default
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
                 "t***@example.com",
-                magiclink.sign_up(
-                    DeliveryMethod.EMAIL,
-                    "dummy@dummy.com",
-                    "http://test.me",
-                    None,
+                await futu_await(
+                    magiclink.sign_up(
+                        DeliveryMethod.EMAIL,
+                        "dummy@dummy.com",
+                        "http://test.me",
+                        None,
+                    )
                 ),
             )
             mock_post.assert_called_with(
@@ -400,12 +432,16 @@ class TestMagicLink(common.DescopeTest):
             )
 
     async def test_sign_up_or_in(self):
-        magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
+        magiclink = MagicLink(
+            Auth(
+                self.dummy_project_id, self.public_key_dict, async_mode=self.async_test
+            )
+        )
 
         # Test failed flows
 
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     magiclink.sign_up_or_in(
@@ -416,31 +452,37 @@ class TestMagicLink(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
                 "t***@example.com",
-                magiclink.sign_up_or_in(
-                    DeliveryMethod.EMAIL, "dummy@dummy.com", "http://test.me"
+                await futu_await(
+                    magiclink.sign_up_or_in(
+                        DeliveryMethod.EMAIL, "dummy@dummy.com", "http://test.me"
+                    )
                 ),
             )
 
         # Test success flow with sign up options
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
                 "t***@example.com",
-                magiclink.sign_up_or_in(
-                    DeliveryMethod.EMAIL,
-                    "dummy@dummy.com",
-                    "http://test.me",
-                    SignUpOptions(template_options={"bla": "blue"}, template_id="foo"),
+                await futu_await(
+                    magiclink.sign_up_or_in(
+                        DeliveryMethod.EMAIL,
+                        "dummy@dummy.com",
+                        "http://test.me",
+                        SignUpOptions(
+                            template_options={"bla": "blue"}, template_id="foo"
+                        ),
+                    )
                 ),
             )
             mock_post.assert_called_with(
@@ -470,10 +512,14 @@ class TestMagicLink(common.DescopeTest):
     async def test_verify(self):
         token = "1234"
 
-        magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
+        magiclink = MagicLink(
+            Auth(
+                self.dummy_project_id, self.public_key_dict, async_mode=self.async_test
+            )
+        )
 
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     magiclink.verify(
@@ -483,42 +529,47 @@ class TestMagicLink(common.DescopeTest):
 
         # Test success flow
         valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3R6VWhkcXBJRjJ5czlnZzdtczA2VXZ0QzQiLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0Mzc1OTYsImlhdCI6MTY1OTYzNzU5NiwiaXNzIjoiUDJDdHpVaGRxcElGMnlzOWdnN21zMDZVdnRDNCIsInN1YiI6IlUyQ3UwajBXUHczWU9pUElTSmI1Mkwwd1VWTWcifQ.WLnlHugvzZtrV9OzBB7SjpCLNRvKF3ImFpVyIN5orkrjO2iyAKg_Rb4XHk9sXGC1aW8puYzLbhE1Jv3kk2hDcKggfE8OaRNRm8byhGFZHnvPJwcP_Ya-aRmfAvCLcKOL"
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {}
             mock_post.return_value = my_mock_response
             mock_post.return_value.cookies = {
                 SESSION_COOKIE_NAME: "dummy session token",
                 REFRESH_SESSION_COOKIE_NAME: valid_jwt_token,
             }
-            self.assertIsNotNone(magiclink.verify(token))
+            self.assertIsNotNone(await futu_await(magiclink.verify(token)))
 
     async def test_verify_with_get_keys_mock(self):
         token = "1234"
         magiclink = MagicLink(
-            Auth(self.dummy_project_id, None)
+            Auth(self.dummy_project_id, None, async_mode=self.async_test)
         )  # public key will be "fetched" by Get mock
 
         # Test success flow
         valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3R6VWhkcXBJRjJ5czlnZzdtczA2VXZ0QzQiLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0Mzc1OTYsImlhdCI6MTY1OTYzNzU5NiwiaXNzIjoiUDJDdHpVaGRxcElGMnlzOWdnN21zMDZVdnRDNCIsInN1YiI6IlUyQ3UwajBXUHczWU9pUElTSmI1Mkwwd1VWTWcifQ.WLnlHugvzZtrV9OzBB7SjpCLNRvKF3ImFpVyIN5orkrjO2iyAKg_Rb4XHk9sXGC1aW8puYzLbhE1Jv3kk2hDcKggfE8OaRNRm8byhGFZHnvPJwcP_Ya-aRmfAvCLcKOL"
-        with mock_http_call(self.async_mode, "get") as mock_get:
+        # _fetch_public_keys is always sync
+        with mock_http_call(False, "get") as mock_get:
             mock_get.return_value.text = json.dumps({"keys": [self.public_key_dict]})
-            mock_get.return_value.ok = True
+            mock_get.return_value.is_success = True
 
-            with mock_http_call(self.async_mode, "post") as mock_post:
+            with mock_http_call(self.async_test, "post") as mock_post:
                 my_mock_response = mock.Mock()
-                my_mock_response.ok = True
+                my_mock_response.is_success = True
                 my_mock_response.json.return_value = {}
                 mock_post.return_value = my_mock_response
                 mock_post.return_value.cookies = {
                     SESSION_COOKIE_NAME: "dummy session token",
                     REFRESH_SESSION_COOKIE_NAME: valid_jwt_token,
                 }
-                self.assertIsNotNone(magiclink.verify(token))
+                self.assertIsNotNone(await futu_await(magiclink.verify(token)))
 
     async def test_update_user_email(self):
-        magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
+        magiclink = MagicLink(
+            Auth(
+                self.dummy_project_id, self.public_key_dict, async_mode=self.async_test
+            )
+        )
 
         with self.assertRaises(AuthException):
 
@@ -530,8 +581,8 @@ class TestMagicLink(common.DescopeTest):
                 )
             )
 
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     magiclink.update_user_email(
@@ -542,14 +593,18 @@ class TestMagicLink(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
                 "t***@example.com",
-                magiclink.update_user_email("id1", "dummy@dummy.com", "refresh_token1"),
+                await futu_await(
+                    magiclink.update_user_email(
+                        "id1", "dummy@dummy.com", "refresh_token1"
+                    )
+                ),
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_user_email_magiclink_path}",
@@ -571,18 +626,20 @@ class TestMagicLink(common.DescopeTest):
             )
 
         # Test success flow with template options
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
                 "t***@example.com",
-                magiclink.update_user_email(
-                    "id1",
-                    "dummy@dummy.com",
-                    "refresh_token1",
-                    template_options={"bla": "blue"},
+                await futu_await(
+                    magiclink.update_user_email(
+                        "id1",
+                        "dummy@dummy.com",
+                        "refresh_token1",
+                        template_options={"bla": "blue"},
+                    )
                 ),
             )
             mock_post.assert_called_with(
@@ -606,7 +663,11 @@ class TestMagicLink(common.DescopeTest):
             )
 
     async def test_update_user_phone(self):
-        magiclink = MagicLink(Auth(self.dummy_project_id, self.public_key_dict))
+        magiclink = MagicLink(
+            Auth(
+                self.dummy_project_id, self.public_key_dict, async_mode=self.async_test
+            )
+        )
 
         with self.assertRaises(AuthException):
 
@@ -619,8 +680,8 @@ class TestMagicLink(common.DescopeTest):
                 )
             )
 
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     magiclink.update_user_phone(
@@ -632,15 +693,17 @@ class TestMagicLink(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedPhone": "*****1111"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
                 "*****1111",
-                magiclink.update_user_phone(
-                    DeliveryMethod.SMS, "id1", "+11111111", "refresh_token1"
+                await futu_await(
+                    magiclink.update_user_phone(
+                        DeliveryMethod.SMS, "id1", "+11111111", "refresh_token1"
+                    )
                 ),
             )
             mock_post.assert_called_with(
@@ -663,19 +726,21 @@ class TestMagicLink(common.DescopeTest):
             )
 
         # Test success flow with template options
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedPhone": "*****1111"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
                 "*****1111",
-                magiclink.update_user_phone(
-                    DeliveryMethod.SMS,
-                    "id1",
-                    "+11111111",
-                    "refresh_token1",
-                    template_options={"bla": "blue"},
+                await futu_await(
+                    magiclink.update_user_phone(
+                        DeliveryMethod.SMS,
+                        "id1",
+                        "+11111111",
+                        "refresh_token1",
+                        template_options={"bla": "blue"},
+                    )
                 ),
             )
             mock_post.assert_called_with(

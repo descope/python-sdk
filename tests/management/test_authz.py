@@ -30,18 +30,21 @@ class TestAuthz(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed save_schema
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(client.mgmt.authz.save_schema({}, True))
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(client.mgmt.authz.save_schema({"name": "kuku"}, True))
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            self.assertIsNone(
+                await futu_await(client.mgmt.authz.save_schema({"name": "kuku"}, True))
+            )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.authz_schema_save}",
                 headers={
@@ -62,18 +65,19 @@ class TestAuthz(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed delete_schema
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(client.mgmt.authz.delete_schema())
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(client.mgmt.authz.delete_schema())
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            self.assertIsNone(await futu_await(client.mgmt.authz.delete_schema()))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.authz_schema_delete}",
                 headers={
@@ -94,18 +98,20 @@ class TestAuthz(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed load_schema
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(client.mgmt.authz.load_schema())
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNotNone(client.mgmt.authz.load_schema())
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            mock_post.return_value.json.return_value = {"schema": {"name": "test"}}
+            self.assertIsNotNone(await futu_await(client.mgmt.authz.load_schema()))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.authz_schema_load}",
                 headers={
@@ -126,19 +132,22 @@ class TestAuthz(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed save_namespace
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(client.mgmt.authz.save_namespace({}))
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNone(
-                client.mgmt.authz.save_namespace({"name": "kuku"}, "old", "v1")
+                await futu_await(
+                    client.mgmt.authz.save_namespace({"name": "kuku"}, "old", "v1")
+                )
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.authz_ns_save}",
@@ -164,18 +173,21 @@ class TestAuthz(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed delete_namespace
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(client.mgmt.authz.delete_namespace("a"))
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(client.mgmt.authz.delete_namespace("a", "b"))
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            self.assertIsNone(
+                await futu_await(client.mgmt.authz.delete_namespace("a", "b"))
+            )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.authz_ns_delete}",
                 headers={
@@ -196,20 +208,23 @@ class TestAuthz(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed save_relation_definition
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(client.mgmt.authz.save_relation_definition({}, "a"))
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNone(
-                client.mgmt.authz.save_relation_definition(
-                    {"name": "kuku"}, "a", "old", "v1"
+                await futu_await(
+                    client.mgmt.authz.save_relation_definition(
+                        {"name": "kuku"}, "a", "old", "v1"
+                    )
                 )
             )
             mock_post.assert_called_with(
@@ -237,19 +252,22 @@ class TestAuthz(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed delete_relation_definition
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(client.mgmt.authz.delete_relation_definition("a", "b"))
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNone(
-                client.mgmt.authz.delete_relation_definition("a", "b", "c")
+                await futu_await(
+                    client.mgmt.authz.delete_relation_definition("a", "b", "c")
+                )
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.authz_rd_delete}",
@@ -271,27 +289,30 @@ class TestAuthz(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed create_relations
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(client.mgmt.authz.create_relations([]))
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNone(
-                client.mgmt.authz.create_relations(
-                    [
-                        {
-                            "resource": "r",
-                            "relationDefinition": "rd",
-                            "namespace": "ns",
-                            "target": "u",
-                        }
-                    ]
+                await futu_await(
+                    client.mgmt.authz.create_relations(
+                        [
+                            {
+                                "resource": "r",
+                                "relationDefinition": "rd",
+                                "namespace": "ns",
+                                "target": "u",
+                            }
+                        ]
+                    )
                 )
             )
             mock_post.assert_called_with(
@@ -323,27 +344,30 @@ class TestAuthz(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed delete_relations
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(client.mgmt.authz.delete_relations([]))
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNone(
-                client.mgmt.authz.delete_relations(
-                    [
-                        {
-                            "resource": "r",
-                            "relationDefinition": "rd",
-                            "namespace": "ns",
-                            "target": "u",
-                        }
-                    ]
+                await futu_await(
+                    client.mgmt.authz.delete_relations(
+                        [
+                            {
+                                "resource": "r",
+                                "relationDefinition": "rd",
+                                "namespace": "ns",
+                                "target": "u",
+                            }
+                        ]
+                    )
                 )
             )
             mock_post.assert_called_with(
@@ -375,18 +399,23 @@ class TestAuthz(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed delete_relations_for_resources
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(client.mgmt.authz.delete_relations_for_resources([]))
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(client.mgmt.authz.delete_relations_for_resources(["r"]))
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            self.assertIsNone(
+                await futu_await(
+                    client.mgmt.authz.delete_relations_for_resources(["r"])
+                )
+            )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.authz_re_delete_resources}",
                 headers={
@@ -407,27 +436,33 @@ class TestAuthz(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed has_relations
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(client.mgmt.authz.has_relations([]))
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            mock_post.return_value.json.return_value = {
+                "relationQueries": [{"hasRelation": True}]
+            }
             self.assertIsNotNone(
-                client.mgmt.authz.has_relations(
-                    [
-                        {
-                            "resource": "r",
-                            "relationDefinition": "rd",
-                            "namespace": "ns",
-                            "target": "u",
-                        }
-                    ]
+                await futu_await(
+                    client.mgmt.authz.has_relations(
+                        [
+                            {
+                                "resource": "r",
+                                "relationDefinition": "rd",
+                                "namespace": "ns",
+                                "target": "u",
+                            }
+                        ]
+                    )
                 )
             )
             mock_post.assert_called_with(
@@ -459,18 +494,22 @@ class TestAuthz(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed who_can_access
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(client.mgmt.authz.who_can_access("a", "b", "c"))
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNotNone(client.mgmt.authz.who_can_access("a", "b", "c"))
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            mock_post.return_value.json.return_value = {"targets": ["user1", "user2"]}
+            self.assertIsNotNone(
+                await futu_await(client.mgmt.authz.who_can_access("a", "b", "c"))
+            )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.authz_re_who}",
                 headers={
@@ -491,18 +530,24 @@ class TestAuthz(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed resource_relations
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(client.mgmt.authz.resource_relations("a"))
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNotNone(client.mgmt.authz.resource_relations("a"))
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            mock_post.return_value.json.return_value = {
+                "relations": [{"resource": "a", "target": "b"}]
+            }
+            self.assertIsNotNone(
+                await futu_await(client.mgmt.authz.resource_relations("a"))
+            )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.authz_re_resource}",
                 headers={
@@ -523,18 +568,24 @@ class TestAuthz(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed targets_relations
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(client.mgmt.authz.targets_relations(["a"]))
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNotNone(client.mgmt.authz.targets_relations(["a"]))
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            mock_post.return_value.json.return_value = {
+                "relations": [{"target": "a", "resource": "b"}]
+            }
+            self.assertIsNotNone(
+                await futu_await(client.mgmt.authz.targets_relations(["a"]))
+            )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.authz_re_targets}",
                 headers={
@@ -555,18 +606,24 @@ class TestAuthz(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed what_can_target_access
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(client.mgmt.authz.what_can_target_access("a"))
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNotNone(client.mgmt.authz.what_can_target_access("a"))
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            mock_post.return_value.json.return_value = {
+                "relations": [{"target": "a", "resource": "b"}]
+            }
+            self.assertIsNotNone(
+                await futu_await(client.mgmt.authz.what_can_target_access("a"))
+            )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.authz_re_target_all}",
                 headers={
@@ -587,11 +644,12 @@ class TestAuthz(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed what_can_target_access_with_relation
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     client.mgmt.authz.what_can_target_access_with_relation(
@@ -602,10 +660,17 @@ class TestAuthz(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            mock_post.return_value.json.return_value = {
+                "relations": [{"target": "a", "resource": "b"}]
+            }
             self.assertIsNotNone(
-                client.mgmt.authz.what_can_target_access_with_relation("a", "b", "c")
+                await futu_await(
+                    client.mgmt.authz.what_can_target_access_with_relation(
+                        "a", "b", "c"
+                    )
+                )
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.authz_re_target_with_relation}",
@@ -627,18 +692,22 @@ class TestAuthz(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed get_modified
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(client.mgmt.authz.get_modified())
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNotNone(client.mgmt.authz.get_modified())
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            mock_post.return_value.json.return_value = {
+                "relations": {"resources": ["r1"], "targets": ["t1"]}
+            }
+            self.assertIsNotNone(await futu_await(client.mgmt.authz.get_modified()))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.authz_get_modified}",
                 headers={

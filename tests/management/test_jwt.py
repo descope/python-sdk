@@ -31,11 +31,12 @@ class TestUser(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(client.mgmt.jwt.update_jwt("jwt", {"k1": "v1"}, 0))
 
@@ -44,12 +45,14 @@ class TestUser(common.DescopeTest):
                 await futu_await(client.mgmt.jwt.update_jwt("", {"k1": "v1"}, 0))
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
             mock_post.return_value = network_resp
-            resp = client.mgmt.jwt.update_jwt("test", {"k1": "v1"}, 40)
+            resp = await futu_await(
+                client.mgmt.jwt.update_jwt("test", {"k1": "v1"}, 40)
+            )
             self.assertEqual(resp, "response")
             expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.update_jwt_path}"
             mock_post.assert_called_with(
@@ -70,7 +73,7 @@ class TestUser(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-            resp = client.mgmt.jwt.update_jwt("test", {"k1": "v1"})
+            resp = await futu_await(client.mgmt.jwt.update_jwt("test", {"k1": "v1"}))
             self.assertEqual(resp, "response")
             expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.update_jwt_path}"
             mock_post.assert_called_with(
@@ -97,11 +100,12 @@ class TestUser(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(client.mgmt.jwt.impersonate("imp1", "imp2", False))
 
@@ -114,12 +118,12 @@ class TestUser(common.DescopeTest):
                 await futu_await(client.mgmt.jwt.impersonate("imp1", "", False))
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
             mock_post.return_value = network_resp
-            resp = client.mgmt.jwt.impersonate("imp1", "imp2", True)
+            resp = await futu_await(client.mgmt.jwt.impersonate("imp1", "imp2", True))
             self.assertEqual(resp, "response")
             expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.impersonate_path}"
             mock_post.assert_called_with(
@@ -149,11 +153,12 @@ class TestUser(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     client.mgmt.jwt.stop_impersonation(
@@ -162,12 +167,12 @@ class TestUser(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
             mock_post.return_value = network_resp
-            resp = client.mgmt.jwt.stop_impersonation("jwtstr")
+            resp = await futu_await(client.mgmt.jwt.stop_impersonation("jwtstr"))
             self.assertEqual(resp, "response")
             expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.stop_impersonation_path}"
             mock_post.assert_called_with(
@@ -195,6 +200,7 @@ class TestUser(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
@@ -208,12 +214,12 @@ class TestUser(common.DescopeTest):
             )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
             mock_post.return_value = network_resp
-            client.mgmt.jwt.sign_in("loginId")
+            await futu_await(client.mgmt.jwt.sign_in("loginId"))
             expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.mgmt_sign_in_path}"
             mock_post.assert_called_with(
                 expected_uri,
@@ -243,6 +249,7 @@ class TestUser(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
@@ -250,12 +257,12 @@ class TestUser(common.DescopeTest):
             await futu_await(client.mgmt.jwt.sign_up(""))
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
             mock_post.return_value = network_resp
-            client.mgmt.jwt.sign_up("loginId")
+            await futu_await(client.mgmt.jwt.sign_up("loginId"))
             expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.mgmt_sign_up_path}"
             mock_post.assert_called_with(
                 expected_uri,
@@ -295,6 +302,7 @@ class TestUser(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
@@ -302,12 +310,12 @@ class TestUser(common.DescopeTest):
             await futu_await(client.mgmt.jwt.sign_up_or_in(""))
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
             mock_post.return_value = network_resp
-            client.mgmt.jwt.sign_up_or_in("loginId")
+            await futu_await(client.mgmt.jwt.sign_up_or_in("loginId"))
             expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.mgmt_sign_up_or_in_path}"
             mock_post.assert_called_with(
                 expected_uri,
@@ -347,15 +355,16 @@ class TestUser(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
             mock_post.return_value = network_resp
-            client.mgmt.jwt.anonymous({"k1": "v1"}, "id")
+            await futu_await(client.mgmt.jwt.anonymous({"k1": "v1"}, "id"))
             expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.anonymous_path}"
             mock_post.assert_called_with(
                 expected_uri,

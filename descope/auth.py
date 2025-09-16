@@ -13,7 +13,7 @@ from typing import Awaitable, Iterable, Union
 
 import jwt
 
-from descope.future_utils import futu_apply
+from descope.future_utils import futu_apply, futu_awaitable
 
 try:
     from importlib.metadata import version
@@ -262,7 +262,6 @@ class Auth:
             params=params,
             headers=self._get_default_headers(pswd),
             follow_redirects=False,
-            timeout=self.timeout_seconds,
         )
         return futu_apply(response, self._raise_from_response_and_return)
 
@@ -275,7 +274,7 @@ class Auth:
 
     def exchange_token(
         self, uri, code: str, audience: str | None | Iterable[str] = None
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         if not code:
             raise AuthException(
                 400,
@@ -285,11 +284,14 @@ class Auth:
 
         body = Auth._compose_exchange_body(code)
         response = self.do_post(uri=uri, body=body, params=None)
-        resp = response.json()
-        jwt_response = self.generate_jwt_response(
-            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME), audience
+        return futu_apply(
+            response,
+            lambda response: self.generate_jwt_response(
+                response.json(),
+                response.cookies.get(REFRESH_SESSION_COOKIE_NAME),
+                audience,
+            ),
         )
-        return jwt_response
 
     @staticmethod
     def base_url_for_project_id(project_id):
@@ -429,15 +431,20 @@ class Auth:
         access_key: str,
         audience: str | Iterable[str] | None = None,
         login_options: AccessKeyLoginOptions | None = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         uri = EndpointsV1.exchange_auth_access_key_path
         body = {
             "loginOptions": login_options.__dict__ if login_options else {},
         }
         server_response = self.do_post(uri=uri, body=body, params=None, pswd=access_key)
-        json = server_response.json()
-        return self._generate_auth_info(
-            response_body=json, refresh_token=None, user_jwt=False, audience=audience
+        return futu_apply(
+            server_response,
+            lambda response: self._generate_auth_info(
+                response_body=response.json(),
+                refresh_token=None,
+                user_jwt=False,
+                audience=audience,
+            ),
         )
 
     @staticmethod
@@ -488,9 +495,9 @@ class Auth:
                 f"Unable to load public key {e}",
             )
 
-    def _raise_from_response(self, response):
-        """Raise appropriate exception from response, does nothing if response.ok is True."""
-        if response.ok:
+    def _raise_from_response(self, response: httpx.Response):
+        """Raise appropriate exception from response, does nothing if response.is_success is True."""
+        if response.is_success:
             return
 
         if response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
@@ -502,7 +509,7 @@ class Auth:
             response.text,
         )
 
-    def _fetch_public_keys(self) -> None:
+    def _fetch_public_keys_sync(self) -> None:
         # This function called under mutex protection so no need to acquire it once again
         response = self._sync_request(
             "GET",
@@ -591,14 +598,16 @@ class Auth:
         jwt_response = {}
         st_jwt = response_body.get("sessionJwt", "")
         if st_jwt:
-            jwt_response[SESSION_TOKEN_NAME] = self._validate_token(st_jwt, audience)
+            jwt_response[SESSION_TOKEN_NAME] = self._validate_token_sync(
+                st_jwt, audience
+            )
         rt_jwt = response_body.get("refreshJwt", "")
         if rt_jwt:
-            jwt_response[REFRESH_SESSION_TOKEN_NAME] = self._validate_token(
+            jwt_response[REFRESH_SESSION_TOKEN_NAME] = self._validate_token_sync(
                 rt_jwt, audience
             )
         elif refresh_token:
-            jwt_response[REFRESH_SESSION_TOKEN_NAME] = self._validate_token(
+            jwt_response[REFRESH_SESSION_TOKEN_NAME] = self._validate_token_sync(
                 refresh_token, audience
             )
 
@@ -639,8 +648,8 @@ class Auth:
         headers["Authorization"] = f"Bearer {bearer}"
         return headers
 
-    # Validate a token and load the public key if needed
-    def _validate_token(
+    # Validate a token and load the public key if needed.
+    def _validate_token_sync(
         self, token: str, audience: str | None | Iterable[str] = None
     ) -> dict:
         if not token:
@@ -672,7 +681,7 @@ class Auth:
 
         with self.lock_public_keys:
             if self.public_keys == {} or self.public_keys.get(kid, None) is None:
-                self._fetch_public_keys()
+                self._fetch_public_keys_sync()
 
             found_key = self.public_keys.get(kid, None)
             if found_key is None:
@@ -728,11 +737,11 @@ class Auth:
                 "Session token is required for validation",
             )
 
-        res = self._validate_token(session_token, audience)
+        res = self._validate_token_sync(session_token, audience)
         res[SESSION_TOKEN_NAME] = copy.deepcopy(
             res
         )  # Duplicate for saving backward compatibility but keep the same structure as the refresh operation response
-        return self.adjust_properties(res, True)
+        return futu_awaitable(self.adjust_properties(res, True), self.async_mode)
 
     def refresh_session(
         self, refresh_token: str, audience: str | None | Iterable[str] = None
@@ -745,10 +754,11 @@ class Auth:
                 "Refresh token is required to refresh a session",
             )
 
-        self._validate_token(refresh_token, audience)
+        self._validate_token_sync(refresh_token, audience)
 
-        uri = EndpointsV1.refresh_token_path
-        response = self.do_post(uri=uri, body={}, params=None, pswd=refresh_token)
+        response = self.do_post(
+            uri=EndpointsV1.refresh_token_path, body={}, params=None, pswd=refresh_token
+        )
 
         def process_response(resp_obj):
             resp = resp_obj.json()

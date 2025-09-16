@@ -1,12 +1,15 @@
 from datetime import datetime, timezone
-from typing import Any, List, Optional
+from typing import Any, Awaitable, List, Optional, Union
 
 from descope._auth_base import AuthBase
+from descope.future_utils import futu_apply
 from descope.management.common import MgmtV1
 
 
 class Authz(AuthBase):
-    def save_schema(self, schema: dict, upgrade: bool = False):
+    def save_schema(
+        self, schema: dict, upgrade: bool = False
+    ) -> Union[None, Awaitable[None]]:
         """
         Create or update the ReBAC schema.
         In case of update, will update only given namespaces and will not delete namespaces unless upgrade flag is true.
@@ -40,25 +43,27 @@ class Authz(AuthBase):
         Raise:
         AuthException: raised if saving fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.authz_schema_save,
             {"schema": schema, "upgrade": upgrade},
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
-    def delete_schema(self):
+    def delete_schema(self) -> Union[None, Awaitable[None]]:
         """
         Delete the schema for the project which will also delete all relations.
         Raise:
         AuthException: raised if delete schema fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.authz_schema_delete,
             None,
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
-    def load_schema(self) -> dict:
+    def load_schema(self) -> Union[dict, Awaitable[dict]]:
         """
         Load the schema for the project
         Return value (dict):
@@ -71,11 +76,11 @@ class Authz(AuthBase):
             None,
             pswd=self._auth.management_key,
         )
-        return response.json()["schema"]
+        return futu_apply(response, lambda response: response.json()["schema"])
 
     def save_namespace(
         self, namespace: dict, old_name: str = "", schema_name: str = ""
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Create or update the given namespace
         Will not delete relation definitions not mentioned in the namespace.
@@ -91,13 +96,16 @@ class Authz(AuthBase):
             body["oldName"] = old_name
         if schema_name != "":
             body["schemaName"] = schema_name
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.authz_ns_save,
             body,
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
-    def delete_namespace(self, name: str, schema_name: str = ""):
+    def delete_namespace(
+        self, name: str, schema_name: str = ""
+    ) -> Union[None, Awaitable[None]]:
         """
         delete_namespace will also delete the relevant relations.
         Args:
@@ -109,11 +117,12 @@ class Authz(AuthBase):
         body: dict[str, Any] = {"name": name}
         if schema_name != "":
             body["schemaName"] = schema_name
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.authz_ns_delete,
             body,
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     def save_relation_definition(
         self,
@@ -121,7 +130,7 @@ class Authz(AuthBase):
         namespace: str,
         old_name: str = "",
         schema_name: str = "",
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Create or update the given relation definition
         Will not delete relation definitions not mentioned in the namespace.
@@ -141,15 +150,16 @@ class Authz(AuthBase):
             body["oldName"] = old_name
         if schema_name != "":
             body["schemaName"] = schema_name
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.authz_rd_save,
             body,
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     def delete_relation_definition(
         self, name: str, namespace: str, schema_name: str = ""
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         delete_relation_definition will also delete the relevant relations.
         Args:
@@ -162,16 +172,17 @@ class Authz(AuthBase):
         body: dict[str, Any] = {"name": name, "namespace": namespace}
         if schema_name != "":
             body["schemaName"] = schema_name
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.authz_rd_delete,
             body,
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     def create_relations(
         self,
         relations: List[dict],
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Create the given relations based on the existing schema
         Args:
@@ -202,18 +213,19 @@ class Authz(AuthBase):
         Raise:
         AuthException: raised if create relations fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.authz_re_create,
             {
                 "relations": relations,
             },
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     def delete_relations(
         self,
         relations: List[dict],
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Delete the given relations based on the existing schema
         Args:
@@ -221,18 +233,19 @@ class Authz(AuthBase):
         Raise:
         AuthException: raised if delete relations fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.authz_re_delete,
             {
                 "relations": relations,
             },
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     def delete_relations_for_resources(
         self,
         resources: List[str],
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Delete all relations to the given resources
         Args:
@@ -240,18 +253,19 @@ class Authz(AuthBase):
         Raise:
         AuthException: raised if delete relations for resources fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.authz_re_delete_resources,
             {
                 "resources": resources,
             },
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     def has_relations(
         self,
         relation_queries: List[dict],
-    ) -> List[dict]:
+    ) -> Union[List[dict], Awaitable[List[dict]]]:
         """
         Queries the given relations to see if they exist returning true if they do
         Args:
@@ -284,11 +298,11 @@ class Authz(AuthBase):
             },
             pswd=self._auth.management_key,
         )
-        return response.json()["relationQueries"]
+        return futu_apply(response, lambda response: response.json()["relationQueries"])
 
     def who_can_access(
         self, resource: str, relation_definition: str, namespace: str
-    ) -> List[dict]:
+    ) -> Union[List[dict], Awaitable[List[dict]]]:
         """
         Finds the list of targets (usually users) who can access the given resource with the given RD
         Args:
@@ -309,9 +323,11 @@ class Authz(AuthBase):
             },
             pswd=self._auth.management_key,
         )
-        return response.json()["targets"]
+        return futu_apply(response, lambda response: response.json()["targets"])
 
-    def resource_relations(self, resource: str) -> List[dict]:
+    def resource_relations(
+        self, resource: str
+    ) -> Union[List[dict], Awaitable[List[dict]]]:
         """
         Returns the list of all defined relations (not recursive) on the given resource.
         Args:
@@ -327,9 +343,11 @@ class Authz(AuthBase):
             {"resource": resource},
             pswd=self._auth.management_key,
         )
-        return response.json()["relations"]
+        return futu_apply(response, lambda response: response.json()["relations"])
 
-    def targets_relations(self, targets: List[str]) -> List[dict]:
+    def targets_relations(
+        self, targets: List[str]
+    ) -> Union[List[dict], Awaitable[List[dict]]]:
         """
         Returns the list of all defined relations (not recursive) for the given targets.
         Args:
@@ -345,9 +363,11 @@ class Authz(AuthBase):
             {"targets": targets},
             pswd=self._auth.management_key,
         )
-        return response.json()["relations"]
+        return futu_apply(response, lambda response: response.json()["relations"])
 
-    def what_can_target_access(self, target: str) -> List[dict]:
+    def what_can_target_access(
+        self, target: str
+    ) -> Union[List[dict], Awaitable[List[dict]]]:
         """
         Returns the list of all relations for the given target including derived relations from the schema tree.
         Args:
@@ -363,11 +383,11 @@ class Authz(AuthBase):
             {"target": target},
             pswd=self._auth.management_key,
         )
-        return response.json()["relations"]
+        return futu_apply(response, lambda response: response.json()["relations"])
 
     def what_can_target_access_with_relation(
         self, target: str, relation_definition: str, namespace: str
-    ) -> List[dict]:
+    ) -> Union[List[dict], Awaitable[List[dict]]]:
         """
         Returns the list of all resources that the target has the given relation to including all derived relations
         Args:
@@ -389,9 +409,11 @@ class Authz(AuthBase):
             },
             pswd=self._auth.management_key,
         )
-        return response.json()["relations"]
+        return futu_apply(response, lambda response: response.json()["relations"])
 
-    def get_modified(self, since: Optional[datetime] = None) -> dict:
+    def get_modified(
+        self, since: Optional[datetime] = None
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Get all targets and resources changed since the given date.
         Args:
@@ -413,4 +435,4 @@ class Authz(AuthBase):
             },
             pswd=self._auth.management_key,
         )
-        return response.json()["relations"]
+        return futu_apply(response, lambda response: response.json()["relations"])

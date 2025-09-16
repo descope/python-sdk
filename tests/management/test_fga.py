@@ -30,18 +30,20 @@ class TestFGA(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed save_schema
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(client.mgmt.fga.save_schema(""))
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(client.mgmt.fga.save_schema("model AuthZ 1.0"))
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            result = await futu_await(client.mgmt.fga.save_schema("model AuthZ 1.0"))
+            self.assertIsNone(result)
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.fga_save_schema}",
                 headers={
@@ -62,18 +64,19 @@ class TestFGA(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed create_relations
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(client.mgmt.fga.create_relations([]))
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            result = await futu_await(
                 client.mgmt.fga.create_relations(
                     [
                         {
@@ -86,6 +89,7 @@ class TestFGA(common.DescopeTest):
                     ]
                 )
             )
+            self.assertIsNone(result)
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.fga_create_relations}",
                 headers={
@@ -116,18 +120,19 @@ class TestFGA(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed delete_relations
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(client.mgmt.fga.delete_relations([]))
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            result = await futu_await(
                 client.mgmt.fga.delete_relations(
                     [
                         {
@@ -140,6 +145,7 @@ class TestFGA(common.DescopeTest):
                     ]
                 )
             )
+            self.assertIsNone(result)
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.fga_delete_relations}",
                 headers={
@@ -170,18 +176,33 @@ class TestFGA(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed has_relations
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(client.mgmt.fga.check([]))
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNotNone(
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            mock_post.return_value.json.return_value = {
+                "tuples": [
+                    {
+                        "tuple": {
+                            "resource": "r",
+                            "resourceType": "rt",
+                            "relation": "rel",
+                            "target": "u",
+                            "targetType": "ty",
+                        },
+                        "allowed": True,
+                    }
+                ]
+            }
+            result = await futu_await(
                 client.mgmt.fga.check(
                     [
                         {
@@ -194,6 +215,7 @@ class TestFGA(common.DescopeTest):
                     ]
                 )
             )
+            self.assertIsNotNone(result)
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.fga_check}",
                 headers={
@@ -224,6 +246,7 @@ class TestFGA(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
         response_body = {
             "resourcesDetails": [
@@ -231,14 +254,14 @@ class TestFGA(common.DescopeTest):
                 {"resourceId": "r2", "resourceType": "type2", "displayName": "Name2"},
             ]
         }
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
             mock_post.return_value.json.return_value = response_body
             ids = [
                 {"resourceId": "r1", "resourceType": "type1"},
                 {"resourceId": "r2", "resourceType": "type2"},
             ]
-            details = client.mgmt.fga.load_resources_details(ids)
+            details = await futu_await(client.mgmt.fga.load_resources_details(ids))
             self.assertEqual(details, response_body["resourcesDetails"])
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.fga_resources_load}",
@@ -260,9 +283,10 @@ class TestFGA(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             ids = [{"resourceId": "r1", "resourceType": "type1"}]
             with self.assertRaises(AuthException):
                 await futu_await(
@@ -277,13 +301,15 @@ class TestFGA(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
         details = [
             {"resourceId": "r1", "resourceType": "type1", "displayName": "Name1"}
         ]
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
-            client.mgmt.fga.save_resources_details(details)
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            result = await futu_await(client.mgmt.fga.save_resources_details(details))
+            self.assertIsNone(result)
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.fga_resources_save}",
                 headers={
@@ -304,12 +330,13 @@ class TestFGA(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
         details = [
             {"resourceId": "r1", "resourceType": "type1", "displayName": "Name1"}
         ]
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     client.mgmt.fga.save_resources_details(

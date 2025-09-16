@@ -32,11 +32,12 @@ class TestPermission(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     client.mgmt.permission.create(
@@ -45,9 +46,11 @@ class TestPermission(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(client.mgmt.permission.create("P1", "Something"))
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            self.assertIsNone(
+                await futu_await(client.mgmt.permission.create("P1", "Something"))
+            )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.permission_create_path}",
                 headers={
@@ -71,11 +74,12 @@ class TestPermission(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     client.mgmt.permission.update(
@@ -85,13 +89,15 @@ class TestPermission(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNone(
-                client.mgmt.permission.update(
-                    "name",
-                    "new-name",
-                    "new-description",
+                await futu_await(
+                    client.mgmt.permission.update(
+                        "name",
+                        "new-name",
+                        "new-description",
+                    )
                 )
             )
             mock_post.assert_called_with(
@@ -118,11 +124,12 @@ class TestPermission(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     client.mgmt.permission.delete(
@@ -131,9 +138,9 @@ class TestPermission(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(client.mgmt.permission.delete("name"))
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            self.assertIsNone(await futu_await(client.mgmt.permission.delete("name")))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.permission_delete_path}",
                 headers={
@@ -156,23 +163,24 @@ class TestPermission(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with mock_http_call(self.async_mode, "get") as mock_get:
-            mock_get.return_value.ok = False
+        with mock_http_call(self.async_test, "get") as mock_get:
+            mock_get.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(client.mgmt.permission.load_all())
 
         # Test success flow
-        with mock_http_call(self.async_mode, "get") as mock_get:
+        with mock_http_call(self.async_test, "get") as mock_get:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """{"permissions": [{"name": "p1"}, {"name": "p2"}]}"""
             )
             mock_get.return_value = network_resp
-            resp = client.mgmt.permission.load_all()
+            resp = await futu_await(client.mgmt.permission.load_all())
             permissions = resp["permissions"]
             self.assertEqual(len(permissions), 2)
             self.assertEqual(permissions[0]["name"], "p1")

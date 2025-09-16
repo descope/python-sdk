@@ -1,7 +1,8 @@
 from datetime import datetime
-from typing import Any, List, Optional
+from typing import Any, Awaitable, List, Optional, Union
 
 from descope._auth_base import AuthBase
+from descope.future_utils import futu_apply
 from descope.management.common import MgmtV1
 
 
@@ -21,7 +22,7 @@ class Audit(AuthBase):
         text: Optional[str] = None,
         from_ts: Optional[datetime] = None,
         to_ts: Optional[datetime] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Search the audit trail up to last 30 days based on given parameters
 
@@ -96,9 +97,14 @@ class Audit(AuthBase):
             body=body,
             pswd=self._auth.management_key,
         )
-        return {
-            "audits": list(map(Audit._convert_audit_record, response.json()["audits"]))
-        }
+        return futu_apply(
+            response,
+            lambda response: {
+                "audits": list(
+                    map(Audit._convert_audit_record, response.json()["audits"])
+                )
+            },
+        )
 
     def create_event(
         self,
@@ -108,7 +114,7 @@ class Audit(AuthBase):
         tenant_id: str,
         user_id: Optional[str] = None,
         data: Optional[dict] = None,
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Create audit event based on given parameters
 
@@ -134,10 +140,14 @@ class Audit(AuthBase):
         if data is not None:
             body["data"] = data
 
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.audit_create_event,
             body=body,
             pswd=self._auth.management_key,
+        )
+        return futu_apply(
+            response,
+            lambda response: None,
         )
 
     @staticmethod

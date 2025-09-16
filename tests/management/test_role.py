@@ -32,11 +32,12 @@ class TestRole(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     client.mgmt.role.create(
@@ -45,10 +46,12 @@ class TestRole(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNone(
-                client.mgmt.role.create("R1", "Something", ["P1"], "t1", True)
+                await futu_await(
+                    client.mgmt.role.create("R1", "Something", ["P1"], "t1", True)
+                )
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.role_create_path}",
@@ -76,11 +79,12 @@ class TestRole(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     client.mgmt.role.update(
@@ -90,16 +94,18 @@ class TestRole(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNone(
-                client.mgmt.role.update(
-                    "name",
-                    "new-name",
-                    "new-description",
-                    ["P1", "P2"],
-                    "t1",
-                    True,
+                await futu_await(
+                    client.mgmt.role.update(
+                        "name",
+                        "new-name",
+                        "new-description",
+                        ["P1", "P2"],
+                        "t1",
+                        True,
+                    )
                 )
             )
             mock_post.assert_called_with(
@@ -129,11 +135,12 @@ class TestRole(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     client.mgmt.role.delete(
@@ -142,9 +149,9 @@ class TestRole(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(client.mgmt.role.delete("name"))
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            self.assertIsNone(await futu_await(client.mgmt.role.delete("name")))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.role_delete_path}",
                 headers={
@@ -165,18 +172,19 @@ class TestRole(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with mock_http_call(self.async_mode, "get") as mock_get:
-            mock_get.return_value.ok = False
+        with mock_http_call(self.async_test, "get") as mock_get:
+            mock_get.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(client.mgmt.role.load_all())
 
         # Test success flow
-        with mock_http_call(self.async_mode, "get") as mock_get:
+        with mock_http_call(self.async_test, "get") as mock_get:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """
                 {
@@ -188,7 +196,7 @@ class TestRole(common.DescopeTest):
                 """
             )
             mock_get.return_value = network_resp
-            resp = client.mgmt.role.load_all()
+            resp = await futu_await(client.mgmt.role.load_all())
             roles = resp["roles"]
             self.assertEqual(len(roles), 2)
             self.assertEqual(roles[0]["name"], "R1")
@@ -216,11 +224,12 @@ class TestRole(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     client.mgmt.role.search(
@@ -230,9 +239,9 @@ class TestRole(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """
                 {
@@ -244,7 +253,9 @@ class TestRole(common.DescopeTest):
                 """
             )
             mock_post.return_value = network_resp
-            resp = client.mgmt.role.search(["t"], ["r"], "x", ["p1", "p2"])
+            resp = await futu_await(
+                client.mgmt.role.search(["t"], ["r"], "x", ["p1", "p2"])
+            )
             roles = resp["roles"]
             self.assertEqual(len(roles), 2)
             self.assertEqual(roles[0]["name"], "R1")

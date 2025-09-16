@@ -1,7 +1,5 @@
 from ssl import SSLContext
-import json as json_module
 from contextlib import contextmanager
-from typing import Dict, Optional
 from unittest.mock import AsyncMock, Mock, patch
 
 
@@ -72,4 +70,7 @@ def _mock_async_http(method: str):
                 mock_class.assert_called_with(**client_kwargs)
 
         async_method_mock.assert_called_with = enhanced_assert_called_with
+
+        # using Mock here to avoid getting AsyncMock as default return value class
+        async_method_mock.return_value = Mock()
         yield async_method_mock

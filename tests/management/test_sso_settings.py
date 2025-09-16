@@ -39,11 +39,12 @@ class TestSSOSettings(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with mock_http_call(self.async_mode, "delete") as mock_delete:
-            mock_delete.return_value.ok = False
+        with mock_http_call(self.async_test, "delete") as mock_delete:
+            mock_delete.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     client.mgmt.sso.delete_settings(
@@ -52,12 +53,12 @@ class TestSSOSettings(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "delete") as mock_delete:
+        with mock_http_call(self.async_test, "delete") as mock_delete:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
 
             mock_delete.return_value = network_resp
-            client.mgmt.sso.delete_settings("tenant-id")
+            await futu_await(client.mgmt.sso.delete_settings("tenant-id"))
 
             mock_delete.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_settings_path}",
@@ -78,11 +79,12 @@ class TestSSOSettings(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with mock_http_call(self.async_mode, "get") as mock_get:
-            mock_get.return_value.ok = False
+        with mock_http_call(self.async_test, "get") as mock_get:
+            mock_get.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     client.mgmt.sso.load_settings(
@@ -91,14 +93,14 @@ class TestSSOSettings(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "get") as mock_get:
+        with mock_http_call(self.async_test, "get") as mock_get:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """{"tenant": {"id": "T2AAAA", "name": "myTenantName", "selfProvisioningDomains": [], "customAttributes": {}, "authType": "saml", "domains": ["lulu", "kuku"]}, "saml": {"idpEntityId": "", "idpSSOUrl": "", "idpCertificate": "", "defaultSSORoles": ["aa", "bb"], "idpMetadataUrl": "https://dummy.com/metadata", "spEntityId": "", "spACSUrl": "", "spCertificate": "", "attributeMapping": {"name": "name", "email": "email", "username": "", "phoneNumber": "phone", "group": "", "givenName": "", "middleName": "", "familyName": "", "picture": "", "customAttributes": {}}, "groupsMapping": [], "redirectUrl": ""}, "oidc": {"name": "", "clientId": "", "clientSecret": "", "redirectUrl": "", "authUrl": "", "tokenUrl": "", "userDataUrl": "", "scope": [], "JWKsUrl": "", "userAttrMapping": {"loginId": "sub", "username": "", "name": "name", "email": "email", "phoneNumber": "phone_number", "verifiedEmail": "email_verified", "verifiedPhone": "phone_number_verified", "picture": "picture", "givenName": "given_name", "middleName": "middle_name", "familyName": "family_name"}, "manageProviderTokens": false, "callbackDomain": "", "prompt": [], "grantType": "authorization_code", "issuer": ""}}"""
             )
             mock_get.return_value = network_resp
-            resp = client.mgmt.sso.load_settings("T2AAAA")
+            resp = await futu_await(client.mgmt.sso.load_settings("T2AAAA"))
             tenant = resp.get("tenant", {})
             self.assertEqual(tenant.get("id", ""), "T2AAAA")
             self.assertEqual(tenant.get("domains", []), ["lulu", "kuku"])
@@ -129,11 +131,12 @@ class TestSSOSettings(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     client.mgmt.sso.configure_oidc_settings(
@@ -142,40 +145,42 @@ class TestSSOSettings(common.DescopeTest):
                             name="myName",
                             client_id="cid",
                         ),
+                        ["domain.com"],
                     ),
-                    ["domain.com"],
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNone(
-                client.mgmt.sso.configure_oidc_settings(
-                    "tenant-id",
-                    SSOOIDCSettings(
-                        name="myName",
-                        client_id="cid",
-                        client_secret="secret",
-                        redirect_url="http://dummy.com/",
-                        auth_url="http://dummy.com/auth",
-                        token_url="http://dummy.com/token",
-                        user_data_url="http://dummy.com/userInfo",
-                        scope=["openid", "profile", "email"],
-                        attribute_mapping=OIDCAttributeMapping(
-                            login_id="my-id",
-                            name="name",
-                            given_name="givenName",
-                            middle_name="middleName",
-                            family_name="familyName",
-                            email="email",
-                            verified_email="verifiedEmail",
-                            username="username",
-                            phone_number="phoneNumber",
-                            verified_phone="verifiedPhone",
-                            picture="picture",
+                await futu_await(
+                    client.mgmt.sso.configure_oidc_settings(
+                        "tenant-id",
+                        SSOOIDCSettings(
+                            name="myName",
+                            client_id="cid",
+                            client_secret="secret",
+                            redirect_url="http://dummy.com/",
+                            auth_url="http://dummy.com/auth",
+                            token_url="http://dummy.com/token",
+                            user_data_url="http://dummy.com/userInfo",
+                            scope=["openid", "profile", "email"],
+                            attribute_mapping=OIDCAttributeMapping(
+                                login_id="my-id",
+                                name="name",
+                                given_name="givenName",
+                                middle_name="middleName",
+                                family_name="familyName",
+                                email="email",
+                                verified_email="verifiedEmail",
+                                username="username",
+                                phone_number="phoneNumber",
+                                verified_phone="verifiedPhone",
+                                picture="picture",
+                            ),
                         ),
-                    ),
-                    ["domain.com"],
+                        ["domain.com"],
+                    )
                 )
             )
             mock_post.assert_called_with(
@@ -230,11 +235,12 @@ class TestSSOSettings(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     client.mgmt.sso.configure_saml_settings(
@@ -247,38 +253,42 @@ class TestSSOSettings(common.DescopeTest):
                             sp_entity_id="spentityid",
                             default_sso_roles=["aa", "bb"],
                         ),
+                        "https://redirect.com",
+                        ["domain.com"],
                     ),
-                    "https://redirect.com",
-                    ["domain.com"],
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNone(
-                client.mgmt.sso.configure_saml_settings(
-                    "tenant-id",
-                    SSOSAMLSettings(
-                        idp_url="http://dummy.com",
-                        idp_entity_id="ent1234",
-                        idp_cert="cert",
-                        attribute_mapping=AttributeMapping(
-                            name="name",
-                            given_name="givenName",
-                            middle_name="middleName",
-                            family_name="familyName",
-                            picture="picture",
-                            email="email",
-                            phone_number="phoneNumber",
-                            group="groups",
+                await futu_await(
+                    client.mgmt.sso.configure_saml_settings(
+                        "tenant-id",
+                        SSOSAMLSettings(
+                            idp_url="http://dummy.com",
+                            idp_entity_id="ent1234",
+                            idp_cert="cert",
+                            attribute_mapping=AttributeMapping(
+                                name="name",
+                                given_name="givenName",
+                                middle_name="middleName",
+                                family_name="familyName",
+                                picture="picture",
+                                email="email",
+                                phone_number="phoneNumber",
+                                group="groups",
+                            ),
+                            role_mappings=[
+                                RoleMapping(groups=["grp1"], role_name="rl1")
+                            ],
+                            sp_acs_url="http://spacsurl.com",
+                            sp_entity_id="spentityid",
+                            default_sso_roles=["aa", "bb"],
                         ),
-                        role_mappings=[RoleMapping(groups=["grp1"], role_name="rl1")],
-                        sp_acs_url="http://spacsurl.com",
-                        sp_entity_id="spentityid",
-                        default_sso_roles=["aa", "bb"],
-                    ),
-                    "https://redirect.com",
-                    ["domain.com"],
+                        "https://redirect.com",
+                        ["domain.com"],
+                    )
                 )
             )
             mock_post.assert_called_with(
@@ -325,11 +335,12 @@ class TestSSOSettings(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     client.mgmt.sso.configure_saml_settings_by_metadata(
@@ -337,36 +348,40 @@ class TestSSOSettings(common.DescopeTest):
                         SSOSAMLSettingsByMetadata(
                             idp_metadata_url="http://dummy.com/metadata"
                         ),
+                        "https://redirect.com",
+                        ["domain.com"],
                     ),
-                    "https://redirect.com",
-                    ["domain.com"],
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNone(
-                client.mgmt.sso.configure_saml_settings_by_metadata(
-                    "tenant-id",
-                    SSOSAMLSettingsByMetadata(
-                        idp_metadata_url="http://dummy.com/metadata",
-                        attribute_mapping=AttributeMapping(
-                            name="name",
-                            given_name="givenName",
-                            middle_name="middleName",
-                            family_name="familyName",
-                            picture="picture",
-                            email="email",
-                            phone_number="phoneNumber",
-                            group="groups",
+                await futu_await(
+                    client.mgmt.sso.configure_saml_settings_by_metadata(
+                        "tenant-id",
+                        SSOSAMLSettingsByMetadata(
+                            idp_metadata_url="http://dummy.com/metadata",
+                            attribute_mapping=AttributeMapping(
+                                name="name",
+                                given_name="givenName",
+                                middle_name="middleName",
+                                family_name="familyName",
+                                picture="picture",
+                                email="email",
+                                phone_number="phoneNumber",
+                                group="groups",
+                            ),
+                            role_mappings=[
+                                RoleMapping(groups=["grp1"], role_name="rl1")
+                            ],
+                            sp_acs_url="http://spacsurl.com",
+                            sp_entity_id="spentityid",
+                            default_sso_roles=["aa", "bb"],
                         ),
-                        role_mappings=[RoleMapping(groups=["grp1"], role_name="rl1")],
-                        sp_acs_url="http://spacsurl.com",
-                        sp_entity_id="spentityid",
-                        default_sso_roles=["aa", "bb"],
-                    ),
-                    "https://redirect.com",
-                    ["domain.com"],
+                        "https://redirect.com",
+                        ["domain.com"],
+                    )
                 )
             )
             mock_post.assert_called_with(
@@ -416,11 +431,12 @@ class TestSSOSettings(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with mock_http_call(self.async_mode, "get") as mock_get:
-            mock_get.return_value.ok = False
+        with mock_http_call(self.async_test, "get") as mock_get:
+            mock_get.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     client.mgmt.sso.get_settings(
@@ -429,14 +445,14 @@ class TestSSOSettings(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "get") as mock_get:
+        with mock_http_call(self.async_test, "get") as mock_get:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """{"domains": ["lulu", "kuku"], "tenantId": "tenant-id"}"""
             )
             mock_get.return_value = network_resp
-            resp = client.mgmt.sso.get_settings("tenant-id")
+            resp = await futu_await(client.mgmt.sso.get_settings("tenant-id"))
             self.assertEqual(resp["tenantId"], "tenant-id")
             self.assertEqual(resp["domains"], ["lulu", "kuku"])
             mock_get.assert_called_with(
@@ -458,11 +474,12 @@ class TestSSOSettings(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     client.mgmt.sso.configure(
@@ -476,16 +493,18 @@ class TestSSOSettings(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNone(
-                client.mgmt.sso.configure(
-                    "tenant-id",
-                    "https://idp.com",
-                    "entity-id",
-                    "cert",
-                    "https://redirect.com",
-                    ["domain.com"],
+                await futu_await(
+                    client.mgmt.sso.configure(
+                        "tenant-id",
+                        "https://idp.com",
+                        "entity-id",
+                        "cert",
+                        "https://redirect.com",
+                        ["domain.com"],
+                    )
                 )
             )
             mock_post.assert_called_with(
@@ -510,15 +529,17 @@ class TestSSOSettings(common.DescopeTest):
             )
 
         # Domain is optional
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNone(
-                client.mgmt.sso.configure(
-                    "tenant-id",
-                    "https://idp.com",
-                    "entity-id",
-                    "cert",
-                    "https://redirect.com",
+                await futu_await(
+                    client.mgmt.sso.configure(
+                        "tenant-id",
+                        "https://idp.com",
+                        "entity-id",
+                        "cert",
+                        "https://redirect.com",
+                    )
                 )
             )
             mock_post.assert_called_with(
@@ -543,16 +564,18 @@ class TestSSOSettings(common.DescopeTest):
             )
 
         # Redirect is optional
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNone(
-                client.mgmt.sso.configure(
-                    "tenant-id",
-                    "https://idp.com",
-                    "entity-id",
-                    "cert",
-                    "",
-                    ["domain.com"],
+                await futu_await(
+                    client.mgmt.sso.configure(
+                        "tenant-id",
+                        "https://idp.com",
+                        "entity-id",
+                        "cert",
+                        "",
+                        ["domain.com"],
+                    )
                 )
             )
             mock_post.assert_called_with(
@@ -582,11 +605,12 @@ class TestSSOSettings(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     client.mgmt.sso.configure_via_metadata(
@@ -598,14 +622,16 @@ class TestSSOSettings(common.DescopeTest):
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNone(
-                client.mgmt.sso.configure_via_metadata(
-                    "tenant-id",
-                    "https://idp-meta.com",
-                    "https://redirect.com",
-                    ["domain.com"],
+                await futu_await(
+                    client.mgmt.sso.configure_via_metadata(
+                        "tenant-id",
+                        "https://idp-meta.com",
+                        "https://redirect.com",
+                        ["domain.com"],
+                    )
                 )
             )
             mock_post.assert_called_with(
@@ -628,12 +654,14 @@ class TestSSOSettings(common.DescopeTest):
             )
 
         # Test partial arguments
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNone(
-                client.mgmt.sso.configure_via_metadata(
-                    "tenant-id",
-                    "https://idp-meta.com",
+                await futu_await(
+                    client.mgmt.sso.configure_via_metadata(
+                        "tenant-id",
+                        "https://idp-meta.com",
+                    )
                 )
             )
             mock_post.assert_called_with(
@@ -661,26 +689,31 @@ class TestSSOSettings(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
-                client.mgmt.sso.mapping(
-                    "tenant-id",
-                    [RoleMapping(["a", "b"], "role")],
-                    AttributeMapping(name="UName"),
+                await futu_await(
+                    client.mgmt.sso.mapping(
+                        "tenant-id",
+                        [RoleMapping(["a", "b"], "role")],
+                        AttributeMapping(name="UName"),
+                    )
                 )
 
         # Test success flow
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = True
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNone(
-                client.mgmt.sso.mapping(
-                    "tenant-id",
-                    [RoleMapping(["a", "b"], "role")],
-                    AttributeMapping(name="UName"),
+                await futu_await(
+                    client.mgmt.sso.mapping(
+                        "tenant-id",
+                        [RoleMapping(["a", "b"], "role")],
+                        AttributeMapping(name="UName"),
+                    )
                 )
             )
             mock_post.assert_called_with(

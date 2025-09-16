@@ -20,6 +20,7 @@ from . import common
 class TestOTP(common.DescopeTest):
     def setUp(self) -> None:
         super().setUp()
+        self.async_mode = True
         self.dummy_project_id = "dummy"
         self.public_key_dict = {
             "alg": "ES384",
@@ -192,7 +193,7 @@ class TestOTP(common.DescopeTest):
             )
 
         with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     client.otp.sign_up(
@@ -205,7 +206,7 @@ class TestOTP(common.DescopeTest):
         # Test success flow
         with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
@@ -227,7 +228,7 @@ class TestOTP(common.DescopeTest):
 
         with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
@@ -264,7 +265,7 @@ class TestOTP(common.DescopeTest):
         # Test success flow with sign up options
         with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
@@ -310,7 +311,7 @@ class TestOTP(common.DescopeTest):
         # Test user is None so using the login_id as default
         with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
@@ -357,7 +358,7 @@ class TestOTP(common.DescopeTest):
 
         with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = False
+            my_mock_response.is_success = False
             my_mock_response.json = mock.Mock(return_value={})
             mock_post.return_value = my_mock_response
             with self.assertRaises(AuthException):
@@ -371,7 +372,7 @@ class TestOTP(common.DescopeTest):
         # Test success flow
         with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
@@ -390,8 +391,8 @@ class TestOTP(common.DescopeTest):
         # Validate refresh token used while provided
         with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
-            my_mock_response.json = {"maskedEmail": "t***@example.com"}
+            my_mock_response.is_success = True
+            my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
             mock_post.return_value = my_mock_response
             refresh_token = "dummy refresh token"
             await futu_await(
@@ -426,8 +427,8 @@ class TestOTP(common.DescopeTest):
         # With template options
         with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
-            my_mock_response.json = {"maskedEmail": "t***@example.com"}
+            my_mock_response.is_success = True
+            my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
             mock_post.return_value = my_mock_response
             refresh_token = "dummy refresh token"
             await futu_await(
@@ -473,7 +474,7 @@ class TestOTP(common.DescopeTest):
             await futu_await(client.otp.sign_up_or_in(DeliveryMethod.EMAIL, ""))
 
         with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     client.otp.sign_up_or_in(
@@ -485,7 +486,7 @@ class TestOTP(common.DescopeTest):
         # Test success flow
         with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
@@ -498,7 +499,7 @@ class TestOTP(common.DescopeTest):
         # Test success flow with sign up options
         with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
@@ -550,7 +551,7 @@ class TestOTP(common.DescopeTest):
             await futu_await(client.otp.verify_code(DeliveryMethod.EMAIL, None, code))
 
         with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     client.otp.verify_code(
@@ -564,7 +565,7 @@ class TestOTP(common.DescopeTest):
         valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3R6VWhkcXBJRjJ5czlnZzdtczA2VXZ0QzQiLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0Mzc1OTYsImlhdCI6MTY1OTYzNzU5NiwiaXNzIjoiUDJDdHpVaGRxcElGMnlzOWdnN21zMDZVdnRDNCIsInN1YiI6IlUyQ3UwajBXUHczWU9pUElTSmI1Mkwwd1VWTWcifQ.WLnlHugvzZtrV9OzBB7SjpCLNRvKF3ImFpVyIN5orkrjO2iyAKg_Rb4XHk9sXGC1aW8puYzLbhE1Jv3kk2hDcKggfE8OaRNRm8byhGFZHnvPJwcP_Ya-aRmfAvCLcKOL"
         with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {}
             mock_post.return_value = my_mock_response
             mock_post.return_value.cookies = {
@@ -605,7 +606,7 @@ class TestOTP(common.DescopeTest):
             )
 
         with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     client.otp.update_user_email(
@@ -618,7 +619,7 @@ class TestOTP(common.DescopeTest):
         # Test success flow
         with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
@@ -651,7 +652,7 @@ class TestOTP(common.DescopeTest):
         # Test success flow with template options
         with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
@@ -720,7 +721,7 @@ class TestOTP(common.DescopeTest):
             )
 
         with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     client.otp.update_user_phone(
@@ -734,7 +735,7 @@ class TestOTP(common.DescopeTest):
         # Test success flow
         with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedPhone": "*****111"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
@@ -766,7 +767,7 @@ class TestOTP(common.DescopeTest):
 
         with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedPhone": "*****111"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
@@ -798,7 +799,7 @@ class TestOTP(common.DescopeTest):
 
         with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedPhone": "*****111"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
@@ -831,7 +832,7 @@ class TestOTP(common.DescopeTest):
         # Test success flow with template options
         with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedPhone": "*****111"}
             mock_post.return_value = my_mock_response
             self.assertEqual(

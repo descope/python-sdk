@@ -20,6 +20,17 @@ def futu_apply(
         return modifier(result_or_coro)
 
 
+def futu_awaitable(result: T, as_awaitable: bool) -> Union[Any, Awaitable[Any]]:
+    if as_awaitable:
+
+        async def awaitable_wrapper():
+            return result
+
+        return awaitable_wrapper()
+
+    return result
+
+
 async def futu_await(obj: Union[Any, Awaitable[Any]]) -> Any:
     if asyncio.iscoroutine(obj) or asyncio.isfuture(obj):
         return await obj

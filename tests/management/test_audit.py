@@ -32,11 +32,12 @@ class TestAudit(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed search
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
                     client.mgmt.audit.search(
@@ -45,9 +46,9 @@ class TestAudit(common.DescopeTest):
                 )
 
         # Test success search
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = {
                 "audits": [
                     {
@@ -67,7 +68,7 @@ class TestAudit(common.DescopeTest):
                 ]
             }
             mock_post.return_value = network_resp
-            resp = client.mgmt.audit.search()
+            resp = await futu_await(client.mgmt.audit.search())
             audits = resp["audits"]
             self.assertEqual(len(audits), 2)
             self.assertEqual(audits[0]["loginIds"][0], "e1")
@@ -91,27 +92,30 @@ class TestAudit(common.DescopeTest):
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed search
-        with mock_http_call(self.async_mode, "post") as mock_post:
-            mock_post.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(client.mgmt.audit.create_event("a", "b", "c", "d"))
 
         # Test success search
-        with mock_http_call(self.async_mode, "post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = {}
             mock_post.return_value = network_resp
-            client.mgmt.audit.create_event(
-                action="pencil.created",
-                user_id="user-id",
-                actor_id="actor-id",
-                tenant_id="tenant-id",
-                type="info",
-                data={"some": "data"},
+            await futu_await(
+                client.mgmt.audit.create_event(
+                    action="pencil.created",
+                    user_id="user-id",
+                    actor_id="actor-id",
+                    tenant_id="tenant-id",
+                    type="info",
+                    data={"some": "data"},
+                )
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.audit_create_event}",
