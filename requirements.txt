@@ -199,9 +199,9 @@ cryptography==45.0.6; python_full_version >= "3.8.1" and python_version < "4.0" 
 dnspython==2.7.0; python_full_version >= "3.8.1" and python_version < "4.0" \
     --hash=sha256:b4c34b7d10b51bcc3a5071e7b8dee77939f1e878477eeecc965e9835f63c6c86 \
     --hash=sha256:ce9c432eda0dc91cf618a5cedf1a4e142651196bbcd2c80e89ed5a907e5cfaf1
-email-validator==2.2.0 ; python_full_version >= "3.8.1" and python_version < "4.0" \
-    --hash=sha256:561977c2d73ce3611850a06fa56b414621e0c8faa9d66f2611407d87465da631 \
-    --hash=sha256:cb690f344c617a714f22e66ae771445a1ceb46821152df8e165c5f9a364582b7
+email-validator==2.3.0; python_full_version >= "3.8.1" and python_version < "4.0" \
+    --hash=sha256:80f13f623413e6b197ae73bb10bf4eb0908faf509ad8362c5edeb0be7fd450b4 \
+    --hash=sha256:9fc05c37f2f6cf439ff414f8fc46d917929974a82244c20eb10231ba60c54426
 Flask==3.1.2; python_full_version >= "3.8.1" and python_version < "4.0" \
     --hash=sha256:bf656c15c80190ed628ad08cdfd3aaa35beb087855e2f494910aa3774cc4fd87 \
     --hash=sha256:ca1d8112ec8a6158cc29ea4858963350011b5c846a414cdb7a954aa9e967d03c
