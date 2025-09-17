@@ -31,6 +31,7 @@ class DescopeClient:
         timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
         jwt_validation_leeway: int = 5,
         auth_management_key: str | None = None,
+        fga_cache_url: str | None = None,
     ):
         auth = Auth(
             project_id,
@@ -40,6 +41,7 @@ class DescopeClient:
             timeout_seconds,
             jwt_validation_leeway,
             auth_management_key,
+            fga_cache_url,
         )
         self._auth = auth
         self._mgmt = MGMT(auth)

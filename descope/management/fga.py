@@ -40,9 +40,10 @@ class FGA(AuthBase):
         Raise:
         AuthException: raised if saving fails
         """
-        self._auth.do_post(
+        self._auth.do_post_with_custom_base_url(
             MgmtV1.fga_save_schema,
             {"dsl": schema},
+            custom_base_url=self._auth.fga_cache_url,
             pswd=self._auth.management_key,
         )
 
@@ -64,11 +65,12 @@ class FGA(AuthBase):
         Raise:
         AuthException: raised if create relations fails
         """
-        self._auth.do_post(
+        self._auth.do_post_with_custom_base_url(
             MgmtV1.fga_create_relations,
             {
                 "tuples": relations,
             },
+            custom_base_url=self._auth.fga_cache_url,
             pswd=self._auth.management_key,
         )
 
@@ -83,11 +85,12 @@ class FGA(AuthBase):
         Raise:
         AuthException: raised if delete relations fails
         """
-        self._auth.do_post(
+        self._auth.do_post_with_custom_base_url(
             MgmtV1.fga_delete_relations,
             {
                 "tuples": relations,
             },
+            custom_base_url=self._auth.fga_cache_url,
             pswd=self._auth.management_key,
         )
 
@@ -124,11 +127,12 @@ class FGA(AuthBase):
         Raise:
         AuthException: raised if query fails
         """
-        response = self._auth.do_post(
+        response = self._auth.do_post_with_custom_base_url(
             MgmtV1.fga_check,
             {
                 "tuples": relations,
             },
+            custom_base_url=self._auth.fga_cache_url,
             pswd=self._auth.management_key,
         )
         return list(

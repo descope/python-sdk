@@ -74,6 +74,7 @@ class Auth:
         timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
         jwt_validation_leeway: int = 5,
         auth_management_key: str | None = None,
+        fga_cache_url: str | None = None,
     ):
         self.lock_public_keys = Lock()
         # validate project id
@@ -99,6 +100,7 @@ class Auth:
         self.auth_management_key = auth_management_key or os.getenv(
             "DESCOPE_AUTH_MANAGEMENT_KEY"
         )
+        self.fga_cache_url = fga_cache_url
 
         public_key = public_key or os.getenv("DESCOPE_PUBLIC_KEY")
         with self.lock_public_keys:
@@ -203,6 +205,31 @@ class Auth:
             headers=self._get_default_headers(pswd),
             allow_redirects=False,
             verify=self.secure,
+            timeout=self.timeout_seconds,
+        )
+        self._raise_from_response(response)
+        return response
+
+    def do_post_with_custom_base_url(
+        self,
+        uri: str,
+        body: dict | list[dict] | list[str] | None,
+        custom_base_url: str | None = None,
+        params=None,
+        pswd: str | None = None,
+    ) -> requests.Response:
+        """
+        Post request with optional custom base URL.
+        If base_url is provided, use it instead of self.base_url.
+        """
+        effective_base_url = custom_base_url if custom_base_url else self.base_url
+        response = requests.post(
+            f"{effective_base_url}{uri}",
+            headers=self._get_default_headers(pswd),
+            json=body,
+            allow_redirects=False,
+            verify=self.secure,
+            params=params,
             timeout=self.timeout_seconds,
         )
         self._raise_from_response(response)
@@ -637,13 +664,13 @@ class Auth:
                 audience=audience,
                 leeway=self.jwt_validation_leeway,
             )
-        except (ImmatureSignatureError):
+        except ImmatureSignatureError:
             raise AuthException(
                 400,
                 ERROR_TYPE_INVALID_TOKEN,
                 "Received Invalid token (nbf in future) during jwt validation. Error can be due to time glitch (between machines), try to set the jwt_validation_leeway parameter (in DescopeClient) to higher value than 5sec which is the default",
             )
-        except (ExpiredSignatureError):
+        except ExpiredSignatureError:
             raise AuthException(
                 401,
                 ERROR_TYPE_INVALID_TOKEN,
