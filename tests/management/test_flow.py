@@ -2,9 +2,10 @@ from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
 from descope.common import DEFAULT_TIMEOUT_SECONDS
+from descope.future_utils import futu_await
 from descope.management.common import MgmtV1
 
-from tests.testutils import SSLMatcher
+from tests.testutils import SSLMatcher, mock_http_call
 from .. import common
 
 
@@ -23,26 +24,25 @@ class TestFlow(common.DescopeTest):
             "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
         }
 
-    def test_list_flows(self):
+    async def test_list_flows(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.flow.list_flows,
-            )
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.flow.list_flows())
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNotNone(client.mgmt.flow.list_flows())
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            self.assertIsNotNone(await futu_await(client.mgmt.flow.list_flows()))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.flow_list_path}",
                 headers={
@@ -57,27 +57,31 @@ class TestFlow(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_delete_flows(self):
+    async def test_delete_flows(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed delete flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.flow.delete_flows,
-                ["flow-1", "flow-2"],
-            )
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.flow.delete_flows(
+                        ["flow-1", "flow-2"],
+                    )
+                )
 
         # Test success delete flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNotNone(client.mgmt.flow.delete_flows(["flow-1", "flow-2"]))
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            self.assertIsNotNone(
+                await futu_await(client.mgmt.flow.delete_flows(["flow-1", "flow-2"]))
+            )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.flow_delete_path}",
                 headers={
@@ -92,27 +96,29 @@ class TestFlow(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_export_flow(self):
+    async def test_export_flow(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.flow.export_flow,
-                "name",
-            )
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.flow.export_flow(
+                        "name",
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNotNone(client.mgmt.flow.export_flow("test"))
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            self.assertIsNotNone(await futu_await(client.mgmt.flow.export_flow("test")))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.flow_export_path}",
                 headers={
@@ -129,30 +135,36 @@ class TestFlow(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_import_flow(self):
+    async def test_import_flow(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.flow.import_flow,
-                "name",
-                {"name": "test"},
-                [{"id": "test"}],
-            )
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.flow.import_flow(
+                        "name",
+                        {"name": "test"},
+                        [{"id": "test"}],
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNotNone(
-                client.mgmt.flow.import_flow("name", {"name": "test"}, [{"id": "test"}])
+                await futu_await(
+                    client.mgmt.flow.import_flow(
+                        "name", {"name": "test"}, [{"id": "test"}]
+                    )
+                )
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.flow_import_path}",
@@ -172,23 +184,25 @@ class TestFlow(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_export_theme(self):
+    async def test_export_theme(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(AuthException, client.mgmt.flow.export_theme)
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.flow.export_theme())
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNotNone(client.mgmt.flow.export_theme())
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            self.assertIsNotNone(await futu_await(client.mgmt.flow.export_theme()))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.theme_export_path}",
                 headers={
@@ -203,25 +217,27 @@ class TestFlow(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_import_theme(self):
+    async def test_import_theme(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException, client.mgmt.flow.import_theme, {"id": "test"}
-            )
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.flow.import_theme({"id": "test"}))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNotNone(client.mgmt.flow.import_theme({"id": "test"}))
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            self.assertIsNotNone(
+                await futu_await(client.mgmt.flow.import_theme({"id": "test"}))
+            )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.theme_import_path}",
                 headers={

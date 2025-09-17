@@ -1,11 +1,12 @@
-from typing import List
+from typing import Awaitable, List, Union
 
 from descope._auth_base import AuthBase
+from descope.future_utils import futu_apply
 from descope.management.common import MgmtV1
 
 
 class FGA(AuthBase):
-    def save_schema(self, schema: str):
+    def save_schema(self, schema: str) -> Union[None, Awaitable[None]]:
         """
         Create or update an FGA schema.
         Args:
@@ -40,16 +41,17 @@ class FGA(AuthBase):
         Raise:
         AuthException: raised if saving fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.fga_save_schema,
             {"dsl": schema},
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     def create_relations(
         self,
         relations: List[dict],
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Create the given relations based on the existing schema
         Args:
@@ -64,18 +66,19 @@ class FGA(AuthBase):
         Raise:
         AuthException: raised if create relations fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.fga_create_relations,
             {
                 "tuples": relations,
             },
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     def delete_relations(
         self,
         relations: List[dict],
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Delete the given relations based on the existing schema
         Args:
@@ -83,18 +86,19 @@ class FGA(AuthBase):
         Raise:
         AuthException: raised if delete relations fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.fga_delete_relations,
             {
                 "tuples": relations,
             },
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     def check(
         self,
         relations: List[dict],
-    ) -> List[dict]:
+    ) -> Union[List[dict], Awaitable[List[dict]]]:
         """
         Queries the given relations to see if they exist returning true if they do
         Args:
@@ -131,14 +135,22 @@ class FGA(AuthBase):
             },
             pswd=self._auth.management_key,
         )
-        return list(
-            map(
-                lambda tuple: {"relation": tuple["tuple"], "allowed": tuple["allowed"]},
-                response.json()["tuples"],
-            )
+        return futu_apply(
+            response,
+            lambda response: list(
+                map(
+                    lambda tuple: {
+                        "relation": tuple["tuple"],
+                        "allowed": tuple["allowed"],
+                    },
+                    response.json()["tuples"],
+                )
+            ),
         )
 
-    def load_resources_details(self, resource_identifiers: List[dict]) -> List[dict]:
+    def load_resources_details(
+        self, resource_identifiers: List[dict]
+    ) -> Union[List[dict], Awaitable[List[dict]]]:
         """
         Load details for the given resource identifiers.
         Args:
@@ -151,16 +163,21 @@ class FGA(AuthBase):
             {"resourceIdentifiers": resource_identifiers},
             pswd=self._auth.management_key,
         )
-        return response.json().get("resourcesDetails", [])
+        return futu_apply(
+            response, lambda response: response.json().get("resourcesDetails", [])
+        )
 
-    def save_resources_details(self, resources_details: List[dict]) -> None:
+    def save_resources_details(
+        self, resources_details: List[dict]
+    ) -> Union[None, Awaitable[None]]:
         """
         Save details for the given resources.
         Args:
             resources_details (List[dict]): list of dicts each containing 'resourceId' and 'resourceType' plus optionally containing metadata fields such as 'displayName'.
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.fga_resources_save,
             {"resourcesDetails": resources_details},
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)

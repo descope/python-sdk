@@ -1,6 +1,7 @@
-from typing import Any, List, Optional
+from typing import Any, Awaitable, List, Optional, Union
 
 from descope._auth_base import AuthBase
+from descope.future_utils import futu_apply
 from descope.management.common import MgmtV1
 
 
@@ -13,7 +14,7 @@ class Tenant(AuthBase):
         custom_attributes: Optional[dict] = None,
         enforce_sso: Optional[bool] = False,
         disabled: Optional[bool] = False,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Create a new tenant with the given name. Tenant IDs are provisioned automatically, but can be provided
         explicitly if needed. Both the name and ID must be unique per project.
@@ -51,7 +52,7 @@ class Tenant(AuthBase):
             ),
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def update(
         self,
@@ -61,7 +62,7 @@ class Tenant(AuthBase):
         custom_attributes: Optional[dict] = None,
         enforce_sso: Optional[bool] = False,
         disabled: Optional[bool] = False,
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Update an existing tenant with the given name and domains. IMPORTANT: All parameters are used as overrides
         to the existing tenant. Empty fields will override populated fields. Use carefully.
@@ -83,7 +84,7 @@ class Tenant(AuthBase):
         )
 
         uri = MgmtV1.tenant_update_path
-        self._auth.do_post(
+        response = self._auth.do_post(
             uri,
             Tenant._compose_create_update_body(
                 name,
@@ -95,12 +96,13 @@ class Tenant(AuthBase):
             ),
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     def delete(
         self,
         id: str,
         cascade: bool = False,
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Delete an existing tenant. IMPORTANT: This action is irreversible. Use carefully.
 
@@ -111,14 +113,15 @@ class Tenant(AuthBase):
         AuthException: raised if creation operation fails
         """
         uri = MgmtV1.tenant_delete_path
-        self._auth.do_post(
+        response = self._auth.do_post(
             uri, {"id": id, "cascade": cascade}, pswd=self._auth.management_key
         )
+        return futu_apply(response, lambda response: None)
 
     def load(
         self,
         id: str,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Load tenant by id.
 
@@ -138,11 +141,11 @@ class Tenant(AuthBase):
             params={"id": id},
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def load_all(
         self,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Load all tenants.
 
@@ -158,7 +161,7 @@ class Tenant(AuthBase):
             uri=MgmtV1.tenant_load_all_path,
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def search_all(
         self,
@@ -166,7 +169,7 @@ class Tenant(AuthBase):
         names: Optional[List[str]] = None,
         self_provisioning_domains: Optional[List[str]] = None,
         custom_attributes: Optional[dict] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Search all tenants.
 
@@ -194,7 +197,7 @@ class Tenant(AuthBase):
             },
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     @staticmethod
     def _compose_create_update_body(

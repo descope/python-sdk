@@ -4,9 +4,10 @@ from unittest.mock import patch
 
 from descope import AssociatedTenant, AuthException, DescopeClient
 from descope.common import DEFAULT_TIMEOUT_SECONDS
+from descope.future_utils import futu_await
 from descope.management.common import MgmtV1
 
-from tests.testutils import SSLMatcher
+from tests.testutils import SSLMatcher, mock_http_call
 from .. import common
 
 
@@ -25,42 +26,46 @@ class TestAccessKey(common.DescopeTest):
             "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
         }
 
-    def test_create(self):
+    async def test_create(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.access_key.create,
-                "key-name",
-            )
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.access_key.create(
+                        "key-name",
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """{"key": {"id": "ak1"}, "cleartext": "abc"}"""
             )
             mock_post.return_value = network_resp
-            resp = client.mgmt.access_key.create(
-                name="key-name",
-                expire_time=123456789,
-                key_tenants=[
-                    AssociatedTenant("tenant1"),
-                    AssociatedTenant("tenant2", ["role1", "role2"]),
-                ],
-                user_id="userid",
-                custom_claims={"k1": "v1"},
-                description="this is my access key",
-                permitted_ips=["10.0.0.1", "192.168.1.0/24"],
+            resp = await futu_await(
+                client.mgmt.access_key.create(
+                    name="key-name",
+                    expire_time=123456789,
+                    key_tenants=[
+                        AssociatedTenant("tenant1"),
+                        AssociatedTenant("tenant2", ["role1", "role2"]),
+                    ],
+                    user_id="userid",
+                    custom_claims={"k1": "v1"},
+                    description="this is my access key",
+                    permitted_ips=["10.0.0.1", "192.168.1.0/24"],
+                )
             )
             access_key = resp["key"]
             self.assertEqual(access_key["id"], "ak1")
@@ -90,30 +95,32 @@ class TestAccessKey(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_load(self):
+    async def test_load(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with patch("httpx.get") as mock_get:
-            mock_get.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.access_key.load,
-                "key-id",
-            )
+        with mock_http_call(self.async_test, "get") as mock_get:
+            mock_get.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.access_key.load(
+                        "key-id",
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.get") as mock_get:
+        with mock_http_call(self.async_test, "get") as mock_get:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"key": {"id": "ak1"}}""")
             mock_get.return_value = network_resp
-            resp = client.mgmt.access_key.load("key-id")
+            resp = await futu_await(client.mgmt.access_key.load("key-id"))
             access_key = resp["key"]
             self.assertEqual(access_key["id"], "ak1")
             mock_get.assert_called_with(
@@ -129,32 +136,36 @@ class TestAccessKey(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_search_all_users(self):
+    async def test_search_all_users(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.access_key.search_all_access_keys,
-                ["t1, t2"],
-            )
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.access_key.search_all_access_keys(
+                        ["t1, t2"],
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """{"keys": [{"id": "ak1"}, {"id": "ak2"}]}"""
             )
             mock_post.return_value = network_resp
-            resp = client.mgmt.access_key.search_all_access_keys(["t1, t2"])
+            resp = await futu_await(
+                client.mgmt.access_key.search_all_access_keys(["t1, t2"])
+            )
             keys = resp["keys"]
             self.assertEqual(len(keys), 2)
             self.assertEqual(keys[0]["id"], "ak1")
@@ -175,30 +186,34 @@ class TestAccessKey(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_update(self):
+    async def test_update(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.access_key.update,
-                "key-id",
-                "new-name",
-            )
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.access_key.update(
+                        "key-id",
+                        "new-name",
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNone(
-                client.mgmt.access_key.update(
-                    "key-id", name="new-name", description=None
+                await futu_await(
+                    client.mgmt.access_key.update(
+                        "key-id", name="new-name", description=None
+                    )
                 )
             )
             mock_post.assert_called_with(
@@ -219,27 +234,31 @@ class TestAccessKey(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_deactivate(self):
+    async def test_deactivate(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.access_key.deactivate,
-                "key-id",
-            )
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.access_key.deactivate(
+                        "key-id",
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(client.mgmt.access_key.deactivate("ak1"))
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            self.assertIsNone(
+                await futu_await(client.mgmt.access_key.deactivate("ak1"))
+            )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.access_key_deactivate_path}",
                 headers={
@@ -256,27 +275,29 @@ class TestAccessKey(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_activate(self):
+    async def test_activate(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.access_key.activate,
-                "key-id",
-            )
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.access_key.activate(
+                        "key-id",
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(client.mgmt.access_key.activate("ak1"))
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            self.assertIsNone(await futu_await(client.mgmt.access_key.activate("ak1")))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.access_key_activate_path}",
                 headers={
@@ -293,27 +314,29 @@ class TestAccessKey(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_delete(self):
+    async def test_delete(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.access_key.delete,
-                "key-id",
-            )
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.access_key.delete(
+                        "key-id",
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertIsNone(client.mgmt.access_key.delete("ak1"))
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            self.assertIsNone(await futu_await(client.mgmt.access_key.delete("ak1")))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.access_key_delete_path}",
                 headers={

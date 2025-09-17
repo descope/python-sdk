@@ -4,9 +4,10 @@ from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
 from descope.common import DEFAULT_TIMEOUT_SECONDS
+from descope.future_utils import futu_await
 from descope.management.common import MgmtV1
 
-from tests.testutils import SSLMatcher
+from tests.testutils import SSLMatcher, mock_http_call
 from .. import common
 
 
@@ -25,27 +26,29 @@ class TestAudit(common.DescopeTest):
             "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
         }
 
-    def test_search(self):
+    async def test_search(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed search
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.audit.search,
-                "data",
-            )
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.audit.search(
+                        "data",
+                    )
+                )
 
         # Test success search
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = {
                 "audits": [
                     {
@@ -65,7 +68,7 @@ class TestAudit(common.DescopeTest):
                 ]
             }
             mock_post.return_value = network_resp
-            resp = client.mgmt.audit.search()
+            resp = await futu_await(client.mgmt.audit.search())
             audits = resp["audits"]
             self.assertEqual(len(audits), 2)
             self.assertEqual(audits[0]["loginIds"][0], "e1")
@@ -83,34 +86,36 @@ class TestAudit(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_create_event(self):
+    async def test_create_event(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed search
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException, client.mgmt.audit.create_event, "a", "b", "c", "d"
-            )
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.audit.create_event("a", "b", "c", "d"))
 
         # Test success search
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = {}
             mock_post.return_value = network_resp
-            client.mgmt.audit.create_event(
-                action="pencil.created",
-                user_id="user-id",
-                actor_id="actor-id",
-                tenant_id="tenant-id",
-                type="info",
-                data={"some": "data"},
+            await futu_await(
+                client.mgmt.audit.create_event(
+                    action="pencil.created",
+                    user_id="user-id",
+                    actor_id="actor-id",
+                    tenant_id="tenant-id",
+                    type="info",
+                    data={"some": "data"},
+                )
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.audit_create_event}",

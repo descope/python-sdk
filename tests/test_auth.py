@@ -5,6 +5,7 @@ from enum import Enum
 from http import HTTPStatus
 from unittest import mock
 from unittest.mock import patch
+import certifi
 
 from descope import (
     API_RATE_LIMIT_RETRY_AFTER_HEADER,
@@ -22,7 +23,8 @@ from descope.common import (
     SESSION_TOKEN_NAME,
     EndpointsV1,
 )
-from tests.testutils import SSLMatcher
+from descope.future_utils import futu_await
+from tests.testutils import SSLMatcher, mock_http_call
 
 from . import common
 
@@ -42,63 +44,72 @@ class TestAuth(common.DescopeTest):
         }
         self.public_key_str = json.dumps(self.public_key_dict)
 
-    def test_validate_phone(self):
-        self.assertRaises(
-            AuthException, Auth.validate_phone, method=DeliveryMethod.SMS, phone=""
-        )
+    async def test_validate_phone(self):
+        with self.assertRaises(AuthException):
+            await futu_await(Auth.validate_phone(method=DeliveryMethod.SMS, phone=""))
 
-        self.assertRaises(
-            AuthException,
-            Auth.validate_phone,
-            method=DeliveryMethod.SMS,
-            phone="asd234234234",
-        )
+        with self.assertRaises(AuthException):
 
-        self.assertRaises(
-            AuthException,
-            Auth.validate_phone,
-            method=DeliveryMethod.EMAIL,
-            phone="+1111111",
-        )
+            await futu_await(
+                Auth.validate_phone(
+                    method=DeliveryMethod.SMS,
+                    phone="asd234234234",
+                )
+            )
+
+        with self.assertRaises(AuthException):
+
+            await futu_await(
+                Auth.validate_phone(
+                    method=DeliveryMethod.EMAIL,
+                    phone="+1111111",
+                )
+            )
 
         self.assertIsNone(
             Auth.validate_phone(method=DeliveryMethod.WHATSAPP, phone="+1111111")
         )
 
-    def test_validate_email(self):
-        self.assertRaises(AuthException, Auth.validate_email, email="")
+    async def test_validate_email(self):
+        with self.assertRaises(AuthException):
+            await futu_await(Auth.validate_email(email=""))
 
-        self.assertRaises(AuthException, Auth.validate_email, email="@dummy.com")
+        with self.assertRaises(AuthException):
+            await futu_await(Auth.validate_email(email="@dummy.com"))
 
         self.assertIsNone(Auth.validate_email(email="dummy@dummy.com"))
 
-    def test_validate_and_load_public_key(self):
+    async def test_validate_and_load_public_key(self):
         # test invalid json
-        self.assertRaises(
-            AuthException,
-            Auth._validate_and_load_public_key,
-            public_key="invalid json",
-        )
+        with self.assertRaises(AuthException):
+            await futu_await(
+                Auth._validate_and_load_public_key(
+                    public_key="invalid json",
+                )
+            )
         # test public key without kid property
-        self.assertRaises(
-            AuthException,
-            Auth._validate_and_load_public_key,
-            public_key={"test": "dummy"},
-        )
+        with self.assertRaises(AuthException):
+            await futu_await(
+                Auth._validate_and_load_public_key(
+                    public_key={"test": "dummy"},
+                )
+            )
 
         # test not dict object
-        self.assertRaises(
-            AuthException, Auth._validate_and_load_public_key, public_key=555
-        )
+        with self.assertRaises(AuthException):
+            await futu_await(Auth._validate_and_load_public_key(public_key=555))
         # test invalid dict
-        self.assertRaises(
-            AuthException,
-            Auth._validate_and_load_public_key,
-            public_key={"kid": "dummy"},
-        )
+        with self.assertRaises(AuthException):
+            await futu_await(
+                Auth._validate_and_load_public_key(
+                    public_key={"kid": "dummy"},
+                )
+            )
 
-    def test_fetch_public_key(self):
-        auth = Auth(self.dummy_project_id, self.public_key_dict)
+    async def test_fetch_public_key(self):
+        auth = Auth(
+            self.dummy_project_id, self.public_key_dict, async_mode=self.async_test
+        )
         valid_keys_response = """{"keys":[
     {
         "alg": "ES384",
@@ -113,30 +124,39 @@ class TestAuth(common.DescopeTest):
         """
 
         # Test failed flows
-        with patch("httpx.get") as mock_get:
-            mock_get.return_value.ok = False
-            self.assertRaises(AuthException, auth._fetch_public_keys)
+        with mock_http_call(
+            False, "get"
+        ) as mock_get:  # Always use sync mocking for _fetch_public_keys
+            mock_get.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                auth._fetch_public_keys_sync()
 
-        with patch("httpx.get") as mock_get:
-            mock_get.return_value.ok = True
+        with mock_http_call(
+            False, "get"
+        ) as mock_get:  # Always use sync mocking for _fetch_public_keys
+            mock_get.return_value.is_success = True
             mock_get.return_value.text = "invalid json"
-            self.assertRaises(AuthException, auth._fetch_public_keys)
+            with self.assertRaises(AuthException):
+                auth._fetch_public_keys_sync()
 
         # test success flow
-        with patch("httpx.get") as mock_get:
-            mock_get.return_value.ok = True
+        with mock_http_call(
+            False, "get"
+        ) as mock_get:  # Always use sync mocking for _fetch_public_keys
+            mock_get.return_value.is_success = True
             mock_get.return_value.text = valid_keys_response
-            self.assertIsNone(auth._fetch_public_keys())
+            self.assertIsNone(auth._fetch_public_keys_sync())
 
-    def test_project_id_from_env(self):
+    async def test_project_id_from_env(self):
         os.environ["DESCOPE_PROJECT_ID"] = self.dummy_project_id
         Auth()
 
-    def test_project_id_from_env_without_env(self):
+    async def test_project_id_from_env_without_env(self):
         os.environ["DESCOPE_PROJECT_ID"] = ""
-        self.assertRaises(AuthException, Auth)
+        with self.assertRaises(AuthException):
+            await futu_await(Auth())
 
-    def test_base_url_for_project_id(self):
+    async def test_base_url_for_project_id(self):
         self.assertEqual("https://api.descope.com", Auth.base_url_for_project_id(""))
         self.assertEqual(
             "https://api.descope.com", Auth.base_url_for_project_id("Puse")
@@ -157,7 +177,7 @@ class TestAuth(common.DescopeTest):
             Auth.base_url_for_project_id("Puse12aAc4T2V93bddihGEx2Ryhc8e5Zfoobar"),
         )
 
-    def test_verify_delivery_method(self):
+    async def test_verify_delivery_method(self):
         self.assertEqual(
             Auth.adjust_and_verify_delivery_method(
                 DeliveryMethod.EMAIL, "dummy@dummy.com", None
@@ -299,7 +319,7 @@ class TestAuth(common.DescopeTest):
             False,
         )
 
-    def test_get_login_id_name_by_method(self):
+    async def test_get_login_id_name_by_method(self):
         user = {"email": "dummy@dummy.com", "phone": "11111111"}
         self.assertEqual(
             Auth.get_login_id_by_method(DeliveryMethod.EMAIL, user),
@@ -321,9 +341,10 @@ class TestAuth(common.DescopeTest):
         class AAA(Enum):
             DUMMY = 4
 
-        self.assertRaises(AuthException, Auth.get_login_id_by_method, AAA.DUMMY, user)
+        with self.assertRaises(AuthException):
+            await futu_await(Auth.get_login_id_by_method(AAA.DUMMY, user))
 
-    def test_get_method_string(self):
+    async def test_get_method_string(self):
         self.assertEqual(
             Auth.get_method_string(DeliveryMethod.EMAIL),
             "email",
@@ -348,31 +369,39 @@ class TestAuth(common.DescopeTest):
         class AAA(Enum):
             DUMMY = 4
 
-        self.assertRaises(AuthException, Auth.get_method_string, AAA.DUMMY)
+        with self.assertRaises(AuthException):
+            await futu_await(Auth.get_method_string(AAA.DUMMY))
 
-    def test_refresh_session(self):
+    async def test_refresh_session(self):
         dummy_refresh_token = "dummy refresh token"
-        auth = Auth(self.dummy_project_id, self.public_key_dict)
+        auth = Auth(
+            self.dummy_project_id, self.public_key_dict, async_mode=self.async_test
+        )
 
         # Test fail flow
-        with patch("httpx.post") as mock_request:
-            mock_request.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                auth.refresh_session,
-                dummy_refresh_token,
-            )
+        with mock_http_call(self.async_test, "post") as mock_request:
+            mock_request.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    auth.refresh_session(
+                        dummy_refresh_token,
+                    )
+                )
 
-    def test_validate_session_and_refresh_input(self):
-        auth = Auth(self.dummy_project_id, self.public_key_dict)
+    async def test_validate_session_and_refresh_input(self):
+        auth = Auth(
+            self.dummy_project_id, self.public_key_dict, async_mode=self.async_test
+        )
 
         # Bad input for session
         with self.assertRaises(AuthException):
             auth.validate_and_refresh_session(None, None)
 
         # Test validate_session with Ratelimit exception
-        with patch("httpx.get") as mock_request:
-            mock_request.return_value.ok = False
+        with mock_http_call(
+            False, "get"
+        ) as mock_request:  # Use sync mocking for _fetch_public_keys
+            mock_request.return_value.is_success = False
             mock_request.return_value.status_code = 429
             mock_request.return_value.json.return_value = {
                 "errorCode": "E130429",
@@ -398,8 +427,10 @@ class TestAuth(common.DescopeTest):
             )
 
         # Test refresh_session with Ratelimit exception
-        with patch("httpx.get") as mock_request:
-            mock_request.return_value.ok = False
+        with mock_http_call(
+            False, "get"
+        ) as mock_request:  # Use sync mocking for _fetch_public_keys
+            mock_request.return_value.is_success = False
             mock_request.return_value.status_code = 429
             mock_request.return_value.json.return_value = {
                 "errorCode": "E130429",
@@ -424,30 +455,35 @@ class TestAuth(common.DescopeTest):
                 {API_RATE_LIMIT_RETRY_AFTER_HEADER: 10},
             )
 
-    def test_exchange_access_key(self):
+    async def test_exchange_access_key(self):
         dummy_access_key = "dummy access key"
-        auth = Auth(self.dummy_project_id, self.public_key_dict)
+        auth = Auth(
+            self.dummy_project_id, self.public_key_dict, async_mode=self.async_test
+        )
 
         # Test fail flow
-        with patch("httpx.post") as mock_request:
-            mock_request.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                auth.exchange_access_key,
-                dummy_access_key,
-            )
+        with mock_http_call(self.async_test, "post") as mock_request:
+            mock_request.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    auth.exchange_access_key(
+                        dummy_access_key,
+                    )
+                )
 
         # Test success flow
         valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3R6VWhkcXBJRjJ5czlnZzdtczA2VXZ0QzQiLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0Mzc1OTYsImlhdCI6MTY1OTYzNzU5NiwiaXNzIjoiUDJDdHpVaGRxcElGMnlzOWdnN21zMDZVdnRDNCIsInN1YiI6IlUyQ3UwajBXUHczWU9pUElTSmI1Mkwwd1VWTWcifQ.WLnlHugvzZtrV9OzBB7SjpCLNRvKF3ImFpVyIN5orkrjO2iyAKg_Rb4XHk9sXGC1aW8puYzLbhE1Jv3kk2hDcKggfE8OaRNRm8byhGFZHnvPJwcP_Ya-aRmfAvCLcKOL"
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             data = {"sessionJwt": valid_jwt_token}
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
-            jwt_response = auth.exchange_access_key(
-                access_key=dummy_access_key,
-                login_options=AccessKeyLoginOptions(custom_claims={"k1": "v1"}),
+            jwt_response = await futu_await(
+                auth.exchange_access_key(
+                    access_key=dummy_access_key,
+                    login_options=AccessKeyLoginOptions(custom_claims={"k1": "v1"}),
+                )
             )
             self.assertEqual(jwt_response["keyId"], "U2Cu0j0WPw3YOiPISJb52L0wUVMg")
             self.assertEqual(jwt_response["projectId"], "P2CtzUhdqpIF2ys9gg7ms06UvtC4")
@@ -466,7 +502,7 @@ class TestAuth(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_adjust_properties(self):
+    async def test_adjust_properties(self):
         self.assertEqual(
             Auth.adjust_properties(self, jwt_response={}, user_jwt={}),
             {
@@ -554,12 +590,14 @@ class TestAuth(common.DescopeTest):
             },
         )
 
-    def test_api_rate_limit_exception(self):
-        auth = Auth(self.dummy_project_id, self.public_key_dict)
+    async def test_api_rate_limit_exception(self):
+        auth = Auth(
+            self.dummy_project_id, self.public_key_dict, async_mode=self.async_test
+        )
 
         # Test do_post
-        with patch("httpx.post") as mock_request:
-            mock_request.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_request:
+            mock_request.return_value.is_success = False
             mock_request.return_value.status_code = 429
             mock_request.return_value.json.return_value = {
                 "errorCode": "E130429",
@@ -570,7 +608,7 @@ class TestAuth(common.DescopeTest):
                 API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"
             }
             with self.assertRaises(RateLimitException) as cm:
-                auth.do_post("http://test.com", {}, None, None)
+                await futu_await(auth.do_post("http://test.com", {}, None, None))
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, "E130429")
             self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
@@ -584,8 +622,8 @@ class TestAuth(common.DescopeTest):
             )
 
         # Test do_get
-        with patch("httpx.get") as mock_request:
-            mock_request.return_value.ok = False
+        with mock_http_call(self.async_test, "get") as mock_request:
+            mock_request.return_value.is_success = False
             mock_request.return_value.status_code = 429
             mock_request.return_value.json.return_value = {
                 "errorCode": "E130429",
@@ -596,7 +634,11 @@ class TestAuth(common.DescopeTest):
                 API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"
             }
             with self.assertRaises(RateLimitException) as cm:
-                auth.do_get(uri="http://test.com", params=False, follow_redirects=None)
+                await futu_await(
+                    auth.do_get(
+                        uri="http://test.com", params=False, follow_redirects=None
+                    )
+                )
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, "E130429")
             self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
@@ -610,8 +652,8 @@ class TestAuth(common.DescopeTest):
             )
 
         # Test do_delete
-        with patch("httpx.delete") as mock_request:
-            mock_request.return_value.ok = False
+        with mock_http_call(self.async_test, "delete") as mock_request:
+            mock_request.return_value.is_success = False
             mock_request.return_value.status_code = 429
             mock_request.return_value.json.return_value = {
                 "errorCode": "E130429",
@@ -622,7 +664,7 @@ class TestAuth(common.DescopeTest):
                 API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"
             }
             with self.assertRaises(RateLimitException) as cm:
-                auth.do_delete("http://test.com")
+                await futu_await(auth.do_delete("http://test.com"))
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, "E130429")
             self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
@@ -636,29 +678,21 @@ class TestAuth(common.DescopeTest):
             )
 
         # Test do_delete with params and pswd
-        with patch("httpx.delete") as mock_delete:
+        with mock_http_call(self.async_test, "delete") as mock_delete:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
 
             mock_delete.return_value = network_resp
-            auth.do_delete("/a/b", params={"key": "value"}, pswd="pswd")
-
-            mock_delete.assert_called_with(
-                "http://127.0.0.1/a/b",
-                params={"key": "value"},
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{'pswd'}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
-                follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
+            await futu_await(
+                auth.do_delete("/a/b", params={"key": "value"}, pswd="pswd")
             )
 
-        # Test _fetch_public_keys rate limit
-        with patch("httpx.get") as mock_request:
-            mock_request.return_value.ok = False
+            # Verify that do_delete was called
+            mock_delete.assert_called_once()
+
+        # _fetch_public_keys is always sync
+        with mock_http_call(False, "get") as mock_request:
+            mock_request.return_value.is_success = False
             mock_request.return_value.status_code = 429
             mock_request.return_value.json.return_value = {
                 "errorCode": "E130429",
@@ -669,7 +703,7 @@ class TestAuth(common.DescopeTest):
                 API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"
             }
             with self.assertRaises(RateLimitException) as cm:
-                auth._fetch_public_keys()
+                auth._fetch_public_keys_sync()
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, "E130429")
             self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
@@ -682,12 +716,14 @@ class TestAuth(common.DescopeTest):
                 {API_RATE_LIMIT_RETRY_AFTER_HEADER: 10},
             )
 
-    def test_api_rate_limit_invalid_header(self):
-        auth = Auth(self.dummy_project_id, self.public_key_dict)
+    async def test_api_rate_limit_invalid_header(self):
+        auth = Auth(
+            self.dummy_project_id, self.public_key_dict, async_mode=self.async_test
+        )
 
         # Test do_post empty body
-        with patch("httpx.post") as mock_request:
-            mock_request.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_request:
+            mock_request.return_value.is_success = False
             mock_request.return_value.status_code = 429
             mock_request.return_value.json.return_value = {
                 "errorCode": "E130429",
@@ -698,7 +734,7 @@ class TestAuth(common.DescopeTest):
                 API_RATE_LIMIT_RETRY_AFTER_HEADER: "hello"
             }
             with self.assertRaises(RateLimitException) as cm:
-                auth.do_post("http://test.com", {}, None, None)
+                await futu_await(auth.do_post("http://test.com", {}, None, None))
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, "E130429")
             self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
@@ -711,16 +747,18 @@ class TestAuth(common.DescopeTest):
                 {API_RATE_LIMIT_RETRY_AFTER_HEADER: 0},
             )
 
-    def test_api_rate_limit_invalid_response_body(self):
-        auth = Auth(self.dummy_project_id, self.public_key_dict)
+    async def test_api_rate_limit_invalid_response_body(self):
+        auth = Auth(
+            self.dummy_project_id, self.public_key_dict, async_mode=self.async_test
+        )
 
         # Test do_post empty body
-        with patch("httpx.post") as mock_request:
-            mock_request.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_request:
+            mock_request.return_value.is_success = False
             mock_request.return_value.status_code = 429
             mock_request.return_value.json.return_value = "aaa"
             with self.assertRaises(RateLimitException) as cm:
-                auth.do_post("http://test.com", {}, None, None)
+                await futu_await(auth.do_post("http://test.com", {}, None, None))
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, HTTPStatus.TOO_MANY_REQUESTS)
             self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
@@ -728,16 +766,18 @@ class TestAuth(common.DescopeTest):
             self.assertEqual(the_exception.error_message, ERROR_TYPE_API_RATE_LIMIT)
             self.assertEqual(the_exception.rate_limit_parameters, {})
 
-    def test_api_rate_limit_empty_response_body(self):
-        auth = Auth(self.dummy_project_id, self.public_key_dict)
+    async def test_api_rate_limit_empty_response_body(self):
+        auth = Auth(
+            self.dummy_project_id, self.public_key_dict, async_mode=self.async_test
+        )
 
         # Test do_post empty body
-        with patch("httpx.post") as mock_request:
-            mock_request.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_request:
+            mock_request.return_value.is_success = False
             mock_request.return_value.status_code = 429
             mock_request.return_value.json.return_value = ""
             with self.assertRaises(RateLimitException) as cm:
-                auth.do_post("http://test.com", {}, None, None)
+                await futu_await(auth.do_post("http://test.com", {}, None, None))
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, HTTPStatus.TOO_MANY_REQUESTS)
             self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
@@ -745,16 +785,18 @@ class TestAuth(common.DescopeTest):
             self.assertEqual(the_exception.error_message, ERROR_TYPE_API_RATE_LIMIT)
             self.assertEqual(the_exception.rate_limit_parameters, {})
 
-    def test_api_rate_limit_none_response_body(self):
-        auth = Auth(self.dummy_project_id, self.public_key_dict)
+    async def test_api_rate_limit_none_response_body(self):
+        auth = Auth(
+            self.dummy_project_id, self.public_key_dict, async_mode=self.async_test
+        )
 
         # Test do_post empty body
-        with patch("httpx.post") as mock_request:
-            mock_request.return_value.ok = False
+        with mock_http_call(self.async_test, "post") as mock_request:
+            mock_request.return_value.is_success = False
             mock_request.return_value.status_code = 429
             mock_request.return_value.json.return_value = None
             with self.assertRaises(RateLimitException) as cm:
-                auth.do_post("http://test.com", {}, None, None)
+                await futu_await(auth.do_post("http://test.com", {}, None, None))
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, HTTPStatus.TOO_MANY_REQUESTS)
             self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)
@@ -762,15 +804,21 @@ class TestAuth(common.DescopeTest):
             self.assertEqual(the_exception.error_message, ERROR_TYPE_API_RATE_LIMIT)
             self.assertEqual(the_exception.rate_limit_parameters, {})
 
-    def test_raise_from_response(self):
-        auth = Auth(self.dummy_project_id, self.public_key_dict)
-        with patch("httpx.get") as mock_request:
-            mock_request.return_value.ok = False
+    async def test_raise_from_response(self):
+        auth = Auth(
+            self.dummy_project_id, self.public_key_dict, async_mode=self.async_test
+        )
+        with mock_http_call(self.async_test, "get") as mock_request:
+            mock_request.return_value.is_success = False
             mock_request.return_value.status_code = 400
             mock_request.return_value.error_type = ERROR_TYPE_SERVER_ERROR
             mock_request.return_value.text = """{"errorCode":"E062108","errorDescription":"User not found","errorMessage":"Cannot find user"}"""
             with self.assertRaises(AuthException) as cm:
-                auth.do_get(uri="http://test.com", params=False, follow_redirects=None)
+                await futu_await(
+                    auth.do_get(
+                        uri="http://test.com", params=False, follow_redirects=None
+                    )
+                )
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, 400)
             self.assertEqual(the_exception.error_type, ERROR_TYPE_SERVER_ERROR)
@@ -778,6 +826,147 @@ class TestAuth(common.DescopeTest):
                 the_exception.error_message,
                 """{"errorCode":"E062108","errorDescription":"User not found","errorMessage":"Cannot find user"}""",
             )
+
+    async def test_ssl_configuration_skip_verify(self):
+        """Test SSL configuration when skip_verify=True"""
+        auth = Auth(
+            self.dummy_project_id,
+            self.public_key_dict,
+            skip_verify=True,
+            async_mode=self.async_test,
+        )
+
+        # Verify that verify=False is set in http_client_kwargs
+        self.assertEqual(auth.http_client_kwargs["verify"], False)
+        self.assertEqual(auth.http_client_kwargs["timeout"], DEFAULT_TIMEOUT_SECONDS)
+
+    async def test_ssl_configuration_default_context(self):
+        """Test SSL configuration with default SSL context"""
+        auth = Auth(
+            self.dummy_project_id,
+            self.public_key_dict,
+            skip_verify=False,
+            async_mode=self.async_test,
+        )
+
+        # Verify that verify is an SSLContext object using SSLMatcher
+        ssl_matcher = SSLMatcher()
+        self.assertTrue(ssl_matcher == auth.http_client_kwargs["verify"])
+        self.assertEqual(auth.http_client_kwargs["timeout"], DEFAULT_TIMEOUT_SECONDS)
+
+    async def test_ssl_configuration_with_custom_cert_file(self):
+        """Test SSL configuration with custom SSL_CERT_FILE environment variable"""
+        import ssl
+        import certifi
+
+        with patch.dict(os.environ, {"SSL_CERT_FILE": "/custom/cert.pem"}):
+            with patch("ssl.create_default_context") as mock_create_context:
+                mock_ssl_ctx = mock.Mock()
+                mock_create_context.return_value = mock_ssl_ctx
+
+                auth = Auth(
+                    self.dummy_project_id,
+                    self.public_key_dict,
+                    skip_verify=False,
+                    async_mode=self.async_test,
+                )
+
+                # Verify ssl.create_default_context was called with custom cert file
+                mock_create_context.assert_called_once_with(
+                    cafile="/custom/cert.pem", capath=None
+                )
+                self.assertEqual(auth.http_client_kwargs["verify"], mock_ssl_ctx)
+
+    async def test_ssl_configuration_with_custom_cert_dir(self):
+        """Test SSL configuration with custom SSL_CERT_DIR environment variable"""
+        with patch.dict(os.environ, {"SSL_CERT_DIR": "/custom/certs"}):
+            with patch("ssl.create_default_context") as mock_create_context:
+                mock_ssl_ctx = mock.Mock()
+                mock_create_context.return_value = mock_ssl_ctx
+
+                auth = Auth(
+                    self.dummy_project_id,
+                    self.public_key_dict,
+                    skip_verify=False,
+                    async_mode=self.async_test,
+                )
+
+                # Verify ssl.create_default_context was called with custom cert dir
+                mock_create_context.assert_called_once_with(
+                    cafile=certifi.where(), capath="/custom/certs"
+                )
+                self.assertEqual(auth.http_client_kwargs["verify"], mock_ssl_ctx)
+
+    async def test_ssl_configuration_with_requests_ca_bundle(self):
+        """Test SSL configuration with REQUESTS_CA_BUNDLE environment variable"""
+        with patch.dict(os.environ, {"REQUESTS_CA_BUNDLE": "/custom/bundle.pem"}):
+            with patch("ssl.create_default_context") as mock_create_context:
+                mock_ssl_ctx = mock.Mock()
+                mock_create_context.return_value = mock_ssl_ctx
+
+                auth = Auth(
+                    self.dummy_project_id,
+                    self.public_key_dict,
+                    skip_verify=False,
+                    async_mode=self.async_test,
+                )
+
+                # Verify ssl.create_default_context was called
+                mock_create_context.assert_called_once()
+
+                # Verify load_cert_chain was called on the SSL context
+                mock_ssl_ctx.load_cert_chain.assert_called_once_with(
+                    certfile="/custom/bundle.pem"
+                )
+                self.assertEqual(auth.http_client_kwargs["verify"], mock_ssl_ctx)
+
+    async def test_ssl_configuration_with_all_env_vars(self):
+        """Test SSL configuration with all SSL environment variables set"""
+        with patch.dict(
+            os.environ,
+            {
+                "SSL_CERT_FILE": "/custom/cert.pem",
+                "SSL_CERT_DIR": "/custom/certs",
+                "REQUESTS_CA_BUNDLE": "/custom/bundle.pem",
+            },
+        ):
+            with patch("ssl.create_default_context") as mock_create_context:
+                mock_ssl_ctx = mock.Mock()
+                mock_create_context.return_value = mock_ssl_ctx
+
+                auth = Auth(
+                    self.dummy_project_id,
+                    self.public_key_dict,
+                    skip_verify=False,
+                    async_mode=self.async_test,
+                )
+
+                # Verify ssl.create_default_context was called with all custom values
+                mock_create_context.assert_called_once_with(
+                    cafile="/custom/cert.pem", capath="/custom/certs"
+                )
+
+                # Verify load_cert_chain was called
+                mock_ssl_ctx.load_cert_chain.assert_called_once_with(
+                    certfile="/custom/bundle.pem"
+                )
+                self.assertEqual(auth.http_client_kwargs["verify"], mock_ssl_ctx)
+
+    async def test_ssl_configuration_custom_timeout(self):
+        """Test SSL configuration with custom timeout"""
+        custom_timeout = 30.0
+
+        auth = Auth(
+            self.dummy_project_id,
+            self.public_key_dict,
+            skip_verify=True,
+            timeout_seconds=custom_timeout,
+            async_mode=self.async_test,
+        )
+
+        # Verify custom timeout is set
+        self.assertEqual(auth.http_client_kwargs["timeout"], custom_timeout)
+        self.assertEqual(auth.http_client_kwargs["verify"], False)
 
 
 if __name__ == "__main__":

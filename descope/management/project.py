@@ -1,6 +1,7 @@
-from typing import List, Optional
+from typing import Awaitable, List, Optional, Union
 
 from descope._auth_base import AuthBase
+from descope.future_utils import futu_apply
 from descope.management.common import MgmtV1
 
 
@@ -8,7 +9,7 @@ class Project(AuthBase):
     def update_name(
         self,
         name: str,
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Update the current project name.
 
@@ -17,18 +18,22 @@ class Project(AuthBase):
         Raise:
         AuthException: raised if operation fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.project_update_name,
             {
                 "name": name,
             },
             pswd=self._auth.management_key,
         )
+        return futu_apply(
+            response,
+            lambda response: None,
+        )
 
     def update_tags(
         self,
         tags: List[str],
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Update the current project tags.
 
@@ -37,17 +42,21 @@ class Project(AuthBase):
         Raise:
         AuthException: raised if operation fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.project_update_tags,
             {
                 "tags": tags,
             },
             pswd=self._auth.management_key,
         )
+        return futu_apply(
+            response,
+            lambda response: None,
+        )
 
     def list_projects(
         self,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         List of all the projects in the company.
 
@@ -64,12 +73,17 @@ class Project(AuthBase):
             {},
             pswd=self._auth.management_key,
         )
-        resp = response.json()
+        return futu_apply(
+            response,
+            lambda response: self._process_list_projects_response(response),
+        )
 
+    def _process_list_projects_response(self, response):
+        """Helper method to process list_projects response"""
+        resp = response.json()
         projects = resp["projects"]
         # Apply the function to the projects list
         formatted_projects = self.remove_tag_field(projects)
-
         # Return the same structure with 'tag' removed
         result = {"projects": formatted_projects}
         return result
@@ -79,7 +93,7 @@ class Project(AuthBase):
         name: str,
         environment: Optional[str] = None,
         tags: Optional[List[str]] = None,
-    ):
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Clone the current project, including its settings and configurations.
         - This action is supported only with a pro license or above.
@@ -105,11 +119,14 @@ class Project(AuthBase):
             },
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(
+            response,
+            lambda response: response.json(),
+        )
 
     def export_project(
         self,
-    ):
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Exports all settings and configurations for a project and returns the
         raw JSON files response as a dictionary.
@@ -128,12 +145,15 @@ class Project(AuthBase):
             {},
             pswd=self._auth.management_key,
         )
-        return response.json()["files"]
+        return futu_apply(
+            response,
+            lambda response: response.json()["files"],
+        )
 
     def import_project(
         self,
         files: dict,
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Imports all settings and configurations for a project overriding any current
         configuration.
@@ -147,14 +167,17 @@ class Project(AuthBase):
         Raise:
         AuthException: raised if import operation fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.project_import,
             {
                 "files": files,
             },
             pswd=self._auth.management_key,
         )
-        return
+        return futu_apply(
+            response,
+            lambda response: None,
+        )
 
     # Function to remove 'tag' field from each project
     def remove_tag_field(self, projects):

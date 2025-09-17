@@ -2,8 +2,10 @@ from unittest import mock
 from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
+from descope.future_utils import futu_await
 from descope.management.common import AccessType, PromptType, URLParam
 from descope.management.outbound_application import OutboundApplication
+from tests.testutils import mock_http_call
 
 from .. import common
 
@@ -23,17 +25,18 @@ class TestOutboundApplication(common.DescopeTest):
             "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
         }
 
-    def test_create_application_success(self):
+    async def test_create_application_success(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = {
                 "app": {
                     "id": "app123",
@@ -42,8 +45,10 @@ class TestOutboundApplication(common.DescopeTest):
                 }
             }
             mock_post.return_value = network_resp
-            response = client.mgmt.outbound_application.create_application(
-                "Test App", description="Test Description", client_secret="secret"
+            response = await futu_await(
+                client.mgmt.outbound_application.create_application(
+                    "Test App", description="Test Description", client_secret="secret"
+                )
             )
 
             assert response == {
@@ -54,12 +59,13 @@ class TestOutboundApplication(common.DescopeTest):
                 }
             }
 
-    def test_create_application_with_all_parameters_success(self):
+    async def test_create_application_with_all_parameters_success(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Create test data for all new parameters
@@ -70,9 +76,9 @@ class TestOutboundApplication(common.DescopeTest):
         token_params = [URLParam("grant_type", "authorization_code")]
         prompts = [PromptType.LOGIN, PromptType.CONSENT]
 
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = {
                 "app": {
                     "id": "app123",
@@ -81,25 +87,27 @@ class TestOutboundApplication(common.DescopeTest):
                 }
             }
             mock_post.return_value = network_resp
-            response = client.mgmt.outbound_application.create_application(
-                name="Test OAuth App",
-                description="Test Description",
-                logo="https://example.com/logo.png",
-                id="app123",
-                client_secret="secret",
-                client_id="test-client-id",
-                discovery_url="https://accounts.google.com/.well-known/openid_configuration",
-                authorization_url="https://accounts.google.com/o/oauth2/v2/auth",
-                authorization_url_params=auth_params,
-                token_url="https://oauth2.googleapis.com/token",
-                token_url_params=token_params,
-                revocation_url="https://oauth2.googleapis.com/revoke",
-                default_scopes=["https://www.googleapis.com/auth/userinfo.profile"],
-                default_redirect_url="https://myapp.com/callback",
-                callback_domain="myapp.com",
-                pkce=True,
-                access_type=AccessType.OFFLINE,
-                prompt=prompts,
+            response = await futu_await(
+                client.mgmt.outbound_application.create_application(
+                    name="Test OAuth App",
+                    description="Test Description",
+                    logo="https://example.com/logo.png",
+                    id="app123",
+                    client_secret="secret",
+                    client_id="test-client-id",
+                    discovery_url="https://accounts.google.com/.well-known/openid_configuration",
+                    authorization_url="https://accounts.google.com/o/oauth2/v2/auth",
+                    authorization_url_params=auth_params,
+                    token_url="https://oauth2.googleapis.com/token",
+                    token_url_params=token_params,
+                    revocation_url="https://oauth2.googleapis.com/revoke",
+                    default_scopes=["https://www.googleapis.com/auth/userinfo.profile"],
+                    default_redirect_url="https://myapp.com/callback",
+                    callback_domain="myapp.com",
+                    pkce=True,
+                    access_type=AccessType.OFFLINE,
+                    prompt=prompts,
+                )
             )
 
             assert response == {
@@ -110,33 +118,36 @@ class TestOutboundApplication(common.DescopeTest):
                 }
             }
 
-    def test_create_application_failure(self):
+    async def test_create_application_failure(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application.create_application,
-                "Test App",
-            )
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.outbound_application.create_application(
+                        "Test App",
+                    )
+                )
 
-    def test_update_application_success(self):
+    async def test_update_application_success(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = {
                 "app": {
                     "id": "app123",
@@ -145,11 +156,13 @@ class TestOutboundApplication(common.DescopeTest):
                 }
             }
             mock_post.return_value = network_resp
-            response = client.mgmt.outbound_application.update_application(
-                "app123",
-                "Updated App",
-                description="Updated Description",
-                client_secret="new-secret",
+            response = await futu_await(
+                client.mgmt.outbound_application.update_application(
+                    "app123",
+                    "Updated App",
+                    description="Updated Description",
+                    client_secret="new-secret",
+                )
             )
 
             assert response == {
@@ -160,12 +173,13 @@ class TestOutboundApplication(common.DescopeTest):
                 }
             }
 
-    def test_update_application_with_all_parameters_success(self):
+    async def test_update_application_with_all_parameters_success(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Create test data for all new parameters
@@ -176,9 +190,9 @@ class TestOutboundApplication(common.DescopeTest):
         token_params = [URLParam("grant_type", "authorization_code")]
         prompts = [PromptType.LOGIN, PromptType.CONSENT, PromptType.SELECT_ACCOUNT]
 
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = {
                 "app": {
                     "id": "app123",
@@ -187,28 +201,30 @@ class TestOutboundApplication(common.DescopeTest):
                 }
             }
             mock_post.return_value = network_resp
-            response = client.mgmt.outbound_application.update_application(
-                id="app123",
-                name="Updated OAuth App",
-                description="Updated Description",
-                logo="https://example.com/new-logo.png",
-                client_secret="new-secret",
-                client_id="new-client-id",
-                discovery_url="https://accounts.google.com/.well-known/openid_configuration",
-                authorization_url="https://accounts.google.com/o/oauth2/v2/auth",
-                authorization_url_params=auth_params,
-                token_url="https://oauth2.googleapis.com/token",
-                token_url_params=token_params,
-                revocation_url="https://oauth2.googleapis.com/revoke",
-                default_scopes=[
-                    "https://www.googleapis.com/auth/userinfo.profile",
-                    "https://www.googleapis.com/auth/userinfo.email",
-                ],
-                default_redirect_url="https://myapp.com/updated-callback",
-                callback_domain="myapp.com",
-                pkce=True,
-                access_type=AccessType.OFFLINE,
-                prompt=prompts,
+            response = await futu_await(
+                client.mgmt.outbound_application.update_application(
+                    id="app123",
+                    name="Updated OAuth App",
+                    description="Updated Description",
+                    logo="https://example.com/new-logo.png",
+                    client_secret="new-secret",
+                    client_id="new-client-id",
+                    discovery_url="https://accounts.google.com/.well-known/openid_configuration",
+                    authorization_url="https://accounts.google.com/o/oauth2/v2/auth",
+                    authorization_url_params=auth_params,
+                    token_url="https://oauth2.googleapis.com/token",
+                    token_url_params=token_params,
+                    revocation_url="https://oauth2.googleapis.com/revoke",
+                    default_scopes=[
+                        "https://www.googleapis.com/auth/userinfo.profile",
+                        "https://www.googleapis.com/auth/userinfo.email",
+                    ],
+                    default_redirect_url="https://myapp.com/updated-callback",
+                    callback_domain="myapp.com",
+                    pkce=True,
+                    access_type=AccessType.OFFLINE,
+                    prompt=prompts,
+                )
             )
 
             assert response == {
@@ -219,64 +235,72 @@ class TestOutboundApplication(common.DescopeTest):
                 }
             }
 
-    def test_update_application_failure(self):
+    async def test_update_application_failure(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application.update_application,
-                "app123",
-                "Updated App",
-            )
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.outbound_application.update_application(
+                        "app123",
+                        "Updated App",
+                    )
+                )
 
-    def test_delete_application_success(self):
+    async def test_delete_application_success(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             mock_post.return_value = network_resp
-            client.mgmt.outbound_application.delete_application("app123")
-
-    def test_delete_application_failure(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application.delete_application,
-                "app123",
+            await futu_await(
+                client.mgmt.outbound_application.delete_application("app123")
             )
 
-    def test_load_application_success(self):
+    async def test_delete_application_failure(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
-        with patch("httpx.get") as mock_get:
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.outbound_application.delete_application(
+                        "app123",
+                    )
+                )
+
+    async def test_load_application_success(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+            async_mode=self.async_test,
+        )
+
+        with mock_http_call(self.async_test, "get") as mock_get:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = {
                 "app": {
                     "id": "app123",
@@ -285,7 +309,9 @@ class TestOutboundApplication(common.DescopeTest):
                 }
             }
             mock_get.return_value = network_resp
-            response = client.mgmt.outbound_application.load_application("app123")
+            response = await futu_await(
+                client.mgmt.outbound_application.load_application("app123")
+            )
 
             assert response == {
                 "app": {
@@ -295,33 +321,36 @@ class TestOutboundApplication(common.DescopeTest):
                 }
             }
 
-    def test_load_application_failure(self):
+    async def test_load_application_failure(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
-        with patch("httpx.get") as mock_get:
-            mock_get.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application.load_application,
-                "app123",
-            )
+        with mock_http_call(self.async_test, "get") as mock_get:
+            mock_get.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.outbound_application.load_application(
+                        "app123",
+                    )
+                )
 
-    def test_load_all_applications_success(self):
+    async def test_load_all_applications_success(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
-        with patch("httpx.get") as mock_get:
+        with mock_http_call(self.async_test, "get") as mock_get:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = {
                 "apps": [
                     {"id": "app1", "name": "App 1", "description": "Description 1"},
@@ -329,7 +358,9 @@ class TestOutboundApplication(common.DescopeTest):
                 ]
             }
             mock_get.return_value = network_resp
-            response = client.mgmt.outbound_application.load_all_applications()
+            response = await futu_await(
+                client.mgmt.outbound_application.load_all_applications()
+            )
 
             assert response == {
                 "apps": [
@@ -338,32 +369,34 @@ class TestOutboundApplication(common.DescopeTest):
                 ]
             }
 
-    def test_load_all_applications_failure(self):
+    async def test_load_all_applications_failure(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
-        with patch("httpx.get") as mock_get:
-            mock_get.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application.load_all_applications,
-            )
+        with mock_http_call(self.async_test, "get") as mock_get:
+            mock_get.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.outbound_application.load_all_applications()
+                )
 
-    def test_fetch_token_by_scopes_success(self):
+    async def test_fetch_token_by_scopes_success(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = {
                 "token": {
                     "token": "access-token",
@@ -374,12 +407,14 @@ class TestOutboundApplication(common.DescopeTest):
                 }
             }
             mock_post.return_value = network_resp
-            response = client.mgmt.outbound_application.fetch_token_by_scopes(
-                "app123",
-                "user456",
-                ["read", "write"],
-                {"refreshToken": True},
-                "tenant789",
+            response = await futu_await(
+                client.mgmt.outbound_application.fetch_token_by_scopes(
+                    "app123",
+                    "user456",
+                    ["read", "write"],
+                    {"refreshToken": True},
+                    "tenant789",
+                )
             )
 
             assert response == {
@@ -392,35 +427,38 @@ class TestOutboundApplication(common.DescopeTest):
                 }
             }
 
-    def test_fetch_token_by_scopes_failure(self):
+    async def test_fetch_token_by_scopes_failure(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application.fetch_token_by_scopes,
-                "app123",
-                "user456",
-                ["read"],
-            )
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.outbound_application.fetch_token_by_scopes(
+                        "app123",
+                        "user456",
+                        ["read"],
+                    )
+                )
 
-    def test_fetch_token_success(self):
+    async def test_fetch_token_success(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = {
                 "token": {
                     "token": "access-token",
@@ -431,8 +469,10 @@ class TestOutboundApplication(common.DescopeTest):
                 }
             }
             mock_post.return_value = network_resp
-            response = client.mgmt.outbound_application.fetch_token(
-                "app123", "user456", "tenant789", {"forceRefresh": True}
+            response = await futu_await(
+                client.mgmt.outbound_application.fetch_token(
+                    "app123", "user456", "tenant789", {"forceRefresh": True}
+                )
             )
 
             assert response == {
@@ -445,34 +485,37 @@ class TestOutboundApplication(common.DescopeTest):
                 }
             }
 
-    def test_fetch_token_failure(self):
+    async def test_fetch_token_failure(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application.fetch_token,
-                "app123",
-                "user456",
-            )
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.outbound_application.fetch_token(
+                        "app123",
+                        "user456",
+                    )
+                )
 
-    def test_fetch_tenant_token_by_scopes_success(self):
+    async def test_fetch_tenant_token_by_scopes_success(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = {
                 "token": {
                     "token": "access-token",
@@ -483,8 +526,10 @@ class TestOutboundApplication(common.DescopeTest):
                 }
             }
             mock_post.return_value = network_resp
-            response = client.mgmt.outbound_application.fetch_tenant_token_by_scopes(
-                "app123", "tenant789", ["read", "write"], {"refreshToken": True}
+            response = await futu_await(
+                client.mgmt.outbound_application.fetch_tenant_token_by_scopes(
+                    "app123", "tenant789", ["read", "write"], {"refreshToken": True}
+                )
             )
 
             assert response == {
@@ -497,35 +542,38 @@ class TestOutboundApplication(common.DescopeTest):
                 }
             }
 
-    def test_fetch_tenant_token_by_scopes_failure(self):
+    async def test_fetch_tenant_token_by_scopes_failure(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application.fetch_tenant_token_by_scopes,
-                "app123",
-                "tenant789",
-                ["read"],
-            )
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.outbound_application.fetch_tenant_token_by_scopes(
+                        "app123",
+                        "tenant789",
+                        ["read"],
+                    )
+                )
 
-    def test_fetch_tenant_token_success(self):
+    async def test_fetch_tenant_token_success(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = {
                 "token": {
                     "token": "access-token",
@@ -536,8 +584,10 @@ class TestOutboundApplication(common.DescopeTest):
                 }
             }
             mock_post.return_value = network_resp
-            response = client.mgmt.outbound_application.fetch_tenant_token(
-                "app123", "tenant789", {"forceRefresh": True}
+            response = await futu_await(
+                client.mgmt.outbound_application.fetch_tenant_token(
+                    "app123", "tenant789", {"forceRefresh": True}
+                )
             )
 
             assert response == {
@@ -550,24 +600,26 @@ class TestOutboundApplication(common.DescopeTest):
                 }
             }
 
-    def test_fetch_tenant_token_failure(self):
+    async def test_fetch_tenant_token_failure(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application.fetch_tenant_token,
-                "app123",
-                "tenant789",
-            )
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.outbound_application.fetch_tenant_token(
+                        "app123",
+                        "tenant789",
+                    )
+                )
 
-    def test_compose_create_update_body(self):
+    async def test_compose_create_update_body(self):
         body = OutboundApplication._compose_create_update_body(
             "Test App",
             "Test Description",
@@ -586,7 +638,7 @@ class TestOutboundApplication(common.DescopeTest):
 
         assert body == expected_body
 
-    def test_compose_create_update_body_without_client_secret(self):
+    async def test_compose_create_update_body_without_client_secret(self):
         body = OutboundApplication._compose_create_update_body(
             "Test App", "Test Description", "https://example.com/logo.png", "app123"
         )
@@ -600,7 +652,7 @@ class TestOutboundApplication(common.DescopeTest):
 
         assert body == expected_body
 
-    def test_compose_create_update_body_with_all_new_parameters(self):
+    async def test_compose_create_update_body_with_all_new_parameters(self):
         # Create test data for all new parameters
         auth_params = [
             URLParam("response_type", "code"),
@@ -656,7 +708,7 @@ class TestOutboundApplication(common.DescopeTest):
 
         assert body == expected_body
 
-    def test_compose_create_update_body_with_partial_new_parameters(self):
+    async def test_compose_create_update_body_with_partial_new_parameters(self):
         # Test with only some of the new parameters
         body = OutboundApplication._compose_create_update_body(
             name="Test App",
@@ -684,7 +736,7 @@ class TestOutboundApplication(common.DescopeTest):
 
         assert body == expected_body
 
-    def test_compose_create_update_body_with_url_params_only(self):
+    async def test_compose_create_update_body_with_url_params_only(self):
         # Test with only URL parameters
         auth_params = [URLParam("response_type", "code")]
         token_params = [URLParam("grant_type", "authorization_code")]
@@ -707,7 +759,7 @@ class TestOutboundApplication(common.DescopeTest):
 
         assert body == expected_body
 
-    def test_compose_create_update_body_with_prompt_types(self):
+    async def test_compose_create_update_body_with_prompt_types(self):
         # Test with different prompt type combinations
         prompts = [PromptType.LOGIN, PromptType.CONSENT, PromptType.SELECT_ACCOUNT]
 
@@ -725,7 +777,7 @@ class TestOutboundApplication(common.DescopeTest):
 
         assert body == expected_body
 
-    def test_compose_create_update_body_with_none_values(self):
+    async def test_compose_create_update_body_with_none_values(self):
         # Test that None values are handled correctly
         body = OutboundApplication._compose_create_update_body(
             name="Test App",
@@ -744,7 +796,7 @@ class TestOutboundApplication(common.DescopeTest):
 
         assert body == expected_body
 
-    def test_compose_create_update_body_with_empty_lists(self):
+    async def test_compose_create_update_body_with_empty_lists(self):
         # Test with empty lists for URL parameters and prompts
         body = OutboundApplication._compose_create_update_body(
             name="Test App",
@@ -768,7 +820,7 @@ class TestOutboundApplication(common.DescopeTest):
 
         assert body == expected_body
 
-    def test_url_param_to_dict(self):
+    async def test_url_param_to_dict(self):
         # Test URLParam to_dict method
         param = URLParam("test_name", "test_value")
         param_dict = param.to_dict()
@@ -776,12 +828,12 @@ class TestOutboundApplication(common.DescopeTest):
         expected_dict = {"name": "test_name", "value": "test_value"}
         assert param_dict == expected_dict
 
-    def test_access_type_enum_values(self):
+    async def test_access_type_enum_values(self):
         # Test AccessType enum values
         assert AccessType.OFFLINE.value == "offline"
         assert AccessType.ONLINE.value == "online"
 
-    def test_prompt_type_enum_values(self):
+    async def test_prompt_type_enum_values(self):
         # Test PromptType enum values
         assert PromptType.NONE.value == "none"
         assert PromptType.LOGIN.value == "login"
@@ -804,12 +856,17 @@ class TestOutboundApplicationByToken(common.DescopeTest):
             "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
         }
 
-    def test_fetch_token_by_scopes_success(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
+    async def test_fetch_token_by_scopes_success(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            async_mode=self.async_test,
+        )
 
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = {
                 "token": {
                     "token": "access-token",
@@ -820,13 +877,15 @@ class TestOutboundApplicationByToken(common.DescopeTest):
                 }
             }
             mock_post.return_value = network_resp
-            response = client.mgmt.outbound_application_by_token.fetch_token_by_scopes(
-                self.dummy_token,
-                "app123",
-                "user456",
-                ["read", "write"],
-                {"refreshToken": True},
-                "tenant789",
+            response = await futu_await(
+                client.mgmt.outbound_application_by_token.fetch_token_by_scopes(
+                    self.dummy_token,
+                    "app123",
+                    "user456",
+                    ["read", "write"],
+                    {"refreshToken": True},
+                    "tenant789",
+                )
             )
 
             assert response == {
@@ -839,39 +898,51 @@ class TestOutboundApplicationByToken(common.DescopeTest):
                 }
             }
 
-    def test_fetch_token_by_scopes_failure(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
+    async def test_fetch_token_by_scopes_failure(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            async_mode=self.async_test,
+        )
 
         # Test failure of empty token
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application_by_token.fetch_token_by_scopes,
-                "",  # empty token
-                "app123",
-                "user456",
-                ["read"],
-            )
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.outbound_application_by_token.fetch_token_by_scopes(
+                        "",  # empty token
+                        "app123",
+                        "user456",
+                        ["read"],
+                    )
+                )
 
         # Test invalid response failure
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application_by_token.fetch_token_by_scopes,
-                self.dummy_token,
-                "app123",
-                "user456",
-                ["read"],
-            )
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.outbound_application_by_token.fetch_token_by_scopes(
+                        self.dummy_token,
+                        "app123",
+                        "user456",
+                        ["read"],
+                    )
+                )
 
-    def test_fetch_token_success(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
+    async def test_fetch_token_success(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            async_mode=self.async_test,
+        )
 
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = {
                 "token": {
                     "token": "access-token",
@@ -882,12 +953,14 @@ class TestOutboundApplicationByToken(common.DescopeTest):
                 }
             }
             mock_post.return_value = network_resp
-            response = client.mgmt.outbound_application_by_token.fetch_token(
-                self.dummy_token,
-                "app123",
-                "user456",
-                "tenant789",
-                {"forceRefresh": True},
+            response = await futu_await(
+                client.mgmt.outbound_application_by_token.fetch_token(
+                    self.dummy_token,
+                    "app123",
+                    "user456",
+                    "tenant789",
+                    {"forceRefresh": True},
+                )
             )
 
             assert response == {
@@ -900,37 +973,49 @@ class TestOutboundApplicationByToken(common.DescopeTest):
                 }
             }
 
-    def test_fetch_token_failure(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
+    async def test_fetch_token_failure(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            async_mode=self.async_test,
+        )
 
         # Test failure of empty token
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application_by_token.fetch_token,
-                "",  # empty token
-                "app123",
-                "user456",
-            )
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.outbound_application_by_token.fetch_token(
+                        "",  # empty token
+                        "app123",
+                        "user456",
+                    )
+                )
 
         # Test invalid response failure
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application_by_token.fetch_token,
-                self.dummy_token,
-                "app123",
-                "user456",
-            )
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.outbound_application_by_token.fetch_token(
+                        self.dummy_token,
+                        "app123",
+                        "user456",
+                    )
+                )
 
-    def test_fetch_tenant_token_by_scopes_success(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
+    async def test_fetch_tenant_token_by_scopes_success(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            async_mode=self.async_test,
+        )
 
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = {
                 "token": {
                     "token": "access-token",
@@ -941,7 +1026,7 @@ class TestOutboundApplicationByToken(common.DescopeTest):
                 }
             }
             mock_post.return_value = network_resp
-            response = (
+            response = await futu_await(
                 client.mgmt.outbound_application_by_token.fetch_tenant_token_by_scopes(
                     self.dummy_token,
                     "app123",
@@ -961,39 +1046,51 @@ class TestOutboundApplicationByToken(common.DescopeTest):
                 }
             }
 
-    def test_fetch_tenant_token_by_scopes_failure(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
+    async def test_fetch_tenant_token_by_scopes_failure(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            async_mode=self.async_test,
+        )
 
         # Test failure of empty token
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application_by_token.fetch_tenant_token_by_scopes,
-                "",  # empty token
-                "app123",
-                "tenant789",
-                ["read"],
-            )
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.outbound_application_by_token.fetch_tenant_token_by_scopes(
+                        "",  # empty token
+                        "app123",
+                        "tenant789",
+                        ["read"],
+                    )
+                )
 
         # Test invalid response failure
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application_by_token.fetch_tenant_token_by_scopes,
-                self.dummy_token,
-                "app123",
-                "tenant789",
-                ["read"],
-            )
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.outbound_application_by_token.fetch_tenant_token_by_scopes(
+                        self.dummy_token,
+                        "app123",
+                        "tenant789",
+                        ["read"],
+                    )
+                )
 
-    def test_fetch_tenant_token_success(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
+    async def test_fetch_tenant_token_success(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            async_mode=self.async_test,
+        )
 
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = {
                 "token": {
                     "token": "access-token",
@@ -1004,8 +1101,10 @@ class TestOutboundApplicationByToken(common.DescopeTest):
                 }
             }
             mock_post.return_value = network_resp
-            response = client.mgmt.outbound_application_by_token.fetch_tenant_token(
-                self.dummy_token, "app123", "tenant789", {"forceRefresh": True}
+            response = await futu_await(
+                client.mgmt.outbound_application_by_token.fetch_tenant_token(
+                    self.dummy_token, "app123", "tenant789", {"forceRefresh": True}
+                )
             )
 
             assert response == {
@@ -1018,27 +1117,34 @@ class TestOutboundApplicationByToken(common.DescopeTest):
                 }
             }
 
-    def test_fetch_tenant_token_failure(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
+    async def test_fetch_tenant_token_failure(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            async_mode=self.async_test,
+        )
 
         # Test failure of empty token
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = True
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application_by_token.fetch_tenant_token,
-                "",  # empty token
-                "app123",
-                "tenant789",
-            )
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = True
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.outbound_application_by_token.fetch_tenant_token(
+                        "",  # empty token
+                        "app123",
+                        "tenant789",
+                    )
+                )
 
         # Test invalid response failure
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.ok = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application_by_token.fetch_tenant_token,
-                self.dummy_token,
-                "app123",
-                "tenant789",
-            )
+        with mock_http_call(self.async_test, "post") as mock_post:
+            mock_post.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.outbound_application_by_token.fetch_tenant_token(
+                        self.dummy_token,
+                        "app123",
+                        "tenant789",
+                    )
+                )
