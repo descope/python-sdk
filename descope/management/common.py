@@ -68,6 +68,7 @@ class MgmtV1:
     user_create_batch_path = "/v1/mgmt/user/create/batch"
     user_update_path = "/v1/mgmt/user/update"
     user_patch_path = "/v1/mgmt/user/patch"
+    user_patch_batch_path = "/v1/mgmt/user/patch/batch"
     user_delete_path = "/v1/mgmt/user/delete"
     user_logout_path = "/v1/mgmt/user/logout"
     user_delete_all_test_users_path = "/v1/mgmt/user/test/delete/all"
