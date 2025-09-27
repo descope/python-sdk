@@ -423,6 +423,7 @@ class User(AuthBase):
         verified_email: Optional[bool] = None,
         verified_phone: Optional[bool] = None,
         sso_app_ids: Optional[List[str]] = None,
+        status: Optional[str] = None,
         test: bool = False,
     ) -> dict:
         """
@@ -443,6 +444,7 @@ class User(AuthBase):
         picture (str): Optional url for user picture
         custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
         sso_app_ids (List[str]): Optional, list of SSO applications IDs to be associated with the user.
+        status (str): Optional status field. Can be one of: "enabled", "disabled", "invited".
         test (bool, optional): Set to True to update a test user. Defaults to False.
 
         Return value (dict):
@@ -453,6 +455,12 @@ class User(AuthBase):
         Raise:
         AuthException: raised if patch operation fails
         """
+        if status is not None and status not in ["enabled", "disabled", "invited"]:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                f"Invalid status value: {status}. Must be one of: enabled, disabled, invited",
+            )
         response = self._auth.do_patch(
             MgmtV1.user_patch_path,
             User._compose_patch_body(
@@ -470,6 +478,7 @@ class User(AuthBase):
                 verified_email,
                 verified_phone,
                 sso_app_ids,
+                status,
                 test,
             ),
             pswd=self._auth.management_key,
@@ -1968,6 +1977,7 @@ class User(AuthBase):
         verified_email: Optional[bool],
         verified_phone: Optional[bool],
         sso_app_ids: Optional[List[str]],
+        status: Optional[str],
         test: bool = False,
     ) -> dict:
         res: dict[str, Any] = {
@@ -1999,6 +2009,8 @@ class User(AuthBase):
             res["verifiedPhone"] = verified_phone
         if sso_app_ids is not None:
             res["ssoAppIds"] = sso_app_ids
+        if status is not None:
+            res["status"] = status
         if test:
             res["test"] = test
         return res
