@@ -63,13 +63,13 @@ class WebAuthn(AuthBase):
 
         uri = EndpointsV1.sign_up_auth_webauthn_finish_path
         body = WebAuthn._compose_sign_up_in_finish_body(transaction_id, response)
-        response = self._auth.do_post(uri, body, None, "")
+        res = self._auth.do_post(uri, body, None, "")
 
         return futu_apply(
-            response,
-            lambda response: self._auth.generate_jwt_response(
-                response.json(),
-                response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None),
+            res,
+            lambda res: self._auth.generate_jwt_response(
+                res.json(),
+                res.cookies.get(REFRESH_SESSION_COOKIE_NAME, None),
                 audience,
             ),
         )
@@ -123,13 +123,13 @@ class WebAuthn(AuthBase):
 
         uri = EndpointsV1.sign_in_auth_webauthn_finish_path
         body = WebAuthn._compose_sign_up_in_finish_body(transaction_id, response)
-        response = self._auth.do_post(uri, body, None)
+        res = self._auth.do_post(uri, body, None)
 
         return futu_apply(
-            response,
-            lambda response: self._auth.generate_jwt_response(
-                response.json(),
-                response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None),
+            res,
+            lambda res: self._auth.generate_jwt_response(
+                res.json(),
+                res.cookies.get(REFRESH_SESSION_COOKIE_NAME, None),
                 audience,
             ),
         )
@@ -198,9 +198,9 @@ class WebAuthn(AuthBase):
 
         uri = EndpointsV1.update_auth_webauthn_finish_path
         body = WebAuthn._compose_update_finish_body(transaction_id, response)
-        response = self._auth.do_post(uri, body)
+        res = self._auth.do_post(uri, body)
 
-        return futu_apply(response, lambda response: None)
+        return futu_apply(res, lambda res: None)
 
     @staticmethod
     def _compose_sign_up_start_body(login_id: str, user: dict, origin: str) -> dict:

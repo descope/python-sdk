@@ -9,7 +9,7 @@ T = TypeVar("T")
 def futu_apply(
     result_or_coro: Union[T, Awaitable[T]], modifier: Callable[[T], Any]
 ) -> Union[Any, Awaitable[Any]]:
-    if asyncio.iscoroutine(result_or_coro):
+    if asyncio.iscoroutine(result_or_coro) or asyncio.isfuture(result_or_coro):
 
         async def process_async():
             result = await result_or_coro
@@ -17,7 +17,8 @@ def futu_apply(
 
         return process_async()
     else:
-        return modifier(result_or_coro)
+        # we ignore arg-type due to the check above.
+        return modifier(result_or_coro)  # type: ignore[arg-type]
 
 
 def futu_awaitable(result: T, as_awaitable: bool) -> Union[Any, Awaitable[Any]]:

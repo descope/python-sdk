@@ -115,18 +115,19 @@ class Auth:
                 kid, pub_key, alg = self._validate_and_load_public_key(public_key)
                 self.public_keys = {kid: (pub_key, alg)}
 
-        if skip_verify:
-            self.http_client_kwargs = {"verify": False, "timeout": timeout_seconds}
-        else:
+        self.client_timeout = timeout_seconds
+        self.client_verify: bool | ssl.SSLContext = False
+        if not skip_verify:
             # Backwards compatibility with requests
             ssl_ctx = ssl.create_default_context(
                 cafile=os.environ.get("SSL_CERT_FILE", certifi.where()),
                 capath=os.environ.get("SSL_CERT_DIR"),
             )
             if os.environ.get("REQUESTS_CA_BUNDLE"):
-                ssl_ctx.load_cert_chain(certfile=os.environ.get("REQUESTS_CA_BUNDLE"))
-
-            self.http_client_kwargs = {"verify": ssl_ctx, "timeout": timeout_seconds}
+                # ignore - is valid string
+                ssl_ctx.load_cert_chain(certfile=os.environ.get("REQUESTS_CA_BUNDLE"))  # type: ignore[arg-type]
+            self.client_verify = ssl_ctx
+            # ignore - is valid string
 
     def _request(
         self, method: str, url: str, **kwargs
@@ -138,7 +139,11 @@ class Auth:
             return self._sync_request(method, url, **kwargs)
 
     def _sync_request(self, method: str, url: str, **kwargs) -> httpx.Response:
-        req_kwargs = {**self.http_client_kwargs, **kwargs}
+        req_kwargs = {
+            "verify": self.client_verify,
+            "timeout": self.client_timeout,
+            **kwargs,
+        }
         method_lower = method.lower()
         if method_lower == "get":
             return httpx.get(url, **req_kwargs)
@@ -154,7 +159,9 @@ class Auth:
             return httpx.request(method, url, **req_kwargs)
 
     async def _async_request(self, method: str, url: str, **kwargs) -> httpx.Response:
-        async with httpx.AsyncClient(**self.http_client_kwargs) as client:
+        async with httpx.AsyncClient(
+            verify=self.client_verify, timeout=self.client_timeout
+        ) as client:
             method_lower = method.lower()
             if method_lower == "get":
                 return await client.get(url, **kwargs)
