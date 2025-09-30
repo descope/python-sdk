@@ -836,9 +836,9 @@ class TestAuth(common.DescopeTest):
             async_mode=self.async_test,
         )
 
-        # Verify that verify=False is set in http_client_kwargs
-        self.assertEqual(auth.http_client_kwargs["verify"], False)
-        self.assertEqual(auth.http_client_kwargs["timeout"], DEFAULT_TIMEOUT_SECONDS)
+        # Verify that verify=False is set
+        self.assertEqual(auth.client_verify, False)
+        self.assertEqual(auth.client_timeout, DEFAULT_TIMEOUT_SECONDS)
 
     async def test_ssl_configuration_default_context(self):
         """Test SSL configuration with default SSL context"""
@@ -851,8 +851,8 @@ class TestAuth(common.DescopeTest):
 
         # Verify that verify is an SSLContext object using SSLMatcher
         ssl_matcher = SSLMatcher()
-        self.assertTrue(ssl_matcher == auth.http_client_kwargs["verify"])
-        self.assertEqual(auth.http_client_kwargs["timeout"], DEFAULT_TIMEOUT_SECONDS)
+        self.assertTrue(ssl_matcher == auth.client_verify)
+        self.assertEqual(auth.client_timeout, DEFAULT_TIMEOUT_SECONDS)
 
     async def test_ssl_configuration_with_custom_cert_file(self):
         """Test SSL configuration with custom SSL_CERT_FILE environment variable"""
@@ -875,7 +875,7 @@ class TestAuth(common.DescopeTest):
                 mock_create_context.assert_called_once_with(
                     cafile="/custom/cert.pem", capath=None
                 )
-                self.assertEqual(auth.http_client_kwargs["verify"], mock_ssl_ctx)
+                self.assertEqual(auth.client_verify, mock_ssl_ctx)
 
     async def test_ssl_configuration_with_custom_cert_dir(self):
         """Test SSL configuration with custom SSL_CERT_DIR environment variable"""
@@ -895,7 +895,7 @@ class TestAuth(common.DescopeTest):
                 mock_create_context.assert_called_once_with(
                     cafile=certifi.where(), capath="/custom/certs"
                 )
-                self.assertEqual(auth.http_client_kwargs["verify"], mock_ssl_ctx)
+                self.assertEqual(auth.client_verify, mock_ssl_ctx)
 
     async def test_ssl_configuration_with_requests_ca_bundle(self):
         """Test SSL configuration with REQUESTS_CA_BUNDLE environment variable"""
@@ -918,7 +918,7 @@ class TestAuth(common.DescopeTest):
                 mock_ssl_ctx.load_cert_chain.assert_called_once_with(
                     certfile="/custom/bundle.pem"
                 )
-                self.assertEqual(auth.http_client_kwargs["verify"], mock_ssl_ctx)
+                self.assertEqual(auth.client_verify, mock_ssl_ctx)
 
     async def test_ssl_configuration_with_all_env_vars(self):
         """Test SSL configuration with all SSL environment variables set"""
@@ -950,7 +950,7 @@ class TestAuth(common.DescopeTest):
                 mock_ssl_ctx.load_cert_chain.assert_called_once_with(
                     certfile="/custom/bundle.pem"
                 )
-                self.assertEqual(auth.http_client_kwargs["verify"], mock_ssl_ctx)
+                self.assertEqual(auth.client_verify, mock_ssl_ctx)
 
     async def test_ssl_configuration_custom_timeout(self):
         """Test SSL configuration with custom timeout"""
@@ -965,8 +965,8 @@ class TestAuth(common.DescopeTest):
         )
 
         # Verify custom timeout is set
-        self.assertEqual(auth.http_client_kwargs["timeout"], custom_timeout)
-        self.assertEqual(auth.http_client_kwargs["verify"], False)
+        self.assertEqual(auth.client_timeout, custom_timeout)
+        self.assertEqual(auth.client_verify, False)
 
 
 if __name__ == "__main__":

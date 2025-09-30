@@ -69,7 +69,8 @@ def _mock_async_http(method: str):
             if client_kwargs:
                 mock_class.assert_called_with(**client_kwargs)
 
-        async_method_mock.enhanced_assert_called_with = enhanced_assert_called_with
+        # Use setattr to assign the method
+        setattr(async_method_mock, "assert_called_with", enhanced_assert_called_with)
 
         # using Mock here to avoid getting AsyncMock as default return value class
         async_method_mock.return_value = Mock()
