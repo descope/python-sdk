@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Awaitable, Union
+
 import httpx
 
 from descope._auth_base import AuthBase
