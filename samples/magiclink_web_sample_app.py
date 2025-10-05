@@ -1,4 +1,4 @@
-from flask import Flask, Response, g, jsonify, request
+from flask import Flask, Response, _request_ctx_stack, jsonify, request
 
 from descope import (
     COOKIE_DATA_NAME,
@@ -116,7 +116,7 @@ def verify():
 @APP.route("/api/verify_by_decorator", methods=["GET"])
 @descope_verify_magiclink_token(descope_client)
 def verify_by_decorator(*args, **kwargs):
-    claims = g.top.claims
+    claims = _request_ctx_stack.top.claims
     response = f"This is a code verification API, claims are: {claims}"
     return jsonify(message=response)
 
