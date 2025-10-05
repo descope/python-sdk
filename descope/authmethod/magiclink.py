@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable
+from typing import Awaitable, Iterable, Union
 
 from descope._auth_base import AuthBase
 from descope.auth import Auth
@@ -14,6 +14,7 @@ from descope.common import (
     validate_refresh_token_provided,
 )
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
+from descope.future_utils import futu_apply
 
 
 class MagicLink(AuthBase):
@@ -24,7 +25,7 @@ class MagicLink(AuthBase):
         uri: str,
         login_options: LoginOptions | None = None,
         refresh_token: str | None = None,
-    ) -> str:
+    ) -> Union[str, Awaitable[str]]:
         if not login_id:
             raise AuthException(
                 400,
@@ -38,7 +39,10 @@ class MagicLink(AuthBase):
         uri = MagicLink._compose_signin_url(method)
 
         response = self._auth.do_post(uri, body, None, refresh_token)
-        return Auth.extract_masked_address(response.json(), method)
+        return futu_apply(
+            response,
+            lambda response: Auth.extract_masked_address(response.json(), method),
+        )
 
     def sign_up(
         self,
@@ -47,7 +51,7 @@ class MagicLink(AuthBase):
         uri: str,
         user: dict | None = None,
         signup_options: SignUpOptions | None = None,
-    ) -> str:
+    ) -> Union[str, Awaitable[str]]:
         if not user:
             user = {}
 
@@ -63,7 +67,10 @@ class MagicLink(AuthBase):
         )
         uri = MagicLink._compose_signup_url(method)
         response = self._auth.do_post(uri, body, None)
-        return Auth.extract_masked_address(response.json(), method)
+        return futu_apply(
+            response,
+            lambda response: Auth.extract_masked_address(response.json(), method),
+        )
 
     def sign_up_or_in(
         self,
@@ -71,7 +78,7 @@ class MagicLink(AuthBase):
         login_id: str,
         uri: str,
         signup_options: SignUpOptions | None = None,
-    ) -> str:
+    ) -> Union[str, Awaitable[str]]:
         login_options: LoginOptions | None = None
         if signup_options is not None:
             login_options = LoginOptions(
@@ -86,17 +93,25 @@ class MagicLink(AuthBase):
         )
         uri = MagicLink._compose_sign_up_or_in_url(method)
         response = self._auth.do_post(uri, body, None)
-        return Auth.extract_masked_address(response.json(), method)
+        return futu_apply(
+            response,
+            lambda response: Auth.extract_masked_address(response.json(), method),
+        )
 
-    def verify(self, token: str, audience: str | None | Iterable[str] = None) -> dict:
+    def verify(
+        self, token: str, audience: str | None | Iterable[str] = None
+    ) -> Union[dict, Awaitable[dict]]:
         uri = EndpointsV1.verify_magiclink_auth_path
         body = MagicLink._compose_verify_body(token)
         response = self._auth.do_post(uri, body, None)
-        resp = response.json()
-        jwt_response = self._auth.generate_jwt_response(
-            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
+        return futu_apply(
+            response,
+            lambda response: self._auth.generate_jwt_response(
+                response.json(),
+                response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None),
+                audience,
+            ),
         )
-        return jwt_response
 
     def update_user_email(
         self,
@@ -108,7 +123,7 @@ class MagicLink(AuthBase):
         template_options: dict | None = None,
         template_id: str | None = None,
         provider_id: str | None = None,
-    ) -> str:
+    ) -> Union[str, Awaitable[str]]:
         if not login_id:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
@@ -127,7 +142,12 @@ class MagicLink(AuthBase):
         )
         uri = EndpointsV1.update_user_email_magiclink_path
         response = self._auth.do_post(uri, body, None, refresh_token)
-        return Auth.extract_masked_address(response.json(), DeliveryMethod.EMAIL)
+        return futu_apply(
+            response,
+            lambda response: Auth.extract_masked_address(
+                response.json(), DeliveryMethod.EMAIL
+            ),
+        )
 
     def update_user_phone(
         self,
@@ -140,7 +160,7 @@ class MagicLink(AuthBase):
         template_options: dict | None = None,
         template_id: str | None = None,
         provider_id: str | None = None,
-    ) -> str:
+    ) -> Union[str, Awaitable[str]]:
         if not login_id:
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
@@ -159,7 +179,12 @@ class MagicLink(AuthBase):
         )
         uri = EndpointsV1.update_user_phone_magiclink_path
         response = self._auth.do_post(uri, body, None, refresh_token)
-        return Auth.extract_masked_address(response.json(), DeliveryMethod.SMS)
+        return futu_apply(
+            response,
+            lambda response: Auth.extract_masked_address(
+                response.json(), DeliveryMethod.SMS
+            ),
+        )
 
     @staticmethod
     def _compose_signin_url(method: DeliveryMethod) -> str:

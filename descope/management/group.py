@@ -1,6 +1,7 @@
-from typing import List, Optional
+from typing import Awaitable, List, Optional, Union
 
 from descope._auth_base import AuthBase
+from descope.future_utils import futu_apply
 from descope.management.common import MgmtV1
 
 
@@ -8,7 +9,7 @@ class Group(AuthBase):
     def load_all_groups(
         self,
         tenant_id: str,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Load all groups for a specific tenant id.
 
@@ -42,14 +43,17 @@ class Group(AuthBase):
             },
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(
+            response,
+            lambda response: response.json(),
+        )
 
     def load_all_groups_for_members(
         self,
         tenant_id: str,
         user_ids: Optional[List[str]] = None,
         login_ids: Optional[List[str]] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Load all groups for the provided user IDs or login IDs.
 
@@ -90,13 +94,16 @@ class Group(AuthBase):
             },
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(
+            response,
+            lambda response: response.json(),
+        )
 
     def load_all_group_members(
         self,
         tenant_id: str,
         group_id: str,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Load all members of the provided group id.
 
@@ -132,4 +139,7 @@ class Group(AuthBase):
             },
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(
+            response,
+            lambda response: response.json(),
+        )

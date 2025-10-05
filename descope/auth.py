@@ -8,10 +8,12 @@ import re
 from http import HTTPStatus
 import ssl
 from threading import Lock
-from typing import Iterable
 import certifi
+from typing import Awaitable, Iterable, Union
 
 import jwt
+
+from descope.future_utils import futu_apply, futu_awaitable
 
 try:
     from importlib.metadata import version
@@ -21,6 +23,7 @@ except ImportError:
 import httpx
 from email_validator import EmailNotValidError, validate_email
 from jwt import ExpiredSignatureError, ImmatureSignatureError
+
 
 from descope.common import (
     COOKIE_DATA_NAME,
@@ -76,6 +79,7 @@ class Auth:
         timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
         jwt_validation_leeway: int = 5,
         auth_management_key: str | None = None,
+        async_mode: bool = False,
         fga_cache_url: str | None = None,
     ):
         self.lock_public_keys = Lock()
@@ -93,6 +97,7 @@ class Auth:
         self.project_id = project_id
         self.jwt_validation_leeway = jwt_validation_leeway
         self.secure = not skip_verify
+        self.async_mode = async_mode
 
         self.base_url = os.getenv("DESCOPE_BASE_URI")
         if not self.base_url:
@@ -112,18 +117,66 @@ class Auth:
                 kid, pub_key, alg = self._validate_and_load_public_key(public_key)
                 self.public_keys = {kid: (pub_key, alg)}
 
-        if skip_verify:
-            self.ssl_ctx = False
-        else:
+        self.client_timeout = timeout_seconds
+        self.client_verify: bool | ssl.SSLContext = False
+        if not skip_verify:
             # Backwards compatibility with requests
-            self.ssl_ctx = ssl.create_default_context(
+            ssl_ctx = ssl.create_default_context(
                 cafile=os.environ.get("SSL_CERT_FILE", certifi.where()),
                 capath=os.environ.get("SSL_CERT_DIR"),
             )
             if os.environ.get("REQUESTS_CA_BUNDLE"):
-                self.ssl_ctx.load_cert_chain(
-                    certfile=os.environ.get("REQUESTS_CA_BUNDLE")
-                )
+                # ignore - is valid string
+                ssl_ctx.load_cert_chain(certfile=os.environ.get("REQUESTS_CA_BUNDLE"))  # type: ignore[arg-type]
+            self.client_verify = ssl_ctx
+            # ignore - is valid string
+
+    def _request(
+        self, method: str, url: str, **kwargs
+    ) -> Union[httpx.Response, Awaitable[httpx.Response]]:
+        kwargs = {**kwargs}
+        if self.async_mode:
+            return self._async_request(method, url, **kwargs)
+        else:
+            return self._sync_request(method, url, **kwargs)
+
+    def _sync_request(self, method: str, url: str, **kwargs) -> httpx.Response:
+        req_kwargs = {
+            "verify": self.client_verify,
+            "timeout": self.client_timeout,
+            **kwargs,
+        }
+        method_lower = method.lower()
+        if method_lower == "get":
+            return httpx.get(url, **req_kwargs)
+        elif method_lower == "post":
+            return httpx.post(url, **req_kwargs)
+        elif method_lower == "patch":
+            return httpx.patch(url, **req_kwargs)
+        elif method_lower == "delete":
+            return httpx.delete(url, **req_kwargs)
+        elif method_lower == "put":
+            return httpx.put(url, **req_kwargs)
+        else:
+            return httpx.request(method, url, **req_kwargs)
+
+    async def _async_request(self, method: str, url: str, **kwargs) -> httpx.Response:
+        async with httpx.AsyncClient(
+            verify=self.client_verify, timeout=self.client_timeout
+        ) as client:
+            method_lower = method.lower()
+            if method_lower == "get":
+                return await client.get(url, **kwargs)
+            elif method_lower == "post":
+                return await client.post(url, **kwargs)
+            elif method_lower == "patch":
+                return await client.patch(url, **kwargs)
+            elif method_lower == "delete":
+                return await client.delete(url, **kwargs)
+            elif method_lower == "put":
+                return await client.put(url, **kwargs)
+            else:
+                return await client.request(method, url, **kwargs)
 
     def _raise_rate_limit_exception(self, response):
         try:
@@ -161,17 +214,16 @@ class Auth:
         params=None,
         follow_redirects=None,
         pswd: str | None = None,
-    ) -> httpx.Response:
-        response = httpx.get(
+    ) -> Union[httpx.Response, Awaitable[httpx.Response]]:
+        """Make GET request, returning Response or awaitable Response based on async_mode."""
+        response = self._request(
+            "GET",
             f"{self.base_url}{uri}",
             headers=self._get_default_headers(pswd),
             params=params,
             follow_redirects=follow_redirects,
-            verify=self.ssl_ctx,
-            timeout=self.timeout_seconds,
         )
-        self._raise_from_response(response)
-        return response
+        return futu_apply(response, self._raise_from_response_and_return)
 
     def do_post(
         self,
@@ -179,18 +231,17 @@ class Auth:
         body: dict | list[dict] | list[str] | None,
         params=None,
         pswd: str | None = None,
-    ) -> httpx.Response:
-        response = httpx.post(
+    ) -> Union[httpx.Response, Awaitable[httpx.Response]]:
+        """Make POST request, returning Response or awaitable Response based on async_mode."""
+        response = self._request(
+            "POST",
             f"{self.base_url}{uri}",
             headers=self._get_default_headers(pswd),
             json=body,
-            follow_redirects=False,
-            verify=self.ssl_ctx,
             params=params,
-            timeout=self.timeout_seconds,
+            follow_redirects=False,
         )
-        self._raise_from_response(response)
-        return response
+        return futu_apply(response, self._raise_from_response_and_return)
 
     def do_patch(
         self,
@@ -198,30 +249,35 @@ class Auth:
         body: dict | list[dict] | list[str] | None,
         params=None,
         pswd: str | None = None,
-    ) -> httpx.Response:
-        response = httpx.patch(
+    ) -> Union[httpx.Response, Awaitable[httpx.Response]]:
+        """Make PATCH request, returning Response or awaitable Response based on async_mode."""
+        response = self._request(
+            "PATCH",
             f"{self.base_url}{uri}",
             headers=self._get_default_headers(pswd),
             json=body,
-            follow_redirects=False,
-            verify=self.ssl_ctx,
             params=params,
-            timeout=self.timeout_seconds,
+            follow_redirects=False,
         )
-        self._raise_from_response(response)
-        return response
+        return futu_apply(response, self._raise_from_response_and_return)
 
     def do_delete(
         self, uri: str, params=None, pswd: str | None = None
-    ) -> httpx.Response:
-        response = httpx.delete(
+    ) -> Union[httpx.Response, Awaitable[httpx.Response]]:
+        """Make DELETE request, returning Response or awaitable Response based on async_mode."""
+        response = self._request(
+            "DELETE",
             f"{self.base_url}{uri}",
             params=params,
             headers=self._get_default_headers(pswd),
             follow_redirects=False,
-            verify=self.ssl_ctx,
-            timeout=self.timeout_seconds,
         )
+        return futu_apply(response, self._raise_from_response_and_return)
+
+    def _raise_from_response_and_return(
+        self, response: httpx.Response
+    ) -> httpx.Response:
+        """Helper method to raise exception if needed, then return response."""
         self._raise_from_response(response)
         return response
 
@@ -232,27 +288,25 @@ class Auth:
         custom_base_url: str | None = None,
         params=None,
         pswd: str | None = None,
-    ) -> httpx.Response:
+    ) -> Union[httpx.Response, Awaitable[httpx.Response]]:
         """
-        Post request with optional custom base URL.
-        If base_url is provided, use it instead of self.base_url.
+        Make POST request to a custom base URL when provided; otherwise use default base URL.
+        Returns Response or awaitable Response based on async_mode.
         """
         effective_base_url = custom_base_url if custom_base_url else self.base_url
-        response = httpx.post(
+        response = self._request(
+            "POST",
             f"{effective_base_url}{uri}",
             headers=self._get_default_headers(pswd),
             json=body,
-            follow_redirects=False,
-            verify=self.ssl_ctx,
             params=params,
-            timeout=self.timeout_seconds,
+            follow_redirects=False,
         )
-        self._raise_from_response(response)
-        return response
+        return futu_apply(response, self._raise_from_response_and_return)
 
     def exchange_token(
         self, uri, code: str, audience: str | None | Iterable[str] = None
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         if not code:
             raise AuthException(
                 400,
@@ -262,11 +316,14 @@ class Auth:
 
         body = Auth._compose_exchange_body(code)
         response = self.do_post(uri=uri, body=body, params=None)
-        resp = response.json()
-        jwt_response = self.generate_jwt_response(
-            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME), audience
+        return futu_apply(
+            response,
+            lambda response: self.generate_jwt_response(
+                response.json(),
+                response.cookies.get(REFRESH_SESSION_COOKIE_NAME),
+                audience,
+            ),
         )
-        return jwt_response
 
     @staticmethod
     def base_url_for_project_id(project_id):
@@ -406,15 +463,20 @@ class Auth:
         access_key: str,
         audience: str | Iterable[str] | None = None,
         login_options: AccessKeyLoginOptions | None = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         uri = EndpointsV1.exchange_auth_access_key_path
         body = {
             "loginOptions": login_options.__dict__ if login_options else {},
         }
         server_response = self.do_post(uri=uri, body=body, params=None, pswd=access_key)
-        json = server_response.json()
-        return self._generate_auth_info(
-            response_body=json, refresh_token=None, user_jwt=False, audience=audience
+        return futu_apply(
+            server_response,
+            lambda response: self._generate_auth_info(
+                response_body=response.json(),
+                refresh_token=None,
+                user_jwt=False,
+                audience=audience,
+            ),
         )
 
     @staticmethod
@@ -466,7 +528,7 @@ class Auth:
             )
 
     def _raise_from_response(self, response: httpx.Response):
-        """Raise appropriate exception from response, does nothing if response.ok is True."""
+        """Raise appropriate exception from response, does nothing if response.is_success is True."""
         if response.is_success:
             return
 
@@ -479,13 +541,12 @@ class Auth:
             response.text,
         )
 
-    def _fetch_public_keys(self) -> None:
+    def _fetch_public_keys_sync(self) -> None:
         # This function called under mutex protection so no need to acquire it once again
-        response = httpx.get(
+        response = self._sync_request(
+            "GET",
             f"{self.base_url}{EndpointsV2.public_key_path}/{self.project_id}",
             headers=self._get_default_headers(),
-            verify=self.ssl_ctx,
-            timeout=self.timeout_seconds,
         )
         self._raise_from_response(response)
 
@@ -569,14 +630,16 @@ class Auth:
         jwt_response = {}
         st_jwt = response_body.get("sessionJwt", "")
         if st_jwt:
-            jwt_response[SESSION_TOKEN_NAME] = self._validate_token(st_jwt, audience)
+            jwt_response[SESSION_TOKEN_NAME] = self._validate_token_sync(
+                st_jwt, audience
+            )
         rt_jwt = response_body.get("refreshJwt", "")
         if rt_jwt:
-            jwt_response[REFRESH_SESSION_TOKEN_NAME] = self._validate_token(
+            jwt_response[REFRESH_SESSION_TOKEN_NAME] = self._validate_token_sync(
                 rt_jwt, audience
             )
         elif refresh_token:
-            jwt_response[REFRESH_SESSION_TOKEN_NAME] = self._validate_token(
+            jwt_response[REFRESH_SESSION_TOKEN_NAME] = self._validate_token_sync(
                 refresh_token, audience
             )
 
@@ -617,8 +680,8 @@ class Auth:
         headers["Authorization"] = f"Bearer {bearer}"
         return headers
 
-    # Validate a token and load the public key if needed
-    def _validate_token(
+    # Validate a token and load the public key if needed.
+    def _validate_token_sync(
         self, token: str, audience: str | None | Iterable[str] = None
     ) -> dict:
         if not token:
@@ -650,7 +713,7 @@ class Auth:
 
         with self.lock_public_keys:
             if self.public_keys == {} or self.public_keys.get(kid, None) is None:
-                self._fetch_public_keys()
+                self._fetch_public_keys_sync()
 
             found_key = self.public_keys.get(kid, None)
             if found_key is None:
@@ -697,7 +760,8 @@ class Auth:
 
     def validate_session(
         self, session_token: str, audience: str | None | Iterable[str] = None
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
+        """Validate a session token, returning dict or awaitable dict based on async_mode."""
         if not session_token:
             raise AuthException(
                 400,
@@ -705,15 +769,16 @@ class Auth:
                 "Session token is required for validation",
             )
 
-        res = self._validate_token(session_token, audience)
+        res = self._validate_token_sync(session_token, audience)
         res[SESSION_TOKEN_NAME] = copy.deepcopy(
             res
         )  # Duplicate for saving backward compatibility but keep the same structure as the refresh operation response
-        return self.adjust_properties(res, True)
+        return futu_awaitable(self.adjust_properties(res, True), self.async_mode)
 
     def refresh_session(
         self, refresh_token: str, audience: str | None | Iterable[str] = None
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
+        """Refresh a session token, returning dict or awaitable dict based on async_mode."""
         if not refresh_token:
             raise AuthException(
                 400,
@@ -721,23 +786,28 @@ class Auth:
                 "Refresh token is required to refresh a session",
             )
 
-        self._validate_token(refresh_token, audience)
+        self._validate_token_sync(refresh_token, audience)
 
-        uri = EndpointsV1.refresh_token_path
-        response = self.do_post(uri=uri, body={}, params=None, pswd=refresh_token)
-
-        resp = response.json()
-        refresh_token = (
-            response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None) or refresh_token
+        response = self.do_post(
+            uri=EndpointsV1.refresh_token_path, body={}, params=None, pswd=refresh_token
         )
-        return self.generate_jwt_response(resp, refresh_token, audience)
+
+        def process_response(resp_obj):
+            resp = resp_obj.json()
+            refresh_token_from_cookie = (
+                resp_obj.cookies.get(REFRESH_SESSION_COOKIE_NAME, None) or refresh_token
+            )
+            return self.generate_jwt_response(resp, refresh_token_from_cookie, audience)
+
+        return futu_apply(response, process_response)
 
     def validate_and_refresh_session(
         self,
         session_token: str,
         refresh_token: str,
         audience: str | None | Iterable[str] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
+        """Validate session, refresh if needed, returning dict or awaitable dict based on async_mode."""
         if not session_token:
             raise AuthException(
                 400,
@@ -762,7 +832,8 @@ class Auth:
         tenant_id: str,
         refresh_token: str,
         audience: str | None | Iterable[str] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
+        """Select a tenant, returning dict or awaitable dict based on async_mode."""
         if not refresh_token:
             raise AuthException(
                 400,
@@ -775,11 +846,13 @@ class Auth:
             uri=uri, body={"tenant": tenant_id}, params=None, pswd=refresh_token
         )
 
-        resp = response.json()
-        jwt_response = self.generate_jwt_response(
-            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
-        )
-        return jwt_response
+        def process_response(resp_obj):
+            resp = resp_obj.json()
+            return self.generate_jwt_response(
+                resp, resp_obj.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
+            )
+
+        return futu_apply(response, process_response)
 
     @staticmethod
     def extract_masked_address(response: dict, method: DeliveryMethod) -> str:

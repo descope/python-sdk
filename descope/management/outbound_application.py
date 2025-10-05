@@ -1,8 +1,9 @@
-from typing import Any, List, Optional
+from typing import Any, Awaitable, List, Optional, Union
 
 from descope._auth_base import AuthBase
 from descope.auth import Auth
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException  # noqa: F401
+from descope.future_utils import futu_apply
 from descope.management.common import (
     AccessType,
     MgmtV1,
@@ -24,7 +25,7 @@ class _OutboundApplicationTokenFetcher:
         scopes: List[str],
         options: Optional[dict] = None,
         tenant_id: Optional[str] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """Internal implementation for fetching token by scopes."""
         uri = MgmtV1.outbound_application_fetch_token_by_scopes_path
         response = auth_instance.do_post(
@@ -38,7 +39,7 @@ class _OutboundApplicationTokenFetcher:
             },
             pswd=token,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     @staticmethod
     def fetch_token(
@@ -48,7 +49,7 @@ class _OutboundApplicationTokenFetcher:
         user_id: str,
         tenant_id: Optional[str] = None,
         options: Optional[dict] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """Internal implementation for fetching token."""
         uri = MgmtV1.outbound_application_fetch_token_path
         response = auth_instance.do_post(
@@ -61,7 +62,7 @@ class _OutboundApplicationTokenFetcher:
             },
             pswd=token,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     @staticmethod
     def fetch_tenant_token_by_scopes(
@@ -71,7 +72,7 @@ class _OutboundApplicationTokenFetcher:
         tenant_id: str,
         scopes: List[str],
         options: Optional[dict] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """Internal implementation for fetching tenant token by scopes."""
         uri = MgmtV1.outbound_application_fetch_tenant_token_by_scopes_path
         response = auth_instance.do_post(
@@ -84,7 +85,7 @@ class _OutboundApplicationTokenFetcher:
             },
             pswd=token,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     @staticmethod
     def fetch_tenant_token(
@@ -93,7 +94,7 @@ class _OutboundApplicationTokenFetcher:
         app_id: str,
         tenant_id: str,
         options: Optional[dict] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """Internal implementation for fetching tenant token."""
         uri = MgmtV1.outbound_application_fetch_tenant_token_path
         response = auth_instance.do_post(
@@ -105,7 +106,7 @@ class _OutboundApplicationTokenFetcher:
             },
             pswd=token,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
 
 class OutboundApplication(AuthBase):
@@ -129,7 +130,7 @@ class OutboundApplication(AuthBase):
         pkce: Optional[bool] = None,
         access_type: Optional[AccessType] = None,
         prompt: Optional[List[PromptType]] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Create a new outbound application with the given name. Outbound application IDs are provisioned automatically, but can be provided
         explicitly if needed. Both the name and ID must be unique per project.
@@ -186,7 +187,7 @@ class OutboundApplication(AuthBase):
             ),
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def update_application(
         self,
@@ -208,7 +209,7 @@ class OutboundApplication(AuthBase):
         pkce: Optional[bool] = None,
         access_type: Optional[AccessType] = None,
         prompt: Optional[List[PromptType]] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Update an existing outbound application with the given parameters. IMPORTANT: All parameters are used as overrides
         to the existing outbound application. Empty fields will override populated fields. Use carefully.
@@ -267,12 +268,12 @@ class OutboundApplication(AuthBase):
             },
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def delete_application(
         self,
         id: str,
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Delete an existing outbound application. IMPORTANT: This action is irreversible. Use carefully.
 
@@ -283,12 +284,13 @@ class OutboundApplication(AuthBase):
         AuthException: raised if deletion operation fails
         """
         uri = MgmtV1.outbound_application_delete_path
-        self._auth.do_post(uri, {"id": id}, pswd=self._auth.management_key)
+        response = self._auth.do_post(uri, {"id": id}, pswd=self._auth.management_key)
+        return futu_apply(response, lambda response: None)
 
     def load_application(
         self,
         id: str,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Load outbound application by id.
 
@@ -307,11 +309,11 @@ class OutboundApplication(AuthBase):
             uri=f"{MgmtV1.outbound_application_load_path}/{id}",
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def load_all_applications(
         self,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Load all outbound applications.
 
@@ -327,7 +329,7 @@ class OutboundApplication(AuthBase):
             uri=MgmtV1.outbound_application_load_all_path,
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def fetch_token_by_scopes(
         self,
@@ -336,7 +338,7 @@ class OutboundApplication(AuthBase):
         scopes: List[str],
         options: Optional[dict] = None,
         tenant_id: Optional[str] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Fetch an outbound application token for a user with specific scopes.
 
@@ -354,15 +356,19 @@ class OutboundApplication(AuthBase):
         Raise:
         AuthException: raised if fetch operation fails
         """
-        return _OutboundApplicationTokenFetcher.fetch_token_by_scopes(
-            self._auth,
-            self._auth.management_key,  # type: ignore[arg-type] # will never get here with None value
-            app_id,
-            user_id,
-            scopes,
-            options,
-            tenant_id,
+        uri = MgmtV1.outbound_application_fetch_token_by_scopes_path
+        response = self._auth.do_post(
+            uri,
+            {
+                "appId": app_id,
+                "userId": user_id,
+                "scopes": scopes,
+                "options": options,
+                "tenantId": tenant_id,
+            },
+            pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: response.json())
 
     def fetch_token(
         self,
@@ -370,7 +376,7 @@ class OutboundApplication(AuthBase):
         user_id: str,
         tenant_id: Optional[str] = None,
         options: Optional[dict] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Fetch an outbound application token for a user.
 
@@ -387,14 +393,18 @@ class OutboundApplication(AuthBase):
         Raise:
         AuthException: raised if fetch operation fails
         """
-        return _OutboundApplicationTokenFetcher.fetch_token(
-            self._auth,
-            self._auth.management_key,  # type: ignore[arg-type] # will never get here with None value
-            app_id,
-            user_id,
-            tenant_id,
-            options,
+        uri = MgmtV1.outbound_application_fetch_token_path
+        response = self._auth.do_post(
+            uri,
+            {
+                "appId": app_id,
+                "userId": user_id,
+                "tenantId": tenant_id,
+                "options": options,
+            },
+            pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: response.json())
 
     def fetch_tenant_token_by_scopes(
         self,
@@ -402,7 +412,7 @@ class OutboundApplication(AuthBase):
         tenant_id: str,
         scopes: List[str],
         options: Optional[dict] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Fetch an outbound application token for a tenant with specific scopes.
 
@@ -419,21 +429,25 @@ class OutboundApplication(AuthBase):
         Raise:
         AuthException: raised if fetch operation fails
         """
-        return _OutboundApplicationTokenFetcher.fetch_tenant_token_by_scopes(
-            self._auth,
-            self._auth.management_key,  # type: ignore[arg-type] # will never get here with None value
-            app_id,
-            tenant_id,
-            scopes,
-            options,
+        uri = MgmtV1.outbound_application_fetch_tenant_token_by_scopes_path
+        response = self._auth.do_post(
+            uri,
+            {
+                "appId": app_id,
+                "tenantId": tenant_id,
+                "scopes": scopes,
+                "options": options,
+            },
+            pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: response.json())
 
     def fetch_tenant_token(
         self,
         app_id: str,
         tenant_id: str,
         options: Optional[dict] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Fetch an outbound application token for a tenant.
 
@@ -449,13 +463,17 @@ class OutboundApplication(AuthBase):
         Raise:
         AuthException: raised if fetch operation fails
         """
-        return _OutboundApplicationTokenFetcher.fetch_tenant_token(
-            self._auth,
-            self._auth.management_key,  # type: ignore[arg-type] # will never get here with None value
-            app_id,
-            tenant_id,
-            options,
+        uri = MgmtV1.outbound_application_fetch_tenant_token_path
+        response = self._auth.do_post(
+            uri,
+            {
+                "appId": app_id,
+                "tenantId": tenant_id,
+                "options": options,
+            },
+            pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: response.json())
 
     @staticmethod
     def _compose_create_update_body(
@@ -539,7 +557,7 @@ class OutboundApplicationByToken(AuthBase):
         scopes: List[str],
         options: Optional[dict] = None,
         tenant_id: Optional[str] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Fetch an outbound application token for a user with specific scopes.
 
@@ -570,7 +588,7 @@ class OutboundApplicationByToken(AuthBase):
         user_id: str,
         tenant_id: Optional[str] = None,
         options: Optional[dict] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Fetch an outbound application token for a user.
 
@@ -600,7 +618,7 @@ class OutboundApplicationByToken(AuthBase):
         tenant_id: str,
         scopes: List[str],
         options: Optional[dict] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Fetch an outbound application token for a tenant with specific scopes.
 
@@ -625,7 +643,7 @@ class OutboundApplicationByToken(AuthBase):
 
     def fetch_tenant_token(
         self, token: str, app_id: str, tenant_id: str, options: Optional[dict] = None
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Fetch an outbound application token for a tenant.
 

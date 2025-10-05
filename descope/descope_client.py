@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable
+from typing import Awaitable, Iterable, Union
 
 import httpx
 
@@ -16,6 +16,7 @@ from descope.authmethod.totp import TOTP  # noqa: F401
 from descope.authmethod.webauthn import WebAuthn  # noqa: F401
 from descope.common import DEFAULT_TIMEOUT_SECONDS, AccessKeyLoginOptions, EndpointsV1
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
+from descope.future_utils import futu_apply
 from descope.mgmt import MGMT  # noqa: F401
 
 
@@ -31,6 +32,7 @@ class DescopeClient:
         timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
         jwt_validation_leeway: int = 5,
         auth_management_key: str | None = None,
+        async_mode: bool = False,
         fga_cache_url: str | None = None,
     ):
         auth = Auth(
@@ -41,6 +43,7 @@ class DescopeClient:
             timeout_seconds,
             jwt_validation_leeway,
             auth_management_key,
+            async_mode,
             fga_cache_url,
         )
         self._auth = auth
@@ -296,7 +299,7 @@ class DescopeClient:
 
     def validate_session(
         self, session_token: str, audience: str | Iterable[str] | None = None
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Validate a session token. Call this function for every incoming request to your
         private endpoints. Alternatively, use validate_and_refresh_session in order to
@@ -319,7 +322,7 @@ class DescopeClient:
 
     def refresh_session(
         self, refresh_token: str, audience: str | Iterable[str] | None = None
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Refresh a session. Call this function when a session expires and needs to be refreshed.
 
@@ -340,7 +343,7 @@ class DescopeClient:
         session_token: str,
         refresh_token: str,
         audience: str | Iterable[str] | None = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Validate the session token and refresh it if it has expired, the session token will automatically be refreshed.
         Either the session_token or the refresh_token must be provided.
@@ -362,7 +365,9 @@ class DescopeClient:
             session_token, refresh_token, audience
         )
 
-    def logout(self, refresh_token: str) -> httpx.Response:
+    def logout(
+        self, refresh_token: str
+    ) -> Union[httpx.Response, Awaitable[httpx.Response]]:
         """
         Logout user from current session and revoke the refresh_token. After calling this function,
             you must invalidate or remove any cookies you have created.
@@ -383,9 +388,12 @@ class DescopeClient:
             )
 
         uri = EndpointsV1.logout_path
-        return self._auth.do_post(uri, {}, None, refresh_token)
+        response = self._auth.do_post(uri, {}, None, refresh_token)
+        return futu_apply(response, lambda response: response)
 
-    def logout_all(self, refresh_token: str) -> httpx.Response:
+    def logout_all(
+        self, refresh_token: str
+    ) -> Union[httpx.Response, Awaitable[httpx.Response]]:
         """
         Logout user from all active sessions and revoke the refresh_token. After calling this function,
             you must invalidate or remove any cookies you have created.
@@ -406,9 +414,10 @@ class DescopeClient:
             )
 
         uri = EndpointsV1.logout_all_path
-        return self._auth.do_post(uri, {}, None, refresh_token)
+        response = self._auth.do_post(uri, {}, None, refresh_token)
+        return futu_apply(response, lambda response: response)
 
-    def me(self, refresh_token: str) -> dict:
+    def me(self, refresh_token: str) -> Union[dict, Awaitable[dict]]:
         """
         Retrieve user details for the refresh token. The returned data includes email, name, phone,
             list of loginIds and boolean flags for verifiedEmail, verifiedPhone.
@@ -433,14 +442,14 @@ class DescopeClient:
         response = self._auth.do_get(
             uri=uri, params=None, follow_redirects=None, pswd=refresh_token
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def my_tenants(
         self,
         refresh_token: str,
         dct: bool = False,
         ids: list[str] | None = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Retrieve tenant attributes that user belongs to, one of dct/ids must be populated .
 
@@ -480,9 +489,9 @@ class DescopeClient:
 
         uri = EndpointsV1.my_tenants_path
         response = self._auth.do_post(uri, body, None, refresh_token)
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
-    def history(self, refresh_token: str) -> list[dict]:
+    def history(self, refresh_token: str) -> Union[list[dict], Awaitable[list[dict]]]:
         """
         Retrieve user authentication history for the refresh token
 
@@ -515,14 +524,14 @@ class DescopeClient:
         response = self._auth.do_get(
             uri=uri, params=None, follow_redirects=None, pswd=refresh_token
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def exchange_access_key(
         self,
         access_key: str,
         audience: str | Iterable[str] | None = None,
         login_options: AccessKeyLoginOptions | None = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Return a new session token for the given access key
 
@@ -547,7 +556,7 @@ class DescopeClient:
         self,
         tenant_id: str,
         refresh_token: str,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Add to JWT a selected tenant claim
 
