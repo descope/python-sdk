@@ -7,6 +7,7 @@ from descope.auth import Auth
 from descope.authmethod.totp import TOTP  # noqa: F401
 from descope.common import DEFAULT_TIMEOUT_SECONDS, EndpointsV1, LoginOptions
 
+from tests.testutils import SSLMatcher
 from . import common
 
 
@@ -49,8 +50,8 @@ class TestTOTP(common.DescopeTest):
             signup_user_details,
         )
 
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 totp.sign_up,
@@ -59,8 +60,8 @@ class TestTOTP(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNotNone(totp.sign_up("dummy@dummy.com", signup_user_details))
 
     def test_sign_in(self):
@@ -72,16 +73,16 @@ class TestTOTP(common.DescopeTest):
         self.assertRaises(AuthException, totp.sign_in_code, "dummy@dummy.com", None)
         self.assertRaises(AuthException, totp.sign_in_code, "dummy@dummy.com", "")
 
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(
                 AuthException, totp.sign_in_code, "dummy@dummy.com", "1234"
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.cookies = {}
             data = json.loads(
                 """{"jwts": ["eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg4MDc4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MTY2MDIxNTI3OCwiaWF0IjoxNjU3Nzk2MDc4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQnRFSGtnT3UwMmxtTXh6UElleGRNdFV3MU0ifQ.oAnvJ7MJvCyL_33oM7YCF12JlQ0m6HWRuteUVAdaswfnD4rHEBmPeuVHGljN6UvOP4_Cf0559o39UHVgm3Fwb-q7zlBbsu_nP1-PRl-F8NJjvBgC5RsAYabtJq7LlQmh"], "user": {"loginIds": ["guyp@descope.com"], "name": "", "email": "guyp@descope.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false}, "firstSeen": false}"""
@@ -98,9 +99,9 @@ class TestTOTP(common.DescopeTest):
             )
 
         # Validate refresh token used while provided
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.cookies = {}
             data = json.loads(
                 """{"jwts": ["eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg4MDc4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MTY2MDIxNTI3OCwiaWF0IjoxNjU3Nzk2MDc4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQnRFSGtnT3UwMmxtTXh6UElleGRNdFV3MU0ifQ.oAnvJ7MJvCyL_33oM7YCF12JlQ0m6HWRuteUVAdaswfnD4rHEBmPeuVHGljN6UvOP4_Cf0559o39UHVgm3Fwb-q7zlBbsu_nP1-PRl-F8NJjvBgC5RsAYabtJq7LlQmh"], "user": {"loginIds": ["guyp@descope.com"], "name": "", "email": "guyp@descope.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false}, "firstSeen": false}"""
@@ -131,8 +132,8 @@ class TestTOTP(common.DescopeTest):
                         "mfa": False,
                     },
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -145,8 +146,8 @@ class TestTOTP(common.DescopeTest):
         self.assertRaises(AuthException, totp.update_user, "dummy@dummy.com", None)
         self.assertRaises(AuthException, totp.update_user, "dummy@dummy.com", "")
 
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 totp.update_user,
@@ -159,7 +160,7 @@ class TestTOTP(common.DescopeTest):
                 """{ "provisioningURL": "http://dummy.com", "image": "imagedata", "key": "k01", "error": "" }"""
             )
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = valid_response
             mock_post.return_value = my_mock_response
             res = totp.update_user("dummy@dummy.com", valid_jwt_token)
@@ -173,8 +174,8 @@ class TestTOTP(common.DescopeTest):
                 },
                 params=None,
                 json={"loginId": "dummy@dummy.com"},
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(res, valid_response)

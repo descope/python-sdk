@@ -9,6 +9,7 @@ from descope.authmethod.oauth import OAuth
 from descope.common import DEFAULT_TIMEOUT_SECONDS, EndpointsV1, LoginOptions
 
 from . import common
+from tests.testutils import SSLMatcher
 
 
 class TestOAuth(common.DescopeTest):
@@ -48,13 +49,13 @@ class TestOAuth(common.DescopeTest):
         # Test failed flows
         self.assertRaises(AuthException, oauth.start, "")
 
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(AuthException, oauth.start, "google")
 
         # Test success flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNotNone(oauth.start("google"))
 
             self.assertRaises(
@@ -65,8 +66,8 @@ class TestOAuth(common.DescopeTest):
                 LoginOptions(mfa=True),
             )
 
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             oauth.start("facebook")
             expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.oauth_start_path}"
             mock_post.assert_called_with(
@@ -78,8 +79,8 @@ class TestOAuth(common.DescopeTest):
                 },
                 params={"provider": "facebook"},
                 json={},
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -89,17 +90,17 @@ class TestOAuth(common.DescopeTest):
         # Test failed flows
         self.assertRaises(AuthException, oauth.start, "")
 
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(AuthException, oauth.start, "google")
 
         # Test success flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNotNone(oauth.start("google"))
 
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             lo = LoginOptions(stepup=True, custom_claims={"k1": "v1"})
             oauth.start("facebook", login_options=lo, refresh_token="refresh")
             expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.oauth_start_path}"
@@ -112,8 +113,8 @@ class TestOAuth(common.DescopeTest):
                 },
                 params={"provider": "facebook"},
                 json={"stepup": True, "customClaims": {"k1": "v1"}, "mfa": False},
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -127,14 +128,14 @@ class TestOAuth(common.DescopeTest):
         self.assertRaises(AuthException, oauth.exchange_token, "")
         self.assertRaises(AuthException, oauth.exchange_token, None)
 
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(AuthException, oauth.exchange_token, "c1")
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.cookies = {}
             data = json.loads(
                 """{"jwts": ["eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg4MDc4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MTY2MDIxNTI3OCwiaWF0IjoxNjU3Nzk2MDc4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQnRFSGtnT3UwMmxtTXh6UElleGRNdFV3MU0ifQ.oAnvJ7MJvCyL_33oM7YCF12JlQ0m6HWRuteUVAdaswfnD4rHEBmPeuVHGljN6UvOP4_Cf0559o39UHVgm3Fwb-q7zlBbsu_nP1-PRl-F8NJjvBgC5RsAYabtJq7LlQmh"], "user": {"loginIds": ["guyp@descope.com"], "name": "", "email": "guyp@descope.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false}, "firstSeen": false}"""
@@ -151,8 +152,8 @@ class TestOAuth(common.DescopeTest):
                 },
                 params=None,
                 json={"code": "c1"},
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 

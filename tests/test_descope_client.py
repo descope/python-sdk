@@ -22,6 +22,7 @@ from descope.common import (
 )
 
 from . import common
+from tests.testutils import SSLMatcher
 
 
 class TestDescopeClient(common.DescopeTest):
@@ -104,13 +105,13 @@ class TestDescopeClient(common.DescopeTest):
         self.assertRaises(AuthException, client.logout, None)
 
         # Test failed flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(AuthException, client.logout, dummy_refresh_token)
 
         # Test success flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNotNone(client.logout(dummy_refresh_token))
 
     def test_logout_all(self):
@@ -120,13 +121,13 @@ class TestDescopeClient(common.DescopeTest):
         self.assertRaises(AuthException, client.logout_all, None)
 
         # Test failed flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(AuthException, client.logout_all, dummy_refresh_token)
 
         # Test success flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNotNone(client.logout_all(dummy_refresh_token))
 
     def test_me(self):
@@ -136,14 +137,14 @@ class TestDescopeClient(common.DescopeTest):
         self.assertRaises(AuthException, client.me, None)
 
         # Test failed flow
-        with patch("requests.get") as mock_get:
-            mock_get.return_value.ok = False
+        with patch("httpx.get") as mock_get:
+            mock_get.return_value.is_success = False
             self.assertRaises(AuthException, client.me, dummy_refresh_token)
 
         # Test success flow
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             data = json.loads(
                 """{"name": "Testy McTester", "email": "testy@tester.com"}"""
             )
@@ -159,8 +160,8 @@ class TestDescopeClient(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                     "x-descope-project-id": self.dummy_project_id,
                 },
-                allow_redirects=None,
-                verify=True,
+                follow_redirects=None,
+                verify=SSLMatcher(),
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -176,16 +177,16 @@ class TestDescopeClient(common.DescopeTest):
         )
 
         # Test failed flow
-        with patch("requests.post") as mock_get:
-            mock_get.return_value.ok = False
+        with patch("httpx.post") as mock_get:
+            mock_get.return_value.is_success = False
             self.assertRaises(
                 AuthException, client.my_tenants, dummy_refresh_token, True
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             data = json.loads(
                 """{"tenants": [{"id": "tenant_id", "name": "tenant_name"}]}"""
             )
@@ -204,8 +205,8 @@ class TestDescopeClient(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 json={"dct": False, "ids": ["a"]},
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -217,14 +218,14 @@ class TestDescopeClient(common.DescopeTest):
         self.assertRaises(AuthException, client.history, None)
 
         # Test failed flow
-        with patch("requests.get") as mock_get:
-            mock_get.return_value.ok = False
+        with patch("httpx.get") as mock_get:
+            mock_get.return_value.is_success = False
             self.assertRaises(AuthException, client.history, dummy_refresh_token)
 
         # Test success flow
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             data = json.loads(
                 """
                 [
@@ -257,8 +258,8 @@ class TestDescopeClient(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}",
                     "x-descope-project-id": self.dummy_project_id,
                 },
-                allow_redirects=None,
-                verify=True,
+                follow_redirects=None,
+                verify=SSLMatcher(),
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -368,12 +369,12 @@ class TestDescopeClient(common.DescopeTest):
 
         # Test case where key id cannot be found
         client2 = DescopeClient(self.dummy_project_id, None)
-        with patch("requests.get") as mock_request:
+        with patch("httpx.get") as mock_request:
             fake_key = deepcopy(self.public_key_dict)
             # overwrite the kid (so it will not be found)
             fake_key["kid"] = "dummy_kid"
             mock_request.return_value.text = json.dumps([fake_key])
-            mock_request.return_value.ok = True
+            mock_request.return_value.is_success = True
             self.assertRaises(
                 AuthException,
                 client2.validate_and_refresh_session,
@@ -383,9 +384,9 @@ class TestDescopeClient(common.DescopeTest):
 
         # Test case where we failed to load key
         client3 = DescopeClient(self.dummy_project_id, None)
-        with patch("requests.get") as mock_request:
+        with patch("httpx.get") as mock_request:
             mock_request.return_value.text = """[{"kid": "dummy_kid"}]"""
-            mock_request.return_value.ok = True
+            mock_request.return_value.is_success = True
             self.assertRaises(
                 AuthException,
                 client3.validate_and_refresh_session,
@@ -396,9 +397,9 @@ class TestDescopeClient(common.DescopeTest):
         # Test case where header_alg != key[alg]
         self.public_key_dict["alg"] = "ES521"
         client4 = DescopeClient(self.dummy_project_id, self.public_key_dict)
-        with patch("requests.get") as mock_request:
+        with patch("httpx.get") as mock_request:
             mock_request.return_value.text = """[{"kid": "dummy_kid"}]"""
-            mock_request.return_value.ok = True
+            mock_request.return_value.is_success = True
             self.assertRaises(
                 AuthException,
                 client4.validate_and_refresh_session,
@@ -418,9 +419,9 @@ class TestDescopeClient(common.DescopeTest):
         #
         expired_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3VDOXl2MlVHdEdJMW84NGdDWkViOXFFUVciLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEUyIsImV4cCI6MTY1OTY0NDI5OCwiaWF0IjoxNjU5NjQ0Mjk3LCJpc3MiOiJQMkN1Qzl5djJVR3RHSTFvODRnQ1pFYjlxRVFXIiwic3ViIjoiVTJDdUNQdUpnUFdIR0I1UDRHbWZidVBHaEdWbSJ9.wBuOnIQI_z3SXOszqsWCg8ilOPdE5ruWYHA3jkaeQ3uX9hWgCTd69paFajc-xdMYbqlIF7JHji7T9oVmkCUJvDNgRZRZO9boMFANPyXitLOK4aX3VZpMJBpFxdrWV3GE"
         valid_refresh_token = valid_jwt_token
-        with patch("requests.get") as mock_request:
+        with patch("httpx.get") as mock_request:
             mock_request.return_value.cookies = {SESSION_COOKIE_NAME: expired_jwt_token}
-            mock_request.return_value.ok = True
+            mock_request.return_value.is_success = True
 
             self.assertRaises(
                 AuthException,
@@ -472,17 +473,17 @@ class TestDescopeClient(common.DescopeTest):
         )
 
         # Test fail flow
-        with patch("requests.get") as mock_request:
-            mock_request.return_value.ok = False
+        with patch("httpx.get") as mock_request:
+            mock_request.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 client.validate_session,
                 expired_jwt_token,
             )
 
-        with patch("requests.get") as mock_request:
+        with patch("httpx.get") as mock_request:
             mock_request.return_value.cookies = {"aaa": "aaa"}
-            mock_request.return_value.ok = True
+            mock_request.return_value.is_success = True
             self.assertRaises(
                 AuthException,
                 client.validate_session,
@@ -505,9 +506,9 @@ class TestDescopeClient(common.DescopeTest):
         new_session_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3VDOXl2MlVHdEdJMW84NGdDWkViOXFFUVciLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEUyIsImV4cCI6MjQ5MzA2MTQxNSwiaWF0IjoxNjU5NjQzMDYxLCJpc3MiOiJQMkN1Qzl5djJVR3RHSTFvODRnQ1pFYjlxRVFXIiwic3ViIjoiVTJDdUNQdUpnUFdIR0I1UDRHbWZidVBHaEdWbSJ9.gMalOv1GhqYVsfITcOc7Jv_fibX1Iof6AFy2KCVmyHmU2KwATT6XYXsHjBFFLq262Pg-LS1IX9f_DV3ppzvb1pSY4ccsP6WDGd1vJpjp3wFBP9Sji6WXL0SCCJUFIyJR"
         valid_refresh_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3VDOXl2MlVHdEdJMW84NGdDWkViOXFFUVciLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0NDMwNjEsImlhdCI6MTY1OTY0MzA2MSwiaXNzIjoiUDJDdUM5eXYyVUd0R0kxbzg0Z0NaRWI5cUVRVyIsInN1YiI6IlUyQ3VDUHVKZ1BXSEdCNVA0R21mYnVQR2hHVm0ifQ.mRo9FihYMR3qnQT06Mj3CJ5X0uTCEcXASZqfLLUv0cPCLBtBqYTbuK-ZRDnV4e4N6zGCNX2a3jjpbyqbViOxICCNSxJsVb-sdsSujtEXwVMsTTLnpWmNsMbOUiKmoME0"
         expired_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3VDOXl2MlVHdEdJMW84NGdDWkViOXFFUVciLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEUyIsImV4cCI6MTY1OTY0NDI5OCwiaWF0IjoxNjU5NjQ0Mjk3LCJpc3MiOiJQMkN1Qzl5djJVR3RHSTFvODRnQ1pFYjlxRVFXIiwic3ViIjoiVTJDdUNQdUpnUFdIR0I1UDRHbWZidVBHaEdWbSJ9.wBuOnIQI_z3SXOszqsWCg8ilOPdE5ruWYHA3jkaeQ3uX9hWgCTd69paFajc-xdMYbqlIF7JHji7T9oVmkCUJvDNgRZRZO9boMFANPyXitLOK4aX3VZpMJBpFxdrWV3GE"
-        with patch("requests.post") as mock_request:
+        with patch("httpx.post") as mock_request:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {"sessionJwt": new_session_token}
             mock_request.return_value = my_mock_response
             mock_request.return_value.cookies = {}
@@ -539,9 +540,9 @@ class TestDescopeClient(common.DescopeTest):
         new_refreshed_token = (
             expired_jwt_token  # the refreshed token should be invalid (or expired)
         )
-        with patch("requests.get") as mock_request:
+        with patch("httpx.get") as mock_request:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {"sessionJwt": new_refreshed_token}
             mock_request.return_value = my_mock_response
             mock_request.return_value.cookies = {}
@@ -774,9 +775,9 @@ class TestDescopeClient(common.DescopeTest):
         )
         dummy_access_key = "dummy access key"
         valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3VDOXl2MlVHdEdJMW84NGdDWkViOXFFUVciLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0NDMwNjEsImlhdCI6MTY1OTY0MzA2MSwiaXNzIjoiUDJDdUM5eXYyVUd0R0kxbzg0Z0NaRWI5cUVRVyIsInN1YiI6IlUyQ3VDUHVKZ1BXSEdCNVA0R21mYnVQR2hHVm0ifQ.mRo9FihYMR3qnQT06Mj3CJ5X0uTCEcXASZqfLLUv0cPCLBtBqYTbuK-ZRDnV4e4N6zGCNX2a3jjpbyqbViOxICCNSxJsVb-sdsSujtEXwVMsTTLnpWmNsMbOUiKmoME0"
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             data = {"sessionJwt": valid_jwt_token}
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
@@ -796,8 +797,8 @@ class TestDescopeClient(common.DescopeTest):
                 },
                 params=None,
                 json={"loginOptions": {"customClaims": {"k1": "v1"}}},
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -843,10 +844,10 @@ class TestDescopeClient(common.DescopeTest):
 
         valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3VDOXl2MlVHdEdJMW84NGdDWkViOXFFUVciLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0NDMwNjEsImlhdCI6MTY1OTY0MzA2MSwiaXNzIjoiUDJDdUM5eXYyVUd0R0kxbzg0Z0NaRWI5cUVRVyIsInN1YiI6IlUyQ3VDUHVKZ1BXSEdCNVA0R21mYnVQR2hHVm0ifQ.mRo9FihYMR3qnQT06Mj3CJ5X0uTCEcXASZqfLLUv0cPCLBtBqYTbuK-ZRDnV4e4N6zGCNX2a3jjpbyqbViOxICCNSxJsVb-sdsSujtEXwVMsTTLnpWmNsMbOUiKmoME0"
 
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.cookies = {}
             data = json.loads(
                 """{"jwts": ["eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg4MDc4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MTY2MDIxNTI3OCwiaWF0IjoxNjU3Nzk2MDc4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQnRFSGtnT3UwMmxtTXh6UElleGRNdFV3MU0ifQ.oAnvJ7MJvCyL_33oM7YCF12JlQ0m6HWRuteUVAdaswfnD4rHEBmPeuVHGljN6UvOP4_Cf0559o39UHVgm3Fwb-q7zlBbsu_nP1-PRl-F8NJjvBgC5RsAYabtJq7LlQmh"], "user": {"loginIds": ["guyp@descope.com"], "name": "", "email": "guyp@descope.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false}, "firstSeen": false}"""
@@ -865,8 +866,8 @@ class TestDescopeClient(common.DescopeTest):
                 json={
                     "tenant": "t1",
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -881,9 +882,9 @@ class TestDescopeClient(common.DescopeTest):
             auth_management_key=auth_mgmt_key,
         )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
             mock_post.return_value = my_mock_response
 
@@ -902,8 +903,8 @@ class TestDescopeClient(common.DescopeTest):
                     "email": "test@example.com",
                 },
                 params=None,
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -914,9 +915,9 @@ class TestDescopeClient(common.DescopeTest):
         ):
             client_env = DescopeClient(self.dummy_project_id, self.public_key_dict)
 
-            with patch("requests.post") as mock_post:
+            with patch("httpx.post") as mock_post:
                 my_mock_response = mock.Mock()
-                my_mock_response.ok = True
+                my_mock_response.is_success = True
                 my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
                 mock_post.return_value = my_mock_response
 
@@ -934,8 +935,8 @@ class TestDescopeClient(common.DescopeTest):
                         "user": {"email": "test@example.com"},
                         "email": "test@example.com",
                     },
-                    allow_redirects=False,
-                    verify=True,
+                    follow_redirects=False,
+                    verify=SSLMatcher(),
                     params=None,
                     timeout=DEFAULT_TIMEOUT_SECONDS,
                 )
@@ -951,9 +952,9 @@ class TestDescopeClient(common.DescopeTest):
                 auth_management_key=direct_auth_mgmt_key,
             )
 
-            with patch("requests.post") as mock_post:
+            with patch("httpx.post") as mock_post:
                 my_mock_response = mock.Mock()
-                my_mock_response.ok = True
+                my_mock_response.is_success = True
                 my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
                 mock_post.return_value = my_mock_response
 
@@ -972,8 +973,8 @@ class TestDescopeClient(common.DescopeTest):
                         "email": "test@example.com",
                     },
                     params=None,
-                    allow_redirects=False,
-                    verify=True,
+                    follow_redirects=False,
+                    verify=SSLMatcher(),
                     timeout=DEFAULT_TIMEOUT_SECONDS,
                 )
 
@@ -987,9 +988,9 @@ class TestDescopeClient(common.DescopeTest):
 
         # Test with refresh token function
         refresh_token = "test_refresh_token"
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedEmail": "n***@example.com"}
             mock_post.return_value = my_mock_response
 
@@ -1010,17 +1011,17 @@ class TestDescopeClient(common.DescopeTest):
                     "addToLoginIDs": False,
                     "onMergeUseExisting": False,
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Test without auth_management_key for comparison
         client_no_auth = DescopeClient(self.dummy_project_id, self.public_key_dict)
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedEmail": "n***@example.com"}
             mock_post.return_value = my_mock_response
 
@@ -1041,8 +1042,8 @@ class TestDescopeClient(common.DescopeTest):
                     "addToLoginIDs": False,
                     "onMergeUseExisting": False,
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

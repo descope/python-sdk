@@ -4,6 +4,7 @@ from descope import AuthException, DescopeClient
 from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
+from tests.testutils import SSLMatcher
 from .. import common
 
 
@@ -31,13 +32,13 @@ class TestFGA(common.DescopeTest):
         )
 
         # Test failed save_schema
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(AuthException, client.mgmt.fga.save_schema, "")
 
         # Test success flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNone(client.mgmt.fga.save_schema("model AuthZ 1.0"))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.fga_save_schema}",
@@ -48,8 +49,8 @@ class TestFGA(common.DescopeTest):
                 },
                 params=None,
                 json={"dsl": "model AuthZ 1.0"},
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -62,13 +63,13 @@ class TestFGA(common.DescopeTest):
         )
 
         # Test failed create_relations
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(AuthException, client.mgmt.fga.create_relations, [])
 
         # Test success flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNone(
                 client.mgmt.fga.create_relations(
                     [
@@ -101,8 +102,8 @@ class TestFGA(common.DescopeTest):
                         }
                     ]
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -115,13 +116,13 @@ class TestFGA(common.DescopeTest):
         )
 
         # Test failed delete_relations
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(AuthException, client.mgmt.fga.delete_relations, [])
 
         # Test success flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNone(
                 client.mgmt.fga.delete_relations(
                     [
@@ -154,8 +155,8 @@ class TestFGA(common.DescopeTest):
                         }
                     ]
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -168,13 +169,13 @@ class TestFGA(common.DescopeTest):
         )
 
         # Test failed has_relations
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(AuthException, client.mgmt.fga.check, [])
 
         # Test success flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNotNone(
                 client.mgmt.fga.check(
                     [
@@ -207,8 +208,8 @@ class TestFGA(common.DescopeTest):
                         }
                     ]
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -225,8 +226,8 @@ class TestFGA(common.DescopeTest):
                 {"resourceId": "r2", "resourceType": "type2", "displayName": "Name2"},
             ]
         }
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             mock_post.return_value.json.return_value = response_body
             ids = [
                 {"resourceId": "r1", "resourceType": "type1"},
@@ -243,8 +244,8 @@ class TestFGA(common.DescopeTest):
                 },
                 params=None,
                 json={"resourceIdentifiers": ids},
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -255,8 +256,8 @@ class TestFGA(common.DescopeTest):
             False,
             self.dummy_management_key,
         )
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             ids = [{"resourceId": "r1", "resourceType": "type1"}]
             self.assertRaises(
                 AuthException,
@@ -274,8 +275,8 @@ class TestFGA(common.DescopeTest):
         details = [
             {"resourceId": "r1", "resourceType": "type1", "displayName": "Name1"}
         ]
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             client.mgmt.fga.save_resources_details(details)
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.fga_resources_save}",
@@ -286,8 +287,8 @@ class TestFGA(common.DescopeTest):
                 },
                 params=None,
                 json={"resourcesDetails": details},
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -301,8 +302,8 @@ class TestFGA(common.DescopeTest):
         details = [
             {"resourceId": "r1", "resourceType": "type1", "displayName": "Name1"}
         ]
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 client.mgmt.fga.save_resources_details,
@@ -320,8 +321,8 @@ class TestFGA(common.DescopeTest):
             fga_cache_url=fga_cache_url,
         )
 
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             client.mgmt.fga.save_schema("model AuthZ 1.0")
             mock_post.assert_called_with(
                 f"{fga_cache_url}{MgmtV1.fga_save_schema}",
@@ -332,8 +333,8 @@ class TestFGA(common.DescopeTest):
                 },
                 params=None,
                 json={"dsl": "model AuthZ 1.0"},
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -358,8 +359,8 @@ class TestFGA(common.DescopeTest):
             }
         ]
 
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             client.mgmt.fga.create_relations(relations)
             mock_post.assert_called_with(
                 f"{fga_cache_url}{MgmtV1.fga_create_relations}",
@@ -370,8 +371,8 @@ class TestFGA(common.DescopeTest):
                 },
                 params=None,
                 json={"tuples": relations},
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -396,8 +397,8 @@ class TestFGA(common.DescopeTest):
             }
         ]
 
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             client.mgmt.fga.delete_relations(relations)
             mock_post.assert_called_with(
                 f"{fga_cache_url}{MgmtV1.fga_delete_relations}",
@@ -408,8 +409,8 @@ class TestFGA(common.DescopeTest):
                 },
                 params=None,
                 json={"tuples": relations},
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -434,8 +435,8 @@ class TestFGA(common.DescopeTest):
             }
         ]
 
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             mock_post.return_value.json.return_value = {
                 "tuples": [
                     {
@@ -454,8 +455,8 @@ class TestFGA(common.DescopeTest):
                 },
                 params=None,
                 json={"tuples": relations},
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(len(result), 1)
@@ -472,8 +473,8 @@ class TestFGA(common.DescopeTest):
             # No fga_cache_url provided
         )
 
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             client.mgmt.fga.save_schema("model AuthZ 1.0")
             # Should use default base URL
             mock_post.assert_called_with(
@@ -485,7 +486,7 @@ class TestFGA(common.DescopeTest):
                 },
                 params=None,
                 json={"dsl": "model AuthZ 1.0"},
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import requests
+import httpx
 
 from descope._auth_base import AuthBase
 from descope.auth import Auth
@@ -212,5 +212,5 @@ class EnchantedLink(AuthBase):
         return {"pendingRef": pending_ref}
 
     @staticmethod
-    def _get_pending_ref_from_response(response: requests.Response) -> dict:
+    def _get_pending_ref_from_response(response: httpx.Response) -> dict:
         return response.json()
