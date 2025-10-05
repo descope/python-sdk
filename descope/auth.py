@@ -112,18 +112,19 @@ class Auth:
                 kid, pub_key, alg = self._validate_and_load_public_key(public_key)
                 self.public_keys = {kid: (pub_key, alg)}
 
-        if skip_verify:
-            self.ssl_ctx = False
-        else:
+        self.client_timeout = timeout_seconds
+        self.client_verify: bool | ssl.SSLContext = False
+        if not skip_verify:
             # Backwards compatibility with requests
-            self.ssl_ctx = ssl.create_default_context(
+            ssl_ctx = ssl.create_default_context(
                 cafile=os.environ.get("SSL_CERT_FILE", certifi.where()),
                 capath=os.environ.get("SSL_CERT_DIR"),
             )
             if os.environ.get("REQUESTS_CA_BUNDLE"):
-                self.ssl_ctx.load_cert_chain(
-                    certfile=os.environ.get("REQUESTS_CA_BUNDLE")
-                )
+                # ignore - is valid string
+                ssl_ctx.load_cert_chain(certfile=os.environ.get("REQUESTS_CA_BUNDLE"))  # type: ignore[arg-type]
+            self.client_verify = ssl_ctx
+            # ignore - is valid string
 
     def _raise_rate_limit_exception(self, response):
         try:
@@ -167,8 +168,8 @@ class Auth:
             headers=self._get_default_headers(pswd),
             params=params,
             follow_redirects=follow_redirects,
-            verify=self.ssl_ctx,
-            timeout=self.timeout_seconds,
+            verify=self.client_verify,
+            timeout=self.client_timeout,
         )
         self._raise_from_response(response)
         return response
@@ -185,9 +186,9 @@ class Auth:
             headers=self._get_default_headers(pswd),
             json=body,
             follow_redirects=False,
-            verify=self.ssl_ctx,
+            verify=self.client_verify,
             params=params,
-            timeout=self.timeout_seconds,
+            timeout=self.client_timeout,
         )
         self._raise_from_response(response)
         return response
@@ -204,9 +205,9 @@ class Auth:
             headers=self._get_default_headers(pswd),
             json=body,
             follow_redirects=False,
-            verify=self.ssl_ctx,
+            verify=self.client_verify,
             params=params,
-            timeout=self.timeout_seconds,
+            timeout=self.client_timeout,
         )
         self._raise_from_response(response)
         return response
@@ -219,8 +220,8 @@ class Auth:
             params=params,
             headers=self._get_default_headers(pswd),
             follow_redirects=False,
-            verify=self.ssl_ctx,
-            timeout=self.timeout_seconds,
+            verify=self.client_verify,
+            timeout=self.client_timeout,
         )
         self._raise_from_response(response)
         return response
@@ -243,9 +244,9 @@ class Auth:
             headers=self._get_default_headers(pswd),
             json=body,
             follow_redirects=False,
-            verify=self.ssl_ctx,
+            verify=self.client_verify,
             params=params,
-            timeout=self.timeout_seconds,
+            timeout=self.client_timeout,
         )
         self._raise_from_response(response)
         return response
@@ -484,7 +485,7 @@ class Auth:
         response = httpx.get(
             f"{self.base_url}{EndpointsV2.public_key_path}/{self.project_id}",
             headers=self._get_default_headers(),
-            verify=self.ssl_ctx,
+            verify=self.client_verify,
             timeout=self.timeout_seconds,
         )
         self._raise_from_response(response)
