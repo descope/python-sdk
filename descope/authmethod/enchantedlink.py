@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import httpx
 
-if TYPE_CHECKING:
-    import httpx
 from descope._auth_base import AuthBase
 from descope.auth import Auth
 from descope.common import (
