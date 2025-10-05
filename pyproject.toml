@@ -89,3 +89,6 @@ profile = "black"
 per-file-ignores = "__init__.py:F401"
 ignore = "E501,N818,W503"
 max-line-length = 120
+
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "function"

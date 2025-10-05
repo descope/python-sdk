@@ -12,13 +12,15 @@ from descope.common import (
     SignUpOptions,
 )
 
-from tests.testutils import SSLMatcher
+from descope.future_utils import futu_await
+from tests.testutils import SSLMatcher, mock_http_call
 from . import common
 
 
 class TestOTP(common.DescopeTest):
     def setUp(self) -> None:
         super().setUp()
+        self.async_mode = True
         self.dummy_project_id = "dummy"
         self.public_key_dict = {
             "alg": "ES384",
@@ -30,7 +32,7 @@ class TestOTP(common.DescopeTest):
             "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
         }
 
-    def test_compose_signin_url(self):
+    async def test_compose_signin_url(self):
         self.assertEqual(
             OTP._compose_signin_url(DeliveryMethod.EMAIL),
             "/v1/auth/otp/signin/email",
@@ -48,7 +50,7 @@ class TestOTP(common.DescopeTest):
             "/v1/auth/otp/signin/whatsapp",
         )
 
-    def test_compose_verify_code_url(self):
+    async def test_compose_verify_code_url(self):
         self.assertEqual(
             OTP._compose_verify_code_url(DeliveryMethod.EMAIL),
             "/v1/auth/otp/verify/email",
@@ -66,7 +68,7 @@ class TestOTP(common.DescopeTest):
             "/v1/auth/otp/verify/whatsapp",
         )
 
-    def test_compose_update_phone_url(self):
+    async def test_compose_update_phone_url(self):
         self.assertEqual(
             OTP._compose_update_phone_url(DeliveryMethod.EMAIL),
             "/v1/auth/otp/update/phone/email",
@@ -84,7 +86,7 @@ class TestOTP(common.DescopeTest):
             "/v1/auth/otp/update/phone/whatsapp",
         )
 
-    def test_compose_sign_up_or_in_url(self):
+    async def test_compose_sign_up_or_in_url(self):
         self.assertEqual(
             OTP._compose_sign_up_or_in_url(DeliveryMethod.EMAIL),
             "/v1/auth/otp/signup-in/email",
@@ -102,7 +104,7 @@ class TestOTP(common.DescopeTest):
             "/v1/auth/otp/signup-in/whatsapp",
         )
 
-    def test_compose_update_user_phone_body(self):
+    async def test_compose_update_user_phone_body(self):
         self.assertEqual(
             OTP._compose_update_user_phone_body(
                 "dummy@dummy.com", "+11111111", False, True
@@ -115,7 +117,7 @@ class TestOTP(common.DescopeTest):
             },
         )
 
-    def test_compose_update_user_email_body(self):
+    async def test_compose_update_user_email_body(self):
         self.assertEqual(
             OTP._compose_update_user_email_body(
                 "dummy@dummy.com", "dummy@dummy.com", False, True
@@ -128,7 +130,7 @@ class TestOTP(common.DescopeTest):
             },
         )
 
-    def test_sign_up(self):
+    async def test_sign_up(self):
         invalid_signup_user_details = {
             "username": "jhon",
             "name": "john",
@@ -142,67 +144,77 @@ class TestOTP(common.DescopeTest):
             "email": "dummy@dummy.com",
         }
 
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
+        client = DescopeClient(
+            self.dummy_project_id, self.public_key_dict, async_mode=self.async_mode
+        )
 
         # Test failed flows
-        self.assertRaises(
-            AuthException,
-            client.otp.sign_up,
-            DeliveryMethod.EMAIL,
-            "dummy@dummy",
-            invalid_signup_user_details,
-        )
+        with self.assertRaises(AuthException):
+            await futu_await(
+                client.otp.sign_up(
+                    DeliveryMethod.EMAIL,
+                    "dummy@dummy",
+                    invalid_signup_user_details,
+                )
+            )
         invalid_signup_user_details["email"] = "dummy@dummy.com"  # set valid mail
         invalid_signup_user_details["phone"] = "aaaaaaaa"  # set invalid phone
-        self.assertRaises(
-            AuthException,
-            client.otp.sign_up,
-            DeliveryMethod.EMAIL,
-            "",
-            invalid_signup_user_details,
-        )
-        self.assertRaises(
-            AuthException,
-            client.otp.sign_up,
-            DeliveryMethod.SMS,
-            "dummy@dummy.com",
-            invalid_signup_user_details,
-        )
-        self.assertRaises(
-            AuthException,
-            client.otp.sign_up,
-            DeliveryMethod.VOICE,
-            "dummy@dummy.com",
-            invalid_signup_user_details,
-        )
-        self.assertRaises(
-            AuthException,
-            client.otp.sign_up,
-            DeliveryMethod.WHATSAPP,
-            "dummy@dummy.com",
-            invalid_signup_user_details,
-        )
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.otp.sign_up,
-                DeliveryMethod.EMAIL,
-                "dummy@dummy.com",
-                signup_user_details,
+        with self.assertRaises(AuthException):
+            await futu_await(
+                client.otp.sign_up(
+                    DeliveryMethod.EMAIL,
+                    "",
+                    invalid_signup_user_details,
+                )
+            )
+        with self.assertRaises(AuthException):
+            await futu_await(
+                client.otp.sign_up(
+                    DeliveryMethod.SMS,
+                    "dummy@dummy.com",
+                    invalid_signup_user_details,
+                )
+            )
+        with self.assertRaises(AuthException):
+            await futu_await(
+                client.otp.sign_up(
+                    DeliveryMethod.VOICE,
+                    "dummy@dummy.com",
+                    invalid_signup_user_details,
+                )
+            )
+        with self.assertRaises(AuthException):
+            await futu_await(
+                client.otp.sign_up(
+                    DeliveryMethod.WHATSAPP,
+                    "dummy@dummy.com",
+                    invalid_signup_user_details,
+                )
             )
 
+        with mock_http_call(self.async_mode, "post") as mock_post:
+            mock_post.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.otp.sign_up(
+                        DeliveryMethod.EMAIL,
+                        "dummy@dummy.com",
+                        signup_user_details,
+                    )
+                )
+
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
                 "t***@example.com",
-                client.otp.sign_up(
-                    DeliveryMethod.EMAIL, "dummy@dummy.com", signup_user_details
+                await futu_await(
+                    client.otp.sign_up(
+                        DeliveryMethod.EMAIL, "dummy@dummy.com", signup_user_details
+                    )
                 ),
             )
 
@@ -214,15 +226,17 @@ class TestOTP(common.DescopeTest):
             "email": "dummy@dummy.com",
         }
 
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
                 "t***@example.com",
-                client.otp.sign_up(
-                    DeliveryMethod.EMAIL, "dummy@dummy.com", signup_user_details
+                await futu_await(
+                    client.otp.sign_up(
+                        DeliveryMethod.EMAIL, "dummy@dummy.com", signup_user_details
+                    )
                 ),
             )
             mock_post.assert_called_with(
@@ -249,18 +263,22 @@ class TestOTP(common.DescopeTest):
             )
 
         # Test success flow with sign up options
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
                 "t***@example.com",
-                client.otp.sign_up(
-                    DeliveryMethod.EMAIL,
-                    "dummy@dummy.com",
-                    signup_user_details,
-                    SignUpOptions(template_options={"bla": "blue"}, template_id="foo"),
+                await futu_await(
+                    client.otp.sign_up(
+                        DeliveryMethod.EMAIL,
+                        "dummy@dummy.com",
+                        signup_user_details,
+                        SignUpOptions(
+                            template_options={"bla": "blue"}, template_id="foo"
+                        ),
+                    )
                 ),
             )
             mock_post.assert_called_with(
@@ -291,14 +309,16 @@ class TestOTP(common.DescopeTest):
             )
 
         # Test user is None so using the login_id as default
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
                 "t***@example.com",
-                client.otp.sign_up(DeliveryMethod.EMAIL, "dummy@dummy.com", None),
+                await futu_await(
+                    client.otp.sign_up(DeliveryMethod.EMAIL, "dummy@dummy.com", None)
+                ),
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_otp_path}/email",
@@ -322,50 +342,66 @@ class TestOTP(common.DescopeTest):
         class Dummy(Enum):
             DUMMY = 7
 
-        self.assertRaises(AuthException, OTP._compose_signin_url, Dummy.DUMMY)
+        with self.assertRaises(AuthException):
+            await futu_await(OTP._compose_signin_url(Dummy.DUMMY))
 
-    def test_sign_in(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
+    async def test_sign_in(self):
+        client = DescopeClient(
+            self.dummy_project_id, self.public_key_dict, async_mode=self.async_mode
+        )
 
         # Test failed flows
-        self.assertRaises(AuthException, client.otp.sign_in, DeliveryMethod.EMAIL, "")
-        self.assertRaises(AuthException, client.otp.sign_in, DeliveryMethod.EMAIL, None)
+        with self.assertRaises(AuthException):
+            await futu_await(client.otp.sign_in(DeliveryMethod.EMAIL, ""))
+        with self.assertRaises(AuthException):
+            await futu_await(client.otp.sign_in(DeliveryMethod.EMAIL, None))
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.otp.sign_in,
-                DeliveryMethod.EMAIL,
-                "dummy@dummy.com",
-            )
+        with mock_http_call(self.async_mode, "post") as mock_post:
+            my_mock_response = mock.Mock()
+            my_mock_response.is_success = False
+            my_mock_response.json = mock.Mock(return_value={})
+            mock_post.return_value = my_mock_response
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.otp.sign_in(
+                        DeliveryMethod.EMAIL,
+                        "dummy@dummy.com",
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
                 "t***@example.com",
-                client.otp.sign_in(DeliveryMethod.EMAIL, "dummy@dummy.com"),
+                await futu_await(
+                    client.otp.sign_in(DeliveryMethod.EMAIL, "dummy@dummy.com")
+                ),
             )
-            self.assertRaises(
-                AuthException,
-                client.otp.sign_in,
-                DeliveryMethod.EMAIL,
-                "exid",
-                LoginOptions(mfa=True),
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.otp.sign_in(
+                        DeliveryMethod.EMAIL, "exid", LoginOptions(mfa=True)
+                    ),
+                )
 
         # Validate refresh token used while provided
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
+            my_mock_response = mock.Mock()
+            my_mock_response.is_success = True
+            my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
+            mock_post.return_value = my_mock_response
             refresh_token = "dummy refresh token"
-            client.otp.sign_in(
-                DeliveryMethod.EMAIL,
-                "dummy@dummy.com",
-                LoginOptions(stepup=True),
-                refresh_token=refresh_token,
+            await futu_await(
+                client.otp.sign_in(
+                    DeliveryMethod.EMAIL,
+                    "dummy@dummy.com",
+                    LoginOptions(stepup=True),
+                    refresh_token=refresh_token,
+                )
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_otp_path}/email",
@@ -389,15 +425,21 @@ class TestOTP(common.DescopeTest):
             )
 
         # With template options
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
+            my_mock_response = mock.Mock()
+            my_mock_response.is_success = True
+            my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
+            mock_post.return_value = my_mock_response
             refresh_token = "dummy refresh token"
-            client.otp.sign_in(
-                DeliveryMethod.EMAIL,
-                "dummy@dummy.com",
-                LoginOptions(
-                    stepup=True, template_options={"blue": "bla"}, template_id="foo"
-                ),
-                refresh_token=refresh_token,
+            await futu_await(
+                client.otp.sign_in(
+                    DeliveryMethod.EMAIL,
+                    "dummy@dummy.com",
+                    LoginOptions(
+                        stepup=True, template_options={"blue": "bla"}, template_id="foo"
+                    ),
+                    refresh_token=refresh_token,
+                )
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_otp_path}/email",
@@ -422,46 +464,54 @@ class TestOTP(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_sign_up_or_in(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
-
-        # Test failed flows
-        self.assertRaises(
-            AuthException, client.otp.sign_up_or_in, DeliveryMethod.EMAIL, ""
+    async def test_sign_up_or_in(self):
+        client = DescopeClient(
+            self.dummy_project_id, self.public_key_dict, async_mode=self.async_mode
         )
 
-        with patch("httpx.post") as mock_post:
+        # Test failed flows
+        with self.assertRaises(AuthException):
+            await futu_await(client.otp.sign_up_or_in(DeliveryMethod.EMAIL, ""))
+
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.otp.sign_up_or_in,
-                DeliveryMethod.EMAIL,
-                "dummy@dummy.com",
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.otp.sign_up_or_in(
+                        DeliveryMethod.EMAIL,
+                        "dummy@dummy.com",
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
                 "t***@example.com",
-                client.otp.sign_up_or_in(DeliveryMethod.EMAIL, "dummy@dummy.com"),
+                await futu_await(
+                    client.otp.sign_up_or_in(DeliveryMethod.EMAIL, "dummy@dummy.com")
+                ),
             )
 
         # Test success flow with sign up options
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
                 "t***@example.com",
-                client.otp.sign_up_or_in(
-                    DeliveryMethod.EMAIL,
-                    "dummy@dummy.com",
-                    SignUpOptions(template_options={"bla": "blue"}, template_id="foo"),
+                await futu_await(
+                    client.otp.sign_up_or_in(
+                        DeliveryMethod.EMAIL,
+                        "dummy@dummy.com",
+                        SignUpOptions(
+                            template_options={"bla": "blue"}, template_id="foo"
+                        ),
+                    )
                 ),
             )
             mock_post.assert_called_with(
@@ -487,31 +537,33 @@ class TestOTP(common.DescopeTest):
                 params=None,
             )
 
-    def test_verify_code(self):
+    async def test_verify_code(self):
         code = "1234"
 
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
-
-        self.assertRaises(
-            AuthException, client.otp.verify_code, DeliveryMethod.EMAIL, "", code
-        )
-        self.assertRaises(
-            AuthException, client.otp.verify_code, DeliveryMethod.EMAIL, None, code
+        client = DescopeClient(
+            self.dummy_project_id, self.public_key_dict, async_mode=self.async_mode
         )
 
-        with patch("httpx.post") as mock_post:
+        with self.assertRaises(AuthException):
+
+            await futu_await(client.otp.verify_code(DeliveryMethod.EMAIL, "", code))
+        with self.assertRaises(AuthException):
+            await futu_await(client.otp.verify_code(DeliveryMethod.EMAIL, None, code))
+
+        with mock_http_call(self.async_mode, "post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.otp.verify_code,
-                DeliveryMethod.EMAIL,
-                "dummy@dummy.com",
-                code,
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.otp.verify_code(
+                        DeliveryMethod.EMAIL,
+                        "dummy@dummy.com",
+                        code,
+                    )
+                )
 
         # Test success flow
         valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3R6VWhkcXBJRjJ5czlnZzdtczA2VXZ0QzQiLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0Mzc1OTYsImlhdCI6MTY1OTYzNzU5NiwiaXNzIjoiUDJDdHpVaGRxcElGMnlzOWdnN21zMDZVdnRDNCIsInN1YiI6IlUyQ3UwajBXUHczWU9pUElTSmI1Mkwwd1VWTWcifQ.WLnlHugvzZtrV9OzBB7SjpCLNRvKF3ImFpVyIN5orkrjO2iyAKg_Rb4XHk9sXGC1aW8puYzLbhE1Jv3kk2hDcKggfE8OaRNRm8byhGFZHnvPJwcP_Ya-aRmfAvCLcKOL"
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.is_success = True
             my_mock_response.json.return_value = {}
@@ -521,49 +573,61 @@ class TestOTP(common.DescopeTest):
                 REFRESH_SESSION_COOKIE_NAME: valid_jwt_token,
             }
             self.assertIsNotNone(
-                client.otp.verify_code(DeliveryMethod.EMAIL, "dummy@dummy.com", code)
+                await futu_await(
+                    client.otp.verify_code(
+                        DeliveryMethod.EMAIL, "dummy@dummy.com", code
+                    )
+                )
             )
 
-    def test_update_user_email(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
+    async def test_update_user_email(self):
+        client = DescopeClient(
+            self.dummy_project_id, self.public_key_dict, async_mode=self.async_mode
+        )
 
         # Test failed flows
-        self.assertRaises(
-            AuthException,
-            client.otp.update_user_email,
-            "",
-            "dummy@dummy.com",
-            "refresh_token1",
-        )
-
-        self.assertRaises(
-            AuthException,
-            client.otp.update_user_email,
-            "id1",
-            "dummy@dummy",
-            "refresh_token1",
-        )
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.otp.update_user_email,
-                "id1",
-                "dummy@dummy.com",
-                "refresh_token1",
+        with self.assertRaises(AuthException):
+            await futu_await(
+                client.otp.update_user_email(
+                    "",
+                    "dummy@dummy.com",
+                    "refresh_token1",
+                )
             )
 
+        with self.assertRaises(AuthException):
+
+            await futu_await(
+                client.otp.update_user_email(
+                    "id1",
+                    "dummy@dummy",
+                    "refresh_token1",
+                )
+            )
+
+        with mock_http_call(self.async_mode, "post") as mock_post:
+            mock_post.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.otp.update_user_email(
+                        "id1",
+                        "dummy@dummy.com",
+                        "refresh_token1",
+                    )
+                )
+
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
                 "t***@example.com",
-                client.otp.update_user_email(
-                    "id1", "dummy@dummy.com", "refresh_token1"
+                await futu_await(
+                    client.otp.update_user_email(
+                        "id1", "dummy@dummy.com", "refresh_token1"
+                    )
                 ),
             )
             mock_post.assert_called_with(
@@ -586,18 +650,20 @@ class TestOTP(common.DescopeTest):
             )
 
         # Test success flow with template options
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
                 "t***@example.com",
-                client.otp.update_user_email(
-                    "id1",
-                    "dummy@dummy.com",
-                    "refresh_token1",
-                    template_options={"bla": "blue"},
+                await futu_await(
+                    client.otp.update_user_email(
+                        "id1",
+                        "dummy@dummy.com",
+                        "refresh_token1",
+                        template_options={"bla": "blue"},
+                    )
                 ),
             )
             mock_post.assert_called_with(
@@ -620,56 +686,64 @@ class TestOTP(common.DescopeTest):
                 params=None,
             )
 
-    def test_update_user_phone(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict)
+    async def test_update_user_phone(self):
+        client = DescopeClient(
+            self.dummy_project_id, self.public_key_dict, async_mode=self.async_mode
+        )
 
         # Test failed flows
-        self.assertRaises(
-            AuthException,
-            client.otp.update_user_phone,
-            DeliveryMethod.SMS,
-            "",
-            "+1111111",
-            "refresh_token1",
-        )
-        self.assertRaises(
-            AuthException,
-            client.otp.update_user_phone,
-            DeliveryMethod.SMS,
-            "id1",
-            "not_a_phone",
-            "refresh_token1",
-        )
-        self.assertRaises(
-            AuthException,
-            client.otp.update_user_phone,
-            DeliveryMethod.EMAIL,
-            "id1",
-            "+1111111",
-            "refresh_token1",
-        )
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.otp.update_user_phone,
-                DeliveryMethod.SMS,
-                "id1",
-                "+1111111",
-                "refresh_token1",
+        with self.assertRaises(AuthException):
+            await futu_await(
+                client.otp.update_user_phone(
+                    DeliveryMethod.SMS,
+                    "",
+                    "+1111111",
+                    "refresh_token1",
+                )
+            )
+        with self.assertRaises(AuthException):
+            await futu_await(
+                client.otp.update_user_phone(
+                    DeliveryMethod.SMS,
+                    "id1",
+                    "not_a_phone",
+                    "refresh_token1",
+                )
+            )
+        with self.assertRaises(AuthException):
+            await futu_await(
+                client.otp.update_user_phone(
+                    DeliveryMethod.EMAIL,
+                    "id1",
+                    "+1111111",
+                    "refresh_token1",
+                )
             )
 
+        with mock_http_call(self.async_mode, "post") as mock_post:
+            mock_post.return_value.is_success = False
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.otp.update_user_phone(
+                        DeliveryMethod.SMS,
+                        "id1",
+                        "+1111111",
+                        "refresh_token1",
+                    )
+                )
+
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedPhone": "*****111"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
                 "*****111",
-                client.otp.update_user_phone(
-                    DeliveryMethod.SMS, "id1", "+1111111", "refresh_token1"
+                await futu_await(
+                    client.otp.update_user_phone(
+                        DeliveryMethod.SMS, "id1", "+1111111", "refresh_token1"
+                    )
                 ),
             )
             mock_post.assert_called_with(
@@ -691,15 +765,17 @@ class TestOTP(common.DescopeTest):
                 params=None,
             )
 
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedPhone": "*****111"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
                 "*****111",
-                client.otp.update_user_phone(
-                    DeliveryMethod.VOICE, "id1", "+1111111", "refresh_token1"
+                await futu_await(
+                    client.otp.update_user_phone(
+                        DeliveryMethod.VOICE, "id1", "+1111111", "refresh_token1"
+                    )
                 ),
             )
             mock_post.assert_called_with(
@@ -721,15 +797,17 @@ class TestOTP(common.DescopeTest):
                 params=None,
             )
 
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedPhone": "*****111"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
                 "*****111",
-                client.otp.update_user_phone(
-                    DeliveryMethod.WHATSAPP, "id1", "+1111111", "refresh_token1"
+                await futu_await(
+                    client.otp.update_user_phone(
+                        DeliveryMethod.WHATSAPP, "id1", "+1111111", "refresh_token1"
+                    )
                 ),
             )
             mock_post.assert_called_with(
@@ -752,19 +830,21 @@ class TestOTP(common.DescopeTest):
             )
 
         # Test success flow with template options
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_mode, "post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.is_success = True
             my_mock_response.json.return_value = {"maskedPhone": "*****111"}
             mock_post.return_value = my_mock_response
             self.assertEqual(
                 "*****111",
-                client.otp.update_user_phone(
-                    DeliveryMethod.SMS,
-                    "id1",
-                    "+1111111",
-                    "refresh_token1",
-                    template_options={"bla": "blue"},
+                await futu_await(
+                    client.otp.update_user_phone(
+                        DeliveryMethod.SMS,
+                        "id1",
+                        "+1111111",
+                        "refresh_token1",
+                        template_options={"bla": "blue"},
+                    )
                 ),
             )
             mock_post.assert_called_with(

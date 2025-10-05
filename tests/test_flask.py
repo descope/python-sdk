@@ -53,7 +53,7 @@ class TestFlaskIntegration(DescopeTest):
             "tenants": {"tenant1": {"permissions": ["manage"], "roles": ["owner"]}},
         }
 
-    def test_set_cookie_on_response(self):
+    async def test_set_cookie_on_response(self):
         """Test cookie setting utility function"""
         response = Response("test")
         token = {"drn": "DST", "jwt": "test-token"}
@@ -63,7 +63,7 @@ class TestFlaskIntegration(DescopeTest):
         # Verify cookie was set (Flask sets cookies in headers)
         self.assertIsInstance(response, Response)
 
-    def test_otp_signup_decorator_success(self):
+    async def test_otp_signup_decorator_success(self):
         """Test OTP signup decorator with valid data"""
 
         @self.app.route("/signup", methods=["POST"])
@@ -84,7 +84,7 @@ class TestFlaskIntegration(DescopeTest):
                 DeliveryMethod.EMAIL, "test@example.com", {"name": "Test User"}
             )
 
-    def test_otp_signup_decorator_missing_email(self):
+    async def test_otp_signup_decorator_missing_email(self):
         """Test OTP signup decorator with missing email"""
 
         @self.app.route("/signup", methods=["POST"])
@@ -97,7 +97,7 @@ class TestFlaskIntegration(DescopeTest):
         self.assertEqual(response.status_code, 400)
         self.assertIn(b"Invalid Request, missing email", response.data)
 
-    def test_otp_signup_decorator_auth_exception(self):
+    async def test_otp_signup_decorator_auth_exception(self):
         """Test OTP signup decorator with AuthException"""
 
         @self.app.route("/signup", methods=["POST"])
@@ -117,7 +117,7 @@ class TestFlaskIntegration(DescopeTest):
             self.assertEqual(response.status_code, 500)
             self.assertIn(b"Unable to sign-up user", response.data)
 
-    def test_otp_signin_decorator_success(self):
+    async def test_otp_signin_decorator_success(self):
         """Test OTP signin decorator with valid data"""
 
         @self.app.route("/signin", methods=["POST"])
@@ -135,7 +135,7 @@ class TestFlaskIntegration(DescopeTest):
                 DeliveryMethod.EMAIL, "test@example.com"
             )
 
-    def test_otp_verify_decorator_success(self):
+    async def test_otp_verify_decorator_success(self):
         """Test OTP verify decorator with valid code"""
 
         @self.app.route("/verify", methods=["POST"])
@@ -155,7 +155,7 @@ class TestFlaskIntegration(DescopeTest):
                 DeliveryMethod.EMAIL, "test@example.com", "123456"
             )
 
-    def test_otp_verify_decorator_missing_data(self):
+    async def test_otp_verify_decorator_missing_data(self):
         """Test OTP verify decorator with missing email or code"""
 
         @self.app.route("/verify", methods=["POST"])
@@ -171,7 +171,7 @@ class TestFlaskIntegration(DescopeTest):
         response = self.client.post("/verify", json={"email": "test@example.com"})
         self.assertEqual(response.status_code, 401)
 
-    def test_sms_verify_decorator_success(self):
+    async def test_sms_verify_decorator_success(self):
         """Test SMS verify decorator with valid code"""
 
         @self.app.route("/verify-sms", methods=["POST"])
@@ -191,7 +191,7 @@ class TestFlaskIntegration(DescopeTest):
                 DeliveryMethod.SMS, "+1234567890", "123456"
             )
 
-    def test_validate_auth_decorator_success(self):
+    async def test_validate_auth_decorator_success(self):
         """Test auth validation decorator with valid session"""
 
         @self.app.route("/protected")
@@ -214,7 +214,7 @@ class TestFlaskIntegration(DescopeTest):
             self.assertEqual(response.status_code, 200)
             mock_validate.assert_called_once()
 
-    def test_validate_auth_decorator_no_session(self):
+    async def test_validate_auth_decorator_no_session(self):
         """Test auth validation decorator without session"""
 
         @self.app.route("/protected")
@@ -234,7 +234,7 @@ class TestFlaskIntegration(DescopeTest):
             self.assertEqual(response.status_code, 401)
             self.assertIn(b"Access denied", response.data)
 
-    def test_validate_auth_decorator_with_permissions(self):
+    async def test_validate_auth_decorator_with_permissions(self):
         """Test auth validation decorator with permission requirements"""
 
         @self.app.route("/admin")
@@ -261,7 +261,7 @@ class TestFlaskIntegration(DescopeTest):
                 self.assertEqual(response.status_code, 200)
                 mock_perms.assert_called_once_with(self.mock_jwt_response, ["admin"])
 
-    def test_validate_auth_decorator_insufficient_permissions(self):
+    async def test_validate_auth_decorator_insufficient_permissions(self):
         """Test auth validation decorator with insufficient permissions"""
 
         @self.app.route("/admin")
@@ -287,7 +287,7 @@ class TestFlaskIntegration(DescopeTest):
 
                 self.assertEqual(response.status_code, 401)
 
-    def test_validate_auth_decorator_with_roles(self):
+    async def test_validate_auth_decorator_with_roles(self):
         """Test auth validation decorator with role requirements"""
 
         @self.app.route("/manager")
@@ -312,7 +312,7 @@ class TestFlaskIntegration(DescopeTest):
                 self.assertEqual(response.status_code, 200)
                 mock_roles.assert_called_once_with(self.mock_jwt_response, ["manager"])
 
-    def test_validate_auth_decorator_with_tenant(self):
+    async def test_validate_auth_decorator_with_tenant(self):
         """Test auth validation decorator with tenant-specific permissions"""
 
         @self.app.route("/tenant-admin")
@@ -343,7 +343,7 @@ class TestFlaskIntegration(DescopeTest):
                     self.mock_jwt_response, ["manage"]
                 )
 
-    def test_magiclink_signup_decorator_success(self):
+    async def test_magiclink_signup_decorator_success(self):
         """Test MagicLink signup decorator with valid data"""
 
         @self.app.route("/magiclink-signup", methods=["POST"])
@@ -369,7 +369,7 @@ class TestFlaskIntegration(DescopeTest):
                 {"name": "Test User"},
             )
 
-    def test_magiclink_signin_decorator_success(self):
+    async def test_magiclink_signin_decorator_success(self):
         """Test MagicLink signin decorator with valid data"""
 
         @self.app.route("/magiclink-signin", methods=["POST"])
@@ -391,7 +391,7 @@ class TestFlaskIntegration(DescopeTest):
                 DeliveryMethod.EMAIL, "test@example.com", "http://example.com/verify"
             )
 
-    def test_magiclink_verify_decorator_success(self):
+    async def test_magiclink_verify_decorator_success(self):
         """Test MagicLink verify decorator with valid token"""
 
         @self.app.route("/magiclink-verify")
@@ -407,7 +407,7 @@ class TestFlaskIntegration(DescopeTest):
             self.assertEqual(response.status_code, 200)
             mock_verify.assert_called_once_with("mock-token")
 
-    def test_magiclink_verify_decorator_missing_token(self):
+    async def test_magiclink_verify_decorator_missing_token(self):
         """Test MagicLink verify decorator without token"""
 
         @self.app.route("/magiclink-verify")
@@ -420,7 +420,7 @@ class TestFlaskIntegration(DescopeTest):
         self.assertEqual(response.status_code, 401)
         self.assertIn(b"Unauthorized", response.data)
 
-    def test_oauth_decorator_success(self):
+    async def test_oauth_decorator_success(self):
         """Test OAuth decorator with valid provider"""
 
         @self.app.route("/oauth")
@@ -436,7 +436,7 @@ class TestFlaskIntegration(DescopeTest):
             self.assertEqual(response.status_code, 302)
             mock_start.assert_called_once_with("google")
 
-    def test_oauth_decorator_auth_exception(self):
+    async def test_oauth_decorator_auth_exception(self):
         """Test OAuth decorator with AuthException"""
 
         @self.app.route("/oauth")
@@ -454,7 +454,7 @@ class TestFlaskIntegration(DescopeTest):
             self.assertEqual(response.status_code, 400)
             self.assertIn(b"OAuth failed", response.data)
 
-    def test_logout_decorator_success(self):
+    async def test_logout_decorator_success(self):
         """Test logout decorator with valid refresh token"""
 
         @self.app.route("/logout", methods=["POST"])
@@ -476,7 +476,7 @@ class TestFlaskIntegration(DescopeTest):
             # The decorator should extract the refresh token from cookies and call logout
             mock_logout.assert_called_once_with("mock-refresh-token")
 
-    def test_logout_decorator_auth_exception(self):
+    async def test_logout_decorator_auth_exception(self):
         """Test logout decorator with AuthException"""
 
         @self.app.route("/logout", methods=["POST"])
@@ -497,7 +497,7 @@ class TestFlaskIntegration(DescopeTest):
             self.assertEqual(response.status_code, 400)
             self.assertIn(b"Logout failed", response.data)
 
-    def test_full_login_decorator_success(self):
+    async def test_full_login_decorator_success(self):
         """Test full login decorator generates correct HTML"""
 
         @self.app.route("/login")
@@ -517,7 +517,7 @@ class TestFlaskIntegration(DescopeTest):
         self.assertIn(b"sign-up-or-in", response.data)
         self.assertIn(b"http://localhost/success", response.data)
 
-    def test_full_login_decorator_missing_redirect_url(self):
+    async def test_full_login_decorator_missing_redirect_url(self):
         """Test full login decorator with missing redirect URL"""
 
         @descope_full_login(
@@ -534,7 +534,7 @@ class TestFlaskIntegration(DescopeTest):
         self.assertEqual(context.exception.status_code, 500)
         self.assertIn("Missing success_redirect_url", str(context.exception))
 
-    def test_request_context_claims_storage(self):
+    async def test_request_context_claims_storage(self):
         """Test that JWT claims are stored in Flask request context"""
 
         @self.app.route("/context-test")

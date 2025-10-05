@@ -2,9 +2,10 @@ from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
 from descope.common import DEFAULT_TIMEOUT_SECONDS
+from descope.future_utils import futu_await
 from descope.management.common import MgmtV1
 
-from tests.testutils import SSLMatcher
+from tests.testutils import SSLMatcher, mock_http_call
 from .. import common
 
 
@@ -23,23 +24,26 @@ class TestFGA(common.DescopeTest):
             "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
         }
 
-    def test_save_schema(self):
+    async def test_save_schema(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed save_schema
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(AuthException, client.mgmt.fga.save_schema, "")
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.fga.save_schema(""))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = True
-            self.assertIsNone(client.mgmt.fga.save_schema("model AuthZ 1.0"))
+            result = await futu_await(client.mgmt.fga.save_schema("model AuthZ 1.0"))
+            self.assertIsNone(result)
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.fga_save_schema}",
                 headers={
@@ -54,23 +58,25 @@ class TestFGA(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_create_relations(self):
+    async def test_create_relations(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed create_relations
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(AuthException, client.mgmt.fga.create_relations, [])
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.fga.create_relations([]))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = True
-            self.assertIsNone(
+            result = await futu_await(
                 client.mgmt.fga.create_relations(
                     [
                         {
@@ -83,6 +89,7 @@ class TestFGA(common.DescopeTest):
                     ]
                 )
             )
+            self.assertIsNone(result)
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.fga_create_relations}",
                 headers={
@@ -107,23 +114,25 @@ class TestFGA(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_delete_relations(self):
+    async def test_delete_relations(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed delete_relations
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(AuthException, client.mgmt.fga.delete_relations, [])
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.fga.delete_relations([]))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = True
-            self.assertIsNone(
+            result = await futu_await(
                 client.mgmt.fga.delete_relations(
                     [
                         {
@@ -136,6 +145,7 @@ class TestFGA(common.DescopeTest):
                     ]
                 )
             )
+            self.assertIsNone(result)
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.fga_delete_relations}",
                 headers={
@@ -160,23 +170,39 @@ class TestFGA(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_check(self):
+    async def test_check(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed has_relations
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(AuthException, client.mgmt.fga.check, [])
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.fga.check([]))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = True
-            self.assertIsNotNone(
+            mock_post.return_value.json.return_value = {
+                "tuples": [
+                    {
+                        "tuple": {
+                            "resource": "r",
+                            "resourceType": "rt",
+                            "relation": "rel",
+                            "target": "u",
+                            "targetType": "ty",
+                        },
+                        "allowed": True,
+                    }
+                ]
+            }
+            result = await futu_await(
                 client.mgmt.fga.check(
                     [
                         {
@@ -189,6 +215,7 @@ class TestFGA(common.DescopeTest):
                     ]
                 )
             )
+            self.assertIsNotNone(result)
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.fga_check}",
                 headers={
@@ -213,12 +240,13 @@ class TestFGA(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_load_resources_details_success(self):
+    async def test_load_resources_details_success(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
         response_body = {
             "resourcesDetails": [
@@ -226,14 +254,14 @@ class TestFGA(common.DescopeTest):
                 {"resourceId": "r2", "resourceType": "type2", "displayName": "Name2"},
             ]
         }
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = True
             mock_post.return_value.json.return_value = response_body
             ids = [
                 {"resourceId": "r1", "resourceType": "type1"},
                 {"resourceId": "r2", "resourceType": "type2"},
             ]
-            details = client.mgmt.fga.load_resources_details(ids)
+            details = await futu_await(client.mgmt.fga.load_resources_details(ids))
             self.assertEqual(details, response_body["resourcesDetails"])
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.fga_resources_load}",
@@ -249,35 +277,39 @@ class TestFGA(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_load_resources_details_error(self):
+    async def test_load_resources_details_error(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = False
             ids = [{"resourceId": "r1", "resourceType": "type1"}]
-            self.assertRaises(
-                AuthException,
-                client.mgmt.fga.load_resources_details,
-                ids,
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.fga.load_resources_details(
+                        ids,
+                    )
+                )
 
-    def test_save_resources_details_success(self):
+    async def test_save_resources_details_success(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
         details = [
             {"resourceId": "r1", "resourceType": "type1", "displayName": "Name1"}
         ]
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = True
-            client.mgmt.fga.save_resources_details(details)
+            result = await futu_await(client.mgmt.fga.save_resources_details(details))
+            self.assertIsNone(result)
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.fga_resources_save}",
                 headers={
@@ -292,25 +324,27 @@ class TestFGA(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_save_resources_details_error(self):
+    async def test_save_resources_details_error(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
         details = [
             {"resourceId": "r1", "resourceType": "type1", "displayName": "Name1"}
         ]
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.fga.save_resources_details,
-                details,
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.fga.save_resources_details(
+                        details,
+                    )
+                )
 
-    def test_fga_cache_url_save_schema(self):
+    async def test_fga_cache_url_save_schema(self):
         # Test FGA cache URL functionality for save_schema
         fga_cache_url = "https://my-fga-cache.example.com"
         client = DescopeClient(
@@ -319,11 +353,12 @@ class TestFGA(common.DescopeTest):
             False,
             self.dummy_management_key,
             fga_cache_url=fga_cache_url,
+            async_mode=self.async_test,
         )
 
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = True
-            client.mgmt.fga.save_schema("model AuthZ 1.0")
+            await futu_await(client.mgmt.fga.save_schema("model AuthZ 1.0"))
             mock_post.assert_called_with(
                 f"{fga_cache_url}{MgmtV1.fga_save_schema}",
                 headers={
@@ -338,7 +373,7 @@ class TestFGA(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_fga_cache_url_create_relations(self):
+    async def test_fga_cache_url_create_relations(self):
         # Test FGA cache URL functionality for create_relations
         fga_cache_url = "https://my-fga-cache.example.com"
         client = DescopeClient(
@@ -347,6 +382,7 @@ class TestFGA(common.DescopeTest):
             False,
             self.dummy_management_key,
             fga_cache_url=fga_cache_url,
+            async_mode=self.async_test,
         )
 
         relations = [
@@ -359,9 +395,9 @@ class TestFGA(common.DescopeTest):
             }
         ]
 
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = True
-            client.mgmt.fga.create_relations(relations)
+            await futu_await(client.mgmt.fga.create_relations(relations))
             mock_post.assert_called_with(
                 f"{fga_cache_url}{MgmtV1.fga_create_relations}",
                 headers={
@@ -376,7 +412,7 @@ class TestFGA(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_fga_cache_url_delete_relations(self):
+    async def test_fga_cache_url_delete_relations(self):
         # Test FGA cache URL functionality for delete_relations
         fga_cache_url = "https://my-fga-cache.example.com"
         client = DescopeClient(
@@ -385,6 +421,7 @@ class TestFGA(common.DescopeTest):
             False,
             self.dummy_management_key,
             fga_cache_url=fga_cache_url,
+            async_mode=self.async_test,
         )
 
         relations = [
@@ -397,9 +434,9 @@ class TestFGA(common.DescopeTest):
             }
         ]
 
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = True
-            client.mgmt.fga.delete_relations(relations)
+            await futu_await(client.mgmt.fga.delete_relations(relations))
             mock_post.assert_called_with(
                 f"{fga_cache_url}{MgmtV1.fga_delete_relations}",
                 headers={
@@ -414,7 +451,7 @@ class TestFGA(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_fga_cache_url_check(self):
+    async def test_fga_cache_url_check(self):
         # Test FGA cache URL functionality for check
         fga_cache_url = "https://my-fga-cache.example.com"
         client = DescopeClient(
@@ -423,6 +460,7 @@ class TestFGA(common.DescopeTest):
             False,
             self.dummy_management_key,
             fga_cache_url=fga_cache_url,
+            async_mode=self.async_test,
         )
 
         relations = [
@@ -435,7 +473,7 @@ class TestFGA(common.DescopeTest):
             }
         ]
 
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = True
             mock_post.return_value.json.return_value = {
                 "tuples": [
@@ -445,7 +483,7 @@ class TestFGA(common.DescopeTest):
                     }
                 ]
             }
-            result = client.mgmt.fga.check(relations)
+            result = await futu_await(client.mgmt.fga.check(relations))
             mock_post.assert_called_with(
                 f"{fga_cache_url}{MgmtV1.fga_check}",
                 headers={
@@ -463,20 +501,20 @@ class TestFGA(common.DescopeTest):
             self.assertTrue(result[0]["allowed"])
             self.assertEqual(result[0]["relation"], relations[0])
 
-    def test_fga_without_cache_url_uses_default_base_url(self):
+    async def test_fga_without_cache_url_uses_default_base_url(self):
         # Test that FGA methods use default base URL when cache URL is not provided
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
             # No fga_cache_url provided
         )
 
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = True
-            client.mgmt.fga.save_schema("model AuthZ 1.0")
-            # Should use default base URL
+            await futu_await(client.mgmt.fga.save_schema("model AuthZ 1.0"))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.fga_save_schema}",
                 headers={
