@@ -78,7 +78,7 @@ omit = ["descope/flask/*"]
 
 
 [tool.coverage.report]
-fail_under = 97
+fail_under = 98
 skip_covered = true
 skip_empty = true
 
