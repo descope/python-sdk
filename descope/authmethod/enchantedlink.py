@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-import httpx
-from typing import Awaitable, Union
+from typing import Awaitable, Union, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import httpx
 
 from descope._auth_base import AuthBase
 from descope.auth import Auth
