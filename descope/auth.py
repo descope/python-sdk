@@ -6,8 +6,10 @@ import os
 import platform
 import re
 from http import HTTPStatus
+import ssl
 from threading import Lock
 from typing import Iterable
+import certifi
 
 import jwt
 
@@ -16,7 +18,7 @@ try:
 except ImportError:
     from pkg_resources import get_distribution
 
-import requests
+import httpx
 from email_validator import EmailNotValidError, validate_email
 from jwt import ExpiredSignatureError, ImmatureSignatureError
 
@@ -110,6 +112,19 @@ class Auth:
                 kid, pub_key, alg = self._validate_and_load_public_key(public_key)
                 self.public_keys = {kid: (pub_key, alg)}
 
+        if skip_verify:
+            self.ssl_ctx = False
+        else:
+            # Backwards compatibility with requests
+            self.ssl_ctx = ssl.create_default_context(
+                cafile=os.environ.get("SSL_CERT_FILE", certifi.where()),
+                capath=os.environ.get("SSL_CERT_DIR"),
+            )
+            if os.environ.get("REQUESTS_CA_BUNDLE"):
+                self.ssl_ctx.load_cert_chain(
+                    certfile=os.environ.get("REQUESTS_CA_BUNDLE")
+                )
+
     def _raise_rate_limit_exception(self, response):
         try:
             resp = response.json()
@@ -144,15 +159,15 @@ class Auth:
         self,
         uri: str,
         params=None,
-        allow_redirects=None,
+        follow_redirects=None,
         pswd: str | None = None,
-    ) -> requests.Response:
-        response = requests.get(
+    ) -> httpx.Response:
+        response = httpx.get(
             f"{self.base_url}{uri}",
             headers=self._get_default_headers(pswd),
             params=params,
-            allow_redirects=allow_redirects,
-            verify=self.secure,
+            follow_redirects=follow_redirects,
+            verify=self.ssl_ctx,
             timeout=self.timeout_seconds,
         )
         self._raise_from_response(response)
@@ -164,13 +179,13 @@ class Auth:
         body: dict | list[dict] | list[str] | None,
         params=None,
         pswd: str | None = None,
-    ) -> requests.Response:
-        response = requests.post(
+    ) -> httpx.Response:
+        response = httpx.post(
             f"{self.base_url}{uri}",
             headers=self._get_default_headers(pswd),
             json=body,
-            allow_redirects=False,
-            verify=self.secure,
+            follow_redirects=False,
+            verify=self.ssl_ctx,
             params=params,
             timeout=self.timeout_seconds,
         )
@@ -183,13 +198,13 @@ class Auth:
         body: dict | list[dict] | list[str] | None,
         params=None,
         pswd: str | None = None,
-    ) -> requests.Response:
-        response = requests.patch(
+    ) -> httpx.Response:
+        response = httpx.patch(
             f"{self.base_url}{uri}",
             headers=self._get_default_headers(pswd),
             json=body,
-            allow_redirects=False,
-            verify=self.secure,
+            follow_redirects=False,
+            verify=self.ssl_ctx,
             params=params,
             timeout=self.timeout_seconds,
         )
@@ -198,13 +213,13 @@ class Auth:
 
     def do_delete(
         self, uri: str, params=None, pswd: str | None = None
-    ) -> requests.Response:
-        response = requests.delete(
+    ) -> httpx.Response:
+        response = httpx.delete(
             f"{self.base_url}{uri}",
             params=params,
             headers=self._get_default_headers(pswd),
-            allow_redirects=False,
-            verify=self.secure,
+            follow_redirects=False,
+            verify=self.ssl_ctx,
             timeout=self.timeout_seconds,
         )
         self._raise_from_response(response)
@@ -217,18 +232,18 @@ class Auth:
         custom_base_url: str | None = None,
         params=None,
         pswd: str | None = None,
-    ) -> requests.Response:
+    ) -> httpx.Response:
         """
         Post request with optional custom base URL.
         If base_url is provided, use it instead of self.base_url.
         """
         effective_base_url = custom_base_url if custom_base_url else self.base_url
-        response = requests.post(
+        response = httpx.post(
             f"{effective_base_url}{uri}",
             headers=self._get_default_headers(pswd),
             json=body,
-            allow_redirects=False,
-            verify=self.secure,
+            follow_redirects=False,
+            verify=self.ssl_ctx,
             params=params,
             timeout=self.timeout_seconds,
         )
@@ -450,9 +465,9 @@ class Auth:
                 f"Unable to load public key {e}",
             )
 
-    def _raise_from_response(self, response):
+    def _raise_from_response(self, response: httpx.Response):
         """Raise appropriate exception from response, does nothing if response.ok is True."""
-        if response.ok:
+        if response.is_success:
             return
 
         if response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
@@ -466,10 +481,10 @@ class Auth:
 
     def _fetch_public_keys(self) -> None:
         # This function called under mutex protection so no need to acquire it once again
-        response = requests.get(
+        response = httpx.get(
             f"{self.base_url}{EndpointsV2.public_key_path}/{self.project_id}",
             headers=self._get_default_headers(),
-            verify=self.secure,
+            verify=self.ssl_ctx,
             timeout=self.timeout_seconds,
         )
         self._raise_from_response(response)
