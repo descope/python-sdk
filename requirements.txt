@@ -152,7 +152,7 @@ charset-normalizer==3.4.3; python_full_version >= "3.8.1" and python_version < "
     --hash=sha256:fb7f67a1bfa6e40b438170ebdc8158b78dc465a5a67b6dde178a46987b244a72 \
     --hash=sha256:fd10de089bcdcd1be95a2f73dbe6254798ec1bda9f450d5828c96f93e2536b9c \
     --hash=sha256:fdabf8315679312cfa71302f9bd509ded4f2f263fb5b765cf1433b39106c3cc9
-click==8.2.1; python_full_version >= "3.8.1" and python_version < "4.0" \
+click==8.3.0; python_full_version >= "3.8.1" and python_version < "4.0" \
     --hash=sha256:27c491cc05d968d271d5a1db13e3b5a184636d9d930f148c50b038f0d0646202 \
     --hash=sha256:61a3265b914e850b85317d0b3109c7f8cd35a670f963866005d6ef1d5175a12b
 colorama==0.4.6 ; python_full_version >= "3.8.1" and python_version < "4.0" and platform_system == "Windows" \
