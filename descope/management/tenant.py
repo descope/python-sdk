@@ -28,7 +28,7 @@ class Tenant(AuthBase):
         enforce_sso (bool): Optional, login to the tenant is possible only using the configured sso
         disabled (bool): Optional, login to the tenant will be disabled
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"id": <id>}
 
@@ -128,7 +128,7 @@ class Tenant(AuthBase):
         Args:
         id (str): The ID of the tenant to load.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"id": <id>, "name": <name>, "selfProvisioningDomains": [], "customAttributes: {}, "createdTime": <timestamp>}
         Containing the loaded tenant information.
@@ -149,7 +149,7 @@ class Tenant(AuthBase):
         """
         Load all tenants.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"tenants": [{"id": <id>, "name": <name>, "selfProvisioningDomains": [], customAttributes: {}, "createdTime": <timestamp>}]}
         Containing the loaded tenant information.
@@ -179,7 +179,7 @@ class Tenant(AuthBase):
         self_provisioning_domains (List[str]): Optional list of self provisioning domains to filter by
         custom_attributes (dict): Optional search for a attribute with a given value
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"tenants": [{"id": <id>, "name": <name>, "selfProvisioningDomains": [], customAttributes:{}}]}
         Containing the loaded tenant information.

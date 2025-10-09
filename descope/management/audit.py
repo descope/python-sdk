@@ -41,7 +41,7 @@ class Audit(AuthBase):
         from_ts (datetime): Retrieve records newer than given time but not older than 30 days
         to_ts (datetime): Retrieve records older than given time
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {
                 "audits": [

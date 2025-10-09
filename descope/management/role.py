@@ -108,7 +108,7 @@ class Role(AuthBase):
         """
         Load all roles.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"roles": [{"name": <name>, "description": <description>, "permissionNames":[]}] }
         Containing the loaded role information.
@@ -139,7 +139,7 @@ class Role(AuthBase):
         role_name_like (str): Return roles that contain the given string ignoring case
         permission_names (List[str]): Only return roles that have the given permissions
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"roles": [{"name": <name>, "description": <description>, "permissionNames":[]}] }
         Containing the loaded role information.

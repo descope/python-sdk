@@ -125,7 +125,7 @@ class DescopeClient:
         jwt_response (dict): The jwt_response object which includes all JWT claims information
         permissions (List[str]): List of permissions to validate for this jwt_response
 
-        Return value (List[str]): returns the list of permissions that are granted
+        Return value (list[str]): returns the list of permissions that are granted
         """
         return self.get_matched_tenant_permissions(jwt_response, "", permissions)
 
@@ -177,7 +177,7 @@ class DescopeClient:
         tenant (str): TenantId
         permissions (List[str]): List of permissions to validate for this jwt_response
 
-        Return value (List[str]): returns the list of permissions that are granted
+        Return value (list[str]): returns the list of permissions that are granted
         """
         if not jwt_response:
             return []
@@ -224,7 +224,7 @@ class DescopeClient:
         jwt_response (dict): The jwt_response object which includes all JWT claims information
         roles (List[str]): List of roles to validate for this jwt_response
 
-        Return value (List[str]): returns the list of roles that are granted
+        Return value (list[str]): returns the list of roles that are granted
         """
         return self.get_matched_tenant_roles(jwt_response, "", roles)
 
@@ -274,7 +274,7 @@ class DescopeClient:
         tenant (str): TenantId
         roles (List[str]): List of roles to validate for this jwt_response
 
-        Return value (List[str]): returns the list of roles that are granted
+        Return value (list[str]): returns the list of roles that are granted
         """
         if not jwt_response:
             return []
@@ -312,7 +312,7 @@ class DescopeClient:
         session_token (str): The session token to be validated
         audience (str|Iterable[str]|None): Optional recipients that the JWT is intended for (must be equal to the 'aud' claim on the provided token)
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict includes the session token and all JWT claims
 
         Raise:
@@ -330,7 +330,7 @@ class DescopeClient:
         refresh_token (str): The refresh token that will be used to refresh the session
         audience (str|Iterable[str]|None): Optional recipients that the JWT is intended for (must be equal to the 'aud' claim on the provided token)
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict includes the session token, refresh token, and all JWT claims
 
         Raise:
@@ -355,7 +355,7 @@ class DescopeClient:
         refresh_token (str): The refresh token that will be used to refresh the session token, if needed
         audience (str|Iterable[str]|None): Optional recipients that the JWT is intended for (must be equal to the 'aud' claim on the provided token)
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict includes the session token, refresh token, and all JWT claims
 
         Raise:
@@ -375,7 +375,7 @@ class DescopeClient:
         Args:
         refresh_token (str): The refresh token
 
-        Return value (httpx.Response): returns the response from the Descope server
+        Return value (Union[httpx.Response, Awaitable[httpx.Response]]): returns the response from the Descope server
 
         Raise:
         AuthException: Exception is raised if session is not authorized or another error occurs
@@ -401,7 +401,7 @@ class DescopeClient:
         Args:
         refresh_token (str): The refresh token
 
-        Return value (httpx.Response): returns the response from the Descope server
+        Return value (Union[httpx.Response, Awaitable[httpx.Response]]): returns the response from the Descope server
 
         Raise:
         AuthException: Exception is raised if session is not authorized or another error occurs
@@ -425,7 +425,7 @@ class DescopeClient:
         Args:
         refresh_token (str): The refresh token
 
-        Return value (dict): returns the user details from the server
+        Return value (Union[dict, Awaitable[dict]]): returns the user details from the server
             (email:str, name:str, phone:str, loginIds[str], verifiedEmail:bool, verifiedPhone:bool)
 
         Raise:
@@ -458,7 +458,7 @@ class DescopeClient:
         ids (List[str]): Get the list of tenants
         refresh_token (str): The refresh token
 
-        Return value (dict): returns the tenant requested from the server
+        Return value (Union[dict, Awaitable[dict]]): returns the tenant requested from the server
             (id:str, name:str, customAttributes:dict)
 
         Raise:
@@ -498,7 +498,7 @@ class DescopeClient:
         Args:
         refresh_token (str): The refresh token
 
-        Return value (List[dict]):
+        Return value (Union[list[dict], Awaitable[list[dict]]]):
         Return List in the format
              [
                 {
@@ -564,7 +564,7 @@ class DescopeClient:
         refresh_token (str): The refresh token that will be used to refresh the session token, if needed
         tenant_id (str): The tenant id to place on JWT
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict includes the session token, refresh token, with the tenant id on the jwt
 
         Raise:

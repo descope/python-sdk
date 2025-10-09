@@ -26,7 +26,7 @@ class Password(AuthBase):
         user (dict) optional: Preserve additional user metadata in the form of
              {"name": "Desmond Copeland", "phone": "2125551212", "email": "des@cope.com"}
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"jwts": [], "user": "", "firstSeen": "", "error": ""}
         Includes all the jwts tokens (session token, refresh token), token claims, and user information
@@ -71,7 +71,7 @@ class Password(AuthBase):
         login_id (str): The login ID of the user being validated
         password (str): The password to be validated
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"jwts": [], "user": "", "firstSeen": "", "error": ""}
         Includes all the jwts tokens (session token, refresh token), token claims, and user information
@@ -119,7 +119,7 @@ class Password(AuthBase):
                 if those are the chosen reset methods. See the Magic Link and Enchanted Link sections
                 for more details.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"resetMethod": "", "pendingRef": "", "linkId": "", "maskedEmail": ""}
             The contents will differ according to the chosen reset method. 'pendingRef'
@@ -202,7 +202,7 @@ class Password(AuthBase):
         old_password (str): The user's current active password
         new_password (str): The new password to use
 
-                        Return value (dict):
+                        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"jwts": [], "user": "", "firstSeen": false, "error": ""}
         Includes all the jwts tokens (session token, refresh token), token claims, and user information
@@ -250,7 +250,7 @@ class Password(AuthBase):
         Get a subset of the password policy defined in the Descope console and enforced
         by Descope. The goal is to enable client-side validations to give users a better UX
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"minLength": 8, "lowercase": true, "uppercase": true, "number": true, "nonAlphanumeric": true}
             minLength - the minimum length of a password

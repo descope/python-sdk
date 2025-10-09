@@ -172,7 +172,7 @@ class SSOSettings(AuthBase):
         Args:
         tenant_id (str): The tenant ID of the desired SSO Settings
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Containing the loaded SSO settings information.
         Return dict in the format:
              {"tenant": {"id": "T2AAAA", "name": "myTenantName", "selfProvisioningDomains": [], "customAttributes": {}, "authType": "saml", "domains": ["lulu", "kuku"]}, "saml": {"idpEntityId": "", "idpSSOUrl": "", "idpCertificate": "", "idpMetadataUrl": "https://dummy.com/metadata", "spEntityId": "", "spACSUrl": "", "spCertificate": "", "attributeMapping": {"name": "name", "email": "email", "username": "", "phoneNumber": "phone", "group": "", "givenName": "", "middleName": "", "familyName": "", "picture": "", "customAttributes": {}}, "groupsMapping": [], "redirectUrl": ""}, "oidc": {"name": "", "clientId": "", "clientSecret": "", "redirectUrl": "", "authUrl": "", "tokenUrl": "", "userDataUrl": "", "scope": [], "JWKsUrl": "", "userAttrMapping": {"loginId": "sub", "username": "", "name": "name", "email": "email", "phoneNumber": "phone_number", "verifiedEmail": "email_verified", "verifiedPhone": "phone_number_verified", "picture": "picture", "givenName": "given_name", "middleName": "middle_name", "familyName": "family_name"}, "manageProviderTokens": False, "callbackDomain": "", "prompt": [], "grantType": "authorization_code", "issuer": ""}}
@@ -305,7 +305,7 @@ class SSOSettings(AuthBase):
         Args:
         tenant_id (str): The tenant ID of the desired SSO Settings
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Containing the loaded SSO settings information.
 
         Raise:

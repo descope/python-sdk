@@ -24,7 +24,7 @@ class TOTP(AuthBase):
         user (dict) optional: Preserve additional user metadata in the form of,
              {"name": "Desmond Copeland", "phone": "2125551212", "email": "des@cope.com"}
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"provisioningURL": "", "image": "", "key": ""}
         Includes 3 different ways to allow the user to save their credentials in
@@ -63,7 +63,7 @@ class TOTP(AuthBase):
         login_options (LoginOptions): Optional advanced controls over login parameters
         refresh_token: Optional refresh token is needed for specific login options
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"jwts": [], "user": "", "firstSeen": "", "error": ""}
         Includes all the jwts tokens (session token, refresh token), token claims, and user information
@@ -107,7 +107,7 @@ class TOTP(AuthBase):
         login_id (str): The login ID of the user whose information is being updated
         refresh_token (str): The session's refresh token (used for verification)
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"provisioningURL": "", "image": "", "key": ""}
         Includes 3 different ways to allow the user to save their credentials in

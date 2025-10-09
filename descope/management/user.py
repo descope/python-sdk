@@ -111,7 +111,7 @@ class User(AuthBase):
         custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
         sso_app_ids (List[str]): Optional, list of SSO applications IDs to be associated with the user.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the created user information.
@@ -187,7 +187,7 @@ class User(AuthBase):
         custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
         sso_app_ids (List[str]): Optional, list of SSO applications IDs to be associated with the user.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the created test user information.
@@ -372,7 +372,7 @@ class User(AuthBase):
         sso_app_ids (List[str]): Optional, list of SSO applications IDs to be associated with the user.
         test (bool, optional): Set to True to update a test user. Defaults to False.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -448,7 +448,7 @@ class User(AuthBase):
         status (str): Optional status field. Can be one of: "enabled", "disabled", "invited".
         test (bool, optional): Set to True to update a test user. Defaults to False.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the patched user information.
@@ -499,7 +499,7 @@ class User(AuthBase):
             Each UserObj should have a login_id and the fields to be updated.
         test (bool, optional): Set to True to patch test users. Defaults to False.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"patchedUsers": [...], "failedUsers": [...]}
         "patchedUsers" contains successfully patched users,
@@ -593,7 +593,7 @@ class User(AuthBase):
         Args:
         login_id (str): The login ID of the user to be loaded.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the loaded user information.
@@ -619,7 +619,7 @@ class User(AuthBase):
         Args:
         user_id (str): The user ID from the user's JWT.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the loaded user information.
@@ -726,7 +726,7 @@ class User(AuthBase):
         tenant_role_names (dict): Optional mapping of tenant ID to list of role names.
             Dict value is in the form of {"tenant_id": {"values":["role_name1", "role_name2"], "and": True}} if you want to match all roles (AND) or any role (OR).
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"users": []}
         "users" contains a list of all of the found users and their information
@@ -848,7 +848,7 @@ class User(AuthBase):
         tenant_role_names (dict): Optional mapping of tenant ID to list of role names.
             Dict value is in the form of {"tenant_id": {"values":["role_name1", "role_name2"], "and": True}} if you want to match all roles (AND) or any role (OR).
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"users": []}
         "users" contains a list of all of the found users and their information
@@ -939,7 +939,7 @@ class User(AuthBase):
         withRefreshToken (bool): Optional, set to true to get also the refresh token.
         forceRefresh (bool): Optional, set to true to force refresh the token.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"provider": "", "providerUserId": "", "accessToken": "", "expiration": "", "scopes": "[]"}
         Containing the provider token of the given user and provider.
@@ -969,7 +969,7 @@ class User(AuthBase):
         Args:
         login_id (str): The login ID of the user to be activated.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -994,7 +994,7 @@ class User(AuthBase):
         Args:
         login_id (str): The login ID of the user to be deactivated.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1022,7 +1022,7 @@ class User(AuthBase):
         login_id (str): The login ID of the user to update.
         new_login_id (str): New login ID to set for the user.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1051,7 +1051,7 @@ class User(AuthBase):
         email (str): The user email address. Leave empty to remove.
         verified (bool): Set to true for the user to be able to login with the email address.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1080,7 +1080,7 @@ class User(AuthBase):
         phone (str): The user phone number. Leave empty to remove.
         verified (bool): Set to true for the user to be able to login with the phone number.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1110,7 +1110,7 @@ class User(AuthBase):
         login_id (str): The login ID of the user to update.
         display_name (str): Optional user display name. Leave empty to remove.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1146,7 +1146,7 @@ class User(AuthBase):
         login_id (str): The login ID of the user to update.
         picture (str): Optional url to user avatar. Leave empty to remove.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1172,7 +1172,7 @@ class User(AuthBase):
         attribute_key (str): The custom attribute that needs to be updated, this attribute needs to exists in Descope console app
         attribute_val: The value to be updated
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1204,7 +1204,7 @@ class User(AuthBase):
         login_id (str): The login ID of the user to update.
         role_names (List[str]): A list of roles to set to a user without tenant association.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1232,7 +1232,7 @@ class User(AuthBase):
         login_id (str): The login ID of the user to update.
         role_names (List[str]): A list of roles to add to a user without tenant association.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1260,7 +1260,7 @@ class User(AuthBase):
         login_id (str): The login ID of the user to update.
         role_names (List[str]): A list of roles to remove from a user without tenant association.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1287,7 +1287,7 @@ class User(AuthBase):
         login_id (str): The login ID of the user to update.
         sso_app_ids (List[str]): A list of sso applications ids for associate with a user.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1314,7 +1314,7 @@ class User(AuthBase):
         login_id (str): The login ID of the user to update.
         sso_app_ids (List[str]): A list of sso applications ids for associate with a user.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1341,7 +1341,7 @@ class User(AuthBase):
         login_id (str): The login ID of the user to update.
         sso_app_ids (List[str]): A list of sso applications ids to remove association from a user.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1368,7 +1368,7 @@ class User(AuthBase):
         login_id (str): The login ID of the user to update.
         tenant_id (str): The ID of the tenant to add to the user.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1395,7 +1395,7 @@ class User(AuthBase):
         login_id (str): The login ID of the user to update.
         tenant_id (str): The ID of the tenant to add to the user.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1424,7 +1424,7 @@ class User(AuthBase):
         tenant_id (str): The ID of the user's tenant.
         role_names (List[str]): A list of roles to set on the user.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1453,7 +1453,7 @@ class User(AuthBase):
         tenant_id (str): The ID of the user's tenant.
         role_names (List[str]): A list of roles to add to the user.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1482,7 +1482,7 @@ class User(AuthBase):
         tenant_id (str): The ID of the user's tenant.
         role_names (List[str]): A list of roles to remove from the user.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1666,7 +1666,7 @@ class User(AuthBase):
         login_id (str): The login ID of the test user being validated.
         login_options (LoginOptions): optional, can be provided to set custom claims to the generated jwt.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"code": "", "loginId": ""}
         Containing the code for the login (exactly as it sent via Email or Phone messaging).
@@ -1703,7 +1703,7 @@ class User(AuthBase):
         uri (str): Optional redirect uri which will be used instead of any global configuration.
         login_options (LoginOptions): optional, can be provided to set custom claims to the generated jwt.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"link": "", "loginId": ""}
         Containing the magic link for the login (exactly as it sent via Email or Phone messaging).
@@ -1738,7 +1738,7 @@ class User(AuthBase):
         uri (str): Optional redirect uri which will be used instead of any global configuration.
         login_options (LoginOptions): optional, can be provided to set custom claims to the generated jwt.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"link": "", "loginId": "", "pendingRef": ""}
         Containing the enchanted link for the login (exactly as it sent via Email or Phone messaging) and pendingRef.
@@ -1768,7 +1768,7 @@ class User(AuthBase):
         login_id (str): The login ID of the user to authenticate with.
         custom_claims (dict): Additional claims to place on the jwt after verification
 
-        Return value (str):
+        Return value (Union[str, Awaitable[str]]):
         Return the token to be used in verification process
 
         Raise:
@@ -1802,7 +1802,7 @@ class User(AuthBase):
         login_options (LoginOptions): Optional login options to customize the link
         timeout (int): Optional, the timeout in seconds for the link to be valid
 
-        Return value (str):
+        Return value (Union[str, Awaitable[str]]):
         Return the token to be used in verification process
 
         Raise:
@@ -1829,7 +1829,7 @@ class User(AuthBase):
         Args:
         login_ids (List[str]): List of Users' IDs.
 
-        Return value (List[dict]):
+        Return value (Union[List[dict], Awaitable[List[dict]]]):
         Return List in the format
              [
                 {

@@ -79,7 +79,7 @@ class Permission(AuthBase):
         """
         Load all permissions.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"permissions": [{"name": <name>, "description": <description>, "systemDefault":<True/False>}]}
         Containing the loaded permission information.
