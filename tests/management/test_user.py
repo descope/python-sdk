@@ -634,6 +634,175 @@ class TestUser(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+    def test_patch_with_status(self):
+        # Test invalid status value
+        with self.assertRaises(AuthException) as context:
+            self.client.mgmt.user.patch("valid-id", status="invalid_status")
+
+        self.assertEqual(context.exception.status_code, 400)
+        self.assertIn("Invalid status value: invalid_status", str(context.exception))
+
+        # Test valid status values
+        valid_statuses = ["enabled", "disabled", "invited"]
+
+        for status in valid_statuses:
+            with patch("requests.patch") as mock_patch:
+                network_resp = mock.Mock()
+                network_resp.ok = True
+                network_resp.json.return_value = json.loads(
+                    """{"user": {"id": "u1"}}"""
+                )
+                mock_patch.return_value = network_resp
+
+                resp = self.client.mgmt.user.patch("id", status=status)
+                user = resp["user"]
+                self.assertEqual(user["id"], "u1")
+
+                mock_patch.assert_called_with(
+                    f"{common.DEFAULT_BASE_URL}{MgmtV1.user_patch_path}",
+                    headers={
+                        **common.default_headers,
+                        "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                        "x-descope-project-id": self.dummy_project_id,
+                    },
+                    params=None,
+                    json={
+                        "loginId": "id",
+                        "status": status,
+                    },
+                    allow_redirects=False,
+                    verify=True,
+                    timeout=DEFAULT_TIMEOUT_SECONDS,
+                )
+
+        # Test that status is not included when None
+        with patch("requests.patch") as mock_patch:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
+            mock_patch.return_value = network_resp
+
+            resp = self.client.mgmt.user.patch("id", display_name="test", status=None)
+            user = resp["user"]
+            self.assertEqual(user["id"], "u1")
+
+            # Verify that status is not in the JSON payload
+            call_args = mock_patch.call_args
+            json_payload = call_args[1]["json"]
+            self.assertNotIn("status", json_payload)
+            self.assertEqual(json_payload["displayName"], "test")
+
+    def test_patch_batch(self):
+        # Test invalid status value in batch
+        users_with_invalid_status = [
+            UserObj(login_id="user1", status="invalid_status"),
+            UserObj(login_id="user2", status="enabled"),
+        ]
+
+        with self.assertRaises(AuthException) as context:
+            self.client.mgmt.user.patch_batch(users_with_invalid_status)
+
+        self.assertEqual(context.exception.status_code, 400)
+        self.assertIn(
+            "Invalid status value: invalid_status for user user1",
+            str(context.exception),
+        )
+
+        # Test successful batch patch
+        users = [
+            UserObj(login_id="user1", email="user1@test.com", status="enabled"),
+            UserObj(login_id="user2", display_name="User Two", status="disabled"),
+            UserObj(login_id="user3", phone="+123456789", status="invited"),
+        ]
+
+        with patch("requests.patch") as mock_patch:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads(
+                """{"patchedUsers": [{"id": "u1"}, {"id": "u2"}, {"id": "u3"}], "failedUsers": []}"""
+            )
+            mock_patch.return_value = network_resp
+
+            resp = self.client.mgmt.user.patch_batch(users)
+
+            self.assertEqual(len(resp["patchedUsers"]), 3)
+            self.assertEqual(len(resp["failedUsers"]), 0)
+
+            mock_patch.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_patch_batch_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "users": [
+                        {
+                            "loginId": "user1",
+                            "email": "user1@test.com",
+                            "status": "enabled",
+                        },
+                        {
+                            "loginId": "user2",
+                            "displayName": "User Two",
+                            "status": "disabled",
+                        },
+                        {
+                            "loginId": "user3",
+                            "phone": "+123456789",
+                            "status": "invited",
+                        },
+                    ]
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test batch with mixed success/failure response
+        with patch("requests.patch") as mock_patch:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads(
+                """{"patchedUsers": [{"id": "u1"}], "failedUsers": [{"failure": "User not found", "user": {"loginId": "user2"}}]}"""
+            )
+            mock_patch.return_value = network_resp
+
+            resp = self.client.mgmt.user.patch_batch(
+                [UserObj(login_id="user1"), UserObj(login_id="user2")]
+            )
+
+            self.assertEqual(len(resp["patchedUsers"]), 1)
+            self.assertEqual(len(resp["failedUsers"]), 1)
+            self.assertEqual(resp["failedUsers"][0]["failure"], "User not found")
+
+        # Test failed batch operation
+        with patch("requests.patch") as mock_patch:
+            mock_patch.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                self.client.mgmt.user.patch_batch,
+                [UserObj(login_id="user1")],
+            )
+
+        # Test with test users flag
+        with patch("requests.patch") as mock_patch:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads(
+                """{"patchedUsers": [{"id": "u1"}], "failedUsers": []}"""
+            )
+            mock_patch.return_value = network_resp
+
+            resp = self.client.mgmt.user.patch_batch(
+                [UserObj(login_id="test_user1")], test=True
+            )
+
+            call_args = mock_patch.call_args
+            json_payload = call_args[1]["json"]
+            self.assertTrue(json_payload["users"][0]["test"])
+
     def test_delete(self):
         # Test failed flows
         with patch("requests.post") as mock_post:
@@ -1056,8 +1225,12 @@ class TestUser(common.DescopeTest):
             )
             mock_post.return_value = network_resp
             resp = self.client.mgmt.user.search_all(
-                tenant_role_ids={"tenant1": {"values": ["roleA", "roleB"], "and": True}},
-                tenant_role_names={"tenant2": {"values": ["admin", "user"], "and": False}},
+                tenant_role_ids={
+                    "tenant1": {"values": ["roleA", "roleB"], "and": True}
+                },
+                tenant_role_names={
+                    "tenant2": {"values": ["admin", "user"], "and": False}
+                },
             )
             users = resp["users"]
             self.assertEqual(len(users), 2)
@@ -1078,8 +1251,12 @@ class TestUser(common.DescopeTest):
                     "page": 0,
                     "testUsersOnly": False,
                     "withTestUser": False,
-                    "tenantRoleIds": {"tenant1": {"values": ["roleA", "roleB"], "and": True}},
-                    "tenantRoleNames": {"tenant2": {"values": ["admin", "user"], "and": False}},
+                    "tenantRoleIds": {
+                        "tenant1": {"values": ["roleA", "roleB"], "and": True}
+                    },
+                    "tenantRoleNames": {
+                        "tenant2": {"values": ["admin", "user"], "and": False}
+                    },
                 },
                 allow_redirects=False,
                 verify=True,
@@ -1302,8 +1479,12 @@ class TestUser(common.DescopeTest):
             )
             mock_post.return_value = network_resp
             resp = self.client.mgmt.user.search_all_test_users(
-                tenant_role_ids={"tenant1": {"values": ["roleA", "roleB"], "and": True}},
-                tenant_role_names={"tenant2": {"values": ["admin", "user"], "and": False}},
+                tenant_role_ids={
+                    "tenant1": {"values": ["roleA", "roleB"], "and": True}
+                },
+                tenant_role_names={
+                    "tenant2": {"values": ["admin", "user"], "and": False}
+                },
             )
             users = resp["users"]
             self.assertEqual(len(users), 2)
@@ -1324,8 +1505,12 @@ class TestUser(common.DescopeTest):
                     "page": 0,
                     "testUsersOnly": True,
                     "withTestUser": True,
-                    "tenantRoleIds": {"tenant1": {"values": ["roleA", "roleB"], "and": True}},
-                    "tenantRoleNames": {"tenant2": {"values": ["admin", "user"], "and": False}},
+                    "tenantRoleIds": {
+                        "tenant1": {"values": ["roleA", "roleB"], "and": True}
+                    },
+                    "tenantRoleNames": {
+                        "tenant2": {"values": ["admin", "user"], "and": False}
+                    },
                 },
                 allow_redirects=False,
                 verify=True,

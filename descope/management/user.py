@@ -417,6 +417,7 @@ class User(HTTPBase):
         verified_email: Optional[bool] = None,
         verified_phone: Optional[bool] = None,
         sso_app_ids: Optional[List[str]] = None,
+        status: Optional[str] = None,
         test: bool = False,
     ) -> dict:
         """
@@ -437,6 +438,7 @@ class User(HTTPBase):
         picture (str): Optional url for user picture
         custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
         sso_app_ids (List[str]): Optional, list of SSO applications IDs to be associated with the user.
+        status (str): Optional status field. Can be one of: "enabled", "disabled", "invited".
         test (bool, optional): Set to True to update a test user. Defaults to False.
 
         Return value (dict):
@@ -447,6 +449,12 @@ class User(HTTPBase):
         Raise:
         AuthException: raised if patch operation fails
         """
+        if status is not None and status not in ["enabled", "disabled", "invited"]:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                f"Invalid status value: {status}. Must be one of: enabled, disabled, invited",
+            )
         response = self._http.patch(
             MgmtV1.user_patch_path,
             body=User._compose_patch_body(
@@ -464,8 +472,50 @@ class User(HTTPBase):
                 verified_email,
                 verified_phone,
                 sso_app_ids,
+                status,
                 test,
             ),
+        )
+        return response.json()
+
+    def patch_batch(
+        self,
+        users: List[UserObj],
+        test: bool = False,
+    ) -> dict:
+        """
+        Patch users in batch. Only the provided fields will be updated for each user.
+
+        Args:
+        users (List[UserObj]): A list of UserObj instances representing users to be patched.
+            Each UserObj should have a login_id and the fields to be updated.
+        test (bool, optional): Set to True to patch test users. Defaults to False.
+
+        Return value (dict):
+        Return dict in the format
+             {"patchedUsers": [...], "failedUsers": [...]}
+        "patchedUsers" contains successfully patched users,
+        "failedUsers" contains users that failed to be patched with error details.
+
+        Raise:
+        AuthException: raised if patch batch operation fails
+        """
+        # Validate status fields for all users
+        for user in users:
+            if user.status is not None and user.status not in [
+                "enabled",
+                "disabled",
+                "invited",
+            ]:
+                raise AuthException(
+                    400,
+                    ERROR_TYPE_INVALID_ARGUMENT,
+                    f"Invalid status value: {user.status} for user {user.login_id}. Must be one of: enabled, disabled, invited",
+                )
+
+        response = self._http.patch(
+            MgmtV1.user_patch_batch_path,
+            body=User._compose_patch_batch_body(users, test),
         )
         return response.json()
 
@@ -1924,6 +1974,7 @@ class User(HTTPBase):
         verified_email: Optional[bool],
         verified_phone: Optional[bool],
         sso_app_ids: Optional[List[str]],
+        status: Optional[str],
         test: bool = False,
     ) -> dict:
         res: dict[str, Any] = {
@@ -1955,6 +2006,37 @@ class User(HTTPBase):
             res["verifiedPhone"] = verified_phone
         if sso_app_ids is not None:
             res["ssoAppIds"] = sso_app_ids
+        if status is not None:
+            res["status"] = status
         if test:
             res["test"] = test
         return res
+
+    @staticmethod
+    def _compose_patch_batch_body(
+        users: List[UserObj],
+        test: bool = False,
+    ) -> dict:
+        users_body = []
+        for user in users:
+            user_body = User._compose_patch_body(
+                login_id=user.login_id,
+                email=user.email,
+                phone=user.phone,
+                display_name=user.display_name,
+                given_name=user.given_name,
+                middle_name=user.middle_name,
+                family_name=user.family_name,
+                role_names=user.role_names,
+                user_tenants=user.user_tenants,
+                picture=user.picture,
+                custom_attributes=user.custom_attributes,
+                verified_email=user.verified_email,
+                verified_phone=user.verified_phone,
+                sso_app_ids=user.sso_app_ids,
+                status=user.status,
+                test=test,
+            )
+            users_body.append(user_body)
+
+        return {"users": users_body}

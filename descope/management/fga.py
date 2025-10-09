@@ -1,10 +1,15 @@
-from typing import List
+from typing import List, Optional
 
 from descope._http_base import HTTPBase
 from descope.management.common import MgmtV1
 
 
 class FGA(HTTPBase):
+
+    def __init__(self, http_client, fga_cache_url: Optional[str] = None):
+        super().__init__(http_client)
+        self._fga_cache_url = fga_cache_url
+
     def save_schema(self, schema: str):
         """
         Create or update an FGA schema.
@@ -43,6 +48,7 @@ class FGA(HTTPBase):
         self._http.post(
             MgmtV1.fga_save_schema,
             body={"dsl": schema},
+            base_url=self._fga_cache_url,
         )
 
     def create_relations(
@@ -66,6 +72,7 @@ class FGA(HTTPBase):
         self._http.post(
             MgmtV1.fga_create_relations,
             body={"tuples": relations},
+            base_url=self._fga_cache_url,
         )
 
     def delete_relations(
@@ -82,6 +89,7 @@ class FGA(HTTPBase):
         self._http.post(
             MgmtV1.fga_delete_relations,
             body={"tuples": relations},
+            base_url=self._fga_cache_url,
         )
 
     def check(
@@ -120,6 +128,7 @@ class FGA(HTTPBase):
         response = self._http.post(
             MgmtV1.fga_check,
             body={"tuples": relations},
+            base_url=self._fga_cache_url,
         )
         return list(
             map(

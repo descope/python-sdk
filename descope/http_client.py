@@ -95,9 +95,10 @@ class HTTPClient:
         body: Optional[Union[dict, list[dict], list[str]]] = None,
         params=None,
         pswd: Optional[str] = None,
+        base_url: Optional[str] = None,
     ) -> requests.Response:
         response = requests.post(
-            f"{self.base_url}{uri}",
+            f"{base_url or self.base_url}{uri}",
             headers=self._get_default_headers(pswd),
             json=body,
             allow_redirects=False,

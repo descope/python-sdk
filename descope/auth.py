@@ -9,6 +9,7 @@ from threading import Lock
 from typing import Iterable, Optional
 
 import jwt
+import requests
 from email_validator import EmailNotValidError, validate_email
 from jwt import ExpiredSignatureError, ImmatureSignatureError
 
@@ -66,7 +67,6 @@ class Auth:
         self.project_id = project_id
         self.jwt_validation_leeway = jwt_validation_leeway
 
-        # Internal HTTP client for all network traffic (must be injected)
         self._http = http_client
 
         public_key = public_key or os.getenv("DESCOPE_PUBLIC_KEY")
@@ -447,13 +447,13 @@ class Auth:
                 audience=audience,
                 leeway=self.jwt_validation_leeway,
             )
-        except (ImmatureSignatureError):
+        except ImmatureSignatureError:
             raise AuthException(
                 400,
                 ERROR_TYPE_INVALID_TOKEN,
                 "Received Invalid token (nbf in future) during jwt validation. Error can be due to time glitch (between machines), try to set the jwt_validation_leeway parameter (in DescopeClient) to higher value than 5sec which is the default",
             )
-        except (ExpiredSignatureError):
+        except ExpiredSignatureError:
             raise AuthException(
                 401,
                 ERROR_TYPE_INVALID_TOKEN,

@@ -1,3 +1,5 @@
+from typing import Optional
+
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 from descope.http_client import HTTPClient
 from descope.management.access_key import AccessKey
@@ -25,7 +27,7 @@ from descope.management.user import User
 class MGMT:
     _http: HTTPClient
 
-    def __init__(self, http_client: HTTPClient):
+    def __init__(self, http_client: HTTPClient, fga_cache_url: Optional[str] = None):
         """Create a management API facade.
 
         Args:
@@ -35,7 +37,7 @@ class MGMT:
         self._access_key = AccessKey(http_client)
         self._audit = Audit(http_client)
         self._authz = Authz(http_client)
-        self._fga = FGA(http_client)
+        self._fga = FGA(http_client, fga_cache_url=fga_cache_url)
         self._flow = Flow(http_client)
         self._group = Group(http_client)
         self._jwt = JWT(http_client)

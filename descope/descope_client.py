@@ -30,9 +30,10 @@ class DescopeClient:
         public_key: Optional[dict] = None,
         skip_verify: bool = False,
         management_key: Optional[str] = None,
-        auth_management_key: Optional[str] = None,
         timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
         jwt_validation_leeway: int = 5,
+        auth_management_key: Optional[str] = None,
+        fga_cache_url: Optional[str] = None,
     ):
         # Auth Initialization
         auth_http_client = HTTPClient(
@@ -68,6 +69,7 @@ class DescopeClient:
         )
         self._mgmt = MGMT(
             http_client=mgmt_http_client,
+            fga_cache_url=fga_cache_url,
         )
 
     @property

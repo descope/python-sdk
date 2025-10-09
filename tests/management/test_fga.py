@@ -308,3 +308,184 @@ class TestFGA(common.DescopeTest):
                 client.mgmt.fga.save_resources_details,
                 details,
             )
+
+    def test_fga_cache_url_save_schema(self):
+        # Test FGA cache URL functionality for save_schema
+        fga_cache_url = "https://my-fga-cache.example.com"
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+            fga_cache_url=fga_cache_url,
+        )
+
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            client.mgmt.fga.save_schema("model AuthZ 1.0")
+            mock_post.assert_called_with(
+                f"{fga_cache_url}{MgmtV1.fga_save_schema}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={"dsl": "model AuthZ 1.0"},
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_fga_cache_url_create_relations(self):
+        # Test FGA cache URL functionality for create_relations
+        fga_cache_url = "https://my-fga-cache.example.com"
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+            fga_cache_url=fga_cache_url,
+        )
+
+        relations = [
+            {
+                "resource": "r",
+                "resourceType": "rt",
+                "relation": "rel",
+                "target": "u",
+                "targetType": "ty",
+            }
+        ]
+
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            client.mgmt.fga.create_relations(relations)
+            mock_post.assert_called_with(
+                f"{fga_cache_url}{MgmtV1.fga_create_relations}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={"tuples": relations},
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_fga_cache_url_delete_relations(self):
+        # Test FGA cache URL functionality for delete_relations
+        fga_cache_url = "https://my-fga-cache.example.com"
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+            fga_cache_url=fga_cache_url,
+        )
+
+        relations = [
+            {
+                "resource": "r",
+                "resourceType": "rt",
+                "relation": "rel",
+                "target": "u",
+                "targetType": "ty",
+            }
+        ]
+
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            client.mgmt.fga.delete_relations(relations)
+            mock_post.assert_called_with(
+                f"{fga_cache_url}{MgmtV1.fga_delete_relations}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={"tuples": relations},
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_fga_cache_url_check(self):
+        # Test FGA cache URL functionality for check
+        fga_cache_url = "https://my-fga-cache.example.com"
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+            fga_cache_url=fga_cache_url,
+        )
+
+        relations = [
+            {
+                "resource": "r",
+                "resourceType": "rt",
+                "relation": "rel",
+                "target": "u",
+                "targetType": "ty",
+            }
+        ]
+
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            mock_post.return_value.json.return_value = {
+                "tuples": [
+                    {
+                        "allowed": True,
+                        "tuple": relations[0],
+                    }
+                ]
+            }
+            result = client.mgmt.fga.check(relations)
+            mock_post.assert_called_with(
+                f"{fga_cache_url}{MgmtV1.fga_check}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={"tuples": relations},
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+            self.assertEqual(len(result), 1)
+            self.assertTrue(result[0]["allowed"])
+            self.assertEqual(result[0]["relation"], relations[0])
+
+    def test_fga_without_cache_url_uses_default_base_url(self):
+        # Test that FGA methods use default base URL when cache URL is not provided
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+            # No fga_cache_url provided
+        )
+
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            client.mgmt.fga.save_schema("model AuthZ 1.0")
+            # Should use default base URL
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.fga_save_schema}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={"dsl": "model AuthZ 1.0"},
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
