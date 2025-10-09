@@ -16,7 +16,7 @@ class Group(AuthBase):
         Args:
         tenant_id (str): Tenant ID to load groups from.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              [
                 {
@@ -62,7 +62,7 @@ class Group(AuthBase):
         user_ids (List[str]): Optional List of user IDs, with the format of "U2J5ES9S8TkvCgOvcrkpzUgVTEBM" (example), which can be found on the user's JWT.
         login_ids (List[str]): Optional List of login IDs, how the users identify when logging in.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              [
                 {
@@ -111,7 +111,7 @@ class Group(AuthBase):
         tenant_id (str): Tenant ID to load groups from.
         group_id (str): Group ID to load members for.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              [
                 {

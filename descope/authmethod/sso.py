@@ -19,7 +19,7 @@ class SSO(AuthBase):
         """
         Start tenant sso session (saml/oidc based on tenant settings)
 
-        Return value (dict): the redirect url for the login page
+        Return value (Union[dict, Awaitable[dict]]): the redirect url for the login page
         Return dict in the format
              {'url': 'http://dummy.com/login..'}
         """

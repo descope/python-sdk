@@ -41,22 +41,8 @@ class OAuth(AuthBase):
         )
 
     def exchange_token(self, code: str) -> Union[dict, Awaitable[dict]]:
-        if not code:
-            raise AuthException(
-                400,
-                ERROR_TYPE_INVALID_ARGUMENT,
-                "exchange code is empty",
-            )
-
-        uri = EndpointsV1.oauth_exchange_token_path
-        response = self._auth.do_post(uri, {"code": code}, None)
-        return futu_apply(
-            response,
-            lambda response: self._auth.generate_jwt_response(
-                response.json(),
-                response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None),
-                None,
-            ),
+        return self._auth.exchange_token(
+            EndpointsV1.oauth_exchange_token_path, code, None
         )
 
     @staticmethod

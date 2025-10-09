@@ -35,7 +35,7 @@ class SSOApplication(AuthBase):
         enabled (bool): Optional (default True) does the sso application will be enabled or disabled.
         force_authentication (bool): Optional determine if the IdP should force the user to re-authenticate.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"id": <id>}
 
@@ -105,7 +105,7 @@ class SSOApplication(AuthBase):
         force_authentication (bool): Optional determine if the IdP should force the user to re-authenticate.
         logout_redirect_url (str): Optional Target URL to which the user will be redirected upon logout completion.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"id": <id>}
 
@@ -320,7 +320,7 @@ class SSOApplication(AuthBase):
         Args:
         id (str): The ID of the sso application to load.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"id":"<id>","name":"<name>","description":"<description>","enabled":true,"logo":"","appType":"saml","samlSettings":{"loginPageUrl":"","idpCert":"<cert>","useMetadataInfo":true,"metadataUrl":"","entityId":"","acsUrl":"","certificate":"","attributeMapping":[{"name":"email","type":"","value":"attrVal1"}],"groupsMapping":[{"name":"grp1","type":"","filterType":"roles","value":"","roles":[{"id":"myRoleId","name":"myRole"}]}],"idpMetadataUrl":"","idpEntityId":"","idpSsoUrl":"","acsAllowedCallbacks":[],"subjectNameIdType":"","subjectNameIdFormat":"", "defaultRelayState":"", "forceAuthentication": false, "idpLogoutUrl": "", "logoutRedirectUrl": ""},"oidcSettings":{"loginPageUrl":"","issuer":"","discoveryUrl":"", "forceAuthentication":false}}
         Containing the loaded sso application information.
@@ -341,7 +341,7 @@ class SSOApplication(AuthBase):
         """
         Load all sso applications.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {
                                 "apps": [

@@ -24,7 +24,7 @@ class JWT(AuthBase):
         custom_claims (dict): Custom claims to add to JWT, system claims will be filtered out
         refresh_duration (int): duration in seconds for which the new JWT will be valid
 
-        Return value (str): the newly updated JWT
+        Return value (Union[str, Awaitable[str]]): the newly updated JWT
 
         Raise:
         AuthException: raised if update failed
@@ -65,7 +65,7 @@ class JWT(AuthBase):
         tenant_id (str): tenant id to set on DCT claim.
         refresh_duration (int): duration in seconds for which the new JWT will be valid
 
-        Return value (str): A JWT of the impersonated user
+        Return value (Union[str, Awaitable[str]]): A JWT of the impersonated user
 
         Raise:
         AuthException: raised if update failed
@@ -110,7 +110,7 @@ class JWT(AuthBase):
         tenant_id (str): tenant id to set on DCT claim.
         refresh_duration (int): duration in seconds for which the new JWT will be valid
 
-        Return value (str): A JWT of the actor
+        Return value (Union[str, Awaitable[str]]): A JWT of the actor
 
         Raise:
         AuthException: raised if update failed

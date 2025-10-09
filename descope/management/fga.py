@@ -114,7 +114,7 @@ class FGA(AuthBase):
                 "targetType": "the type of the target (namespace)"
             }
 
-        Return value (List[dict]):
+        Return value (Union[List[dict], Awaitable[List[dict]]]):
         Return List in the format
              [
                 {

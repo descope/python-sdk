@@ -155,7 +155,7 @@ class OutboundApplication(AuthBase):
         access_type (AccessType): Optional OAuth access type.
         prompt (List[PromptType]): Optional OAuth prompt parameters.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"app": {"id": <id>, "name": <name>, "description": <description>, "logo": <logo>}}
 
@@ -234,7 +234,7 @@ class OutboundApplication(AuthBase):
         access_type (AccessType): Optional OAuth access type.
         prompt (List[PromptType]): Optional OAuth prompt parameters.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"app": {"id": <id>, "name": <name>, "description": <description>, "logo": <logo>}}
 
@@ -297,7 +297,7 @@ class OutboundApplication(AuthBase):
         Args:
         id (str): The ID of the outbound application to load.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"app": {"id": <id>, "name": <name>, "description": <description>, "logo": <logo>}}
         Containing the loaded outbound application information.
@@ -317,7 +317,7 @@ class OutboundApplication(AuthBase):
         """
         Load all outbound applications.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"apps": [{"id": <id>, "name": <name>, "description": <description>, "logo": <logo>}, ...]}
         Containing the loaded outbound applications information.
@@ -349,7 +349,7 @@ class OutboundApplication(AuthBase):
         options (dict): Optional token options.
         tenant_id (str): Optional tenant ID.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"token": {"token": <access_token>, "refreshToken": <refresh_token>, "expiresIn": <expires_in>, "tokenType": <token_type>, "scopes": <scopes>}}
 
@@ -386,7 +386,7 @@ class OutboundApplication(AuthBase):
         tenant_id (str): Optional tenant ID.
         options (dict): Optional token options.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"token": {"token": <access_token>, "refreshToken": <refresh_token>, "expiresIn": <expires_in>, "tokenType": <token_type>, "scopes": <scopes>}}
 
@@ -422,7 +422,7 @@ class OutboundApplication(AuthBase):
         scopes (List[str]): List of scopes to include in the token.
         options (dict): Optional token options.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"token": {"token": <access_token>, "refreshToken": <refresh_token>, "expiresIn": <expires_in>, "tokenType": <token_type>, "scopes": <scopes>}}
 
@@ -456,7 +456,7 @@ class OutboundApplication(AuthBase):
         tenant_id (str): The ID of the tenant.
         options (dict): Optional token options.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"token": {"token": <access_token>, "refreshToken": <refresh_token>, "expiresIn": <expires_in>, "tokenType": <token_type>, "scopes": <scopes>}}
 
@@ -569,7 +569,7 @@ class OutboundApplicationByToken(AuthBase):
         options (dict): Optional token options.
         tenant_id (str): Optional tenant ID.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"token": {"token": <access_token>, "refreshToken": <refresh_token>, "expiresIn": <expires_in>, "tokenType": <token_type>, "scopes": <scopes>}}
 
@@ -599,7 +599,7 @@ class OutboundApplicationByToken(AuthBase):
         tenant_id (str): Optional tenant ID.
         options (dict): Optional token options.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"token": {"token": <access_token>, "refreshToken": <refresh_token>, "expiresIn": <expires_in>, "tokenType": <token_type>, "scopes": <scopes>}}
 
@@ -629,7 +629,7 @@ class OutboundApplicationByToken(AuthBase):
         scopes (List[str]): List of scopes to include in the token.
         options (dict): Optional token options.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"token": {"token": <access_token>, "refreshToken": <refresh_token>, "expiresIn": <expires_in>, "tokenType": <token_type>, "scopes": <scopes>}}
 
@@ -653,7 +653,7 @@ class OutboundApplicationByToken(AuthBase):
         tenant_id (str): The ID of the tenant.
         options (dict): Optional token options.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"token": {"token": <access_token>, "refreshToken": <refresh_token>, "expiresIn": <expires_in>, "tokenType": <token_type>, "scopes": <scopes>}}
 

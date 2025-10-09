@@ -37,7 +37,7 @@ class AccessKey(AuthBase):
         description (str): an optional text the access key can hold.
         permitted_ips: (List[str]): An optional list of IP addresses or CIDR ranges that are allowed to use the access key.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
             {
                 "key": {},
@@ -78,7 +78,7 @@ class AccessKey(AuthBase):
         Args:
         id (str): The id of the access key to be loaded.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"key": {}}
         Containing the loaded access key information.
@@ -103,7 +103,7 @@ class AccessKey(AuthBase):
         Args:
         tenant_ids (List[str]): Optional list of tenant IDs to filter by
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"keys": []}
         "keys" contains a list of all of the found users and their information

@@ -60,7 +60,7 @@ class Project(AuthBase):
         """
         List of all the projects in the company.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"projects": []}
         "projects" contains a list of all of the projects and their information
@@ -104,7 +104,7 @@ class Project(AuthBase):
         environment (str): Optional state for the project. Currently, only the "production" tag is supported.
         tags(list[str]): Optional free text tags.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict Containing the new project details (name, id, environment and tag).
 
         Raise:
@@ -134,7 +134,7 @@ class Project(AuthBase):
         - Users, tenants and access keys are not cloned.
         - Secrets, keys and tokens are not stripped from the exported data.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict Containing the exported JSON files payload.
 
         Raise:

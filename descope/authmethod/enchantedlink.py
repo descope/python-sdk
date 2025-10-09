@@ -228,7 +228,3 @@ class EnchantedLink(AuthBase):
     @staticmethod
     def _compose_get_session_body(pending_ref: str) -> dict:
         return {"pendingRef": pending_ref}
-
-    @staticmethod
-    def _get_pending_ref_from_response(response: httpx.Response) -> dict:
-        return response.json()

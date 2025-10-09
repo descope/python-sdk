@@ -12,7 +12,7 @@ class Flow(AuthBase):
         """
         List all project flows
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
             { "flows": [{"id": "", "name": "", "description": "", "disabled": False}], total: number}
 
@@ -64,7 +64,7 @@ class Flow(AuthBase):
         Args:
         flow_id (str): the flow id to export.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
             { "flow": {"id": "", "name": "", "description": "", "disabled": False, "etag": "", "dsl": {}}, screens: [{ "id": "", "inputs": [], "interactions": [] }] }
 
@@ -100,7 +100,7 @@ class Flow(AuthBase):
         screens (List[dict]): the flow screens to import. list of dictss in the format:
             { "id": "", "inputs": [], "interactions": [] }
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
             { "flow": {"id": "", "name": "", "description": "", "disabled": False, "etag": "", "dsl": {}}, screens: [{ "id": "", "inputs": [], "interactions": [] }] }
 
@@ -127,7 +127,7 @@ class Flow(AuthBase):
         """
         Export the current project theme.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
             {"id": "", "cssTemplate": {} }
 
@@ -156,7 +156,7 @@ class Flow(AuthBase):
         theme (Theme): the theme to import. dict in the format
             {"id": "", "cssTemplate": {} }
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
             {"id": "", "cssTemplate": {} }
 

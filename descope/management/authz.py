@@ -66,7 +66,7 @@ class Authz(AuthBase):
     def load_schema(self) -> Union[dict, Awaitable[dict]]:
         """
         Load the schema for the project
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format of schema as above (see save_schema)
         Raise:
         AuthException: raised if load schema fails
@@ -277,7 +277,7 @@ class Authz(AuthBase):
                 "target": "the target that has the relation - usually users or other resources"
             }
 
-        Return value (List[dict]):
+        Return value (Union[List[dict], Awaitable[List[dict]]]):
         Return List in the format
              [
                 {
@@ -310,7 +310,7 @@ class Authz(AuthBase):
         relation_definition (str): the RD we are checking
         namespace (str): the namespace for the RD
 
-        Return value (List[str]): list of targets (user IDs usually that have the access)
+        Return value (Union[List[dict], Awaitable[List[dict]]]): list of targets (user IDs usually that have the access)
         Raise:
         AuthException: raised if query fails
         """
@@ -333,7 +333,7 @@ class Authz(AuthBase):
         Args:
         resource (str): the resource we are listing relations for
 
-        Return value (List[dict]):
+        Return value (Union[List[dict], Awaitable[List[dict]]]):
         Return List of relations each in the format of a relation as documented in create_relations
         Raise:
         AuthException: raised if query fails
@@ -353,7 +353,7 @@ class Authz(AuthBase):
         Args:
         targets (List[str]): the list of targets we are returning the relations for
 
-        Return value (List[dict]):
+        Return value (Union[List[dict], Awaitable[List[dict]]]):
         Return List of relations each in the format of a relation as documented in create_relations
         Raise:
         AuthException: raised if query fails
@@ -373,7 +373,7 @@ class Authz(AuthBase):
         Args:
         target (str): the target we are returning the relations for
 
-        Return value (List[dict]):
+        Return value (Union[List[dict], Awaitable[List[dict]]]):
         Return List of relations each in the format of a relation as documented in create_relations
         Raise:
         AuthException: raised if query fails
@@ -395,7 +395,7 @@ class Authz(AuthBase):
         relation_definition (str): the RD we are checking
         namespace (str): the namespace for the RD
 
-        Return value (List[dict]):
+        Return value (Union[List[dict], Awaitable[List[dict]]]):
         Return List of relations each in the format of a relation as documented in create_relations
         Raise:
         AuthException: raised if query fails
@@ -419,7 +419,7 @@ class Authz(AuthBase):
         Args:
         since (datetime): only return changes from this given datetime
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Dict including "resources" list of strings, "targets" list of strings and "schemaChanged" bool
         Raise:
         AuthException: raised if query fails
