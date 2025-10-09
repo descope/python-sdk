@@ -4,9 +4,10 @@ from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
 from descope.common import DEFAULT_TIMEOUT_SECONDS
+from descope.future_utils import futu_await
 from descope.management.common import MgmtV1
 
-from tests.testutils import SSLMatcher
+from tests.testutils import SSLMatcher, mock_http_call
 from .. import common
 
 
@@ -25,27 +26,31 @@ class TestProject(common.DescopeTest):
             "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
         }
 
-    def test_update_name(self):
+    async def test_update_name(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.project.update_name,
-                "name",
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.project.update_name(
+                        "name",
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = True
-            self.assertIsNone(client.mgmt.project.update_name("new-name"))
+            self.assertIsNone(
+                await futu_await(client.mgmt.project.update_name("new-name"))
+            )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.project_update_name}",
                 headers={
@@ -62,27 +67,31 @@ class TestProject(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_update_tags(self):
+    async def test_update_tags(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.project.update_tags,
-                "tags",
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.project.update_tags(
+                        "tags",
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = True
-            self.assertIsNone(client.mgmt.project.update_tags(["tag1", "tag2"]))
+            self.assertIsNone(
+                await futu_await(client.mgmt.project.update_tags(["tag1", "tag2"]))
+            )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.project_update_tags}",
                 headers={
@@ -99,24 +108,23 @@ class TestProject(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_list_projects(self):
+    async def test_list_projects(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.project.list_projects,
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.project.list_projects())
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
             network_resp.is_success = True
             json_str = """
@@ -133,7 +141,7 @@ class TestProject(common.DescopeTest):
             """
             network_resp.json.return_value = json.loads(json_str)
             mock_post.return_value = network_resp
-            resp = client.mgmt.project.list_projects()
+            resp = await futu_await(client.mgmt.project.list_projects())
             projects = resp["projects"]
             self.assertEqual(len(projects), 1)
             self.assertEqual(projects[0]["id"], "dummy")
@@ -151,27 +159,29 @@ class TestProject(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_clone(self):
+    async def test_clone(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.project.clone,
-                "new-name",
-                "production",
-                ["apple", "banana", "cherry"],
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.project.clone(
+                        "new-name",
+                        "production",
+                        ["apple", "banana", "cherry"],
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
             network_resp.is_success = True
             network_resp.json.return_value = json.loads(
@@ -182,10 +192,12 @@ class TestProject(common.DescopeTest):
                 """
             )
             mock_post.return_value = network_resp
-            resp = client.mgmt.project.clone(
-                "new-name",
-                "production",
-                ["apple", "banana", "cherry"],
+            resp = await futu_await(
+                client.mgmt.project.clone(
+                    "new-name",
+                    "production",
+                    ["apple", "banana", "cherry"],
+                )
             )
             self.assertEqual(resp["id"], "dummy")
             mock_post.assert_called_with(
@@ -206,24 +218,23 @@ class TestProject(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_export_project(self):
+    async def test_export_project(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.project.export_project,
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.project.export_project())
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
             network_resp.is_success = True
             network_resp.json.return_value = json.loads(
@@ -234,7 +245,7 @@ class TestProject(common.DescopeTest):
                 """
             )
             mock_post.return_value = network_resp
-            resp = client.mgmt.project.export_project()
+            resp = await futu_await(client.mgmt.project.export_project())
             self.assertIsNotNone(resp)
             self.assertEqual(resp["foo"], "bar")
             mock_post.assert_called_with(
@@ -251,34 +262,36 @@ class TestProject(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_import_project(self):
+    async def test_import_project(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.project.import_project,
-                {
-                    "foo": "bar",
-                },
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.project.import_project(
+                        {
+                            "foo": "bar",
+                        },
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             network_resp = mock.Mock()
             network_resp.is_success = True
             mock_post.return_value = network_resp
             files = {
                 "foo": "bar",
             }
-            client.mgmt.project.import_project(files)
+            await futu_await(client.mgmt.project.import_project(files))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.project_import}",
                 headers={

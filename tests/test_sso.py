@@ -7,9 +7,10 @@ from descope import AuthException
 from descope.auth import Auth
 from descope.authmethod.sso import SSO
 from descope.common import DEFAULT_TIMEOUT_SECONDS, EndpointsV1, LoginOptions
+from descope.future_utils import futu_await
 
 from . import common
-from tests.testutils import SSLMatcher
+from tests.testutils import SSLMatcher, mock_http_call
 
 
 class TestSSO(common.DescopeTest):
@@ -26,7 +27,7 @@ class TestSSO(common.DescopeTest):
             "y": "N5n5jKZA5Wu7_b4B36KKjJf-VRfJ-XqczfCSYy9GeQLqF-b63idfE0SYaYk9cFqg",
         }
 
-    def test_compose_start_params(self):
+    async def test_compose_start_params(self):
         self.assertEqual(
             SSO._compose_start_params("tenant1", "http://dummy.com", "", ""),
             {"tenant": "tenant1", "redirectURL": "http://dummy.com"},
@@ -42,25 +43,36 @@ class TestSSO(common.DescopeTest):
             },
         )
 
-    def test_sso_start(self):
-        sso = SSO(Auth(self.dummy_project_id, self.public_key_dict))
+    async def test_sso_start(self):
+        sso = SSO(
+            Auth(
+                self.dummy_project_id, self.public_key_dict, async_mode=self.async_test
+            )
+        )
 
         # Test failed flows
-        self.assertRaises(AuthException, sso.start, "", "http://dummy.com")
-        self.assertRaises(AuthException, sso.start, None, "http://dummy.com")
+        with self.assertRaises(AuthException):
+            await futu_await(sso.start("", "http://dummy.com"))
+        with self.assertRaises(AuthException):
+            await futu_await(sso.start(None, "http://dummy.com"))
 
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(AuthException, sso.start, "tenant1", "http://dummy.com")
+            with self.assertRaises(AuthException):
+                await futu_await(sso.start("tenant1", "http://dummy.com"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = True
-            self.assertIsNotNone(sso.start("tenant1", "http://dummy.com"))
+            self.assertIsNotNone(
+                await futu_await(sso.start("tenant1", "http://dummy.com"))
+            )
 
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = True
-            sso.start("tenant1", "http://dummy.com", sso_id="some-sso-id")
+            await futu_await(
+                sso.start("tenant1", "http://dummy.com", sso_id="some-sso-id")
+            )
             expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.auth_sso_start_path}"
             mock_post.assert_called_with(
                 expected_uri,
@@ -79,34 +91,40 @@ class TestSSO(common.DescopeTest):
                 verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
-            self.assertRaises(
-                AuthException,
-                sso.start,
-                "tenant",
-                "http://dummy.com",
-                LoginOptions(mfa=True),
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    sso.start("tenant", "http://dummy.com", LoginOptions(mfa=True)),
+                )
 
-    def test_sso_start_with_login_options(self):
-        sso = SSO(Auth(self.dummy_project_id, self.public_key_dict))
+    async def test_sso_start_with_login_options(self):
+        sso = SSO(
+            Auth(
+                self.dummy_project_id, self.public_key_dict, async_mode=self.async_test
+            )
+        )
 
         # Test failed flows
-        self.assertRaises(AuthException, sso.start, "", "http://dummy.com")
-        self.assertRaises(AuthException, sso.start, None, "http://dummy.com")
+        with self.assertRaises(AuthException):
+            await futu_await(sso.start("", "http://dummy.com"))
+        with self.assertRaises(AuthException):
+            await futu_await(sso.start(None, "http://dummy.com"))
 
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(AuthException, sso.start, "tenant1", "http://dummy.com")
+            with self.assertRaises(AuthException):
+                await futu_await(sso.start("tenant1", "http://dummy.com"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = True
-            self.assertIsNotNone(sso.start("tenant1", "http://dummy.com"))
+            self.assertIsNotNone(
+                await futu_await(sso.start("tenant1", "http://dummy.com"))
+            )
 
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = True
             lo = LoginOptions(stepup=True, custom_claims={"k1": "v1"})
-            sso.start("tenant1", "http://dummy.com", lo, "refresh")
+            await futu_await(sso.start("tenant1", "http://dummy.com", lo, "refresh"))
             expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.auth_sso_start_path}"
             mock_post.assert_called_with(
                 expected_uri,
@@ -122,22 +140,29 @@ class TestSSO(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_compose_exchange_params(self):
+    async def test_compose_exchange_params(self):
         self.assertEqual(Auth._compose_exchange_body("c1"), {"code": "c1"})
 
-    def test_exchange_token(self):
-        sso = SSO(Auth(self.dummy_project_id, self.public_key_dict))
+    async def test_exchange_token(self):
+        sso = SSO(
+            Auth(
+                self.dummy_project_id, self.public_key_dict, async_mode=self.async_test
+            )
+        )
 
         # Test failed flows
-        self.assertRaises(AuthException, sso.exchange_token, "")
-        self.assertRaises(AuthException, sso.exchange_token, None)
+        with self.assertRaises(AuthException):
+            await futu_await(sso.exchange_token(""))
+        with self.assertRaises(AuthException):
+            await futu_await(sso.exchange_token(None))
 
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(AuthException, sso.exchange_token, "c1")
+            with self.assertRaises(AuthException):
+                await futu_await(sso.exchange_token("c1"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.is_success = True
             my_mock_response.cookies = {}
@@ -146,7 +171,7 @@ class TestSSO(common.DescopeTest):
             )
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
-            sso.exchange_token("c1")
+            await futu_await(sso.exchange_token("c1"))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.sso_exchange_token_path}",
                 headers={
