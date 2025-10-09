@@ -115,18 +115,18 @@ class TestAuth(common.DescopeTest):
         # Test failed flows
         with patch("httpx.get") as mock_get:
             mock_get.return_value.is_success = False
-            self.assertRaises(AuthException, auth._fetch_public_keys)
+            self.assertRaises(AuthException, auth._fetch_public_keys_sync)
 
         with patch("httpx.get") as mock_get:
             mock_get.return_value.is_success = True
             mock_get.return_value.text = "invalid json"
-            self.assertRaises(AuthException, auth._fetch_public_keys)
+            self.assertRaises(AuthException, auth._fetch_public_keys_sync)
 
         # test success flow
         with patch("httpx.get") as mock_get:
             mock_get.return_value.is_success = True
             mock_get.return_value.text = valid_keys_response
-            self.assertIsNone(auth._fetch_public_keys())
+            self.assertIsNone(auth._fetch_public_keys_sync())
 
     def test_project_id_from_env(self):
         os.environ["DESCOPE_PROJECT_ID"] = self.dummy_project_id
@@ -656,7 +656,7 @@ class TestAuth(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-        # Test _fetch_public_keys rate limit
+        # Test _fetch_public_keys_sync rate limit
         with patch("httpx.get") as mock_request:
             mock_request.return_value.is_success = False
             mock_request.return_value.status_code = 429
@@ -669,7 +669,7 @@ class TestAuth(common.DescopeTest):
                 API_RATE_LIMIT_RETRY_AFTER_HEADER: "10"
             }
             with self.assertRaises(RateLimitException) as cm:
-                auth._fetch_public_keys()
+                auth._fetch_public_keys_sync()
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, "E130429")
             self.assertEqual(the_exception.error_type, ERROR_TYPE_API_RATE_LIMIT)

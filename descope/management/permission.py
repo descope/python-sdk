@@ -1,6 +1,7 @@
-from typing import Optional
+from typing import Awaitable, Optional, Union
 
 from descope._auth_base import AuthBase
+from descope.future_utils import futu_apply
 from descope.management.common import MgmtV1
 
 
@@ -9,7 +10,7 @@ class Permission(AuthBase):
         self,
         name: str,
         description: Optional[str] = None,
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Create a new permission.
 
@@ -20,18 +21,19 @@ class Permission(AuthBase):
         Raise:
         AuthException: raised if creation operation fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.permission_create_path,
             {"name": name, "description": description},
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     def update(
         self,
         name: str,
         new_name: str,
         description: Optional[str] = None,
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Update an existing permission with the given various fields. IMPORTANT: All parameters are used as overrides
         to the existing permission. Empty fields will override populated fields. Use carefully.
@@ -44,16 +46,17 @@ class Permission(AuthBase):
         Raise:
         AuthException: raised if update operation fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.permission_update_path,
             {"name": name, "newName": new_name, "description": description},
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     def delete(
         self,
         name: str,
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Delete an existing permission. IMPORTANT: This action is irreversible. Use carefully.
 
@@ -63,19 +66,20 @@ class Permission(AuthBase):
         Raise:
         AuthException: raised if creation operation fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.permission_delete_path,
             {"name": name},
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     def load_all(
         self,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Load all permissions.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"permissions": [{"name": <name>, "description": <description>, "systemDefault":<True/False>}]}
         Containing the loaded permission information.
@@ -87,4 +91,4 @@ class Permission(AuthBase):
             uri=MgmtV1.permission_load_all_path,
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())

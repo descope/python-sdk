@@ -1,9 +1,10 @@
-from typing import Any, List, Optional, Union
+from typing import Any, Awaitable, List, Optional, Union
 
 from descope._auth_base import AuthBase
 from descope.auth import Auth
 from descope.common import DeliveryMethod, LoginOptions
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
+from descope.future_utils import futu_apply
 from descope.management.common import (
     AssociatedTenant,
     MgmtV1,
@@ -93,7 +94,7 @@ class User(AuthBase):
         invite_url: Optional[str] = None,
         additional_login_ids: Optional[List[str]] = None,
         sso_app_ids: Optional[List[str]] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Create a new user. Users can have any number of optional fields, including email, phone number and authorization.
 
@@ -110,7 +111,7 @@ class User(AuthBase):
         custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
         sso_app_ids (List[str]): Optional, list of SSO applications IDs to be associated with the user.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the created user information.
@@ -147,7 +148,7 @@ class User(AuthBase):
             ),
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def create_test_user(
         self,
@@ -167,7 +168,7 @@ class User(AuthBase):
         invite_url: Optional[str] = None,
         additional_login_ids: Optional[List[str]] = None,
         sso_app_ids: Optional[List[str]] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Create a new test user.
         The login_id is required and will determine what the user will use to sign in.
@@ -186,7 +187,7 @@ class User(AuthBase):
         custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
         sso_app_ids (List[str]): Optional, list of SSO applications IDs to be associated with the user.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the created test user information.
@@ -223,7 +224,7 @@ class User(AuthBase):
             ),
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def invite(
         self,
@@ -251,7 +252,7 @@ class User(AuthBase):
         sso_app_ids: Optional[List[str]] = None,
         template_id: str = "",
         test: bool = False,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Create a new user and invite them via an email / text message.
 
@@ -293,7 +294,7 @@ class User(AuthBase):
             ),
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def invite_batch(
         self,
@@ -305,7 +306,7 @@ class User(AuthBase):
         send_sms: Optional[
             bool
         ] = None,  # send invite via text message, default is according to project settings
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Create users in batch and invite them via an email / text message.
 
@@ -328,7 +329,7 @@ class User(AuthBase):
             ),
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def update(
         self,
@@ -348,7 +349,7 @@ class User(AuthBase):
         additional_login_ids: Optional[List[str]] = None,
         sso_app_ids: Optional[List[str]] = None,
         test: bool = False,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Update an existing user with the given various fields. IMPORTANT: All parameters are used as overrides
         to the existing user. Empty fields will override populated fields. Use carefully.
@@ -371,7 +372,7 @@ class User(AuthBase):
         sso_app_ids (List[str]): Optional, list of SSO applications IDs to be associated with the user.
         test (bool, optional): Set to True to update a test user. Defaults to False.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -405,7 +406,7 @@ class User(AuthBase):
             ),
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def patch(
         self,
@@ -425,7 +426,7 @@ class User(AuthBase):
         sso_app_ids: Optional[List[str]] = None,
         status: Optional[str] = None,
         test: bool = False,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Patches an existing user with the given various fields. Only the given fields will be used to update the user.
 
@@ -447,7 +448,7 @@ class User(AuthBase):
         status (str): Optional status field. Can be one of: "enabled", "disabled", "invited".
         test (bool, optional): Set to True to update a test user. Defaults to False.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the patched user information.
@@ -483,13 +484,13 @@ class User(AuthBase):
             ),
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def patch_batch(
         self,
         users: List[UserObj],
         test: bool = False,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Patch users in batch. Only the provided fields will be updated for each user.
 
@@ -498,7 +499,7 @@ class User(AuthBase):
             Each UserObj should have a login_id and the fields to be updated.
         test (bool, optional): Set to True to patch test users. Defaults to False.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"patchedUsers": [...], "failedUsers": [...]}
         "patchedUsers" contains successfully patched users,
@@ -525,12 +526,12 @@ class User(AuthBase):
             User._compose_patch_batch_body(users, test),
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def delete(
         self,
         login_id: str,
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Delete an existing user. IMPORTANT: This action is irreversible. Use carefully.
 
@@ -540,16 +541,17 @@ class User(AuthBase):
         Raise:
         AuthException: raised if delete operation fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.user_delete_path,
             {"loginId": login_id},
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     def delete_by_user_id(
         self,
         user_id: str,
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Delete an existing user by user ID. IMPORTANT: This action is irreversible. Use carefully.
 
@@ -559,37 +561,39 @@ class User(AuthBase):
         Raise:
         AuthException: raised if delete operation fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.user_delete_path,
             {"userId": user_id},
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     def delete_all_test_users(
         self,
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Delete all test users in the project. IMPORTANT: This action is irreversible. Use carefully.
 
         Raise:
         AuthException: raised if delete operation fails
         """
-        self._auth.do_delete(
+        response = self._auth.do_delete(
             MgmtV1.user_delete_all_test_users_path,
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     def load(
         self,
         login_id: str,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Load an existing user.
 
         Args:
         login_id (str): The login ID of the user to be loaded.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the loaded user information.
@@ -602,12 +606,12 @@ class User(AuthBase):
             params={"loginId": login_id},
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def load_by_user_id(
         self,
         user_id: str,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Load an existing user by user ID.
         The user ID can be found on the user's JWT.
@@ -615,7 +619,7 @@ class User(AuthBase):
         Args:
         user_id (str): The user ID from the user's JWT.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the loaded user information.
@@ -628,12 +632,12 @@ class User(AuthBase):
             params={"userId": user_id},
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def logout_user(
         self,
         login_id: str,
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Logout a user from all devices.
 
@@ -643,16 +647,17 @@ class User(AuthBase):
         Raise:
         AuthException: raised if logout operation fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.user_logout_path,
             {"loginId": login_id},
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     def logout_user_by_user_id(
         self,
         user_id: str,
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Logout a user from all devices.
 
@@ -662,11 +667,12 @@ class User(AuthBase):
         Raise:
         AuthException: raised if logout operation fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.user_logout_path,
             {"userId": user_id},
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     def search_all(
         self,
@@ -691,7 +697,7 @@ class User(AuthBase):
         user_ids: Optional[List[str]] = None,
         tenant_role_ids: Optional[dict] = None,
         tenant_role_names: Optional[dict] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Search all users.
 
@@ -720,7 +726,7 @@ class User(AuthBase):
         tenant_role_names (dict): Optional mapping of tenant ID to list of role names.
             Dict value is in the form of {"tenant_id": {"values":["role_name1", "role_name2"], "and": True}} if you want to match all roles (AND) or any role (OR).
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"users": []}
         "users" contains a list of all of the found users and their information
@@ -794,7 +800,7 @@ class User(AuthBase):
             body=body,
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def search_all_test_users(
         self,
@@ -816,7 +822,7 @@ class User(AuthBase):
         to_modified_time: Optional[int] = None,
         tenant_role_ids: Optional[dict] = None,
         tenant_role_names: Optional[dict] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Search all test users.
 
@@ -842,7 +848,7 @@ class User(AuthBase):
         tenant_role_names (dict): Optional mapping of tenant ID to list of role names.
             Dict value is in the form of {"tenant_id": {"values":["role_name1", "role_name2"], "and": True}} if you want to match all roles (AND) or any role (OR).
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"users": []}
         "users" contains a list of all of the found users and their information
@@ -913,7 +919,7 @@ class User(AuthBase):
             body=body,
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def get_provider_token(
         self,
@@ -921,7 +927,7 @@ class User(AuthBase):
         provider: str,
         withRefreshToken: Optional[bool] = False,
         forceRefresh: Optional[bool] = False,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Get the provider token for the given login ID.
         Only users that sign-in using social providers will have token.
@@ -933,7 +939,7 @@ class User(AuthBase):
         withRefreshToken (bool): Optional, set to true to get also the refresh token.
         forceRefresh (bool): Optional, set to true to force refresh the token.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"provider": "", "providerUserId": "", "accessToken": "", "expiration": "", "scopes": "[]"}
         Containing the provider token of the given user and provider.
@@ -951,19 +957,19 @@ class User(AuthBase):
             },
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def activate(
         self,
         login_id: str,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Activate an existing user.
 
         Args:
         login_id (str): The login ID of the user to be activated.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -976,19 +982,19 @@ class User(AuthBase):
             {"loginId": login_id, "status": "enabled"},
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def deactivate(
         self,
         login_id: str,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Deactivate an existing user.
 
         Args:
         login_id (str): The login ID of the user to be deactivated.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1001,13 +1007,13 @@ class User(AuthBase):
             {"loginId": login_id, "status": "disabled"},
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def update_login_id(
         self,
         login_id: str,
         new_login_id: Optional[str] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Update login id of user, leave new login empty to remove the ID.
         A user must have at least one login ID. Trying to remove the last one will fail.
@@ -1016,7 +1022,7 @@ class User(AuthBase):
         login_id (str): The login ID of the user to update.
         new_login_id (str): New login ID to set for the user.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1029,14 +1035,14 @@ class User(AuthBase):
             {"loginId": login_id, "newLoginId": new_login_id},
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def update_email(
         self,
         login_id: str,
         email: Optional[str] = None,
         verified: Optional[bool] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Update the email address for an existing user.
 
@@ -1045,7 +1051,7 @@ class User(AuthBase):
         email (str): The user email address. Leave empty to remove.
         verified (bool): Set to true for the user to be able to login with the email address.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1058,14 +1064,14 @@ class User(AuthBase):
             {"loginId": login_id, "email": email, "verified": verified},
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def update_phone(
         self,
         login_id: str,
         phone: Optional[str] = None,
         verified: Optional[bool] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Update the phone number for an existing user.
 
@@ -1074,7 +1080,7 @@ class User(AuthBase):
         phone (str): The user phone number. Leave empty to remove.
         verified (bool): Set to true for the user to be able to login with the phone number.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1087,7 +1093,7 @@ class User(AuthBase):
             {"loginId": login_id, "phone": phone, "verified": verified},
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def update_display_name(
         self,
@@ -1096,7 +1102,7 @@ class User(AuthBase):
         given_name: Optional[str] = None,
         middle_name: Optional[str] = None,
         family_name: Optional[str] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Update the display name for an existing user.
 
@@ -1104,7 +1110,7 @@ class User(AuthBase):
         login_id (str): The login ID of the user to update.
         display_name (str): Optional user display name. Leave empty to remove.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1126,13 +1132,13 @@ class User(AuthBase):
             bdy,
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def update_picture(
         self,
         login_id: str,
         picture: Optional[str] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Update the picture for an existing user.
 
@@ -1140,7 +1146,7 @@ class User(AuthBase):
         login_id (str): The login ID of the user to update.
         picture (str): Optional url to user avatar. Leave empty to remove.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1153,11 +1159,11 @@ class User(AuthBase):
             {"loginId": login_id, "picture": picture},
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def update_custom_attribute(
         self, login_id: str, attribute_key: str, attribute_val: Union[str, int, bool]
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Update a custom attribute of an existing user.
 
@@ -1166,7 +1172,7 @@ class User(AuthBase):
         attribute_key (str): The custom attribute that needs to be updated, this attribute needs to exists in Descope console app
         attribute_val: The value to be updated
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1183,13 +1189,13 @@ class User(AuthBase):
             },
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def set_roles(
         self,
         login_id: str,
         role_names: List[str],
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Set roles to a user without tenant association. Use set_tenant_roles
         for users that are part of a multi-tenant project.
@@ -1198,7 +1204,7 @@ class User(AuthBase):
         login_id (str): The login ID of the user to update.
         role_names (List[str]): A list of roles to set to a user without tenant association.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1211,13 +1217,13 @@ class User(AuthBase):
             {"loginId": login_id, "roleNames": role_names},
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def add_roles(
         self,
         login_id: str,
         role_names: List[str],
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Add roles to a user without tenant association. Use add_tenant_roles
         for users that are part of a multi-tenant project.
@@ -1226,7 +1232,7 @@ class User(AuthBase):
         login_id (str): The login ID of the user to update.
         role_names (List[str]): A list of roles to add to a user without tenant association.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1239,13 +1245,13 @@ class User(AuthBase):
             {"loginId": login_id, "roleNames": role_names},
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def remove_roles(
         self,
         login_id: str,
         role_names: List[str],
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Remove roles from a user without tenant association. Use remove_tenant_roles
         for users that are part of a multi-tenant project.
@@ -1254,7 +1260,7 @@ class User(AuthBase):
         login_id (str): The login ID of the user to update.
         role_names (List[str]): A list of roles to remove from a user without tenant association.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1267,13 +1273,13 @@ class User(AuthBase):
             {"loginId": login_id, "roleNames": role_names},
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def set_sso_apps(
         self,
         login_id: str,
         sso_app_ids: List[str],
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Set SSO applications association to a user.
 
@@ -1281,7 +1287,7 @@ class User(AuthBase):
         login_id (str): The login ID of the user to update.
         sso_app_ids (List[str]): A list of sso applications ids for associate with a user.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1294,13 +1300,13 @@ class User(AuthBase):
             {"loginId": login_id, "ssoAppIds": sso_app_ids},
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def add_sso_apps(
         self,
         login_id: str,
         sso_app_ids: List[str],
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Add SSO applications association to a user.
 
@@ -1308,7 +1314,7 @@ class User(AuthBase):
         login_id (str): The login ID of the user to update.
         sso_app_ids (List[str]): A list of sso applications ids for associate with a user.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1321,13 +1327,13 @@ class User(AuthBase):
             {"loginId": login_id, "ssoAppIds": sso_app_ids},
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def remove_sso_apps(
         self,
         login_id: str,
         sso_app_ids: List[str],
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Remove SSO applications association from a user.
 
@@ -1335,7 +1341,7 @@ class User(AuthBase):
         login_id (str): The login ID of the user to update.
         sso_app_ids (List[str]): A list of sso applications ids to remove association from a user.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1348,13 +1354,13 @@ class User(AuthBase):
             {"loginId": login_id, "ssoAppIds": sso_app_ids},
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def add_tenant(
         self,
         login_id: str,
         tenant_id: str,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Add a tenant association to an existing user.
 
@@ -1362,7 +1368,7 @@ class User(AuthBase):
         login_id (str): The login ID of the user to update.
         tenant_id (str): The ID of the tenant to add to the user.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1375,13 +1381,13 @@ class User(AuthBase):
             {"loginId": login_id, "tenantId": tenant_id},
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def remove_tenant(
         self,
         login_id: str,
         tenant_id: str,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Remove a tenant association from an existing user.
 
@@ -1389,7 +1395,7 @@ class User(AuthBase):
         login_id (str): The login ID of the user to update.
         tenant_id (str): The ID of the tenant to add to the user.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1402,14 +1408,14 @@ class User(AuthBase):
             {"loginId": login_id, "tenantId": tenant_id},
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def set_tenant_roles(
         self,
         login_id: str,
         tenant_id: str,
         role_names: List[str],
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Set roles to a user in a specific tenant.
 
@@ -1418,7 +1424,7 @@ class User(AuthBase):
         tenant_id (str): The ID of the user's tenant.
         role_names (List[str]): A list of roles to set on the user.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1431,14 +1437,14 @@ class User(AuthBase):
             {"loginId": login_id, "tenantId": tenant_id, "roleNames": role_names},
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def add_tenant_roles(
         self,
         login_id: str,
         tenant_id: str,
         role_names: List[str],
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Add roles to a user in a specific tenant.
 
@@ -1447,7 +1453,7 @@ class User(AuthBase):
         tenant_id (str): The ID of the user's tenant.
         role_names (List[str]): A list of roles to add to the user.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1460,14 +1466,14 @@ class User(AuthBase):
             {"loginId": login_id, "tenantId": tenant_id, "roleNames": role_names},
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def remove_tenant_roles(
         self,
         login_id: str,
         tenant_id: str,
         role_names: List[str],
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Remove roles from a user in a specific tenant.
 
@@ -1476,7 +1482,7 @@ class User(AuthBase):
         tenant_id (str): The ID of the user's tenant.
         role_names (List[str]): A list of roles to remove from the user.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"user": {}}
         Containing the updated user information.
@@ -1489,13 +1495,13 @@ class User(AuthBase):
             {"loginId": login_id, "tenantId": tenant_id, "roleNames": role_names},
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def set_temporary_password(
         self,
         login_id: str,
         password: str,
-    ) -> None:
+    ) -> Union[None, Awaitable[None]]:
         """
             Set the temporary password for the given login ID.
             Note: The password will automatically be set as expired.
@@ -1509,7 +1515,7 @@ class User(AuthBase):
         Raise:
         AuthException: raised if the operation fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.user_set_temporary_password_path,
             {
                 "loginId": login_id,
@@ -1518,13 +1524,13 @@ class User(AuthBase):
             },
             pswd=self._auth.management_key,
         )
-        return
+        return futu_apply(response, lambda response: None)
 
     def set_active_password(
         self,
         login_id: str,
         password: str,
-    ) -> None:
+    ) -> Union[None, Awaitable[None]]:
         """
             Set the password for the given login ID.
 
@@ -1535,7 +1541,7 @@ class User(AuthBase):
         Raise:
         AuthException: raised if the operation fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.user_set_active_password_path,
             {
                 "loginId": login_id,
@@ -1544,7 +1550,7 @@ class User(AuthBase):
             },
             pswd=self._auth.management_key,
         )
-        return
+        return futu_apply(response, lambda response: None)
 
     # Deprecated (use set_temporary_password instead)
     def set_password(
@@ -1552,7 +1558,7 @@ class User(AuthBase):
         login_id: str,
         password: str,
         set_active: Optional[bool] = False,
-    ) -> None:
+    ) -> Union[None, Awaitable[None]]:
         """
             Set the password for the given login ID.
             Note: The password will automatically be set as expired unless the set_active flag will be set to True,
@@ -1567,7 +1573,7 @@ class User(AuthBase):
         Raise:
         AuthException: raised if the operation fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.user_set_password_path,
             {
                 "loginId": login_id,
@@ -1576,12 +1582,12 @@ class User(AuthBase):
             },
             pswd=self._auth.management_key,
         )
-        return
+        return futu_apply(response, lambda response: None)
 
     def expire_password(
         self,
         login_id: str,
-    ) -> None:
+    ) -> Union[None, Awaitable[None]]:
         """
             Expires the password for the given login ID.
             Note: user sign-in with an expired password, the user will get an error with code.
@@ -1593,17 +1599,17 @@ class User(AuthBase):
         Raise:
         AuthException: raised if the operation fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.user_expire_password_path,
             {"loginId": login_id},
             pswd=self._auth.management_key,
         )
-        return
+        return futu_apply(response, lambda response: None)
 
     def remove_all_passkeys(
         self,
         login_id: str,
-    ) -> None:
+    ) -> Union[None, Awaitable[None]]:
         """
             Removes all registered passkeys (WebAuthn devices) for the user with the given login ID.
             Note: The user might not be able to login anymore if they have no other authentication
@@ -1615,17 +1621,17 @@ class User(AuthBase):
         Raise:
         AuthException: raised if the operation fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.user_remove_all_passkeys_path,
             {"loginId": login_id},
             pswd=self._auth.management_key,
         )
-        return
+        return futu_apply(response, lambda response: None)
 
     def remove_totp_seed(
         self,
         login_id: str,
-    ) -> None:
+    ) -> Union[None, Awaitable[None]]:
         """
             Removes TOTP seed for the user with the given login ID.
             Note: The user might not be able to login anymore if they have no other authentication
@@ -1637,19 +1643,19 @@ class User(AuthBase):
         Raise:
         AuthException: raised if the operation fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.user_remove_totp_seed_path,
             {"loginId": login_id},
             pswd=self._auth.management_key,
         )
-        return
+        return futu_apply(response, lambda response: None)
 
     def generate_otp_for_test_user(
         self,
         method: DeliveryMethod,
         login_id: str,
         login_options: Optional[LoginOptions] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Generate OTP for the given login ID of a test user.
         This is useful when running tests and don't want to use 3rd party messaging services.
@@ -1660,7 +1666,7 @@ class User(AuthBase):
         login_id (str): The login ID of the test user being validated.
         login_options (LoginOptions): optional, can be provided to set custom claims to the generated jwt.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"code": "", "loginId": ""}
         Containing the code for the login (exactly as it sent via Email or Phone messaging).
@@ -1677,7 +1683,7 @@ class User(AuthBase):
             },
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def generate_magic_link_for_test_user(
         self,
@@ -1685,7 +1691,7 @@ class User(AuthBase):
         login_id: str,
         uri: str,
         login_options: Optional[LoginOptions] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Generate Magic Link for the given login ID of a test user.
         This is useful when running tests and don't want to use 3rd party messaging services.
@@ -1697,7 +1703,7 @@ class User(AuthBase):
         uri (str): Optional redirect uri which will be used instead of any global configuration.
         login_options (LoginOptions): optional, can be provided to set custom claims to the generated jwt.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"link": "", "loginId": ""}
         Containing the magic link for the login (exactly as it sent via Email or Phone messaging).
@@ -1715,14 +1721,14 @@ class User(AuthBase):
             },
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def generate_enchanted_link_for_test_user(
         self,
         login_id: str,
         uri: str,
         login_options: Optional[LoginOptions] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Generate Enchanted Link for the given login ID of a test user.
         This is useful when running tests and don't want to use 3rd party messaging services.
@@ -1732,7 +1738,7 @@ class User(AuthBase):
         uri (str): Optional redirect uri which will be used instead of any global configuration.
         login_options (LoginOptions): optional, can be provided to set custom claims to the generated jwt.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"link": "", "loginId": "", "pendingRef": ""}
         Containing the enchanted link for the login (exactly as it sent via Email or Phone messaging) and pendingRef.
@@ -1749,11 +1755,11 @@ class User(AuthBase):
             },
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def generate_embedded_link(
         self, login_id: str, custom_claims: Optional[dict] = None, timeout: int = 0
-    ) -> str:
+    ) -> Union[str, Awaitable[str]]:
         """
         Generate Embedded Link for the given user login ID.
         The return value is a token that can be verified via magic link, or using flows
@@ -1762,7 +1768,7 @@ class User(AuthBase):
         login_id (str): The login ID of the user to authenticate with.
         custom_claims (dict): Additional claims to place on the jwt after verification
 
-        Return value (str):
+        Return value (Union[str, Awaitable[str]]):
         Return the token to be used in verification process
 
         Raise:
@@ -1773,7 +1779,7 @@ class User(AuthBase):
             {"loginId": login_id, "customClaims": custom_claims, "timeout": timeout},
             pswd=self._auth.management_key,
         )
-        return response.json()["token"]
+        return futu_apply(response, lambda response: response.json()["token"])
 
     def generate_sign_up_embedded_link(
         self,
@@ -1783,7 +1789,7 @@ class User(AuthBase):
         phone_verified: bool = False,
         login_options: Optional[LoginOptions] = None,
         timeout: int = 0,
-    ) -> str:
+    ) -> Union[str, Awaitable[str]]:
         """
         Generate sign up Embedded Link for the given user login ID.
         The return value is a token that can be verified via magic link, or using flows
@@ -1796,7 +1802,7 @@ class User(AuthBase):
         login_options (LoginOptions): Optional login options to customize the link
         timeout (int): Optional, the timeout in seconds for the link to be valid
 
-        Return value (str):
+        Return value (Union[str, Awaitable[str]]):
         Return the token to be used in verification process
 
         Raise:
@@ -1814,16 +1820,16 @@ class User(AuthBase):
             },
             pswd=self._auth.management_key,
         )
-        return response.json()["token"]
+        return futu_apply(response, lambda response: response.json()["token"])
 
-    def history(self, user_ids: List[str]) -> List[dict]:
+    def history(self, user_ids: List[str]) -> Union[List[dict], Awaitable[List[dict]]]:
         """
         Retrieve users' authentication history, by the given user's ids.
 
         Args:
         login_ids (List[str]): List of Users' IDs.
 
-        Return value (List[dict]):
+        Return value (Union[List[dict], Awaitable[List[dict]]]):
         Return List in the format
              [
                 {
@@ -1843,7 +1849,7 @@ class User(AuthBase):
             user_ids,
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     @staticmethod
     def _compose_create_body(

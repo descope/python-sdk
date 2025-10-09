@@ -1,6 +1,7 @@
-from typing import List, Optional
+from typing import Awaitable, List, Optional, Union
 
 from descope._auth_base import AuthBase
+from descope.future_utils import futu_apply
 from descope.management.common import MgmtV1
 
 
@@ -12,7 +13,7 @@ class Role(AuthBase):
         permission_names: Optional[List[str]] = None,
         tenant_id: Optional[str] = None,
         default: Optional[bool] = None,
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Create a new role.
 
@@ -28,7 +29,7 @@ class Role(AuthBase):
         """
         permission_names = [] if permission_names is None else permission_names
 
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.role_create_path,
             {
                 "name": name,
@@ -39,6 +40,7 @@ class Role(AuthBase):
             },
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     def update(
         self,
@@ -48,7 +50,7 @@ class Role(AuthBase):
         permission_names: Optional[List[str]] = None,
         tenant_id: Optional[str] = None,
         default: Optional[bool] = None,
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Update an existing role with the given various fields. IMPORTANT: All parameters are used as overrides
         to the existing role. Empty fields will override populated fields. Use carefully.
@@ -65,7 +67,7 @@ class Role(AuthBase):
         AuthException: raised if update operation fails
         """
         permission_names = [] if permission_names is None else permission_names
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.role_update_path,
             {
                 "name": name,
@@ -77,12 +79,13 @@ class Role(AuthBase):
             },
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     def delete(
         self,
         name: str,
         tenant_id: Optional[str] = None,
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Delete an existing role. IMPORTANT: This action is irreversible. Use carefully.
 
@@ -92,19 +95,20 @@ class Role(AuthBase):
         Raise:
         AuthException: raised if creation operation fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.role_delete_path,
             {"name": name, "tenantId": tenant_id},
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     def load_all(
         self,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Load all roles.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"roles": [{"name": <name>, "description": <description>, "permissionNames":[]}] }
         Containing the loaded role information.
@@ -116,7 +120,7 @@ class Role(AuthBase):
             uri=MgmtV1.role_load_all_path,
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def search(
         self,
@@ -125,7 +129,7 @@ class Role(AuthBase):
         role_name_like: Optional[str] = None,
         permission_names: Optional[List[str]] = None,
         include_project_roles: Optional[bool] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Search roles based on the given filters.
 
@@ -135,7 +139,7 @@ class Role(AuthBase):
         role_name_like (str): Return roles that contain the given string ignoring case
         permission_names (List[str]): Only return roles that have the given permissions
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"roles": [{"name": <name>, "description": <description>, "permissionNames":[]}] }
         Containing the loaded role information.
@@ -160,4 +164,4 @@ class Role(AuthBase):
             body,
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())

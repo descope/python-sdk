@@ -1,6 +1,7 @@
-from typing import List, Optional
+from typing import Awaitable, List, Optional, Union
 
 from descope._auth_base import AuthBase
+from descope.future_utils import futu_apply
 from descope.management.common import (
     AssociatedTenant,
     MgmtV1,
@@ -19,7 +20,7 @@ class AccessKey(AuthBase):
         custom_claims: Optional[dict] = None,
         description: Optional[str] = None,
         permitted_ips: Optional[List[str]] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Create a new access key.
 
@@ -36,7 +37,7 @@ class AccessKey(AuthBase):
         description (str): an optional text the access key can hold.
         permitted_ips: (List[str]): An optional list of IP addresses or CIDR ranges that are allowed to use the access key.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
             {
                 "key": {},
@@ -65,19 +66,19 @@ class AccessKey(AuthBase):
             ),
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def load(
         self,
         id: str,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Load an existing access key.
 
         Args:
         id (str): The id of the access key to be loaded.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"key": {}}
         Containing the loaded access key information.
@@ -90,19 +91,19 @@ class AccessKey(AuthBase):
             params={"id": id},
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def search_all_access_keys(
         self,
         tenant_ids: Optional[List[str]] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Search all access keys.
 
         Args:
         tenant_ids (List[str]): Optional list of tenant IDs to filter by
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"keys": []}
         "keys" contains a list of all of the found users and their information
@@ -117,14 +118,14 @@ class AccessKey(AuthBase):
             {"tenantIds": tenant_ids},
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def update(
         self,
         id: str,
         name: str,
         description: Optional[str] = None,
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Update an existing access key with the given various fields. IMPORTANT: id and name are mandatory fields.
 
@@ -136,16 +137,17 @@ class AccessKey(AuthBase):
         Raise:
         AuthException: raised if update operation fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.access_key_update_path,
             {"id": id, "name": name, "description": description},
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     def deactivate(
         self,
         id: str,
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Deactivate an existing access key. IMPORTANT: This deactivated key will not be usable from this stage.
         It will, however, persist, and can be activated again if needed.
@@ -156,16 +158,17 @@ class AccessKey(AuthBase):
         Raise:
         AuthException: raised if deactivation operation fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.access_key_deactivate_path,
             {"id": id},
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     def activate(
         self,
         id: str,
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Activate an existing access key. IMPORTANT: Only deactivated keys can be activated again,
         and become usable once more. New access keys are active by default.
@@ -176,16 +179,17 @@ class AccessKey(AuthBase):
         Raise:
         AuthException: raised if activation operation fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.access_key_activate_path,
             {"id": id},
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     def delete(
         self,
         id: str,
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Delete an existing access key. IMPORTANT: This action is irreversible. Use carefully.
 
@@ -195,11 +199,12 @@ class AccessKey(AuthBase):
         Raise:
         AuthException: raised if creation operation fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.access_key_delete_path,
             {"id": id},
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     @staticmethod
     def _compose_create_body(

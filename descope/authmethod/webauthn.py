@@ -1,4 +1,4 @@
-from typing import Iterable, Optional, Union
+from typing import Awaitable, Iterable, Optional, Union
 
 from httpx import Response
 
@@ -10,6 +10,7 @@ from descope.common import (
     validate_refresh_token_provided,
 )
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
+from descope.future_utils import futu_apply
 
 
 class WebAuthn(AuthBase):
@@ -18,7 +19,7 @@ class WebAuthn(AuthBase):
         login_id: Optional[str],
         origin: Optional[str],
         user: Optional[dict] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Docs
         """
@@ -39,14 +40,14 @@ class WebAuthn(AuthBase):
         body = WebAuthn._compose_sign_up_start_body(login_id, user, origin)
         response = self._auth.do_post(uri, body)
 
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def sign_up_finish(
         self,
         transaction_id: str,
         response: Response,
         audience: Union[str, None, Iterable[str]] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Docs
         """
@@ -62,13 +63,16 @@ class WebAuthn(AuthBase):
 
         uri = EndpointsV1.sign_up_auth_webauthn_finish_path
         body = WebAuthn._compose_sign_up_in_finish_body(transaction_id, response)
-        response = self._auth.do_post(uri, body, None, "")
+        res = self._auth.do_post(uri, body, None, "")
 
-        resp = response.json()
-        jwt_response = self._auth.generate_jwt_response(
-            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
+        return futu_apply(
+            res,
+            lambda res: self._auth.generate_jwt_response(
+                res.json(),
+                res.cookies.get(REFRESH_SESSION_COOKIE_NAME, None),
+                audience,
+            ),
         )
-        return jwt_response
 
     def sign_in_start(
         self,
@@ -76,7 +80,7 @@ class WebAuthn(AuthBase):
         origin: str,
         login_options: Optional[LoginOptions] = None,
         refresh_token: Optional[str] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Docs
         """
@@ -96,14 +100,14 @@ class WebAuthn(AuthBase):
         body = WebAuthn._compose_sign_in_start_body(login_id, origin, login_options)
         response = self._auth.do_post(uri, body, pswd=refresh_token)
 
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def sign_in_finish(
         self,
         transaction_id: str,
         response: Response,
         audience: Union[str, None, Iterable[str]] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Docs
         """
@@ -119,19 +123,22 @@ class WebAuthn(AuthBase):
 
         uri = EndpointsV1.sign_in_auth_webauthn_finish_path
         body = WebAuthn._compose_sign_up_in_finish_body(transaction_id, response)
-        response = self._auth.do_post(uri, body, None)
+        res = self._auth.do_post(uri, body, None)
 
-        resp = response.json()
-        jwt_response = self._auth.generate_jwt_response(
-            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
+        return futu_apply(
+            res,
+            lambda res: self._auth.generate_jwt_response(
+                res.json(),
+                res.cookies.get(REFRESH_SESSION_COOKIE_NAME, None),
+                audience,
+            ),
         )
-        return jwt_response
 
     def sign_up_or_in_start(
         self,
         login_id: str,
         origin: str,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Docs
         """
@@ -149,9 +156,11 @@ class WebAuthn(AuthBase):
         body = WebAuthn._compose_sign_up_or_in_start_body(login_id, origin)
         response = self._auth.do_post(uri, body)
 
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
-    def update_start(self, login_id: str, refresh_token: str, origin: str):
+    def update_start(
+        self, login_id: str, refresh_token: str, origin: str
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Docs
         """
@@ -169,9 +178,11 @@ class WebAuthn(AuthBase):
         body = WebAuthn._compose_update_start_body(login_id, origin)
         response = self._auth.do_post(uri, body, None, refresh_token)
 
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
-    def update_finish(self, transaction_id: str, response: str) -> None:
+    def update_finish(
+        self, transaction_id: str, response: str
+    ) -> Union[None, Awaitable[None]]:
         """
         Docs
         """
@@ -187,7 +198,9 @@ class WebAuthn(AuthBase):
 
         uri = EndpointsV1.update_auth_webauthn_finish_path
         body = WebAuthn._compose_update_finish_body(transaction_id, response)
-        self._auth.do_post(uri, body)
+        res = self._auth.do_post(uri, body)
+
+        return futu_apply(res, lambda res: None)
 
     @staticmethod
     def _compose_sign_up_start_body(login_id: str, user: dict, origin: str) -> dict:

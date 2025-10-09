@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from typing import Iterable
+from typing import Awaitable, Iterable, Union
 
 from descope._auth_base import AuthBase
 from descope.common import REFRESH_SESSION_COOKIE_NAME, EndpointsV1
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
+from descope.future_utils import futu_apply
 
 
 class Password(AuthBase):
@@ -14,7 +15,7 @@ class Password(AuthBase):
         password: str,
         user: dict | None = None,
         audience: str | None | Iterable[str] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Sign up (create) a new user using a login ID and password.
             (optional) Include additional user metadata that you wish to save.
@@ -25,7 +26,7 @@ class Password(AuthBase):
         user (dict) optional: Preserve additional user metadata in the form of
              {"name": "Desmond Copeland", "phone": "2125551212", "email": "des@cope.com"}
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"jwts": [], "user": "", "firstSeen": "", "error": ""}
         Includes all the jwts tokens (session token, refresh token), token claims, and user information
@@ -48,18 +49,21 @@ class Password(AuthBase):
         body = Password._compose_signup_body(login_id, password, user)
         response = self._auth.do_post(uri, body)
 
-        resp = response.json()
-        jwt_response = self._auth.generate_jwt_response(
-            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
+        return futu_apply(
+            response,
+            lambda response: self._auth.generate_jwt_response(
+                response.json(),
+                response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None),
+                audience,
+            ),
         )
-        return jwt_response
 
     def sign_in(
         self,
         login_id: str,
         password: str,
         audience: str | None | Iterable[str] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Sign in by verifying the validity of a password entered by an end user.
 
@@ -67,7 +71,7 @@ class Password(AuthBase):
         login_id (str): The login ID of the user being validated
         password (str): The password to be validated
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"jwts": [], "user": "", "firstSeen": "", "error": ""}
         Includes all the jwts tokens (session token, refresh token), token claims, and user information
@@ -89,18 +93,21 @@ class Password(AuthBase):
         uri = EndpointsV1.sign_in_password_path
         response = self._auth.do_post(uri, {"loginId": login_id, "password": password})
 
-        resp = response.json()
-        jwt_response = self._auth.generate_jwt_response(
-            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
+        return futu_apply(
+            response,
+            lambda response: self._auth.generate_jwt_response(
+                response.json(),
+                response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None),
+                audience,
+            ),
         )
-        return jwt_response
 
     def send_reset(
         self,
         login_id: str,
         redirect_url: str | None = None,
         template_options: dict | None = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Sends a password reset prompt to the user with the given
             login_id according to the password settings defined in the Descope console.
@@ -112,7 +119,7 @@ class Password(AuthBase):
                 if those are the chosen reset methods. See the Magic Link and Enchanted Link sections
                 for more details.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"resetMethod": "", "pendingRef": "", "linkId": "", "maskedEmail": ""}
             The contents will differ according to the chosen reset method. 'pendingRef'
@@ -140,9 +147,11 @@ class Password(AuthBase):
             body,
         )
 
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
-    def update(self, login_id: str, new_password: str, refresh_token: str) -> None:
+    def update(
+        self, login_id: str, new_password: str, refresh_token: str
+    ) -> Union[None, Awaitable[None]]:
         """
         Update a password for an existing logged in user using their refresh token.
 
@@ -171,9 +180,10 @@ class Password(AuthBase):
             )
 
         uri = EndpointsV1.update_password_path
-        self._auth.do_post(
+        response = self._auth.do_post(
             uri, {"loginId": login_id, "newPassword": new_password}, None, refresh_token
         )
+        return futu_apply(response, lambda response: None)
 
     def replace(
         self,
@@ -181,7 +191,7 @@ class Password(AuthBase):
         old_password: str,
         new_password: str,
         audience: str | None | Iterable[str] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Replace a valid active password with a new one. The old_password is used to
         authenticate the user. If the user cannot be authenticated, this operation
@@ -192,7 +202,7 @@ class Password(AuthBase):
         old_password (str): The user's current active password
         new_password (str): The new password to use
 
-                        Return value (dict):
+                        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"jwts": [], "user": "", "firstSeen": false, "error": ""}
         Includes all the jwts tokens (session token, refresh token), token claims, and user information
@@ -226,18 +236,21 @@ class Password(AuthBase):
             },
         )
 
-        resp = response.json()
-        jwt_response = self._auth.generate_jwt_response(
-            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
+        return futu_apply(
+            response,
+            lambda response: self._auth.generate_jwt_response(
+                response.json(),
+                response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None),
+                audience,
+            ),
         )
-        return jwt_response
 
-    def get_policy(self) -> dict:
+    def get_policy(self) -> Union[dict, Awaitable[dict]]:
         """
         Get a subset of the password policy defined in the Descope console and enforced
         by Descope. The goal is to enable client-side validations to give users a better UX
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"minLength": 8, "lowercase": true, "uppercase": true, "number": true, "nonAlphanumeric": true}
             minLength - the minimum length of a password
@@ -251,7 +264,7 @@ class Password(AuthBase):
         """
 
         response = self._auth.do_get(uri=EndpointsV1.password_policy_path)
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     @staticmethod
     def _compose_signup_body(login_id: str, password: str, user: dict | None) -> dict:

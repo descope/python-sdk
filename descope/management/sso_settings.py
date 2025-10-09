@@ -1,6 +1,7 @@
-from typing import List, Optional
+from typing import Awaitable, List, Optional, Union
 
 from descope._auth_base import AuthBase
+from descope.future_utils import futu_apply
 from descope.management.common import MgmtV1
 
 
@@ -164,14 +165,14 @@ class SSOSettings(AuthBase):
     def load_settings(
         self,
         tenant_id: str,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Load SSO setting for the provided tenant_id.
 
         Args:
         tenant_id (str): The tenant ID of the desired SSO Settings
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Containing the loaded SSO settings information.
         Return dict in the format:
              {"tenant": {"id": "T2AAAA", "name": "myTenantName", "selfProvisioningDomains": [], "customAttributes": {}, "authType": "saml", "domains": ["lulu", "kuku"]}, "saml": {"idpEntityId": "", "idpSSOUrl": "", "idpCertificate": "", "idpMetadataUrl": "https://dummy.com/metadata", "spEntityId": "", "spACSUrl": "", "spCertificate": "", "attributeMapping": {"name": "name", "email": "email", "username": "", "phoneNumber": "phone", "group": "", "givenName": "", "middleName": "", "familyName": "", "picture": "", "customAttributes": {}}, "groupsMapping": [], "redirectUrl": ""}, "oidc": {"name": "", "clientId": "", "clientSecret": "", "redirectUrl": "", "authUrl": "", "tokenUrl": "", "userDataUrl": "", "scope": [], "JWKsUrl": "", "userAttrMapping": {"loginId": "sub", "username": "", "name": "name", "email": "email", "phoneNumber": "phone_number", "verifiedEmail": "email_verified", "verifiedPhone": "phone_number_verified", "picture": "picture", "givenName": "given_name", "middleName": "middle_name", "familyName": "family_name"}, "manageProviderTokens": False, "callbackDomain": "", "prompt": [], "grantType": "authorization_code", "issuer": ""}}
@@ -184,12 +185,12 @@ class SSOSettings(AuthBase):
             params={"tenantId": tenant_id},
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def delete_settings(
         self,
         tenant_id: str,
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Delete SSO setting for the provided tenant_id.
 
@@ -199,18 +200,19 @@ class SSOSettings(AuthBase):
         Raise:
         AuthException: raised if delete operation fails
         """
-        self._auth.do_delete(
+        response = self._auth.do_delete(
             MgmtV1.sso_settings_path,
             {"tenantId": tenant_id},
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     def configure_oidc_settings(
         self,
         tenant_id: str,
         settings: SSOOIDCSettings,
         domains: Optional[List[str]] = None,
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Configure SSO OIDC settings for a tenant.
 
@@ -223,13 +225,14 @@ class SSOSettings(AuthBase):
         AuthException: raised if configuration operation fails
         """
 
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.sso_configure_oidc_settings,
             SSOSettings._compose_configure_oidc_settings_body(
                 tenant_id, settings, domains
             ),
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     def configure_saml_settings(
         self,
@@ -237,7 +240,7 @@ class SSOSettings(AuthBase):
         settings: SSOSAMLSettings,
         redirect_url: Optional[str] = None,
         domains: Optional[List[str]] = None,
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Configure SSO SAML settings for a tenant.
 
@@ -251,13 +254,14 @@ class SSOSettings(AuthBase):
         AuthException: raised if configuration operation fails
         """
 
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.sso_configure_saml_settings,
             SSOSettings._compose_configure_saml_settings_body(
                 tenant_id, settings, redirect_url, domains
             ),
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     def configure_saml_settings_by_metadata(
         self,
@@ -265,7 +269,7 @@ class SSOSettings(AuthBase):
         settings: SSOSAMLSettingsByMetadata,
         redirect_url: Optional[str] = None,
         domains: Optional[List[str]] = None,
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Configure SSO SAML settings for a tenant by fetching them from an IDP metadata URL.
 
@@ -279,19 +283,20 @@ class SSOSettings(AuthBase):
         AuthException: raised if configuration operation fails
         """
 
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.sso_configure_saml_by_metadata_settings,
             SSOSettings._compose_configure_saml_settings_by_metadata_body(
                 tenant_id, settings, redirect_url, domains
             ),
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     # DEPRECATED
     def get_settings(
         self,
         tenant_id: str,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         DEPRECATED (use load_settings(..) function instead)
 
@@ -300,7 +305,7 @@ class SSOSettings(AuthBase):
         Args:
         tenant_id (str): The tenant ID of the desired SSO Settings
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Containing the loaded SSO settings information.
 
         Raise:
@@ -311,7 +316,7 @@ class SSOSettings(AuthBase):
             params={"tenantId": tenant_id},
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     # DEPRECATED
     def configure(
@@ -322,7 +327,7 @@ class SSOSettings(AuthBase):
         idp_cert: str,
         redirect_url: str,
         domains: Optional[List[str]] = None,
-    ) -> None:
+    ) -> Union[None, Awaitable[None]]:
         """
         DEPRECATED (use configure_saml_settings(..) function instead)
 
@@ -339,13 +344,14 @@ class SSOSettings(AuthBase):
         Raise:
         AuthException: raised if configuration operation fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.sso_settings_path,
             SSOSettings._compose_configure_body(
                 tenant_id, idp_url, entity_id, idp_cert, redirect_url, domains
             ),
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     # DEPRECATED
     def configure_via_metadata(
@@ -354,7 +360,7 @@ class SSOSettings(AuthBase):
         idp_metadata_url: str,
         redirect_url: Optional[str] = None,
         domains: Optional[List[str]] = None,
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         DEPRECATED (use configure_saml_settings_by_metadata(..) function instead)
 
@@ -369,13 +375,14 @@ class SSOSettings(AuthBase):
         Raise:
         AuthException: raised if configuration operation fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.sso_metadata_path,
             SSOSettings._compose_metadata_body(
                 tenant_id, idp_metadata_url, redirect_url, domains
             ),
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     # DEPRECATED
     def mapping(
@@ -383,7 +390,7 @@ class SSOSettings(AuthBase):
         tenant_id: str,
         role_mappings: Optional[List[RoleMapping]] = None,
         attribute_mapping: Optional[AttributeMapping] = None,
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         DEPRECATED (use configure_saml_settings(..) or configure_saml_settings_by_metadata(..) functions instead)
 
@@ -397,13 +404,14 @@ class SSOSettings(AuthBase):
         Raise:
         AuthException: raised if configuration operation fails
         """
-        self._auth.do_post(
+        response = self._auth.do_post(
             MgmtV1.sso_mapping_path,
             SSOSettings._compose_mapping_body(
                 tenant_id, role_mappings, attribute_mapping
             ),
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     @staticmethod
     def _compose_configure_body(

@@ -1,6 +1,7 @@
-from typing import Optional
+from typing import Awaitable, Optional, Union
 
 from descope._auth_base import AuthBase
+from descope.future_utils import futu_apply
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 from descope.management.common import (
     MgmtLoginOptions,
@@ -14,7 +15,7 @@ from descope.management.common import (
 class JWT(AuthBase):
     def update_jwt(
         self, jwt: str, custom_claims: dict, refresh_duration: int = 0
-    ) -> str:
+    ) -> Union[str, Awaitable[str]]:
         """
         Given a valid JWT, update it with custom claims, and update its authz claims as well
 
@@ -23,7 +24,7 @@ class JWT(AuthBase):
         custom_claims (dict): Custom claims to add to JWT, system claims will be filtered out
         refresh_duration (int): duration in seconds for which the new JWT will be valid
 
-        Return value (str): the newly updated JWT
+        Return value (Union[str, Awaitable[str]]): the newly updated JWT
 
         Raise:
         AuthException: raised if update failed
@@ -39,7 +40,10 @@ class JWT(AuthBase):
             },
             pswd=self._auth.management_key,
         )
-        return response.json().get("jwt", "")
+        return futu_apply(
+            response,
+            lambda response: response.json().get("jwt", ""),
+        )
 
     def impersonate(
         self,
@@ -49,7 +53,7 @@ class JWT(AuthBase):
         custom_claims: Optional[dict] = None,
         tenant_id: Optional[str] = None,
         refresh_duration: Optional[int] = None,
-    ) -> str:
+    ) -> Union[str, Awaitable[str]]:
         """
         Impersonate to another user
 
@@ -61,7 +65,7 @@ class JWT(AuthBase):
         tenant_id (str): tenant id to set on DCT claim.
         refresh_duration (int): duration in seconds for which the new JWT will be valid
 
-        Return value (str): A JWT of the impersonated user
+        Return value (Union[str, Awaitable[str]]): A JWT of the impersonated user
 
         Raise:
         AuthException: raised if update failed
@@ -86,7 +90,10 @@ class JWT(AuthBase):
             },
             pswd=self._auth.management_key,
         )
-        return response.json().get("jwt", "")
+        return futu_apply(
+            response,
+            lambda response: response.json().get("jwt", ""),
+        )
 
     def stop_impersonation(
         self,
@@ -94,7 +101,7 @@ class JWT(AuthBase):
         custom_claims: Optional[dict] = None,
         tenant_id: Optional[str] = None,
         refresh_duration: Optional[int] = None,
-    ) -> str:
+    ) -> Union[str, Awaitable[str]]:
         """
         Stop impersonation and return to the original user
         Args:
@@ -103,7 +110,7 @@ class JWT(AuthBase):
         tenant_id (str): tenant id to set on DCT claim.
         refresh_duration (int): duration in seconds for which the new JWT will be valid
 
-        Return value (str): A JWT of the actor
+        Return value (Union[str, Awaitable[str]]): A JWT of the actor
 
         Raise:
         AuthException: raised if update failed
@@ -121,11 +128,14 @@ class JWT(AuthBase):
             },
             pswd=self._auth.management_key,
         )
-        return response.json().get("jwt", "")
+        return futu_apply(
+            response,
+            lambda response: response.json().get("jwt", ""),
+        )
 
     def sign_in(
         self, login_id: str, login_options: Optional[MgmtLoginOptions] = None
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Generate a JWT for a user, simulating a signin request.
 
@@ -158,16 +168,19 @@ class JWT(AuthBase):
             },
             pswd=self._auth.management_key,
         )
-        resp = response.json()
-        jwt_response = self._auth.generate_jwt_response(resp, None, None)
-        return jwt_response
+        return futu_apply(
+            response,
+            lambda response: self._auth.generate_jwt_response(
+                response.json(), None, None
+            ),
+        )
 
     def sign_up(
         self,
         login_id: str,
         user: Optional[MgmtUserRequest] = None,
         signup_options: Optional[MgmtSignUpOptions] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Generate a JWT for a user, simulating a signup request.
 
@@ -186,7 +199,7 @@ class JWT(AuthBase):
         login_id: str,
         user: Optional[MgmtUserRequest] = None,
         signup_options: Optional[MgmtSignUpOptions] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Generate a JWT for a user, simulating a signup or in request.
 
@@ -205,7 +218,7 @@ class JWT(AuthBase):
         endpoint: str,
         user: Optional[MgmtUserRequest] = None,
         signup_options: Optional[MgmtSignUpOptions] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         if user is None:
             user = MgmtUserRequest()
 
@@ -230,16 +243,19 @@ class JWT(AuthBase):
             },
             pswd=self._auth.management_key,
         )
-        resp = response.json()
-        jwt_response = self._auth.generate_jwt_response(resp, None, None)
-        return jwt_response
+        return futu_apply(
+            response,
+            lambda response: self._auth.generate_jwt_response(
+                response.json(), None, None
+            ),
+        )
 
     def anonymous(
         self,
         custom_claims: Optional[dict] = None,
         tenant_id: Optional[str] = None,
         refresh_duration: Optional[int] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Generate a JWT for an anonymous user.
 
@@ -257,6 +273,13 @@ class JWT(AuthBase):
             },
             pswd=self._auth.management_key,
         )
+        return futu_apply(
+            response,
+            lambda response: self._anonymous_jwt_response(response),
+        )
+
+    def _anonymous_jwt_response(self, response):
+        """Helper method to process anonymous JWT response"""
         resp = response.json()
         jwt_response = self._auth.generate_jwt_response(resp, None, None)
         del jwt_response["firstSeen"]

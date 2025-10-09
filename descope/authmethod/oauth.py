@@ -1,8 +1,14 @@
-from typing import Optional
+from typing import Awaitable, Optional, Union
 
 from descope._auth_base import AuthBase
-from descope.common import EndpointsV1, LoginOptions, validate_refresh_token_provided
+from descope.common import (
+    EndpointsV1,
+    LoginOptions,
+    REFRESH_SESSION_COOKIE_NAME,
+    validate_refresh_token_provided,
+)
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
+from descope.future_utils import futu_apply
 
 
 class OAuth(AuthBase):
@@ -12,7 +18,7 @@ class OAuth(AuthBase):
         return_url: str = "",
         login_options: Optional[LoginOptions] = None,
         refresh_token: Optional[str] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """ """
         if not self._verify_provider(provider):
             raise AuthException(
@@ -29,11 +35,15 @@ class OAuth(AuthBase):
             uri, login_options.__dict__ if login_options else {}, params, refresh_token
         )
 
-        return response.json()
+        return futu_apply(
+            response,
+            lambda response: response.json(),
+        )
 
-    def exchange_token(self, code: str) -> dict:
-        uri = EndpointsV1.oauth_exchange_token_path
-        return self._auth.exchange_token(uri, code)
+    def exchange_token(self, code: str) -> Union[dict, Awaitable[dict]]:
+        return self._auth.exchange_token(
+            EndpointsV1.oauth_exchange_token_path, code, None
+        )
 
     @staticmethod
     def _verify_provider(oauth_provider: str) -> bool:

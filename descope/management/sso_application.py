@@ -1,6 +1,7 @@
-from typing import Any, List, Optional
+from typing import Any, Awaitable, List, Optional, Union
 
 from descope._auth_base import AuthBase
+from descope.future_utils import futu_apply
 from descope.management.common import (
     MgmtV1,
     SAMLIDPAttributeMappingInfo,
@@ -20,7 +21,7 @@ class SSOApplication(AuthBase):
         logo: Optional[str] = None,
         enabled: Optional[bool] = True,
         force_authentication: Optional[bool] = False,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Create a new OIDC sso application with the given name. SSO application IDs are provisioned automatically, but can be provided
         explicitly if needed. Both the name and ID must be unique per project.
@@ -34,7 +35,7 @@ class SSOApplication(AuthBase):
         enabled (bool): Optional (default True) does the sso application will be enabled or disabled.
         force_authentication (bool): Optional determine if the IdP should force the user to re-authenticate.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"id": <id>}
 
@@ -55,7 +56,7 @@ class SSOApplication(AuthBase):
             ),
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def create_saml_application(
         self,
@@ -78,7 +79,7 @@ class SSOApplication(AuthBase):
         default_relay_state: Optional[str] = None,
         force_authentication: Optional[bool] = False,
         logout_redirect_url: Optional[str] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Create a new SAML sso application with the given name. SSO application IDs are provisioned automatically, but can be provided
         explicitly if needed. Both the name and ID must be unique per project.
@@ -104,7 +105,7 @@ class SSOApplication(AuthBase):
         force_authentication (bool): Optional determine if the IdP should force the user to re-authenticate.
         logout_redirect_url (str): Optional Target URL to which the user will be redirected upon logout completion.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"id": <id>}
 
@@ -153,7 +154,7 @@ class SSOApplication(AuthBase):
             ),
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def update_oidc_application(
         self,
@@ -164,7 +165,7 @@ class SSOApplication(AuthBase):
         logo: Optional[str] = None,
         enabled: Optional[bool] = True,
         force_authentication: Optional[bool] = False,
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Update an existing OIDC sso application with the given parameters. IMPORTANT: All parameters are used as overrides
         to the existing sso application. Empty fields will override populated fields. Use carefully.
@@ -183,7 +184,7 @@ class SSOApplication(AuthBase):
         """
 
         uri = MgmtV1.sso_application_oidc_update_path
-        self._auth.do_post(
+        response = self._auth.do_post(
             uri,
             SSOApplication._compose_create_update_oidc_body(
                 name,
@@ -196,6 +197,7 @@ class SSOApplication(AuthBase):
             ),
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     def update_saml_application(
         self,
@@ -218,7 +220,7 @@ class SSOApplication(AuthBase):
         default_relay_state: Optional[str] = None,
         force_authentication: Optional[bool] = False,
         logout_redirect_url: Optional[str] = None,
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Update an existing SAML sso application with the given parameters. IMPORTANT: All parameters are used as overrides
         to the existing sso application. Empty fields will override populated fields. Use carefully.
@@ -264,7 +266,7 @@ class SSOApplication(AuthBase):
         )
 
         uri = MgmtV1.sso_application_saml_update_path
-        self._auth.do_post(
+        response = self._auth.do_post(
             uri,
             SSOApplication._compose_create_update_saml_body(
                 name,
@@ -289,11 +291,12 @@ class SSOApplication(AuthBase):
             ),
             pswd=self._auth.management_key,
         )
+        return futu_apply(response, lambda response: None)
 
     def delete(
         self,
         id: str,
-    ):
+    ) -> Union[None, Awaitable[None]]:
         """
         Delete an existing sso application. IMPORTANT: This action is irreversible. Use carefully.
 
@@ -304,19 +307,20 @@ class SSOApplication(AuthBase):
         AuthException: raised if deletion operation fails
         """
         uri = MgmtV1.sso_application_delete_path
-        self._auth.do_post(uri, {"id": id}, pswd=self._auth.management_key)
+        response = self._auth.do_post(uri, {"id": id}, pswd=self._auth.management_key)
+        return futu_apply(response, lambda response: None)
 
     def load(
         self,
         id: str,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Load sso application by id.
 
         Args:
         id (str): The ID of the sso application to load.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"id":"<id>","name":"<name>","description":"<description>","enabled":true,"logo":"","appType":"saml","samlSettings":{"loginPageUrl":"","idpCert":"<cert>","useMetadataInfo":true,"metadataUrl":"","entityId":"","acsUrl":"","certificate":"","attributeMapping":[{"name":"email","type":"","value":"attrVal1"}],"groupsMapping":[{"name":"grp1","type":"","filterType":"roles","value":"","roles":[{"id":"myRoleId","name":"myRole"}]}],"idpMetadataUrl":"","idpEntityId":"","idpSsoUrl":"","acsAllowedCallbacks":[],"subjectNameIdType":"","subjectNameIdFormat":"", "defaultRelayState":"", "forceAuthentication": false, "idpLogoutUrl": "", "logoutRedirectUrl": ""},"oidcSettings":{"loginPageUrl":"","issuer":"","discoveryUrl":"", "forceAuthentication":false}}
         Containing the loaded sso application information.
@@ -329,15 +333,15 @@ class SSOApplication(AuthBase):
             params={"id": id},
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def load_all(
         self,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Load all sso applications.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {
                                 "apps": [
@@ -354,7 +358,7 @@ class SSOApplication(AuthBase):
             uri=MgmtV1.sso_application_load_all_path,
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     @staticmethod
     def _compose_create_update_oidc_body(

@@ -1,17 +1,18 @@
-from typing import List
+from typing import Awaitable, List, Union
 
 from descope._auth_base import AuthBase
+from descope.future_utils import futu_apply
 from descope.management.common import MgmtV1
 
 
 class Flow(AuthBase):
     def list_flows(
         self,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         List all project flows
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
             { "flows": [{"id": "", "name": "", "description": "", "disabled": False}], total: number}
 
@@ -23,12 +24,15 @@ class Flow(AuthBase):
             None,
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(
+            response,
+            lambda response: response.json(),
+        )
 
     def delete_flows(
         self,
         flow_ids: List[str],
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Delete flows by the given ids
 
@@ -45,19 +49,22 @@ class Flow(AuthBase):
             },
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(
+            response,
+            lambda response: response.json(),
+        )
 
     def export_flow(
         self,
         flow_id: str,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Export the given flow id flow and screens.
 
         Args:
         flow_id (str): the flow id to export.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
             { "flow": {"id": "", "name": "", "description": "", "disabled": False, "etag": "", "dsl": {}}, screens: [{ "id": "", "inputs": [], "interactions": [] }] }
 
@@ -71,14 +78,17 @@ class Flow(AuthBase):
             },
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(
+            response,
+            lambda response: response.json(),
+        )
 
     def import_flow(
         self,
         flow_id: str,
         flow: dict,
         screens: List[dict],
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Import the given flow and screens to the flow id.
         Imoprtant: This will override the current project flow by the given id, treat with caution.
@@ -90,7 +100,7 @@ class Flow(AuthBase):
         screens (List[dict]): the flow screens to import. list of dictss in the format:
             { "id": "", "inputs": [], "interactions": [] }
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
             { "flow": {"id": "", "name": "", "description": "", "disabled": False, "etag": "", "dsl": {}}, screens: [{ "id": "", "inputs": [], "interactions": [] }] }
 
@@ -106,15 +116,18 @@ class Flow(AuthBase):
             },
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(
+            response,
+            lambda response: response.json(),
+        )
 
     def export_theme(
         self,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Export the current project theme.
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
             {"id": "", "cssTemplate": {} }
 
@@ -126,12 +139,15 @@ class Flow(AuthBase):
             {},
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(
+            response,
+            lambda response: response.json(),
+        )
 
     def import_theme(
         self,
         theme: dict,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Import the given theme as the current project theme.
         Imoprtant: This will override the current project theme, treat with caution.
@@ -140,7 +156,7 @@ class Flow(AuthBase):
         theme (Theme): the theme to import. dict in the format
             {"id": "", "cssTemplate": {} }
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
             {"id": "", "cssTemplate": {} }
 
@@ -154,4 +170,7 @@ class Flow(AuthBase):
             },
             pswd=self._auth.management_key,
         )
-        return response.json()
+        return futu_apply(
+            response,
+            lambda response: response.json(),
+        )

@@ -1,4 +1,4 @@
-from typing import Iterable, Optional, Union
+from typing import Iterable, Optional, Union, Awaitable
 
 from descope._auth_base import AuthBase
 from descope.common import (
@@ -8,10 +8,13 @@ from descope.common import (
     validate_refresh_token_provided,
 )
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
+from descope.future_utils import futu_apply
 
 
 class TOTP(AuthBase):
-    def sign_up(self, login_id: str, user: Optional[dict] = None) -> dict:
+    def sign_up(
+        self, login_id: str, user: Optional[dict] = None
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Sign up (create) a new user using their email or phone number.
             (optional) Include additional user metadata that you wish to save.
@@ -21,7 +24,7 @@ class TOTP(AuthBase):
         user (dict) optional: Preserve additional user metadata in the form of,
              {"name": "Desmond Copeland", "phone": "2125551212", "email": "des@cope.com"}
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"provisioningURL": "", "image": "", "key": ""}
         Includes 3 different ways to allow the user to save their credentials in
@@ -41,7 +44,7 @@ class TOTP(AuthBase):
         body = TOTP._compose_signup_body(login_id, user)
         response = self._auth.do_post(uri, body)
 
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     def sign_in_code(
         self,
@@ -50,7 +53,7 @@ class TOTP(AuthBase):
         login_options: Optional[LoginOptions] = None,
         refresh_token: Optional[str] = None,
         audience: Union[str, None, Iterable[str]] = None,
-    ) -> dict:
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Sign in by verifying the validity of a TOTP code entered by an end user.
 
@@ -60,7 +63,7 @@ class TOTP(AuthBase):
         login_options (LoginOptions): Optional advanced controls over login parameters
         refresh_token: Optional refresh token is needed for specific login options
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"jwts": [], "user": "", "firstSeen": "", "error": ""}
         Includes all the jwts tokens (session token, refresh token), token claims, and user information
@@ -85,13 +88,18 @@ class TOTP(AuthBase):
         body = TOTP._compose_signin_body(login_id, code, login_options)
         response = self._auth.do_post(uri, body, None, refresh_token)
 
-        resp = response.json()
-        jwt_response = self._auth.generate_jwt_response(
-            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
+        return futu_apply(
+            response,
+            lambda response: self._auth.generate_jwt_response(
+                response.json(),
+                response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None),
+                audience,
+            ),
         )
-        return jwt_response
 
-    def update_user(self, login_id: str, refresh_token: str) -> None:
+    def update_user(
+        self, login_id: str, refresh_token: str
+    ) -> Union[dict, Awaitable[dict]]:
         """
         Add TOTP to an existing logged in user using their refresh token.
 
@@ -99,7 +107,7 @@ class TOTP(AuthBase):
         login_id (str): The login ID of the user whose information is being updated
         refresh_token (str): The session's refresh token (used for verification)
 
-        Return value (dict):
+        Return value (Union[dict, Awaitable[dict]]):
         Return dict in the format
              {"provisioningURL": "", "image": "", "key": ""}
         Includes 3 different ways to allow the user to save their credentials in
@@ -124,7 +132,7 @@ class TOTP(AuthBase):
         body = TOTP._compose_update_user_body(login_id)
         response = self._auth.do_post(uri, body, None, refresh_token)
 
-        return response.json()
+        return futu_apply(response, lambda response: response.json())
 
     @staticmethod
     def _compose_signup_body(login_id: str, user: Optional[dict]) -> dict:
