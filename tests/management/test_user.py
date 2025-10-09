@@ -976,7 +976,7 @@ class TestUser(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 params={"loginId": "valid-id"},
-                allow_redirects=None,
+                allow_redirects=True,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -1008,7 +1008,7 @@ class TestUser(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 params={"userId": "user-id"},
-                allow_redirects=None,
+                allow_redirects=True,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -1557,7 +1557,7 @@ class TestUser(common.DescopeTest):
                     "withRefreshToken": True,
                     "forceRefresh": True,
                 },
-                allow_redirects=None,
+                allow_redirects=True,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

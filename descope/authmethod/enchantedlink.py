@@ -34,9 +34,8 @@ class EnchantedLink(AuthBase):
         validate_refresh_token_provided(login_options, refresh_token)
 
         body = EnchantedLink._compose_signin_body(login_id, uri, login_options)
-        uri = EnchantedLink._compose_signin_url()
-
-        response = self._auth.do_post(uri, body, None, refresh_token)
+        url = EnchantedLink._compose_signin_url()
+        response = self._http.post(url, body=body, pswd=refresh_token)
         return EnchantedLink._get_pending_ref_from_response(response)
 
     def sign_up(
@@ -59,8 +58,8 @@ class EnchantedLink(AuthBase):
             )
 
         body = EnchantedLink._compose_signup_body(login_id, uri, user, signup_options)
-        uri = EnchantedLink._compose_signup_url()
-        response = self._auth.do_post(uri, body, None)
+        url = EnchantedLink._compose_signup_url()
+        response = self._http.post(url, body=body)
         return EnchantedLink._get_pending_ref_from_response(response)
 
     def sign_up_or_in(
@@ -79,15 +78,14 @@ class EnchantedLink(AuthBase):
             uri,
             login_options,
         )
-        uri = EnchantedLink._compose_sign_up_or_in_url()
-        response = self._auth.do_post(uri, body, None)
+        url = EnchantedLink._compose_sign_up_or_in_url()
+        response = self._http.post(url, body=body)
         return EnchantedLink._get_pending_ref_from_response(response)
 
     def get_session(self, pending_ref: str) -> dict:
         uri = EndpointsV1.get_session_enchantedlink_auth_path
         body = EnchantedLink._compose_get_session_body(pending_ref)
-        response = self._auth.do_post(uri, body, None)
-
+        response = self._http.post(uri, body=body)
         resp = response.json()
         jwt_response = self._auth.generate_jwt_response(
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), None
@@ -97,7 +95,7 @@ class EnchantedLink(AuthBase):
     def verify(self, token: str):
         uri = EndpointsV1.verify_enchantedlink_auth_path
         body = EnchantedLink._compose_verify_body(token)
-        self._auth.do_post(uri, body, None)
+        self._http.post(uri, body=body)
 
     def update_user_email(
         self,
@@ -127,7 +125,7 @@ class EnchantedLink(AuthBase):
             provider_id,
         )
         uri = EndpointsV1.update_user_email_enchantedlink_path
-        response = self._auth.do_post(uri, body, None, refresh_token)
+        response = self._http.post(uri, body=body, pswd=refresh_token)
         return EnchantedLink._get_pending_ref_from_response(response)
 
     @staticmethod

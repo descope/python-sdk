@@ -39,7 +39,7 @@ class TOTP(AuthBase):
 
         uri = EndpointsV1.sign_up_auth_totp_path
         body = TOTP._compose_signup_body(login_id, user)
-        response = self._auth.do_post(uri, body)
+        response = self._http.post(uri, body=body)
 
         return response.json()
 
@@ -83,7 +83,7 @@ class TOTP(AuthBase):
 
         uri = EndpointsV1.verify_totp_path
         body = TOTP._compose_signin_body(login_id, code, login_options)
-        response = self._auth.do_post(uri, body, None, refresh_token)
+        response = self._http.post(uri, body=body, pswd=refresh_token)
 
         resp = response.json()
         jwt_response = self._auth.generate_jwt_response(
@@ -122,7 +122,7 @@ class TOTP(AuthBase):
 
         uri = EndpointsV1.update_totp_path
         body = TOTP._compose_update_user_body(login_id)
-        response = self._auth.do_post(uri, body, None, refresh_token)
+        response = self._http.post(uri, body=body, pswd=refresh_token)
 
         return response.json()
 
