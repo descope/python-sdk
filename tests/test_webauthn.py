@@ -543,7 +543,7 @@ class TestWebauthN(common.DescopeTest):
             mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
                 await futu_await(
-                    await futu_await(webauthn.update_finish("t01", "response01"))
+                    webauthn.update_finish("t01", "response01")
                 )
 
         # Test success flow
