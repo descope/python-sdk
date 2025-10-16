@@ -25,8 +25,12 @@ default_headers = {
 }
 
 
-class DescopeTest(unittest.TestCase):
+class DescopeTest(unittest.IsolatedAsyncioTestCase):
+    async_test = False
+
     def setUp(self) -> None:
         os.environ["DESCOPE_BASE_URI"] = (
             DEFAULT_BASE_URL  # Make sure tests always running against localhost
         )
+
+        self.async_test = os.environ.get("ASYNC_MODE", "False").lower() == "true"
