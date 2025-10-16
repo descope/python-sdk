@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 from typing import Any, List, Optional
 
-from descope._auth_base import AuthBase
+from descope._http_base import HTTPBase
 from descope.management.common import (
     MgmtV1,
     SAMLIDPAttributeMappingInfo,
@@ -10,7 +12,7 @@ from descope.management.common import (
 )
 
 
-class SSOApplication(AuthBase):
+class SSOApplication(HTTPBase):
     def create_oidc_application(
         self,
         name: str,
@@ -42,9 +44,9 @@ class SSOApplication(AuthBase):
         AuthException: raised if create operation fails
         """
         uri = MgmtV1.sso_application_oidc_create_path
-        response = self._auth.do_post(
+        response = self._http.post(
             uri,
-            SSOApplication._compose_create_update_oidc_body(
+            body=SSOApplication._compose_create_update_oidc_body(
                 name,
                 login_page_url,
                 id,
@@ -53,7 +55,6 @@ class SSOApplication(AuthBase):
                 enabled,
                 force_authentication,
             ),
-            pswd=self._auth.management_key,
         )
         return response.json()
 
@@ -128,9 +129,9 @@ class SSOApplication(AuthBase):
         )
 
         uri = MgmtV1.sso_application_saml_create_path
-        response = self._auth.do_post(
+        response = self._http.post(
             uri,
-            SSOApplication._compose_create_update_saml_body(
+            body=SSOApplication._compose_create_update_saml_body(
                 name,
                 login_page_url,
                 id,
@@ -151,7 +152,6 @@ class SSOApplication(AuthBase):
                 force_authentication,
                 logout_redirect_url,
             ),
-            pswd=self._auth.management_key,
         )
         return response.json()
 
@@ -183,9 +183,9 @@ class SSOApplication(AuthBase):
         """
 
         uri = MgmtV1.sso_application_oidc_update_path
-        self._auth.do_post(
+        self._http.post(
             uri,
-            SSOApplication._compose_create_update_oidc_body(
+            body=SSOApplication._compose_create_update_oidc_body(
                 name,
                 login_page_url,
                 id,
@@ -194,7 +194,6 @@ class SSOApplication(AuthBase):
                 enabled,
                 force_authentication,
             ),
-            pswd=self._auth.management_key,
         )
 
     def update_saml_application(
@@ -264,9 +263,9 @@ class SSOApplication(AuthBase):
         )
 
         uri = MgmtV1.sso_application_saml_update_path
-        self._auth.do_post(
+        self._http.post(
             uri,
-            SSOApplication._compose_create_update_saml_body(
+            body=SSOApplication._compose_create_update_saml_body(
                 name,
                 login_page_url,
                 id,
@@ -287,7 +286,6 @@ class SSOApplication(AuthBase):
                 force_authentication,
                 logout_redirect_url,
             ),
-            pswd=self._auth.management_key,
         )
 
     def delete(
@@ -304,7 +302,8 @@ class SSOApplication(AuthBase):
         AuthException: raised if deletion operation fails
         """
         uri = MgmtV1.sso_application_delete_path
-        self._auth.do_post(uri, {"id": id}, pswd=self._auth.management_key)
+        # Using adapter's do_post which already includes management key in Authorization header
+        self._http.post(uri, body={"id": id})
 
     def load(
         self,
@@ -324,11 +323,7 @@ class SSOApplication(AuthBase):
         Raise:
         AuthException: raised if load operation fails
         """
-        response = self._auth.do_get(
-            uri=MgmtV1.sso_application_load_path,
-            params={"id": id},
-            pswd=self._auth.management_key,
-        )
+        response = self._http.get(MgmtV1.sso_application_load_path, params={"id": id})
         return response.json()
 
     def load_all(
@@ -350,10 +345,7 @@ class SSOApplication(AuthBase):
         Raise:
         AuthException: raised if load operation fails
         """
-        response = self._auth.do_get(
-            uri=MgmtV1.sso_application_load_all_path,
-            pswd=self._auth.management_key,
-        )
+        response = self._http.get(MgmtV1.sso_application_load_all_path)
         return response.json()
 
     @staticmethod

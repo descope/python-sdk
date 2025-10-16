@@ -48,7 +48,7 @@ class OTP(AuthBase):
 
         uri = OTP._compose_signin_url(method)
         body = OTP._compose_signin_body(login_id, login_options)
-        response = self._auth.do_post(uri, body, None, refresh_token)
+        response = self._http.post(uri, body=body, pswd=refresh_token)
         return Auth.extract_masked_address(response.json(), method)
 
     def sign_up(
@@ -85,7 +85,7 @@ class OTP(AuthBase):
 
         uri = OTP._compose_signup_url(method)
         body = OTP._compose_signup_body(method, login_id, user, signup_options)
-        response = self._auth.do_post(uri, body)
+        response = self._http.post(uri, body=body)
         return Auth.extract_masked_address(response.json(), method)
 
     def sign_up_or_in(
@@ -124,7 +124,7 @@ class OTP(AuthBase):
             login_id,
             login_options,
         )
-        response = self._auth.do_post(uri, body)
+        response = self._http.post(uri, body=body)
         return Auth.extract_masked_address(response.json(), method)
 
     def verify_code(
@@ -158,7 +158,7 @@ class OTP(AuthBase):
 
         uri = OTP._compose_verify_code_url(method)
         body = OTP._compose_verify_code_body(login_id, code)
-        response = self._auth.do_post(uri, body, None)
+        response = self._http.post(uri, body=body)
 
         resp = response.json()
         jwt_response = self._auth.generate_jwt_response(
@@ -206,7 +206,7 @@ class OTP(AuthBase):
             template_id,
             provider_id,
         )
-        response = self._auth.do_post(uri, body, None, refresh_token)
+        response = self._http.post(uri, body=body, pswd=refresh_token)
         return Auth.extract_masked_address(response.json(), DeliveryMethod.EMAIL)
 
     def update_user_phone(
@@ -254,7 +254,7 @@ class OTP(AuthBase):
             template_id,
             provider_id,
         )
-        response = self._auth.do_post(uri, body, None, refresh_token)
+        response = self._http.post(uri, body=body, pswd=refresh_token)
         return Auth.extract_masked_address(response.json(), method)
 
     @staticmethod
