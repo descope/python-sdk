@@ -656,12 +656,37 @@ class Auth:
                 "Algorithm signature in JWT header does not match the algorithm signature in the public key",
             )
 
+        # Check if we need to auto-detect audience from token
+        validation_audience = audience
+        if audience is None:
+            try:
+                unverified_claims = jwt.decode(
+                    jwt=token,
+                    key=copy_key[0].key,
+                    algorithms=[alg_header],
+                    options={"verify_aud": False},  # Skip audience verification for now
+                    leeway=self.jwt_validation_leeway,
+                )
+                token_audience = unverified_claims.get("aud")
+                
+                # If token has audience claim and it matches our project ID, use it
+                if token_audience and self.project_id:
+                    if isinstance(token_audience, list):
+                        if self.project_id in token_audience:
+                            validation_audience = self.project_id
+                    else:
+                        if token_audience == self.project_id:
+                            validation_audience = self.project_id
+            except Exception:
+                # If we can't decode the token to check audience, proceed with original audience (None)
+                pass
+
         try:
             claims = jwt.decode(
                 jwt=token,
                 key=copy_key[0].key,
                 algorithms=[alg_header],
-                audience=audience,
+                audience=validation_audience,
                 leeway=self.jwt_validation_leeway,
             )
         except ImmatureSignatureError:
