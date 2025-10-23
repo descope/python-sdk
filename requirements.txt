@@ -152,7 +152,7 @@ charset-normalizer==3.4.3; python_full_version >= "3.8.1" and python_version < "
     --hash=sha256:fb7f67a1bfa6e40b438170ebdc8158b78dc465a5a67b6dde178a46987b244a72 \
     --hash=sha256:fd10de089bcdcd1be95a2f73dbe6254798ec1bda9f450d5828c96f93e2536b9c \
     --hash=sha256:fdabf8315679312cfa71302f9bd509ded4f2f263fb5b765cf1433b39106c3cc9
-click==8.2.1; python_full_version >= "3.8.1" and python_version < "4.0" \
+click==8.3.0; python_full_version >= "3.8.1" and python_version < "4.0" \
     --hash=sha256:27c491cc05d968d271d5a1db13e3b5a184636d9d930f148c50b038f0d0646202 \
     --hash=sha256:61a3265b914e850b85317d0b3109c7f8cd35a670f963866005d6ef1d5175a12b
 colorama==0.4.6 ; python_full_version >= "3.8.1" and python_version < "4.0" and platform_system == "Windows" \
@@ -220,7 +220,7 @@ Jinja2==3.1.6; python_full_version >= "3.8.1" and python_version < "4.0" \
 liccheck==0.9.2 ; python_full_version >= "3.8.1" and python_version < "4.0" \
     --hash=sha256:15cbedd042515945fe9d58b62e0a5af2f2a7795def216f163bb35b3016a16637 \
     --hash=sha256:bdc2190f8e95af3c8f9c19edb784ba7d41ecb2bf9189422eae6112bf84c08cd5
-MarkupSafe==3.0.2; python_full_version >= "3.8.1" and python_version < "4.0" \
+MarkupSafe==3.0.3; python_full_version >= "3.8.1" and python_version < "4.0" \
     --hash=sha256:0bff5e0ae4ef2e1ae4fdf2dfd5b76c75e5c2fa4132d05fc1b0dabcd20c7e28c4 \
     --hash=sha256:0f4ca02bea9a23221c0182836703cbf8930c5e9454bacce27e767509fa286a30 \
     --hash=sha256:1225beacc926f536dc82e45f8a4d68502949dc67eea90eab715dea3a21c1b5f0 \
