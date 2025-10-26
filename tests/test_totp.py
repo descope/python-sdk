@@ -32,7 +32,13 @@ class TestTOTP(common.DescopeTest):
             "email": "dummy@dummy.com",
         }
 
-        totp = TOTP(Auth(self.dummy_project_id, self.public_key_dict))
+        totp = TOTP(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
 
         # Test failed flows
         self.assertRaises(
@@ -64,7 +70,13 @@ class TestTOTP(common.DescopeTest):
             self.assertIsNotNone(totp.sign_up("dummy@dummy.com", signup_user_details))
 
     def test_sign_in(self):
-        totp = TOTP(Auth(self.dummy_project_id, self.public_key_dict))
+        totp = TOTP(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
 
         # Test failed flows
         self.assertRaises(AuthException, totp.sign_in_code, None, "1234")
@@ -137,7 +149,13 @@ class TestTOTP(common.DescopeTest):
             )
 
     def test_update_user(self):
-        totp = TOTP(Auth(self.dummy_project_id, self.public_key_dict))
+        totp = TOTP(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
 
         # Test failed flows
         self.assertRaises(AuthException, totp.update_user, None, "")

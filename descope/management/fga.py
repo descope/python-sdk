@@ -1,10 +1,15 @@
-from typing import List
+from typing import List, Optional
 
-from descope._auth_base import AuthBase
+from descope._http_base import HTTPBase
 from descope.management.common import MgmtV1
 
 
-class FGA(AuthBase):
+class FGA(HTTPBase):
+
+    def __init__(self, http_client, fga_cache_url: Optional[str] = None):
+        super().__init__(http_client)
+        self._fga_cache_url = fga_cache_url
+
     def save_schema(self, schema: str):
         """
         Create or update an FGA schema.
@@ -40,11 +45,10 @@ class FGA(AuthBase):
         Raise:
         AuthException: raised if saving fails
         """
-        self._auth.do_post_with_custom_base_url(
+        self._http.post(
             MgmtV1.fga_save_schema,
-            {"dsl": schema},
-            custom_base_url=self._auth.fga_cache_url,
-            pswd=self._auth.management_key,
+            body={"dsl": schema},
+            base_url=self._fga_cache_url,
         )
 
     def create_relations(
@@ -65,13 +69,10 @@ class FGA(AuthBase):
         Raise:
         AuthException: raised if create relations fails
         """
-        self._auth.do_post_with_custom_base_url(
+        self._http.post(
             MgmtV1.fga_create_relations,
-            {
-                "tuples": relations,
-            },
-            custom_base_url=self._auth.fga_cache_url,
-            pswd=self._auth.management_key,
+            body={"tuples": relations},
+            base_url=self._fga_cache_url,
         )
 
     def delete_relations(
@@ -85,13 +86,10 @@ class FGA(AuthBase):
         Raise:
         AuthException: raised if delete relations fails
         """
-        self._auth.do_post_with_custom_base_url(
+        self._http.post(
             MgmtV1.fga_delete_relations,
-            {
-                "tuples": relations,
-            },
-            custom_base_url=self._auth.fga_cache_url,
-            pswd=self._auth.management_key,
+            body={"tuples": relations},
+            base_url=self._fga_cache_url,
         )
 
     def check(
@@ -127,13 +125,10 @@ class FGA(AuthBase):
         Raise:
         AuthException: raised if query fails
         """
-        response = self._auth.do_post_with_custom_base_url(
+        response = self._http.post(
             MgmtV1.fga_check,
-            {
-                "tuples": relations,
-            },
-            custom_base_url=self._auth.fga_cache_url,
-            pswd=self._auth.management_key,
+            body={"tuples": relations},
+            base_url=self._fga_cache_url,
         )
         return list(
             map(
@@ -150,10 +145,9 @@ class FGA(AuthBase):
         Returns:
             List[dict]: list of resources details as returned by the server.
         """
-        response = self._auth.do_post(
+        response = self._http.post(
             MgmtV1.fga_resources_load,
-            {"resourceIdentifiers": resource_identifiers},
-            pswd=self._auth.management_key,
+            body={"resourceIdentifiers": resource_identifiers},
         )
         return response.json().get("resourcesDetails", [])
 
@@ -163,8 +157,7 @@ class FGA(AuthBase):
         Args:
             resources_details (List[dict]): list of dicts each containing 'resourceId' and 'resourceType' plus optionally containing metadata fields such as 'displayName'.
         """
-        self._auth.do_post(
+        self._http.post(
             MgmtV1.fga_resources_save,
-            {"resourcesDetails": resources_details},
-            pswd=self._auth.management_key,
+            body={"resourcesDetails": resources_details},
         )

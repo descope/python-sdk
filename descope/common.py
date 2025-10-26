@@ -184,3 +184,20 @@ def signup_options_to_dict(signup_options: Optional[SignUpOptions] = None) -> di
         if signup_options.revokeOtherSessions is not None:
             res["revokeOtherSessions"] = signup_options.revokeOtherSessions
     return res
+
+
+def get_method_string(method: DeliveryMethod) -> str:
+    name = {
+        DeliveryMethod.EMAIL: "email",
+        DeliveryMethod.SMS: "sms",
+        DeliveryMethod.VOICE: "voice",
+        DeliveryMethod.WHATSAPP: "whatsapp",
+        DeliveryMethod.EMBEDDED: "Embedded",
+    }.get(method)
+
+    if not name:
+        raise AuthException(
+            400, ERROR_TYPE_INVALID_ARGUMENT, f"Unknown delivery method: {method}"
+        )
+
+    return name

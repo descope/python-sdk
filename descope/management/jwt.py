@@ -1,7 +1,8 @@
 from typing import Optional
 
-from descope._auth_base import AuthBase
+from descope._http_base import HTTPBase
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
+from descope.jwt_common import generate_jwt_response
 from descope.management.common import (
     MgmtLoginOptions,
     MgmtSignUpOptions,
@@ -11,7 +12,7 @@ from descope.management.common import (
 )
 
 
-class JWT(AuthBase):
+class JWT(HTTPBase):
     def update_jwt(
         self, jwt: str, custom_claims: dict, refresh_duration: int = 0
     ) -> str:
@@ -30,14 +31,14 @@ class JWT(AuthBase):
         """
         if not jwt:
             raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "jwt cannot be empty")
-        response = self._auth.do_post(
+        response = self._http.post(
             MgmtV1.update_jwt_path,
-            {
+            body={
                 "jwt": jwt,
                 "customClaims": custom_claims,
                 "refreshDuration": refresh_duration,
             },
-            pswd=self._auth.management_key,
+            params=None,
         )
         return response.json().get("jwt", "")
 
@@ -74,9 +75,9 @@ class JWT(AuthBase):
             raise AuthException(
                 400, ERROR_TYPE_INVALID_ARGUMENT, "login_id cannot be empty"
             )
-        response = self._auth.do_post(
+        response = self._http.post(
             MgmtV1.impersonate_path,
-            {
+            body={
                 "loginId": login_id,
                 "impersonatorId": impersonator_id,
                 "validateConsent": validate_consent,
@@ -84,7 +85,7 @@ class JWT(AuthBase):
                 "selectedTenant": tenant_id,
                 "refreshDuration": refresh_duration,
             },
-            pswd=self._auth.management_key,
+            params=None,
         )
         return response.json().get("jwt", "")
 
@@ -111,15 +112,15 @@ class JWT(AuthBase):
         if not jwt or jwt == "":
             raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "jwt cannot be empty")
 
-        response = self._auth.do_post(
+        response = self._http.post(
             MgmtV1.stop_impersonation_path,
-            {
+            body={
                 "jwt": jwt,
                 "customClaims": custom_claims,
                 "selectedTenant": tenant_id,
                 "refreshDuration": refresh_duration,
             },
-            pswd=self._auth.management_key,
+            params=None,
         )
         return response.json().get("jwt", "")
 
@@ -145,9 +146,9 @@ class JWT(AuthBase):
         if is_jwt_required(login_options) and not login_options.jwt:
             raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "JWT is required")
 
-        response = self._auth.do_post(
+        response = self._http.post(
             MgmtV1.mgmt_sign_in_path,
-            {
+            body={
                 "loginId": login_id,
                 "stepup": login_options.stepup,
                 "mfa": login_options.mfa,
@@ -156,10 +157,10 @@ class JWT(AuthBase):
                 "jwt": login_options.jwt,
                 "refreshDuration": login_options.refresh_duration,
             },
-            pswd=self._auth.management_key,
+            params=None,
         )
         resp = response.json()
-        jwt_response = self._auth.generate_jwt_response(resp, None, None)
+        jwt_response = generate_jwt_response(resp, None, None)
         return jwt_response
 
     def sign_up(
@@ -217,9 +218,9 @@ class JWT(AuthBase):
         if signup_options is None:
             signup_options = MgmtSignUpOptions()
 
-        response = self._auth.do_post(
+        response = self._http.post(
             endpoint,
-            {
+            body={
                 "loginId": login_id,
                 "user": user.to_dict(),
                 "emailVerified": user.email_verified,
@@ -228,10 +229,10 @@ class JWT(AuthBase):
                 "customClaims": signup_options.custom_claims,
                 "refreshDuration": signup_options.refresh_duration,
             },
-            pswd=self._auth.management_key,
+            params=None,
         )
         resp = response.json()
-        jwt_response = self._auth.generate_jwt_response(resp, None, None)
+        jwt_response = generate_jwt_response(resp, None, None)
         return jwt_response
 
     def anonymous(
@@ -248,17 +249,17 @@ class JWT(AuthBase):
         tenant_id (str): tenant id to set on DCT claim.
         """
 
-        response = self._auth.do_post(
+        response = self._http.post(
             MgmtV1.anonymous_path,
-            {
+            body={
                 "customClaims": custom_claims,
                 "selectedTenant": tenant_id,
                 "refreshDuration": refresh_duration,
             },
-            pswd=self._auth.management_key,
+            params=None,
         )
         resp = response.json()
-        jwt_response = self._auth.generate_jwt_response(resp, None, None)
+        jwt_response = generate_jwt_response(resp, None, None)
         del jwt_response["firstSeen"]
         del jwt_response["user"]
         return jwt_response

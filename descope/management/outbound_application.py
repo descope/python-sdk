@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 from typing import Any, List, Optional
 
-from descope._auth_base import AuthBase
-from descope.auth import Auth
+from descope._http_base import HTTPBase
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException  # noqa: F401
+from descope.http_client import HTTPClient
 from descope.management.common import (
     AccessType,
     MgmtV1,
@@ -17,8 +19,9 @@ class _OutboundApplicationTokenFetcher:
 
     @staticmethod
     def fetch_token_by_scopes(
-        auth_instance: Auth,
-        token: str,
+        *,
+        http: HTTPClient,
+        token: Optional[str] = None,
         app_id: str,
         user_id: str,
         scopes: List[str],
@@ -27,9 +30,9 @@ class _OutboundApplicationTokenFetcher:
     ) -> dict:
         """Internal implementation for fetching token by scopes."""
         uri = MgmtV1.outbound_application_fetch_token_by_scopes_path
-        response = auth_instance.do_post(
+        response = http.post(
             uri,
-            {
+            body={
                 "appId": app_id,
                 "userId": user_id,
                 "scopes": scopes,
@@ -42,8 +45,9 @@ class _OutboundApplicationTokenFetcher:
 
     @staticmethod
     def fetch_token(
-        auth_instance: Auth,
-        token: str,
+        *,
+        http: HTTPClient,
+        token: Optional[str] = None,
         app_id: str,
         user_id: str,
         tenant_id: Optional[str] = None,
@@ -51,9 +55,9 @@ class _OutboundApplicationTokenFetcher:
     ) -> dict:
         """Internal implementation for fetching token."""
         uri = MgmtV1.outbound_application_fetch_token_path
-        response = auth_instance.do_post(
+        response = http.post(
             uri,
-            {
+            body={
                 "appId": app_id,
                 "userId": user_id,
                 "tenantId": tenant_id,
@@ -65,8 +69,9 @@ class _OutboundApplicationTokenFetcher:
 
     @staticmethod
     def fetch_tenant_token_by_scopes(
-        auth_instance: Auth,
-        token: str,
+        *,
+        http: HTTPClient,
+        token: Optional[str] = None,
         app_id: str,
         tenant_id: str,
         scopes: List[str],
@@ -74,9 +79,9 @@ class _OutboundApplicationTokenFetcher:
     ) -> dict:
         """Internal implementation for fetching tenant token by scopes."""
         uri = MgmtV1.outbound_application_fetch_tenant_token_by_scopes_path
-        response = auth_instance.do_post(
+        response = http.post(
             uri,
-            {
+            body={
                 "appId": app_id,
                 "tenantId": tenant_id,
                 "scopes": scopes,
@@ -88,17 +93,18 @@ class _OutboundApplicationTokenFetcher:
 
     @staticmethod
     def fetch_tenant_token(
-        auth_instance: Auth,
-        token: str,
+        *,
+        http: HTTPClient,
+        token: Optional[str] = None,
         app_id: str,
         tenant_id: str,
         options: Optional[dict] = None,
     ) -> dict:
         """Internal implementation for fetching tenant token."""
         uri = MgmtV1.outbound_application_fetch_tenant_token_path
-        response = auth_instance.do_post(
+        response = http.post(
             uri,
-            {
+            body={
                 "appId": app_id,
                 "tenantId": tenant_id,
                 "options": options,
@@ -108,7 +114,7 @@ class _OutboundApplicationTokenFetcher:
         return response.json()
 
 
-class OutboundApplication(AuthBase):
+class OutboundApplication(HTTPBase):
     def create_application(
         self,
         name: str,
@@ -162,9 +168,9 @@ class OutboundApplication(AuthBase):
         AuthException: raised if create operation fails
         """
         uri = MgmtV1.outbound_application_create_path
-        response = self._auth.do_post(
+        response = self._http.post(
             uri,
-            OutboundApplication._compose_create_update_body(
+            body=OutboundApplication._compose_create_update_body(
                 name,
                 description,
                 logo,
@@ -184,7 +190,6 @@ class OutboundApplication(AuthBase):
                 access_type,
                 prompt,
             ),
-            pswd=self._auth.management_key,
         )
         return response.json()
 
@@ -241,9 +246,9 @@ class OutboundApplication(AuthBase):
         AuthException: raised if update operation fails
         """
         uri = MgmtV1.outbound_application_update_path
-        response = self._auth.do_post(
+        response = self._http.post(
             uri,
-            {
+            body={
                 "app": OutboundApplication._compose_create_update_body(
                     name,
                     description,
@@ -265,7 +270,6 @@ class OutboundApplication(AuthBase):
                     prompt,
                 )
             },
-            pswd=self._auth.management_key,
         )
         return response.json()
 
@@ -283,7 +287,7 @@ class OutboundApplication(AuthBase):
         AuthException: raised if deletion operation fails
         """
         uri = MgmtV1.outbound_application_delete_path
-        self._auth.do_post(uri, {"id": id}, pswd=self._auth.management_key)
+        self._http.post(uri, body={"id": id})
 
     def load_application(
         self,
@@ -303,15 +307,10 @@ class OutboundApplication(AuthBase):
         Raise:
         AuthException: raised if load operation fails
         """
-        response = self._auth.do_get(
-            uri=f"{MgmtV1.outbound_application_load_path}/{id}",
-            pswd=self._auth.management_key,
-        )
+        response = self._http.get(f"{MgmtV1.outbound_application_load_path}/{id}")
         return response.json()
 
-    def load_all_applications(
-        self,
-    ) -> dict:
+    def load_all_applications(self) -> dict:
         """
         Load all outbound applications.
 
@@ -323,10 +322,7 @@ class OutboundApplication(AuthBase):
         Raise:
         AuthException: raised if load operation fails
         """
-        response = self._auth.do_get(
-            uri=MgmtV1.outbound_application_load_all_path,
-            pswd=self._auth.management_key,
-        )
+        response = self._http.get(MgmtV1.outbound_application_load_all_path)
         return response.json()
 
     def fetch_token_by_scopes(
@@ -355,13 +351,12 @@ class OutboundApplication(AuthBase):
         AuthException: raised if fetch operation fails
         """
         return _OutboundApplicationTokenFetcher.fetch_token_by_scopes(
-            self._auth,
-            self._auth.management_key,  # type: ignore[arg-type] # will never get here with None value
-            app_id,
-            user_id,
-            scopes,
-            options,
-            tenant_id,
+            http=self._http,
+            app_id=app_id,
+            user_id=user_id,
+            scopes=scopes,
+            options=options,
+            tenant_id=tenant_id,
         )
 
     def fetch_token(
@@ -388,12 +383,11 @@ class OutboundApplication(AuthBase):
         AuthException: raised if fetch operation fails
         """
         return _OutboundApplicationTokenFetcher.fetch_token(
-            self._auth,
-            self._auth.management_key,  # type: ignore[arg-type] # will never get here with None value
-            app_id,
-            user_id,
-            tenant_id,
-            options,
+            http=self._http,
+            app_id=app_id,
+            user_id=user_id,
+            tenant_id=tenant_id,
+            options=options,
         )
 
     def fetch_tenant_token_by_scopes(
@@ -420,12 +414,11 @@ class OutboundApplication(AuthBase):
         AuthException: raised if fetch operation fails
         """
         return _OutboundApplicationTokenFetcher.fetch_tenant_token_by_scopes(
-            self._auth,
-            self._auth.management_key,  # type: ignore[arg-type] # will never get here with None value
-            app_id,
-            tenant_id,
-            scopes,
-            options,
+            http=self._http,
+            app_id=app_id,
+            tenant_id=tenant_id,
+            scopes=scopes,
+            options=options,
         )
 
     def fetch_tenant_token(
@@ -450,11 +443,10 @@ class OutboundApplication(AuthBase):
         AuthException: raised if fetch operation fails
         """
         return _OutboundApplicationTokenFetcher.fetch_tenant_token(
-            self._auth,
-            self._auth.management_key,  # type: ignore[arg-type] # will never get here with None value
-            app_id,
-            tenant_id,
-            options,
+            http=self._http,
+            app_id=app_id,
+            tenant_id=tenant_id,
+            options=options,
         )
 
     @staticmethod
@@ -517,7 +509,17 @@ class OutboundApplication(AuthBase):
         return body
 
 
-class OutboundApplicationByToken(AuthBase):
+class OutboundApplicationByToken(HTTPBase):
+    def __init__(self, http_client: HTTPClient):
+        # This class expects the token to be passed for each call
+        no_key_client = HTTPClient(
+            project_id=http_client.project_id,
+            base_url=http_client.base_url,
+            timeout_seconds=http_client.timeout_seconds,
+            secure=http_client.secure,
+            management_key=None,  # Override the management key for this client
+        )
+        super().__init__(no_key_client)
 
     # Methods for fetching outbound application tokens using an inbound application token
     # that includes the "outbound.token.fetch" scope (no management key required)
@@ -560,7 +562,13 @@ class OutboundApplicationByToken(AuthBase):
         """
         self._check_inbound_app_token(token)
         return _OutboundApplicationTokenFetcher.fetch_token_by_scopes(
-            self._auth, token, app_id, user_id, scopes, options, tenant_id
+            http=self._http,
+            token=token,
+            app_id=app_id,
+            user_id=user_id,
+            scopes=scopes,
+            options=options,
+            tenant_id=tenant_id,
         )
 
     def fetch_token(
@@ -590,7 +598,12 @@ class OutboundApplicationByToken(AuthBase):
         """
         self._check_inbound_app_token(token)
         return _OutboundApplicationTokenFetcher.fetch_token(
-            self._auth, token, app_id, user_id, tenant_id, options
+            http=self._http,
+            token=token,
+            app_id=app_id,
+            user_id=user_id,
+            tenant_id=tenant_id,
+            options=options,
         )
 
     def fetch_tenant_token_by_scopes(
@@ -620,7 +633,12 @@ class OutboundApplicationByToken(AuthBase):
         """
         self._check_inbound_app_token(token)
         return _OutboundApplicationTokenFetcher.fetch_tenant_token_by_scopes(
-            self._auth, token, app_id, tenant_id, scopes, options
+            http=self._http,
+            token=token,
+            app_id=app_id,
+            tenant_id=tenant_id,
+            scopes=scopes,
+            options=options,
         )
 
     def fetch_tenant_token(
@@ -644,5 +662,9 @@ class OutboundApplicationByToken(AuthBase):
         """
         self._check_inbound_app_token(token)
         return _OutboundApplicationTokenFetcher.fetch_tenant_token(
-            self._auth, token, app_id, tenant_id, options
+            http=self._http,
+            token=token,
+            app_id=app_id,
+            tenant_id=tenant_id,
+            options=options,
         )

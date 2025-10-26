@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Iterable
+import os
+from typing import Iterable, Optional
 
 import requests
 
@@ -16,6 +17,7 @@ from descope.authmethod.totp import TOTP  # noqa: F401
 from descope.authmethod.webauthn import WebAuthn  # noqa: F401
 from descope.common import DEFAULT_TIMEOUT_SECONDS, AccessKeyLoginOptions, EndpointsV1
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
+from descope.http_client import HTTPClient
 from descope.mgmt import MGMT  # noqa: F401
 
 
@@ -25,35 +27,50 @@ class DescopeClient:
     def __init__(
         self,
         project_id: str,
-        public_key: dict | None = None,
+        public_key: Optional[dict] = None,
         skip_verify: bool = False,
-        management_key: str | None = None,
+        management_key: Optional[str] = None,
         timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
         jwt_validation_leeway: int = 5,
-        auth_management_key: str | None = None,
-        fga_cache_url: str | None = None,
+        auth_management_key: Optional[str] = None,
+        fga_cache_url: Optional[str] = None,
     ):
-        auth = Auth(
+        # Auth Initialization
+        auth_http_client = HTTPClient(
+            project_id=project_id,
+            timeout_seconds=timeout_seconds,
+            secure=not skip_verify,
+            management_key=auth_management_key
+            or os.getenv("DESCOPE_AUTH_MANAGEMENT_KEY"),
+        )
+        self._auth = Auth(
             project_id,
             public_key,
-            skip_verify,
-            management_key,
-            timeout_seconds,
             jwt_validation_leeway,
-            auth_management_key,
-            fga_cache_url,
+            http_client=auth_http_client,
         )
-        self._auth = auth
-        self._mgmt = MGMT(auth)
-        self._magiclink = MagicLink(auth)
-        self._enchantedlink = EnchantedLink(auth)
-        self._oauth = OAuth(auth)
-        self._saml = SAML(auth)  # deprecated
-        self._sso = SSO(auth)
-        self._otp = OTP(auth)
-        self._totp = TOTP(auth)
-        self._webauthn = WebAuthn(auth)
-        self._password = Password(auth)
+        self._magiclink = MagicLink(self._auth)
+        self._enchantedlink = EnchantedLink(self._auth)
+        self._oauth = OAuth(self._auth)
+        self._saml = SAML(self._auth)  # deprecated
+        self._sso = SSO(self._auth)
+        self._otp = OTP(self._auth)
+        self._totp = TOTP(self._auth)
+        self._webauthn = WebAuthn(self._auth)
+        self._password = Password(self._auth)
+
+        # Management Initialization
+        mgmt_http_client = HTTPClient(
+            project_id=project_id,
+            base_url=auth_http_client.base_url,
+            timeout_seconds=auth_http_client.timeout_seconds,
+            secure=auth_http_client.secure,
+            management_key=management_key or os.getenv("DESCOPE_MANAGEMENT_KEY"),
+        )
+        self._mgmt = MGMT(
+            http_client=mgmt_http_client,
+            fga_cache_url=fga_cache_url,
+        )
 
     @property
     def mgmt(self):
@@ -295,7 +312,7 @@ class DescopeClient:
         return matched
 
     def validate_session(
-        self, session_token: str, audience: str | Iterable[str] | None = None
+        self, session_token: str, audience: Optional[Iterable[str] | str] = None
     ) -> dict:
         """
         Validate a session token. Call this function for every incoming request to your
@@ -318,7 +335,7 @@ class DescopeClient:
         return self._auth.validate_session(session_token, audience)
 
     def refresh_session(
-        self, refresh_token: str, audience: str | Iterable[str] | None = None
+        self, refresh_token: str, audience: Optional[Iterable[str] | str] = None
     ) -> dict:
         """
         Refresh a session. Call this function when a session expires and needs to be refreshed.
@@ -339,7 +356,7 @@ class DescopeClient:
         self,
         session_token: str,
         refresh_token: str,
-        audience: str | Iterable[str] | None = None,
+        audience: Optional[Iterable[str] | str] = None,
     ) -> dict:
         """
         Validate the session token and refresh it if it has expired, the session token will automatically be refreshed.
@@ -383,7 +400,7 @@ class DescopeClient:
             )
 
         uri = EndpointsV1.logout_path
-        return self._auth.do_post(uri, {}, None, refresh_token)
+        return self._auth.http_client.post(uri, body={}, pswd=refresh_token)
 
     def logout_all(self, refresh_token: str) -> requests.Response:
         """
@@ -406,7 +423,7 @@ class DescopeClient:
             )
 
         uri = EndpointsV1.logout_all_path
-        return self._auth.do_post(uri, {}, None, refresh_token)
+        return self._auth.http_client.post(uri, body={}, pswd=refresh_token)
 
     def me(self, refresh_token: str) -> dict:
         """
@@ -430,8 +447,8 @@ class DescopeClient:
             )
 
         uri = EndpointsV1.me_path
-        response = self._auth.do_get(
-            uri=uri, params=None, allow_redirects=None, pswd=refresh_token
+        response = self._auth.http_client.get(
+            uri=uri, allow_redirects=None, pswd=refresh_token
         )
         return response.json()
 
@@ -439,7 +456,7 @@ class DescopeClient:
         self,
         refresh_token: str,
         dct: bool = False,
-        ids: list[str] | None = None,
+        ids: Optional[list[str]] = None,
     ) -> dict:
         """
         Retrieve tenant attributes that user belongs to, one of dct/ids must be populated .
@@ -479,7 +496,7 @@ class DescopeClient:
             body["ids"] = ids
 
         uri = EndpointsV1.my_tenants_path
-        response = self._auth.do_post(uri, body, None, refresh_token)
+        response = self._auth.http_client.post(uri, body=body, pswd=refresh_token)
         return response.json()
 
     def history(self, refresh_token: str) -> list[dict]:
@@ -512,16 +529,16 @@ class DescopeClient:
             )
 
         uri = EndpointsV1.history_path
-        response = self._auth.do_get(
-            uri=uri, params=None, allow_redirects=None, pswd=refresh_token
+        response = self._auth.http_client.get(
+            uri=uri, allow_redirects=None, pswd=refresh_token
         )
         return response.json()
 
     def exchange_access_key(
         self,
         access_key: str,
-        audience: str | Iterable[str] | None = None,
-        login_options: AccessKeyLoginOptions | None = None,
+        audience: Optional[Iterable[str] | str] = None,
+        login_options: Optional[AccessKeyLoginOptions] = None,
     ) -> dict:
         """
         Return a new session token for the given access key

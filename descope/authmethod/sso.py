@@ -36,8 +36,11 @@ class SSO(AuthBase):
             prompt if prompt else "",
             sso_id if sso_id else "",
         )
-        response = self._auth.do_post(
-            uri, login_options.__dict__ if login_options else {}, params, refresh_token
+        response = self._http.post(
+            uri,
+            body=login_options.__dict__ if login_options else {},
+            params=params,
+            pswd=refresh_token,
         )
 
         return response.json()

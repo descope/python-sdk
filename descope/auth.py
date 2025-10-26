@@ -3,32 +3,22 @@ from __future__ import annotations
 import copy
 import json
 import os
-import platform
 import re
 from http import HTTPStatus
 from threading import Lock
-from typing import Iterable
+from typing import Iterable, Optional
 
 import jwt
-
-try:
-    from importlib.metadata import version
-except ImportError:
-    from pkg_resources import get_distribution
-
 import requests
 from email_validator import EmailNotValidError, validate_email
 from jwt import ExpiredSignatureError, ImmatureSignatureError
 
 from descope.common import (
-    COOKIE_DATA_NAME,
     DEFAULT_BASE_URL,
     DEFAULT_DOMAIN,
-    DEFAULT_TIMEOUT_SECONDS,
     DEFAULT_URL_PREFIX,
     PHONE_REGEX,
     REFRESH_SESSION_COOKIE_NAME,
-    REFRESH_SESSION_TOKEN_NAME,
     SESSION_TOKEN_NAME,
     AccessKeyLoginOptions,
     DeliveryMethod,
@@ -45,21 +35,10 @@ from descope.exceptions import (
     AuthException,
     RateLimitException,
 )
-
-
-def sdk_version():
-    try:
-        return version("descope")
-    except NameError:
-        return get_distribution("descope").version
-
-
-_default_headers = {
-    "Content-Type": "application/json",
-    "x-descope-sdk-name": "python",
-    "x-descope-sdk-python-version": platform.python_version(),
-    "x-descope-sdk-version": sdk_version(),
-}
+from descope.http_client import HTTPClient
+from descope.jwt_common import adjust_properties as jwt_adjust_properties
+from descope.jwt_common import generate_auth_info as jwt_generate_auth_info
+from descope.jwt_common import generate_jwt_response as jwt_generate_jwt_response
 
 
 class Auth:
@@ -67,14 +46,11 @@ class Auth:
 
     def __init__(
         self,
-        project_id: str | None = None,
-        public_key: dict | str | None = None,
-        skip_verify: bool = False,
-        management_key: str | None = None,
-        timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
+        project_id: Optional[str] = None,
+        public_key: Optional[dict | str] = None,
         jwt_validation_leeway: int = 5,
-        auth_management_key: str | None = None,
-        fga_cache_url: str | None = None,
+        *,
+        http_client: HTTPClient,
     ):
         self.lock_public_keys = Lock()
         # validate project id
@@ -90,17 +66,8 @@ class Auth:
             )
         self.project_id = project_id
         self.jwt_validation_leeway = jwt_validation_leeway
-        self.secure = not skip_verify
 
-        self.base_url = os.getenv("DESCOPE_BASE_URI")
-        if not self.base_url:
-            self.base_url = self.base_url_for_project_id(self.project_id)
-        self.timeout_seconds = timeout_seconds
-        self.management_key = management_key or os.getenv("DESCOPE_MANAGEMENT_KEY")
-        self.auth_management_key = auth_management_key or os.getenv(
-            "DESCOPE_AUTH_MANAGEMENT_KEY"
-        )
-        self.fga_cache_url = fga_cache_url
+        self._http = http_client
 
         public_key = public_key or os.getenv("DESCOPE_PUBLIC_KEY")
         with self.lock_public_keys:
@@ -140,103 +107,12 @@ class Auth:
         except (ValueError, TypeError):
             return 0
 
-    def do_get(
-        self,
-        uri: str,
-        params=None,
-        allow_redirects=None,
-        pswd: str | None = None,
-    ) -> requests.Response:
-        response = requests.get(
-            f"{self.base_url}{uri}",
-            headers=self._get_default_headers(pswd),
-            params=params,
-            allow_redirects=allow_redirects,
-            verify=self.secure,
-            timeout=self.timeout_seconds,
-        )
-        self._raise_from_response(response)
-        return response
-
-    def do_post(
-        self,
-        uri: str,
-        body: dict | list[dict] | list[str] | None,
-        params=None,
-        pswd: str | None = None,
-    ) -> requests.Response:
-        response = requests.post(
-            f"{self.base_url}{uri}",
-            headers=self._get_default_headers(pswd),
-            json=body,
-            allow_redirects=False,
-            verify=self.secure,
-            params=params,
-            timeout=self.timeout_seconds,
-        )
-        self._raise_from_response(response)
-        return response
-
-    def do_patch(
-        self,
-        uri: str,
-        body: dict | list[dict] | list[str] | None,
-        params=None,
-        pswd: str | None = None,
-    ) -> requests.Response:
-        response = requests.patch(
-            f"{self.base_url}{uri}",
-            headers=self._get_default_headers(pswd),
-            json=body,
-            allow_redirects=False,
-            verify=self.secure,
-            params=params,
-            timeout=self.timeout_seconds,
-        )
-        self._raise_from_response(response)
-        return response
-
-    def do_delete(
-        self, uri: str, params=None, pswd: str | None = None
-    ) -> requests.Response:
-        response = requests.delete(
-            f"{self.base_url}{uri}",
-            params=params,
-            headers=self._get_default_headers(pswd),
-            allow_redirects=False,
-            verify=self.secure,
-            timeout=self.timeout_seconds,
-        )
-        self._raise_from_response(response)
-        return response
-
-    def do_post_with_custom_base_url(
-        self,
-        uri: str,
-        body: dict | list[dict] | list[str] | None,
-        custom_base_url: str | None = None,
-        params=None,
-        pswd: str | None = None,
-    ) -> requests.Response:
-        """
-        Post request with optional custom base URL.
-        If base_url is provided, use it instead of self.base_url.
-        """
-        effective_base_url = custom_base_url if custom_base_url else self.base_url
-        response = requests.post(
-            f"{effective_base_url}{uri}",
-            headers=self._get_default_headers(pswd),
-            json=body,
-            allow_redirects=False,
-            verify=self.secure,
-            params=params,
-            timeout=self.timeout_seconds,
-        )
-        self._raise_from_response(response)
-        return response
+    @property
+    def http_client(self) -> HTTPClient:
+        return self._http
 
     def exchange_token(
-        self, uri, code: str, audience: str | None | Iterable[str] = None
+        self, uri, code: str, audience: Optional[Iterable[str] | str] = None
     ) -> dict:
         if not code:
             raise AuthException(
@@ -246,7 +122,7 @@ class Auth:
             )
 
         body = Auth._compose_exchange_body(code)
-        response = self.do_post(uri=uri, body=body, params=None)
+        response = self._http.post(uri, body=body)
         resp = response.json()
         jwt_response = self.generate_jwt_response(
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME), audience
@@ -331,23 +207,6 @@ class Auth:
         return login_id
 
     @staticmethod
-    def get_method_string(method: DeliveryMethod) -> str:
-        name = {
-            DeliveryMethod.EMAIL: "email",
-            DeliveryMethod.SMS: "sms",
-            DeliveryMethod.VOICE: "voice",
-            DeliveryMethod.WHATSAPP: "whatsapp",
-            DeliveryMethod.EMBEDDED: "Embedded",
-        }.get(method)
-
-        if not name:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, f"Unknown delivery method: {method}"
-            )
-
-        return name
-
-    @staticmethod
     def validate_email(email: str):
         if email == "":
             raise AuthException(
@@ -396,10 +255,13 @@ class Auth:
         body = {
             "loginOptions": login_options.__dict__ if login_options else {},
         }
-        server_response = self.do_post(uri=uri, body=body, params=None, pswd=access_key)
-        json = server_response.json()
+        server_response = self._http.post(uri, body=body, pswd=access_key)
+        json_body = server_response.json()
         return self._generate_auth_info(
-            response_body=json, refresh_token=None, user_jwt=False, audience=audience
+            response_body=json_body,
+            refresh_token=None,
+            user_jwt=False,
+            audience=audience,
         )
 
     @staticmethod
@@ -466,13 +328,9 @@ class Auth:
 
     def _fetch_public_keys(self) -> None:
         # This function called under mutex protection so no need to acquire it once again
-        response = requests.get(
-            f"{self.base_url}{EndpointsV2.public_key_path}/{self.project_id}",
-            headers=self._get_default_headers(),
-            verify=self.secure,
-            timeout=self.timeout_seconds,
+        response = self._http.get(
+            f"{EndpointsV2.public_key_path}/{self.project_id}",
         )
-        self._raise_from_response(response)
 
         jwks_data = response.text
         try:
@@ -494,55 +352,8 @@ class Auth:
                 pass
 
     def adjust_properties(self, jwt_response: dict, user_jwt: bool):
-        # Save permissions, roles and tenants info from Session token or from refresh token on the json top level
-        if SESSION_TOKEN_NAME in jwt_response:
-            jwt_response["permissions"] = jwt_response[SESSION_TOKEN_NAME].get(
-                "permissions", []
-            )
-            jwt_response["roles"] = jwt_response[SESSION_TOKEN_NAME].get("roles", [])
-            jwt_response["tenants"] = jwt_response[SESSION_TOKEN_NAME].get(
-                "tenants", {}
-            )
-        elif REFRESH_SESSION_TOKEN_NAME in jwt_response:
-            jwt_response["permissions"] = jwt_response[REFRESH_SESSION_TOKEN_NAME].get(
-                "permissions", []
-            )
-            jwt_response["roles"] = jwt_response[REFRESH_SESSION_TOKEN_NAME].get(
-                "roles", []
-            )
-            jwt_response["tenants"] = jwt_response[REFRESH_SESSION_TOKEN_NAME].get(
-                "tenants", {}
-            )
-        else:
-            jwt_response["permissions"] = jwt_response.get("permissions", [])
-            jwt_response["roles"] = jwt_response.get("roles", [])
-            jwt_response["tenants"] = jwt_response.get("tenants", {})
-
-        # Save the projectID also in the dict top level
-        issuer = (
-            jwt_response.get(SESSION_TOKEN_NAME, {}).get("iss", None)
-            or jwt_response.get(REFRESH_SESSION_TOKEN_NAME, {}).get("iss", None)
-            or jwt_response.get("iss", "")
-        )
-        jwt_response["projectId"] = issuer.rsplit("/")[
-            -1
-        ]  # support both url issuer and project ID issuer
-
-        sub = (
-            jwt_response.get(SESSION_TOKEN_NAME, {}).get("dsub", None)
-            or jwt_response.get(SESSION_TOKEN_NAME, {}).get("sub", None)
-            or jwt_response.get(REFRESH_SESSION_TOKEN_NAME, {}).get("dsub", None)
-            or jwt_response.get(REFRESH_SESSION_TOKEN_NAME, {}).get("sub", None)
-            or jwt_response.get("sub", "")
-        )
-        if user_jwt:
-            # Save the userID also in the dict top level
-            jwt_response["userId"] = sub
-        else:
-            # Save the AccessKeyID also in the dict top level
-            jwt_response["keyId"] = sub
-
-        return jwt_response
+        # Delegate to shared JWT utilities for normalization
+        return jwt_adjust_properties(jwt_response, user_jwt)
 
     def _generate_auth_info(
         self,
@@ -551,31 +362,14 @@ class Auth:
         user_jwt: bool,
         audience: str | None | Iterable[str] = None,
     ) -> dict:
-        jwt_response = {}
-        st_jwt = response_body.get("sessionJwt", "")
-        if st_jwt:
-            jwt_response[SESSION_TOKEN_NAME] = self._validate_token(st_jwt, audience)
-        rt_jwt = response_body.get("refreshJwt", "")
-        if rt_jwt:
-            jwt_response[REFRESH_SESSION_TOKEN_NAME] = self._validate_token(
-                rt_jwt, audience
-            )
-        elif refresh_token:
-            jwt_response[REFRESH_SESSION_TOKEN_NAME] = self._validate_token(
-                refresh_token, audience
-            )
-
-        jwt_response = self.adjust_properties(jwt_response, user_jwt)
-
-        if user_jwt:
-            jwt_response[COOKIE_DATA_NAME] = {
-                "exp": response_body.get("cookieExpiration", 0),
-                "maxAge": response_body.get("cookieMaxAge", 0),
-                "domain": response_body.get("cookieDomain", ""),
-                "path": response_body.get("cookiePath", "/"),
-            }
-
-        return jwt_response
+        # Use shared generator with class validator to preserve signature checks
+        return jwt_generate_auth_info(
+            response_body,
+            refresh_token,
+            user_jwt,
+            audience,
+            token_validator=self._validate_token,
+        )
 
     def generate_jwt_response(
         self,
@@ -583,24 +377,13 @@ class Auth:
         refresh_cookie: str | None,
         audience: str | None | Iterable[str] = None,
     ) -> dict:
-        jwt_response = self._generate_auth_info(
-            response_body, refresh_cookie, True, audience
+        # Delegate to shared implementation (keeps same output shape)
+        return jwt_generate_jwt_response(
+            response_body,
+            refresh_cookie,
+            audience,
+            token_validator=self._validate_token,
         )
-
-        jwt_response["user"] = response_body.get("user", {})
-        jwt_response["firstSeen"] = response_body.get("firstSeen", True)
-        return jwt_response
-
-    def _get_default_headers(self, pswd: str | None = None):
-        headers = _default_headers.copy()
-        headers["x-descope-project-id"] = self.project_id
-        bearer = self.project_id
-        if pswd:
-            bearer = f"{self.project_id}:{pswd}"
-        if self.auth_management_key:
-            bearer = f"{bearer}:{self.auth_management_key}"
-        headers["Authorization"] = f"Bearer {bearer}"
-        return headers
 
     # Validate a token and load the public key if needed
     def _validate_token(
@@ -709,7 +492,7 @@ class Auth:
         self._validate_token(refresh_token, audience)
 
         uri = EndpointsV1.refresh_token_path
-        response = self.do_post(uri=uri, body={}, params=None, pswd=refresh_token)
+        response = self._http.post(uri, body={}, pswd=refresh_token)
 
         resp = response.json()
         refresh_token = (
@@ -756,9 +539,7 @@ class Auth:
             )
 
         uri = EndpointsV1.select_tenant_path
-        response = self.do_post(
-            uri=uri, body={"tenant": tenant_id}, params=None, pswd=refresh_token
-        )
+        response = self._http.post(uri, body={"tenant": tenant_id}, pswd=refresh_token)
 
         resp = response.json()
         jwt_response = self.generate_jwt_response(

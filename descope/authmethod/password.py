@@ -46,7 +46,7 @@ class Password(AuthBase):
 
         uri = EndpointsV1.sign_up_password_path
         body = Password._compose_signup_body(login_id, password, user)
-        response = self._auth.do_post(uri, body)
+        response = self._http.post(uri, body=body)
 
         resp = response.json()
         jwt_response = self._auth.generate_jwt_response(
@@ -87,7 +87,9 @@ class Password(AuthBase):
             )
 
         uri = EndpointsV1.sign_in_password_path
-        response = self._auth.do_post(uri, {"loginId": login_id, "password": password})
+        response = self._http.post(
+            uri, body={"loginId": login_id, "password": password}
+        )
 
         resp = response.json()
         jwt_response = self._auth.generate_jwt_response(
@@ -135,10 +137,7 @@ class Password(AuthBase):
         if template_options is not None:
             body["templateOptions"] = template_options
 
-        response = self._auth.do_post(
-            uri,
-            body,
-        )
+        response = self._http.post(uri, body=body)
 
         return response.json()
 
@@ -171,8 +170,10 @@ class Password(AuthBase):
             )
 
         uri = EndpointsV1.update_password_path
-        self._auth.do_post(
-            uri, {"loginId": login_id, "newPassword": new_password}, None, refresh_token
+        self._http.post(
+            uri,
+            body={"loginId": login_id, "newPassword": new_password},
+            pswd=refresh_token,
         )
 
     def replace(
@@ -217,9 +218,9 @@ class Password(AuthBase):
             )
 
         uri = EndpointsV1.replace_password_path
-        response = self._auth.do_post(
+        response = self._http.post(
             uri,
-            {
+            body={
                 "loginId": login_id,
                 "oldPassword": old_password,
                 "newPassword": new_password,
@@ -250,7 +251,7 @@ class Password(AuthBase):
         AuthException: raised if get policy operation fails
         """
 
-        response = self._auth.do_get(uri=EndpointsV1.password_policy_path)
+        response = self._http.get(uri=EndpointsV1.password_policy_path)
         return response.json()
 
     @staticmethod
