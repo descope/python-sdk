@@ -4,19 +4,19 @@
 
 | Name                                |    Stmts |     Miss |   Cover |   Missing |
 |------------------------------------ | -------: | -------: | ------: | --------: |
-| descope/auth.py                     |      329 |       14 |     96% |16-17, 53-54, 97, 492-494, 610, 642, 653, 703, 738, 752, 779 |
-| descope/authmethod/enchantedlink.py |       92 |        2 |     98% |  204, 206 |
-| descope/authmethod/magiclink.py     |      103 |        4 |     96% |234, 236, 259, 261 |
+| descope/auth.py                     |      248 |        5 |     98% |318, 350-352, 486, 521 |
+| descope/authmethod/enchantedlink.py |       92 |        2 |     98% |  202, 204 |
+| descope/authmethod/magiclink.py     |      103 |        4 |     96% |233, 235, 258, 260 |
 | descope/authmethod/otp.py           |      110 |        4 |     96% |330, 332, 355, 357 |
-| descope/common.py                   |      108 |        1 |     99% |       179 |
-| descope/descope\_client.py          |      178 |        4 |     98% |68, 99, 183, 280 |
-| descope/management/audit.py         |       43 |       11 |     74% |72, 74, 76, 78, 80, 82, 84, 86, 88, 90, 92 |
+| descope/common.py                   |      113 |        1 |     99% |       179 |
+| descope/descope\_client.py          |      181 |        4 |     98% |85, 116, 200, 297 |
+| descope/management/audit.py         |       44 |       11 |     75% |74, 76, 78, 80, 82, 84, 86, 88, 90, 92, 94 |
 | descope/management/common.py        |      234 |        1 |     99% |        28 |
-| descope/management/role.py          |       29 |        1 |     97% |       156 |
-| descope/management/user.py          |      370 |       15 |     96% |69-74, 770, 1119, 1121, 1123, 1896, 1948, 1991, 1993, 1995 |
-|                           **TOTAL** | **2604** |   **57** | **98%** |           |
+| descope/management/role.py          |       30 |        1 |     97% |       154 |
+| descope/management/user.py          |      369 |       15 |     96% |68-73, 755, 1096, 1098, 1100, 1851, 1903, 1946, 1948, 1950 |
+|                           **TOTAL** | **2673** |   **48** | **98%** |           |
 
-24 files skipped due to complete coverage.
+27 files skipped due to complete coverage.
 
 
 ## Setup coverage badge
