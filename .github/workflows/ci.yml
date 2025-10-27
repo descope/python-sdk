@@ -30,6 +30,9 @@ jobs:
           - ubuntu-latest
           - macos-latest
           - windows-latest
+        async:
+          - true
+          - false
     steps:
       - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
         with:
@@ -45,12 +48,13 @@ jobs:
       - name: Run test suite
         run: tox --skip-pkg-install
         env:
-          COVERAGE_FILE: "coverage.${{ matrix.os }}.${{ matrix.py }}"
+          COVERAGE_FILE: "coverage.${{ matrix.os }}.${{ matrix.py }}.${{matrix.async}}"
+          ASYNC_MODE: ${{matrix.async}}
       - name: Store coverage file
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: coverage.${{ matrix.os }}.${{ matrix.py }}
-          path: coverage.${{ matrix.os }}.${{ matrix.py }}
+          name: "coverage.${{ matrix.os }}.${{ matrix.py }}.${{matrix.async}}"
+          path: "coverage.${{ matrix.os }}.${{ matrix.py }}.${{matrix.async}}"
           if-no-files-found: error
 
   coverage:
@@ -72,12 +76,25 @@ jobs:
           pattern: coverage.*
           merge-multiple: true
 
+      - name: Setup Python for coverage
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.13"
+
+      - name: Install coverage
+        run: python -m pip install "coverage[toml]>=7.3.1"
+
+      - name: Combine coverage files
+        run: |
+          coverage combine coverage.*
+          coverage report
+
       - name: Coverage comment
         id: coverage_comment
         uses: py-cov-action/python-coverage-comment-action@b3d7e98bf5528b07d6951ef7a93e2b156f960112 # v3.1.0
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MERGE_COVERAGE_FILES: true
+          MERGE_COVERAGE_FILES: false
           ANNOTATE_MISSING_LINES: true
           VERBOSE: true
 
