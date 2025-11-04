@@ -952,7 +952,7 @@ class TestAuth(common.DescopeTest):
 
     def test_validate_session_audience_auto_detection(self):
         """Test that validate_session automatically detects audience when token audience matches project ID"""
-        auth = Auth(self.dummy_project_id, self.public_key_dict)
+        auth = Auth(self.dummy_project_id, self.public_key_dict, http_client=self.make_http_client())
         
         with patch("jwt.get_unverified_header") as mock_get_header, patch("jwt.decode") as mock_decode:
             mock_get_header.return_value = {"alg": "ES384", "kid": self.public_key_dict["kid"]}
@@ -975,7 +975,7 @@ class TestAuth(common.DescopeTest):
 
     def test_validate_session_audience_auto_detection_list(self):
         """Test that validate_session automatically detects audience when token audience is a list containing project ID"""
-        auth = Auth(self.dummy_project_id, self.public_key_dict)
+        auth = Auth(self.dummy_project_id, self.public_key_dict, http_client=self.make_http_client())
         
         with patch("jwt.get_unverified_header") as mock_get_header, patch("jwt.decode") as mock_decode:
             mock_get_header.return_value = {"alg": "ES384", "kid": self.public_key_dict["kid"]}
@@ -994,7 +994,7 @@ class TestAuth(common.DescopeTest):
 
     def test_validate_session_audience_auto_detection_no_match(self):
         """Test that validate_session does not auto-detect audience when token audience doesn't match project ID"""
-        auth = Auth(self.dummy_project_id, self.public_key_dict)
+        auth = Auth(self.dummy_project_id, self.public_key_dict, http_client=self.make_http_client())
         
         with patch("jwt.get_unverified_header") as mock_get_header, patch("jwt.decode") as mock_decode:
             mock_get_header.return_value = {"alg": "ES384", "kid": self.public_key_dict["kid"]}
@@ -1013,7 +1013,7 @@ class TestAuth(common.DescopeTest):
 
     def test_validate_session_explicit_audience(self):
         """Test that validate_session uses explicit audience parameter instead of auto-detection"""
-        auth = Auth(self.dummy_project_id, self.public_key_dict)
+        auth = Auth(self.dummy_project_id, self.public_key_dict, http_client=self.make_http_client())
         explicit_audience = "explicit-audience"
         
         with patch("jwt.get_unverified_header") as mock_get_header, patch("jwt.decode") as mock_decode:
@@ -1030,7 +1030,7 @@ class TestAuth(common.DescopeTest):
 
     def test_validate_and_refresh_session_audience_auto_detection(self):
         """Test that validate_and_refresh_session automatically detects audience when token audience matches project ID"""
-        auth = Auth(self.dummy_project_id, self.public_key_dict)
+        auth = Auth(self.dummy_project_id, self.public_key_dict, http_client=self.make_http_client())
         
         with patch("jwt.get_unverified_header") as mock_get_header, patch("jwt.decode") as mock_decode:
             mock_get_header.return_value = {"alg": "ES384", "kid": self.public_key_dict["kid"]}
@@ -1058,7 +1058,7 @@ class TestAuth(common.DescopeTest):
 
     def test_validate_session_audience_mismatch_fails(self):
         """Test that validate_session fails when token audience doesn't match project ID and no explicit audience is provided"""
-        auth = Auth(self.dummy_project_id, self.public_key_dict)
+        auth = Auth(self.dummy_project_id, self.public_key_dict, http_client=self.make_http_client())
         
         with patch("jwt.get_unverified_header") as mock_get_header, patch("jwt.decode") as mock_decode:
             mock_get_header.return_value = {"alg": "ES384", "kid": self.public_key_dict["kid"]}
