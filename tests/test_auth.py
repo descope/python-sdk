@@ -1076,6 +1076,7 @@ class TestAuth(common.DescopeTest):
                     # Verify the error is about invalid audience
                     self.assertIn("Invalid audience", str(cm.exception))
                     self.assertEqual(mock_decode.call_count, 2)
+
     def test_http_client_authorization_header_variants(self):
         # Base client without management key
         client = self.make_http_client()
