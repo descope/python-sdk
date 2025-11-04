@@ -1,6 +1,16 @@
 from enum import Enum
 from typing import List, Optional
 
+class SessionExiprationUnit(Enum):
+    MINUTES = "minutes"
+    HOURS = "hours"
+    DAYS = "days"
+    WEEKS = "weeks"
+
+class TenantAuthType(Enum):
+    NONE = "none"
+    SAML = "saml"
+    OIDC = "oidc"
 
 class AccessType(Enum):
     OFFLINE = "offline"
@@ -35,6 +45,7 @@ class MgmtV1:
     tenant_update_path = "/v1/mgmt/tenant/update"
     tenant_delete_path = "/v1/mgmt/tenant/delete"
     tenant_load_path = "/v1/mgmt/tenant"
+    tenant_settings_path = "/v1/mgmt/tenant/settings"
     tenant_load_all_path = "/v1/mgmt/tenant/all"
     tenant_search_all_path = "/v1/mgmt/tenant/search"
 
@@ -292,6 +303,42 @@ def associated_tenants_to_dict(associated_tenants: List[AssociatedTenant]) -> li
             )
     return associated_tenant_list
 
+class tenantSettings:
+    """
+    Represents tenant settings object.
+    """
+
+    def __init__(
+        self,
+        self_provisioning_domains: List[str],
+        domains: Optional[List[str]] = None,
+        auth_type: Optional[TenantAuthType] = None,
+        session_settings_enabled: Optional[bool] = False,
+        refresh_token_expiration: Optional[int] = None,
+        refresh_token_expiration_unit: Optional[SessionExiprationUnit] = None,
+        session_token_expiration: Optional[int] = None,
+        session_token_expiration_unit: Optional[SessionExiprationUnit] = None,
+        stepup_token_expiration: Optional[int] = None,
+        stepup_token_expiration_unit: Optional[SessionExiprationUnit] = None,
+        enable_inactivity: Optional[bool] = False,
+        inactivity_time: Optional[int] = None,
+        inactivity_time_unit: Optional[SessionExiprationUnit] = None,
+        JITDisabled: Optional[bool] = False,
+    ):
+        self.domains = domains
+        self.self_provisioning_domains = self_provisioning_domains
+        self.auth_type = auth_type
+        self.session_settings_enabled = session_settings_enabled
+        self.refresh_token_expiration = refresh_token_expiration
+        self.refresh_token_expiration_unit = refresh_token_expiration_unit
+        self.session_token_expiration = session_token_expiration
+        self.session_token_expiration_unit = session_token_expiration_unit
+        self.stepup_token_expiration = stepup_token_expiration
+        self.stepup_token_expiration_unit = stepup_token_expiration_unit
+        self.enable_inactivity = enable_inactivity
+        self.inactivity_time = inactivity_time
+        self.inactivity_time_unit = inactivity_time_unit
+        self.JITDisabled = JITDisabled
 
 class SAMLIDPAttributeMappingInfo:
     """

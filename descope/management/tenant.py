@@ -1,7 +1,7 @@
 from typing import Any, List, Optional
 
 from descope._http_base import HTTPBase
-from descope.management.common import MgmtV1
+from descope.management.common import MgmtV1, tenantSettings
 
 
 class Tenant(HTTPBase):
@@ -92,6 +92,27 @@ class Tenant(HTTPBase):
             ),
         )
 
+    def update_settings(
+        self,
+        id: str,
+        tenant_settings: tenantSettings
+    ):
+        """
+        Update an existing tenant's session settings.
+
+        Args:
+        id (str): The ID of the tenant to update.
+        session_settings (dict): The session settings to set for the tenant.
+
+        Raise:
+        AuthException: raised if creation operation fails
+        """
+        self._http.post(
+            MgmtV1.tenant_settings_path,
+            params={"id": id},
+            body= tenant_settings,
+        )
+
     def delete(
         self,
         id: str,
@@ -131,6 +152,35 @@ class Tenant(HTTPBase):
         """
         response = self._http.get(
             MgmtV1.tenant_load_path,
+            params={"id": id},
+        )
+        return response.json()
+    
+    def load_settings(
+        self,
+        id: str,
+    ) -> dict:
+        """
+        Load tenant session settings by id.
+
+        Args:
+        id (str): The ID of the tenant to load session settings for.
+
+        Return value (dict):
+        Return dict in the format
+            { "domains":<list[str]>, "selfProvisioningDomains":<list[str]>, "authType":<str>,
+             "enabled":<bool>, "refreshTokenExpiration":<int>, "refreshTokenExpirationUnit":<str>,
+             "sessionTokenExpiration":<int>, "sessionTokenExpirationUnit":<str>,
+             "stepupTokenExpiration":<int>, "stepupTokenExpirationUnit":<str>,
+             "enableInactivity":<bool>, "inactivityTime":<int>, "inactivityTimeUnit":<str>,
+             "JITDisabled":<bool> }
+        Containing the loaded tenant session settings.
+
+        Raise:
+        AuthException: raised if load operation fails
+        """
+        response = self._http.get(
+            MgmtV1.tenant_settings_path,
             params={"id": id},
         )
         return response.json()

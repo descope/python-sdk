@@ -366,3 +366,90 @@ class TestTenant(common.DescopeTest):
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
+
+    def test_update_settings(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.tenant.update_settings,
+                "valid-id",
+                {},
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            tenant_settings = {
+                "domains": ["domain1.com", "domain2.com"],
+                "authType": "oidc",
+                "sessionSettingsEnabled": True,
+            }
+            self.assertIsNone(
+                client.mgmt.tenant.update_settings("t1", tenant_settings)
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_settings_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                json=tenant_settings,
+                allow_redirects=False,
+                verify=True,
+                params={"id": "t1"},
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_load_settings(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flows
+        with patch("requests.get") as mock_get:
+            mock_get.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.tenant.load_settings,
+                "valid-id",
+            )
+
+        # Test success flow
+        with patch("requests.get") as mock_get:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads(
+                """
+                {"domains": ["domain1.com", "domain2.com"], "authType": "oidc", "sessionSettingsEnabled": true}
+                """
+            )
+            mock_get.return_value = network_resp
+            resp = client.mgmt.tenant.load_settings("t1")
+            self.assertEqual(resp["domains"], ["domain1.com", "domain2.com"])
+            self.assertEqual(resp["authType"], "oidc")
+            self.assertEqual(resp["sessionSettingsEnabled"], True)
+            mock_get.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_settings_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params={"id": "t1"},
+                allow_redirects=True,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
