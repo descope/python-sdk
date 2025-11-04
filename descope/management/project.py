@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 from typing import List, Optional
 
-from descope._auth_base import AuthBase
+from descope._http_base import HTTPBase
 from descope.management.common import MgmtV1
 
 
-class Project(AuthBase):
+class Project(HTTPBase):
     def update_name(
         self,
         name: str,
@@ -17,12 +19,11 @@ class Project(AuthBase):
         Raise:
         AuthException: raised if operation fails
         """
-        self._auth.do_post(
+        self._http.post(
             MgmtV1.project_update_name,
-            {
+            body={
                 "name": name,
             },
-            pswd=self._auth.management_key,
         )
 
     def update_tags(
@@ -37,12 +38,11 @@ class Project(AuthBase):
         Raise:
         AuthException: raised if operation fails
         """
-        self._auth.do_post(
+        self._http.post(
             MgmtV1.project_update_tags,
-            {
+            body={
                 "tags": tags,
             },
-            pswd=self._auth.management_key,
         )
 
     def list_projects(
@@ -59,10 +59,9 @@ class Project(AuthBase):
         Raise:
         AuthException: raised if operation fails
         """
-        response = self._auth.do_post(
+        response = self._http.post(
             MgmtV1.project_list_projects,
-            {},
-            pswd=self._auth.management_key,
+            body={},
         )
         resp = response.json()
 
@@ -96,14 +95,13 @@ class Project(AuthBase):
         Raise:
         AuthException: raised if clone operation fails
         """
-        response = self._auth.do_post(
+        response = self._http.post(
             MgmtV1.project_clone,
-            {
+            body={
                 "name": name,
                 "environment": environment,
                 "tags": tags,
             },
-            pswd=self._auth.management_key,
         )
         return response.json()
 
@@ -123,10 +121,9 @@ class Project(AuthBase):
         Raise:
         AuthException: raised if export operation fails
         """
-        response = self._auth.do_post(
+        response = self._http.post(
             MgmtV1.project_export,
-            {},
-            pswd=self._auth.management_key,
+            body={},
         )
         return response.json()["files"]
 
@@ -147,12 +144,11 @@ class Project(AuthBase):
         Raise:
         AuthException: raised if import operation fails
         """
-        self._auth.do_post(
+        self._http.post(
             MgmtV1.project_import,
-            {
+            body={
                 "files": files,
             },
-            pswd=self._auth.management_key,
         )
         return
 

@@ -123,7 +123,7 @@ class TestAccessKey(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 params={"id": "key-id"},
-                allow_redirects=None,
+                allow_redirects=True,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

@@ -31,8 +31,11 @@ class SAML(AuthBase):
 
         uri = EndpointsV1.auth_saml_start_path
         params = SAML._compose_start_params(tenant, return_url)
-        response = self._auth.do_post(
-            uri, login_options.__dict__ if login_options else {}, params, refresh_token
+        response = self._http.post(
+            uri,
+            body=login_options.__dict__ if login_options else {},
+            params=params,
+            pswd=refresh_token,
         )
 
         return response.json()

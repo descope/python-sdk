@@ -7,3 +7,4 @@ class AuthBase:
 
     def __init__(self, auth: Auth):
         self._auth = auth
+        self._http = auth.http_client

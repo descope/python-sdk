@@ -9,7 +9,7 @@ from descope.management.common import MgmtLoginOptions, MgmtV1
 from .. import common
 
 
-class TestUser(common.DescopeTest):
+class TestJWT(common.DescopeTest):
     def setUp(self) -> None:
         super().setUp()
         self.dummy_project_id = "dummy"
