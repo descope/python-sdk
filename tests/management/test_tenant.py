@@ -388,13 +388,8 @@ class TestTenant(common.DescopeTest):
         # Test success flow
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
-            tenant_settings = {
-                "domains": ["domain1.com", "domain2.com"],
-                "authType": "oidc",
-                "sessionSettingsEnabled": True,
-            }
             self.assertIsNone(
-                client.mgmt.tenant.update_settings("t1", tenant_settings)
+                client.mgmt.tenant.update_settings("t1", self_provisioning_domains=["domain1.com"], domains=["domain1.com", "domain2.com"], auth_type="oidc", session_settings_enabled=True)
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_settings_path}",
@@ -403,10 +398,16 @@ class TestTenant(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                     "x-descope-project-id": self.dummy_project_id,
                 },
-                json=tenant_settings,
+                json={
+                    "tenantId": "t1",
+                    "selfProvisioningDomains": ["domain1.com"],
+                    "domains": ["domain1.com", "domain2.com"],
+                    "authType": "oidc",
+                    "sessionSettingsEnabled": True
+                },
                 allow_redirects=False,
+                params=None,
                 verify=True,
-                params={"id": "t1"},
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 

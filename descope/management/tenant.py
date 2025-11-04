@@ -1,7 +1,7 @@
 from typing import Any, List, Optional
 
 from descope._http_base import HTTPBase
-from descope.management.common import MgmtV1, tenantSettings
+from descope.management.common import MgmtV1, TenantAuthType, SessionExiprationUnit
 
 
 class Tenant(HTTPBase):
@@ -95,7 +95,20 @@ class Tenant(HTTPBase):
     def update_settings(
         self,
         id: str,
-        tenant_settings: tenantSettings
+        self_provisioning_domains: List[str],
+        domains: Optional[List[str]] = None,
+        auth_type: Optional[TenantAuthType] = None,
+        session_settings_enabled: Optional[bool] = False,
+        refresh_token_expiration: Optional[int] = None,
+        refresh_token_expiration_unit: Optional[SessionExiprationUnit] = None,
+        session_token_expiration: Optional[int] = None,
+        session_token_expiration_unit: Optional[SessionExiprationUnit] = None,
+        stepup_token_expiration: Optional[int] = None,
+        stepup_token_expiration_unit: Optional[SessionExiprationUnit] = None,
+        enable_inactivity: Optional[bool] = None,
+        inactivity_time: Optional[int] = None,
+        inactivity_time_unit: Optional[SessionExiprationUnit] = None,
+        JITDisabled: Optional[bool] = None
     ):
         """
         Update an existing tenant's session settings.
@@ -107,10 +120,42 @@ class Tenant(HTTPBase):
         Raise:
         AuthException: raised if creation operation fails
         """
+        body: dict[str, Any] = {
+            "tenantId": id,
+            "selfProvisioningDomains": self_provisioning_domains,
+        }
+        
+        if domains is not None:
+            body["domains"] = domains
+        if auth_type is not None:
+            body["authType"] = auth_type
+        if session_settings_enabled is not None:
+            body["sessionSettingsEnabled"] = session_settings_enabled
+        if refresh_token_expiration is not None:
+            body["refreshTokenExpiration"] = refresh_token_expiration
+        if refresh_token_expiration_unit is not None:
+            body["refreshTokenExpirationUnit"] = refresh_token_expiration_unit
+        if session_token_expiration is not None:
+            body["sessionTokenExpiration"] = session_token_expiration
+        if session_token_expiration_unit is not None:
+            body["sessionTokenExpirationUnit"] = session_token_expiration_unit
+        if stepup_token_expiration is not None:
+            body["stepupTokenExpiration"] = stepup_token_expiration
+        if stepup_token_expiration_unit is not None:
+            body["stepupTokenExpirationUnit"] = stepup_token_expiration_unit
+        if enable_inactivity is not None:
+            body["enableInactivity"] = enable_inactivity
+        if inactivity_time is not None:
+            body["inactivityTime"] = inactivity_time
+        if inactivity_time_unit is not None:
+            body["inactivityTimeUnit"] = inactivity_time_unit
+        if JITDisabled is not None:
+            body["JITDisabled"] = JITDisabled
+        
         self._http.post(
             MgmtV1.tenant_settings_path,
-            params={"id": id},
-            body= tenant_settings,
+            body=body,
+            params=None
         )
 
     def delete(
