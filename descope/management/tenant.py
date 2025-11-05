@@ -1,7 +1,7 @@
 from typing import Any, List, Optional
 
 from descope._http_base import HTTPBase
-from descope.management.common import MgmtV1
+from descope.management.common import MgmtV1, TenantAuthType, SessionExpirationUnit
 
 
 class Tenant(HTTPBase):
@@ -92,6 +92,73 @@ class Tenant(HTTPBase):
             ),
         )
 
+    def update_settings(
+        self,
+        id: str,
+        self_provisioning_domains: List[str],
+        domains: Optional[List[str]] = None,
+        auth_type: Optional[TenantAuthType] = None,
+        session_settings_enabled: Optional[bool] = None,
+        refresh_token_expiration: Optional[int] = None,
+        refresh_token_expiration_unit: Optional[SessionExpirationUnit] = None,
+        session_token_expiration: Optional[int] = None,
+        session_token_expiration_unit: Optional[SessionExpirationUnit] = None,
+        stepup_token_expiration: Optional[int] = None,
+        stepup_token_expiration_unit: Optional[SessionExpirationUnit] = None,
+        enable_inactivity: Optional[bool] = None,
+        inactivity_time: Optional[int] = None,
+        inactivity_time_unit: Optional[SessionExpirationUnit] = None,
+        JITDisabled: Optional[bool] = None
+    ):
+        """
+        Update an existing tenant's session settings.
+
+        Args:
+            id (str): The ID of the tenant to update.
+            self_provisioning_domains (List[str]): Domains for self-provisioning.
+            domains (Optional[List[str]]): List of domains associated with the tenant.
+            auth_type (Optional[TenantAuthType]): Authentication type for the tenant.
+            session_settings_enabled (Optional[bool]): Whether session settings are enabled.
+            refresh_token_expiration (Optional[int]): Expiration time for refresh tokens.
+            refresh_token_expiration_unit (Optional[SessionExiprationUnit]): Unit for refresh token expiration.
+            session_token_expiration (Optional[int]): Expiration time for session tokens.
+            session_token_expiration_unit (Optional[SessionExiprationUnit]): Unit for session token expiration.
+            stepup_token_expiration (Optional[int]): Expiration time for step-up tokens.
+            stepup_token_expiration_unit (Optional[SessionExiprationUnit]): Unit for step-up token expiration.
+            enable_inactivity (Optional[bool]): Whether inactivity timeout is enabled.
+            inactivity_time (Optional[int]): Inactivity timeout duration.
+            inactivity_time_unit (Optional[SessionExiprationUnit]): Unit for inactivity timeout.
+            JITDisabled (Optional[bool]): Whether JIT is disabled.
+
+        Raise:
+            AuthException: raised if update operation fails
+        """
+        body: dict[str, Any] = {
+            "tenantId": id,
+            "selfProvisioningDomains": self_provisioning_domains,
+            "domains": domains,
+            "authType": auth_type,
+            "enabled": session_settings_enabled,
+            "refreshTokenExpiration": refresh_token_expiration,
+            "refreshTokenExpirationUnit": refresh_token_expiration_unit,
+            "sessionTokenExpiration": session_token_expiration,
+            "sessionTokenExpirationUnit": session_token_expiration_unit,
+            "stepupTokenExpiration": stepup_token_expiration,
+            "stepupTokenExpirationUnit": stepup_token_expiration_unit,
+            "enableInactivity": enable_inactivity,
+            "inactivityTime": inactivity_time,
+            "inactivityTimeUnit": inactivity_time_unit,
+            "JITDisabled": JITDisabled,
+        }
+        
+        body = {k: v for k, v in body.items() if v is not None}
+
+        self._http.post(
+            MgmtV1.tenant_settings_path,
+            body=body,
+            params=None
+        )
+
     def delete(
         self,
         id: str,
@@ -131,6 +198,35 @@ class Tenant(HTTPBase):
         """
         response = self._http.get(
             MgmtV1.tenant_load_path,
+            params={"id": id},
+        )
+        return response.json()
+    
+    def load_settings(
+        self,
+        id: str,
+    ) -> dict:
+        """
+        Load tenant session settings by id.
+
+        Args:
+        id (str): The ID of the tenant to load session settings for.
+
+        Return value (dict):
+        Return dict in the format
+            { "domains":<list[str]>, "selfProvisioningDomains":<list[str]>, "authType":<str>,
+             "enabled":<bool>, "refreshTokenExpiration":<int>, "refreshTokenExpirationUnit":<str>,
+             "sessionTokenExpiration":<int>, "sessionTokenExpirationUnit":<str>,
+             "stepupTokenExpiration":<int>, "stepupTokenExpirationUnit":<str>,
+             "enableInactivity":<bool>, "inactivityTime":<int>, "inactivityTimeUnit":<str>,
+             "JITDisabled":<bool> }
+        Containing the loaded tenant session settings.
+
+        Raise:
+        AuthException: raised if load operation fails
+        """
+        response = self._http.get(
+            MgmtV1.tenant_settings_path,
             params={"id": id},
         )
         return response.json()

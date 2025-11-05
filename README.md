@@ -556,6 +556,14 @@ descope_client.mgmt.tenant.update(
     custom_attributes={"attribute-name": "value"},
 )
 
+# Managing the tenant's settings
+# Getting the settings
+descope_client.mgmt.tenant.load_settings(id="my-custom-id")
+
+# updating the settings
+descope_client.mgmt.tenant.update_settings(id="my-custom-id", self_provisioning_domains=["domain.com"], session_settings_enabled=True, refresh_token_expiration=1, refresh_token_expiration_unit="hours")
+
+
 # Tenant deletion cannot be undone. Use carefully.
 # Pass true to cascade value, in case you want to delete all users/keys associated only with this tenant
 descope_client.mgmt.tenant.delete(id="my-custom-id", cascade=False)
