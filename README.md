@@ -561,11 +561,6 @@ descope_client.mgmt.tenant.update(
 descope_client.mgmt.tenant.load_settings(id="my-custom-id")
 
 # updating the session settings
-tenant_settings = {
-    session_settings_enabled = True,
-    self_provisioning_domains = ["ackme.com"],
-
-}
 descope_client.mgmt.tenant.update_settings(id="my-custom-id", self_provisioning_domain=["domain.com"], session_settings_enabled=True, refresh_token_expiration=1, refresh_token_expiration_unit="hours")
 
 
