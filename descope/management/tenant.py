@@ -114,11 +114,24 @@ class Tenant(HTTPBase):
         Update an existing tenant's session settings.
 
         Args:
-        id (str): The ID of the tenant to update.
-        session_settings (dict): The session settings to set for the tenant.
+            id (str): The ID of the tenant to update.
+            self_provisioning_domains (List[str]): Domains for self-provisioning.
+            domains (Optional[List[str]]): List of domains associated with the tenant.
+            auth_type (Optional[TenantAuthType]): Authentication type for the tenant.
+            session_settings_enabled (Optional[bool]): Whether session settings are enabled.
+            refresh_token_expiration (Optional[int]): Expiration time for refresh tokens.
+            refresh_token_expiration_unit (Optional[SessionExiprationUnit]): Unit for refresh token expiration.
+            session_token_expiration (Optional[int]): Expiration time for session tokens.
+            session_token_expiration_unit (Optional[SessionExiprationUnit]): Unit for session token expiration.
+            stepup_token_expiration (Optional[int]): Expiration time for step-up tokens.
+            stepup_token_expiration_unit (Optional[SessionExiprationUnit]): Unit for step-up token expiration.
+            enable_inactivity (Optional[bool]): Whether inactivity timeout is enabled.
+            inactivity_time (Optional[int]): Inactivity timeout duration.
+            inactivity_time_unit (Optional[SessionExiprationUnit]): Unit for inactivity timeout.
+            JITDisabled (Optional[bool]): Whether JIT is disabled.
 
         Raise:
-        AuthException: raised if creation operation fails
+            AuthException: raised if update operation fails
         """
         body: dict[str, Any] = {
             "tenantId": id,
