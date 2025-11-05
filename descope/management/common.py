@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import List, Optional
 
-class SessionExiprationUnit(Enum):
+class SessionExpirationUnit(Enum):
     MINUTES = "minutes"
     HOURS = "hours"
     DAYS = "days"

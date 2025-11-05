@@ -1,7 +1,7 @@
 from typing import Any, List, Optional
 
 from descope._http_base import HTTPBase
-from descope.management.common import MgmtV1, TenantAuthType, SessionExiprationUnit
+from descope.management.common import MgmtV1, TenantAuthType, SessionExpirationUnit
 
 
 class Tenant(HTTPBase):
@@ -100,14 +100,14 @@ class Tenant(HTTPBase):
         auth_type: Optional[TenantAuthType] = None,
         session_settings_enabled: Optional[bool] = None,
         refresh_token_expiration: Optional[int] = None,
-        refresh_token_expiration_unit: Optional[SessionExiprationUnit] = None,
+        refresh_token_expiration_unit: Optional[SessionExpirationUnit] = None,
         session_token_expiration: Optional[int] = None,
-        session_token_expiration_unit: Optional[SessionExiprationUnit] = None,
+        session_token_expiration_unit: Optional[SessionExpirationUnit] = None,
         stepup_token_expiration: Optional[int] = None,
-        stepup_token_expiration_unit: Optional[SessionExiprationUnit] = None,
+        stepup_token_expiration_unit: Optional[SessionExpirationUnit] = None,
         enable_inactivity: Optional[bool] = None,
         inactivity_time: Optional[int] = None,
-        inactivity_time_unit: Optional[SessionExiprationUnit] = None,
+        inactivity_time_unit: Optional[SessionExpirationUnit] = None,
         JITDisabled: Optional[bool] = None
     ):
         """
