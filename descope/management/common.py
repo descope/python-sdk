@@ -302,6 +302,7 @@ def associated_tenants_to_dict(associated_tenants: List[AssociatedTenant]) -> li
                 }
             )
     return associated_tenant_list
+
 class SAMLIDPAttributeMappingInfo:
     """
     Represents a SAML IDP attribute mapping object. use this class for mapping Descope attribute

@@ -403,7 +403,7 @@ class TestTenant(common.DescopeTest):
                     "selfProvisioningDomains": ["domain1.com"],
                     "domains": ["domain1.com", "domain2.com"],
                     "authType": "oidc",
-                    "sessionSettingsEnabled": True
+                    "enabled": True
                 },
                 allow_redirects=False,
                 params=None,

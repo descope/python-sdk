@@ -123,35 +123,23 @@ class Tenant(HTTPBase):
         body: dict[str, Any] = {
             "tenantId": id,
             "selfProvisioningDomains": self_provisioning_domains,
+            "domains": domains,
+            "authType": auth_type,
+            "enabled": session_settings_enabled,
+            "refreshTokenExpiration": refresh_token_expiration,
+            "refreshTokenExpirationUnit": refresh_token_expiration_unit,
+            "sessionTokenExpiration": session_token_expiration,
+            "sessionTokenExpirationUnit": session_token_expiration_unit,
+            "stepupTokenExpiration": stepup_token_expiration,
+            "stepupTokenExpirationUnit": stepup_token_expiration_unit,
+            "enableInactivity": enable_inactivity,
+            "inactivityTime": inactivity_time,
+            "inactivityTimeUnit": inactivity_time_unit,
+            "JITDisabled": JITDisabled,
         }
         
-        if domains is not None:
-            body["domains"] = domains
-        if auth_type is not None:
-            body["authType"] = auth_type
-        if session_settings_enabled is not None:
-            body["sessionSettingsEnabled"] = session_settings_enabled
-        if refresh_token_expiration is not None:
-            body["refreshTokenExpiration"] = refresh_token_expiration
-        if refresh_token_expiration_unit is not None:
-            body["refreshTokenExpirationUnit"] = refresh_token_expiration_unit
-        if session_token_expiration is not None:
-            body["sessionTokenExpiration"] = session_token_expiration
-        if session_token_expiration_unit is not None:
-            body["sessionTokenExpirationUnit"] = session_token_expiration_unit
-        if stepup_token_expiration is not None:
-            body["stepupTokenExpiration"] = stepup_token_expiration
-        if stepup_token_expiration_unit is not None:
-            body["stepupTokenExpirationUnit"] = stepup_token_expiration_unit
-        if enable_inactivity is not None:
-            body["enableInactivity"] = enable_inactivity
-        if inactivity_time is not None:
-            body["inactivityTime"] = inactivity_time
-        if inactivity_time_unit is not None:
-            body["inactivityTimeUnit"] = inactivity_time_unit
-        if JITDisabled is not None:
-            body["JITDisabled"] = JITDisabled
-        
+        body = {k: v for k, v in body.items() if v is not None}
+
         self._http.post(
             MgmtV1.tenant_settings_path,
             body=body,
