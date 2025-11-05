@@ -98,7 +98,7 @@ class Tenant(HTTPBase):
         self_provisioning_domains: List[str],
         domains: Optional[List[str]] = None,
         auth_type: Optional[TenantAuthType] = None,
-        session_settings_enabled: Optional[bool] = False,
+        session_settings_enabled: Optional[bool] = None,
         refresh_token_expiration: Optional[int] = None,
         refresh_token_expiration_unit: Optional[SessionExiprationUnit] = None,
         session_token_expiration: Optional[int] = None,
