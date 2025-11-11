@@ -21,6 +21,7 @@ from descope.common import (
 from descope.exceptions import (
     API_RATE_LIMIT_RETRY_AFTER_HEADER,
     ERROR_TYPE_API_RATE_LIMIT,
+    ERROR_TYPE_INVALID_ARGUMENT,
     ERROR_TYPE_SERVER_ERROR,
     AuthException,
     RateLimitException,
@@ -52,11 +53,16 @@ class HTTPClient:
         secure: bool = True,
         management_key: Optional[str] = None,
     ) -> None:
+        # validate project id
+        project_id = project_id or os.getenv("DESCOPE_PROJECT_ID", "")
         if not project_id:
             raise AuthException(
                 400,
-                ERROR_TYPE_SERVER_ERROR,
-                "Project ID is required to initialize HTTP client",
+                ERROR_TYPE_INVALID_ARGUMENT,
+                (
+                    "Project ID is required to initialize HTTP client"
+                    "Set environment variable DESCOPE_PROJECT_ID or pass your Project ID to the init function."
+                ),
             )
 
         # Prefer explicitly provided base_url, then env var, then computed default

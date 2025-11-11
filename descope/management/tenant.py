@@ -1,7 +1,7 @@
 from typing import Any, List, Optional
 
 from descope._http_base import HTTPBase
-from descope.management.common import MgmtV1, TenantAuthType, SessionExpirationUnit
+from descope.management.common import MgmtV1, SessionExpirationUnit, TenantAuthType
 
 
 class Tenant(HTTPBase):
@@ -108,7 +108,7 @@ class Tenant(HTTPBase):
         enable_inactivity: Optional[bool] = None,
         inactivity_time: Optional[int] = None,
         inactivity_time_unit: Optional[SessionExpirationUnit] = None,
-        JITDisabled: Optional[bool] = None
+        JITDisabled: Optional[bool] = None,
     ):
         """
         Update an existing tenant's session settings.
@@ -150,14 +150,10 @@ class Tenant(HTTPBase):
             "inactivityTimeUnit": inactivity_time_unit,
             "JITDisabled": JITDisabled,
         }
-        
+
         body = {k: v for k, v in body.items() if v is not None}
 
-        self._http.post(
-            MgmtV1.tenant_settings_path,
-            body=body,
-            params=None
-        )
+        self._http.post(MgmtV1.tenant_settings_path, body=body, params=None)
 
     def delete(
         self,
@@ -201,7 +197,7 @@ class Tenant(HTTPBase):
             params={"id": id},
         )
         return response.json()
-    
+
     def load_settings(
         self,
         id: str,

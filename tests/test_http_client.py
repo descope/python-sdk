@@ -1,9 +1,11 @@
 import importlib
 import importlib.util
+import os
 import sys
 import types
 import unittest
 
+from descope import AuthException
 from descope.http_client import HTTPClient
 
 
@@ -14,6 +16,10 @@ class TestHTTPClient(unittest.TestCase):
         # long project id -> computed region
         pid = "Puse12aAc4T2V93bddihGEx2Ryhc8e5Z"
         assert HTTPClient.base_url_for_project_id(pid) == "https://api.use1.descope.com"
+
+    def test_project_id_from_env_without_env(self):
+        os.environ["DESCOPE_PROJECT_ID"] = ""
+        self.assertRaises(AuthException, HTTPClient, "")
 
     @unittest.skipIf(
         importlib.util.find_spec("importlib.metadata") is not None,
