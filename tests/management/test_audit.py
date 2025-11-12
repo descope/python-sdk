@@ -6,6 +6,7 @@ from descope import AuthException, DescopeClient
 from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
+from tests.testutils import SSLMatcher
 from .. import common
 
 
@@ -33,8 +34,8 @@ class TestAudit(common.DescopeTest):
         )
 
         # Test failed search
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 client.mgmt.audit.search,
@@ -42,9 +43,9 @@ class TestAudit(common.DescopeTest):
             )
 
         # Test success search
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = {
                 "audits": [
                     {
@@ -77,8 +78,8 @@ class TestAudit(common.DescopeTest):
                 },
                 params=None,
                 json={"noTenants": False},
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -91,16 +92,16 @@ class TestAudit(common.DescopeTest):
         )
 
         # Test failed search
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(
                 AuthException, client.mgmt.audit.create_event, "a", "b", "c", "d"
             )
 
         # Test success search
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = {}
             mock_post.return_value = network_resp
             client.mgmt.audit.create_event(
@@ -127,7 +128,7 @@ class TestAudit(common.DescopeTest):
                     "type": "info",
                     "data": {"some": "data"},
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

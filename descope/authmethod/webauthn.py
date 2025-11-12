@@ -1,6 +1,6 @@
 from typing import Iterable, Optional, Union
 
-from requests import Response
+from httpx import Response
 
 from descope._auth_base import AuthBase
 from descope.common import (

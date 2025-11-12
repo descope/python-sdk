@@ -29,18 +29,16 @@ packages = [{ include = "descope" }]
 [tool.poetry.extras]
 Flask = ["Flask"]
 
-
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/descope/python-sdk/issues"
 
-
 [tool.poetry.dependencies]
 python = ">=3.8.1,<4.0"
-requests = ">=2.27.0"
 pyjwt = { version = ">=2.4.0", extras = ["crypto"] }
 email-validator = [{ version = ">=2,<3", python = ">=3.8" }]
 liccheck = "^0.9.1"
 Flask = ">=2"
+httpx = "^0.27.2"
 
 [tool.poetry.group.dev.dependencies]
 mock = "5.2.0"
@@ -64,7 +62,6 @@ black = [
 
 [tool.poetry.group.types.dependencies]
 mypy = "1.11.2"
-types-requests = "2.32.0.20240914"
 types-setuptools = "75.1.0.20240917"
 
 [tool.poetry.group.tests.dependencies]
