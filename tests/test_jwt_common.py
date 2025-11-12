@@ -5,7 +5,6 @@ from descope.jwt_common import (
     REFRESH_SESSION_TOKEN_NAME,
     SESSION_TOKEN_NAME,
     decode_token_unverified,
-    generate_auth_info,
     generate_jwt_response,
 )
 

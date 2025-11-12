@@ -389,7 +389,13 @@ class TestTenant(common.DescopeTest):
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
-                client.mgmt.tenant.update_settings("t1", self_provisioning_domains=["domain1.com"], domains=["domain1.com", "domain2.com"], auth_type="oidc", session_settings_enabled=True)
+                client.mgmt.tenant.update_settings(
+                    "t1",
+                    self_provisioning_domains=["domain1.com"],
+                    domains=["domain1.com", "domain2.com"],
+                    auth_type="oidc",
+                    session_settings_enabled=True,
+                )
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_settings_path}",
@@ -403,7 +409,7 @@ class TestTenant(common.DescopeTest):
                     "selfProvisioningDomains": ["domain1.com"],
                     "domains": ["domain1.com", "domain2.com"],
                     "authType": "oidc",
-                    "enabled": True
+                    "enabled": True,
                 },
                 allow_redirects=False,
                 params=None,

@@ -9,7 +9,6 @@ from threading import Lock
 from typing import Iterable, Optional
 
 import jwt
-import requests
 from email_validator import EmailNotValidError, validate_email
 from jwt import ExpiredSignatureError, ImmatureSignatureError
 
@@ -53,8 +52,7 @@ class Auth:
         http_client: HTTPClient,
     ):
         self.lock_public_keys = Lock()
-        # validate project id
-        project_id = project_id or os.getenv("DESCOPE_PROJECT_ID", "")
+
         if not project_id:
             raise AuthException(
                 400,
@@ -451,7 +449,7 @@ class Auth:
                     leeway=self.jwt_validation_leeway,
                 )
                 token_audience = unverified_claims.get("aud")
-                
+
                 # If token has audience claim and it matches our project ID, use it
                 if token_audience and self.project_id:
                     if isinstance(token_audience, list):

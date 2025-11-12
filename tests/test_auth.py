@@ -1,5 +1,4 @@
 import json
-import os
 import unittest
 from enum import Enum
 from http import HTTPStatus
@@ -134,12 +133,7 @@ class TestAuth(common.DescopeTest):
             mock_get.return_value.text = valid_keys_response
             self.assertIsNone(auth._fetch_public_keys())
 
-    def test_project_id_from_env(self):
-        os.environ["DESCOPE_PROJECT_ID"] = self.dummy_project_id
-        Auth(http_client=self.make_http_client())
-
-    def test_project_id_from_env_without_env(self):
-        os.environ["DESCOPE_PROJECT_ID"] = ""
+    def test_empty_project_id(self):
         self.assertRaises(AuthException, Auth, http_client=self.make_http_client())
 
     def test_base_url_for_project_id(self):
@@ -952,127 +946,233 @@ class TestAuth(common.DescopeTest):
 
     def test_validate_session_audience_auto_detection(self):
         """Test that validate_session automatically detects audience when token audience matches project ID"""
-        auth = Auth(self.dummy_project_id, self.public_key_dict, http_client=self.make_http_client())
-        
-        with patch("jwt.get_unverified_header") as mock_get_header, patch("jwt.decode") as mock_decode:
-            mock_get_header.return_value = {"alg": "ES384", "kid": self.public_key_dict["kid"]}
+        auth = Auth(
+            self.dummy_project_id,
+            self.public_key_dict,
+            http_client=self.make_http_client(),
+        )
+
+        with patch("jwt.get_unverified_header") as mock_get_header, patch(
+            "jwt.decode"
+        ) as mock_decode:
+            mock_get_header.return_value = {
+                "alg": "ES384",
+                "kid": self.public_key_dict["kid"],
+            }
             mock_decode.side_effect = [
                 {"aud": self.dummy_project_id, "sub": "user123", "exp": 9999999999},
-                {"aud": self.dummy_project_id, "sub": "user123", "exp": 9999999999}
+                {"aud": self.dummy_project_id, "sub": "user123", "exp": 9999999999},
             ]
-            
-            with patch.object(auth, 'public_keys', {self.public_key_dict["kid"]: (mock.Mock(), "ES384")}):
-                with patch.object(auth, '_fetch_public_keys'):
-                    result = auth.validate_session("dummy_token")
-                    
+
+            with patch.object(
+                auth,
+                "public_keys",
+                {self.public_key_dict["kid"]: (mock.Mock(), "ES384")},
+            ):
+                with patch.object(auth, "_fetch_public_keys"):
+                    auth.validate_session("dummy_token")
+
                     self.assertEqual(mock_decode.call_count, 2)
                     first_call = mock_decode.call_args_list[0]
                     self.assertIn("options", first_call.kwargs)
                     self.assertIn("verify_aud", first_call.kwargs["options"])
                     self.assertFalse(first_call.kwargs["options"]["verify_aud"])
                     second_call = mock_decode.call_args_list[1]
-                    self.assertEqual(second_call.kwargs["audience"], self.dummy_project_id)
+                    self.assertEqual(
+                        second_call.kwargs["audience"], self.dummy_project_id
+                    )
 
     def test_validate_session_audience_auto_detection_list(self):
         """Test that validate_session automatically detects audience when token audience is a list containing project ID"""
-        auth = Auth(self.dummy_project_id, self.public_key_dict, http_client=self.make_http_client())
-        
-        with patch("jwt.get_unverified_header") as mock_get_header, patch("jwt.decode") as mock_decode:
-            mock_get_header.return_value = {"alg": "ES384", "kid": self.public_key_dict["kid"]}
+        auth = Auth(
+            self.dummy_project_id,
+            self.public_key_dict,
+            http_client=self.make_http_client(),
+        )
+
+        with patch("jwt.get_unverified_header") as mock_get_header, patch(
+            "jwt.decode"
+        ) as mock_decode:
+            mock_get_header.return_value = {
+                "alg": "ES384",
+                "kid": self.public_key_dict["kid"],
+            }
             mock_decode.side_effect = [
-                {"aud": [self.dummy_project_id, "other-audience"], "sub": "user123", "exp": 9999999999},
-                {"aud": [self.dummy_project_id, "other-audience"], "sub": "user123", "exp": 9999999999}
+                {
+                    "aud": [self.dummy_project_id, "other-audience"],
+                    "sub": "user123",
+                    "exp": 9999999999,
+                },
+                {
+                    "aud": [self.dummy_project_id, "other-audience"],
+                    "sub": "user123",
+                    "exp": 9999999999,
+                },
             ]
-            
-            with patch.object(auth, 'public_keys', {self.public_key_dict["kid"]: (mock.Mock(), "ES384")}):
-                with patch.object(auth, '_fetch_public_keys'):
-                    result = auth.validate_session("dummy_token")
-                    
+
+            with patch.object(
+                auth,
+                "public_keys",
+                {self.public_key_dict["kid"]: (mock.Mock(), "ES384")},
+            ):
+                with patch.object(auth, "_fetch_public_keys"):
+                    auth.validate_session("dummy_token")
+
                     self.assertEqual(mock_decode.call_count, 2)
                     second_call = mock_decode.call_args_list[1]
-                    self.assertEqual(second_call.kwargs["audience"], self.dummy_project_id)
+                    self.assertEqual(
+                        second_call.kwargs["audience"], self.dummy_project_id
+                    )
 
     def test_validate_session_audience_auto_detection_no_match(self):
         """Test that validate_session does not auto-detect audience when token audience doesn't match project ID"""
-        auth = Auth(self.dummy_project_id, self.public_key_dict, http_client=self.make_http_client())
-        
-        with patch("jwt.get_unverified_header") as mock_get_header, patch("jwt.decode") as mock_decode:
-            mock_get_header.return_value = {"alg": "ES384", "kid": self.public_key_dict["kid"]}
+        auth = Auth(
+            self.dummy_project_id,
+            self.public_key_dict,
+            http_client=self.make_http_client(),
+        )
+
+        with patch("jwt.get_unverified_header") as mock_get_header, patch(
+            "jwt.decode"
+        ) as mock_decode:
+            mock_get_header.return_value = {
+                "alg": "ES384",
+                "kid": self.public_key_dict["kid"],
+            }
             mock_decode.side_effect = [
                 {"aud": "different-project-id", "sub": "user123", "exp": 9999999999},
-                {"aud": "different-project-id", "sub": "user123", "exp": 9999999999}
+                {"aud": "different-project-id", "sub": "user123", "exp": 9999999999},
             ]
-            
-            with patch.object(auth, 'public_keys', {self.public_key_dict["kid"]: (mock.Mock(), "ES384")}):
-                with patch.object(auth, '_fetch_public_keys'):
-                    result = auth.validate_session("dummy_token")
-                    
+
+            with patch.object(
+                auth,
+                "public_keys",
+                {self.public_key_dict["kid"]: (mock.Mock(), "ES384")},
+            ):
+                with patch.object(auth, "_fetch_public_keys"):
+                    auth.validate_session("dummy_token")
+
                     self.assertEqual(mock_decode.call_count, 2)
                     second_call = mock_decode.call_args_list[1]
                     self.assertIsNone(second_call.kwargs["audience"])
 
     def test_validate_session_explicit_audience(self):
         """Test that validate_session uses explicit audience parameter instead of auto-detection"""
-        auth = Auth(self.dummy_project_id, self.public_key_dict, http_client=self.make_http_client())
+        auth = Auth(
+            self.dummy_project_id,
+            self.public_key_dict,
+            http_client=self.make_http_client(),
+        )
         explicit_audience = "explicit-audience"
-        
-        with patch("jwt.get_unverified_header") as mock_get_header, patch("jwt.decode") as mock_decode:
-            mock_get_header.return_value = {"alg": "ES384", "kid": self.public_key_dict["kid"]}
-            mock_decode.return_value = {"aud": explicit_audience, "sub": "user123", "exp": 9999999999}
-            
-            with patch.object(auth, 'public_keys', {self.public_key_dict["kid"]: (mock.Mock(), "ES384")}):
-                with patch.object(auth, '_fetch_public_keys'):
-                    result = auth.validate_session("dummy_token", audience=explicit_audience)
-                    
+
+        with patch("jwt.get_unverified_header") as mock_get_header, patch(
+            "jwt.decode"
+        ) as mock_decode:
+            mock_get_header.return_value = {
+                "alg": "ES384",
+                "kid": self.public_key_dict["kid"],
+            }
+            mock_decode.return_value = {
+                "aud": explicit_audience,
+                "sub": "user123",
+                "exp": 9999999999,
+            }
+
+            with patch.object(
+                auth,
+                "public_keys",
+                {self.public_key_dict["kid"]: (mock.Mock(), "ES384")},
+            ):
+                with patch.object(auth, "_fetch_public_keys"):
+                    auth.validate_session("dummy_token", audience=explicit_audience)
+
                     self.assertEqual(mock_decode.call_count, 1)
                     call_args = mock_decode.call_args
                     self.assertEqual(call_args.kwargs["audience"], explicit_audience)
 
     def test_validate_and_refresh_session_audience_auto_detection(self):
         """Test that validate_and_refresh_session automatically detects audience when token audience matches project ID"""
-        auth = Auth(self.dummy_project_id, self.public_key_dict, http_client=self.make_http_client())
-        
-        with patch("jwt.get_unverified_header") as mock_get_header, patch("jwt.decode") as mock_decode:
-            mock_get_header.return_value = {"alg": "ES384", "kid": self.public_key_dict["kid"]}
+        auth = Auth(
+            self.dummy_project_id,
+            self.public_key_dict,
+            http_client=self.make_http_client(),
+        )
+
+        with patch("jwt.get_unverified_header") as mock_get_header, patch(
+            "jwt.decode"
+        ) as mock_decode:
+            mock_get_header.return_value = {
+                "alg": "ES384",
+                "kid": self.public_key_dict["kid"],
+            }
             mock_decode.side_effect = [
                 {"aud": self.dummy_project_id, "sub": "user123", "exp": 9999999999},
-                {"aud": self.dummy_project_id, "sub": "user123", "exp": 9999999999}
+                {"aud": self.dummy_project_id, "sub": "user123", "exp": 9999999999},
             ]
-            
-            with patch.object(auth, 'public_keys', {self.public_key_dict["kid"]: (mock.Mock(), "ES384")}):
-                with patch.object(auth, '_fetch_public_keys'):
+
+            with patch.object(
+                auth,
+                "public_keys",
+                {self.public_key_dict["kid"]: (mock.Mock(), "ES384")},
+            ):
+                with patch.object(auth, "_fetch_public_keys"):
                     with patch("requests.post") as mock_post:
                         mock_post.return_value.ok = True
-                        mock_post.return_value.json.return_value = {"sessionJwt": "new_token"}
+                        mock_post.return_value.json.return_value = {
+                            "sessionJwt": "new_token"
+                        }
                         mock_post.return_value.cookies = {}
-                        
-                        result = auth.validate_and_refresh_session("dummy_session_token", "dummy_refresh_token")
-                        
+
+                        auth.validate_and_refresh_session(
+                            "dummy_session_token", "dummy_refresh_token"
+                        )
+
                         self.assertEqual(mock_decode.call_count, 2)
                         first_call = mock_decode.call_args_list[0]
                         self.assertIn("options", first_call.kwargs)
                         self.assertIn("verify_aud", first_call.kwargs["options"])
                         self.assertFalse(first_call.kwargs["options"]["verify_aud"])
                         second_call = mock_decode.call_args_list[1]
-                        self.assertEqual(second_call.kwargs["audience"], self.dummy_project_id)
+                        self.assertEqual(
+                            second_call.kwargs["audience"], self.dummy_project_id
+                        )
 
     def test_validate_session_audience_mismatch_fails(self):
         """Test that validate_session fails when token audience doesn't match project ID and no explicit audience is provided"""
-        auth = Auth(self.dummy_project_id, self.public_key_dict, http_client=self.make_http_client())
-        
-        with patch("jwt.get_unverified_header") as mock_get_header, patch("jwt.decode") as mock_decode:
-            mock_get_header.return_value = {"alg": "ES384", "kid": self.public_key_dict["kid"]}
+        auth = Auth(
+            self.dummy_project_id,
+            self.public_key_dict,
+            http_client=self.make_http_client(),
+        )
+
+        with patch("jwt.get_unverified_header") as mock_get_header, patch(
+            "jwt.decode"
+        ) as mock_decode:
+            mock_get_header.return_value = {
+                "alg": "ES384",
+                "kid": self.public_key_dict["kid"],
+            }
             # First call succeeds (for audience detection), second call fails (for validation with None audience)
             mock_decode.side_effect = [
-                {"aud": "different-project-id", "sub": "user123", "exp": 9999999999},  # First call for audience detection
-                jwt.InvalidAudienceError("Invalid audience")  # Second call fails because audience doesn't match
+                {
+                    "aud": "different-project-id",
+                    "sub": "user123",
+                    "exp": 9999999999,
+                },  # First call for audience detection
+                jwt.InvalidAudienceError(
+                    "Invalid audience"
+                ),  # Second call fails because audience doesn't match
             ]
-            
-            with patch.object(auth, 'public_keys', {self.public_key_dict["kid"]: (mock.Mock(), "ES384")}):
-                with patch.object(auth, '_fetch_public_keys'):
+
+            with patch.object(
+                auth,
+                "public_keys",
+                {self.public_key_dict["kid"]: (mock.Mock(), "ES384")},
+            ):
+                with patch.object(auth, "_fetch_public_keys"):
                     with self.assertRaises(jwt.InvalidAudienceError) as cm:
                         auth.validate_session("dummy_token")
-                    
+
                     # Verify the error is about invalid audience
                     self.assertIn("Invalid audience", str(cm.exception))
                     self.assertEqual(mock_decode.call_count, 2)

@@ -1,16 +1,19 @@
 from enum import Enum
 from typing import List, Optional
 
+
 class SessionExpirationUnit(Enum):
     MINUTES = "minutes"
     HOURS = "hours"
     DAYS = "days"
     WEEKS = "weeks"
 
+
 class TenantAuthType(Enum):
     NONE = "none"
     SAML = "saml"
     OIDC = "oidc"
+
 
 class AccessType(Enum):
     OFFLINE = "offline"
@@ -302,6 +305,7 @@ def associated_tenants_to_dict(associated_tenants: List[AssociatedTenant]) -> li
                 }
             )
     return associated_tenant_list
+
 
 class SAMLIDPAttributeMappingInfo:
     """
