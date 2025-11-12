@@ -53,8 +53,6 @@ class HTTPClient:
         secure: bool = True,
         management_key: Optional[str] = None,
     ) -> None:
-        # validate project id
-        project_id = project_id or os.getenv("DESCOPE_PROJECT_ID", "")
         if not project_id:
             raise AuthException(
                 400,

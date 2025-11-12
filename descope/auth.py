@@ -52,8 +52,7 @@ class Auth:
         http_client: HTTPClient,
     ):
         self.lock_public_keys = Lock()
-        # validate project id
-        project_id = project_id or os.getenv("DESCOPE_PROJECT_ID", "")
+
         if not project_id:
             raise AuthException(
                 400,

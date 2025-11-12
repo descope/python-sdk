@@ -1,5 +1,4 @@
 import json
-import os
 import unittest
 from enum import Enum
 from http import HTTPStatus
@@ -134,12 +133,7 @@ class TestAuth(common.DescopeTest):
             mock_get.return_value.text = valid_keys_response
             self.assertIsNone(auth._fetch_public_keys())
 
-    def test_project_id_from_env(self):
-        os.environ["DESCOPE_PROJECT_ID"] = self.dummy_project_id
-        Auth(http_client=self.make_http_client())
-
-    def test_project_id_from_env_without_env(self):
-        os.environ["DESCOPE_PROJECT_ID"] = ""
+    def test_empty_project_id(self):
         self.assertRaises(AuthException, Auth, http_client=self.make_http_client())
 
     def test_base_url_for_project_id(self):

@@ -35,6 +35,18 @@ class DescopeClient:
         auth_management_key: Optional[str] = None,
         fga_cache_url: Optional[str] = None,
     ):
+        # validate project id
+        project_id = project_id or os.getenv("DESCOPE_PROJECT_ID", "")
+        if not project_id:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                (
+                    "Unable to init DescopeClient because project_id cannot be empty. "
+                    "Set environment variable DESCOPE_PROJECT_ID or pass your Project ID to the init function."
+                ),
+            )
+
         # Auth Initialization
         auth_http_client = HTTPClient(
             project_id=project_id,

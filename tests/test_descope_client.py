@@ -1,4 +1,5 @@
 import json
+import os
 import sys
 import unittest
 from copy import deepcopy
@@ -68,6 +69,10 @@ class TestDescopeClient(common.DescopeTest):
         self.assertIsNotNone(
             DescopeClient(project_id="dummy", public_key=self.public_key_str)
         )
+
+    def test_project_id_from_env_without_env(self):
+        os.environ["DESCOPE_PROJECT_ID"] = ""
+        self.assertRaises(AuthException, DescopeClient, "")
 
     def test_mgmt(self):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)
