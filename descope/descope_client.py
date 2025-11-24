@@ -27,7 +27,6 @@ class DescopeClient:
     def __init__(
         self,
         project_id: str,
-        base_url: Optional[str] = None,
         public_key: Optional[dict] = None,
         skip_verify: bool = False,
         management_key: Optional[str] = None,
@@ -35,6 +34,8 @@ class DescopeClient:
         jwt_validation_leeway: int = 5,
         auth_management_key: Optional[str] = None,
         fga_cache_url: Optional[str] = None,
+        *,
+        base_url: Optional[str] = None,
     ):
         # validate project id
         project_id = project_id or os.getenv("DESCOPE_PROJECT_ID", "")
