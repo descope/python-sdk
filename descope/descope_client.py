@@ -27,6 +27,7 @@ class DescopeClient:
     def __init__(
         self,
         project_id: str,
+        base_url: Optional[str] = None,
         public_key: Optional[dict] = None,
         skip_verify: bool = False,
         management_key: Optional[str] = None,
@@ -50,6 +51,7 @@ class DescopeClient:
         # Auth Initialization
         auth_http_client = HTTPClient(
             project_id=project_id,
+            base_url=base_url,
             timeout_seconds=timeout_seconds,
             secure=not skip_verify,
             management_key=auth_management_key
