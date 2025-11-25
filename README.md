@@ -38,10 +38,11 @@ from descope import DescopeClient
 # Initialized after setting the DESCOPE_PROJECT_ID and DESCOPE_AUTH_MANAGEMENT_KEY env vars
 descope_client = DescopeClient()
 
-# ** Or directly **
+# ** Or directly (w/ optional base URL) **
 descope_client = DescopeClient(
-    project_id="<Project ID>"
-    auth_management_key="<Auth Managemet Key>
+    project_id="<Project ID>",
+    auth_management_key="<Descope Project Management Key>,
+    base_url="<Descope Base URL>"
 )
 ```
 
@@ -1245,8 +1246,9 @@ descope_client = DescopeClient(
 ```
 
 When the `fga_cache_url` is configured, the following FGA methods will automatically use the cache proxy instead of the default Descope API:
+
 - `save_schema`
-- `create_relations`  
+- `create_relations`
 - `delete_relations`
 - `check`
 

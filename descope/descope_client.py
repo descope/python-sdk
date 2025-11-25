@@ -77,9 +77,9 @@ class DescopeClient:
         # Management Initialization
         mgmt_http_client = HTTPClient(
             project_id=project_id,
-            base_url=base_url,
-            timeout_seconds=timeout_seconds,
-            secure=not skip_verify,
+            base_url=auth_http_client.base_url,
+            timeout_seconds=auth_http_client.timeout_seconds,
+            secure=auth_http_client.secure,
             management_key=management_key or os.getenv("DESCOPE_MANAGEMENT_KEY"),
         )
         self._mgmt = MGMT(
