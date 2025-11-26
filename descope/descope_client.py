@@ -34,6 +34,8 @@ class DescopeClient:
         jwt_validation_leeway: int = 5,
         auth_management_key: Optional[str] = None,
         fga_cache_url: Optional[str] = None,
+        *,
+        base_url: Optional[str] = None,
     ):
         # validate project id
         project_id = project_id or os.getenv("DESCOPE_PROJECT_ID", "")
@@ -50,6 +52,7 @@ class DescopeClient:
         # Auth Initialization
         auth_http_client = HTTPClient(
             project_id=project_id,
+            base_url=base_url,
             timeout_seconds=timeout_seconds,
             secure=not skip_verify,
             management_key=auth_management_key

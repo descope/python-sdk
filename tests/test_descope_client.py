@@ -1052,6 +1052,34 @@ class TestDescopeClient(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+    def test_base_url_setting(self):
+        """Test that base_url parameter is correctly set in DescopeClient"""
+        custom_base_url = "https://api.use1.descope.com"
+        client = DescopeClient(
+            project_id=self.dummy_project_id,
+            base_url=custom_base_url,
+            public_key=self.public_key_dict,
+        )
+
+        # Verify that the base_url is set in the auth HTTP client
+        self.assertEqual(client._auth.http_client.base_url, custom_base_url)
+
+        # Verify that the base_url is set in the mgmt HTTP client
+        self.assertEqual(client._mgmt._http.base_url, custom_base_url)
+
+    def test_base_url_none(self):
+        """Test that base_url=None uses default base URL from environment or project ID"""
+        # When base_url is None, it should use DESCOPE_BASE_URI env var or computed default
+        client = DescopeClient(
+            project_id=self.dummy_project_id,
+            base_url=None,
+            public_key=self.public_key_dict,
+        )
+
+        expected_base_url = common.DEFAULT_BASE_URL 
+        self.assertEqual(client._auth.http_client.base_url, expected_base_url)
+        self.assertEqual(client._mgmt._http.base_url, expected_base_url)
+
 
 if __name__ == "__main__":
     unittest.main()
