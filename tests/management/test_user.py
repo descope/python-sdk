@@ -1013,6 +1013,55 @@ class TestUser(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+    def test_load_users(self):
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                self.client.mgmt.user.load_users,
+                [""],
+            )
+
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertRaises(
+                AuthException, self.client.mgmt.user.load_users, None, False
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads(
+                """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
+            )
+            mock_post.return_value = network_resp
+            resp = self.client.mgmt.user.load_users(
+                ["uid"],
+                include_invalid_users=True,
+            )
+            users = resp["users"]
+            self.assertEqual(len(users), 2)
+            self.assertEqual(users[0]["id"], "u1")
+            self.assertEqual(users[1]["id"], "u2")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.users_load_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "userIds": ["uid"],
+                    "includeInvalidUsers": True,
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
     def test_search_all(self):
         # Test failed flows
         with patch("requests.post") as mock_post:

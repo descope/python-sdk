@@ -653,6 +653,46 @@ class User(HTTPBase):
             body={"userId": user_id},
         )
 
+    def load_users(
+        self,
+        user_ids: List[str],
+        include_invalid_users: Optional[bool] = None,
+    ) -> dict:
+        """
+        Load users by their user IDs.
+
+        Args:
+        user_ids (List[str]): Optional list of user IDs to filter by
+        include_invalid_users (bool): Optional flag to include invalid users in the response
+
+        Return value (dict):
+        Return dict in the format
+             {"users": []}
+        "users" contains a list of all of the found users and their information
+
+        Raise:
+        AuthException: raised if search operation fails
+        """
+        if user_ids is None or len(user_ids) == 0:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                "At least one user id needs to be supplied",
+            )
+
+        body: dict[str, Union[List[str], bool]] = {
+            "userIds": user_ids,
+        }
+
+        if include_invalid_users is not None:
+            body["includeInvalidUsers"] = include_invalid_users
+
+        response = self._http.post(
+            MgmtV1.users_load_path,
+            body=body,
+        )
+        return response.json()
+
     def search_all(
         self,
         tenant_ids: Optional[List[str]] = None,
