@@ -659,7 +659,7 @@ class User(HTTPBase):
         include_invalid_users: Optional[bool] = None,
     ) -> dict:
         """
-        Search all users.
+        Load users by their user IDs.
 
         Args:
         user_ids (List[str]): Optional list of user IDs to filter by
