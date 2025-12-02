@@ -87,6 +87,7 @@ class MgmtV1:
     user_logout_path = "/v1/mgmt/user/logout"
     user_delete_all_test_users_path = "/v1/mgmt/user/test/delete/all"
     user_load_path = "/v1/mgmt/user"
+    users_load_path = "/v1/mgmt/users/load"
     users_search_path = "/v2/mgmt/user/search"
     test_users_search_path = "/v2/mgmt/user/search/test"
     user_get_provider_token = "/v1/mgmt/user/provider/token"
