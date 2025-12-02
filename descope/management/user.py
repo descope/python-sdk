@@ -655,7 +655,7 @@ class User(HTTPBase):
 
     def load_users(
         self,
-        user_ids: List[str] = None,
+        user_ids: List[str],
         include_invalid_users: Optional[bool] = None,
     ) -> dict:
         """
