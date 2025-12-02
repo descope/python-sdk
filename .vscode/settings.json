@@ -7,5 +7,5 @@
   "mypy-type-checker.importStrategy": "fromEnvironment",
   "isort.importStrategy": "fromEnvironment",
   "black-formatter.importStrategy": "fromEnvironment",
-  "workbench.colorCustomizations": {}
+  "workbench.colorCustomizations": { /* do not change please... */}
 }
