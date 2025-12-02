@@ -675,7 +675,9 @@ class User(HTTPBase):
         """
         if user_ids is None or len(user_ids) == 0:
             raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "At least one user id needs to be supplied"
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                "At least one user id needs to be supplied",
             )
 
         body: dict[str, Union[List[str], bool]] = {

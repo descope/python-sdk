@@ -1076,7 +1076,7 @@ class TestDescopeClient(common.DescopeTest):
             public_key=self.public_key_dict,
         )
 
-        expected_base_url = common.DEFAULT_BASE_URL 
+        expected_base_url = common.DEFAULT_BASE_URL
         self.assertEqual(client._auth.http_client.base_url, expected_base_url)
         self.assertEqual(client._mgmt._http.base_url, expected_base_url)
 
