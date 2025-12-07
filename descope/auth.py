@@ -383,6 +383,12 @@ class Auth:
             token_validator=self._validate_token,
         )
 
+    # public method to validate a token from the management class
+    def validate_token(
+        self, token: str, audience: str | None | Iterable[str] = None
+    ) -> dict:
+        return self._validate_token(token, audience)
+
     # Validate a token and load the public key if needed
     def _validate_token(
         self, token: str, audience: str | None | Iterable[str] = None
