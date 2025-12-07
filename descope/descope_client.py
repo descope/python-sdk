@@ -84,6 +84,7 @@ class DescopeClient:
         )
         self._mgmt = MGMT(
             http_client=mgmt_http_client,
+            auth=self._auth,
             fga_cache_url=fga_cache_url,
         )
 

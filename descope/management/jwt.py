@@ -1,6 +1,7 @@
 from typing import Optional
 
 from descope._http_base import HTTPBase
+from descope.auth import Auth
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 from descope.jwt_common import generate_jwt_response
 from descope.management.common import (
@@ -13,6 +14,12 @@ from descope.management.common import (
 
 
 class JWT(HTTPBase):
+    _auth: Auth
+
+    def __init__(self, http_client, auth: Auth):
+        super().__init__(http_client)
+        self._auth = auth
+
     def update_jwt(
         self, jwt: str, custom_claims: dict, refresh_duration: int = 0
     ) -> str:
@@ -160,7 +167,9 @@ class JWT(HTTPBase):
             params=None,
         )
         resp = response.json()
-        jwt_response = generate_jwt_response(resp, None, None)
+        jwt_response = generate_jwt_response(
+            resp, None, None, self._auth.validate_token
+        )
         return jwt_response
 
     def sign_up(
@@ -232,7 +241,9 @@ class JWT(HTTPBase):
             params=None,
         )
         resp = response.json()
-        jwt_response = generate_jwt_response(resp, None, None)
+        jwt_response = generate_jwt_response(
+            resp, None, None, self._auth.validate_token
+        )
         return jwt_response
 
     def anonymous(
@@ -259,7 +270,9 @@ class JWT(HTTPBase):
             params=None,
         )
         resp = response.json()
-        jwt_response = generate_jwt_response(resp, None, None)
+        jwt_response = generate_jwt_response(
+            resp, None, None, self._auth.validate_token
+        )
         del jwt_response["firstSeen"]
         del jwt_response["user"]
         return jwt_response
