@@ -4,20 +4,21 @@
 
 | Name                                |    Stmts |     Miss |   Cover |   Missing |
 |------------------------------------ | -------: | -------: | ------: | --------: |
-| descope/auth.py                     |      259 |        5 |     98% |316, 348-350, 509, 544 |
+| descope/auth.py                     |      261 |        6 |     98% |316, 348-350, 390, 515, 550 |
 | descope/authmethod/enchantedlink.py |       92 |        2 |     98% |  202, 204 |
 | descope/authmethod/magiclink.py     |      103 |        4 |     96% |233, 235, 258, 260 |
 | descope/authmethod/otp.py           |      110 |        4 |     96% |330, 332, 355, 357 |
 | descope/common.py                   |      113 |        1 |     99% |       179 |
-| descope/descope\_client.py          |      184 |        4 |     98% |100, 131, 215, 312 |
+| descope/descope\_client.py          |      184 |        4 |     98% |101, 132, 216, 313 |
 | descope/http\_client.py             |       77 |        1 |     99% |        57 |
+| descope/jwt\_common.py              |       49 |        1 |     98% |       100 |
 | descope/management/audit.py         |       44 |       11 |     75% |74, 76, 78, 80, 82, 84, 86, 88, 90, 92, 94 |
 | descope/management/common.py        |      245 |        1 |     99% |        41 |
 | descope/management/role.py          |       30 |        1 |     97% |       154 |
 | descope/management/user.py          |      377 |       15 |     96% |68-73, 795, 1136, 1138, 1140, 1891, 1943, 1986, 1988, 1990 |
-|                           **TOTAL** | **2713** |   **49** | **98%** |           |
+|                           **TOTAL** | **2721** |   **51** | **98%** |           |
 
-26 files skipped due to complete coverage.
+25 files skipped due to complete coverage.
 
 
 ## Setup coverage badge
