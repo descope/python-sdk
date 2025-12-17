@@ -183,7 +183,7 @@ class SSOSettings(HTTPBase):
             uri=MgmtV1.sso_load_settings_path,
             params={"tenantId": tenant_id},
         )
-        return response.json()
+        return response
 
     def delete_settings(
         self,
@@ -305,7 +305,7 @@ class SSOSettings(HTTPBase):
             uri=MgmtV1.sso_settings_path,
             params={"tenantId": tenant_id},
         )
-        return response.json()
+        return response
 
     # DEPRECATED
     def configure(

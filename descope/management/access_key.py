@@ -64,7 +64,7 @@ class AccessKey(HTTPBase):
                 permitted_ips,
             ),
         )
-        return response.json()
+        return response
 
     def load(
         self,
@@ -88,7 +88,7 @@ class AccessKey(HTTPBase):
             uri=MgmtV1.access_key_load_path,
             params={"id": id},
         )
-        return response.json()
+        return response
 
     def search_all_access_keys(
         self,
@@ -114,7 +114,7 @@ class AccessKey(HTTPBase):
             MgmtV1.access_keys_search_path,
             body={"tenantIds": tenant_ids},
         )
-        return response.json()
+        return response
 
     def update(
         self,

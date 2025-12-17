@@ -133,7 +133,7 @@ class FGA(HTTPBase):
         return list(
             map(
                 lambda tuple: {"relation": tuple["tuple"], "allowed": tuple["allowed"]},
-                response.json()["tuples"],
+                response["tuples"],
             )
         )
 
@@ -149,7 +149,7 @@ class FGA(HTTPBase):
             MgmtV1.fga_resources_load,
             body={"resourceIdentifiers": resource_identifiers},
         )
-        return response.json().get("resourcesDetails", [])
+        return response.get("resourcesDetails", [])
 
     def save_resources_details(self, resources_details: List[dict]) -> None:
         """

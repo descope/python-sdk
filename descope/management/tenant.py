@@ -49,7 +49,7 @@ class Tenant(HTTPBase):
                 disabled,
             ),
         )
-        return response.json()
+        return response
 
     def update(
         self,
@@ -196,7 +196,7 @@ class Tenant(HTTPBase):
             MgmtV1.tenant_load_path,
             params={"id": id},
         )
-        return response.json()
+        return response
 
     def load_settings(
         self,
@@ -225,7 +225,7 @@ class Tenant(HTTPBase):
             MgmtV1.tenant_settings_path,
             params={"id": id},
         )
-        return response.json()
+        return response
 
     def load_all(
         self,
@@ -244,7 +244,7 @@ class Tenant(HTTPBase):
         response = self._http.get(
             MgmtV1.tenant_load_all_path,
         )
-        return response.json()
+        return response
 
     def search_all(
         self,
@@ -279,7 +279,7 @@ class Tenant(HTTPBase):
                 "customAttributes": custom_attributes,
             },
         )
-        return response.json()
+        return response
 
     @staticmethod
     def _compose_create_update_body(

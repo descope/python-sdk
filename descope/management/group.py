@@ -41,7 +41,7 @@ class Group(HTTPBase):
                 "tenantId": tenant_id,
             },
         )
-        return response.json()
+        return response
 
     def load_all_groups_for_members(
         self,
@@ -88,7 +88,7 @@ class Group(HTTPBase):
                 "userIds": user_ids,
             },
         )
-        return response.json()
+        return response
 
     def load_all_group_members(
         self,
@@ -129,4 +129,4 @@ class Group(HTTPBase):
                 "groupId": group_id,
             },
         )
-        return response.json()
+        return response

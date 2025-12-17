@@ -63,8 +63,7 @@ class Project(HTTPBase):
             MgmtV1.project_list_projects,
             body={},
         )
-        resp = response.json()
-
+        resp = response
         projects = resp["projects"]
         # Apply the function to the projects list
         formatted_projects = self.remove_tag_field(projects)
@@ -103,7 +102,7 @@ class Project(HTTPBase):
                 "tags": tags,
             },
         )
-        return response.json()
+        return response
 
     def export_project(
         self,
@@ -125,7 +124,7 @@ class Project(HTTPBase):
             MgmtV1.project_export,
             body={},
         )
-        return response.json()["files"]
+        return response["files"]
 
     def import_project(
         self,

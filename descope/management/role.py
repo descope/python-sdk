@@ -114,7 +114,7 @@ class Role(HTTPBase):
         response = self._http.get(
             MgmtV1.role_load_all_path,
         )
-        return response.json()
+        return response
 
     def search(
         self,
@@ -157,4 +157,4 @@ class Role(HTTPBase):
             MgmtV1.role_search_path,
             body=body,
         )
-        return response.json()
+        return response

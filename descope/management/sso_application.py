@@ -56,7 +56,7 @@ class SSOApplication(HTTPBase):
                 force_authentication,
             ),
         )
-        return response.json()
+        return response
 
     def create_saml_application(
         self,
@@ -153,7 +153,7 @@ class SSOApplication(HTTPBase):
                 logout_redirect_url,
             ),
         )
-        return response.json()
+        return response
 
     def update_oidc_application(
         self,
@@ -324,7 +324,7 @@ class SSOApplication(HTTPBase):
         AuthException: raised if load operation fails
         """
         response = self._http.get(MgmtV1.sso_application_load_path, params={"id": id})
-        return response.json()
+        return response
 
     def load_all(
         self,
@@ -346,7 +346,7 @@ class SSOApplication(HTTPBase):
         AuthException: raised if load operation fails
         """
         response = self._http.get(MgmtV1.sso_application_load_all_path)
-        return response.json()
+        return response
 
     @staticmethod
     def _compose_create_update_oidc_body(

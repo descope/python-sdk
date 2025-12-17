@@ -68,7 +68,7 @@ class Authz(HTTPBase):
         response = self._http.post(
             MgmtV1.authz_schema_load,
         )
-        return response.json()["schema"]
+        return response["schema"]
 
     def save_namespace(
         self, namespace: dict, old_name: str = "", schema_name: str = ""
@@ -265,7 +265,7 @@ class Authz(HTTPBase):
             MgmtV1.authz_re_has_relations,
             body={"relationQueries": relation_queries},
         )
-        return response.json()["relationQueries"]
+        return response["relationQueries"]
 
     def who_can_access(
         self, resource: str, relation_definition: str, namespace: str
@@ -289,7 +289,7 @@ class Authz(HTTPBase):
                 "namespace": namespace,
             },
         )
-        return response.json()["targets"]
+        return response["targets"]
 
     def resource_relations(self, resource: str) -> List[dict]:
         """
@@ -306,7 +306,7 @@ class Authz(HTTPBase):
             MgmtV1.authz_re_resource,
             body={"resource": resource},
         )
-        return response.json()["relations"]
+        return response["relations"]
 
     def targets_relations(self, targets: List[str]) -> List[dict]:
         """
@@ -323,7 +323,7 @@ class Authz(HTTPBase):
             MgmtV1.authz_re_targets,
             body={"targets": targets},
         )
-        return response.json()["relations"]
+        return response["relations"]
 
     def what_can_target_access(self, target: str) -> List[dict]:
         """
@@ -340,7 +340,7 @@ class Authz(HTTPBase):
             MgmtV1.authz_re_target_all,
             body={"target": target},
         )
-        return response.json()["relations"]
+        return response["relations"]
 
     def what_can_target_access_with_relation(
         self, target: str, relation_definition: str, namespace: str
@@ -365,7 +365,7 @@ class Authz(HTTPBase):
                 "namespace": namespace,
             },
         )
-        return response.json()["relations"]
+        return response["relations"]
 
     def get_modified(self, since: Optional[datetime] = None) -> dict:
         """
@@ -388,4 +388,4 @@ class Authz(HTTPBase):
                 )
             },
         )
-        return response.json()["relations"]
+        return response["relations"]

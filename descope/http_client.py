@@ -43,6 +43,102 @@ _default_headers = {
 }
 
 
+class DescopeResponse:
+    def __init__(self, response):
+        self.raw = response
+        self._json_data = None
+    
+    def json(self):
+        if self._json_data is None:
+            self._json_data = self.raw.json()
+        return self._json_data
+    
+    # Make it dict-compatible for backward compatibility
+    def __getitem__(self, key):
+        return self.json()[key]
+    
+    def __contains__(self, key):
+        return key in self.json()
+    
+    def keys(self):
+        return self.json().keys()
+    
+    def values(self):
+        return self.json().values()
+    
+    def items(self):
+        return self.json().items()
+    
+    def get(self, key, default=None):
+        return self.json().get(key, default)
+    
+    # Make it print like a dict for backward compatibility
+    def __str__(self):
+        return str(self.json())
+    
+    def __repr__(self):
+        return repr(self.json())
+    
+    # Make it behave like a dict in boolean context
+    def __bool__(self):
+        return bool(self.json())
+    
+    def __len__(self):
+        return len(self.json())
+    
+    # Equality comparison - compare the underlying JSON data
+    def __eq__(self, other):
+        if isinstance(other, DescopeResponse):
+            return self.json() == other.json()
+        # Allow comparison with dict/list directly
+        return self.json() == other
+    
+    def __ne__(self, other):
+        return not self.__eq__(other)
+    
+    # Iteration support for list responses
+    def __iter__(self):
+        return iter(self.json())
+    
+    # Hashing support (for use in sets/dicts)
+    def __hash__(self):
+        json_data = self.json()
+        if isinstance(json_data, dict):
+            return hash(tuple(sorted(json_data.items())))
+        elif isinstance(json_data, list):
+            return hash(tuple(json_data))
+        return hash(json_data)
+    
+    # Delegate properties
+    @property
+    def headers(self):
+        return self.raw.headers
+    
+    @property
+    def status_code(self):
+        return self.raw.status_code
+    
+    @property
+    def cookies(self):
+        return self.raw.cookies
+    
+    @property
+    def text(self):
+        return self.raw.text
+    
+    @property
+    def content(self):
+        return self.raw.content
+    
+    @property
+    def url(self):
+        return self.raw.url
+    
+    @property
+    def ok(self):
+        return self.raw.ok
+
+
 class HTTPClient:
     def __init__(
         self,
@@ -80,7 +176,7 @@ class HTTPClient:
         params=None,
         allow_redirects: Optional[bool] = True,
         pswd: Optional[str] = None,
-    ) -> requests.Response:
+    ) -> DescopeResponse:
         response = requests.get(
             f"{self.base_url}{uri}",
             headers=self._get_default_headers(pswd),
@@ -90,7 +186,7 @@ class HTTPClient:
             timeout=self.timeout_seconds,
         )
         self._raise_from_response(response)
-        return response
+        return DescopeResponse(response)
 
     def post(
         self,
@@ -100,7 +196,7 @@ class HTTPClient:
         params=None,
         pswd: Optional[str] = None,
         base_url: Optional[str] = None,
-    ) -> requests.Response:
+    ) -> DescopeResponse:
         response = requests.post(
             f"{base_url or self.base_url}{uri}",
             headers=self._get_default_headers(pswd),
@@ -111,7 +207,7 @@ class HTTPClient:
             timeout=self.timeout_seconds,
         )
         self._raise_from_response(response)
-        return response
+        return DescopeResponse(response)
 
     def patch(
         self,
@@ -120,7 +216,7 @@ class HTTPClient:
         body: Optional[Union[dict, list[dict], list[str]]],
         params=None,
         pswd: Optional[str] = None,
-    ) -> requests.Response:
+    ) -> DescopeResponse:
         response = requests.patch(
             f"{self.base_url}{uri}",
             headers=self._get_default_headers(pswd),
@@ -131,7 +227,7 @@ class HTTPClient:
             timeout=self.timeout_seconds,
         )
         self._raise_from_response(response)
-        return response
+        return DescopeResponse(response)
 
     def delete(
         self,
@@ -139,7 +235,7 @@ class HTTPClient:
         *,
         params=None,
         pswd: Optional[str] = None,
-    ) -> requests.Response:
+    ) -> DescopeResponse:
         response = requests.delete(
             f"{self.base_url}{uri}",
             params=params,
@@ -149,7 +245,7 @@ class HTTPClient:
             timeout=self.timeout_seconds,
         )
         self._raise_from_response(response)
-        return response
+        return DescopeResponse(response)
 
     def get_default_headers(self, pswd: Optional[str] = None) -> dict:
         return self._get_default_headers(pswd)
