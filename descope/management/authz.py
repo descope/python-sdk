@@ -181,7 +181,7 @@ class Authz(HTTPBase):
                     "tenants": ["t1", "t2"],
                     "roles": ["r1", "r2"],
                     "text": "full-text-search",
-                    "statuses": ["enabled|disabled|invited"],
+                    "statuses": ["enabled|disabled|invited|expired"],
                     "ssoOnly": True|False,
                     "withTestUser": True|False,
                     "customAttributes": {
