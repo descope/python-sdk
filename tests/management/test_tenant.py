@@ -4,7 +4,11 @@ from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
 from descope.common import DEFAULT_TIMEOUT_SECONDS
-from descope.management.common import MgmtV1
+from descope.management.common import (
+    MgmtV1,
+    SSOSetupSuiteSettings,
+    SSOSetupSuiteSettingsDisabledFeatures,
+)
 
 from .. import common
 
@@ -417,6 +421,58 @@ class TestTenant(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+        # Test success flow with SSO Setup Suite settings
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            sso_disabled_features = SSOSetupSuiteSettingsDisabledFeatures(
+                saml=True, oidc=False, scim=True, sso_domains=False, group_mapping=True
+            )
+            sso_settings = SSOSetupSuiteSettings(
+                enabled=True,
+                style_id="style123",
+                disabled_features=sso_disabled_features,
+            )
+            self.assertIsNone(
+                client.mgmt.tenant.update_settings(
+                    "t1",
+                    self_provisioning_domains=["domain1.com"],
+                    domains=["domain1.com", "domain2.com"],
+                    auth_type="oidc",
+                    session_settings_enabled=True,
+                    sso_setup_suite_settings=sso_settings,
+                )
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_settings_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                json={
+                    "tenantId": "t1",
+                    "selfProvisioningDomains": ["domain1.com"],
+                    "domains": ["domain1.com", "domain2.com"],
+                    "authType": "oidc",
+                    "enabled": True,
+                    "ssoSetupSuiteSettings": {
+                        "enabled": True,
+                        "styleId": "style123",
+                        "disabledFeatures": {
+                            "saml": True,
+                            "oidc": False,
+                            "scim": True,
+                            "ssoDomains": False,
+                            "groupMapping": True,
+                        },
+                    },
+                },
+                allow_redirects=False,
+                params=None,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
     def test_load_settings(self):
         client = DescopeClient(
             self.dummy_project_id,
@@ -448,6 +504,57 @@ class TestTenant(common.DescopeTest):
             self.assertEqual(resp["domains"], ["domain1.com", "domain2.com"])
             self.assertEqual(resp["authType"], "oidc")
             self.assertEqual(resp["sessionSettingsEnabled"], True)
+            mock_get.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_settings_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params={"id": "t1"},
+                allow_redirects=True,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test success flow with SSO Setup Suite settings
+        with patch("requests.get") as mock_get:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads(
+                """
+                {
+                    "domains": ["domain1.com", "domain2.com"],
+                    "authType": "oidc",
+                    "sessionSettingsEnabled": true,
+                    "ssoSetupSuiteSettings": {
+                        "enabled": true,
+                        "styleId": "style123",
+                        "disabledFeatures": {
+                            "saml": true,
+                            "oidc": false,
+                            "scim": true,
+                            "ssoDomains": false,
+                            "groupMapping": true
+                        }
+                    }
+                }
+                """
+            )
+            mock_get.return_value = network_resp
+            resp = client.mgmt.tenant.load_settings("t1")
+            self.assertEqual(resp["domains"], ["domain1.com", "domain2.com"])
+            self.assertEqual(resp["authType"], "oidc")
+            self.assertEqual(resp["sessionSettingsEnabled"], True)
+            sso_settings = resp["ssoSetupSuiteSettings"]
+            self.assertEqual(sso_settings["enabled"], True)
+            self.assertEqual(sso_settings["styleId"], "style123")
+            disabled_features = sso_settings["disabledFeatures"]
+            self.assertEqual(disabled_features["saml"], True)
+            self.assertEqual(disabled_features["oidc"], False)
+            self.assertEqual(disabled_features["scim"], True)
+            self.assertEqual(disabled_features["ssoDomains"], False)
+            self.assertEqual(disabled_features["groupMapping"], True)
             mock_get.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_settings_path}",
                 headers={
