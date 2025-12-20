@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List, Optional
+from typing import Dict, List, Optional, Any
 
 
 class SessionExpirationUnit(Enum):
@@ -13,6 +13,51 @@ class TenantAuthType(Enum):
     NONE = "none"
     SAML = "saml"
     OIDC = "oidc"
+
+
+class SSOSetupSuiteSettingsDisabledFeatures:
+    def __init__(
+        self,
+        saml: bool = False,
+        oidc: bool = False,
+        scim: bool = False,
+        sso_domains: bool = False,
+        group_mapping: bool = False,
+    ):
+        self.saml = saml
+        self.oidc = oidc
+        self.scim = scim
+        self.sso_domains = sso_domains
+        self.group_mapping = group_mapping
+
+    def to_dict(self) -> Dict[str, bool]:
+        return {
+            "saml": self.saml,
+            "oidc": self.oidc,
+            "scim": self.scim,
+            "ssoDomains": self.sso_domains,
+            "groupMapping": self.group_mapping,
+        }
+
+
+class SSOSetupSuiteSettings:
+    def __init__(
+        self,
+        enabled: bool,
+        style_id: Optional[str] = None,
+        disabled_features: Optional[SSOSetupSuiteSettingsDisabledFeatures] = None,
+    ):
+        self.enabled = enabled
+        self.style_id = style_id
+        self.disabled_features = disabled_features
+
+    def to_dict(self) -> Dict[str, Any]:
+        result: Dict[str, Any] = {"enabled": self.enabled}
+        if self.style_id is not None:
+            result["styleId"] = self.style_id
+        if self.disabled_features is not None:
+            result["disabledFeatures"] = self.disabled_features.to_dict()
+        return result
 
 
 class AccessType(Enum):
