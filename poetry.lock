@@ -643,12 +643,12 @@ dev = ["coverage", "hypothesis", "hypothesmith (>=0.2)", "pre-commit", "pytest",
 
 [[package]]
 name = "flake8-pyproject"
-version = "1.2.3"
+version = "1.2.4"
 description = "Flake8 plug-in loading the configuration from pyproject.toml"
 optional = false
-python-versions = ">= 3.6"
+python-versions = ">=3.6"
 files = [
-    {file = "flake8_pyproject-1.2.3-py3-none-any.whl", hash = "sha256:6249fe53545205af5e76837644dc80b4c10037e73a0e5db87ff562d75fb5bd4a"},
+    {file = "flake8_pyproject-1.2.4-py3-none-any.whl", hash = "sha256:ea34c057f9a9329c76d98723bb2bb498cc6ba8ff9872c4d19932d48c91249a77"},
 ]
 
 [package.dependencies]
@@ -656,7 +656,7 @@ Flake8 = ">=5"
 TOMLi = {version = "*", markers = "python_version < \"3.11\""}
 
 [package.extras]
-dev = ["pyTest", "pyTest-cov"]
+dev = ["Flit (>=3.4)", "pyTest (>=7)", "pyTest-cov (>=7)"]
 
 [[package]]
 name = "flask"
@@ -1499,4 +1499,4 @@ flask = ["Flask"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8.1,<4.0"
-content-hash = "3ff83961673abf5e34bf736af959ea3b3e2dad184de7a3048a42a5b5c9e41580"
+content-hash = "27809e3723d12e4238f2bf6df82f8096efe75706daf83d6b6f444cfde0a2eb14"
