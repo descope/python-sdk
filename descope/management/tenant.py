@@ -126,14 +126,14 @@ class Tenant(HTTPBase):
             auth_type (Optional[TenantAuthType]): Authentication type for the tenant.
             session_settings_enabled (Optional[bool]): Whether session settings are enabled.
             refresh_token_expiration (Optional[int]): Expiration time for refresh tokens.
-            refresh_token_expiration_unit (Optional[SessionExiprationUnit]): Unit for refresh token expiration.
+            refresh_token_expiration_unit (Optional[SessionExpirationUnit]): Unit for refresh token expiration.
             session_token_expiration (Optional[int]): Expiration time for session tokens.
-            session_token_expiration_unit (Optional[SessionExiprationUnit]): Unit for session token expiration.
+            session_token_expiration_unit (Optional[SessionExpirationUnit]): Unit for session token expiration.
             stepup_token_expiration (Optional[int]): Expiration time for step-up tokens.
-            stepup_token_expiration_unit (Optional[SessionExiprationUnit]): Unit for step-up token expiration.
+            stepup_token_expiration_unit (Optional[SessionExpirationUnit]): Unit for step-up token expiration.
             enable_inactivity (Optional[bool]): Whether inactivity timeout is enabled.
             inactivity_time (Optional[int]): Inactivity timeout duration.
-            inactivity_time_unit (Optional[SessionExiprationUnit]): Unit for inactivity timeout.
+            inactivity_time_unit (Optional[SessionExpirationUnit]): Unit for inactivity timeout.
             JITDisabled (Optional[bool]): Whether JIT is disabled.
             sso_setup_suite_settings (Optional[SSOSetupSuiteSettings]): SSO Setup Suite configuration.
 
