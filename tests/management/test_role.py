@@ -45,7 +45,7 @@ class TestRole(common.DescopeTest):
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             self.assertIsNone(
-                client.mgmt.role.create("R1", "Something", ["P1"], "t1", True)
+                client.mgmt.role.create("R1", "Something", ["P1"], "t1", True, False)
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.role_create_path}",
@@ -61,6 +61,7 @@ class TestRole(common.DescopeTest):
                     "permissionNames": ["P1"],
                     "tenantId": "t1",
                     "default": True,
+                    "private": False,
                 },
                 allow_redirects=False,
                 verify=True,
@@ -96,6 +97,7 @@ class TestRole(common.DescopeTest):
                     ["P1", "P2"],
                     "t1",
                     True,
+                    False,
                 )
             )
             mock_post.assert_called_with(
@@ -113,6 +115,7 @@ class TestRole(common.DescopeTest):
                     "permissionNames": ["P1", "P2"],
                     "tenantId": "t1",
                     "default": True,
+                    "private": False,
                 },
                 allow_redirects=False,
                 verify=True,
@@ -259,6 +262,120 @@ class TestRole(common.DescopeTest):
                     "roleNames": ["r"],
                     "roleNameLike": "x",
                     "permissionNames": ["p1", "p2"],
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_create_with_private_true(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test private=True
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(
+                client.mgmt.role.create(
+                    "PrivateRole", "Private role", ["P1"], "t1", False, True
+                )
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.role_create_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "name": "PrivateRole",
+                    "description": "Private role",
+                    "permissionNames": ["P1"],
+                    "tenantId": "t1",
+                    "default": False,
+                    "private": True,
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_update_with_private_true(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test private=True
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(
+                client.mgmt.role.update(
+                    "role",
+                    "updated-role",
+                    "Updated private role",
+                    ["P1", "P2"],
+                    "t1",
+                    False,
+                    True,
+                )
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.role_update_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "name": "role",
+                    "newName": "updated-role",
+                    "description": "Updated private role",
+                    "permissionNames": ["P1", "P2"],
+                    "tenantId": "t1",
+                    "default": False,
+                    "private": True,
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_create_without_private_parameter(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test without private parameter (should be None)
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(client.mgmt.role.create("SimpleRole", "Simple role"))
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.role_create_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "name": "SimpleRole",
+                    "description": "Simple role",
+                    "permissionNames": [],
+                    "tenantId": None,
+                    "default": None,
+                    "private": None,
                 },
                 allow_redirects=False,
                 verify=True,
