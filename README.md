@@ -975,7 +975,8 @@ descope_client.mgmt.role.create(
     name="My Role",
     description="Optional description to briefly explain what this role allows.",
     permission_names=["My Updated Permission"],
-    tenant_id="Optionally scope this role for this specific tenant. If left empty, the role will be available to all tenants."
+    tenant_id="Optionally scope this role for this specific tenant. If left empty, the role will be available to all tenants.",
+    private=False  # Optional, marks this role as private role
 )
 
 # Update will override all fields as is. Use carefully.
@@ -983,8 +984,9 @@ descope_client.mgmt.role.update(
     name="My Role",
     new_name="My Updated Role",
     description="A revised description",
-    permission_names=["My Updated Permission", "Another Permission"]
-    tenant_id="The tenant ID to which this role is associated, leave empty, if role is a global one"
+    permission_names=["My Updated Permission", "Another Permission"],
+    tenant_id="The tenant ID to which this role is associated, leave empty, if role is a global one",
+    private=True  # Optional, marks this role as private role
 )
 
 # Role deletion cannot be undone. Use carefully.
