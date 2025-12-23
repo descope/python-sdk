@@ -1080,6 +1080,53 @@ class TestDescopeClient(common.DescopeTest):
         self.assertEqual(client._auth.http_client.base_url, expected_base_url)
         self.assertEqual(client._mgmt._http.base_url, expected_base_url)
 
+    def test_verbose_mode_disabled_by_default(self):
+        """Test that verbose mode is disabled by default."""
+        client = DescopeClient(
+            project_id=self.dummy_project_id,
+            public_key=self.public_key_dict,
+        )
+        assert client.get_last_response() is None
+
+    def test_verbose_mode_enabled(self):
+        """Test that verbose mode can be enabled."""
+        client = DescopeClient(
+            project_id=self.dummy_project_id,
+            public_key=self.public_key_dict,
+            verbose=True,
+        )
+        # Just verify it doesn't error when enabled
+        assert client.get_last_response() is None  # No requests made yet
+
+    @patch("requests.post")
+    def test_verbose_mode_captures_mgmt_response(self, mock_post):
+        """Test that management API responses are captured in verbose mode."""
+        mock_response = mock.Mock()
+        mock_response.ok = True
+        mock_response.json.return_value = {
+            "user": {"id": "u1", "loginIds": ["test@example.com"]}
+        }
+        mock_response.headers = {"cf-ray": "mgmt-ray-123", "x-request-id": "req-456"}
+        mock_response.status_code = 200
+        mock_post.return_value = mock_response
+
+        client = DescopeClient(
+            project_id=self.dummy_project_id,
+            public_key=self.public_key_dict,
+            management_key="test-mgmt-key",
+            verbose=True,
+        )
+
+        # Make a management API call
+        client.mgmt.user.create(login_id="test@example.com")
+
+        # Verify response was captured
+        last_resp = client.get_last_response()
+        assert last_resp is not None
+        assert last_resp["user"]["id"] == "u1"
+        assert last_resp.headers.get("cf-ray") == "mgmt-ray-123"
+        assert last_resp.status_code == 200
+
 
 if __name__ == "__main__":
     unittest.main()
