@@ -190,9 +190,9 @@ class HTTPClient:
             verify=self.secure,
             timeout=self.timeout_seconds,
         )
-        self._raise_from_response(response)
         if self.verbose:
             self._last_response = DescopeResponse(response)
+        self._raise_from_response(response)
         return response
 
     def post(
@@ -213,9 +213,9 @@ class HTTPClient:
             params=params,
             timeout=self.timeout_seconds,
         )
-        self._raise_from_response(response)
         if self.verbose:
             self._last_response = DescopeResponse(response)
+        self._raise_from_response(response)
         return response
 
     def patch(
@@ -235,9 +235,9 @@ class HTTPClient:
             params=params,
             timeout=self.timeout_seconds,
         )
-        self._raise_from_response(response)
         if self.verbose:
             self._last_response = DescopeResponse(response)
+        self._raise_from_response(response)
         return response
 
     def delete(
@@ -255,9 +255,9 @@ class HTTPClient:
             verify=self.secure,
             timeout=self.timeout_seconds,
         )
-        self._raise_from_response(response)
         if self.verbose:
             self._last_response = DescopeResponse(response)
+        self._raise_from_response(response)
         return response
 
     def get_last_response(self) -> DescopeResponse | None:
