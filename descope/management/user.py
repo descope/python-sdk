@@ -438,7 +438,7 @@ class User(HTTPBase):
         picture (str): Optional url for user picture
         custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
         sso_app_ids (List[str]): Optional, list of SSO applications IDs to be associated with the user.
-        status (str): Optional status field. Can be one of: "enabled", "disabled", "invited".
+        status (str): Optional status field. Can be one of: "enabled", "disabled", "invited", "expired".
         test (bool, optional): Set to True to update a test user. Defaults to False.
 
         Return value (dict):
@@ -449,11 +449,16 @@ class User(HTTPBase):
         Raise:
         AuthException: raised if patch operation fails
         """
-        if status is not None and status not in ["enabled", "disabled", "invited"]:
+        if status is not None and status not in [
+            "enabled",
+            "disabled",
+            "invited",
+            "expired",
+        ]:
             raise AuthException(
                 400,
                 ERROR_TYPE_INVALID_ARGUMENT,
-                f"Invalid status value: {status}. Must be one of: enabled, disabled, invited",
+                f"Invalid status value: {status}. Must be one of: enabled, disabled, invited, expired",
             )
         response = self._http.patch(
             MgmtV1.user_patch_path,
@@ -506,11 +511,12 @@ class User(HTTPBase):
                 "enabled",
                 "disabled",
                 "invited",
+                "expired",
             ]:
                 raise AuthException(
                     400,
                     ERROR_TYPE_INVALID_ARGUMENT,
-                    f"Invalid status value: {user.status} for user {user.login_id}. Must be one of: enabled, disabled, invited",
+                    f"Invalid status value: {user.status} for user {user.login_id}. Must be one of: enabled, disabled, invited, expired",
                 )
 
         response = self._http.patch(
@@ -728,7 +734,7 @@ class User(HTTPBase):
         test_users_only (bool): Optional filter only test users.
         with_test_user (bool): Optional include test users in search.
         custom_attributes (dict): Optional search for a attribute with a given value
-        statuses (List[str]): Optional list of statuses to search for ("enabled", "disabled", "invited")
+        statuses (List[str]): Optional list of statuses to search for ("enabled", "disabled", "invited", "expired")
         emails (List[str]): Optional list of emails to search for
         phones (List[str]): Optional list of phones to search for
         sso_app_ids (List[str]): Optional list of SSO application IDs to filter by
@@ -850,7 +856,7 @@ class User(HTTPBase):
         limit (int): Optional limit of the number of users returned. Leave empty for default.
         page (int): Optional pagination control. Pages start at 0 and must be non-negative.
         custom_attributes (dict): Optional search for a attribute with a given value
-        statuses (List[str]): Optional list of statuses to search for ("enabled", "disabled", "invited")
+        statuses (List[str]): Optional list of statuses to search for ("enabled", "disabled", "invited", "expired")
         emails (List[str]): Optional list of emails to search for
         phones (List[str]): Optional list of phones to search for
         sso_app_ids (List[str]): Optional list of SSO application IDs to filter by

@@ -14,6 +14,7 @@ class Role(HTTPBase):
         permission_names: Optional[List[str]] = None,
         tenant_id: Optional[str] = None,
         default: Optional[bool] = None,
+        private: Optional[bool] = None,
     ):
         """
         Create a new role.
@@ -24,6 +25,7 @@ class Role(HTTPBase):
         permission_names (List[str]): Optional list of names of permissions this role grants.
         tenant_id (str): Optional tenant ID to create the role in.
         default (bool): Optional marks this role as default role.
+        private (bool): Optional marks this role as private role.
 
         Raise:
         AuthException: raised if creation operation fails
@@ -38,6 +40,7 @@ class Role(HTTPBase):
                 "permissionNames": permission_names,
                 "tenantId": tenant_id,
                 "default": default,
+                "private": private,
             },
         )
 
@@ -49,6 +52,7 @@ class Role(HTTPBase):
         permission_names: Optional[List[str]] = None,
         tenant_id: Optional[str] = None,
         default: Optional[bool] = None,
+        private: Optional[bool] = None,
     ):
         """
         Update an existing role with the given various fields. IMPORTANT: All parameters are used as overrides
@@ -61,6 +65,7 @@ class Role(HTTPBase):
         permission_names (List[str]): Optional list of names of permissions this role grants.
         tenant_id (str): Optional tenant ID to update the role in.
         default (bool): Optional marks this role as default role.
+        private (bool): Optional marks this role as private role.
 
         Raise:
         AuthException: raised if update operation fails
@@ -75,6 +80,7 @@ class Role(HTTPBase):
                 "permissionNames": permission_names,
                 "tenantId": tenant_id,
                 "default": default,
+                "private": private,
             },
         )
 

@@ -1,7 +1,12 @@
 from typing import Any, List, Optional
 
 from descope._http_base import HTTPBase
-from descope.management.common import MgmtV1, SessionExpirationUnit, TenantAuthType
+from descope.management.common import (
+    MgmtV1,
+    SessionExpirationUnit,
+    SSOSetupSuiteSettings,
+    TenantAuthType,
+)
 
 
 class Tenant(HTTPBase):
@@ -109,6 +114,7 @@ class Tenant(HTTPBase):
         inactivity_time: Optional[int] = None,
         inactivity_time_unit: Optional[SessionExpirationUnit] = None,
         JITDisabled: Optional[bool] = None,
+        sso_setup_suite_settings: Optional[SSOSetupSuiteSettings] = None,
     ):
         """
         Update an existing tenant's session settings.
@@ -120,15 +126,16 @@ class Tenant(HTTPBase):
             auth_type (Optional[TenantAuthType]): Authentication type for the tenant.
             session_settings_enabled (Optional[bool]): Whether session settings are enabled.
             refresh_token_expiration (Optional[int]): Expiration time for refresh tokens.
-            refresh_token_expiration_unit (Optional[SessionExiprationUnit]): Unit for refresh token expiration.
+            refresh_token_expiration_unit (Optional[SessionExpirationUnit]): Unit for refresh token expiration.
             session_token_expiration (Optional[int]): Expiration time for session tokens.
-            session_token_expiration_unit (Optional[SessionExiprationUnit]): Unit for session token expiration.
+            session_token_expiration_unit (Optional[SessionExpirationUnit]): Unit for session token expiration.
             stepup_token_expiration (Optional[int]): Expiration time for step-up tokens.
-            stepup_token_expiration_unit (Optional[SessionExiprationUnit]): Unit for step-up token expiration.
+            stepup_token_expiration_unit (Optional[SessionExpirationUnit]): Unit for step-up token expiration.
             enable_inactivity (Optional[bool]): Whether inactivity timeout is enabled.
             inactivity_time (Optional[int]): Inactivity timeout duration.
-            inactivity_time_unit (Optional[SessionExiprationUnit]): Unit for inactivity timeout.
+            inactivity_time_unit (Optional[SessionExpirationUnit]): Unit for inactivity timeout.
             JITDisabled (Optional[bool]): Whether JIT is disabled.
+            sso_setup_suite_settings (Optional[SSOSetupSuiteSettings]): SSO Setup Suite configuration.
 
         Raise:
             AuthException: raised if update operation fails
@@ -149,6 +156,9 @@ class Tenant(HTTPBase):
             "inactivityTime": inactivity_time,
             "inactivityTimeUnit": inactivity_time_unit,
             "JITDisabled": JITDisabled,
+            "ssoSetupSuiteSettings": (
+                sso_setup_suite_settings.to_dict() if sso_setup_suite_settings else None
+            ),
         }
 
         body = {k: v for k, v in body.items() if v is not None}
@@ -215,7 +225,7 @@ class Tenant(HTTPBase):
              "sessionTokenExpiration":<int>, "sessionTokenExpirationUnit":<str>,
              "stepupTokenExpiration":<int>, "stepupTokenExpirationUnit":<str>,
              "enableInactivity":<bool>, "inactivityTime":<int>, "inactivityTimeUnit":<str>,
-             "JITDisabled":<bool> }
+             "JITDisabled":<bool>, "ssoSetupSuiteSettings":<dict> }
         Containing the loaded tenant session settings.
 
         Raise:
