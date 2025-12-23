@@ -84,6 +84,7 @@ These sections show how to use the SDK to perform permission and user management
 14. [Manage Project](#manage-project)
 15. [Manage SSO Applications](#manage-sso-applications)
 16. [Manage Outbound Applications](#manage-outbound-applications)
+17. [Manage Descopers](#manage-descopers)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -1508,6 +1509,74 @@ latest_tenant_token = descope_client.mgmt.outbound_application_by_token.fetch_te
     "tenant-id",
     {"forceRefresh": True}  # Optional
 )
+```
+
+### Manage Descopers
+
+You can create, update, delete, load or list Descopers (users who have access to the Descope console):
+
+```python
+from descope import (
+    DescoperAttributes,
+    DescoperCreate,
+    DescoperProjectRole,
+    DescoperRBAC,
+    DescoperRole,
+)
+
+# Create a new Descoper
+resp = descope_client.mgmt.descoper.create(
+    descopers=[
+        DescoperCreate(
+            login_id="user@example.com",
+            attributes=DescoperAttributes(
+                display_name="John Doe",
+                email="user@example.com",
+                phone="+1234567890",
+            ),
+            send_invite=True,  # Send an invitation email
+            rbac=DescoperRBAC(
+                is_company_admin=False,
+                projects=[
+                    DescoperProjectRole(
+                        project_ids=["project-id-1"],
+                        role=DescoperRole.ADMIN,
+                    )
+                ],
+            ),
+        )
+    ]
+)
+descopers = resp["descopers"]
+total = resp["total"]
+
+# Load a Descoper by ID
+resp = descope_client.mgmt.descoper.load("descoper-id")
+descoper = resp["descoper"]
+
+# Update a Descoper's attributes and/or RBAC
+# Note: All fields that are set will override existing values
+resp = descope_client.mgmt.descoper.update(
+    id="descoper-id",
+    attributes=DescoperAttributes(
+        display_name="Updated Name",
+    ),
+    rbac=DescoperRBAC(
+        is_company_admin=True,
+    ),
+)
+updated_descoper = resp["descoper"]
+
+# List all Descopers
+resp = descope_client.mgmt.descoper.list()
+descopers = resp["descopers"]
+total = resp["total"]
+for descoper in descopers:
+    # Do something
+
+# Delete a Descoper
+# Descoper deletion cannot be undone. Use carefully.
+descope_client.mgmt.descoper.delete("descoper-id")
 ```
 
 ### Utils for your end to end (e2e) tests and integration tests
