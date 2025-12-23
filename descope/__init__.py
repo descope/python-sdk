@@ -19,6 +19,12 @@ from descope.exceptions import (
 )
 from descope.management.common import (
     AssociatedTenant,
+    DescoperAttributes,
+    DescoperCreate,
+    DescoperProjectRole,
+    DescoperRBAC,
+    DescoperRole,
+    DescoperTagRole,
     SAMLIDPAttributeMappingInfo,
     SAMLIDPGroupsMappingInfo,
     SAMLIDPRoleGroupMappingInfo,

@@ -113,6 +113,26 @@ class HTTPClient:
         self._raise_from_response(response)
         return response
 
+    def put(
+        self,
+        uri: str,
+        *,
+        body: Optional[Union[dict, list[dict], list[str]]] = None,
+        params=None,
+        pswd: Optional[str] = None,
+    ) -> requests.Response:
+        response = requests.put(
+            f"{self.base_url}{uri}",
+            headers=self._get_default_headers(pswd),
+            json=body,
+            allow_redirects=False,
+            verify=self.secure,
+            params=params,
+            timeout=self.timeout_seconds,
+        )
+        self._raise_from_response(response)
+        return response
+
     def patch(
         self,
         uri: str,
