@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Any
 
 from descope._http_base import HTTPBase
 from descope.management.common import (
@@ -69,7 +69,7 @@ class Descoper(HTTPBase):
         if not id:
             raise ValueError("id cannot be empty")
 
-        body = {"id": id}
+        body: dict[str, Any] = {"id": id}
         if attributes is not None:
             body["attributes"] = attributes.to_dict()
         if rbac is not None:
