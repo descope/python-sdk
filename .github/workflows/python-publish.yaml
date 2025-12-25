@@ -23,9 +23,6 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Set version from tag
-        run: poetry version $(git describe --tags --abbrev=0)
-
       - name: Build
         uses: descope/.github/.github/actions/python/poetry/build@main
 
