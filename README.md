@@ -9,16 +9,15 @@
 | descope/authmethod/magiclink.py     |      103 |        4 |     96% |233, 235, 258, 260 |
 | descope/authmethod/otp.py           |      110 |        4 |     96% |330, 332, 355, 357 |
 | descope/common.py                   |      113 |        1 |     99% |       179 |
-| descope/descope\_client.py          |      184 |        4 |     98% |101, 132, 216, 313 |
-| descope/http\_client.py             |       77 |        1 |     99% |        57 |
+| descope/descope\_client.py          |      190 |        4 |     98% |108, 139, 223, 320 |
 | descope/jwt\_common.py              |       49 |        1 |     98% |       100 |
 | descope/management/audit.py         |       44 |       11 |     75% |74, 76, 78, 80, 82, 84, 86, 88, 90, 92, 94 |
 | descope/management/common.py        |      266 |        1 |     99% |        86 |
 | descope/management/role.py          |       30 |        1 |     97% |       160 |
 | descope/management/user.py          |      377 |       15 |     96% |68-73, 801, 1142, 1144, 1146, 1897, 1949, 1992, 1994, 1996 |
-|                           **TOTAL** | **2743** |   **51** | **98%** |           |
+|                           **TOTAL** | **2820** |   **50** | **98%** |           |
 
-25 files skipped due to complete coverage.
+26 files skipped due to complete coverage.
 
 
 ## Setup coverage badge
