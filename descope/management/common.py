@@ -108,6 +108,7 @@ class MgmtV1:
 
     # outbound application
     outbound_application_create_path = "/v1/mgmt/outbound/app/create"
+    outbound_application_create_by_dcr_preset_path = "/v1/mgmt/outbound/app/create/bydcrpreset"
     outbound_application_update_path = "/v1/mgmt/outbound/app/update"
     outbound_application_delete_path = "/v1/mgmt/outbound/app/delete"
     outbound_application_load_path = "/v1/mgmt/outbound/app"
