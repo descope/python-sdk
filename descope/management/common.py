@@ -258,6 +258,13 @@ class MgmtV1:
     project_import = "/v1/mgmt/project/import"
     project_list_projects = "/v1/mgmt/projects/list"
 
+    # Descoper
+    descoper_create_path = "/v1/mgmt/descoper"
+    descoper_update_path = "/v1/mgmt/descoper"
+    descoper_load_path = "/v1/mgmt/descoper"
+    descoper_delete_path = "/v1/mgmt/descoper"
+    descoper_list_path = "/v1/mgmt/descoper/list"
+
 
 class MgmtSignUpOptions:
     def __init__(
@@ -468,3 +475,128 @@ def sort_to_dict(sort: List[Sort]) -> list:
                 }
             )
     return sort_list
+
+
+class DescoperRole(Enum):
+    """Represents a Descoper role."""
+
+    ADMIN = "admin"
+    DEVELOPER = "developer"
+    SUPPORT = "support"
+    AUDITOR = "auditor"
+
+
+class DescoperAttributes:
+    """
+    Represents Descoper attributes, such as name and email/phone.
+    """
+
+    def __init__(
+        self,
+        display_name: Optional[str] = None,
+        email: Optional[str] = None,
+        phone: Optional[str] = None,
+    ):
+        self.display_name = display_name
+        self.email = email
+        self.phone = phone
+
+    def to_dict(self) -> dict:
+        return {
+            "displayName": self.display_name,
+            "email": self.email,
+            "phone": self.phone,
+        }
+
+
+class DescoperTagRole:
+    """
+    Represents a Descoper tags to role mapping.
+    """
+
+    def __init__(
+        self,
+        tags: Optional[List[str]] = None,
+        role: Optional[DescoperRole] = None,
+    ):
+        self.tags = tags if tags is not None else []
+        self.role = role
+
+    def to_dict(self) -> dict:
+        return {
+            "tags": self.tags,
+            "role": self.role.value if self.role else None,
+        }
+
+
+class DescoperProjectRole:
+    """
+    Represents a Descoper projects to role mapping.
+    """
+
+    def __init__(
+        self,
+        project_ids: Optional[List[str]] = None,
+        role: Optional[DescoperRole] = None,
+    ):
+        self.project_ids = project_ids if project_ids is not None else []
+        self.role = role
+
+    def to_dict(self) -> dict:
+        return {
+            "projectIds": self.project_ids,
+            "role": self.role.value if self.role else None,
+        }
+
+
+class DescoperRBAC:
+    """
+    Represents Descoper RBAC configuration.
+    """
+
+    def __init__(
+        self,
+        is_company_admin: bool = False,
+        tags: Optional[List[DescoperTagRole]] = None,
+        projects: Optional[List[DescoperProjectRole]] = None,
+    ):
+        self.is_company_admin = is_company_admin
+        self.tags = tags if tags is not None else []
+        self.projects = projects if projects is not None else []
+
+    def to_dict(self) -> dict:
+        return {
+            "isCompanyAdmin": self.is_company_admin,
+            "tags": [t.to_dict() for t in self.tags],
+            "projects": [p.to_dict() for p in self.projects],
+        }
+
+
+class DescoperCreate:
+    """
+    Represents a Descoper to be created.
+    """
+
+    def __init__(
+        self,
+        login_id: str,
+        attributes: Optional[DescoperAttributes] = None,
+        send_invite: bool = False,
+        rbac: Optional[DescoperRBAC] = None,
+    ):
+        self.login_id = login_id
+        self.attributes = attributes
+        self.send_invite = send_invite
+        self.rbac = rbac
+
+    def to_dict(self) -> dict:
+        return {
+            "loginId": self.login_id,
+            "attributes": self.attributes.to_dict() if self.attributes else None,
+            "sendInvite": self.send_invite,
+            "rbac": self.rbac.to_dict() if self.rbac else None,
+        }
+
+
+def descopers_to_dict(descopers: List[DescoperCreate]) -> list:
+    return [d.to_dict() for d in descopers]
