@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from typing import Iterable, Optional
+from typing import Iterable
 
 import requests
 
@@ -27,15 +27,16 @@ class DescopeClient:
     def __init__(
         self,
         project_id: str,
-        public_key: Optional[dict] = None,
+        public_key: dict | None = None,
         skip_verify: bool = False,
-        management_key: Optional[str] = None,
+        management_key: str | None = None,
         timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
         jwt_validation_leeway: int = 5,
-        auth_management_key: Optional[str] = None,
-        fga_cache_url: Optional[str] = None,
+        auth_management_key: str | None = None,
+        fga_cache_url: str | None = None,
         *,
-        base_url: Optional[str] = None,
+        base_url: str | None = None,
+        verbose: bool = False,
     ):
         # validate project id
         project_id = project_id or os.getenv("DESCOPE_PROJECT_ID", "")
@@ -57,6 +58,7 @@ class DescopeClient:
             secure=not skip_verify,
             management_key=auth_management_key
             or os.getenv("DESCOPE_AUTH_MANAGEMENT_KEY"),
+            verbose=verbose,
         )
         self._auth = Auth(
             project_id,
@@ -81,12 +83,17 @@ class DescopeClient:
             timeout_seconds=auth_http_client.timeout_seconds,
             secure=auth_http_client.secure,
             management_key=management_key or os.getenv("DESCOPE_MANAGEMENT_KEY"),
+            verbose=verbose,
         )
         self._mgmt = MGMT(
             http_client=mgmt_http_client,
             auth=self._auth,
             fga_cache_url=fga_cache_url,
         )
+
+        # Store references to HTTP clients for verbose mode access
+        self._auth_http_client = auth_http_client
+        self._mgmt_http_client = mgmt_http_client
 
     @property
     def mgmt(self):
@@ -328,7 +335,7 @@ class DescopeClient:
         return matched
 
     def validate_session(
-        self, session_token: str, audience: Optional[Iterable[str] | str] = None
+        self, session_token: str, audience: Iterable[str] | str | None = None
     ) -> dict:
         """
         Validate a session token. Call this function for every incoming request to your
@@ -351,7 +358,7 @@ class DescopeClient:
         return self._auth.validate_session(session_token, audience)
 
     def refresh_session(
-        self, refresh_token: str, audience: Optional[Iterable[str] | str] = None
+        self, refresh_token: str, audience: Iterable[str] | str | None = None
     ) -> dict:
         """
         Refresh a session. Call this function when a session expires and needs to be refreshed.
@@ -372,7 +379,7 @@ class DescopeClient:
         self,
         session_token: str,
         refresh_token: str,
-        audience: Optional[Iterable[str] | str] = None,
+        audience: Iterable[str] | str | None = None,
     ) -> dict:
         """
         Validate the session token and refresh it if it has expired, the session token will automatically be refreshed.
@@ -472,7 +479,7 @@ class DescopeClient:
         self,
         refresh_token: str,
         dct: bool = False,
-        ids: Optional[list[str]] = None,
+        ids: list[str] | None = None,
     ) -> dict:
         """
         Retrieve tenant attributes that user belongs to, one of dct/ids must be populated .
@@ -553,8 +560,8 @@ class DescopeClient:
     def exchange_access_key(
         self,
         access_key: str,
-        audience: Optional[Iterable[str] | str] = None,
-        login_options: Optional[AccessKeyLoginOptions] = None,
+        audience: Iterable[str] | str | None = None,
+        login_options: AccessKeyLoginOptions | None = None,
     ) -> dict:
         """
         Return a new session token for the given access key
@@ -595,3 +602,35 @@ class DescopeClient:
         AuthException: Exception is raised if session is not authorized or another error occurs
         """
         return self._auth.select_tenant(tenant_id, refresh_token)
+
+    def get_last_response(self):
+        """
+        Get the last HTTP response from either auth or management operations.
+
+        Only available when verbose mode is enabled during client initialization.
+        This provides access to HTTP metadata like headers (cf-ray), status codes,
+        and raw response data for debugging failed requests.
+
+        Returns:
+            DescopeResponse: The last response if verbose mode is enabled.
+                           Returns the most recent response from either auth or mgmt operations.
+                           None if verbose mode is disabled or no requests have been made.
+
+        Example:
+            client = DescopeClient(project_id, management_key, verbose=True)
+            try:
+                client.mgmt.user.create(login_id="test@example.com")
+            except AuthException:
+                resp = client.get_last_response()
+                if resp:
+                    # Access metadata for debugging
+                    cf_ray = resp.headers.get("cf-ray")
+                    status = resp.status_code
+        """
+        # Return the most recently used response
+        mgmt_resp = self._mgmt_http_client.get_last_response()
+        auth_resp = self._auth_http_client.get_last_response()
+
+        # Return whichever is not None, preferring mgmt if both exist
+        # (in practice, only one should be non-None at a time)
+        return mgmt_resp or auth_resp

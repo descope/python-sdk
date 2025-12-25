@@ -536,6 +536,59 @@ descope_client = DescopeClient()
 descope_client = DescopeClient(project_id="<Project ID>", management_key="<Management Key>")
 ```
 
+### Verbose Mode for Debugging
+
+When debugging failed API requests, you can enable verbose mode to capture HTTP response metadata like headers (`cf-ray`, `x-request-id`), status codes, and raw response bodies. This is especially useful when working with Descope support to troubleshoot issues.
+
+```python
+from descope import DescopeClient, AuthException
+import logging
+
+logger = logging.getLogger(__name__)
+
+# Enable verbose mode during client initialization
+client = DescopeClient(
+    project_id="<Project ID>",
+    management_key="<Management Key>",
+    verbose=True  # Enable response metadata capture
+)
+
+try:
+    # Make any API call
+    client.mgmt.user.create(
+        login_id="test@example.com",
+        email="test@example.com"
+    )
+except AuthException as e:
+    # Access the last response metadata for debugging
+    response = client.get_last_response()
+    if response:
+        logger.error(f"Request failed with status {response.status_code}")
+        logger.error(f"cf-ray: {response.headers.get('cf-ray')}")
+        logger.error(f"x-request-id: {response.headers.get('x-request-id')}")
+        logger.error(f"Response body: {response.text}")
+
+        # Provide cf-ray to Descope support for debugging
+        print(f"Please provide this cf-ray to support: {response.headers.get('cf-ray')}")
+```
+
+**Important Notes:**
+- Verbose mode is **disabled by default** (no performance impact when not needed)
+- When enabled, only the **most recent** HTTP response is stored
+- `get_last_response()` returns `None` when verbose mode is disabled
+- The response object provides dict-like access to JSON data while also exposing HTTP metadata
+
+**Available metadata on response objects:**
+- `response.headers` - HTTP response headers (dict-like object)
+- `response.status_code` - HTTP status code (int)
+- `response.text` - Raw response body as text (str)
+- `response.url` - Request URL (str)
+- `response.ok` - Whether status code is < 400 (bool)
+- `response.json()` - Parsed JSON response (dict/list)
+- `response["key"]` - Dict-like access to JSON data (for backward compatibility)
+
+For a complete example, see [samples/verbose_mode_example.py](https://github.com/descope/python-sdk/blob/main/samples/verbose_mode_example.py).
+
 ### Manage Tenants
 
 You can create, update, delete or load tenants:

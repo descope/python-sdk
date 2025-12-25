@@ -17,6 +17,7 @@ from descope.exceptions import (
     AuthException,
     RateLimitException,
 )
+from descope.http_client import DescopeResponse
 from descope.management.common import (
     AssociatedTenant,
     SAMLIDPAttributeMappingInfo,
