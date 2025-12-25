@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import platform
+import threading
 from http import HTTPStatus
 from typing import cast
 
@@ -171,7 +172,7 @@ class HTTPClient:
         self.secure = secure
         self.management_key = management_key
         self.verbose = verbose
-        self._last_response: DescopeResponse | None = None
+        self._thread_local = threading.local()
 
     # ------------- public API -------------
     def get(
@@ -191,7 +192,7 @@ class HTTPClient:
             timeout=self.timeout_seconds,
         )
         if self.verbose:
-            self._last_response = DescopeResponse(response)
+            self._thread_local.last_response = DescopeResponse(response)
         self._raise_from_response(response)
         return response
 
@@ -214,7 +215,7 @@ class HTTPClient:
             timeout=self.timeout_seconds,
         )
         if self.verbose:
-            self._last_response = DescopeResponse(response)
+            self._thread_local.last_response = DescopeResponse(response)
         self._raise_from_response(response)
         return response
 
@@ -236,7 +237,7 @@ class HTTPClient:
             timeout=self.timeout_seconds,
         )
         if self.verbose:
-            self._last_response = DescopeResponse(response)
+            self._thread_local.last_response = DescopeResponse(response)
         self._raise_from_response(response)
         return response
 
@@ -256,7 +257,7 @@ class HTTPClient:
             timeout=self.timeout_seconds,
         )
         if self.verbose:
-            self._last_response = DescopeResponse(response)
+            self._thread_local.last_response = DescopeResponse(response)
         self._raise_from_response(response)
         return response
 
@@ -266,6 +267,9 @@ class HTTPClient:
 
         Useful for accessing HTTP metadata like headers (e.g., cf-ray),
         status codes, and raw response data for debugging.
+
+        This method is thread-safe: each thread will receive its own
+        last response when using a shared client instance.
 
         Returns:
             DescopeResponse: The last response if verbose mode is enabled, None otherwise.
@@ -279,7 +283,7 @@ class HTTPClient:
                 if resp:
                     logger.error(f"cf-ray: {resp.headers.get('cf-ray')}")
         """
-        return self._last_response
+        return getattr(self._thread_local, "last_response", None)
 
     def get_default_headers(self, pswd: str | None = None) -> dict:
         return self._get_default_headers(pswd)

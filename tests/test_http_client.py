@@ -419,5 +419,137 @@ class TestHTTPClient(unittest.TestCase):
                 sys.modules.pop("pkg_resources", None)
 
 
+class TestVerboseModeThreadSafety(unittest.TestCase):
+    """Tests demonstrating verbose mode thread safety.
+
+    The HTTPClient uses threading.local() to store _last_response, ensuring
+    each thread gets its own response when sharing a client instance.
+    """
+
+    @patch("requests.get")
+    def test_verbose_mode_thread_safe_with_shared_client(self, mock_get):
+        """Verify that shared client is thread-safe for verbose mode.
+
+        Each thread should see its own response even when sharing the same
+        HTTPClient instance, thanks to threading.local() storage.
+        """
+        import threading
+
+        results: dict[str, str | None] = {
+            "thread1_ray": None,
+            "thread2_ray": None,
+        }
+        barrier = threading.Barrier(2)
+
+        def mock_get_side_effect(*args, **kwargs):
+            """Return different cf-ray based on which thread is calling."""
+            thread_name = threading.current_thread().name
+            response = Mock()
+            response.ok = True
+            response.json.return_value = {"thread": thread_name}
+            # Each thread gets a unique cf-ray
+            if "thread1" in thread_name:
+                response.headers = {"cf-ray": "ray-thread1"}
+            else:
+                response.headers = {"cf-ray": "ray-thread2"}
+            response.status_code = 200
+            return response
+
+        mock_get.side_effect = mock_get_side_effect
+
+        # Single shared client - now thread-safe!
+        client = HTTPClient(project_id="test123", verbose=True)
+
+        def thread1_work():
+            client.get("/test")
+            barrier.wait()  # Sync with thread2
+            resp = client.get_last_response()
+            assert resp is not None
+            results["thread1_ray"] = resp.headers.get("cf-ray")
+
+        def thread2_work():
+            client.get("/test")
+            barrier.wait()  # Sync with thread1
+            resp = client.get_last_response()
+            assert resp is not None
+            results["thread2_ray"] = resp.headers.get("cf-ray")
+
+        t1 = threading.Thread(target=thread1_work, name="thread1")
+        t2 = threading.Thread(target=thread2_work, name="thread2")
+
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
+
+        # With thread-local storage, each thread sees its OWN response
+        assert (
+            results["thread1_ray"] == "ray-thread1"
+        ), f"Thread1 should see its own cf-ray, got: {results['thread1_ray']}"
+        assert (
+            results["thread2_ray"] == "ray-thread2"
+        ), f"Thread2 should see its own cf-ray, got: {results['thread2_ray']}"
+
+    @patch("requests.get")
+    def test_verbose_mode_separate_clients_per_thread(self, mock_get):
+        """Verify separate clients per thread also works (alternative pattern).
+
+        This test shows that using separate client instances per thread
+        also provides thread-safe access to response metadata.
+        """
+        import threading
+
+        results: dict[str, str | None] = {"thread1_ray": None, "thread2_ray": None}
+        barrier = threading.Barrier(2)
+
+        def mock_get_side_effect(*args, **kwargs):
+            thread_name = threading.current_thread().name
+            response = Mock()
+            response.ok = True
+            response.json.return_value = {"thread": thread_name}
+            if "thread1" in thread_name:
+                response.headers = {"cf-ray": "ray-thread1"}
+            else:
+                response.headers = {"cf-ray": "ray-thread2"}
+            response.status_code = 200
+            return response
+
+        mock_get.side_effect = mock_get_side_effect
+
+        def thread1_work():
+            # Each thread creates its own client
+            client = HTTPClient(project_id="test123", verbose=True)
+            client.get("/test")
+            barrier.wait()
+            resp = client.get_last_response()
+            assert resp is not None
+            results["thread1_ray"] = resp.headers.get("cf-ray")
+
+        def thread2_work():
+            # Each thread creates its own client
+            client = HTTPClient(project_id="test123", verbose=True)
+            client.get("/test")
+            barrier.wait()
+            resp = client.get_last_response()
+            assert resp is not None
+            results["thread2_ray"] = resp.headers.get("cf-ray")
+
+        t1 = threading.Thread(target=thread1_work, name="thread1")
+        t2 = threading.Thread(target=thread2_work, name="thread2")
+
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
+
+        # With separate clients, each thread has its own response
+        assert (
+            results["thread1_ray"] == "ray-thread1"
+        ), f"Thread1 should see its own cf-ray, got: {results['thread1_ray']}"
+        assert (
+            results["thread2_ray"] == "ray-thread2"
+        ), f"Thread2 should see its own cf-ray, got: {results['thread2_ray']}"
+
+
 if __name__ == "__main__":
     unittest.main()
