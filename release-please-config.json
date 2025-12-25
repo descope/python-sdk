@@ -1,0 +1,35 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "bootstrap-sha": "9ad71ffd7cdb956850a292073a3492669231936c",
+  "release-type": "python",
+  "packages": {
+    ".": {
+      "package-name": "descope",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "toml",
+          "path": "pyproject.toml",
+          "jsonpath": "$.tool.poetry.version"
+        }
+      ]
+    }
+  },
+  "include-v-in-tag": false,
+  "bump-minor-pre-major": true,
+  "bump-patch-for-minor-pre-major": true,
+  "sequential-calls": false,
+  "pull-request-title-pattern": "chore: release ${version}",
+  "changelog-sections": [
+    { "type": "feat", "section": "Features" },
+    { "type": "fix", "section": "Bug Fixes" },
+    { "type": "perf", "section": "Performance Improvements" },
+    { "type": "revert", "section": "Reverts" },
+    { "type": "docs", "section": "Documentation" },
+    { "type": "chore", "section": "Miscellaneous Chores", "hidden": true },
+    { "type": "refactor", "section": "Code Refactoring", "hidden": true },
+    { "type": "test", "section": "Tests", "hidden": true },
+    { "type": "build", "section": "Build System", "hidden": true },
+    { "type": "ci", "section": "Continuous Integration", "hidden": true }
+  ]
+}
