@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import os
 import platform
+import threading
 from http import HTTPStatus
-from typing import Optional, Union, cast
+from typing import cast
 
 try:
     from importlib.metadata import version
@@ -43,15 +44,114 @@ _default_headers = {
 }
 
 
+class DescopeResponse:
+    """
+    Wrapper around requests.Response that provides dict-like access to JSON data
+    while preserving access to HTTP metadata (headers, status_code, etc.).
+
+    This allows backward compatibility (acting like a dict) while exposing
+    HTTP metadata like cf-ray headers for debugging.
+    """
+
+    def __init__(self, response: requests.Response):
+        self.raw = response
+        self._json_data = None
+
+    def json(self):
+        """Get the parsed JSON response, cached after first access."""
+        if self._json_data is None:
+            self._json_data = self.raw.json()
+        return self._json_data
+
+    # Dict-like interface for backward compatibility
+    def __getitem__(self, key):
+        return self.json()[key]
+
+    def __contains__(self, key):
+        return key in self.json()
+
+    def keys(self):
+        return self.json().keys()
+
+    def values(self):
+        return self.json().values()
+
+    def items(self):
+        return self.json().items()
+
+    def get(self, key, default=None):
+        return self.json().get(key, default)
+
+    def __str__(self):
+        return str(self.json())
+
+    def __repr__(self):
+        return f"DescopeResponse({repr(self.json())})"
+
+    def __bool__(self):
+        return bool(self.json())
+
+    def __len__(self):
+        return len(self.json())
+
+    def __eq__(self, other):
+        if isinstance(other, DescopeResponse):
+            return self.json() == other.json()
+        return self.json() == other
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __iter__(self):
+        return iter(self.json())
+
+    # HTTP metadata properties
+    @property
+    def headers(self):
+        """Access response headers (e.g., response.headers.get('cf-ray'))."""
+        return self.raw.headers
+
+    @property
+    def status_code(self):
+        """HTTP status code."""
+        return self.raw.status_code
+
+    @property
+    def cookies(self):
+        """Response cookies."""
+        return self.raw.cookies
+
+    @property
+    def text(self):
+        """Raw response text."""
+        return self.raw.text
+
+    @property
+    def content(self):
+        """Raw response content (bytes)."""
+        return self.raw.content
+
+    @property
+    def url(self):
+        """Request URL."""
+        return self.raw.url
+
+    @property
+    def ok(self):
+        """True if status code < 400."""
+        return self.raw.ok
+
+
 class HTTPClient:
     def __init__(
         self,
         project_id: str,
-        base_url: Optional[str] = None,
+        base_url: str | None = None,
         *,
         timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
         secure: bool = True,
-        management_key: Optional[str] = None,
+        management_key: str | None = None,
+        verbose: bool = False,
     ) -> None:
         if not project_id:
             raise AuthException(
@@ -71,6 +171,8 @@ class HTTPClient:
         self.timeout_seconds = timeout_seconds
         self.secure = secure
         self.management_key = management_key
+        self.verbose = verbose
+        self._thread_local = threading.local()
 
     # ------------- public API -------------
     def get(
@@ -78,8 +180,8 @@ class HTTPClient:
         uri: str,
         *,
         params=None,
-        allow_redirects: Optional[bool] = True,
-        pswd: Optional[str] = None,
+        allow_redirects: bool | None = True,
+        pswd: str | None = None,
     ) -> requests.Response:
         response = requests.get(
             f"{self.base_url}{uri}",
@@ -89,6 +191,8 @@ class HTTPClient:
             verify=self.secure,
             timeout=self.timeout_seconds,
         )
+        if self.verbose:
+            self._thread_local.last_response = DescopeResponse(response)
         self._raise_from_response(response)
         return response
 
@@ -96,10 +200,10 @@ class HTTPClient:
         self,
         uri: str,
         *,
-        body: Optional[Union[dict, list[dict], list[str]]] = None,
+        body: dict | list[dict] | list[str] | None = None,
         params=None,
-        pswd: Optional[str] = None,
-        base_url: Optional[str] = None,
+        pswd: str | None = None,
+        base_url: str | None = None,
     ) -> requests.Response:
         response = requests.post(
             f"{base_url or self.base_url}{uri}",
@@ -110,6 +214,8 @@ class HTTPClient:
             params=params,
             timeout=self.timeout_seconds,
         )
+        if self.verbose:
+            self._thread_local.last_response = DescopeResponse(response)
         self._raise_from_response(response)
         return response
 
@@ -137,9 +243,9 @@ class HTTPClient:
         self,
         uri: str,
         *,
-        body: Optional[Union[dict, list[dict], list[str]]],
+        body: dict | list[dict] | list[str] | None,
         params=None,
-        pswd: Optional[str] = None,
+        pswd: str | None = None,
     ) -> requests.Response:
         response = requests.patch(
             f"{self.base_url}{uri}",
@@ -150,6 +256,8 @@ class HTTPClient:
             params=params,
             timeout=self.timeout_seconds,
         )
+        if self.verbose:
+            self._thread_local.last_response = DescopeResponse(response)
         self._raise_from_response(response)
         return response
 
@@ -159,7 +267,7 @@ class HTTPClient:
         *,
         body: Optional[Union[dict, list[dict], list[str]]] = None,
         params=None,
-        pswd: Optional[str] = None,
+        pswd: str | None = None,
     ) -> requests.Response:
         response = requests.delete(
             f"{self.base_url}{uri}",
@@ -170,10 +278,36 @@ class HTTPClient:
             verify=self.secure,
             timeout=self.timeout_seconds,
         )
+        if self.verbose:
+            self._thread_local.last_response = DescopeResponse(response)
         self._raise_from_response(response)
         return response
 
-    def get_default_headers(self, pswd: Optional[str] = None) -> dict:
+    def get_last_response(self) -> DescopeResponse | None:
+        """
+        Get the last HTTP response when verbose mode is enabled.
+
+        Useful for accessing HTTP metadata like headers (e.g., cf-ray),
+        status codes, and raw response data for debugging.
+
+        This method is thread-safe: each thread will receive its own
+        last response when using a shared client instance.
+
+        Returns:
+            DescopeResponse: The last response if verbose mode is enabled, None otherwise.
+
+        Example:
+            client = DescopeClient(project_id, management_key, verbose=True)
+            try:
+                client.mgmt.user.create(login_id="u1")
+            except AuthException:
+                resp = client.get_last_response()
+                if resp:
+                    logger.error(f"cf-ray: {resp.headers.get('cf-ray')}")
+        """
+        return getattr(self._thread_local, "last_response", None)
+
+    def get_default_headers(self, pswd: str | None = None) -> dict:
         return self._get_default_headers(pswd)
 
     # ------------- helpers -------------
@@ -225,7 +359,7 @@ class HTTPClient:
             response.text,
         )
 
-    def _get_default_headers(self, pswd: Optional[str] = None):
+    def _get_default_headers(self, pswd: str | None = None):
         headers = _default_headers.copy()
         headers["x-descope-project-id"] = self.project_id
         bearer = self.project_id
