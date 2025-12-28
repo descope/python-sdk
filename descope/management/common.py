@@ -265,6 +265,13 @@ class MgmtV1:
     descoper_delete_path = "/v1/mgmt/descoper"
     descoper_list_path = "/v1/mgmt/descoper/list"
 
+    # management key
+    mgmt_key_create_path = "/v1/mgmt/managementkey"
+    mgmt_key_update_path = "/v1/mgmt/managementkey"
+    mgmt_key_load_path = "/v1/mgmt/managementkey"
+    mgmt_key_delete_path = "/v1/mgmt/managementkey/delete"
+    mgmt_key_search_path = "/v1/mgmt/managementkey/search"
+
 
 class MgmtSignUpOptions:
     def __init__(
@@ -600,3 +607,54 @@ class DescoperCreate:
 
 def descopers_to_dict(descopers: List[DescoperCreate]) -> list:
     return [d.to_dict() for d in descopers]
+
+
+class MgmtKeyStatus(Enum):
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+
+
+class MgmtKeyProjectRole:
+    def __init__(self, project_ids: List[str], roles: List[str]):
+        self.project_ids = project_ids
+        self.roles = roles
+
+    def to_dict(self) -> dict:
+        return {
+            "projectIds": self.project_ids,
+            "roles": self.roles,
+        }
+
+
+class MgmtKeyTagRole:
+    def __init__(self, tags: List[str], roles: List[str]):
+        self.tags = tags
+        self.roles = roles
+
+    def to_dict(self) -> dict:
+        return {
+            "tags": self.tags,
+            "roles": self.roles,
+        }
+
+
+class MgmtKeyReBac:
+    def __init__(
+        self,
+        company_roles: Optional[List[str]] = None,
+        project_roles: Optional[List[MgmtKeyProjectRole]] = None,
+        tag_roles: Optional[List[MgmtKeyTagRole]] = None,
+    ):
+        self.company_roles = company_roles
+        self.project_roles = project_roles
+        self.tag_roles = tag_roles
+
+    def to_dict(self) -> dict:
+        res = {}
+        if self.company_roles is not None:
+            res["companyRoles"] = self.company_roles
+        if self.project_roles is not None:
+            res["projectRoles"] = [pr.to_dict() for pr in self.project_roles]
+        if self.tag_roles is not None:
+            res["tagRoles"] = [tr.to_dict() for tr in self.tag_roles]
+        return res

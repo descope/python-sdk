@@ -157,12 +157,14 @@ class HTTPClient:
         self,
         uri: str,
         *,
+        body: Optional[Union[dict, list[dict], list[str]]] = None,
         params=None,
         pswd: Optional[str] = None,
     ) -> requests.Response:
         response = requests.delete(
             f"{self.base_url}{uri}",
             params=params,
+            json=body,
             headers=self._get_default_headers(pswd),
             allow_redirects=False,
             verify=self.secure,
