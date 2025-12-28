@@ -85,6 +85,7 @@ These sections show how to use the SDK to perform permission and user management
 15. [Manage SSO Applications](#manage-sso-applications)
 16. [Manage Outbound Applications](#manage-outbound-applications)
 17. [Manage Descopers](#manage-descopers)
+18. [Manage Management Keys](#manage-management-keys)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -1632,6 +1633,73 @@ for descoper in descopers:
 # Delete a Descoper
 # Descoper deletion cannot be undone. Use carefully.
 descope_client.mgmt.descoper.delete("descoper-id")
+```
+
+### Manage Management Keys
+
+You can create, update, delete, load or search management keys:
+
+```python
+from descope import (
+    MgmtKeyReBac,
+    MgmtKeyProjectRole,
+    MgmtKeyTagRole,
+    MgmtKeyStatus,
+)
+
+# Create a new management key with RBAC configuration
+# The rebac parameter defines the key's access permissions
+rebac = MgmtKeyReBac(
+    company_roles=["company-full-access"],  # Company-level roles
+    project_roles=[  # Project-specific roles
+        MgmtKeyProjectRole(
+            project_ids=["project-id-1", "project-id-2"],
+            roles=["project-admin"]
+        )
+    ],
+    tag_roles=[  # Tag-based roles
+        MgmtKeyTagRole(
+            tags=["production"],
+            roles=["read-only"]
+        )
+    ],
+)
+
+create_resp = descope_client.mgmt.management_key.create(
+    name="My Management Key",
+    rebac=rebac,
+    description="Optional description for the management key",
+    expires_in=0,  # Expiration time in seconds (0 for no expiration)
+    permitted_ips=["10.0.0.1", "192.168.1.0/24"],  # Optional IP allowlist
+)
+key = create_resp["key"]
+cleartext = create_resp["cleartext"]  # Save this securely - it will not be returned again!
+
+# Load a specific management key by ID
+load_resp = descope_client.mgmt.management_key.load("key-id")
+loaded_key = load_resp["key"]
+
+# Search all management keys
+search_resp = descope_client.mgmt.management_key.search()
+keys = search_resp["keys"]
+for key in keys:
+    # Do something
+
+# Update a management key
+# IMPORTANT: All parameters will override existing values. Use carefully.
+update_resp = descope_client.mgmt.management_key.update(
+    id="key-id",
+    name="Updated Key Name",
+    description="Updated description",
+    permitted_ips=["10.0.0.2"],
+    status=MgmtKeyStatus.ACTIVE,  # Can be ACTIVE or INACTIVE
+)
+updated_key = update_resp["key"]
+
+# Delete management keys
+# IMPORTANT: This action is irreversible. Use carefully.
+delete_resp = descope_client.mgmt.management_key.delete(["key-id-1", "key-id-2"])
+total_deleted = delete_resp["total"]
 ```
 
 ### Utils for your end to end (e2e) tests and integration tests
