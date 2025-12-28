@@ -160,9 +160,7 @@ class ManagementKey(HTTPBase):
         )
         return response.json()
 
-    def search(
-        self
-    ) -> dict:
+    def search(self) -> dict:
         """
         Search for management keys.
 

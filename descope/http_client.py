@@ -223,9 +223,9 @@ class HTTPClient:
         self,
         uri: str,
         *,
-        body: Optional[Union[dict, list[dict], list[str]]] = None,
+        body: dict | list[dict] | list[str] | None = None,
         params=None,
-        pswd: Optional[str] = None,
+        pswd: str | None = None,
     ) -> requests.Response:
         response = requests.put(
             f"{self.base_url}{uri}",
@@ -265,7 +265,7 @@ class HTTPClient:
         self,
         uri: str,
         *,
-        body: Optional[Union[dict, list[dict], list[str]]] = None,
+        body: dict | list[dict] | list[str] | None = None,
         params=None,
         pswd: str | None = None,
     ) -> requests.Response:

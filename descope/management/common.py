@@ -650,7 +650,7 @@ class MgmtKeyReBac:
         self.tag_roles = tag_roles
 
     def to_dict(self) -> dict:
-        res = {}
+        res: dict = {}
         if self.company_roles is not None:
             res["companyRoles"] = self.company_roles
         if self.project_roles is not None:

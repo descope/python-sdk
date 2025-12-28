@@ -313,6 +313,7 @@ class TestDescoper(common.DescopeTest):
             mock_delete.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.descoper_delete_path}",
                 params={"id": "U2111111111111111111111111"},
+                json=None,
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",

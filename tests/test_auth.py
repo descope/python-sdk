@@ -781,6 +781,7 @@ class TestAuth(common.DescopeTest):
             mock_delete.assert_called_with(
                 "http://127.0.0.1/a/b",
                 params={"key": "value"},
+                json=None,
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{'pswd'}",
