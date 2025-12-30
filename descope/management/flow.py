@@ -199,6 +199,8 @@ class Flow(HTTPBase):
 
         Return value (dict):
         Return dict with the async flow execution result.
+        use the get_flow_async_result() method with this result's executionId
+        to get the actual flow's result.
 
         Raise:
         AuthException: raised if run operation fails
