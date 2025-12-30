@@ -1120,6 +1120,38 @@ result = descope_client.mgmt.flow.run_flow(
         "tenant": "tenant-id",
     },
 )
+
+# Run a flow asynchronously for long-running flows.
+# This returns immediately with an execution ID that can be used to check the result later.
+from descope import FlowRunOptions
+
+# Start an async flow run
+async_result = descope_client.mgmt.flow.run_flow_async(
+    flow_id="my-flow-id",
+    options=FlowRunOptions(
+        flow_input={"key": "value"},
+        preview=True,
+        tenant="tenant-id",
+    ),
+)
+execution_id = async_result["executionId"]
+
+# Or using a dict
+async_result = descope_client.mgmt.flow.run_flow_async(
+    flow_id="my-flow-id",
+    options={
+        "input": {"key": "value"},
+        "preview": True,
+        "tenant": "tenant-id",
+    },
+)
+execution_id = async_result["executionId"]
+
+# Check the result of an async flow execution
+# Poll this endpoint until the flow completes
+result = descope_client.mgmt.flow.get_flow_async_result(
+    execution_id=execution_id,
+)
 ```
 
 ### Query SSO Groups

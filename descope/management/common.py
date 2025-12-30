@@ -210,6 +210,8 @@ class MgmtV1:
     flow_import_path = "/v1/mgmt/flow/import"
     flow_export_path = "/v1/mgmt/flow/export"
     flow_run_path = "/v1/mgmt/flow/run"
+    flow_async_run_path = "/v1/mgmt/flow/async/run"
+    flow_async_result_path = "/v1/mgmt/flow/async/result"
 
     # theme
     theme_import_path = "/v1/mgmt/theme/import"
