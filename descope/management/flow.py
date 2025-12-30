@@ -1,7 +1,7 @@
-from typing import List
+from typing import List, Optional, Union
 
 from descope._http_base import HTTPBase
-from descope.management.common import MgmtV1
+from descope.management.common import FlowRunOptions, MgmtV1
 
 
 class Flow(HTTPBase):
@@ -144,5 +144,99 @@ class Flow(HTTPBase):
             body={
                 "theme": theme,
             },
+        )
+        return response.json()
+
+    def run_flow(
+        self,
+        flow_id: str,
+        options: Optional[Union[FlowRunOptions, dict]] = None,
+    ) -> dict:
+        """
+        Run a flow with the given flow id and options.
+
+        Args:
+        flow_id (str): the flow id to run.
+        options (Optional[Union[FlowRunOptions, dict]]): optional flow run options containing:
+            - input: optional input data to pass to the flow.
+            - preview: optional flag to run the flow in preview mode.
+            - tenant: optional tenant ID to run the flow for.
+
+        Return value (dict):
+        Return dict with the flow execution result.
+
+        Raise:
+        AuthException: raised if run operation fails
+        """
+        body: dict = {"flowId": flow_id}
+
+        if options is not None:
+            if isinstance(options, dict):
+                options = FlowRunOptions.from_dict(options)
+            if options is not None:
+                body.update(options.to_dict())
+
+        response = self._http.post(
+            MgmtV1.flow_run_path,
+            body=body,
+        )
+        return response.json()
+
+    def run_flow_async(
+        self,
+        flow_id: str,
+        options: Optional[Union[FlowRunOptions, dict]] = None,
+    ) -> dict:
+        """
+        Run a flow asynchronously with the given flow id and options.
+
+        Args:
+        flow_id (str): the flow id to run.
+        options (Optional[Union[FlowRunOptions, dict]]): optional flow run options containing:
+            - input: optional input data to pass to the flow.
+            - preview: optional flag to run the flow in preview mode.
+            - tenant: optional tenant ID to run the flow for.
+
+        Return value (dict):
+        Return dict with the async flow execution result.
+        use the get_flow_async_result() method with this result's executionId
+        to get the actual flow's result.
+
+        Raise:
+        AuthException: raised if run operation fails
+        """
+        body: dict = {"flowId": flow_id}
+
+        if options is not None:
+            if isinstance(options, dict):
+                options = FlowRunOptions.from_dict(options)
+            if options is not None:
+                body.update(options.to_dict())
+
+        response = self._http.post(
+            MgmtV1.flow_async_run_path,
+            body=body,
+        )
+        return response.json()
+
+    def get_flow_async_result(
+        self,
+        execution_id: str,
+    ) -> dict:
+        """
+        Get the result of an async flow execution.
+
+        Args:
+        execution_id (str): the execution id returned from run_flow_async.
+
+        Return value (dict):
+        Return dict with the async flow execution result.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._http.post(
+            MgmtV1.flow_async_result_path,
+            body={"executionId": execution_id},
         )
         return response.json()

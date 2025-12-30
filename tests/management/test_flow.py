@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
 from descope.common import DEFAULT_TIMEOUT_SECONDS
-from descope.management.common import MgmtV1
+from descope.management.common import MgmtV1, FlowRunOptions
 
 from .. import common
 
@@ -230,6 +230,238 @@ class TestFlow(common.DescopeTest):
                 },
                 params=None,
                 json={"theme": {"id": "test"}},
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_run_flow(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed run flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.flow.run_flow,
+                "test-flow",
+            )
+
+        # Test success run flow with no options
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNotNone(client.mgmt.flow.run_flow("test-flow"))
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.flow_run_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={"flowId": "test-flow"},
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test success run flow with dict options
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNotNone(
+                client.mgmt.flow.run_flow(
+                    "test-flow",
+                    {"input": {"key": "value"}, "preview": True, "tenant": "tenant-id"},
+                )
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.flow_run_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "flowId": "test-flow",
+                    "input": {"key": "value"},
+                    "preview": True,
+                    "tenant": "tenant-id",
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test success run flow with FlowRunOptions object
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            options = FlowRunOptions(
+                flow_input={"key": "value"},
+                preview=True,
+                tenant="tenant-id",
+            )
+            self.assertIsNotNone(client.mgmt.flow.run_flow("test-flow", options))
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.flow_run_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "flowId": "test-flow",
+                    "input": {"key": "value"},
+                    "preview": True,
+                    "tenant": "tenant-id",
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_flow_run_options_from_dict(self):
+        # Test from_dict with None returns None
+        self.assertIsNone(FlowRunOptions.from_dict(None))
+
+        # Test from_dict with valid dict
+        options = FlowRunOptions.from_dict(
+            {"input": {"key": "value"}, "preview": True, "tenant": "tenant-id"}
+        )
+        self.assertIsNotNone(options)
+        self.assertEqual(options.flow_input, {"key": "value"})
+        self.assertEqual(options.preview, True)
+        self.assertEqual(options.tenant, "tenant-id")
+
+    def test_run_flow_async(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed run flow async
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.flow.run_flow_async,
+                "test-flow",
+            )
+
+        # Test success run flow async with no options
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNotNone(client.mgmt.flow.run_flow_async("test-flow"))
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.flow_async_run_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={"flowId": "test-flow"},
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test success run flow async with dict options
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNotNone(
+                client.mgmt.flow.run_flow_async(
+                    "test-flow",
+                    {"input": {"key": "value"}, "preview": True, "tenant": "tenant-id"},
+                )
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.flow_async_run_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "flowId": "test-flow",
+                    "input": {"key": "value"},
+                    "preview": True,
+                    "tenant": "tenant-id",
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test success run flow async with FlowRunOptions object
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            options = FlowRunOptions(
+                flow_input={"key": "value"},
+                preview=True,
+                tenant="tenant-id",
+            )
+            self.assertIsNotNone(client.mgmt.flow.run_flow_async("test-flow", options))
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.flow_async_run_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "flowId": "test-flow",
+                    "input": {"key": "value"},
+                    "preview": True,
+                    "tenant": "tenant-id",
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_get_flow_async_result(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed get flow async result
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.flow.get_flow_async_result,
+                "execution-123",
+            )
+
+        # Test success get flow async result
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNotNone(
+                client.mgmt.flow.get_flow_async_result("execution-123")
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.flow_async_result_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={"executionId": "execution-123"},
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,

@@ -1096,6 +1096,62 @@ exported_theme = descope_client.mgmt.flow.export_theme()
 imported_theme = descope_client.mgmt.flow.import_flow(
     theme={}
 )
+
+# Run a flow with the given flow id and options.
+# You can use the FlowRunOptions class or pass a dict directly.
+from descope import FlowRunOptions
+
+# Using FlowRunOptions class
+result = descope_client.mgmt.flow.run_flow(
+    flow_id="my-flow-id",
+    options=FlowRunOptions(
+        input={"key": "value"},
+        preview=True,
+        tenant="tenant-id",
+    ),
+)
+
+# Or using a dict
+result = descope_client.mgmt.flow.run_flow(
+    flow_id="my-flow-id",
+    options={
+        "input": {"key": "value"},
+        "preview": True,
+        "tenant": "tenant-id",
+    },
+)
+
+# Run a flow asynchronously for long-running flows.
+# This returns immediately with an execution ID that can be used to check the result later.
+from descope import FlowRunOptions
+
+# Start an async flow run
+async_result = descope_client.mgmt.flow.run_flow_async(
+    flow_id="my-flow-id",
+    options=FlowRunOptions(
+        flow_input={"key": "value"},
+        preview=True,
+        tenant="tenant-id",
+    ),
+)
+execution_id = async_result["executionId"]
+
+# Or using a dict
+async_result = descope_client.mgmt.flow.run_flow_async(
+    flow_id="my-flow-id",
+    options={
+        "input": {"key": "value"},
+        "preview": True,
+        "tenant": "tenant-id",
+    },
+)
+execution_id = async_result["executionId"]
+
+# Check the result of an async flow execution
+# Poll this endpoint until the flow completes
+result = descope_client.mgmt.flow.get_flow_async_result(
+    execution_id=execution_id,
+)
 ```
 
 ### Query SSO Groups

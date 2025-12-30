@@ -26,6 +26,7 @@ from descope.management.common import (
     DescoperRBAC,
     DescoperRole,
     DescoperTagRole,
+    FlowRunOptions,
     MgmtKeyProjectRole,
     MgmtKeyReBac,
     MgmtKeyStatus,

@@ -209,6 +209,9 @@ class MgmtV1:
     flow_delete_path = "/v1/mgmt/flow/delete"
     flow_import_path = "/v1/mgmt/flow/import"
     flow_export_path = "/v1/mgmt/flow/export"
+    flow_run_path = "/v1/mgmt/flow/run"
+    flow_async_run_path = "/v1/mgmt/flow/async/run"
+    flow_async_result_path = "/v1/mgmt/flow/async/result"
 
     # theme
     theme_import_path = "/v1/mgmt/theme/import"
@@ -281,6 +284,42 @@ class MgmtSignUpOptions:
     ):
         self.custom_claims = custom_claims
         self.refresh_duration = refresh_duration
+
+
+class FlowRunOptions:
+    """
+    Options for running a flow.
+    """
+
+    def __init__(
+        self,
+        flow_input: Optional[Dict[str, Any]] = None,
+        preview: Optional[bool] = None,
+        tenant: Optional[str] = None,
+    ):
+        self.flow_input = flow_input
+        self.preview = preview
+        self.tenant = tenant
+
+    def to_dict(self) -> Dict[str, Any]:
+        result: Dict[str, Any] = {}
+        if self.flow_input is not None:
+            result["input"] = self.flow_input
+        if self.preview is not None:
+            result["preview"] = self.preview
+        if self.tenant is not None:
+            result["tenant"] = self.tenant
+        return result
+
+    @staticmethod
+    def from_dict(options: Optional[dict]) -> Optional["FlowRunOptions"]:
+        if options is None:
+            return None
+        return FlowRunOptions(
+            flow_input=options.get("input"),
+            preview=options.get("preview"),
+            tenant=options.get("tenant"),
+        )
 
 
 class MgmtLoginOptions:
