@@ -325,3 +325,16 @@ class TestFlow(common.DescopeTest):
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
+
+    def test_flow_run_options_from_dict(self):
+        # Test from_dict with None returns None
+        self.assertIsNone(FlowRunOptions.from_dict(None))
+
+        # Test from_dict with valid dict
+        options = FlowRunOptions.from_dict(
+            {"input": {"key": "value"}, "preview": True, "tenant": "tenant-id"}
+        )
+        self.assertIsNotNone(options)
+        self.assertEqual(options.flow_input, {"key": "value"})
+        self.assertEqual(options.preview, True)
+        self.assertEqual(options.tenant, "tenant-id")
