@@ -302,7 +302,7 @@ class TestFlow(common.DescopeTest):
         with patch("requests.post") as mock_post:
             mock_post.return_value.ok = True
             options = FlowRunOptions(
-                input={"key": "value"},
+                flow_input={"key": "value"},
                 preview=True,
                 tenant="tenant-id",
             )

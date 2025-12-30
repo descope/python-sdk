@@ -168,23 +168,13 @@ class Flow(HTTPBase):
         Raise:
         AuthException: raised if run operation fails
         """
-        body = {"flowId": flow_id}
+        body: dict = {"flowId": flow_id}
 
         if options is not None:
             if isinstance(options, dict):
-                if options.get("input") is not None:
-                    body["input"] = options["input"]
-                if options.get("preview") is not None:
-                    body["preview"] = options["preview"]
-                if options.get("tenant") is not None:
-                    body["tenant"] = options["tenant"]
-            else:
-                if options.input is not None:
-                    body["input"] = options.input
-                if options.preview is not None:
-                    body["preview"] = options.preview
-                if options.tenant is not None:
-                    body["tenant"] = options.tenant
+                options = FlowRunOptions.from_dict(options)
+            if options is not None:
+                body.update(options.to_dict())
 
         response = self._http.post(
             MgmtV1.flow_run_path,
