@@ -1096,6 +1096,30 @@ exported_theme = descope_client.mgmt.flow.export_theme()
 imported_theme = descope_client.mgmt.flow.import_flow(
     theme={}
 )
+
+# Run a flow with the given flow id and options.
+# You can use the FlowRunOptions class or pass a dict directly.
+from descope import FlowRunOptions
+
+# Using FlowRunOptions class
+result = descope_client.mgmt.flow.run_flow(
+    flow_id="my-flow-id",
+    options=FlowRunOptions(
+        input={"key": "value"},
+        preview=True,
+        tenant="tenant-id",
+    ),
+)
+
+# Or using a dict
+result = descope_client.mgmt.flow.run_flow(
+    flow_id="my-flow-id",
+    options={
+        "input": {"key": "value"},
+        "preview": True,
+        "tenant": "tenant-id",
+    },
+)
 ```
 
 ### Query SSO Groups
