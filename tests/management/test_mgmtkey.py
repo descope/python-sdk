@@ -7,6 +7,7 @@ from descope import (
     MgmtKeyProjectRole,
     MgmtKeyReBac,
     MgmtKeyStatus,
+    MgmtKeyTagRole,
 )
 from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
@@ -19,6 +20,34 @@ class TestManagementKey(common.DescopeTest):
         super().setUp()
         self.dummy_project_id = "dummy"
         self.dummy_management_key = "key"
+
+    def test_create_empty_name(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            None,
+            False,
+            self.dummy_management_key,
+        )
+        with self.assertRaises(ValueError) as context:
+            client.mgmt.management_key.create(
+                name="",
+                rebac=MgmtKeyReBac(company_roles=["role1"]),
+            )
+        self.assertEqual(str(context.exception), "name cannot be empty")
+
+    def test_create_none_rebac(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            None,
+            False,
+            self.dummy_management_key,
+        )
+        with self.assertRaises(ValueError) as context:
+            client.mgmt.management_key.create(
+                name="test-key",
+                rebac=None,
+            )
+        self.assertEqual(str(context.exception), "rebac cannot be empty")
 
     def test_create(self):
         client = DescopeClient(
@@ -91,6 +120,128 @@ class TestManagementKey(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+    def test_create_with_project_and_tag_roles(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            None,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test success flow with project_roles and tag_roles
+        with patch("requests.put") as mock_put:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = {
+                "cleartext": "cleartext-secret",
+                "key": {
+                    "id": "mk1",
+                    "name": "test-key",
+                    "description": "test key",
+                    "permittedIps": [],
+                    "status": "active",
+                    "createdTime": 1764849768,
+                    "expireTime": 0,
+                    "reBac": {
+                        "companyRoles": [],
+                        "projectRoles": [{"projectIds": ["proj1"], "roles": ["admin"]}],
+                        "tagRoles": [{"tags": ["tag1"], "roles": ["viewer"]}],
+                    },
+                    "version": 1,
+                    "authzVersion": 1,
+                },
+            }
+            mock_put.return_value = network_resp
+            resp = client.mgmt.management_key.create(
+                name="test-key",
+                rebac=MgmtKeyReBac(
+                    project_roles=[
+                        MgmtKeyProjectRole(project_ids=["proj1"], roles=["admin"])
+                    ],
+                    tag_roles=[MgmtKeyTagRole(tags=["tag1"], roles=["viewer"])],
+                ),
+            )
+            self.assertEqual(resp["cleartext"], "cleartext-secret")
+            key = resp["key"]
+            self.assertEqual(key["name"], "test-key")
+            self.assertEqual(len(key["reBac"]["projectRoles"]), 1)
+            self.assertEqual(key["reBac"]["projectRoles"][0]["projectIds"], ["proj1"])
+            self.assertEqual(len(key["reBac"]["tagRoles"]), 1)
+            self.assertEqual(key["reBac"]["tagRoles"][0]["tags"], ["tag1"])
+            mock_put.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.mgmt_key_create_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "name": "test-key",
+                    "description": None,
+                    "expiresIn": 0,
+                    "permittedIps": [],
+                    "reBac": {
+                        "projectRoles": [{"projectIds": ["proj1"], "roles": ["admin"]}],
+                        "tagRoles": [{"tags": ["tag1"], "roles": ["viewer"]}],
+                    },
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_update_empty_id(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            None,
+            False,
+            self.dummy_management_key,
+        )
+        with self.assertRaises(ValueError) as context:
+            client.mgmt.management_key.update(
+                id="",
+                name="updated-key",
+                description="updated key",
+                permitted_ips=["1.2.3.4"],
+                status=MgmtKeyStatus.INACTIVE,
+            )
+        self.assertEqual(str(context.exception), "id cannot be empty")
+
+    def test_update_empty_name(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            None,
+            False,
+            self.dummy_management_key,
+        )
+        with self.assertRaises(ValueError) as context:
+            client.mgmt.management_key.update(
+                id="mk1",
+                name="",
+                description="updated key",
+                permitted_ips=["1.2.3.4"],
+                status=MgmtKeyStatus.INACTIVE,
+            )
+        self.assertEqual(str(context.exception), "name cannot be empty")
+
+    def test_update_none_status(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            None,
+            False,
+            self.dummy_management_key,
+        )
+        with self.assertRaises(ValueError) as context:
+            client.mgmt.management_key.update(
+                id="mk1",
+                name="updated-key",
+                description="updated key",
+                permitted_ips=["1.2.3.4"],
+                status=None,
+            )
+        self.assertEqual(str(context.exception), "status cannot be empty")
+
     def test_update(self):
         client = DescopeClient(
             self.dummy_project_id,
@@ -156,6 +307,17 @@ class TestManagementKey(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+    def test_load_empty_id(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            None,
+            False,
+            self.dummy_management_key,
+        )
+        with self.assertRaises(ValueError) as context:
+            client.mgmt.management_key.load("")
+        self.assertEqual(str(context.exception), "id cannot be empty")
+
     def test_load(self):
         client = DescopeClient(
             self.dummy_project_id,
@@ -205,6 +367,17 @@ class TestManagementKey(common.DescopeTest):
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
+
+    def test_delete_empty_ids(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            None,
+            False,
+            self.dummy_management_key,
+        )
+        with self.assertRaises(ValueError) as context:
+            client.mgmt.management_key.delete([])
+        self.assertEqual(str(context.exception), "ids list cannot be empty")
 
     def test_delete(self):
         client = DescopeClient(

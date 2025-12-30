@@ -4,12 +4,13 @@ from unittest.mock import patch
 
 from descope import (
     AuthException,
+    DescopeClient,
     DescoperAttributes,
     DescoperCreate,
     DescoperProjectRole,
     DescoperRBAC,
     DescoperRole,
-    DescopeClient,
+    DescoperTagRole,
 )
 from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
@@ -138,6 +139,84 @@ class TestDescoper(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+    def test_create_with_tag_roles(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            None,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test success flow with tag roles
+        with patch("requests.put") as mock_put:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = {
+                "descopers": [
+                    {
+                        "id": "U2111111111111111111111111",
+                        "attributes": {
+                            "displayName": "Test User",
+                            "email": "user@example.com",
+                            "phone": "",
+                        },
+                        "rbac": {
+                            "isCompanyAdmin": False,
+                            "tags": [{"tags": ["tag1", "tag2"], "role": "auditor"}],
+                            "projects": [],
+                        },
+                        "status": "invited",
+                    }
+                ],
+                "total": 1,
+            }
+            mock_put.return_value = network_resp
+            resp = client.mgmt.descoper.create(
+                descopers=[
+                    DescoperCreate(
+                        login_id="user@example.com",
+                        rbac=DescoperRBAC(
+                            tags=[
+                                DescoperTagRole(
+                                    tags=["tag1", "tag2"],
+                                    role=DescoperRole.AUDITOR,
+                                )
+                            ],
+                        ),
+                    )
+                ],
+            )
+            descopers = resp["descopers"]
+            self.assertEqual(len(descopers), 1)
+            self.assertEqual(len(descopers[0]["rbac"]["tags"]), 1)
+            self.assertEqual(descopers[0]["rbac"]["tags"][0]["tags"], ["tag1", "tag2"])
+            mock_put.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.descoper_create_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "descopers": [
+                        {
+                            "loginId": "user@example.com",
+                            "attributes": None,
+                            "sendInvite": False,
+                            "rbac": {
+                                "isCompanyAdmin": False,
+                                "tags": [{"tags": ["tag1", "tag2"], "role": "auditor"}],
+                                "projects": [],
+                            },
+                        }
+                    ]
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
     def test_load(self):
         client = DescopeClient(
             self.dummy_project_id,
@@ -255,7 +334,7 @@ class TestDescoper(common.DescopeTest):
             mock_patch.return_value = network_resp
             resp = client.mgmt.descoper.update(
                 "U2333333333333333333333333",
-                None,
+                DescoperAttributes("Updated User", "user4@example.com", "+1234358730"),
                 DescoperRBAC(is_company_admin=True),
             )
             descoper = resp["descoper"]
@@ -275,6 +354,11 @@ class TestDescoper(common.DescopeTest):
                         "isCompanyAdmin": True,
                         "tags": [],
                         "projects": [],
+                    },
+                    "attributes": {
+                        "displayName": "Updated User",
+                        "email": "user4@example.com",
+                        "phone": "+1234358730",
                     },
                 },
                 allow_redirects=False,
