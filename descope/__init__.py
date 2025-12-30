@@ -20,6 +20,16 @@ from descope.exceptions import (
 from descope.http_client import DescopeResponse
 from descope.management.common import (
     AssociatedTenant,
+    DescoperAttributes,
+    DescoperCreate,
+    DescoperProjectRole,
+    DescoperRBAC,
+    DescoperRole,
+    DescoperTagRole,
+    MgmtKeyProjectRole,
+    MgmtKeyReBac,
+    MgmtKeyStatus,
+    MgmtKeyTagRole,
     SAMLIDPAttributeMappingInfo,
     SAMLIDPGroupsMappingInfo,
     SAMLIDPRoleGroupMappingInfo,

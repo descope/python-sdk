@@ -6,10 +6,12 @@ from descope.http_client import HTTPClient
 from descope.management.access_key import AccessKey
 from descope.management.audit import Audit
 from descope.management.authz import Authz
+from descope.management.descoper import Descoper
 from descope.management.fga import FGA
 from descope.management.flow import Flow
 from descope.management.group import Group
 from descope.management.jwt import JWT
+from descope.management.management_key import ManagementKey
 from descope.management.outbound_application import (
     OutboundApplication,
     OutboundApplicationByToken,
@@ -40,10 +42,12 @@ class MGMT:
         self._access_key = AccessKey(http_client)
         self._audit = Audit(http_client)
         self._authz = Authz(http_client)
+        self._descoper = Descoper(http_client)
         self._fga = FGA(http_client, fga_cache_url=fga_cache_url)
         self._flow = Flow(http_client)
         self._group = Group(http_client)
         self._jwt = JWT(http_client, auth=auth)
+        self._management_key = ManagementKey(http_client)
         self._outbound_application = OutboundApplication(http_client)
         self._outbound_application_by_token = OutboundApplicationByToken(http_client)
         self._permission = Permission(http_client)
@@ -141,3 +145,13 @@ class MGMT:
     def outbound_application_by_token(self):
         # No management key check for outbound_app_token (as authentication for those methods is done by inbound app token)
         return self._outbound_application_by_token
+
+    @property
+    def descoper(self):
+        self._ensure_management_key("descoper")
+        return self._descoper
+
+    @property
+    def management_key(self):
+        self._ensure_management_key("management_key")
+        return self._management_key

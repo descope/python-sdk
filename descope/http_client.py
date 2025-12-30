@@ -219,6 +219,26 @@ class HTTPClient:
         self._raise_from_response(response)
         return response
 
+    def put(
+        self,
+        uri: str,
+        *,
+        body: dict | list[dict] | list[str] | None = None,
+        params=None,
+        pswd: str | None = None,
+    ) -> requests.Response:
+        response = requests.put(
+            f"{self.base_url}{uri}",
+            headers=self._get_default_headers(pswd),
+            json=body,
+            allow_redirects=False,
+            verify=self.secure,
+            params=params,
+            timeout=self.timeout_seconds,
+        )
+        self._raise_from_response(response)
+        return response
+
     def patch(
         self,
         uri: str,
@@ -245,12 +265,14 @@ class HTTPClient:
         self,
         uri: str,
         *,
+        body: dict | list[dict] | list[str] | None = None,
         params=None,
         pswd: str | None = None,
     ) -> requests.Response:
         response = requests.delete(
             f"{self.base_url}{uri}",
             params=params,
+            json=body,
             headers=self._get_default_headers(pswd),
             allow_redirects=False,
             verify=self.secure,
