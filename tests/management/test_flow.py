@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
 from descope.common import DEFAULT_TIMEOUT_SECONDS
-from descope.management.common import MgmtV1
+from descope.management.common import MgmtV1, FlowRunOptions
 
 from .. import common
 
@@ -230,6 +230,97 @@ class TestFlow(common.DescopeTest):
                 },
                 params=None,
                 json={"theme": {"id": "test"}},
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_run_flow(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed run flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.flow.run_flow,
+                "test-flow",
+            )
+
+        # Test success run flow with no options
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNotNone(client.mgmt.flow.run_flow("test-flow"))
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.flow_run_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={"flowId": "test-flow"},
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test success run flow with dict options
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNotNone(
+                client.mgmt.flow.run_flow(
+                    "test-flow",
+                    {"input": {"key": "value"}, "preview": True, "tenant": "tenant-id"},
+                )
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.flow_run_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "flowId": "test-flow",
+                    "input": {"key": "value"},
+                    "preview": True,
+                    "tenant": "tenant-id",
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test success run flow with FlowRunOptions object
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            options = FlowRunOptions(
+                input={"key": "value"},
+                preview=True,
+                tenant="tenant-id",
+            )
+            self.assertIsNotNone(client.mgmt.flow.run_flow("test-flow", options))
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.flow_run_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "flowId": "test-flow",
+                    "input": {"key": "value"},
+                    "preview": True,
+                    "tenant": "tenant-id",
+                },
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,

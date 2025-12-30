@@ -209,6 +209,7 @@ class MgmtV1:
     flow_delete_path = "/v1/mgmt/flow/delete"
     flow_import_path = "/v1/mgmt/flow/import"
     flow_export_path = "/v1/mgmt/flow/export"
+    flow_run_path = "/v1/mgmt/flow/run"
 
     # theme
     theme_import_path = "/v1/mgmt/theme/import"
@@ -281,6 +282,22 @@ class MgmtSignUpOptions:
     ):
         self.custom_claims = custom_claims
         self.refresh_duration = refresh_duration
+
+
+class FlowRunOptions:
+    """
+    Options for running a flow.
+    """
+
+    def __init__(
+        self,
+        input: Optional[Dict[str, Any]] = None,
+        preview: Optional[bool] = None,
+        tenant: Optional[str] = None,
+    ):
+        self.input = input
+        self.preview = preview
+        self.tenant = tenant
 
 
 class MgmtLoginOptions:

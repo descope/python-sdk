@@ -1,7 +1,7 @@
-from typing import List
+from typing import List, Optional, Union
 
 from descope._http_base import HTTPBase
-from descope.management.common import MgmtV1
+from descope.management.common import FlowRunOptions, MgmtV1
 
 
 class Flow(HTTPBase):
@@ -144,5 +144,50 @@ class Flow(HTTPBase):
             body={
                 "theme": theme,
             },
+        )
+        return response.json()
+
+    def run_flow(
+        self,
+        flow_id: str,
+        options: Optional[Union[FlowRunOptions, dict]] = None,
+    ) -> dict:
+        """
+        Run a flow with the given flow id and options.
+
+        Args:
+        flow_id (str): the flow id to run.
+        options (Optional[Union[FlowRunOptions, dict]]): optional flow run options containing:
+            - input: optional input data to pass to the flow.
+            - preview: optional flag to run the flow in preview mode.
+            - tenant: optional tenant ID to run the flow for.
+
+        Return value (dict):
+        Return dict with the flow execution result.
+
+        Raise:
+        AuthException: raised if run operation fails
+        """
+        body = {"flowId": flow_id}
+
+        if options is not None:
+            if isinstance(options, dict):
+                if options.get("input") is not None:
+                    body["input"] = options["input"]
+                if options.get("preview") is not None:
+                    body["preview"] = options["preview"]
+                if options.get("tenant") is not None:
+                    body["tenant"] = options["tenant"]
+            else:
+                if options.input is not None:
+                    body["input"] = options.input
+                if options.preview is not None:
+                    body["preview"] = options.preview
+                if options.tenant is not None:
+                    body["tenant"] = options.tenant
+
+        response = self._http.post(
+            MgmtV1.flow_run_path,
+            body=body,
         )
         return response.json()
