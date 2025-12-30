@@ -12,12 +12,12 @@
 | descope/descope\_client.py          |      190 |        4 |     98% |108, 139, 223, 320 |
 | descope/jwt\_common.py              |       49 |        1 |     98% |       100 |
 | descope/management/audit.py         |       44 |       11 |     75% |74, 76, 78, 80, 82, 84, 86, 88, 90, 92, 94 |
-| descope/management/common.py        |      266 |        1 |     99% |        86 |
+| descope/management/common.py        |      346 |        1 |     99% |        86 |
 | descope/management/role.py          |       30 |        1 |     97% |       160 |
 | descope/management/user.py          |      377 |       15 |     96% |68-73, 801, 1142, 1144, 1146, 1897, 1949, 1992, 1994, 1996 |
-|                           **TOTAL** | **2820** |   **50** | **98%** |           |
+|                           **TOTAL** | **2982** |   **50** | **98%** |           |
 
-26 files skipped due to complete coverage.
+28 files skipped due to complete coverage.
 
 
 ## Setup coverage badge
