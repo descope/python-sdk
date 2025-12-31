@@ -120,6 +120,8 @@ class MgmtV1:
     outbound_application_fetch_tenant_token_path = (
         "/v1/mgmt/outbound/app/tenant/token/latest"
     )
+    outbound_application_delete_user_tokens_path = "/v1/mgmt/outbound/user/tokens"
+    outbound_application_delete_token_path = "/v1/mgmt/outbound/token"
 
     # user
     user_create_path = "/v1/mgmt/user/create"
