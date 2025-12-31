@@ -449,6 +449,46 @@ class OutboundApplication(HTTPBase):
             options=options,
         )
 
+    def delete_user_tokens(
+        self,
+        app_id: Optional[str] = None,
+        user_id: Optional[str] = None,
+    ):
+        """
+        Delete outbound application tokens by app ID and/or user ID.
+        At least one of app_id or user_id must be provided.
+
+        Args:
+        app_id (str): Optional ID of the outbound application.
+        user_id (str): Optional ID of the user.
+
+        Raise:
+        AuthException: raised if delete operation fails
+        """
+        params = {}
+        if app_id:
+            params["appId"] = app_id
+        if user_id:
+            params["userId"] = user_id
+        uri = MgmtV1.outbound_application_delete_user_tokens_path
+        self._http.delete(uri, params=params)
+
+    def delete_token(
+        self,
+        token_id: str,
+    ):
+        """
+        Delete an outbound application token by its ID.
+
+        Args:
+        token_id (str): The ID of the token to delete.
+
+        Raise:
+        AuthException: raised if delete operation fails
+        """
+        uri = MgmtV1.outbound_application_delete_token_path
+        self._http.delete(uri, params={"id": token_id})
+
     @staticmethod
     def _compose_create_update_body(
         name: str,

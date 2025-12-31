@@ -136,6 +136,31 @@ def main():
         except AuthException as e:
             logging.info(f"Tenant token fetch failed {e}")
 
+        # DELETE USER TOKENS
+
+        try:
+            logging.info("Going to delete user tokens by app and user id")
+            descope_client.mgmt.outbound_application.delete_user_tokens(
+                app_id=outbound_app_id,
+                user_id="user123",
+            )
+            logging.info("User tokens deleted successfully")
+
+        except AuthException as e:
+            logging.info(f"User tokens deletion failed {e}")
+
+        # DELETE TOKEN BY ID
+
+        try:
+            logging.info("Going to delete token by id")
+            descope_client.mgmt.outbound_application.delete_token(
+                token_id="token-id-123",
+            )
+            logging.info("Token deleted successfully")
+
+        except AuthException as e:
+            logging.info(f"Token deletion failed {e}")
+
         # DELETE OUTBOUND APPLICATION
 
         try:

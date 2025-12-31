@@ -768,6 +768,116 @@ class TestOutboundApplication(common.DescopeTest):
 
         assert body == expected_body
 
+    def test_delete_user_tokens_success(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        with patch("requests.delete") as mock_delete:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            mock_delete.return_value = network_resp
+            client.mgmt.outbound_application.delete_user_tokens(
+                app_id="app123", user_id="user456"
+            )
+
+            mock_delete.assert_called_once()
+            call_args = mock_delete.call_args
+            assert call_args[1]["params"]["appId"] == "app123"
+            assert call_args[1]["params"]["userId"] == "user456"
+
+    def test_delete_user_tokens_with_app_id_only(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        with patch("requests.delete") as mock_delete:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            mock_delete.return_value = network_resp
+            client.mgmt.outbound_application.delete_user_tokens(app_id="app123")
+
+            mock_delete.assert_called_once()
+            call_args = mock_delete.call_args
+            assert call_args[1]["params"]["appId"] == "app123"
+            assert "userId" not in call_args[1]["params"]
+
+    def test_delete_user_tokens_with_user_id_only(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        with patch("requests.delete") as mock_delete:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            mock_delete.return_value = network_resp
+            client.mgmt.outbound_application.delete_user_tokens(user_id="user456")
+
+            mock_delete.assert_called_once()
+            call_args = mock_delete.call_args
+            assert call_args[1]["params"]["userId"] == "user456"
+            assert "appId" not in call_args[1]["params"]
+
+    def test_delete_user_tokens_failure(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        with patch("requests.delete") as mock_delete:
+            mock_delete.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.outbound_application.delete_user_tokens,
+                "app123",
+                "user456",
+            )
+
+    def test_delete_token_success(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        with patch("requests.delete") as mock_delete:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            mock_delete.return_value = network_resp
+            client.mgmt.outbound_application.delete_token("token123")
+
+            mock_delete.assert_called_once()
+            call_args = mock_delete.call_args
+            assert call_args[1]["params"]["id"] == "token123"
+
+    def test_delete_token_failure(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        with patch("requests.delete") as mock_delete:
+            mock_delete.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.outbound_application.delete_token,
+                "token123",
+            )
+
     def test_url_param_to_dict(self):
         # Test URLParam to_dict method
         param = URLParam("test_name", "test_value")
