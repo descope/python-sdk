@@ -17,6 +17,8 @@ class Tenant(HTTPBase):
         self_provisioning_domains: Optional[List[str]] = None,
         custom_attributes: Optional[dict] = None,
         enforce_sso: Optional[bool] = False,
+        enforce_sso_exclusions: Optional[List[str]] = None,
+        federated_app_ids: Optional[List[str]] = None,
         disabled: Optional[bool] = False,
     ) -> dict:
         """
@@ -30,6 +32,8 @@ class Tenant(HTTPBase):
             Users authenticating from these domains will be associated with this tenant.
         custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
         enforce_sso (bool): Optional, login to the tenant is possible only using the configured sso
+        enforce_sso_exclusions (List[str]): Optional, list of user IDs excluded from SSO enforcement
+        federated_app_ids (List[str]): Optional, list of federated application IDs
         disabled (bool): Optional, login to the tenant will be disabled
 
         Return value (dict):
@@ -51,6 +55,8 @@ class Tenant(HTTPBase):
                 self_provisioning_domains,
                 custom_attributes,
                 enforce_sso,
+                enforce_sso_exclusions,
+                federated_app_ids,
                 disabled,
             ),
         )
@@ -63,6 +69,8 @@ class Tenant(HTTPBase):
         self_provisioning_domains: Optional[List[str]] = None,
         custom_attributes: Optional[dict] = None,
         enforce_sso: Optional[bool] = False,
+        enforce_sso_exclusions: Optional[List[str]] = None,
+        federated_app_ids: Optional[List[str]] = None,
         disabled: Optional[bool] = False,
     ):
         """
@@ -76,6 +84,8 @@ class Tenant(HTTPBase):
             Users authenticating from these domains will be associated with this tenant.
         custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
         enforce_sso (bool): Optional, login to the tenant is possible only using the configured sso
+        enforce_sso_exclusions (List[str]): Optional, list of user IDs excluded from SSO enforcement
+        federated_app_ids (List[str]): Optional, list of federated application IDs
         disabled (bool): Optional, login to the tenant will be disabled
 
         Raise:
@@ -93,6 +103,8 @@ class Tenant(HTTPBase):
                 self_provisioning_domains,
                 custom_attributes,
                 enforce_sso,
+                enforce_sso_exclusions,
+                federated_app_ids,
                 disabled,
             ),
         )
@@ -115,6 +127,9 @@ class Tenant(HTTPBase):
         inactivity_time_unit: Optional[SessionExpirationUnit] = None,
         JITDisabled: Optional[bool] = None,
         sso_setup_suite_settings: Optional[SSOSetupSuiteSettings] = None,
+        enforce_sso: Optional[bool] = None,
+        enforce_sso_exclusions: Optional[List[str]] = None,
+        federated_app_ids: Optional[List[str]] = None,
     ):
         """
         Update an existing tenant's session settings.
@@ -136,6 +151,9 @@ class Tenant(HTTPBase):
             inactivity_time_unit (Optional[SessionExpirationUnit]): Unit for inactivity timeout.
             JITDisabled (Optional[bool]): Whether JIT is disabled.
             sso_setup_suite_settings (Optional[SSOSetupSuiteSettings]): SSO Setup Suite configuration.
+            enforce_sso (Optional[bool]): Whether to enforce SSO for the tenant.
+            enforce_sso_exclusions (Optional[List[str]]): List of user IDs excluded from SSO enforcement.
+            federated_app_ids (Optional[List[str]]): List of federated application IDs.
 
         Raise:
             AuthException: raised if update operation fails
@@ -159,6 +177,9 @@ class Tenant(HTTPBase):
             "ssoSetupSuiteSettings": (
                 sso_setup_suite_settings.to_dict() if sso_setup_suite_settings else None
             ),
+            "enforceSSO": enforce_sso,
+            "enforceSSOExclusions": enforce_sso_exclusions,
+            "federatedAppIds": federated_app_ids,
         }
 
         body = {k: v for k, v in body.items() if v is not None}
@@ -298,6 +319,8 @@ class Tenant(HTTPBase):
         self_provisioning_domains: List[str],
         custom_attributes: Optional[dict] = None,
         enforce_sso: Optional[bool] = False,
+        enforce_sso_exclusions: Optional[List[str]] = None,
+        federated_app_ids: Optional[List[str]] = None,
         disabled: Optional[bool] = False,
     ) -> dict:
         body: dict[str, Any] = {
@@ -309,4 +332,8 @@ class Tenant(HTTPBase):
         }
         if custom_attributes is not None:
             body["customAttributes"] = custom_attributes
+        if enforce_sso_exclusions is not None:
+            body["enforceSSOExclusions"] = enforce_sso_exclusions
+        if federated_app_ids is not None:
+            body["federatedAppIds"] = federated_app_ids
         return body
