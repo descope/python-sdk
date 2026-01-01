@@ -1061,6 +1061,7 @@ class User(HTTPBase):
         login_id: str,
         email: Optional[str] = None,
         verified: Optional[bool] = None,
+        fail_on_conflict: Optional[bool] = None,
     ) -> dict:
         """
         Update the email address for an existing user.
@@ -1069,6 +1070,7 @@ class User(HTTPBase):
         login_id (str): The login ID of the user to update the email for.
         email (str): The user email address. Leave empty to remove.
         verified (bool): Set to true for the user to be able to login with the email address.
+        fail_on_conflict (bool): Set to true to raise an error if the email is used as a login id and already exists.
 
         Return value (dict):
         Return dict in the format
@@ -1080,7 +1082,7 @@ class User(HTTPBase):
         """
         response = self._http.post(
             MgmtV1.user_update_email_path,
-            body={"loginId": login_id, "email": email, "verified": verified},
+            body={"loginId": login_id, "email": email, "verified": verified, "failOnConflict": fail_on_conflict},
         )
         return response.json()
 
@@ -1089,6 +1091,7 @@ class User(HTTPBase):
         login_id: str,
         phone: Optional[str] = None,
         verified: Optional[bool] = None,
+        fail_on_conflict: Optional[bool] = None,
     ) -> dict:
         """
         Update the phone number for an existing user.
@@ -1097,6 +1100,7 @@ class User(HTTPBase):
         login_id (str): The login ID of the user to update the phone for.
         phone (str): The user phone number. Leave empty to remove.
         verified (bool): Set to true for the user to be able to login with the phone number.
+        fail_on_conflict (bool): Set to true to raise an error if the phone is used as a login id and already exists.
 
         Return value (dict):
         Return dict in the format
@@ -1108,7 +1112,7 @@ class User(HTTPBase):
         """
         response = self._http.post(
             MgmtV1.user_update_phone_path,
-            body={"loginId": login_id, "phone": phone, "verified": verified},
+            body={"loginId": login_id, "phone": phone, "verified": verified, "failOnConflict": fail_on_conflict},
         )
         return response.json()
 
