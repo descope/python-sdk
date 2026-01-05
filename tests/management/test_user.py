@@ -803,6 +803,62 @@ class TestUser(common.DescopeTest):
             json_payload = call_args[1]["json"]
             self.assertTrue(json_payload["users"][0]["test"])
 
+    def test_patch_batch_with_consent_expiration(self):
+        # Test batch patch with consent_expiration field
+        users = [
+            UserObj(
+                login_id="user1", email="user1@test.com", consent_expiration=1735689600
+            ),
+            UserObj(
+                login_id="user2", display_name="User Two", consent_expiration=1767225600
+            ),
+            UserObj(login_id="user3", phone="+123456789"),  # No consent_expiration
+        ]
+
+        with patch("requests.patch") as mock_patch:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads(
+                """{"patchedUsers": [{"id": "u1"}, {"id": "u2"}, {"id": "u3"}], "failedUsers": []}"""
+            )
+            mock_patch.return_value = network_resp
+
+            resp = self.client.mgmt.user.patch_batch(users)
+
+            self.assertEqual(len(resp["patchedUsers"]), 3)
+            self.assertEqual(len(resp["failedUsers"]), 0)
+
+            mock_patch.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_patch_batch_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "users": [
+                        {
+                            "loginId": "user1",
+                            "email": "user1@test.com",
+                            "consentExpiration": 1735689600,
+                        },
+                        {
+                            "loginId": "user2",
+                            "displayName": "User Two",
+                            "consentExpiration": 1767225600,
+                        },
+                        {
+                            "loginId": "user3",
+                            "phone": "+123456789",
+                        },
+                    ]
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
     def test_delete(self):
         # Test failed flows
         with patch("requests.post") as mock_post:

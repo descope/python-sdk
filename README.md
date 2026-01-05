@@ -780,6 +780,36 @@ users_history_resp = descope_client.mgmt.user.history(["user-id-1", "user-id-2"]
         # Do something
 ```
 
+#### User Impersonation Consent
+
+When using the User Impersonation feature with consent validation, user objects returned from `load()`, `load_by_user_id()`, and `search_all()` methods will include a `consentExpiration` field (Unix timestamp in seconds). This field indicates when the user's consent for impersonation expires, allowing you to:
+
+- Identify which users have granted impersonation consent
+- Filter users by consent status
+- Track consent expiration times
+
+```Python
+# Load a user and check consent expiration
+user_resp = descope_client.mgmt.user.load("desmond@descope.com")
+user = user_resp["user"]
+consent_expiration = user.get("consentExpiration")  # Unix timestamp or None
+
+if consent_expiration:
+    print(f"User has granted consent until: {consent_expiration}")
+
+# Search users and filter by consent status
+users_resp = descope_client.mgmt.user.search_all()
+users_with_consent = [u for u in users_resp["users"] if u.get("consentExpiration")]
+
+# The consentExpiration field is also available in UserObj for batch operations
+from descope import UserObj
+user_obj = UserObj(
+    login_id="desmond@descope.com",
+    email="desmond@descope.com",
+    consent_expiration=1735689600,  # Optional Unix timestamp
+)
+```
+
 #### Set or Expire User Password
 
 You can set a new active password for a user that they can sign in with.
