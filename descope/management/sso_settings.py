@@ -92,7 +92,7 @@ class SSOOIDCSettings:
         prompt: Optional[List[str]] = None,
         grant_type: Optional[str] = None,
         issuer: Optional[str] = None,
-        groups_priority: Optional[List[str]] = None,
+        groups_priority: Optional[List[str]] = None, # list of group names in priority order (first = highest priority)
     ):
         self.name = name
         self.client_id = client_id
@@ -126,10 +126,10 @@ class SSOSAMLSettings:
         role_mappings: Optional[List[RoleMapping]] = None,
         default_sso_roles: Optional[List[str]] = None,
         idp_additional_certs: Optional[List[str]] = None,
+        groups_priority: Optional[List[str]] = None, # list of group names in priority order (first = highest priority)
         # NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
         sp_acs_url: Optional[str] = None,
         sp_entity_id: Optional[str] = None,
-        groups_priority: Optional[List[str]] = None,
     ):
         self.idp_url = idp_url
         self.idp_entity_id = idp_entity_id
@@ -154,10 +154,10 @@ class SSOSAMLSettingsByMetadata:
         attribute_mapping: Optional[AttributeMapping] = None,
         role_mappings: Optional[List[RoleMapping]] = None,
         default_sso_roles: Optional[List[str]] = None,
+        groups_priority: Optional[List[str]] = None, # list of group names in priority order (first = highest priority)
         # NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
         sp_acs_url: Optional[str] = None,
         sp_entity_id: Optional[str] = None,
-        groups_priority: Optional[List[str]] = None,
     ):
         self.idp_metadata_url = idp_metadata_url
         self.attribute_mapping = attribute_mapping
