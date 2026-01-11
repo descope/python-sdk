@@ -34,6 +34,7 @@ class UserObj:
         password: Optional[UserPassword] = None,
         seed: Optional[str] = None,
         status: Optional[str] = None,
+        consent_expiration: Optional[int] = None,
     ):
         self.login_id = login_id
         self.email = email
@@ -53,6 +54,7 @@ class UserObj:
         self.password = password
         self.seed = seed
         self.status = status
+        self.consent_expiration = consent_expiration
 
 
 class CreateUserObj:
@@ -1082,7 +1084,12 @@ class User(HTTPBase):
         """
         response = self._http.post(
             MgmtV1.user_update_email_path,
-            body={"loginId": login_id, "email": email, "verified": verified, "failOnConflict": fail_on_conflict},
+            body={
+                "loginId": login_id,
+                "email": email,
+                "verified": verified,
+                "failOnConflict": fail_on_conflict,
+            },
         )
         return response.json()
 
@@ -1112,7 +1119,12 @@ class User(HTTPBase):
         """
         response = self._http.post(
             MgmtV1.user_update_phone_path,
-            body={"loginId": login_id, "phone": phone, "verified": verified, "failOnConflict": fail_on_conflict},
+            body={
+                "loginId": login_id,
+                "phone": phone,
+                "verified": verified,
+                "failOnConflict": fail_on_conflict,
+            },
         )
         return response.json()
 
@@ -2026,6 +2038,7 @@ class User(HTTPBase):
         sso_app_ids: Optional[List[str]],
         status: Optional[str],
         test: bool = False,
+        consent_expiration: Optional[int] = None,
     ) -> dict:
         res: dict[str, Any] = {
             "loginId": login_id,
@@ -2058,6 +2071,8 @@ class User(HTTPBase):
             res["ssoAppIds"] = sso_app_ids
         if status is not None:
             res["status"] = status
+        if consent_expiration is not None:
+            res["consentExpiration"] = consent_expiration
         if test:
             res["test"] = test
         return res
@@ -2086,6 +2101,7 @@ class User(HTTPBase):
                 sso_app_ids=user.sso_app_ids,
                 status=user.status,
                 test=test,
+                consent_expiration=user.consent_expiration,
             )
             users_body.append(user_body)
 
