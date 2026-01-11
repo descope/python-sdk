@@ -47,6 +47,7 @@ def main():
                     verified_phone="verifiedPhone",
                     picture="picture",
                 ),
+                groups_priority=["admin_group", "user_group"],
             )
             descope_client.mgmt.sso.configure_oidc_settings(tenant_id, settings)
         except AuthException as e:
@@ -76,6 +77,7 @@ def main():
                     group="groups",
                 ),
                 role_mappings=[RoleMapping(groups=["grp1"], role_name="rl1")],
+                groups_priority=["admin_group", "user_group"],
             )
             descope_client.mgmt.sso.configure_saml_settings(tenant_id, settings)
         except AuthException as e:
@@ -103,6 +105,7 @@ def main():
                     group="groups",
                 ),
                 role_mappings=[RoleMapping(groups=["grp1"], role_name="rl1")],
+                groups_priority=["admin_group", "user_group"],
             )
             descope_client.mgmt.sso.configure_saml_settings_by_metadata(
                 tenant_id, settings, domains=["kuki.com"]
