@@ -1082,7 +1082,12 @@ class User(HTTPBase):
         """
         response = self._http.post(
             MgmtV1.user_update_email_path,
-            body={"loginId": login_id, "email": email, "verified": verified, "failOnConflict": fail_on_conflict},
+            body={
+                "loginId": login_id,
+                "email": email,
+                "verified": verified,
+                "failOnConflict": fail_on_conflict,
+            },
         )
         return response.json()
 
@@ -1112,7 +1117,12 @@ class User(HTTPBase):
         """
         response = self._http.post(
             MgmtV1.user_update_phone_path,
-            body={"loginId": login_id, "phone": phone, "verified": verified, "failOnConflict": fail_on_conflict},
+            body={
+                "loginId": login_id,
+                "phone": phone,
+                "verified": verified,
+                "failOnConflict": fail_on_conflict,
+            },
         )
         return response.json()
 
