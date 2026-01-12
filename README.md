@@ -14,8 +14,8 @@
 | descope/management/audit.py         |       44 |       11 |     75% |74, 76, 78, 80, 82, 84, 86, 88, 90, 92, 94 |
 | descope/management/common.py        |      370 |        1 |     99% |        86 |
 | descope/management/role.py          |       30 |        1 |     97% |       160 |
-| descope/management/user.py          |      377 |       15 |     96% |68-73, 801, 1146, 1148, 1150, 1901, 1953, 1996, 1998, 2000 |
-|                           **TOTAL** | **3038** |   **50** | **98%** |           |
+| descope/management/user.py          |      377 |       15 |     96% |68-73, 801, 1156, 1158, 1160, 1911, 1963, 2006, 2008, 2010 |
+|                           **TOTAL** | **3041** |   **50** | **98%** |           |
 
 28 files skipped due to complete coverage.
 
