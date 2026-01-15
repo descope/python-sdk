@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.9.1](https://github.com/descope/python-sdk/compare/descope-1.9.0...descope-1.9.1) (2026-01-15)
+
+
+### Bug Fixes
+
+* add enforcessolist and appids to tenant create and update ([#734](https://github.com/descope/python-sdk/issues/734)) ([2039053](https://github.com/descope/python-sdk/commit/203905381f0345906c359f2d9037c4cc8a2c32e5))
+* add group priority support ([#742](https://github.com/descope/python-sdk/issues/742)) ([262ad0f](https://github.com/descope/python-sdk/commit/262ad0f7ae3fda2873a684b9956071e889d67595))
+
 ## [1.9.0](https://github.com/descope/python-sdk/compare/descope-1.8.0...descope-1.9.0) (2025-12-30)
 
 
