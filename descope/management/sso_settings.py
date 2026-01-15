@@ -92,6 +92,9 @@ class SSOOIDCSettings:
         prompt: Optional[List[str]] = None,
         grant_type: Optional[str] = None,
         issuer: Optional[str] = None,
+        groups_priority: Optional[
+            List[str]
+        ] = None,  # list of group names in priority order (first = highest priority)
     ):
         self.name = name
         self.client_id = client_id
@@ -108,6 +111,7 @@ class SSOOIDCSettings:
         self.prompt = prompt
         self.grant_type = grant_type
         self.issuer = issuer
+        self.groups_priority = groups_priority
 
 
 class SSOSAMLSettings:
@@ -124,6 +128,9 @@ class SSOSAMLSettings:
         role_mappings: Optional[List[RoleMapping]] = None,
         default_sso_roles: Optional[List[str]] = None,
         idp_additional_certs: Optional[List[str]] = None,
+        groups_priority: Optional[
+            List[str]
+        ] = None,  # list of group names in priority order (first = highest priority)
         # NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
         sp_acs_url: Optional[str] = None,
         sp_entity_id: Optional[str] = None,
@@ -137,6 +144,7 @@ class SSOSAMLSettings:
         self.idp_additional_certs = idp_additional_certs
         self.sp_acs_url = sp_acs_url
         self.sp_entity_id = sp_entity_id
+        self.groups_priority = groups_priority
 
 
 class SSOSAMLSettingsByMetadata:
@@ -150,6 +158,9 @@ class SSOSAMLSettingsByMetadata:
         attribute_mapping: Optional[AttributeMapping] = None,
         role_mappings: Optional[List[RoleMapping]] = None,
         default_sso_roles: Optional[List[str]] = None,
+        groups_priority: Optional[
+            List[str]
+        ] = None,  # list of group names in priority order (first = highest priority)
         # NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
         sp_acs_url: Optional[str] = None,
         sp_entity_id: Optional[str] = None,
@@ -160,6 +171,7 @@ class SSOSAMLSettingsByMetadata:
         self.default_sso_roles = default_sso_roles
         self.sp_acs_url = sp_acs_url
         self.sp_entity_id = sp_entity_id
+        self.groups_priority = groups_priority
 
 
 class SSOSettings(HTTPBase):
@@ -516,6 +528,7 @@ class SSOSettings(HTTPBase):
                 "prompt": settings.prompt,
                 "grantType": settings.grant_type,
                 "issuer": settings.issuer,
+                "groupsPriority": settings.groups_priority,
             },
             "domains": domains,
         }
@@ -547,6 +560,7 @@ class SSOSettings(HTTPBase):
                     settings.role_mappings
                 ),
                 "defaultSSORoles": settings.default_sso_roles,
+                "groupsPriority": settings.groups_priority,
             },
             "redirectUrl": redirect_url,
             "domains": domains,
@@ -576,6 +590,7 @@ class SSOSettings(HTTPBase):
                     settings.role_mappings
                 ),
                 "defaultSSORoles": settings.default_sso_roles,
+                "groupsPriority": settings.groups_priority,
             },
             "redirectUrl": redirect_url,
             "domains": domains,
