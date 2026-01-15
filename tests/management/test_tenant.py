@@ -85,6 +85,8 @@ class TestTenant(common.DescopeTest):
                 ["domain.com"],
                 {"k1": "v1"},
                 enforce_sso=True,
+                enforce_sso_exclusions=["user1", "user2"],
+                federated_app_ids=["app1", "app2"],
                 disabled=True,
             )
             self.assertEqual(resp["id"], "t1")
@@ -102,6 +104,8 @@ class TestTenant(common.DescopeTest):
                     "selfProvisioningDomains": ["domain.com"],
                     "customAttributes": {"k1": "v1"},
                     "enforceSSO": True,
+                    "enforceSSOExclusions": ["user1", "user2"],
+                    "federatedAppIds": ["app1", "app2"],
                     "disabled": True,
                 },
                 allow_redirects=False,
@@ -165,6 +169,8 @@ class TestTenant(common.DescopeTest):
                     ["domain.com"],
                     {"k1": "v1"},
                     enforce_sso=True,
+                    enforce_sso_exclusions=["user1", "user2"],
+                    federated_app_ids=["app1", "app2"],
                     disabled=True,
                 )
             )
@@ -182,6 +188,8 @@ class TestTenant(common.DescopeTest):
                     "selfProvisioningDomains": ["domain.com"],
                     "customAttributes": {"k1": "v1"},
                     "enforceSSO": True,
+                    "enforceSSOExclusions": ["user1", "user2"],
+                    "federatedAppIds": ["app1", "app2"],
                     "disabled": True,
                 },
                 allow_redirects=False,
