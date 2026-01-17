@@ -36,6 +36,7 @@ class AccessKey(HTTPBase):
         custom_claims (dict): Optional, map of claims and their values that will be present in the JWT.
         description (str): an optional text the access key can hold.
         permitted_ips: (List[str]): An optional list of IP addresses or CIDR ranges that are allowed to use the access key.
+        custom_attributes (dict): Optional, map of custom attributes and their values that will be associated with the access key.
 
         Return value (dict):
         Return dict in the format
@@ -117,9 +118,6 @@ class AccessKey(HTTPBase):
         AuthException: raised if search operation fails
         """
         tenant_ids = [] if tenant_ids is None else tenant_ids
-        bound_user_id = None if bound_user_id is None else bound_user_id
-        creating_user = None if creating_user is None else creating_user
-        custom_attributes = None if custom_attributes is None else custom_attributes
 
         response = self._http.post(
             MgmtV1.access_keys_search_path,
@@ -155,7 +153,7 @@ class AccessKey(HTTPBase):
         Raise:
         AuthException: raised if update operation fails
         """
-        body: dict[str, str | List[str] | Optional[dict]] = {
+        body: dict[str, str | List[str] | dict] = {
             "id": id,
             "name": name,
         }
