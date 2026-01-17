@@ -781,3 +781,73 @@ class TestSSOSettings(common.DescopeTest):
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
+
+    def test_recalculate_sso_mappings(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.sso.recalculate_sso_mappings,
+                "tenant-id",
+            )
+
+        # Test success flow with sso_id
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = {
+                "affectedUserIds": ["user1", "user2", "user3"]
+            }
+            mock_post.return_value = network_resp
+            affected_users = client.mgmt.sso.recalculate_sso_mappings(
+                "tenant-id", "sso-456"
+            )
+            self.assertEqual(affected_users, ["user1", "user2", "user3"])
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_recalculate_mappings_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "tenantId": "tenant-id",
+                    "ssoId": "sso-456",
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test success flow without sso_id
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = {"affectedUserIds": ["user1"]}
+            mock_post.return_value = network_resp
+            affected_users = client.mgmt.sso.recalculate_sso_mappings("tenant-id")
+            self.assertEqual(affected_users, ["user1"])
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_recalculate_mappings_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "tenantId": "tenant-id",
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )

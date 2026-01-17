@@ -120,6 +120,13 @@ def main():
         except AuthException as e:
             logging.info(f"Load SSO settings failed {e}")
 
+        try:
+            logging.info("Recalculating SSO mappings for tenant")
+            affected_users = descope_client.mgmt.sso.recalculate_sso_mappings(tenant_id)
+            logging.info(f"Affected users: {affected_users}")
+        except AuthException as e:
+            logging.info(f"Recalculate SSO mappings failed {e}")
+
         # All the following code is DEPRECATED (keeping just for backward compatibility)
         try:
             logging.info("Get SSO settings for tenant")
