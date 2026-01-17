@@ -19,6 +19,7 @@ class AccessKey(HTTPBase):
         custom_claims: Optional[dict] = None,
         description: Optional[str] = None,
         permitted_ips: Optional[List[str]] = None,
+        custom_attributes: Optional[dict] = None,
     ) -> dict:
         """
         Create a new access key.
@@ -62,6 +63,7 @@ class AccessKey(HTTPBase):
                 custom_claims,
                 description,
                 permitted_ips,
+                custom_attributes,
             ),
         )
         return response.json()
@@ -93,12 +95,18 @@ class AccessKey(HTTPBase):
     def search_all_access_keys(
         self,
         tenant_ids: Optional[List[str]] = None,
+        bound_user_id: Optional[str] = None,
+        creating_user: Optional[str] = None,
+        custom_attributes: Optional[dict] = None,
     ) -> dict:
         """
         Search all access keys.
 
         Args:
         tenant_ids (List[str]): Optional list of tenant IDs to filter by
+        bound_user_id (str): Optional user ID of bounded user to filter by
+        creating_user (str): Optional user name of the creator to filter by
+        custom_attributes (dict): Optional dictionary of custom attributes to filter by
 
         Return value (dict):
         Return dict in the format
@@ -109,10 +117,18 @@ class AccessKey(HTTPBase):
         AuthException: raised if search operation fails
         """
         tenant_ids = [] if tenant_ids is None else tenant_ids
+        bound_user_id = None if bound_user_id is None else bound_user_id
+        creating_user = None if creating_user is None else creating_user
+        custom_attributes = None if custom_attributes is None else custom_attributes
 
         response = self._http.post(
             MgmtV1.access_keys_search_path,
-            body={"tenantIds": tenant_ids},
+            body={
+                "tenantIds": tenant_ids,
+                "boundUserId": bound_user_id,
+                "creatingUser": creating_user,
+                "customAttributes": custom_attributes,
+            },
         )
         return response.json()
 
@@ -121,6 +137,9 @@ class AccessKey(HTTPBase):
         id: str,
         name: str,
         description: Optional[str] = None,
+        custom_claims: Optional[dict] = None,
+        permitted_ips: Optional[List[str]] = None,
+        custom_attributes: Optional[dict] = None,
     ):
         """
         Update an existing access key with the given various fields. IMPORTANT: id and name are mandatory fields.
@@ -129,13 +148,28 @@ class AccessKey(HTTPBase):
         id (str): The id of the access key to update.
         name (str): The updated access key name.
         description (str): The description of the access key to update. If not provided, it will not be overriden.
+        custom_claims (dict): Optional dictionary of custom claims to update. If not provided, it will not be overridden.
+        permitted_ips (List[str]): Optional list of permitted IPs to update. If not provided, it will not be overridden.
+        custom_attributes (dict): Optional dictionary of custom attributes to update. If not provided, it will not be overridden.
 
         Raise:
         AuthException: raised if update operation fails
         """
+        body: dict[str, str | List[str] | Optional[dict]] = {
+            "id": id,
+            "name": name,
+        }
+        if description is not None:
+            body["description"] = description
+        if custom_claims is not None:
+            body["customClaims"] = custom_claims
+        if permitted_ips is not None:
+            body["permittedIps"] = permitted_ips
+        if custom_attributes is not None:
+            body["customAttributes"] = custom_attributes
         self._http.post(
             MgmtV1.access_key_update_path,
-            body={"id": id, "name": name, "description": description},
+            body=body,
         )
 
     def deactivate(
@@ -204,6 +238,7 @@ class AccessKey(HTTPBase):
         custom_claims: Optional[dict] = None,
         description: Optional[str] = None,
         permitted_ips: Optional[List[str]] = None,
+        custom_attributes: Optional[dict] = None,
     ) -> dict:
         return {
             "name": name,
@@ -214,4 +249,5 @@ class AccessKey(HTTPBase):
             "customClaims": custom_claims,
             "description": description,
             "permittedIps": permitted_ips,
+            "customAttributes": custom_attributes,
         }
