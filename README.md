@@ -817,6 +817,7 @@ create_resp = descope_client.mgmt.access_key.create(
     ],
     description="this is my access key",
     permitted_ips=['10.0.0.1', '192.168.1.0/24'],
+    custom_attributes={'attrName': 'attrValue'},
 )
 key = create_resp["key"]
 cleartext = create_resp["cleartext"] # make sure to save the returned cleartext securely. It will not be returned again.
@@ -826,7 +827,8 @@ access_key_resp = descope_client.mgmt.access_key.load("key-id")
 access_key = access_key_resp["key"]
 
 # Search all access keys, optionally according to a tenant filter
-keys_resp = descope_client.mgmt.access_key.search_all_access_keys(tenant_ids=["my-tenant-id"])
+keys_resp = descope_client.mgmt.access_key.search_all_access_keys(tenant_ids=["my-tenant-id"], bound_user_id='buid',
+        creating_user='cu', custom_attributes={'attrName': 'attrValue'})
 keys = keys_resp["keys"]
     for key in keys:
         # Do something
@@ -835,6 +837,9 @@ keys = keys_resp["keys"]
 descope_client.mgmt.access_key.update(
     id="key-id",
     name="new name",
+    custom_claims={"k1":"v1"},
+    permitted_ips=['10.0.0.1', '192.168.1.0/24'],
+    custom_attributes={'attrName': 'attrValue'},
 )
 
 # Access keys can be deactivated to prevent usage. This can be undone using "activate".
