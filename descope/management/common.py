@@ -179,6 +179,7 @@ class MgmtV1:
     sso_settings_path = "/v1/mgmt/sso/settings"
     sso_metadata_path = "/v1/mgmt/sso/metadata"
     sso_mapping_path = "/v1/mgmt/sso/mapping"
+    sso_recalculate_mappings_path = "/v1/mgmt/sso/recalculate-mappings"
     sso_load_settings_path = "/v2/mgmt/sso/settings"  # v2 only
     sso_configure_oidc_settings = "/v1/mgmt/sso/oidc"
     sso_configure_saml_settings = "/v1/mgmt/sso/saml"
