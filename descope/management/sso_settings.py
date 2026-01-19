@@ -203,7 +203,7 @@ class SSOSettings(HTTPBase):
         self,
         tenant_id: str,
         sso_id: Optional[str] = None,
-    ) -> List[str]:
+    ):
         """
         Recalculate SSO group to role mappings for all users in a tenant.
 
@@ -214,9 +214,6 @@ class SSOSettings(HTTPBase):
         tenant_id (str): The tenant ID (required)
         sso_id (str): Optional, specify to recalculate mappings for a specific SSO configuration
 
-        Return value (List[str]):
-        List of affected user IDs
-
         Raise:
         AuthException: raised if recalculation operation fails
         """
@@ -224,12 +221,10 @@ class SSOSettings(HTTPBase):
         if sso_id:
             body["ssoId"] = sso_id
 
-        response = self._http.post(
+        self._http.post(
             uri=MgmtV1.sso_recalculate_mappings_path,
             body=body,
         )
-        result = response.json()
-        return result.get("affectedUserIds", [])
 
     def delete_settings(
         self,

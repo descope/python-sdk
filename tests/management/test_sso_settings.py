@@ -807,10 +807,7 @@ class TestSSOSettings(common.DescopeTest):
                 "affectedUserIds": ["user1", "user2", "user3"]
             }
             mock_post.return_value = network_resp
-            affected_users = client.mgmt.sso.recalculate_sso_mappings(
-                "tenant-id", "sso-456"
-            )
-            self.assertEqual(affected_users, ["user1", "user2", "user3"])
+            client.mgmt.sso.recalculate_sso_mappings("tenant-id", "sso-456")
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_recalculate_mappings_path}",
                 headers={
@@ -834,8 +831,7 @@ class TestSSOSettings(common.DescopeTest):
             network_resp.ok = True
             network_resp.json.return_value = {"affectedUserIds": ["user1"]}
             mock_post.return_value = network_resp
-            affected_users = client.mgmt.sso.recalculate_sso_mappings("tenant-id")
-            self.assertEqual(affected_users, ["user1"])
+            client.mgmt.sso.recalculate_sso_mappings("tenant-id")
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_recalculate_mappings_path}",
                 headers={
