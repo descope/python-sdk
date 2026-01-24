@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.10.0](https://github.com/descope/python-sdk/compare/descope-1.9.1...descope-1.10.0) (2026-01-19)
+
+
+### Features
+
+* access key custom attributes CRU ([#746](https://github.com/descope/python-sdk/issues/746)) ([25e6de9](https://github.com/descope/python-sdk/commit/25e6de943288d4e2ea69fa174c566b0de7530f7f))
+
+
+### Bug Fixes
+
+* recalculate SSO Mappings ([89a2a21](https://github.com/descope/python-sdk/commit/89a2a21a107ea70a82dc76ff8479e1a71102d2c0))
+
 ## [1.9.1](https://github.com/descope/python-sdk/compare/descope-1.9.0...descope-1.9.1) (2026-01-15)
 
 
