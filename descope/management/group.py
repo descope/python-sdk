@@ -20,7 +20,14 @@ class Group(HTTPBase):
              [
                 {
                     "id": <group id>,
-                    "display": <display name>
+                    "display": <display name>,
+                    "members":[
+                        {
+                            "loginId": <loginId>,
+                            "userId": <userId>,
+                            "display": <display name>
+                        }
+                    ]
                 }
             ]
         Containing the loaded groups information.
@@ -55,7 +62,14 @@ class Group(HTTPBase):
              [
                 {
                     "id": <group id>,
-                    "display": <display name>
+                    "display": <display name>,
+                    "members":[
+                        {
+                            "loginId": <loginId>,
+                            "userId": <userId>,
+                            "display": <display name>
+                        }
+                    ]
                 }
             ]
         Containing the loaded groups information.
