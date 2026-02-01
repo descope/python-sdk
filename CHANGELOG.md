@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.1](https://github.com/descope/python-sdk/compare/descope-1.10.0...descope-1.10.1) (2026-02-01)
+
+
+### Documentation
+
+* fix external groups functions docs ([#748](https://github.com/descope/python-sdk/issues/748)) ([2eff8cb](https://github.com/descope/python-sdk/commit/2eff8cbeb749330217dc92133096dc7b2bed95ee))
+
 ## [1.10.0](https://github.com/descope/python-sdk/compare/descope-1.9.1...descope-1.10.0) (2026-01-19)
 
 
