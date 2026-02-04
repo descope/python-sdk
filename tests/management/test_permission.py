@@ -4,9 +4,10 @@ from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
 from descope.common import DEFAULT_TIMEOUT_SECONDS
+from descope.future_utils import futu_await
 from descope.management.common import MgmtV1
 
-from tests.testutils import SSLMatcher
+from tests.testutils import SSLMatcher, mock_http_call
 from .. import common
 
 
@@ -25,27 +26,31 @@ class TestPermission(common.DescopeTest):
             "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
         }
 
-    def test_create(self):
+    async def test_create(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.permission.create,
-                "name",
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.permission.create(
+                        "name",
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = True
-            self.assertIsNone(client.mgmt.permission.create("P1", "Something"))
+            self.assertIsNone(
+                await futu_await(client.mgmt.permission.create("P1", "Something"))
+            )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.permission_create_path}",
                 headers={
@@ -63,32 +68,36 @@ class TestPermission(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_update(self):
+    async def test_update(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.permission.update,
-                "name",
-                "new-name",
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.permission.update(
+                        "name",
+                        "new-name",
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = True
             self.assertIsNone(
-                client.mgmt.permission.update(
-                    "name",
-                    "new-name",
-                    "new-description",
+                await futu_await(
+                    client.mgmt.permission.update(
+                        "name",
+                        "new-name",
+                        "new-description",
+                    )
                 )
             )
             mock_post.assert_called_with(
@@ -109,27 +118,29 @@ class TestPermission(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_delete(self):
+    async def test_delete(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.permission.delete,
-                "name",
-            )
+            with self.assertRaises(AuthException):
+                await futu_await(
+                    client.mgmt.permission.delete(
+                        "name",
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
+        with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = True
-            self.assertIsNone(client.mgmt.permission.delete("name"))
+            self.assertIsNone(await futu_await(client.mgmt.permission.delete("name")))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.permission_delete_path}",
                 headers={
@@ -146,28 +157,30 @@ class TestPermission(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_load_all(self):
+    async def test_load_all(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
             False,
             self.dummy_management_key,
+            async_mode=self.async_test,
         )
 
         # Test failed flows
-        with patch("httpx.get") as mock_get:
+        with mock_http_call(self.async_test, "get") as mock_get:
             mock_get.return_value.is_success = False
-            self.assertRaises(AuthException, client.mgmt.permission.load_all)
+            with self.assertRaises(AuthException):
+                await futu_await(client.mgmt.permission.load_all())
 
         # Test success flow
-        with patch("httpx.get") as mock_get:
+        with mock_http_call(self.async_test, "get") as mock_get:
             network_resp = mock.Mock()
             network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """{"permissions": [{"name": "p1"}, {"name": "p2"}]}"""
             )
             mock_get.return_value = network_resp
-            resp = client.mgmt.permission.load_all()
+            resp = await futu_await(client.mgmt.permission.load_all())
             permissions = resp["permissions"]
             self.assertEqual(len(permissions), 2)
             self.assertEqual(permissions[0]["name"], "p1")
