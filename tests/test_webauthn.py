@@ -374,7 +374,7 @@ class TestWebauthN(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertIsNotNone(
-                await futu_await(webauthn.sign_up_finish("t01", "response01"))
+                await futu_await(webauthn.sign_in_finish("t01", "response01"))
             )
 
     async def test_sign_up_or_in_start(self):
@@ -542,9 +542,7 @@ class TestWebauthN(common.DescopeTest):
         with mock_http_call(self.async_test, "post") as mock_post:
             mock_post.return_value.is_success = False
             with self.assertRaises(AuthException):
-                await futu_await(
-                    webauthn.update_finish("t01", "response01")
-                )
+                await futu_await(webauthn.update_finish("t01", "response01"))
 
         # Test success flow
         with mock_http_call(self.async_test, "post") as mock_post:
@@ -557,7 +555,7 @@ class TestWebauthN(common.DescopeTest):
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
             expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_auth_webauthn_finish_path}"
-            await futu_await(webauthn.update_finish("t01", "response01"))
+            res = await futu_await(webauthn.update_finish("t01", "response01"))
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
@@ -571,9 +569,7 @@ class TestWebauthN(common.DescopeTest):
                 verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
-            self.assertIsNotNone(
-                await futu_await(webauthn.sign_up_finish("t01", "response01"))
-            )
+            self.assertIsNone(res)
 
 
 if __name__ == "__main__":
