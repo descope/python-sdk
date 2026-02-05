@@ -85,6 +85,13 @@ class DescopeClient:
             management_key=management_key or os.getenv("DESCOPE_MANAGEMENT_KEY"),
             verbose=verbose,
         )
+
+        # Fetch license type for management client (fire-and-forget on failure)
+        if mgmt_http_client.management_key:
+            license_type = mgmt_http_client.fetch_license()
+            if license_type:
+                mgmt_http_client.license_type = license_type
+
         self._mgmt = MGMT(
             http_client=mgmt_http_client,
             auth=self._auth,

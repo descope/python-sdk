@@ -1,11 +1,15 @@
+import logging
 from typing import Optional
 
 from descope.auth import Auth
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 from descope.http_client import HTTPClient
+
+logger = logging.getLogger(__name__)
 from descope.management.access_key import AccessKey
 from descope.management.audit import Audit
 from descope.management.authz import Authz
+from descope.management.common import MgmtV1
 from descope.management.descoper import Descoper
 from descope.management.fga import FGA
 from descope.management.flow import Flow
@@ -29,16 +33,15 @@ from descope.management.user import User
 
 class MGMT:
     _http: HTTPClient
+    _license_type: Optional[str] = None
 
     def __init__(
         self, http_client: HTTPClient, auth: Auth, fga_cache_url: Optional[str] = None
     ):
-        """Create a management API facade.
-
-        Args:
-            http_client: HTTP client to use for all management HTTP calls.
-        """
         self._http = http_client
+        self._license_type = None
+        self._fetch_license()
+
         self._access_key = AccessKey(http_client)
         self._audit = Audit(http_client)
         self._authz = Authz(http_client)
@@ -57,6 +60,18 @@ class MGMT:
         self._sso_application = SSOApplication(http_client)
         self._tenant = Tenant(http_client)
         self._user = User(http_client)
+
+    def _fetch_license(self):
+        if not self._http.management_key:
+            return
+        try:
+            response = self._http.get(MgmtV1.license_path)
+            data = response.json()
+            self._license_type = data.get("licenseType")
+            if self._license_type:
+                self._http.license_type = self._license_type
+        except Exception as e:
+            logger.warning(f"Failed to fetch license information: {e}")
 
     def _ensure_management_key(self, property_name: str):
         """Check if management key is available for the given property."""

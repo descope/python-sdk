@@ -172,6 +172,7 @@ class HTTPClient:
         self.secure = secure
         self.management_key = management_key
         self.verbose = verbose
+        self.license_type: str | None = None
         self._thread_local = threading.local()
 
     # ------------- public API -------------
@@ -310,6 +311,15 @@ class HTTPClient:
     def get_default_headers(self, pswd: str | None = None) -> dict:
         return self._get_default_headers(pswd)
 
+    def fetch_license(self) -> str | None:
+        """Fetch license type from the management API. Returns None on failure."""
+        try:
+            response = self.get("/v1/mgmt/license")
+            data = response.json()
+            return data.get("licenseType")
+        except Exception:
+            return None
+
     # ------------- helpers -------------
     @staticmethod
     def base_url_for_project_id(project_id: str) -> str:
@@ -362,6 +372,9 @@ class HTTPClient:
     def _get_default_headers(self, pswd: str | None = None):
         headers = _default_headers.copy()
         headers["x-descope-project-id"] = self.project_id
+        # Add license header if available (only set for management client)
+        if self.license_type:
+            headers["x-descope-license"] = self.license_type
         bearer = self.project_id
         if pswd:
             bearer = f"{self.project_id}:{pswd}"

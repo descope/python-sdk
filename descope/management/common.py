@@ -88,6 +88,9 @@ def url_params_to_dict(url_params: Optional[List[URLParam]] = None) -> list:
 
 
 class MgmtV1:
+    # license
+    license_path = "/v1/mgmt/license"
+
     # tenant
     tenant_create_path = "/v1/mgmt/tenant/create"
     tenant_update_path = "/v1/mgmt/tenant/update"
