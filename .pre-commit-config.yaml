@@ -41,7 +41,7 @@ repos:
       - id: poetry-check
         files: pyproject.toml
   - repo: https://github.com/python-poetry/poetry-plugin-export
-    rev: 1.9.0
+    rev: 1.10.0
     hooks:
       - id: poetry-export
         args: ["-f", "requirements.txt", "-o", "requirements.txt"]
