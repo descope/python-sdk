@@ -80,7 +80,7 @@ jobs:
         env:
           COVERAGE_FILE: "coverage.${{ matrix.os }}.${{ matrix.py }}"
       - name: Store coverage file
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: coverage.${{ matrix.os }}.${{ matrix.py }}
           path: coverage.${{ matrix.os }}.${{ matrix.py }}
@@ -115,7 +115,7 @@ jobs:
           VERBOSE: true
 
       - name: Store Pull Request comment to be posted
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         if: steps.coverage_comment.outputs.COMMENT_FILE_WRITTEN == 'true'
         with:
           name: python-coverage-comment-action
