@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Optional, Dict
 
 from descope._auth_base import AuthBase
 from descope.common import EndpointsV1, LoginOptions, validate_refresh_token_provided
@@ -72,7 +72,7 @@ class SSO(AuthBase):
         login_hint: str,
         force_authn: Optional[bool],
     ) -> dict:
-        res: dict[str, Any] = {"tenant": tenant}
+        res: Dict[str, Any] = {"tenant": tenant}
         if return_url is not None and return_url != "":
             res["redirectURL"] = return_url
         if prompt is not None and prompt != "":
