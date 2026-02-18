@@ -15,7 +15,7 @@
 | descope/management/common.py        |      371 |        1 |     99% |        86 |
 | descope/management/role.py          |       30 |        1 |     97% |       160 |
 | descope/management/user.py          |      377 |       15 |     96% |68-73, 801, 1156, 1158, 1160, 1911, 1963, 2006, 2008, 2010 |
-|                           **TOTAL** | **3060** |   **50** | **98%** |           |
+|                           **TOTAL** | **3064** |   **50** | **98%** |           |
 
 28 files skipped due to complete coverage.
 
