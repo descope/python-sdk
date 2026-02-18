@@ -165,7 +165,7 @@ class TestSSO(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_sso_start(self):
+    def test_sso_start_login_hint(self):
         sso = SSO(
             Auth(
                 self.dummy_project_id,
