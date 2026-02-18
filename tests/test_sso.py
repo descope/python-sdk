@@ -27,17 +27,49 @@ class TestSSO(common.DescopeTest):
 
     def test_compose_start_params(self):
         self.assertEqual(
-            SSO._compose_start_params("tenant1", "http://dummy.com", "", ""),
+            SSO._compose_start_params("tenant1", "http://dummy.com", "", "", "", None),
             {"tenant": "tenant1", "redirectURL": "http://dummy.com"},
         )
 
         self.assertEqual(
-            SSO._compose_start_params("tenant1", "http://dummy.com", "bla", "blue"),
+            SSO._compose_start_params(
+                "tenant1", "http://dummy.com", "bla", "blue", "", None
+            ),
             {
                 "tenant": "tenant1",
                 "redirectURL": "http://dummy.com",
                 "prompt": "bla",
                 "ssoId": "blue",
+            },
+        )
+
+        # Test new parameters
+        self.assertEqual(
+            SSO._compose_start_params(
+                "tenant1",
+                "http://dummy.com",
+                "consent",
+                "sso-id-123",
+                "user@domain.com",
+                True,
+            ),
+            {
+                "tenant": "tenant1",
+                "redirectURL": "http://dummy.com",
+                "prompt": "consent",
+                "ssoId": "sso-id-123",
+                "loginHint": "user@domain.com",
+                "forceAuthn": True,
+            },
+        )
+
+        # Test boolean parameters set to False
+        self.assertEqual(
+            SSO._compose_start_params("tenant1", "http://dummy.com", "", "", "", False),
+            {
+                "tenant": "tenant1",
+                "redirectURL": "http://dummy.com",
+                "forceAuthn": False,
             },
         )
 
@@ -128,6 +160,103 @@ class TestSSO(common.DescopeTest):
                 },
                 params={"tenant": "tenant1", "redirectURL": "http://dummy.com"},
                 json={"stepup": True, "customClaims": {"k1": "v1"}, "mfa": False},
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_sso_start(self):
+        sso = SSO(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=self.make_http_client(),
+            )
+        )
+
+        # Test with new parameters
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            sso.start(
+                "tenant1",
+                "http://dummy.com",
+                login_hint="user@company.com",
+                force_authn=True,
+            )
+            expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.auth_sso_start_path}"
+            mock_post.assert_called_with(
+                expected_uri,
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params={
+                    "tenant": "tenant1",
+                    "redirectURL": "http://dummy.com",
+                    "loginHint": "user@company.com",
+                    "forceAuthn": True,
+                },
+                json={},
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test with boolean parameters set to False
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            sso.start("tenant1", "http://dummy.com", force_authn=False)
+            expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.auth_sso_start_path}"
+            mock_post.assert_called_with(
+                expected_uri,
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params={
+                    "tenant": "tenant1",
+                    "redirectURL": "http://dummy.com",
+                    "forceAuthn": False,
+                },
+                json={},
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test with mixed parameters
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            lo = LoginOptions(stepup=True, custom_claims={"role": "admin"})
+            sso.start(
+                "tenant1",
+                "http://dummy.com",
+                lo,
+                "refresh-token",
+                "consent",
+                "sso-config-456",
+                "user@example.com",
+                True,
+            )
+            expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.auth_sso_start_path}"
+            mock_post.assert_called_with(
+                expected_uri,
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:refresh-token",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params={
+                    "tenant": "tenant1",
+                    "redirectURL": "http://dummy.com",
+                    "prompt": "consent",
+                    "ssoId": "sso-config-456",
+                    "loginHint": "user@example.com",
+                    "forceAuthn": True,
+                },
+                json={"stepup": True, "customClaims": {"role": "admin"}, "mfa": False},
                 allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
