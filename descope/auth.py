@@ -251,7 +251,11 @@ class Auth:
     ) -> dict:
         uri = EndpointsV1.exchange_auth_access_key_path
         body = {
-            "loginOptions": login_options.__dict__ if login_options else {},
+            "loginOptions": {
+                k: v for k, v in login_options.__dict__.items() if v is not None
+            }
+            if login_options
+            else {},
         }
         server_response = self._http.post(uri, body=body, pswd=access_key)
         json_body = server_response.json()
