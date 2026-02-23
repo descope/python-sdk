@@ -135,8 +135,10 @@ class AccessKeyLoginOptions:
     def __init__(
         self,
         custom_claims: Optional[dict] = None,
+        selected_tenant: Optional[str] = None,
     ):
         self.customClaims = custom_claims
+        self.selectedTenant = selected_tenant
 
 
 def validate_refresh_token_provided(

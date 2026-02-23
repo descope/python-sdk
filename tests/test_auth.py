@@ -451,6 +451,40 @@ class TestAuth(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+        # Test success flow with selected tenant
+        with patch("requests.post") as mock_post:
+            my_mock_response = mock.Mock()
+            my_mock_response.ok = True
+            data = {"sessionJwt": valid_jwt_token}
+            my_mock_response.json.return_value = data
+            mock_post.return_value = my_mock_response
+            jwt_response = auth.exchange_access_key(
+                access_key=dummy_access_key,
+                login_options=AccessKeyLoginOptions(
+                    custom_claims={"k1": "v1"}, selected_tenant="t1"
+                ),
+            )
+            self.assertEqual(jwt_response["keyId"], "U2Cu0j0WPw3YOiPISJb52L0wUVMg")
+
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.exchange_auth_access_key_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:dummy access key",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "loginOptions": {
+                        "customClaims": {"k1": "v1"},
+                        "selectedTenant": "t1",
+                    }
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
     def test_exchange_token_success_and_empty_code(self):
         auth = Auth(
             self.dummy_project_id,
