@@ -4,18 +4,18 @@
 
 | Name                                |    Stmts |     Miss |   Cover |   Missing |
 |------------------------------------ | -------: | -------: | ------: | --------: |
-| descope/auth.py                     |      261 |        6 |     98% |316, 348-350, 390, 515, 550 |
+| descope/auth.py                     |      261 |        6 |     98% |320, 352-354, 394, 519, 554 |
 | descope/authmethod/enchantedlink.py |       92 |        2 |     98% |  202, 204 |
 | descope/authmethod/magiclink.py     |      103 |        4 |     96% |233, 235, 258, 260 |
 | descope/authmethod/otp.py           |      110 |        4 |     96% |330, 332, 355, 357 |
-| descope/common.py                   |      113 |        1 |     99% |       179 |
+| descope/common.py                   |      114 |        1 |     99% |       181 |
 | descope/descope\_client.py          |      190 |        4 |     98% |108, 139, 223, 320 |
 | descope/jwt\_common.py              |       49 |        1 |     98% |       100 |
 | descope/management/audit.py         |       44 |       11 |     75% |74, 76, 78, 80, 82, 84, 86, 88, 90, 92, 94 |
 | descope/management/common.py        |      371 |        1 |     99% |        86 |
 | descope/management/role.py          |       30 |        1 |     97% |       160 |
 | descope/management/user.py          |      377 |       15 |     96% |68-73, 801, 1156, 1158, 1160, 1911, 1963, 2006, 2008, 2010 |
-|                           **TOTAL** | **3067** |   **50** | **98%** |           |
+|                           **TOTAL** | **3068** |   **50** | **98%** |           |
 
 28 files skipped due to complete coverage.
 
