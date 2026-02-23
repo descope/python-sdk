@@ -8,6 +8,11 @@ from descope.management.common import MgmtV1
 
 
 class Authz(HTTPBase):
+
+    def __init__(self, http_client, fga_cache_url: Optional[str] = None):
+        super().__init__(http_client)
+        self._fga_cache_url = fga_cache_url
+
     def save_schema(self, schema: dict, upgrade: bool = False):
         """
         Create or update the ReBAC schema.
@@ -288,6 +293,7 @@ class Authz(HTTPBase):
                 "relationDefinition": relation_definition,
                 "namespace": namespace,
             },
+            base_url=self._fga_cache_url,
         )
         return response.json()["targets"]
 
@@ -339,6 +345,7 @@ class Authz(HTTPBase):
         response = self._http.post(
             MgmtV1.authz_re_target_all,
             body={"target": target},
+            base_url=self._fga_cache_url,
         )
         return response.json()["relations"]
 

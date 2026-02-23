@@ -643,3 +643,67 @@ class TestAuthz(common.DescopeTest):
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
+
+    def test_authz_cache_url_who_can_access(self):
+        fga_cache_url = "https://my-fga-cache.example.com"
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+            fga_cache_url=fga_cache_url,
+        )
+
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            mock_post.return_value.json.return_value = {"targets": ["u1"]}
+            result = client.mgmt.authz.who_can_access("a", "b", "c")
+            mock_post.assert_called_with(
+                f"{fga_cache_url}{MgmtV1.authz_re_who}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "resource": "a",
+                    "relationDefinition": "b",
+                    "namespace": "c",
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+            self.assertEqual(result, ["u1"])
+
+    def test_authz_cache_url_what_can_target_access(self):
+        fga_cache_url = "https://my-fga-cache.example.com"
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+            fga_cache_url=fga_cache_url,
+        )
+
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            mock_post.return_value.json.return_value = {
+                "relations": [{"resource": "r1"}]
+            }
+            result = client.mgmt.authz.what_can_target_access("a")
+            mock_post.assert_called_with(
+                f"{fga_cache_url}{MgmtV1.authz_re_target_all}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={"target": "a"},
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+            self.assertEqual(result, [{"resource": "r1"}])
