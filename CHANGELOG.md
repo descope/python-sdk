@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.11.0](https://github.com/descope/python-sdk/compare/descope-1.10.1...descope-1.11.0) (2026-03-01)
+
+
+### Features
+
+* add selectedTenant to AccessKeyLoginOptions for access key exchange ([#768](https://github.com/descope/python-sdk/issues/768)) ([0f60183](https://github.com/descope/python-sdk/commit/0f601835bad4c2136c18852b8d6458b687b2efe8))
+* **authz:** route who_can_access and what_can_target_access through FGA cache ([#767](https://github.com/descope/python-sdk/issues/767)) ([b49d937](https://github.com/descope/python-sdk/commit/b49d937534beb429312c1d78546255c056179453))
+
 ## [1.10.1](https://github.com/descope/python-sdk/compare/descope-1.10.0...descope-1.10.1) (2026-02-18)
 
 
