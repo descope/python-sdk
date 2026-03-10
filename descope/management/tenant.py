@@ -186,6 +186,26 @@ class Tenant(HTTPBase):
 
         self._http.post(MgmtV1.tenant_settings_path, body=body, params=None)
 
+    def update_default_roles(
+        self,
+        tenant_id: str,
+        role_names: List[str],
+    ) -> None:
+        """
+        Set which project default roles apply to new users in this tenant.
+
+        Args:
+        tenant_id (str): The ID of the tenant to update.
+        role_names (List[str]): List of role names to set as tenant default roles.
+
+        Raise:
+        AuthException: raised if update operation fails
+        """
+        self._http.post(
+            MgmtV1.tenant_update_default_roles_path,
+            body={"id": tenant_id, "defaultRoles": role_names},
+        )
+
     def delete(
         self,
         id: str,
