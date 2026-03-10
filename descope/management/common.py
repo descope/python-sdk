@@ -96,6 +96,7 @@ class MgmtV1:
     tenant_settings_path = "/v1/mgmt/tenant/settings"
     tenant_load_all_path = "/v1/mgmt/tenant/all"
     tenant_search_all_path = "/v1/mgmt/tenant/search"
+    tenant_update_default_roles_path = "/v1/mgmt/tenant/updateDefaultRoles"
 
     # sso application
     sso_application_oidc_create_path = "/v1/mgmt/sso/idp/app/oidc/create"
