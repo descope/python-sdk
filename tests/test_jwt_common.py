@@ -60,7 +60,7 @@ class TestJwtCommon(unittest.TestCase):
     def test_decode_token_unverified_handles_garbage(self):
         # Invalid token strings should not raise and should return empty dict
         with warnings.catch_warnings():
-            warnings.simplefilter("ignore", SecurityWarning)
+            warnings.simplefilter("ignore", UserWarning)
             assert decode_token_unverified("not-a-jwt") == {}
 
 

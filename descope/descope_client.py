@@ -58,7 +58,7 @@ class DescopeClient:
                 "This makes your application vulnerable to man-in-the-middle attacks. "
                 "ONLY use this for local development with self-signed certificates. "
                 "NEVER use skip_verify=True in production environments.",
-                category=SecurityWarning,
+                category=UserWarning,
                 stacklevel=2,
             )
 
