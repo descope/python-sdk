@@ -9,9 +9,9 @@ DEFAULT_BASE_URL = DEFAULT_URL_PREFIX + "." + DEFAULT_DOMAIN  # pragma: no cover
 DEFAULT_TIMEOUT_SECONDS = 60
 
 # Simple phone validation to prevent ReDoS (catastrophic backtracking)
-# Allows digits, spaces, hyphens, plus, parentheses, dots, # for extension
-# Length: 7-25 characters (reasonable for international phone numbers)
-PHONE_REGEX = r"""^(?=.*\d{4,})[\d\s\-\+\(\)\.#xX]{7,25}$"""
+# Optional leading +, then digits, spaces, hyphens, parentheses, dots, # for extension
+# Requires at least 4 consecutive digits, length 7-25, at most one leading +
+PHONE_REGEX = r"""^(?=.*\d{4,})\+?[\d\s\-\(\)\.#xX]{6,24}$"""
 
 SESSION_COOKIE_NAME = "DS"
 REFRESH_SESSION_COOKIE_NAME = "DSR"
