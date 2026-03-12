@@ -1,4 +1,5 @@
 import unittest
+import warnings
 
 from descope.jwt_common import (
     COOKIE_DATA_NAME,
@@ -58,7 +59,9 @@ class TestJwtCommon(unittest.TestCase):
 
     def test_decode_token_unverified_handles_garbage(self):
         # Invalid token strings should not raise and should return empty dict
-        assert decode_token_unverified("not-a-jwt") == {}
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", SecurityWarning)
+            assert decode_token_unverified("not-a-jwt") == {}
 
 
 if __name__ == "__main__":
