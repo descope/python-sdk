@@ -8,7 +8,10 @@ DEFAULT_DOMAIN = "descope.com"
 DEFAULT_BASE_URL = DEFAULT_URL_PREFIX + "." + DEFAULT_DOMAIN  # pragma: no cover
 DEFAULT_TIMEOUT_SECONDS = 60
 
-PHONE_REGEX = r"""^(?:(?:\(?(?:00|\+)([1-4]\d\d|[1-9]\d?)\)?)?[\-\.\ \\/]?)?((?:\(?\d{1,}\)?[\-\.\ \\/]?){0,})(?:[\-\.\ \\/]?(?:#|ext\.?|extension|x)[\-\.\ \\/]?(\d+))?$"""
+# Simple phone validation to prevent ReDoS (catastrophic backtracking)
+# Allows digits, spaces, hyphens, plus, parentheses, dots, # for extension
+# Length: 7-25 characters (reasonable for international phone numbers)
+PHONE_REGEX = r"""^[\d\s\-\+\(\)\.#xX]{7,25}$"""
 
 SESSION_COOKIE_NAME = "DS"
 REFRESH_SESSION_COOKIE_NAME = "DSR"

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from typing import Callable, Iterable, Optional
 
 import jwt
@@ -71,9 +72,20 @@ def decode_token_unverified(
 ) -> dict:
     """Decode a JWT without verifying signature (used when no validator is provided).
 
+    WARNING: This function does NOT verify JWT signatures and should NEVER be used
+    for authentication or authorization decisions. It is only intended for testing
+    or scenarios where token validation happens elsewhere.
+
     Audience verification is disabled by default since no key is provided.
     Returns an empty dict if decoding fails.
     """
+    warnings.warn(
+        "decode_token_unverified() does not verify JWT signatures. "
+        "Do not use this for authentication or authorization. "
+        "Use proper token validation with signature verification instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     try:
         return jwt.decode(
             token, options={"verify_signature": False, "verify_aud": False}

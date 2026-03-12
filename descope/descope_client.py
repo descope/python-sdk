@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import warnings
 from typing import Iterable
 
 import requests
@@ -48,6 +49,17 @@ class DescopeClient:
                     "Unable to init DescopeClient because project_id cannot be empty. "
                     "Set environment variable DESCOPE_PROJECT_ID or pass your Project ID to the init function."
                 ),
+            )
+
+        # Warn about TLS verification bypass
+        if skip_verify:
+            warnings.warn(
+                "⚠️  SECURITY WARNING: TLS certificate verification is DISABLED (skip_verify=True). "
+                "This makes your application vulnerable to man-in-the-middle attacks. "
+                "ONLY use this for local development with self-signed certificates. "
+                "NEVER use skip_verify=True in production environments.",
+                category=SecurityWarning,
+                stacklevel=2,
             )
 
         # Auth Initialization
