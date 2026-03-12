@@ -83,7 +83,7 @@ def decode_token_unverified(
         "decode_token_unverified() does not verify JWT signatures. "
         "Do not use this for authentication or authorization. "
         "Use proper token validation with signature verification instead.",
-        DeprecationWarning,
+        SecurityWarning,
         stacklevel=2,
     )
     try:

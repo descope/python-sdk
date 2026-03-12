@@ -11,7 +11,7 @@ DEFAULT_TIMEOUT_SECONDS = 60
 # Simple phone validation to prevent ReDoS (catastrophic backtracking)
 # Allows digits, spaces, hyphens, plus, parentheses, dots, # for extension
 # Length: 7-25 characters (reasonable for international phone numbers)
-PHONE_REGEX = r"""^[\d\s\-\+\(\)\.#xX]{7,25}$"""
+PHONE_REGEX = r"""^(?=.*\d{4,})[\d\s\-\+\(\)\.#xX]{7,25}$"""
 
 SESSION_COOKIE_NAME = "DS"
 REFRESH_SESSION_COOKIE_NAME = "DSR"
