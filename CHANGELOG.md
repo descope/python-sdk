@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.0](https://github.com/descope/python-sdk/compare/descope-1.11.0...descope-1.12.0) (2026-03-14)
+
+
+### Features
+
+* **security:** enable cookie secure flag, fix redos, add jwt decode warn ([#781](https://github.com/descope/python-sdk/issues/781)) ([90af115](https://github.com/descope/python-sdk/commit/90af11503675b48961e67d44dbd5dcdbce66fa2a))
+
 ## [1.11.0](https://github.com/descope/python-sdk/compare/descope-1.10.1...descope-1.11.0) (2026-03-10)
 
 
