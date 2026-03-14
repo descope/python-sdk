@@ -14,7 +14,9 @@ APP = Flask(__name__)
 
 PROJECT_ID = ""
 
-# init the DescopeClient
+# SECURITY WARNING: skip_verify=True disables TLS certificate verification
+# ONLY use this for local development with self-signed certificates
+# NEVER use skip_verify=True in production - remove this parameter for production
 descope_client = DescopeClient(PROJECT_ID, skip_verify=True)
 
 
