@@ -147,6 +147,7 @@ class TestSSOApplication(common.DescopeTest):
                 default_relay_state="relayState",
                 force_authentication=True,
                 logout_redirect_url="http://dummy.com/logout",
+                default_signature_algorithm="sha256",
             )
             self.assertEqual(resp["id"], "app1")
             mock_post.assert_called_with(
@@ -187,6 +188,7 @@ class TestSSOApplication(common.DescopeTest):
                     "defaultRelayState": "relayState",
                     "forceAuthentication": True,
                     "logoutRedirectUrl": "http://dummy.com/logout",
+                    "defaultSignatureAlgorithm": "sha256",
                 },
                 allow_redirects=False,
                 verify=True,
@@ -351,6 +353,7 @@ class TestSSOApplication(common.DescopeTest):
                     "defaultRelayState": None,
                     "forceAuthentication": False,
                     "logoutRedirectUrl": None,
+                    "defaultSignatureAlgorithm": None,
                 },
                 allow_redirects=False,
                 verify=True,

@@ -7,5 +7,17 @@
   "mypy-type-checker.importStrategy": "fromEnvironment",
   "isort.importStrategy": "fromEnvironment",
   "black-formatter.importStrategy": "fromEnvironment",
-  "workbench.colorCustomizations": { /* do not change please... */}
+  "workbench.colorCustomizations": {
+    "activityBar.background": "#092D5A",
+    "titleBar.activeBackground": "#0D3F7E",
+    "titleBar.activeForeground": "#F7FAFE",
+    "titleBar.inactiveBackground": "#092D5A",
+    "titleBar.inactiveForeground": "#F7FAFE",
+    "statusBar.background": "#092D5A",
+    "statusBar.foreground": "#F7FAFE",
+    "statusBar.debuggingBackground": "#092D5A",
+    "statusBar.debuggingForeground": "#F7FAFE",
+    "statusBar.noFolderBackground": "#092D5A",
+    "statusBar.noFolderForeground": "#F7FAFE"
+  }
 }
