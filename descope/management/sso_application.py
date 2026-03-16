@@ -79,6 +79,7 @@ class SSOApplication(HTTPBase):
         default_relay_state: Optional[str] = None,
         force_authentication: Optional[bool] = False,
         logout_redirect_url: Optional[str] = None,
+        default_signature_algorithm: Optional[str] = None,
     ) -> dict:
         """
         Create a new SAML sso application with the given name. SSO application IDs are provisioned automatically, but can be provided
@@ -104,6 +105,7 @@ class SSOApplication(HTTPBase):
         default_relay_state (str): Optional define the default relay state.
         force_authentication (bool): Optional determine if the IdP should force the user to re-authenticate.
         logout_redirect_url (str): Optional Target URL to which the user will be redirected upon logout completion.
+        default_signature_algorithm (str): Optional signature algorithm for SAML responses. Use "sha256" to opt in to SHA-256. Leave empty for the default (SHA-1). Only applies to IdP-initiated flows.
 
         Return value (dict):
         Return dict in the format
@@ -151,6 +153,7 @@ class SSOApplication(HTTPBase):
                 default_relay_state,
                 force_authentication,
                 logout_redirect_url,
+                default_signature_algorithm,
             ),
         )
         return response.json()
@@ -217,6 +220,7 @@ class SSOApplication(HTTPBase):
         default_relay_state: Optional[str] = None,
         force_authentication: Optional[bool] = False,
         logout_redirect_url: Optional[str] = None,
+        default_signature_algorithm: Optional[str] = None,
     ):
         """
         Update an existing SAML sso application with the given parameters. IMPORTANT: All parameters are used as overrides
@@ -242,6 +246,7 @@ class SSOApplication(HTTPBase):
         default_relay_state (str): Optional define the default relay state.
         force_authentication (bool): Optional determine if the IdP should force the user to re-authenticate.
         logout_redirect_url (str): Optional Target URL to which the user will be redirected upon logout completion.
+        default_signature_algorithm (str): Optional signature algorithm for SAML responses. Use "sha256" to opt in to SHA-256. Leave empty for the default (SHA-1). Only applies to IdP-initiated flows.
 
         Raise:
         AuthException: raised if update operation fails
@@ -285,6 +290,7 @@ class SSOApplication(HTTPBase):
                 default_relay_state,
                 force_authentication,
                 logout_redirect_url,
+                default_signature_algorithm,
             ),
         )
 
@@ -390,6 +396,7 @@ class SSOApplication(HTTPBase):
         default_relay_state: Optional[str] = None,
         force_authentication: Optional[bool] = False,
         logout_redirect_url: Optional[str] = None,
+        default_signature_algorithm: Optional[str] = None,
     ) -> dict:
         body: dict[str, Any] = {
             "id": id,
@@ -413,6 +420,7 @@ class SSOApplication(HTTPBase):
             "defaultRelayState": default_relay_state,
             "forceAuthentication": force_authentication,
             "logoutRedirectUrl": logout_redirect_url,
+            "defaultSignatureAlgorithm": default_signature_algorithm,
         }
 
         return body
