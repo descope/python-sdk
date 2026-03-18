@@ -104,6 +104,17 @@ def main():
             logging.info(f"Role batch update failed {e}")
 
         try:
+            logging.info("Deleting a batch of roles")
+            descope_client.mgmt.role.delete_batch(
+                [
+                    {"name": "Updated Batch Role 1"},
+                ]
+            )
+
+        except AuthException as e:
+            logging.info(f"Role batch deletion failed {e}")
+
+        try:
             logging.info("Deleting newly created role")
             descope_client.mgmt.role.delete("My Updated Role")
 
