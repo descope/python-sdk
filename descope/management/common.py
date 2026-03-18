@@ -210,6 +210,7 @@ class MgmtV1:
     role_update_path = "/v1/mgmt/role/update"
     role_update_batch_path = "/v1/mgmt/role/update/batch"
     role_delete_path = "/v1/mgmt/role/delete"
+    role_delete_batch_path = "/v1/mgmt/role/delete/batch"
     role_load_all_path = "/v1/mgmt/role/all"
     role_search_path = "/v1/mgmt/role/search"
 

@@ -93,6 +93,27 @@ class Role(HTTPBase):
             body={"roles": roles},
         )
 
+    def delete_batch(
+        self,
+        roles: List[dict],
+    ):
+        """
+        Delete a batch of roles in a single atomic transaction.
+        IMPORTANT: This action is irreversible. Use carefully.
+
+        Args:
+        roles (List[dict]): List of role objects to delete, each with:
+            - name (str): role name.
+            - tenantId (str): Optional tenant ID.
+
+        Raise:
+        AuthException: raised if deletion operation fails
+        """
+        self._http.post(
+            MgmtV1.role_delete_batch_path,
+            body={"roles": roles},
+        )
+
     def update(
         self,
         name: str,

@@ -281,6 +281,53 @@ class TestRole(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+    def test_delete_batch(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.role.delete_batch,
+                [{"name": "R1"}],
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(
+                client.mgmt.role.delete_batch(
+                    [
+                        {"name": "R1", "tenantId": "t1"},
+                        {"name": "R2"},
+                    ]
+                )
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.role_delete_batch_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "roles": [
+                        {"name": "R1", "tenantId": "t1"},
+                        {"name": "R2"},
+                    ]
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
     def test_load_all(self):
         client = DescopeClient(
             self.dummy_project_id,
