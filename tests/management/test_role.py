@@ -68,6 +68,130 @@ class TestRole(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+    def test_create_batch(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.role.create_batch,
+                [{"name": "R1"}],
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(
+                client.mgmt.role.create_batch(
+                    [
+                        {
+                            "name": "R1",
+                            "description": "desc1",
+                            "permissionNames": ["P1"],
+                            "tenantId": "t1",
+                            "default": True,
+                            "private": False,
+                        },
+                        {"name": "R2"},
+                    ]
+                )
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.role_create_batch_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "roles": [
+                        {
+                            "name": "R1",
+                            "description": "desc1",
+                            "permissionNames": ["P1"],
+                            "tenantId": "t1",
+                            "default": True,
+                            "private": False,
+                        },
+                        {"name": "R2"},
+                    ]
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_update_batch(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.role.update_batch,
+                [{"name": "R1", "newName": "R1-new"}],
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(
+                client.mgmt.role.update_batch(
+                    [
+                        {
+                            "name": "R1",
+                            "newName": "R1-new",
+                            "description": "d1",
+                            "permissionNames": ["P1", "P2"],
+                            "tenantId": "t1",
+                            "default": False,
+                            "private": True,
+                        },
+                        {"name": "R2", "newName": "R2-new"},
+                    ]
+                )
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.role_update_batch_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "roles": [
+                        {
+                            "name": "R1",
+                            "newName": "R1-new",
+                            "description": "d1",
+                            "permissionNames": ["P1", "P2"],
+                            "tenantId": "t1",
+                            "default": False,
+                            "private": True,
+                        },
+                        {"name": "R2", "newName": "R2-new"},
+                    ]
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
     def test_update(self):
         client = DescopeClient(
             self.dummy_project_id,

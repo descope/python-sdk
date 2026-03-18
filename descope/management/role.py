@@ -44,6 +44,55 @@ class Role(HTTPBase):
             },
         )
 
+    def create_batch(
+        self,
+        roles: List[dict],
+    ):
+        """
+        Create a batch of roles in a single atomic transaction.
+
+        Args:
+        roles (List[dict]): List of role objects, each with:
+            - name (str): role name.
+            - description (str): Optional description.
+            - permissionNames (List[str]): Optional list of permission names.
+            - tenantId (str): Optional tenant ID.
+            - default (bool): Optional default flag.
+            - private (bool): Optional private flag.
+
+        Raise:
+        AuthException: raised if creation operation fails
+        """
+        self._http.post(
+            MgmtV1.role_create_batch_path,
+            body={"roles": roles},
+        )
+
+    def update_batch(
+        self,
+        roles: List[dict],
+    ):
+        """
+        Update a batch of roles in a single atomic transaction.
+
+        Args:
+        roles (List[dict]): List of role objects, each with:
+            - name (str): current role name.
+            - newName (str): new role name.
+            - description (str): Optional new description.
+            - permissionNames (List[str]): Optional list of permission names.
+            - tenantId (str): Optional tenant ID.
+            - default (bool): Optional default flag.
+            - private (bool): Optional private flag.
+
+        Raise:
+        AuthException: raised if update operation fails
+        """
+        self._http.post(
+            MgmtV1.role_update_batch_path,
+            body={"roles": roles},
+        )
+
     def update(
         self,
         name: str,
