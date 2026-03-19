@@ -23,6 +23,24 @@ def main():
             logging.info(f"Permission creation failed {e}")
 
         try:
+            logging.info("Going to create a batch of permissions")
+            descope_client.mgmt.permission.create_batch(
+                [
+                    {
+                        "name": "Batch Permission 1",
+                        "description": "First batch permission",
+                    },
+                    {
+                        "name": "Batch Permission 2",
+                        "description": "Second batch permission",
+                    },
+                ]
+            )
+
+        except AuthException as e:
+            logging.info(f"Permission batch creation failed {e}")
+
+        try:
             logging.info("Loading all permissions")
             permissions_resp = descope_client.mgmt.permission.load_all()
             permissions = permissions_resp["permissions"]
@@ -44,11 +62,35 @@ def main():
             logging.info(f"Permission update failed {e}")
 
         try:
+            logging.info("Updating a batch of permissions")
+            descope_client.mgmt.permission.update_batch(
+                [
+                    {
+                        "name": "Batch Permission 1",
+                        "newName": "Updated Batch Permission 1",
+                        "description": "Updated description",
+                    },
+                ]
+            )
+
+        except AuthException as e:
+            logging.info(f"Permission batch update failed {e}")
+
+        try:
             logging.info("Deleting newly created permission")
             descope_client.mgmt.permission.delete("My Updated Permission")
 
         except AuthException as e:
             logging.info(f"Permission deletion failed {e}")
+
+        try:
+            logging.info("Deleting a batch of permissions")
+            descope_client.mgmt.permission.delete_batch(
+                ["Updated Batch Permission 1", "Batch Permission 2"]
+            )
+
+        except AuthException as e:
+            logging.info(f"Permission batch deletion failed {e}")
 
     except AuthException:
         raise
