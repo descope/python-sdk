@@ -331,11 +331,14 @@ class HTTPClient:
         """Execute request_fn and retry on retryable status codes.
 
         Retries up to 3 times: first retry after 100ms, subsequent retries after 5s each.
+        The prior response is closed before each retry to release the connection back to
+        the pool and avoid connection exhaustion under repeated transient errors.
         """
         response = request_fn()
         for delay in _RETRY_DELAYS_SECONDS:
             if response.status_code not in _RETRY_STATUS_CODES:
                 break
+            response.close()
             time.sleep(delay)
             response = request_fn()
         return response

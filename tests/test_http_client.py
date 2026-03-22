@@ -857,6 +857,36 @@ class TestRetryMechanism(unittest.TestCase):
 
     @patch("time.sleep")
     @patch("requests.get")
+    def test_prior_response_closed_before_retry(self, mock_get, mock_sleep):
+        """Test that each retried response is closed to release the connection pool slot."""
+        error_response1 = Mock()
+        error_response1.ok = False
+        error_response1.status_code = 503
+        error_response1.text = "Service Unavailable"
+
+        error_response2 = Mock()
+        error_response2.ok = False
+        error_response2.status_code = 503
+        error_response2.text = "Service Unavailable"
+
+        success_response = Mock()
+        success_response.ok = True
+        success_response.status_code = 200
+        success_response.json.return_value = {"result": "ok"}
+
+        mock_get.side_effect = [error_response1, error_response2, success_response]
+
+        client = HTTPClient(project_id="test123")
+        client.get("/test")
+
+        # Each failed response must be closed before the next attempt
+        error_response1.close.assert_called_once()
+        error_response2.close.assert_called_once()
+        # The final successful response is not closed here
+        success_response.close.assert_not_called()
+
+    @patch("time.sleep")
+    @patch("requests.get")
     def test_success_on_first_attempt_no_retry(self, mock_get, mock_sleep):
         """Test that no retry happens when the first attempt succeeds."""
         success_response = Mock()
