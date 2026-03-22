@@ -111,8 +111,8 @@ class User(HTTPBase):
 
         Return value (dict):
         Return dict in the format
-             {"user": {}}
-        Containing the created user information.
+             {"user": {}, "created": True/False}
+        Where "created" is True if the user was newly created, False if the user already existed (re-invite case).
 
         Raise:
         AuthException: raised if create operation fails
@@ -186,8 +186,8 @@ class User(HTTPBase):
 
         Return value (dict):
         Return dict in the format
-             {"user": {}}
-        Containing the created test user information.
+             {"user": {}, "created": True/False}
+        Where "created" is True if the user was newly created, False if the user already existed (re-invite case).
 
         Raise:
         AuthException: raised if create operation fails
@@ -259,6 +259,11 @@ class User(HTTPBase):
             the email / phone is explicitly set, or the login_id itself is an email address / phone number.
             You must configure the invitation URL in the Descope console prior to
             calling the method.
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}, "created": True/False}
+        Where "created" is True if the user was newly created, False if the user already existed (re-invite case).
         """
         role_names = [] if role_names is None else role_names
         user_tenants = [] if user_tenants is None else user_tenants
