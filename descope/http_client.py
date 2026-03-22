@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import platform
 import threading
+import time
 from http import HTTPStatus
 from typing import cast
 
@@ -35,6 +36,11 @@ def sdk_version():
     except NameError:  # pragma: no cover
         return get_distribution("descope").version  # type: ignore
 
+
+# HTTP status codes that should trigger automatic retries
+_RETRY_STATUS_CODES = {503, 521, 522, 524, 530}
+# Delays in seconds between retries: first retry after 100ms, subsequent retries after 5s
+_RETRY_DELAYS_SECONDS = [0.1, 5.0, 5.0]
 
 _default_headers = {
     "Content-Type": "application/json",
@@ -183,13 +189,15 @@ class HTTPClient:
         allow_redirects: bool | None = True,
         pswd: str | None = None,
     ) -> requests.Response:
-        response = requests.get(
-            f"{self.base_url}{uri}",
-            headers=self._get_default_headers(pswd),
-            params=params,
-            allow_redirects=cast(bool, allow_redirects),
-            verify=self.secure,
-            timeout=self.timeout_seconds,
+        response = self._execute_with_retry(
+            lambda: requests.get(
+                f"{self.base_url}{uri}",
+                headers=self._get_default_headers(pswd),
+                params=params,
+                allow_redirects=cast(bool, allow_redirects),
+                verify=self.secure,
+                timeout=self.timeout_seconds,
+            )
         )
         if self.verbose:
             self._thread_local.last_response = DescopeResponse(response)
@@ -205,14 +213,16 @@ class HTTPClient:
         pswd: str | None = None,
         base_url: str | None = None,
     ) -> requests.Response:
-        response = requests.post(
-            f"{base_url or self.base_url}{uri}",
-            headers=self._get_default_headers(pswd),
-            json=body,
-            allow_redirects=False,
-            verify=self.secure,
-            params=params,
-            timeout=self.timeout_seconds,
+        response = self._execute_with_retry(
+            lambda: requests.post(
+                f"{base_url or self.base_url}{uri}",
+                headers=self._get_default_headers(pswd),
+                json=body,
+                allow_redirects=False,
+                verify=self.secure,
+                params=params,
+                timeout=self.timeout_seconds,
+            )
         )
         if self.verbose:
             self._thread_local.last_response = DescopeResponse(response)
@@ -227,14 +237,16 @@ class HTTPClient:
         params=None,
         pswd: str | None = None,
     ) -> requests.Response:
-        response = requests.put(
-            f"{self.base_url}{uri}",
-            headers=self._get_default_headers(pswd),
-            json=body,
-            allow_redirects=False,
-            verify=self.secure,
-            params=params,
-            timeout=self.timeout_seconds,
+        response = self._execute_with_retry(
+            lambda: requests.put(
+                f"{self.base_url}{uri}",
+                headers=self._get_default_headers(pswd),
+                json=body,
+                allow_redirects=False,
+                verify=self.secure,
+                params=params,
+                timeout=self.timeout_seconds,
+            )
         )
         self._raise_from_response(response)
         return response
@@ -247,14 +259,16 @@ class HTTPClient:
         params=None,
         pswd: str | None = None,
     ) -> requests.Response:
-        response = requests.patch(
-            f"{self.base_url}{uri}",
-            headers=self._get_default_headers(pswd),
-            json=body,
-            allow_redirects=False,
-            verify=self.secure,
-            params=params,
-            timeout=self.timeout_seconds,
+        response = self._execute_with_retry(
+            lambda: requests.patch(
+                f"{self.base_url}{uri}",
+                headers=self._get_default_headers(pswd),
+                json=body,
+                allow_redirects=False,
+                verify=self.secure,
+                params=params,
+                timeout=self.timeout_seconds,
+            )
         )
         if self.verbose:
             self._thread_local.last_response = DescopeResponse(response)
@@ -269,14 +283,16 @@ class HTTPClient:
         params=None,
         pswd: str | None = None,
     ) -> requests.Response:
-        response = requests.delete(
-            f"{self.base_url}{uri}",
-            params=params,
-            json=body,
-            headers=self._get_default_headers(pswd),
-            allow_redirects=False,
-            verify=self.secure,
-            timeout=self.timeout_seconds,
+        response = self._execute_with_retry(
+            lambda: requests.delete(
+                f"{self.base_url}{uri}",
+                params=params,
+                json=body,
+                headers=self._get_default_headers(pswd),
+                allow_redirects=False,
+                verify=self.secure,
+                timeout=self.timeout_seconds,
+            )
         )
         if self.verbose:
             self._thread_local.last_response = DescopeResponse(response)
@@ -311,6 +327,19 @@ class HTTPClient:
         return self._get_default_headers(pswd)
 
     # ------------- helpers -------------
+    def _execute_with_retry(self, request_fn) -> requests.Response:
+        """Execute request_fn and retry on retryable status codes.
+
+        Retries up to 3 times: first retry after 100ms, subsequent retries after 5s each.
+        """
+        response = request_fn()
+        for delay in _RETRY_DELAYS_SECONDS:
+            if response.status_code not in _RETRY_STATUS_CODES:
+                break
+            time.sleep(delay)
+            response = request_fn()
+        return response
+
     @staticmethod
     def base_url_for_project_id(project_id: str) -> str:
         if len(project_id) >= 32:
