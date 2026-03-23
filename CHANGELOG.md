@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.12.0](https://github.com/descope/python-sdk/compare/descope-1.11.0...descope-1.12.0) (2026-03-23)
+
+
+### Features
+
+* add batch operations for roles and permissions ([#789](https://github.com/descope/python-sdk/issues/789)) ([ce3021f](https://github.com/descope/python-sdk/commit/ce3021ffebd440773398fdc1c9e57a70c1887afc))
+* **http:** retry requests on transient error status codes ([#792](https://github.com/descope/python-sdk/issues/792)) ([011fadf](https://github.com/descope/python-sdk/commit/011fadfd43baf8588eb646cc372995f6fe838ac2))
+* **security:** enable cookie secure flag, fix redos, add jwt decode warn ([#781](https://github.com/descope/python-sdk/issues/781)) ([90af115](https://github.com/descope/python-sdk/commit/90af11503675b48961e67d44dbd5dcdbce66fa2a))
+* **sso-app:** add default signature method ([#787](https://github.com/descope/python-sdk/issues/787)) ([e79b0b8](https://github.com/descope/python-sdk/commit/e79b0b82a4de63c7efd90d44cc2180cf278f4011))
+
 ## [1.11.0](https://github.com/descope/python-sdk/compare/descope-1.10.1...descope-1.11.0) (2026-03-10)
 
 
