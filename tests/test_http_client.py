@@ -556,118 +556,30 @@ class TestRetryMechanism(unittest.TestCase):
 
     @patch("time.sleep")
     @patch("requests.get")
-    def test_retries_on_503(self, mock_get, mock_sleep):
-        """Test that 503 Service Unavailable triggers a retry."""
-        error_response = Mock()
-        error_response.ok = False
-        error_response.status_code = 503
-        error_response.text = "Service Unavailable"
+    def test_retries_on_retryable_codes(self, mock_get, mock_sleep):
+        """Test that all retryable status codes (503, 521, 522, 524, 530) trigger a retry."""
+        for status_code in [503, 521, 522, 524, 530]:
+            mock_get.reset_mock()
+            mock_sleep.reset_mock()
 
-        success_response = Mock()
-        success_response.ok = True
-        success_response.status_code = 200
-        success_response.json.return_value = {"result": "ok"}
+            error_response = Mock()
+            error_response.ok = False
+            error_response.status_code = status_code
+            error_response.text = f"Error {status_code}"
 
-        mock_get.side_effect = [error_response, success_response]
+            success_response = Mock()
+            success_response.ok = True
+            success_response.status_code = 200
+            success_response.json.return_value = {"result": "ok"}
 
-        client = HTTPClient(project_id="test123")
-        response = client.get("/test")
+            mock_get.side_effect = [error_response, success_response]
 
-        assert mock_get.call_count == 2
-        assert response.status_code == 200
-        mock_sleep.assert_called_once_with(0.1)
+            client = HTTPClient(project_id="test123")
+            response = client.get("/test")
 
-    @patch("time.sleep")
-    @patch("requests.get")
-    def test_retries_on_521(self, mock_get, mock_sleep):
-        """Test that 521 Web Server Is Down triggers a retry."""
-        error_response = Mock()
-        error_response.ok = False
-        error_response.status_code = 521
-        error_response.text = "Web Server Is Down"
-
-        success_response = Mock()
-        success_response.ok = True
-        success_response.status_code = 200
-        success_response.json.return_value = {"result": "ok"}
-
-        mock_get.side_effect = [error_response, success_response]
-
-        client = HTTPClient(project_id="test123")
-        response = client.get("/test")
-
-        assert mock_get.call_count == 2
-        assert response.status_code == 200
-        mock_sleep.assert_called_once_with(0.1)
-
-    @patch("time.sleep")
-    @patch("requests.get")
-    def test_retries_on_522(self, mock_get, mock_sleep):
-        """Test that 522 Connection Timed Out triggers a retry."""
-        error_response = Mock()
-        error_response.ok = False
-        error_response.status_code = 522
-        error_response.text = "Connection Timed Out"
-
-        success_response = Mock()
-        success_response.ok = True
-        success_response.status_code = 200
-        success_response.json.return_value = {"result": "ok"}
-
-        mock_get.side_effect = [error_response, success_response]
-
-        client = HTTPClient(project_id="test123")
-        response = client.get("/test")
-
-        assert mock_get.call_count == 2
-        assert response.status_code == 200
-        mock_sleep.assert_called_once_with(0.1)
-
-    @patch("time.sleep")
-    @patch("requests.get")
-    def test_retries_on_524(self, mock_get, mock_sleep):
-        """Test that 524 A Timeout Occurred triggers a retry."""
-        error_response = Mock()
-        error_response.ok = False
-        error_response.status_code = 524
-        error_response.text = "A Timeout Occurred"
-
-        success_response = Mock()
-        success_response.ok = True
-        success_response.status_code = 200
-        success_response.json.return_value = {"result": "ok"}
-
-        mock_get.side_effect = [error_response, success_response]
-
-        client = HTTPClient(project_id="test123")
-        response = client.get("/test")
-
-        assert mock_get.call_count == 2
-        assert response.status_code == 200
-        mock_sleep.assert_called_once_with(0.1)
-
-    @patch("time.sleep")
-    @patch("requests.get")
-    def test_retries_on_530(self, mock_get, mock_sleep):
-        """Test that 530 Cloudflare error triggers a retry."""
-        error_response = Mock()
-        error_response.ok = False
-        error_response.status_code = 530
-        error_response.text = "Cloudflare Error"
-
-        success_response = Mock()
-        success_response.ok = True
-        success_response.status_code = 200
-        success_response.json.return_value = {"result": "ok"}
-
-        mock_get.side_effect = [error_response, success_response]
-
-        client = HTTPClient(project_id="test123")
-        response = client.get("/test")
-
-        assert mock_get.call_count == 2
-        assert response.status_code == 200
-        mock_sleep.assert_called_once_with(0.1)
+            assert mock_get.call_count == 2, f"Should retry once on {status_code}"
+            assert response.status_code == 200
+            mock_sleep.assert_called_once_with(0.1)
 
     @patch("time.sleep")
     @patch("requests.get")
