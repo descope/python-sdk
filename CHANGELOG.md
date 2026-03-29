@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.1](https://github.com/descope/python-sdk/compare/descope-1.12.0...descope-1.12.1) (2026-03-29)
+
+
+### Bug Fixes
+
+* add locale to LoginOptions and fix password sign_in docstring ([#798](https://github.com/descope/python-sdk/issues/798)) ([ad09985](https://github.com/descope/python-sdk/commit/ad09985b5980201817b229f41c264c06ab94a3f5))
+
 ## [1.12.0](https://github.com/descope/python-sdk/compare/descope-1.11.0...descope-1.12.0) (2026-03-23)
 
 
