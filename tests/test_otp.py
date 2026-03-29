@@ -421,6 +421,37 @@ class TestOTP(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+        # With locale
+        with patch("requests.post") as mock_post:
+            refresh_token = "dummy refresh token"
+            client.otp.sign_in(
+                DeliveryMethod.EMAIL,
+                "dummy@dummy.com",
+                LoginOptions(stepup=True, locale="en-US"),
+                refresh_token=refresh_token,
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_otp_path}/email",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{refresh_token}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "loginId": "dummy@dummy.com",
+                    "loginOptions": {
+                        "stepup": True,
+                        "customClaims": None,
+                        "mfa": False,
+                        "locale": "en-US",
+                    },
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
     def test_sign_up_or_in(self):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)
 

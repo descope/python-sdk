@@ -69,8 +69,8 @@ class Password(AuthBase):
 
         Return value (dict):
         Return dict in the format
-             {"jwts": [], "user": "", "firstSeen": "", "error": ""}
-        Includes all the jwts tokens (session token, refresh token), token claims, and user information
+             {"sessionToken": {"jwt": "..."}, "refreshSessionToken": {"jwt": "..."}, ...}
+        Includes the session token, refresh session token, token claims, and user information
 
         Raise:
         AuthException: raised if sign in operation fails
