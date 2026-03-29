@@ -60,6 +60,7 @@ class TestAccessKey(common.DescopeTest):
                 custom_claims={"k1": "v1"},
                 description="this is my access key",
                 permitted_ips=["10.0.0.1", "192.168.1.0/24"],
+                custom_attributes={"attr1": "value1"},
             )
             access_key = resp["key"]
             self.assertEqual(access_key["id"], "ak1")
@@ -83,6 +84,7 @@ class TestAccessKey(common.DescopeTest):
                     "customClaims": {"k1": "v1"},
                     "description": "this is my access key",
                     "permittedIps": ["10.0.0.1", "192.168.1.0/24"],
+                    "customAttributes": {"attr1": "value1"},
                 },
                 allow_redirects=False,
                 verify=True,
@@ -153,7 +155,9 @@ class TestAccessKey(common.DescopeTest):
                 """{"keys": [{"id": "ak1"}, {"id": "ak2"}]}"""
             )
             mock_post.return_value = network_resp
-            resp = client.mgmt.access_key.search_all_access_keys(["t1, t2"])
+            resp = client.mgmt.access_key.search_all_access_keys(
+                ["t1, t2"], "bound-user-id", "creator-user", {"attr1": "value1"}
+            )
             keys = resp["keys"]
             self.assertEqual(len(keys), 2)
             self.assertEqual(keys[0]["id"], "ak1")
@@ -168,6 +172,9 @@ class TestAccessKey(common.DescopeTest):
                 params=None,
                 json={
                     "tenantIds": ["t1, t2"],
+                    "boundUserId": "bound-user-id",
+                    "creatingUser": "creator-user",
+                    "customAttributes": {"attr1": "value1"},
                 },
                 allow_redirects=False,
                 verify=True,
@@ -197,7 +204,12 @@ class TestAccessKey(common.DescopeTest):
             mock_post.return_value.ok = True
             self.assertIsNone(
                 client.mgmt.access_key.update(
-                    "key-id", name="new-name", description=None
+                    "key-id",
+                    name="new-name",
+                    description="desc",
+                    custom_claims={"k1": "v1"},
+                    permitted_ips=["192.168.1.1"],
+                    custom_attributes={"attr1": "value1"},
                 )
             )
             mock_post.assert_called_with(
@@ -211,7 +223,10 @@ class TestAccessKey(common.DescopeTest):
                 json={
                     "id": "key-id",
                     "name": "new-name",
-                    "description": None,
+                    "description": "desc",
+                    "customClaims": {"k1": "v1"},
+                    "permittedIps": ["192.168.1.1"],
+                    "customAttributes": {"attr1": "value1"},
                 },
                 allow_redirects=False,
                 verify=True,

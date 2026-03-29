@@ -817,6 +817,7 @@ create_resp = descope_client.mgmt.access_key.create(
     ],
     description="this is my access key",
     permitted_ips=['10.0.0.1', '192.168.1.0/24'],
+    custom_attributes={'attrName': 'attrValue'},
 )
 key = create_resp["key"]
 cleartext = create_resp["cleartext"] # make sure to save the returned cleartext securely. It will not be returned again.
@@ -826,7 +827,8 @@ access_key_resp = descope_client.mgmt.access_key.load("key-id")
 access_key = access_key_resp["key"]
 
 # Search all access keys, optionally according to a tenant filter
-keys_resp = descope_client.mgmt.access_key.search_all_access_keys(tenant_ids=["my-tenant-id"])
+keys_resp = descope_client.mgmt.access_key.search_all_access_keys(tenant_ids=["my-tenant-id"], bound_user_id='buid',
+        creating_user='cu', custom_attributes={'attrName': 'attrValue'})
 keys = keys_resp["keys"]
     for key in keys:
         # Do something
@@ -835,6 +837,9 @@ keys = keys_resp["keys"]
 descope_client.mgmt.access_key.update(
     id="key-id",
     name="new name",
+    custom_claims={"k1":"v1"},
+    permitted_ips=['10.0.0.1', '192.168.1.0/24'],
+    custom_attributes={'attrName': 'attrValue'},
 )
 
 # Access keys can be deactivated to prevent usage. This can be undone using "activate".
@@ -1003,6 +1008,14 @@ descope_client.mgmt.permission.create(
     description="Optional description to briefly explain what this permission allows."
 )
 
+# Create a batch of permissions in a single atomic transaction.
+descope_client.mgmt.permission.create_batch(
+    permissions=[
+        {"name": "Permission 1", "description": "First permission"},
+        {"name": "Permission 2", "description": "Second permission"},
+    ]
+)
+
 # Update will override all fields as is. Use carefully.
 descope_client.mgmt.permission.update(
     name="My Permission",
@@ -1010,8 +1023,18 @@ descope_client.mgmt.permission.update(
     description="A revised description"
 )
 
+# Update a batch of permissions in a single atomic transaction.
+descope_client.mgmt.permission.update_batch(
+    permissions=[
+        {"name": "Permission 1", "newName": "Updated Permission 1", "description": "Updated description"},
+    ]
+)
+
 # Permission deletion cannot be undone. Use carefully.
 descope_client.mgmt.permission.delete("My Updated Permission")
+
+# Delete a batch of permissions in a single atomic transaction. Cannot be undone. Use carefully.
+descope_client.mgmt.permission.delete_batch(["Permission 1", "Permission 2"])
 
 # Load all permissions
 permissions_resp = descope_client.mgmt.permission.load_all()
@@ -1031,7 +1054,16 @@ descope_client.mgmt.role.create(
     description="Optional description to briefly explain what this role allows.",
     permission_names=["My Updated Permission"],
     tenant_id="Optionally scope this role for this specific tenant. If left empty, the role will be available to all tenants.",
+    default=False,  # Optional, marks this role as default role
     private=False  # Optional, marks this role as private role
+)
+
+# Create a batch of roles in a single atomic transaction.
+descope_client.mgmt.role.create_batch(
+    roles=[
+        {"name": "Role 1", "description": "First role", "permissionNames": ["Permission 1"]},
+        {"name": "Role 2", "description": "Second role", "permissionNames": ["Permission 2"], "default": True},
+    ]
 )
 
 # Update will override all fields as is. Use carefully.
@@ -1041,7 +1073,23 @@ descope_client.mgmt.role.update(
     description="A revised description",
     permission_names=["My Updated Permission", "Another Permission"],
     tenant_id="The tenant ID to which this role is associated, leave empty, if role is a global one",
+    default=False,  # Optional, marks this role as default role
     private=True  # Optional, marks this role as private role
+)
+
+# Update a batch of roles in a single atomic transaction.
+descope_client.mgmt.role.update_batch(
+    roles=[
+        {"name": "Role 1", "newName": "Updated Role 1", "description": "Updated description", "permissionNames": ["Permission 1"]},
+    ]
+)
+
+# Delete a batch of roles in a single atomic transaction. This action is irreversible. Use carefully.
+descope_client.mgmt.role.delete_batch(
+    roles=[
+        {"name": "Role 1"},
+        {"name": "Role 2", "tenantId": "<tenant_id>"},
+    ]
 )
 
 # Role deletion cannot be undone. Use carefully.

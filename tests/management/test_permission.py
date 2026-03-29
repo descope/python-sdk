@@ -145,6 +145,135 @@ class TestPermission(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+    def test_create_batch(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.permission.create_batch,
+                [{"name": "P1"}],
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(
+                client.mgmt.permission.create_batch(
+                    [
+                        {"name": "P1", "description": "desc1"},
+                        {"name": "P2"},
+                    ]
+                )
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.permission_create_batch_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "permissions": [
+                        {"name": "P1", "description": "desc1"},
+                        {"name": "P2"},
+                    ]
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_update_batch(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.permission.update_batch,
+                [{"name": "P1", "newName": "P1-new"}],
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(
+                client.mgmt.permission.update_batch(
+                    [
+                        {"name": "P1", "newName": "P1-new", "description": "d1"},
+                        {"name": "P2", "newName": "P2-new"},
+                    ]
+                )
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.permission_update_batch_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "permissions": [
+                        {"name": "P1", "newName": "P1-new", "description": "d1"},
+                        {"name": "P2", "newName": "P2-new"},
+                    ]
+                },
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_delete_batch(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.permission.delete_batch,
+                ["P1"],
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(client.mgmt.permission.delete_batch(["P1", "P2"]))
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.permission_delete_batch_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={"names": ["P1", "P2"]},
+                allow_redirects=False,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
     def test_load_all(self):
         client = DescopeClient(
             self.dummy_project_id,

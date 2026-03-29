@@ -34,7 +34,7 @@ def set_cookie_on_response(response: Response, token: dict, cookie_data: dict):
         expires=cookie_data.get("exp", expire_time),
         path=cookie_data.get("path", "/"),
         domain=cookie_domain,
-        secure=False,  # True
+        secure=True,  # Cookies must be sent over HTTPS only
         httponly=True,
         samesite="Strict",  # "Strict", "Lax", "None"
     )

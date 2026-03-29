@@ -8,7 +8,10 @@ DEFAULT_DOMAIN = "descope.com"
 DEFAULT_BASE_URL = DEFAULT_URL_PREFIX + "." + DEFAULT_DOMAIN  # pragma: no cover
 DEFAULT_TIMEOUT_SECONDS = 60
 
-PHONE_REGEX = r"""^(?:(?:\(?(?:00|\+)([1-4]\d\d|[1-9]\d?)\)?)?[\-\.\ \\/]?)?((?:\(?\d{1,}\)?[\-\.\ \\/]?){0,})(?:[\-\.\ \\/]?(?:#|ext\.?|extension|x)[\-\.\ \\/]?(\d+))?$"""
+# Simple phone validation to prevent ReDoS (catastrophic backtracking)
+# Optional leading +, then digits, spaces, hyphens, parentheses, dots, # for extension
+# Requires at least 4 consecutive digits, length 7-25, at most one leading +
+PHONE_REGEX = r"""^(?=.*\d{4,})\+?[\d\s\-\(\)\.#xX]{6,24}$"""
 
 SESSION_COOKIE_NAME = "DS"
 REFRESH_SESSION_COOKIE_NAME = "DSR"
@@ -138,8 +141,10 @@ class AccessKeyLoginOptions:
     def __init__(
         self,
         custom_claims: Optional[dict] = None,
+        selected_tenant: Optional[str] = None,
     ):
         self.customClaims = custom_claims
+        self.selectedTenant = selected_tenant
 
 
 def validate_refresh_token_provided(

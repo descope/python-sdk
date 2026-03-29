@@ -96,6 +96,7 @@ class MgmtV1:
     tenant_settings_path = "/v1/mgmt/tenant/settings"
     tenant_load_all_path = "/v1/mgmt/tenant/all"
     tenant_search_all_path = "/v1/mgmt/tenant/search"
+    tenant_update_default_roles_path = "/v1/mgmt/tenant/updateDefaultRoles"
 
     # sso application
     sso_application_oidc_create_path = "/v1/mgmt/sso/idp/app/oidc/create"
@@ -179,6 +180,7 @@ class MgmtV1:
     sso_settings_path = "/v1/mgmt/sso/settings"
     sso_metadata_path = "/v1/mgmt/sso/metadata"
     sso_mapping_path = "/v1/mgmt/sso/mapping"
+    sso_recalculate_mappings_path = "/v1/mgmt/sso/recalculate-mappings"
     sso_load_settings_path = "/v2/mgmt/sso/settings"  # v2 only
     sso_configure_oidc_settings = "/v1/mgmt/sso/oidc"
     sso_configure_saml_settings = "/v1/mgmt/sso/saml"
@@ -195,14 +197,20 @@ class MgmtV1:
 
     # permission
     permission_create_path = "/v1/mgmt/permission/create"
+    permission_create_batch_path = "/v1/mgmt/permission/create/batch"
     permission_update_path = "/v1/mgmt/permission/update"
+    permission_update_batch_path = "/v1/mgmt/permission/update/batch"
     permission_delete_path = "/v1/mgmt/permission/delete"
+    permission_delete_batch_path = "/v1/mgmt/permission/delete/batch"
     permission_load_all_path = "/v1/mgmt/permission/all"
 
     # role
     role_create_path = "/v1/mgmt/role/create"
+    role_create_batch_path = "/v1/mgmt/role/create/batch"
     role_update_path = "/v1/mgmt/role/update"
+    role_update_batch_path = "/v1/mgmt/role/update/batch"
     role_delete_path = "/v1/mgmt/role/delete"
+    role_delete_batch_path = "/v1/mgmt/role/delete/batch"
     role_load_all_path = "/v1/mgmt/role/all"
     role_search_path = "/v1/mgmt/role/search"
 

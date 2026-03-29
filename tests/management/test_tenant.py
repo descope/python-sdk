@@ -85,6 +85,8 @@ class TestTenant(common.DescopeTest):
                 ["domain.com"],
                 {"k1": "v1"},
                 enforce_sso=True,
+                enforce_sso_exclusions=["user1", "user2"],
+                federated_app_ids=["app1", "app2"],
                 disabled=True,
             )
             self.assertEqual(resp["id"], "t1")
@@ -102,6 +104,8 @@ class TestTenant(common.DescopeTest):
                     "selfProvisioningDomains": ["domain.com"],
                     "customAttributes": {"k1": "v1"},
                     "enforceSSO": True,
+                    "enforceSSOExclusions": ["user1", "user2"],
+                    "federatedAppIds": ["app1", "app2"],
                     "disabled": True,
                 },
                 allow_redirects=False,
@@ -165,6 +169,8 @@ class TestTenant(common.DescopeTest):
                     ["domain.com"],
                     {"k1": "v1"},
                     enforce_sso=True,
+                    enforce_sso_exclusions=["user1", "user2"],
+                    federated_app_ids=["app1", "app2"],
                     disabled=True,
                 )
             )
@@ -182,6 +188,8 @@ class TestTenant(common.DescopeTest):
                     "selfProvisioningDomains": ["domain.com"],
                     "customAttributes": {"k1": "v1"},
                     "enforceSSO": True,
+                    "enforceSSOExclusions": ["user1", "user2"],
+                    "federatedAppIds": ["app1", "app2"],
                     "disabled": True,
                 },
                 allow_redirects=False,
@@ -513,6 +521,44 @@ class TestTenant(common.DescopeTest):
                 },
                 params={"id": "t1"},
                 allow_redirects=True,
+                verify=True,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_update_default_roles(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flows
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.tenant.update_default_roles,
+                "valid-id",
+                ["role1"],
+            )
+
+        # Test success flow
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.ok = True
+            self.assertIsNone(
+                client.mgmt.tenant.update_default_roles("t1", ["role1", "role2"])
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_update_default_roles_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={"id": "t1", "defaultRoles": ["role1", "role2"]},
+                allow_redirects=False,
                 verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

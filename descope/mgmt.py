@@ -41,7 +41,7 @@ class MGMT:
         self._http = http_client
         self._access_key = AccessKey(http_client)
         self._audit = Audit(http_client)
-        self._authz = Authz(http_client)
+        self._authz = Authz(http_client, fga_cache_url=fga_cache_url)
         self._descoper = Descoper(http_client)
         self._fga = FGA(http_client, fga_cache_url=fga_cache_url)
         self._flow = Flow(http_client)

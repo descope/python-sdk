@@ -199,6 +199,33 @@ class SSOSettings(HTTPBase):
         )
         return response.json()
 
+    def recalculate_sso_mappings(
+        self,
+        tenant_id: str,
+        sso_id: Optional[str] = None,
+    ):
+        """
+        Recalculate SSO group to role mappings for all users in a tenant.
+
+        This method triggers a recalculation of user roles based on the current SSO group mappings.
+        It will update the roles for all users in the tenant who have SSO group mappings.
+
+        Args:
+        tenant_id (str): The tenant ID (required)
+        sso_id (str): Optional, specify to recalculate mappings for a specific SSO configuration
+
+        Raise:
+        AuthException: raised if recalculation operation fails
+        """
+        body = {"tenantId": tenant_id}
+        if sso_id:
+            body["ssoId"] = sso_id
+
+        self._http.post(
+            uri=MgmtV1.sso_recalculate_mappings_path,
+            body=body,
+        )
+
     def delete_settings(
         self,
         tenant_id: str,

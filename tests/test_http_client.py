@@ -551,5 +551,269 @@ class TestVerboseModeThreadSafety(unittest.TestCase):
         ), f"Thread2 should see its own cf-ray, got: {results['thread2_ray']}"
 
 
+class TestRetryMechanism(unittest.TestCase):
+    """Tests for automatic retry on specific HTTP status codes."""
+
+    @patch("time.sleep")
+    @patch("requests.get")
+    def test_retries_on_retryable_codes(self, mock_get, mock_sleep):
+        """Test that all retryable status codes (503, 521, 522, 524, 530) trigger a retry."""
+        for status_code in [503, 521, 522, 524, 530]:
+            mock_get.reset_mock()
+            mock_sleep.reset_mock()
+
+            error_response = Mock()
+            error_response.ok = False
+            error_response.status_code = status_code
+            error_response.text = f"Error {status_code}"
+
+            success_response = Mock()
+            success_response.ok = True
+            success_response.status_code = 200
+            success_response.json.return_value = {"result": "ok"}
+
+            mock_get.side_effect = [error_response, success_response]
+
+            client = HTTPClient(project_id="test123")
+            response = client.get("/test")
+
+            assert mock_get.call_count == 2, f"Should retry once on {status_code}"
+            assert response.status_code == 200
+            mock_sleep.assert_called_once_with(0.1)
+
+    @patch("time.sleep")
+    @patch("requests.get")
+    def test_retries_up_to_three_times(self, mock_get, mock_sleep):
+        """Test that the client retries up to 3 times (original + 3 retries = 4 calls)."""
+        error_response = Mock()
+        error_response.ok = False
+        error_response.status_code = 503
+        error_response.text = "Service Unavailable"
+
+        mock_get.return_value = error_response
+
+        client = HTTPClient(project_id="test123")
+        from descope.exceptions import AuthException
+
+        with self.assertRaises(AuthException):
+            client.get("/test")
+
+        # Original call + 3 retries = 4 total calls
+        assert mock_get.call_count == 4
+        assert mock_sleep.call_count == 3
+
+    @patch("time.sleep")
+    @patch("requests.get")
+    def test_retry_delays_are_correct(self, mock_get, mock_sleep):
+        """Test that retry delays are: 100ms first, 5s for subsequent retries."""
+        error_response = Mock()
+        error_response.ok = False
+        error_response.status_code = 503
+        error_response.text = "Service Unavailable"
+
+        mock_get.return_value = error_response
+
+        client = HTTPClient(project_id="test123")
+        from descope.exceptions import AuthException
+
+        with self.assertRaises(AuthException):
+            client.get("/test")
+
+        sleep_calls = [call[0][0] for call in mock_sleep.call_args_list]
+        assert sleep_calls == [0.1, 5.0, 5.0]
+
+    @patch("time.sleep")
+    @patch("requests.get")
+    def test_no_retry_on_non_retryable_codes(self, mock_get, mock_sleep):
+        """Test that non-retryable status codes do not trigger retries."""
+        for status_code in [400, 401, 403, 404, 500, 502]:
+            mock_get.reset_mock()
+            mock_sleep.reset_mock()
+
+            error_response = Mock()
+            error_response.ok = False
+            error_response.status_code = status_code
+            error_response.text = f"Error {status_code}"
+            mock_get.return_value = error_response
+
+            client = HTTPClient(project_id="test123")
+            from descope.exceptions import AuthException
+
+            with self.assertRaises(AuthException):
+                client.get("/test")
+
+            assert mock_get.call_count == 1, f"Should not retry on {status_code}"
+            mock_sleep.assert_not_called()
+
+    @patch("time.sleep")
+    @patch("requests.post")
+    def test_retry_works_for_post(self, mock_post, mock_sleep):
+        """Test that retry works for POST requests."""
+        error_response = Mock()
+        error_response.ok = False
+        error_response.status_code = 503
+        error_response.text = "Service Unavailable"
+
+        success_response = Mock()
+        success_response.ok = True
+        success_response.status_code = 200
+        success_response.json.return_value = {"created": "ok"}
+
+        mock_post.side_effect = [error_response, success_response]
+
+        client = HTTPClient(project_id="test123")
+        response = client.post("/test", body={"key": "value"})
+
+        assert mock_post.call_count == 2
+        assert response.status_code == 200
+        mock_sleep.assert_called_once_with(0.1)
+
+    @patch("time.sleep")
+    @patch("requests.put")
+    def test_retry_works_for_put(self, mock_put, mock_sleep):
+        """Test that retry works for PUT requests."""
+        error_response = Mock()
+        error_response.ok = False
+        error_response.status_code = 522
+        error_response.text = "Connection Timed Out"
+
+        success_response = Mock()
+        success_response.ok = True
+        success_response.status_code = 200
+        success_response.json.return_value = {"updated": "ok"}
+
+        mock_put.side_effect = [error_response, success_response]
+
+        client = HTTPClient(project_id="test123")
+        response = client.put("/test", body={"key": "value"})
+
+        assert mock_put.call_count == 2
+        assert response.status_code == 200
+        mock_sleep.assert_called_once_with(0.1)
+
+    @patch("time.sleep")
+    @patch("requests.patch")
+    def test_retry_works_for_patch(self, mock_patch, mock_sleep):
+        """Test that retry works for PATCH requests."""
+        error_response = Mock()
+        error_response.ok = False
+        error_response.status_code = 530
+        error_response.text = "Cloudflare Error"
+
+        success_response = Mock()
+        success_response.ok = True
+        success_response.status_code = 200
+        success_response.json.return_value = {"patched": "ok"}
+
+        mock_patch.side_effect = [error_response, success_response]
+
+        client = HTTPClient(project_id="test123")
+        response = client.patch("/test", body={"key": "value"})
+
+        assert mock_patch.call_count == 2
+        assert response.status_code == 200
+        mock_sleep.assert_called_once_with(0.1)
+
+    @patch("time.sleep")
+    @patch("requests.delete")
+    def test_retry_works_for_delete(self, mock_delete, mock_sleep):
+        """Test that retry works for DELETE requests."""
+        error_response = Mock()
+        error_response.ok = False
+        error_response.status_code = 503
+        error_response.text = "Service Unavailable"
+
+        success_response = Mock()
+        success_response.ok = True
+        success_response.status_code = 200
+        success_response.json.return_value = {"deleted": "ok"}
+
+        mock_delete.side_effect = [error_response, success_response]
+
+        client = HTTPClient(project_id="test123")
+        response = client.delete("/test")
+
+        assert mock_delete.call_count == 2
+        assert response.status_code == 200
+        mock_sleep.assert_called_once_with(0.1)
+
+    @patch("time.sleep")
+    @patch("requests.get")
+    def test_retry_succeeds_on_third_attempt(self, mock_get, mock_sleep):
+        """Test successful response on 3rd retry (4th total call)."""
+        error_response = Mock()
+        error_response.ok = False
+        error_response.status_code = 503
+        error_response.text = "Service Unavailable"
+
+        success_response = Mock()
+        success_response.ok = True
+        success_response.status_code = 200
+        success_response.json.return_value = {"result": "ok"}
+
+        mock_get.side_effect = [
+            error_response,
+            error_response,
+            error_response,
+            success_response,
+        ]
+
+        client = HTTPClient(project_id="test123")
+        response = client.get("/test")
+
+        assert mock_get.call_count == 4
+        assert response.status_code == 200
+        assert mock_sleep.call_count == 3
+        sleep_calls = [call[0][0] for call in mock_sleep.call_args_list]
+        assert sleep_calls == [0.1, 5.0, 5.0]
+
+    @patch("time.sleep")
+    @patch("requests.get")
+    def test_prior_response_closed_before_retry(self, mock_get, mock_sleep):
+        """Test that each retried response is closed to release the connection pool slot."""
+        error_response1 = Mock()
+        error_response1.ok = False
+        error_response1.status_code = 503
+        error_response1.text = "Service Unavailable"
+
+        error_response2 = Mock()
+        error_response2.ok = False
+        error_response2.status_code = 503
+        error_response2.text = "Service Unavailable"
+
+        success_response = Mock()
+        success_response.ok = True
+        success_response.status_code = 200
+        success_response.json.return_value = {"result": "ok"}
+
+        mock_get.side_effect = [error_response1, error_response2, success_response]
+
+        client = HTTPClient(project_id="test123")
+        client.get("/test")
+
+        # Each failed response must be closed before the next attempt
+        error_response1.close.assert_called_once()
+        error_response2.close.assert_called_once()
+        # The final successful response is not closed here
+        success_response.close.assert_not_called()
+
+    @patch("time.sleep")
+    @patch("requests.get")
+    def test_success_on_first_attempt_no_retry(self, mock_get, mock_sleep):
+        """Test that no retry happens when the first attempt succeeds."""
+        success_response = Mock()
+        success_response.ok = True
+        success_response.status_code = 200
+        success_response.json.return_value = {"result": "ok"}
+
+        mock_get.return_value = success_response
+
+        client = HTTPClient(project_id="test123")
+        client.get("/test")
+
+        assert mock_get.call_count == 1
+        mock_sleep.assert_not_called()
+
+
 if __name__ == "__main__":
     unittest.main()
