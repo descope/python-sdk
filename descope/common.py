@@ -119,6 +119,7 @@ class LoginOptions:
         template_id: Optional[
             str
         ] = None,  # for overriding the default template (templates that are being sent via email / text message)
+        locale: Optional[str] = None,
     ):
         self.stepup = stepup
         self.customClaims = custom_claims
@@ -129,6 +130,8 @@ class LoginOptions:
             self.templateOptions = template_options
         if template_id is not None:
             self.templateId = template_id
+        if locale is not None:
+            self.locale = locale
 
 
 class AccessKeyLoginOptions:
