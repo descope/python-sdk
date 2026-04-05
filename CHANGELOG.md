@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.2](https://github.com/descope/python-sdk/compare/descope-1.12.1...descope-1.12.2) (2026-04-05)
+
+
+### Bug Fixes
+
+* remove set active from set password ([#806](https://github.com/descope/python-sdk/issues/806)) ([4cd8caf](https://github.com/descope/python-sdk/commit/4cd8caf8fc51c3c9221a48639293f1c4616a9a0b))
+
 ## [1.12.1](https://github.com/descope/python-sdk/compare/descope-1.12.0...descope-1.12.1) (2026-03-29)
 
 
