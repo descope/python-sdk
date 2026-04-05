@@ -2487,7 +2487,6 @@ class TestUser(common.DescopeTest):
                 json={
                     "loginId": "login-id",
                     "password": "some-password",
-                    "setActive": False,
                 },
                 allow_redirects=False,
                 verify=True,
