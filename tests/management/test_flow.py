@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
 from descope.common import DEFAULT_TIMEOUT_SECONDS
-from descope.management.common import MgmtV1, FlowRunOptions
+from descope.management.common import FlowRunOptions, MgmtV1
 
 from .. import common
 

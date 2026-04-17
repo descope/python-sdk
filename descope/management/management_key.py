@@ -1,11 +1,7 @@
-from typing import List, Optional, Any
+from typing import Any
 
 from descope._http_base import HTTPBase
-from descope.management.common import (
-    MgmtKeyReBac,
-    MgmtKeyStatus,
-    MgmtV1,
-)
+from descope.management.common import MgmtKeyReBac, MgmtKeyStatus, MgmtV1
 
 
 class ManagementKey(HTTPBase):
@@ -13,9 +9,9 @@ class ManagementKey(HTTPBase):
         self,
         name: str,
         rebac: MgmtKeyReBac,
-        description: Optional[str] = None,
+        description: str | None = None,
         expires_in: int = 0,
-        permitted_ips: Optional[List[str]] = None,
+        permitted_ips: list[str] | None = None,
     ) -> dict:
         """
         Create a new management key.
@@ -61,7 +57,7 @@ class ManagementKey(HTTPBase):
         id: str,
         name: str,
         description: str,
-        permitted_ips: List[str],
+        permitted_ips: list[str],
         status: MgmtKeyStatus,
     ) -> dict:
         """
@@ -135,7 +131,7 @@ class ManagementKey(HTTPBase):
 
     def delete(
         self,
-        ids: List[str],
+        ids: list[str],
     ) -> dict:
         """
         Delete existing management keys. IMPORTANT: This action is irreversible. Use carefully.

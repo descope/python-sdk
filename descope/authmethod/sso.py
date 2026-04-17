@@ -1,4 +1,4 @@
-from typing import Any, Optional, Dict
+from typing import Any
 
 from descope._auth_base import AuthBase
 from descope.common import EndpointsV1, LoginOptions, validate_refresh_token_provided
@@ -9,13 +9,13 @@ class SSO(AuthBase):
     def start(
         self,
         tenant: str,
-        return_url: Optional[str] = None,
-        login_options: Optional[LoginOptions] = None,
-        refresh_token: Optional[str] = None,
-        prompt: Optional[str] = None,
-        sso_id: Optional[str] = None,
-        login_hint: Optional[str] = None,
-        force_authn: Optional[bool] = None,
+        return_url: str | None = None,
+        login_options: LoginOptions | None = None,
+        refresh_token: str | None = None,
+        prompt: str | None = None,
+        sso_id: str | None = None,
+        login_hint: str | None = None,
+        force_authn: bool | None = None,
     ) -> dict:
         """
         Start tenant sso session (saml/oidc based on tenant settings)
@@ -70,9 +70,9 @@ class SSO(AuthBase):
         prompt: str,
         sso_id: str,
         login_hint: str,
-        force_authn: Optional[bool],
+        force_authn: bool | None,
     ) -> dict:
-        res: Dict[str, Any] = {"tenant": tenant}
+        res: dict[str, Any] = {"tenant": tenant}
         if return_url is not None and return_url != "":
             res["redirectURL"] = return_url
         if prompt is not None and prompt != "":

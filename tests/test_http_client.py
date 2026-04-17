@@ -5,6 +5,8 @@ import types
 import unittest
 from unittest.mock import Mock, patch
 
+import pytest
+
 from descope.http_client import DescopeResponse, HTTPClient
 
 
@@ -145,11 +147,8 @@ class TestDescopeResponse(unittest.TestCase):
         mock_get.return_value = mock_response
 
         client = HTTPClient(project_id="test123", verbose=True)
-        try:
+        with pytest.raises(AuthException):
             client.get("/test")
-            assert False, "Should have raised AuthException"
-        except AuthException:
-            pass
 
         last_resp = client.get_last_response()
         assert (

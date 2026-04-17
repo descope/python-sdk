@@ -1,4 +1,4 @@
-from typing import List, Optional, Any
+from typing import Any
 
 from descope._http_base import HTTPBase
 from descope.management.common import (
@@ -13,7 +13,7 @@ from descope.management.common import (
 class Descoper(HTTPBase):
     def create(
         self,
-        descopers: List[DescoperCreate],
+        descopers: list[DescoperCreate],
     ) -> dict:
         """
         Create new Descopers.
@@ -44,8 +44,8 @@ class Descoper(HTTPBase):
     def update(
         self,
         id: str,
-        attributes: Optional[DescoperAttributes] = None,
-        rbac: Optional[DescoperRBAC] = None,
+        attributes: DescoperAttributes | None = None,
+        rbac: DescoperRBAC | None = None,
     ) -> dict:
         """
         Update an existing Descoper's RBAC and/or Attributes.

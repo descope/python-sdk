@@ -14,8 +14,6 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -35,19 +33,16 @@ Flask = ["Flask"]
 
 
 [tool.poetry.dependencies]
-python = ">=3.8.1,<4.0"
+python = ">=3.10,<4.0"
 requests = ">=2.27.0"
 pyjwt = { version = ">=2.4.0", extras = ["crypto"] }
-email-validator = [{ version = ">=2,<3", python = ">=3.8" }]
+email-validator = ">=2,<3"
 liccheck = "^0.9.1"
 Flask = ">=2"
 
 [tool.poetry.group.dev.dependencies]
 mock = "5.2.0"
-pre-commit = [
-    { version = "<3.0.0", python = "<3.9" },
-    { version = "3.6.0", python = ">=3.9" },
-]
+pre-commit = "3.6.0"
 flake8 = "7.1.2"
 flake8-pyproject = "1.2.4"
 flake8-bugbear = "24.12.12"
@@ -57,10 +52,7 @@ pep8-naming = "0.14.1"
 tox = "4.25.0"
 
 [tool.poetry.group.format.dependencies]
-black = [
-    { version = "<24.10.0", python = "<3.9" },
-    { version = "24.10.0", python = ">=3.9" },
-]
+black = "24.10.0"
 
 [tool.poetry.group.types.dependencies]
 mypy = "1.11.2"
@@ -68,7 +60,7 @@ types-requests = "2.32.0.20240914"
 types-setuptools = "75.1.0.20240917"
 
 [tool.poetry.group.tests.dependencies]
-pytest = "8.3.5"
+pytest = "9.0.3"
 coverage = { version = "^7.3.1", extras = ["toml"] }
 
 [build-system]
