@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Dict, List, Optional, Any
+from typing import Any, Optional
 
 
 class SessionExpirationUnit(Enum):
@@ -30,7 +30,7 @@ class SSOSetupSuiteSettingsDisabledFeatures:
         self.sso_domains = sso_domains
         self.group_mapping = group_mapping
 
-    def to_dict(self) -> Dict[str, bool]:
+    def to_dict(self) -> dict[str, bool]:
         return {
             "saml": self.saml,
             "oidc": self.oidc,
@@ -44,15 +44,15 @@ class SSOSetupSuiteSettings:
     def __init__(
         self,
         enabled: bool,
-        style_id: Optional[str] = None,
-        disabled_features: Optional[SSOSetupSuiteSettingsDisabledFeatures] = None,
+        style_id: str | None = None,
+        disabled_features: SSOSetupSuiteSettingsDisabledFeatures | None = None,
     ):
         self.enabled = enabled
         self.style_id = style_id
         self.disabled_features = disabled_features
 
-    def to_dict(self) -> Dict[str, Any]:
-        result: Dict[str, Any] = {"enabled": self.enabled}
+    def to_dict(self) -> dict[str, Any]:
+        result: dict[str, Any] = {"enabled": self.enabled}
         if self.style_id is not None:
             result["styleId"] = self.style_id
         if self.disabled_features is not None:
@@ -81,7 +81,7 @@ class URLParam:
         return {"name": self.name, "value": self.value}
 
 
-def url_params_to_dict(url_params: Optional[List[URLParam]] = None) -> list:
+def url_params_to_dict(url_params: list[URLParam] | None = None) -> list:
     if url_params is None:
         return []
     return [param.to_dict() for param in url_params]
@@ -289,8 +289,8 @@ class MgmtV1:
 class MgmtSignUpOptions:
     def __init__(
         self,
-        custom_claims: Optional[dict] = None,
-        refresh_duration: Optional[int] = None,
+        custom_claims: dict | None = None,
+        refresh_duration: int | None = None,
     ):
         self.custom_claims = custom_claims
         self.refresh_duration = refresh_duration
@@ -303,16 +303,16 @@ class FlowRunOptions:
 
     def __init__(
         self,
-        flow_input: Optional[Dict[str, Any]] = None,
-        preview: Optional[bool] = None,
-        tenant: Optional[str] = None,
+        flow_input: dict[str, Any] | None = None,
+        preview: bool | None = None,
+        tenant: str | None = None,
     ):
         self.flow_input = flow_input
         self.preview = preview
         self.tenant = tenant
 
-    def to_dict(self) -> Dict[str, Any]:
-        result: Dict[str, Any] = {}
+    def to_dict(self) -> dict[str, Any]:
+        result: dict[str, Any] = {}
         if self.flow_input is not None:
             result["input"] = self.flow_input
         if self.preview is not None:
@@ -322,7 +322,7 @@ class FlowRunOptions:
         return result
 
     @staticmethod
-    def from_dict(options: Optional[dict]) -> Optional["FlowRunOptions"]:
+    def from_dict(options: dict | None) -> Optional["FlowRunOptions"]:
         if options is None:
             return None
         return FlowRunOptions(
@@ -337,10 +337,10 @@ class MgmtLoginOptions:
         self,
         stepup: bool = False,
         mfa: bool = False,
-        revoke_other_sessions: Optional[bool] = None,
-        custom_claims: Optional[dict] = None,
-        jwt: Optional[str] = None,
-        refresh_duration: Optional[int] = None,
+        revoke_other_sessions: bool | None = None,
+        custom_claims: dict | None = None,
+        jwt: str | None = None,
+        refresh_duration: int | None = None,
     ):
         self.stepup = stepup
         self.custom_claims = custom_claims
@@ -357,15 +357,15 @@ def is_jwt_required(lgo: MgmtLoginOptions) -> bool:
 class MgmtUserRequest:
     def __init__(
         self,
-        name: Optional[str] = None,
-        given_name: Optional[str] = None,
-        middle_name: Optional[str] = None,
-        family_name: Optional[str] = None,
-        phone: Optional[str] = None,
-        email: Optional[str] = None,
-        email_verified: Optional[bool] = None,
-        phone_verified: Optional[bool] = None,
-        sso_app_id: Optional[str] = None,
+        name: str | None = None,
+        given_name: str | None = None,
+        middle_name: str | None = None,
+        family_name: str | None = None,
+        phone: str | None = None,
+        email: str | None = None,
+        email_verified: bool | None = None,
+        phone_verified: bool | None = None,
+        sso_app_id: str | None = None,
     ):
         self.name = name
         self.given_name = given_name
@@ -398,12 +398,12 @@ class AssociatedTenant:
     roles for the user or access key in this specific tenant.
     """
 
-    def __init__(self, tenant_id: str, role_names: Optional[List[str]] = None):
+    def __init__(self, tenant_id: str, role_names: list[str] | None = None):
         self.tenant_id = tenant_id
         self.role_names = [] if role_names is None else role_names
 
 
-def associated_tenants_to_dict(associated_tenants: List[AssociatedTenant]) -> list:
+def associated_tenants_to_dict(associated_tenants: list[AssociatedTenant]) -> list:
     associated_tenant_list = []
     if associated_tenants:
         for associated_tenant in associated_tenants:
@@ -429,7 +429,7 @@ class SAMLIDPAttributeMappingInfo:
 
 
 def saml_idp_attribute_mapping_info_to_dict(
-    attributes_mapping: Optional[List[SAMLIDPAttributeMappingInfo]] = None,
+    attributes_mapping: list[SAMLIDPAttributeMappingInfo] | None = None,
 ) -> list:
     attributes_mapping_list = []
     if attributes_mapping:
@@ -455,7 +455,7 @@ class SAMLIDPRoleGroupMappingInfo:
 
 
 def saml_idp_role_group_mapping_info_to_dict(
-    role_groups_mapping: Optional[List[SAMLIDPRoleGroupMappingInfo]] = None,
+    role_groups_mapping: list[SAMLIDPRoleGroupMappingInfo] | None = None,
 ) -> list:
     role_groups_mapping_list = []
     if role_groups_mapping:
@@ -481,7 +481,7 @@ class SAMLIDPGroupsMappingInfo:
         type: str,
         filter_type: str,
         value: str,
-        roles: List[SAMLIDPRoleGroupMappingInfo],
+        roles: list[SAMLIDPRoleGroupMappingInfo],
     ):
         self.name = name
         self.type = type
@@ -491,7 +491,7 @@ class SAMLIDPGroupsMappingInfo:
 
 
 def saml_idp_groups_mapping_info_to_dict(
-    groups_mapping: Optional[List[SAMLIDPGroupsMappingInfo]] = None,
+    groups_mapping: list[SAMLIDPGroupsMappingInfo] | None = None,
 ) -> list:
     groups_mapping_list = []
     if groups_mapping:
@@ -515,12 +515,12 @@ class Sort:
     Represents a sort object.
     """
 
-    def __init__(self, field: str, desc: Optional[bool] = False):
+    def __init__(self, field: str, desc: bool | None = False):
         self.field = field
         self.desc = desc
 
 
-def sort_to_dict(sort: List[Sort]) -> list:
+def sort_to_dict(sort: list[Sort]) -> list:
     sort_list = []
     if sort:
         for s in sort:
@@ -549,9 +549,9 @@ class DescoperAttributes:
 
     def __init__(
         self,
-        display_name: Optional[str] = None,
-        email: Optional[str] = None,
-        phone: Optional[str] = None,
+        display_name: str | None = None,
+        email: str | None = None,
+        phone: str | None = None,
     ):
         self.display_name = display_name
         self.email = email
@@ -572,8 +572,8 @@ class DescoperTagRole:
 
     def __init__(
         self,
-        tags: Optional[List[str]] = None,
-        role: Optional[DescoperRole] = None,
+        tags: list[str] | None = None,
+        role: DescoperRole | None = None,
     ):
         self.tags = tags if tags is not None else []
         self.role = role
@@ -592,8 +592,8 @@ class DescoperProjectRole:
 
     def __init__(
         self,
-        project_ids: Optional[List[str]] = None,
-        role: Optional[DescoperRole] = None,
+        project_ids: list[str] | None = None,
+        role: DescoperRole | None = None,
     ):
         self.project_ids = project_ids if project_ids is not None else []
         self.role = role
@@ -613,8 +613,8 @@ class DescoperRBAC:
     def __init__(
         self,
         is_company_admin: bool = False,
-        tags: Optional[List[DescoperTagRole]] = None,
-        projects: Optional[List[DescoperProjectRole]] = None,
+        tags: list[DescoperTagRole] | None = None,
+        projects: list[DescoperProjectRole] | None = None,
     ):
         self.is_company_admin = is_company_admin
         self.tags = tags if tags is not None else []
@@ -636,9 +636,9 @@ class DescoperCreate:
     def __init__(
         self,
         login_id: str,
-        attributes: Optional[DescoperAttributes] = None,
+        attributes: DescoperAttributes | None = None,
         send_invite: bool = False,
-        rbac: Optional[DescoperRBAC] = None,
+        rbac: DescoperRBAC | None = None,
     ):
         self.login_id = login_id
         self.attributes = attributes
@@ -654,7 +654,7 @@ class DescoperCreate:
         }
 
 
-def descopers_to_dict(descopers: List[DescoperCreate]) -> list:
+def descopers_to_dict(descopers: list[DescoperCreate]) -> list:
     return [d.to_dict() for d in descopers]
 
 
@@ -664,7 +664,7 @@ class MgmtKeyStatus(Enum):
 
 
 class MgmtKeyProjectRole:
-    def __init__(self, project_ids: List[str], roles: List[str]):
+    def __init__(self, project_ids: list[str], roles: list[str]):
         self.project_ids = project_ids
         self.roles = roles
 
@@ -676,7 +676,7 @@ class MgmtKeyProjectRole:
 
 
 class MgmtKeyTagRole:
-    def __init__(self, tags: List[str], roles: List[str]):
+    def __init__(self, tags: list[str], roles: list[str]):
         self.tags = tags
         self.roles = roles
 
@@ -690,9 +690,9 @@ class MgmtKeyTagRole:
 class MgmtKeyReBac:
     def __init__(
         self,
-        company_roles: Optional[List[str]] = None,
-        project_roles: Optional[List[MgmtKeyProjectRole]] = None,
-        tag_roles: Optional[List[MgmtKeyTagRole]] = None,
+        company_roles: list[str] | None = None,
+        project_roles: list[MgmtKeyProjectRole] | None = None,
+        tag_roles: list[MgmtKeyTagRole] | None = None,
     ):
         self.company_roles = company_roles
         self.project_roles = project_roles
