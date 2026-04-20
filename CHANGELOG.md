@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.0](https://github.com/descope/python-sdk/compare/descope-1.12.2...descope-1.13.0) (2026-04-20)
+
+
+### Features
+
+* impersonate stepup support ([#1064](https://github.com/descope/python-sdk/issues/1064)) ([63d051a](https://github.com/descope/python-sdk/commit/63d051a69380895d7941da1b43076e1059285e15))
+
 ## [1.12.2](https://github.com/descope/python-sdk/compare/descope-1.12.1...descope-1.12.2) (2026-04-12)
 
 
