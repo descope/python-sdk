@@ -137,6 +137,37 @@ class TestJWT(common.DescopeTest):
                     "customClaims": None,
                     "selectedTenant": None,
                     "refreshDuration": None,
+                    "stepup": None,
+                },
+                allow_redirects=False,
+                verify=True,
+                params=None,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test stepup flow
+        with patch("requests.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.ok = True
+            network_resp.json.return_value = json.loads("""{"jwt": "stepup_response"}""")
+            mock_post.return_value = network_resp
+            resp = client.mgmt.jwt.impersonate("imp1", "imp2", True, stepup=True)
+            self.assertEqual(resp, "stepup_response")
+            mock_post.assert_called_with(
+                expected_uri,
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                json={
+                    "loginId": "imp2",
+                    "impersonatorId": "imp1",
+                    "validateConsent": True,
+                    "customClaims": None,
+                    "selectedTenant": None,
+                    "refreshDuration": None,
+                    "stepup": True,
                 },
                 allow_redirects=False,
                 verify=True,

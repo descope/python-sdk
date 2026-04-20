@@ -1285,7 +1285,7 @@ refresh_jwt = descope_client.mgmt.jwt.impersonate(
     validate_consent=True,
     custom_claims={"key1":"value1"},
     tenant_id="<One of the tenants the impersonated user belongs to>"
-)
+    )
 ```
 
 # Note 1: The generate code/link functions, work only for test users, will not work for regular users.

@@ -57,6 +57,7 @@ class JWT(HTTPBase):
         custom_claims: Optional[dict] = None,
         tenant_id: Optional[str] = None,
         refresh_duration: Optional[int] = None,
+        stepup: Optional[bool] = None,
     ) -> str:
         """
         Impersonate to another user
@@ -68,6 +69,7 @@ class JWT(HTTPBase):
         customClaims dict: Custom claims to add to JWT
         tenant_id (str): tenant id to set on DCT claim.
         refresh_duration (int): duration in seconds for which the new JWT will be valid
+        stepup (bool): Whether to generate a stepup token for the impersonated user.
 
         Return value (str): A JWT of the impersonated user
 
@@ -91,6 +93,7 @@ class JWT(HTTPBase):
                 "customClaims": custom_claims,
                 "selectedTenant": tenant_id,
                 "refreshDuration": refresh_duration,
+                "stepup": stepup,
             },
             params=None,
         )
