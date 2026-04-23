@@ -31,8 +31,8 @@ class TestGroup(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 client.mgmt.group.load_all_groups,
@@ -40,8 +40,8 @@ class TestGroup(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNotNone(client.mgmt.group.load_all_groups("someTenantId"))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.group_load_all_path}",
@@ -54,8 +54,7 @@ class TestGroup(common.DescopeTest):
                 json={
                     "tenantId": "someTenantId",
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -68,8 +67,8 @@ class TestGroup(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 client.mgmt.group.load_all_groups_for_members,
@@ -77,8 +76,8 @@ class TestGroup(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNotNone(
                 client.mgmt.group.load_all_groups_for_members(
                     "someTenantId", ["one", "two"], ["three", "four"]
@@ -97,8 +96,7 @@ class TestGroup(common.DescopeTest):
                     "loginIds": ["three", "four"],
                     "userIds": ["one", "two"],
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -111,8 +109,8 @@ class TestGroup(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 client.mgmt.group.load_all_group_members,
@@ -121,8 +119,8 @@ class TestGroup(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNotNone(
                 client.mgmt.group.load_all_group_members("someTenantId", "someGroupId")
             )
@@ -138,7 +136,6 @@ class TestGroup(common.DescopeTest):
                     "tenantId": "someTenantId",
                     "groupId": "someGroupId",
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

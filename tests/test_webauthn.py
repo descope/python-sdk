@@ -94,8 +94,8 @@ class TestWebauthN(common.DescopeTest):
         )
         self.assertRaises(AuthException, webauthn.sign_up_start, "id1", "")
 
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(
                 AuthException, webauthn.sign_up_start, "id1", "https://example.com"
             )
@@ -104,13 +104,13 @@ class TestWebauthN(common.DescopeTest):
         valid_response = json.loads(
             """{"transactionId": "2COHI3LIixYhf6Q7EECYt20zyMi", "options": "{'publicKey':{'challenge':'5GOywA7BHL1QceQOfxHKDrasuN8SkbbgXmB5ImVZ+QU=','rp':{'name':'comp6','id':'localhost'},'user':{'name”:”dummy@dummy.com','displayName”:”dummy”,”id':'VTJDT0hJNWlWOHJaZ3VURkpKMzV3bjEydHRkTw=='},'pubKeyCredParams':[{'type':'public-key','alg':-7},{'type':'public-key','alg':-35},{'type':'public-key','alg':-36},{'type':'public-key','alg':-257},{'type':'public-key','alg':-258},{'type':'public-key','alg':-259},{'type':'public-key','alg':-37},{'type':'public-key','alg':-38},{'type':'public-key','alg':-39},{'type':'public-key','alg':-8}],'authenticatorSelection':{'userVerification':'preferred'},'timeout':60000,'attestation':'none'}}"}"""
         )
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNotNone(webauthn.sign_up_start("id1", "https://example.com"))
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = valid_response
             mock_post.return_value = my_mock_response
             res = webauthn.sign_up_start("id1", "https://example.com")
@@ -125,8 +125,7 @@ class TestWebauthN(common.DescopeTest):
                 },
                 params=None,
                 json={"user": {"loginId": "id1"}, "origin": "https://example.com"},
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(res, valid_response)
@@ -146,16 +145,16 @@ class TestWebauthN(common.DescopeTest):
         self.assertRaises(AuthException, webauthn.sign_up_finish, "t01", "")
         self.assertRaises(AuthException, webauthn.sign_up_finish, "t01", None)
 
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(
                 AuthException, webauthn.sign_up_finish, "t01", "response01"
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.cookies = {}
             data = json.loads(
                 """{"refreshJwt": "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3R6VWhkcXBJRjJ5czlnZzdtczA2VXZ0QzQiLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0Mzc1OTYsImlhdCI6MTY1OTYzNzU5NiwiaXNzIjoiUDJDdHpVaGRxcElGMnlzOWdnN21zMDZVdnRDNCIsInN1YiI6IlUyQ3UwajBXUHczWU9pUElTSmI1Mkwwd1VWTWcifQ.WLnlHugvzZtrV9OzBB7SjpCLNRvKF3ImFpVyIN5orkrjO2iyAKg_Rb4XHk9sXGC1aW8puYzLbhE1Jv3kk2hDcKggfE8OaRNRm8byhGFZHnvPJwcP_Ya-aRmfAvCLcKOL",
@@ -181,8 +180,7 @@ class TestWebauthN(common.DescopeTest):
                 },
                 params=None,
                 json={"transactionId": "t01", "response": "response01"},
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertIsNotNone(webauthn.sign_up_finish("t01", "response01"))
@@ -202,8 +200,8 @@ class TestWebauthN(common.DescopeTest):
         )
         self.assertRaises(AuthException, webauthn.sign_in_start, "id", "")
 
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 webauthn.sign_in_start,
@@ -215,8 +213,8 @@ class TestWebauthN(common.DescopeTest):
         valid_response = json.loads(
             """{"transactionId": "2COHI3LIixYhf6Q7EECYt20zyMi", "options": "{'publicKey':{'challenge':'5GOywA7BHL1QceQOfxHKDrasuN8SkbbgXmB5ImVZ+QU=','rp':{'name':'comp6','id':'localhost'},'user':{'name”:”dummy@dummy.com','displayName”:”dummy”,”id':'VTJDT0hJNWlWOHJaZ3VURkpKMzV3bjEydHRkTw=='},'pubKeyCredParams':[{'type':'public-key','alg':-7},{'type':'public-key','alg':-35},{'type':'public-key','alg':-36},{'type':'public-key','alg':-257},{'type':'public-key','alg':-258},{'type':'public-key','alg':-259},{'type':'public-key','alg':-37},{'type':'public-key','alg':-38},{'type':'public-key','alg':-39},{'type':'public-key','alg':-8}],'authenticatorSelection':{'userVerification':'preferred'},'timeout':60000,'attestation':'none'}}"}"""
         )
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNotNone(
                 webauthn.sign_in_start("dummy@dummy.com", "https://example.com")
             )
@@ -228,9 +226,9 @@ class TestWebauthN(common.DescopeTest):
                 LoginOptions(mfa=True),
             )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = valid_response
             mock_post.return_value = my_mock_response
             res = webauthn.sign_in_start("id1", "https://example.com")
@@ -248,8 +246,7 @@ class TestWebauthN(common.DescopeTest):
                     "origin": "https://example.com",
                     "loginOptions": {},
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(res, valid_response)
@@ -269,8 +266,8 @@ class TestWebauthN(common.DescopeTest):
         )
         self.assertRaises(AuthException, webauthn.sign_in_start, "id", "")
 
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 webauthn.sign_in_start,
@@ -282,15 +279,15 @@ class TestWebauthN(common.DescopeTest):
         valid_response = json.loads(
             """{"transactionId": "2COHI3LIixYhf6Q7EECYt20zyMi", "options": "{'publicKey':{'challenge':'5GOywA7BHL1QceQOfxHKDrasuN8SkbbgXmB5ImVZ+QU=','rp':{'name':'comp6','id':'localhost'},'user':{'name”:”dummy@dummy.com','displayName”:”dummy”,”id':'VTJDT0hJNWlWOHJaZ3VURkpKMzV3bjEydHRkTw=='},'pubKeyCredParams':[{'type':'public-key','alg':-7},{'type':'public-key','alg':-35},{'type':'public-key','alg':-36},{'type':'public-key','alg':-257},{'type':'public-key','alg':-258},{'type':'public-key','alg':-259},{'type':'public-key','alg':-37},{'type':'public-key','alg':-38},{'type':'public-key','alg':-39},{'type':'public-key','alg':-8}],'authenticatorSelection':{'userVerification':'preferred'},'timeout':60000,'attestation':'none'}}"}"""
         )
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNotNone(
                 webauthn.sign_in_start("dummy@dummy.com", "https://example.com")
             )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = valid_response
             mock_post.return_value = my_mock_response
             lo = LoginOptions(stepup=True, custom_claims={"k1": "v1"})
@@ -313,8 +310,7 @@ class TestWebauthN(common.DescopeTest):
                         "mfa": False,
                     },
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(res, valid_response)
@@ -334,16 +330,16 @@ class TestWebauthN(common.DescopeTest):
         self.assertRaises(AuthException, webauthn.sign_in_finish, "t01", "")
         self.assertRaises(AuthException, webauthn.sign_in_finish, "t01", None)
 
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(
                 AuthException, webauthn.sign_in_finish, "t01", "response01"
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.cookies = {}
 
             data = json.loads(
@@ -363,8 +359,7 @@ class TestWebauthN(common.DescopeTest):
                 },
                 params=None,
                 json={"transactionId": "t01", "response": "response01"},
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertIsNotNone(webauthn.sign_up_finish("t01", "response01"))
@@ -384,8 +379,8 @@ class TestWebauthN(common.DescopeTest):
         )
         self.assertRaises(AuthException, webauthn.sign_up_or_in_start, "id", "")
 
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 webauthn.sign_up_or_in_start,
@@ -397,15 +392,15 @@ class TestWebauthN(common.DescopeTest):
         valid_response = json.loads(
             """{"create": true, "transactionId": "2COHI3LIixYhf6Q7EECYt20zyMi", "options": "{'publicKey':{'challenge':'5GOywA7BHL1QceQOfxHKDrasuN8SkbbgXmB5ImVZ+QU=','rp':{'name':'comp6','id':'localhost'},'user':{'name”:”dummy@dummy.com','displayName”:”dummy”,”id':'VTJDT0hJNWlWOHJaZ3VURkpKMzV3bjEydHRkTw=='},'pubKeyCredParams':[{'type':'public-key','alg':-7},{'type':'public-key','alg':-35},{'type':'public-key','alg':-36},{'type':'public-key','alg':-257},{'type':'public-key','alg':-258},{'type':'public-key','alg':-259},{'type':'public-key','alg':-37},{'type':'public-key','alg':-38},{'type':'public-key','alg':-39},{'type':'public-key','alg':-8}],'authenticatorSelection':{'userVerification':'preferred'},'timeout':60000,'attestation':'none'}}"}"""
         )
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNotNone(
                 webauthn.sign_up_or_in_start("dummy@dummy.com", "https://example.com")
             )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = valid_response
             mock_post.return_value = my_mock_response
             res = webauthn.sign_up_or_in_start("id1", "https://example.com")
@@ -422,8 +417,7 @@ class TestWebauthN(common.DescopeTest):
                     "loginId": "id1",
                     "origin": "https://example.com",
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(res, valid_response)
@@ -460,8 +454,8 @@ class TestWebauthN(common.DescopeTest):
             "https://example.com",
         )
 
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 webauthn.update_start,
@@ -471,18 +465,18 @@ class TestWebauthN(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNotNone(
                 webauthn.update_start(
                     "dummy@dummy.com", valid_jwt_token, "https://example.com"
                 )
             )
 
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             valid_response = json.loads("{}")
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = valid_response
             mock_post.return_value = my_mock_response
             res = webauthn.update_start(
@@ -498,8 +492,7 @@ class TestWebauthN(common.DescopeTest):
                 },
                 params=None,
                 json={"loginId": "dummy@dummy.com", "origin": "https://example.com"},
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(res, valid_response)
@@ -519,16 +512,16 @@ class TestWebauthN(common.DescopeTest):
         self.assertRaises(AuthException, webauthn.update_finish, "t01", "")
         self.assertRaises(AuthException, webauthn.update_finish, "t01", None)
 
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(
                 AuthException, webauthn.update_finish, "t01", "response01"
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.cookies = {}
             data = json.loads(
                 """{"refreshJwt": "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3R6VWhkcXBJRjJ5czlnZzdtczA2VXZ0QzQiLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0Mzc1OTYsImlhdCI6MTY1OTYzNzU5NiwiaXNzIjoiUDJDdHpVaGRxcElGMnlzOWdnN21zMDZVdnRDNCIsInN1YiI6IlUyQ3UwajBXUHczWU9pUElTSmI1Mkwwd1VWTWcifQ.WLnlHugvzZtrV9OzBB7SjpCLNRvKF3ImFpVyIN5orkrjO2iyAKg_Rb4XHk9sXGC1aW8puYzLbhE1Jv3kk2hDcKggfE8OaRNRm8byhGFZHnvPJwcP_Ya-aRmfAvCLcKOL", "user": {"loginIds": ["guyp@descope.com"], "name": "", "email": "guyp@descope.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false}, "firstSeen": false}"""
@@ -546,8 +539,7 @@ class TestWebauthN(common.DescopeTest):
                 },
                 params=None,
                 json={"transactionId": "t01", "response": "response01"},
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertIsNotNone(webauthn.sign_up_finish("t01", "response01"))

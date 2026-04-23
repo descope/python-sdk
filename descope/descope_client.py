@@ -4,7 +4,7 @@ import os
 import warnings
 from typing import Iterable
 
-import requests
+import httpx
 
 from descope.auth import Auth  # noqa: F401
 from descope.authmethod.enchantedlink import EnchantedLink  # noqa: F401
@@ -414,7 +414,7 @@ class DescopeClient:
             session_token, refresh_token, audience
         )
 
-    def logout(self, refresh_token: str) -> requests.Response:
+    def logout(self, refresh_token: str) -> httpx.Response:
         """
         Logout user from current session and revoke the refresh_token. After calling this function,
             you must invalidate or remove any cookies you have created.
@@ -422,7 +422,7 @@ class DescopeClient:
         Args:
         refresh_token (str): The refresh token
 
-        Return value (requests.Response): returns the response from the Descope server
+        Return value (httpx.Response): returns the response from the Descope server
 
         Raise:
         AuthException: Exception is raised if session is not authorized or another error occurs
@@ -437,7 +437,7 @@ class DescopeClient:
         uri = EndpointsV1.logout_path
         return self._auth.http_client.post(uri, body={}, pswd=refresh_token)
 
-    def logout_all(self, refresh_token: str) -> requests.Response:
+    def logout_all(self, refresh_token: str) -> httpx.Response:
         """
         Logout user from all active sessions and revoke the refresh_token. After calling this function,
             you must invalidate or remove any cookies you have created.
@@ -445,7 +445,7 @@ class DescopeClient:
         Args:
         refresh_token (str): The refresh token
 
-        Return value (requests.Response): returns the response from the Descope server
+        Return value (httpx.Response): returns the response from the Descope server
 
         Raise:
         AuthException: Exception is raised if session is not authorized or another error occurs

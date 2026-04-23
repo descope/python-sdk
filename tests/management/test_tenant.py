@@ -37,8 +37,8 @@ class TestTenant(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 client.mgmt.tenant.create,
@@ -46,9 +46,9 @@ class TestTenant(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"id": "t1"}""")
             mock_post.return_value = network_resp
             resp = client.mgmt.tenant.create("name", "t1", ["domain.com"])
@@ -68,15 +68,14 @@ class TestTenant(common.DescopeTest):
                     "enforceSSO": False,
                     "disabled": False,
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Test success flow with custom attributes, enforce_sso, disabled
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"id": "t1"}""")
             mock_post.return_value = network_resp
             resp = client.mgmt.tenant.create(
@@ -108,8 +107,7 @@ class TestTenant(common.DescopeTest):
                     "federatedAppIds": ["app1", "app2"],
                     "disabled": True,
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -122,8 +120,8 @@ class TestTenant(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 client.mgmt.tenant.update,
@@ -132,8 +130,8 @@ class TestTenant(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNone(
                 client.mgmt.tenant.update(
                     "t1", "new-name", ["domain.com"], enforce_sso=True, disabled=True
@@ -154,14 +152,13 @@ class TestTenant(common.DescopeTest):
                     "enforceSSO": True,
                     "disabled": True,
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Test success flow with custom attributes, enforce_sso, disabled
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNone(
                 client.mgmt.tenant.update(
                     "t1",
@@ -192,8 +189,7 @@ class TestTenant(common.DescopeTest):
                     "federatedAppIds": ["app1", "app2"],
                     "disabled": True,
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -206,8 +202,8 @@ class TestTenant(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 client.mgmt.tenant.delete,
@@ -215,8 +211,8 @@ class TestTenant(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNone(client.mgmt.tenant.delete("t1", True))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_delete_path}",
@@ -227,8 +223,7 @@ class TestTenant(common.DescopeTest):
                 },
                 params=None,
                 json={"id": "t1", "cascade": True},
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -241,8 +236,8 @@ class TestTenant(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.get") as mock_get:
-            mock_get.return_value.ok = False
+        with patch("httpx.get") as mock_get:
+            mock_get.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 client.mgmt.tenant.load,
@@ -250,9 +245,9 @@ class TestTenant(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """
                 {"id": "t1", "name": "tenant1", "selfProvisioningDomains": ["domain1.com"], "createdTime": 172606520}
@@ -270,8 +265,7 @@ class TestTenant(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 params={"id": "t1"},
-                allow_redirects=True,
-                verify=True,
+                follow_redirects=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -284,14 +278,14 @@ class TestTenant(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.get") as mock_get:
-            mock_get.return_value.ok = False
+        with patch("httpx.get") as mock_get:
+            mock_get.return_value.is_success = False
             self.assertRaises(AuthException, client.mgmt.tenant.load_all)
 
         # Test success flow
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """
                 {
@@ -317,8 +311,7 @@ class TestTenant(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
-                allow_redirects=True,
-                verify=True,
+                follow_redirects=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -331,14 +324,14 @@ class TestTenant(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(AuthException, client.mgmt.tenant.search_all)
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """
                 {
@@ -373,8 +366,7 @@ class TestTenant(common.DescopeTest):
                     "tenantSelfProvisioningDomains": ["spd1"],
                     "customAttributes": {"k1": "v1"},
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
                 params=None,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
@@ -388,8 +380,8 @@ class TestTenant(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 client.mgmt.tenant.update_settings,
@@ -398,8 +390,8 @@ class TestTenant(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNone(
                 client.mgmt.tenant.update_settings(
                     "t1",
@@ -423,15 +415,14 @@ class TestTenant(common.DescopeTest):
                     "authType": "oidc",
                     "enabled": True,
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 params=None,
-                verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Test success flow with SSO Setup Suite settings
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             sso_disabled_features = SSOSetupSuiteSettingsDisabledFeatures(
                 saml=True, oidc=False, scim=True, sso_domains=False, group_mapping=True
             )
@@ -475,9 +466,8 @@ class TestTenant(common.DescopeTest):
                         },
                     },
                 },
-                allow_redirects=False,
+                follow_redirects=False,
                 params=None,
-                verify=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -490,8 +480,8 @@ class TestTenant(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.get") as mock_get:
-            mock_get.return_value.ok = False
+        with patch("httpx.get") as mock_get:
+            mock_get.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 client.mgmt.tenant.load_settings,
@@ -499,9 +489,9 @@ class TestTenant(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """
                 {"domains": ["domain1.com", "domain2.com"], "authType": "oidc", "sessionSettingsEnabled": true}
@@ -520,8 +510,7 @@ class TestTenant(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 params={"id": "t1"},
-                allow_redirects=True,
-                verify=True,
+                follow_redirects=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -534,8 +523,8 @@ class TestTenant(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 client.mgmt.tenant.update_default_roles,
@@ -544,8 +533,8 @@ class TestTenant(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNone(
                 client.mgmt.tenant.update_default_roles("t1", ["role1", "role2"])
             )
@@ -558,15 +547,14 @@ class TestTenant(common.DescopeTest):
                 },
                 params=None,
                 json={"id": "t1", "defaultRoles": ["role1", "role2"]},
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Test success flow with SSO Setup Suite settings
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """
                 {
@@ -609,7 +597,6 @@ class TestTenant(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 params={"id": "t1"},
-                allow_redirects=True,
-                verify=True,
+                follow_redirects=True,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
