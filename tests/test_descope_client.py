@@ -21,6 +21,7 @@ from descope.common import (
     DeliveryMethod,
     EndpointsV1,
 )
+from tests.testutils import SSLMatcher
 
 from . import common
 
@@ -166,6 +167,7 @@ class TestDescopeClient(common.DescopeTest):
                 },
                 follow_redirects=None,
                 params=None,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -210,6 +212,7 @@ class TestDescopeClient(common.DescopeTest):
                 json={"dct": False, "ids": ["a"]},
                 follow_redirects=False,
                 params=None,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -262,6 +265,7 @@ class TestDescopeClient(common.DescopeTest):
                 },
                 follow_redirects=None,
                 params=None,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -799,6 +803,7 @@ class TestDescopeClient(common.DescopeTest):
                 params=None,
                 json={"loginOptions": {"customClaims": {"k1": "v1"}}},
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -867,6 +872,7 @@ class TestDescopeClient(common.DescopeTest):
                     "tenant": "t1",
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -903,6 +909,7 @@ class TestDescopeClient(common.DescopeTest):
                 },
                 params=None,
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -935,6 +942,7 @@ class TestDescopeClient(common.DescopeTest):
                     },
                     follow_redirects=False,
                     params=None,
+                    verify=SSLMatcher(),
                     timeout=DEFAULT_TIMEOUT_SECONDS,
                 )
 
@@ -971,6 +979,7 @@ class TestDescopeClient(common.DescopeTest):
                     },
                     params=None,
                     follow_redirects=False,
+                    verify=SSLMatcher(),
                     timeout=DEFAULT_TIMEOUT_SECONDS,
                 )
 
@@ -1009,6 +1018,7 @@ class TestDescopeClient(common.DescopeTest):
                 },
                 follow_redirects=False,
                 params=None,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -1039,6 +1049,7 @@ class TestDescopeClient(common.DescopeTest):
                 },
                 follow_redirects=False,
                 params=None,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 

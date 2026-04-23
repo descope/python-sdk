@@ -24,6 +24,7 @@ from descope.common import (
     SESSION_TOKEN_NAME,
     EndpointsV1,
 )
+from tests.testutils import SSLMatcher
 
 from . import common
 
@@ -447,6 +448,7 @@ class TestAuth(common.DescopeTest):
                 params=None,
                 json={"loginOptions": {"customClaims": {"k1": "v1"}}},
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -480,6 +482,7 @@ class TestAuth(common.DescopeTest):
                     }
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -762,7 +765,7 @@ class TestAuth(common.DescopeTest):
             }
             with self.assertRaises(RateLimitException) as cm:
                 auth.http_client.get(
-                    uri="http://test.com", params=False, follow_redirects=True
+                    uri="http://test.com", params=False, allow_redirects=True
                 )
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, "E130429")
@@ -820,6 +823,7 @@ class TestAuth(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -966,7 +970,7 @@ class TestAuth(common.DescopeTest):
             mock_request.return_value.text = """{"errorCode":"E062108","errorDescription":"User not found","errorMessage":"Cannot find user"}"""
             with self.assertRaises(AuthException) as cm:
                 auth.http_client.get(
-                    uri="http://test.com", params=False, follow_redirects=True
+                    uri="http://test.com", params=False, allow_redirects=True
                 )
             the_exception = cm.exception
             self.assertEqual(the_exception.status_code, 400)
@@ -1254,6 +1258,7 @@ class TestAuth(common.DescopeTest):
         class Resp:
             def __init__(self, ok, status_code, body, headers):
                 self.is_success = ok
+                self.ok = ok
                 self.status_code = status_code
                 self._body = body
                 self.headers = headers

@@ -14,6 +14,7 @@ from descope.management.sso_settings import (
 )
 
 from .. import common
+from ..testutils import SSLMatcher
 
 
 class TestSSOSettings(common.DescopeTest):
@@ -66,6 +67,7 @@ class TestSSOSettings(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -119,6 +121,7 @@ class TestSSOSettings(common.DescopeTest):
                 },
                 params={"tenantId": "T2AAAA"},
                 follow_redirects=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -220,6 +223,7 @@ class TestSSOSettings(common.DescopeTest):
                     "domains": ["domain.com"],
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -316,6 +320,7 @@ class TestSSOSettings(common.DescopeTest):
                     "domains": ["domain.com"],
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -400,6 +405,7 @@ class TestSSOSettings(common.DescopeTest):
                     "domains": ["domain.com"],
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -470,6 +476,7 @@ class TestSSOSettings(common.DescopeTest):
                     "domains": ["domain.com"],
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -514,6 +521,7 @@ class TestSSOSettings(common.DescopeTest):
                 },
                 params={"tenantId": "tenant-id"},
                 follow_redirects=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -569,6 +577,7 @@ class TestSSOSettings(common.DescopeTest):
                     "domains": ["domain.com"],
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -601,6 +610,7 @@ class TestSSOSettings(common.DescopeTest):
                     "domains": None,
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -634,6 +644,7 @@ class TestSSOSettings(common.DescopeTest):
                     "domains": ["domain.com"],
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -683,6 +694,7 @@ class TestSSOSettings(common.DescopeTest):
                     "domains": ["domain.com"],
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -710,6 +722,7 @@ class TestSSOSettings(common.DescopeTest):
                     "domains": None,
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -766,6 +779,7 @@ class TestSSOSettings(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -808,6 +822,7 @@ class TestSSOSettings(common.DescopeTest):
                     "ssoId": "sso-456",
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -830,5 +845,6 @@ class TestSSOSettings(common.DescopeTest):
                     "tenantId": "tenant-id",
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

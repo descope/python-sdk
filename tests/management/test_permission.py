@@ -7,6 +7,7 @@ from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
 from .. import common
+from ..testutils import SSLMatcher
 
 
 class TestPermission(common.DescopeTest):
@@ -58,6 +59,7 @@ class TestPermission(common.DescopeTest):
                     "description": "Something",
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -103,6 +105,7 @@ class TestPermission(common.DescopeTest):
                     "description": "new-description",
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -139,6 +142,7 @@ class TestPermission(common.DescopeTest):
                     "name": "name",
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -185,6 +189,7 @@ class TestPermission(common.DescopeTest):
                     ]
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -231,6 +236,7 @@ class TestPermission(common.DescopeTest):
                     ]
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -265,6 +271,7 @@ class TestPermission(common.DescopeTest):
                 params=None,
                 json={"names": ["P1", "P2"]},
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -303,5 +310,6 @@ class TestPermission(common.DescopeTest):
                 },
                 params=None,
                 follow_redirects=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

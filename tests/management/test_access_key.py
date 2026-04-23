@@ -7,6 +7,7 @@ from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
 from .. import common
+from ..testutils import SSLMatcher
 
 
 class TestAccessKey(common.DescopeTest):
@@ -87,6 +88,7 @@ class TestAccessKey(common.DescopeTest):
                     "customAttributes": {"attr1": "value1"},
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -125,6 +127,7 @@ class TestAccessKey(common.DescopeTest):
                 },
                 params={"id": "key-id"},
                 follow_redirects=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -175,6 +178,7 @@ class TestAccessKey(common.DescopeTest):
                     "customAttributes": {"attr1": "value1"},
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -226,6 +230,7 @@ class TestAccessKey(common.DescopeTest):
                     "customAttributes": {"attr1": "value1"},
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -262,6 +267,7 @@ class TestAccessKey(common.DescopeTest):
                     "id": "ak1",
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -298,6 +304,7 @@ class TestAccessKey(common.DescopeTest):
                     "id": "ak1",
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -334,5 +341,6 @@ class TestAccessKey(common.DescopeTest):
                     "id": "ak1",
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

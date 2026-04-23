@@ -5,6 +5,7 @@ from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
 from .. import common
+from ..testutils import SSLMatcher
 
 
 class TestFGA(common.DescopeTest):
@@ -49,6 +50,7 @@ class TestFGA(common.DescopeTest):
                 params=None,
                 json={"dsl": "model AuthZ 1.0"},
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -101,6 +103,7 @@ class TestFGA(common.DescopeTest):
                     ]
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -153,6 +156,7 @@ class TestFGA(common.DescopeTest):
                     ]
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -205,6 +209,7 @@ class TestFGA(common.DescopeTest):
                     ]
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -240,6 +245,7 @@ class TestFGA(common.DescopeTest):
                 params=None,
                 json={"resourceIdentifiers": ids},
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -282,6 +288,7 @@ class TestFGA(common.DescopeTest):
                 params=None,
                 json={"resourcesDetails": details},
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -327,6 +334,7 @@ class TestFGA(common.DescopeTest):
                 params=None,
                 json={"dsl": "model AuthZ 1.0"},
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -364,6 +372,7 @@ class TestFGA(common.DescopeTest):
                 params=None,
                 json={"tuples": relations},
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -401,6 +410,7 @@ class TestFGA(common.DescopeTest):
                 params=None,
                 json={"tuples": relations},
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -446,6 +456,7 @@ class TestFGA(common.DescopeTest):
                 params=None,
                 json={"tuples": relations},
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(len(result), 1)
@@ -476,5 +487,6 @@ class TestFGA(common.DescopeTest):
                 params=None,
                 json={"dsl": "model AuthZ 1.0"},
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

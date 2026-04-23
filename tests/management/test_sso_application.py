@@ -13,6 +13,7 @@ from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
 from .. import common
+from ..testutils import SSLMatcher
 
 
 class TestSSOApplication(common.DescopeTest):
@@ -78,6 +79,7 @@ class TestSSOApplication(common.DescopeTest):
                     "forceAuthentication": True,
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -190,6 +192,7 @@ class TestSSOApplication(common.DescopeTest):
                     "defaultSignatureAlgorithm": "sha256",
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -239,6 +242,7 @@ class TestSSOApplication(common.DescopeTest):
                     "forceAuthentication": False,
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -353,6 +357,7 @@ class TestSSOApplication(common.DescopeTest):
                     "defaultSignatureAlgorithm": None,
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -389,6 +394,7 @@ class TestSSOApplication(common.DescopeTest):
                     "id": "app1",
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -452,6 +458,7 @@ class TestSSOApplication(common.DescopeTest):
                 },
                 params={"id": "app1"},
                 follow_redirects=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -532,5 +539,6 @@ class TestSSOApplication(common.DescopeTest):
                 },
                 params=None,
                 follow_redirects=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

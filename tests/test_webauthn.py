@@ -7,6 +7,7 @@ from descope import AuthException
 from descope.auth import Auth
 from descope.authmethod.webauthn import WebAuthn
 from descope.common import DEFAULT_TIMEOUT_SECONDS, EndpointsV1, LoginOptions
+from tests.testutils import SSLMatcher
 
 from . import common
 
@@ -126,6 +127,7 @@ class TestWebauthN(common.DescopeTest):
                 params=None,
                 json={"user": {"loginId": "id1"}, "origin": "https://example.com"},
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(res, valid_response)
@@ -181,6 +183,7 @@ class TestWebauthN(common.DescopeTest):
                 params=None,
                 json={"transactionId": "t01", "response": "response01"},
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertIsNotNone(webauthn.sign_up_finish("t01", "response01"))
@@ -247,6 +250,7 @@ class TestWebauthN(common.DescopeTest):
                     "loginOptions": {},
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(res, valid_response)
@@ -311,6 +315,7 @@ class TestWebauthN(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(res, valid_response)
@@ -360,6 +365,7 @@ class TestWebauthN(common.DescopeTest):
                 params=None,
                 json={"transactionId": "t01", "response": "response01"},
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertIsNotNone(webauthn.sign_up_finish("t01", "response01"))
@@ -418,6 +424,7 @@ class TestWebauthN(common.DescopeTest):
                     "origin": "https://example.com",
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(res, valid_response)
@@ -493,6 +500,7 @@ class TestWebauthN(common.DescopeTest):
                 params=None,
                 json={"loginId": "dummy@dummy.com", "origin": "https://example.com"},
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(res, valid_response)
@@ -540,6 +548,7 @@ class TestWebauthN(common.DescopeTest):
                 params=None,
                 json={"transactionId": "t01", "response": "response01"},
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertIsNotNone(webauthn.sign_up_finish("t01", "response01"))

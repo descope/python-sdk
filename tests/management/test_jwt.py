@@ -7,6 +7,7 @@ from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtLoginOptions, MgmtV1
 
 from .. import common
+from ..testutils import SSLMatcher
 
 
 class TestJWT(common.DescopeTest):
@@ -66,6 +67,7 @@ class TestJWT(common.DescopeTest):
                 },
                 follow_redirects=False,
                 params=None,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -86,6 +88,7 @@ class TestJWT(common.DescopeTest):
                 },
                 follow_redirects=False,
                 params=None,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -139,6 +142,7 @@ class TestJWT(common.DescopeTest):
                 },
                 follow_redirects=False,
                 params=None,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -146,7 +150,9 @@ class TestJWT(common.DescopeTest):
         with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"jwt": "stepup_response"}""")
+            network_resp.json.return_value = json.loads(
+                """{"jwt": "stepup_response"}"""
+            )
             mock_post.return_value = network_resp
             resp = client.mgmt.jwt.impersonate("imp1", "imp2", True, stepup=True)
             self.assertEqual(resp, "stepup_response")
@@ -168,6 +174,7 @@ class TestJWT(common.DescopeTest):
                 },
                 follow_redirects=False,
                 params=None,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -212,6 +219,7 @@ class TestJWT(common.DescopeTest):
                 },
                 follow_redirects=False,
                 params=None,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -259,6 +267,7 @@ class TestJWT(common.DescopeTest):
                 },
                 follow_redirects=False,
                 params=None,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -309,6 +318,7 @@ class TestJWT(common.DescopeTest):
                 },
                 follow_redirects=False,
                 params=None,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -359,6 +369,7 @@ class TestJWT(common.DescopeTest):
                 },
                 follow_redirects=False,
                 params=None,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -392,5 +403,6 @@ class TestJWT(common.DescopeTest):
                 },
                 follow_redirects=False,
                 params=None,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

@@ -7,6 +7,7 @@ from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
 from .. import common
+from ..testutils import SSLMatcher
 
 
 class TestAudit(common.DescopeTest):
@@ -78,6 +79,7 @@ class TestAudit(common.DescopeTest):
                 params=None,
                 json={"noTenants": False},
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -127,5 +129,6 @@ class TestAudit(common.DescopeTest):
                     "data": {"some": "data"},
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

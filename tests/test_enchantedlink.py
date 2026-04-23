@@ -13,6 +13,7 @@ from descope.common import (
     LoginOptions,
     SignUpOptions,
 )
+from tests.testutils import SSLMatcher
 
 from . import common
 
@@ -127,6 +128,7 @@ class TestEnchantedLink(common.DescopeTest):
                     "loginOptions": {},
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(res["pendingRef"], "aaaa")
@@ -159,6 +161,7 @@ class TestEnchantedLink(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -197,6 +200,7 @@ class TestEnchantedLink(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -234,6 +238,7 @@ class TestEnchantedLink(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -281,6 +286,7 @@ class TestEnchantedLink(common.DescopeTest):
                     "email": "dummy@dummy.com",
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(res["pendingRef"], "aaaa")
@@ -310,6 +316,7 @@ class TestEnchantedLink(common.DescopeTest):
                     "email": "dummy@dummy.com",
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(res["pendingRef"], "aaaa")
@@ -349,6 +356,7 @@ class TestEnchantedLink(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(res["pendingRef"], "aaaa")
@@ -385,6 +393,7 @@ class TestEnchantedLink(common.DescopeTest):
                     "loginOptions": {},
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -419,6 +428,7 @@ class TestEnchantedLink(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -515,6 +525,7 @@ class TestEnchantedLink(common.DescopeTest):
                     "onMergeUseExisting": False,
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
                 params=None,
             )
@@ -548,6 +559,7 @@ class TestEnchantedLink(common.DescopeTest):
                     "templateOptions": {"bla": "blue"},
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
                 params=None,
             )

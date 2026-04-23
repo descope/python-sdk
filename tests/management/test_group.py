@@ -5,6 +5,7 @@ from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
 from .. import common
+from ..testutils import SSLMatcher
 
 
 class TestGroup(common.DescopeTest):
@@ -55,6 +56,7 @@ class TestGroup(common.DescopeTest):
                     "tenantId": "someTenantId",
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -97,6 +99,7 @@ class TestGroup(common.DescopeTest):
                     "userIds": ["one", "two"],
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -137,5 +140,6 @@ class TestGroup(common.DescopeTest):
                     "groupId": "someGroupId",
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

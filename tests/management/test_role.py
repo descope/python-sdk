@@ -7,6 +7,7 @@ from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
 from .. import common
+from ..testutils import SSLMatcher
 
 
 class TestRole(common.DescopeTest):
@@ -64,6 +65,7 @@ class TestRole(common.DescopeTest):
                     "private": False,
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -124,6 +126,7 @@ class TestRole(common.DescopeTest):
                     ]
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -186,6 +189,7 @@ class TestRole(common.DescopeTest):
                     ]
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -239,6 +243,7 @@ class TestRole(common.DescopeTest):
                     "private": False,
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -273,6 +278,7 @@ class TestRole(common.DescopeTest):
                 params=None,
                 json={"name": "name", "tenantId": None},
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -319,6 +325,7 @@ class TestRole(common.DescopeTest):
                     ]
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -368,6 +375,7 @@ class TestRole(common.DescopeTest):
                 },
                 params=None,
                 follow_redirects=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -428,6 +436,7 @@ class TestRole(common.DescopeTest):
                     "permissionNames": ["p1", "p2"],
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -464,6 +473,7 @@ class TestRole(common.DescopeTest):
                     "private": True,
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -507,6 +517,7 @@ class TestRole(common.DescopeTest):
                     "private": True,
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -539,5 +550,6 @@ class TestRole(common.DescopeTest):
                     "private": None,
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

@@ -13,6 +13,7 @@ from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
 from .. import common
+from ..testutils import SSLMatcher
 
 
 class TestManagementKey(common.DescopeTest):
@@ -116,6 +117,7 @@ class TestManagementKey(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -186,6 +188,7 @@ class TestManagementKey(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -301,6 +304,7 @@ class TestManagementKey(common.DescopeTest):
                     "status": "inactive",
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -361,6 +365,7 @@ class TestManagementKey(common.DescopeTest):
                 },
                 params={"id": "mk1"},
                 follow_redirects=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -401,6 +406,7 @@ class TestManagementKey(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -472,5 +478,6 @@ class TestManagementKey(common.DescopeTest):
                 },
                 params=None,
                 follow_redirects=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
