@@ -1603,4 +1603,4 @@ flask = ["Flask"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.8.1,<4.0"
-content-hash = "8e208d9829061196b040470832f52b7e5bd1c1fc0132ed6bde670f08738813e2"
+content-hash = "97c5d2b78516fda4f52cca4c9dfabb01147b1e80a56d8ee8d8714c42c52eb50a"

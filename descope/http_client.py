@@ -147,7 +147,7 @@ class DescopeResponse:
 
     @property
     def ok(self):
-        """True if status code < 400."""
+        """True if status code indicates success (2xx)."""
         return self.raw.is_success
 
 
