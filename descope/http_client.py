@@ -295,7 +295,6 @@ class HTTPClient:
         self,
         uri: str,
         *,
-        body: dict | list[dict] | list[str] | None = None,
         params=None,
         pswd: str | None = None,
     ) -> httpx.Response:
@@ -303,7 +302,6 @@ class HTTPClient:
             lambda: httpx.delete(
                 f"{self.base_url}{uri}",
                 params=params,
-                json=body,
                 headers=self._get_default_headers(pswd),
                 follow_redirects=False,
                 verify=self.client_verify,
