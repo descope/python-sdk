@@ -2,17 +2,20 @@ from __future__ import annotations
 
 import os
 import platform
+import ssl
 import threading
 import time
 from http import HTTPStatus
 from typing import cast
+
+import certifi
 
 try:
     from importlib.metadata import version
 except ImportError:  # pragma: no cover
     from pkg_resources import get_distribution
 
-import requests
+import httpx
 
 from descope.common import (
     DEFAULT_BASE_URL,
@@ -52,14 +55,14 @@ _default_headers = {
 
 class DescopeResponse:
     """
-    Wrapper around requests.Response that provides dict-like access to JSON data
+    Wrapper around httpx.Response that provides dict-like access to JSON data
     while preserving access to HTTP metadata (headers, status_code, etc.).
 
     This allows backward compatibility (acting like a dict) while exposing
     HTTP metadata like cf-ray headers for debugging.
     """
 
-    def __init__(self, response: requests.Response):
+    def __init__(self, response: httpx.Response):
         self.raw = response
         self._json_data = None
 
@@ -144,8 +147,8 @@ class DescopeResponse:
 
     @property
     def ok(self):
-        """True if status code < 400."""
-        return self.raw.ok
+        """True if status code indicates success (2xx)."""
+        return self.raw.is_success
 
 
 class HTTPClient:
@@ -180,6 +183,19 @@ class HTTPClient:
         self.verbose = verbose
         self._thread_local = threading.local()
 
+        # Setup SSL verification for httpx (backwards compatibility with requests)
+        self.client_verify: bool | ssl.SSLContext = False
+        if secure:
+            ssl_ctx = ssl.create_default_context(
+                cafile=os.environ.get("SSL_CERT_FILE", certifi.where()),
+                capath=os.environ.get("SSL_CERT_DIR"),
+            )
+            if os.environ.get("REQUESTS_CA_BUNDLE"):
+                ssl_ctx.load_verify_locations(
+                    cafile=os.environ.get("REQUESTS_CA_BUNDLE")
+                )
+            self.client_verify = ssl_ctx
+
     # ------------- public API -------------
     def get(
         self,
@@ -188,14 +204,14 @@ class HTTPClient:
         params=None,
         allow_redirects: bool | None = True,
         pswd: str | None = None,
-    ) -> requests.Response:
+    ) -> httpx.Response:
         response = self._execute_with_retry(
-            lambda: requests.get(
+            lambda: httpx.get(
                 f"{self.base_url}{uri}",
                 headers=self._get_default_headers(pswd),
                 params=params,
-                allow_redirects=cast(bool, allow_redirects),
-                verify=self.secure,
+                follow_redirects=cast(bool, allow_redirects),
+                verify=self.client_verify,
                 timeout=self.timeout_seconds,
             )
         )
@@ -212,14 +228,14 @@ class HTTPClient:
         params=None,
         pswd: str | None = None,
         base_url: str | None = None,
-    ) -> requests.Response:
+    ) -> httpx.Response:
         response = self._execute_with_retry(
-            lambda: requests.post(
+            lambda: httpx.post(
                 f"{base_url or self.base_url}{uri}",
                 headers=self._get_default_headers(pswd),
                 json=body,
-                allow_redirects=False,
-                verify=self.secure,
+                follow_redirects=False,
+                verify=self.client_verify,
                 params=params,
                 timeout=self.timeout_seconds,
             )
@@ -236,14 +252,14 @@ class HTTPClient:
         body: dict | list[dict] | list[str] | None = None,
         params=None,
         pswd: str | None = None,
-    ) -> requests.Response:
+    ) -> httpx.Response:
         response = self._execute_with_retry(
-            lambda: requests.put(
+            lambda: httpx.put(
                 f"{self.base_url}{uri}",
                 headers=self._get_default_headers(pswd),
                 json=body,
-                allow_redirects=False,
-                verify=self.secure,
+                follow_redirects=False,
+                verify=self.client_verify,
                 params=params,
                 timeout=self.timeout_seconds,
             )
@@ -258,14 +274,14 @@ class HTTPClient:
         body: dict | list[dict] | list[str] | None,
         params=None,
         pswd: str | None = None,
-    ) -> requests.Response:
+    ) -> httpx.Response:
         response = self._execute_with_retry(
-            lambda: requests.patch(
+            lambda: httpx.patch(
                 f"{self.base_url}{uri}",
                 headers=self._get_default_headers(pswd),
                 json=body,
-                allow_redirects=False,
-                verify=self.secure,
+                follow_redirects=False,
+                verify=self.client_verify,
                 params=params,
                 timeout=self.timeout_seconds,
             )
@@ -279,18 +295,16 @@ class HTTPClient:
         self,
         uri: str,
         *,
-        body: dict | list[dict] | list[str] | None = None,
         params=None,
         pswd: str | None = None,
-    ) -> requests.Response:
+    ) -> httpx.Response:
         response = self._execute_with_retry(
-            lambda: requests.delete(
+            lambda: httpx.delete(
                 f"{self.base_url}{uri}",
                 params=params,
-                json=body,
                 headers=self._get_default_headers(pswd),
-                allow_redirects=False,
-                verify=self.secure,
+                follow_redirects=False,
+                verify=self.client_verify,
                 timeout=self.timeout_seconds,
             )
         )
@@ -327,7 +341,7 @@ class HTTPClient:
         return self._get_default_headers(pswd)
 
     # ------------- helpers -------------
-    def _execute_with_retry(self, request_fn) -> requests.Response:
+    def _execute_with_retry(self, request_fn) -> httpx.Response:
         """Execute request_fn and retry on retryable status codes.
 
         Retries up to 3 times: first retry after 100ms, subsequent retries after 5s each.
@@ -381,7 +395,7 @@ class HTTPClient:
             )
 
     def _raise_from_response(self, response):
-        if response.ok:
+        if response.is_success:
             return
         if response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
             self._raise_rate_limit_exception(response)

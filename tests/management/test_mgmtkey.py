@@ -13,6 +13,7 @@ from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
 from .. import common
+from ..testutils import SSLMatcher
 
 
 class TestManagementKey(common.DescopeTest):
@@ -58,9 +59,9 @@ class TestManagementKey(common.DescopeTest):
         )
 
         # Test success flow
-        with patch("requests.put") as mock_put:
+        with patch("httpx.put") as mock_put:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = {
                 "cleartext": "cleartext-secret",
                 "key": {
@@ -115,8 +116,8 @@ class TestManagementKey(common.DescopeTest):
                         "companyRoles": ["role1"],
                     },
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -129,9 +130,9 @@ class TestManagementKey(common.DescopeTest):
         )
 
         # Test success flow with project_roles and tag_roles
-        with patch("requests.put") as mock_put:
+        with patch("httpx.put") as mock_put:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = {
                 "cleartext": "cleartext-secret",
                 "key": {
@@ -186,8 +187,8 @@ class TestManagementKey(common.DescopeTest):
                         "tagRoles": [{"tags": ["tag1"], "roles": ["viewer"]}],
                     },
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -251,9 +252,9 @@ class TestManagementKey(common.DescopeTest):
         )
 
         # Test success flow
-        with patch("requests.patch") as mock_patch:
+        with patch("httpx.patch") as mock_patch:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = {
                 "key": {
                     "id": "mk1",
@@ -302,8 +303,8 @@ class TestManagementKey(common.DescopeTest):
                     "permittedIps": ["1.2.3.4"],
                     "status": "inactive",
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -327,9 +328,9 @@ class TestManagementKey(common.DescopeTest):
         )
 
         # Test success flow
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = {
                 "key": {
                     "id": "mk1",
@@ -363,8 +364,8 @@ class TestManagementKey(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 params={"id": "mk1"},
-                allow_redirects=True,
-                verify=True,
+                follow_redirects=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -388,9 +389,9 @@ class TestManagementKey(common.DescopeTest):
         )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = {"total": 2}
             mock_post.return_value = network_resp
             resp = client.mgmt.management_key.delete(["mk1", "mk2"])
@@ -404,8 +405,8 @@ class TestManagementKey(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                     "x-descope-project-id": self.dummy_project_id,
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -418,9 +419,9 @@ class TestManagementKey(common.DescopeTest):
         )
 
         # Test success flow
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = {
                 "keys": [
                     {
@@ -476,7 +477,7 @@ class TestManagementKey(common.DescopeTest):
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                 },
                 params=None,
-                allow_redirects=True,
-                verify=True,
+                follow_redirects=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
