@@ -45,12 +45,12 @@ jobs:
           ref: ${{ needs.release-please.outputs.tag_name }}
 
       - name: Setup
-        uses: descope/.github/.github/actions/python/poetry/setup@da84b8eddd965fef6ef85ebd7f5c91174c071805 # main
+        uses: descope/.github/.github/actions/python/poetry/setup@4cc3ecb9a375a69f98e6218f5420a369e4ba77e5 # main
         with:
           python-version: "3.11"
 
       - name: Build
-        uses: descope/.github/.github/actions/python/poetry/build@da84b8eddd965fef6ef85ebd7f5c91174c071805 # main
+        uses: descope/.github/.github/actions/python/poetry/build@4cc3ecb9a375a69f98e6218f5420a369e4ba77e5 # main
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # release/v1
