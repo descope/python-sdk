@@ -1,5 +1,6 @@
 import importlib
 import importlib.util
+import os
 import sys
 import types
 import unittest
@@ -147,7 +148,7 @@ class TestDescopeResponse(unittest.TestCase):
         client = HTTPClient(project_id="test123", verbose=True)
         try:
             client.get("/test")
-            assert False, "Should have raised AuthException"
+            raise AssertionError("Should have raised AuthException")
         except AuthException:
             pass
 
@@ -813,6 +814,239 @@ class TestRetryMechanism(unittest.TestCase):
 
         assert mock_get.call_count == 1
         mock_sleep.assert_not_called()
+
+
+class TestSSLConfiguration(unittest.TestCase):
+    """Tests for SSL/TLS verification setup in HTTPClient."""
+
+    # ------------------------------------------------------------------ #
+    # client_verify attribute                                              #
+    # ------------------------------------------------------------------ #
+
+    def test_secure_default_uses_ssl_context(self):
+        """secure=True (default) → client_verify is an SSLContext."""
+        import ssl
+
+        client = HTTPClient(project_id="test123")
+        assert isinstance(client.client_verify, ssl.SSLContext)
+
+    def test_secure_false_uses_plain_false(self):
+        """secure=False → client_verify is the boolean False."""
+        client = HTTPClient(project_id="test123", secure=False)
+        assert client.client_verify is False
+
+    def test_default_cert_source_is_certifi(self):
+        """When no SSL env vars are set, certifi.where() is used as cafile."""
+        import certifi
+
+        with patch.dict(
+            "os.environ",
+            {},
+            clear=False,
+        ):
+            # Remove all SSL overrides if present so we hit the default path
+            for key in ("SSL_CERT_FILE", "SSL_CERT_DIR", "REQUESTS_CA_BUNDLE"):
+                os.environ.pop(key, None)
+
+            with patch(
+                "descope.http_client.ssl.create_default_context"
+            ) as mock_ctx_factory:
+                mock_ssl_ctx = Mock()
+                mock_ctx_factory.return_value = mock_ssl_ctx
+
+                HTTPClient(project_id="test123", secure=True)
+
+                mock_ctx_factory.assert_called_once_with(
+                    cafile=certifi.where(),
+                    capath=None,
+                )
+
+    def test_ssl_cert_file_env_overrides_certifi(self):
+        """SSL_CERT_FILE replaces certifi.where() as the cafile."""
+        with patch.dict(
+            "os.environ", {"SSL_CERT_FILE": "/tmp/custom.pem"}, clear=False
+        ):
+            os.environ.pop("SSL_CERT_DIR", None)
+            os.environ.pop("REQUESTS_CA_BUNDLE", None)
+
+            with patch(
+                "descope.http_client.ssl.create_default_context"
+            ) as mock_ctx_factory:
+                mock_ctx_factory.return_value = Mock()
+
+                HTTPClient(project_id="test123", secure=True)
+
+                mock_ctx_factory.assert_called_once_with(
+                    cafile="/tmp/custom.pem",
+                    capath=None,
+                )
+
+    def test_ssl_cert_dir_env_passed_as_capath(self):
+        """SSL_CERT_DIR is forwarded as the capath argument."""
+        import certifi
+
+        with patch.dict("os.environ", {"SSL_CERT_DIR": "/tmp/certs"}, clear=False):
+            os.environ.pop("SSL_CERT_FILE", None)
+            os.environ.pop("REQUESTS_CA_BUNDLE", None)
+
+            with patch(
+                "descope.http_client.ssl.create_default_context"
+            ) as mock_ctx_factory:
+                mock_ctx_factory.return_value = Mock()
+
+                HTTPClient(project_id="test123", secure=True)
+
+                mock_ctx_factory.assert_called_once_with(
+                    cafile=certifi.where(),
+                    capath="/tmp/certs",
+                )
+
+    def test_requests_ca_bundle_env_loaded_into_context(self):
+        """REQUESTS_CA_BUNDLE triggers an extra load_verify_locations call."""
+        with patch.dict(
+            "os.environ", {"REQUESTS_CA_BUNDLE": "/tmp/extra.pem"}, clear=False
+        ):
+            os.environ.pop("SSL_CERT_FILE", None)
+            os.environ.pop("SSL_CERT_DIR", None)
+
+            with patch(
+                "descope.http_client.ssl.create_default_context"
+            ) as mock_ctx_factory:
+                mock_ssl_ctx = Mock()
+                mock_ctx_factory.return_value = mock_ssl_ctx
+
+                HTTPClient(project_id="test123", secure=True)
+
+                mock_ssl_ctx.load_verify_locations.assert_called_once_with(
+                    cafile="/tmp/extra.pem"
+                )
+
+    def test_no_extra_load_when_requests_ca_bundle_unset(self):
+        """load_verify_locations is NOT called when REQUESTS_CA_BUNDLE is absent."""
+        with patch.dict("os.environ", {}, clear=False):
+            os.environ.pop("REQUESTS_CA_BUNDLE", None)
+
+            with patch(
+                "descope.http_client.ssl.create_default_context"
+            ) as mock_ctx_factory:
+                mock_ssl_ctx = Mock()
+                mock_ctx_factory.return_value = mock_ssl_ctx
+
+                HTTPClient(project_id="test123", secure=True)
+
+                mock_ssl_ctx.load_verify_locations.assert_not_called()
+
+    # ------------------------------------------------------------------ #
+    # verify= forwarded to every httpx verb                               #
+    # ------------------------------------------------------------------ #
+
+    def _make_success_response(self):
+        resp = Mock()
+        resp.is_success = True
+        resp.status_code = 200
+        resp.json.return_value = {}
+        return resp
+
+    @patch("httpx.get")
+    def test_get_forwards_verify(self, mock_get):
+        """GET passes SSLContext (secure) or False (insecure) as verify=."""
+        from tests.testutils import SSLMatcher
+
+        mock_get.return_value = self._make_success_response()
+
+        HTTPClient(project_id="test123", secure=True).get("/x")
+        assert mock_get.call_args.kwargs["verify"] == SSLMatcher()
+
+        mock_get.reset_mock()
+        mock_get.return_value = self._make_success_response()
+
+        HTTPClient(project_id="test123", secure=False).get("/x")
+        assert mock_get.call_args.kwargs["verify"] == SSLMatcher(insecure=True)
+
+    @patch("httpx.post")
+    def test_post_forwards_verify(self, mock_post):
+        """POST passes SSLContext (secure) or False (insecure) as verify=."""
+        from tests.testutils import SSLMatcher
+
+        mock_post.return_value = self._make_success_response()
+
+        HTTPClient(project_id="test123", secure=True).post("/x", body={})
+        assert mock_post.call_args.kwargs["verify"] == SSLMatcher()
+
+        mock_post.reset_mock()
+        mock_post.return_value = self._make_success_response()
+
+        HTTPClient(project_id="test123", secure=False).post("/x", body={})
+        assert mock_post.call_args.kwargs["verify"] == SSLMatcher(insecure=True)
+
+    @patch("httpx.put")
+    def test_put_forwards_verify(self, mock_put):
+        """PUT passes SSLContext (secure) or False (insecure) as verify=."""
+        from tests.testutils import SSLMatcher
+
+        mock_put.return_value = self._make_success_response()
+
+        HTTPClient(project_id="test123", secure=True).put("/x", body={})
+        assert mock_put.call_args.kwargs["verify"] == SSLMatcher()
+
+        mock_put.reset_mock()
+        mock_put.return_value = self._make_success_response()
+
+        HTTPClient(project_id="test123", secure=False).put("/x", body={})
+        assert mock_put.call_args.kwargs["verify"] == SSLMatcher(insecure=True)
+
+    @patch("httpx.patch")
+    def test_patch_forwards_verify(self, mock_patch):
+        """PATCH passes SSLContext (secure) or False (insecure) as verify=."""
+        from tests.testutils import SSLMatcher
+
+        mock_patch.return_value = self._make_success_response()
+
+        HTTPClient(project_id="test123", secure=True).patch("/x", body={})
+        assert mock_patch.call_args.kwargs["verify"] == SSLMatcher()
+
+        mock_patch.reset_mock()
+        mock_patch.return_value = self._make_success_response()
+
+        HTTPClient(project_id="test123", secure=False).patch("/x", body={})
+        assert mock_patch.call_args.kwargs["verify"] == SSLMatcher(insecure=True)
+
+    @patch("httpx.delete")
+    def test_delete_forwards_verify(self, mock_delete):
+        """DELETE passes SSLContext (secure) or False (insecure) as verify=."""
+        from tests.testutils import SSLMatcher
+
+        mock_delete.return_value = self._make_success_response()
+
+        HTTPClient(project_id="test123", secure=True).delete("/x")
+        assert mock_delete.call_args.kwargs["verify"] == SSLMatcher()
+
+        mock_delete.reset_mock()
+        mock_delete.return_value = self._make_success_response()
+
+        HTTPClient(project_id="test123", secure=False).delete("/x")
+        assert mock_delete.call_args.kwargs["verify"] == SSLMatcher(insecure=True)
+
+    # ------------------------------------------------------------------ #
+    # SSLMatcher self-tests                                                #
+    # ------------------------------------------------------------------ #
+
+    def test_ssl_matcher_repr(self):
+        from tests.testutils import SSLMatcher
+
+        assert repr(SSLMatcher()) == "SSLMatcher()"
+        assert repr(SSLMatcher(insecure=True)) == "SSLMatcher(insecure=True)"
+
+    def test_ssl_matcher_equality(self):
+        import ssl
+
+        from tests.testutils import SSLMatcher
+
+        real_ctx = ssl.create_default_context()
+        assert SSLMatcher() == real_ctx
+        assert not (SSLMatcher() == False)  # noqa: E712
+        assert SSLMatcher(insecure=True) == False  # noqa: E712
+        assert not (SSLMatcher(insecure=True) == real_ctx)
 
 
 if __name__ == "__main__":
