@@ -135,6 +135,7 @@ jobs:
   done:
     name: All Checks Passed
     runs-on: ubuntu-latest
+    permissions: {}
     needs: [validate-pr-title, build, coverage, gitleaks]
     steps:
       - name: Yey, all checks passed!
