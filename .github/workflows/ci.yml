@@ -131,3 +131,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+  done:
+    name: All Checks Passed
+    runs-on: ubuntu-latest
+    needs: [validate-pr-title, build, coverage, gitleaks]
+    steps:
+      - name: Yey, all checks passed!
+        run: echo "All checks passed! :tada:"
