@@ -287,7 +287,7 @@ class TestPermission(common.DescopeTest):
                 [{"name": "P1", "newName": "P1-new"}],
             )
 
-        # Test success flow
+        # Test success flow — by name
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
             self.assertIsNone(
@@ -310,6 +310,36 @@ class TestPermission(common.DescopeTest):
                     "permissions": [
                         {"name": "P1", "newName": "P1-new", "description": "d1"},
                         {"name": "P2", "newName": "P2-new"},
+                    ]
+                },
+                follow_redirects=False,
+                verify=SSLMatcher(),
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test success flow — by id
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
+            self.assertIsNone(
+                client.mgmt.permission.update_batch(
+                    [
+                        {"id": "PERM1", "newName": "P1-new", "description": "d1"},
+                        {"id": "PERM2", "newName": "P2-new"},
+                    ]
+                )
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.permission_update_batch_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "permissions": [
+                        {"id": "PERM1", "newName": "P1-new", "description": "d1"},
+                        {"id": "PERM2", "newName": "P2-new"},
                     ]
                 },
                 follow_redirects=False,

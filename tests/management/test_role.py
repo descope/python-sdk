@@ -147,7 +147,7 @@ class TestRole(common.DescopeTest):
                 [{"name": "R1", "newName": "R1-new"}],
             )
 
-        # Test success flow
+        # Test success flow — by name
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
             self.assertIsNone(
@@ -186,6 +186,36 @@ class TestRole(common.DescopeTest):
                             "private": True,
                         },
                         {"name": "R2", "newName": "R2-new"},
+                    ]
+                },
+                follow_redirects=False,
+                verify=SSLMatcher(),
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test success flow — by id
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
+            self.assertIsNone(
+                client.mgmt.role.update_batch(
+                    [
+                        {"id": "ROL1", "newName": "R1-new", "description": "d1"},
+                        {"id": "ROL2", "newName": "R2-new"},
+                    ]
+                )
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.role_update_batch_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "roles": [
+                        {"id": "ROL1", "newName": "R1-new", "description": "d1"},
+                        {"id": "ROL2", "newName": "R2-new"},
                     ]
                 },
                 follow_redirects=False,
