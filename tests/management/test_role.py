@@ -247,6 +247,60 @@ class TestRole(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+    def test_update_by_id(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flow
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.role.update_by_id,
+                "ROL123",
+                "new-name",
+            )
+
+        # Test success flow
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
+            self.assertIsNone(
+                client.mgmt.role.update_by_id(
+                    "ROL123",
+                    "new-name",
+                    "new-description",
+                    ["P1", "P2"],
+                    "t1",
+                    True,
+                    False,
+                )
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.role_update_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "id": "ROL123",
+                    "newName": "new-name",
+                    "description": "new-description",
+                    "permissionNames": ["P1", "P2"],
+                    "tenantId": "t1",
+                    "default": True,
+                    "private": False,
+                },
+                follow_redirects=False,
+                verify=SSLMatcher(),
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
     def test_delete(self):
         client = DescopeClient(
             self.dummy_project_id,
@@ -282,7 +336,7 @@ class TestRole(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_update_with_id(self):
+    def test_delete_by_id(self):
         client = DescopeClient(
             self.dummy_project_id,
             self.public_key_dict,
@@ -295,68 +349,14 @@ class TestRole(common.DescopeTest):
             mock_post.return_value.is_success = False
             self.assertRaises(
                 AuthException,
-                client.mgmt.role.update,
-                id="ROL123",
-                new_name="new-name",
+                client.mgmt.role.delete_by_id,
+                "ROL123",
             )
 
         # Test success flow
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
-            self.assertIsNone(
-                client.mgmt.role.update(
-                    new_name="new-name",
-                    description="new-description",
-                    permission_names=["P1", "P2"],
-                    tenant_id="t1",
-                    default=True,
-                    private=False,
-                    id="ROL123",
-                )
-            )
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.role_update_path}",
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
-                params=None,
-                json={
-                    "id": "ROL123",
-                    "newName": "new-name",
-                    "description": "new-description",
-                    "permissionNames": ["P1", "P2"],
-                    "tenantId": "t1",
-                    "default": True,
-                    "private": False,
-                },
-                follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )
-
-    def test_delete_with_id(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
-
-        # Test failed flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.role.delete,
-                id="ROL123",
-            )
-
-        # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNone(client.mgmt.role.delete(tenant_id="t1", id="ROL123"))
+            self.assertIsNone(client.mgmt.role.delete_by_id("ROL123", "t1"))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.role_delete_path}",
                 headers={
@@ -379,7 +379,7 @@ class TestRole(common.DescopeTest):
             self.dummy_management_key,
         )
 
-        # Test failed flow (by names, original call style)
+        # Test failed flow
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = False
             self.assertRaises(
@@ -388,14 +388,16 @@ class TestRole(common.DescopeTest):
                 [{"name": "R1"}],
             )
 
-        # Test success flow — by names with tenantId (original call style)
+        # Test success flow
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
             self.assertIsNone(
-                client.mgmt.role.delete_batch([
-                    {"name": "R1", "tenantId": "t1"},
-                    {"name": "R2"},
-                ])
+                client.mgmt.role.delete_batch(
+                    [
+                        {"name": "R1", "tenantId": "t1"},
+                        {"name": "R2"},
+                    ]
+                )
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.role_delete_batch_path}",
@@ -405,18 +407,38 @@ class TestRole(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
-                json={"roleNames": ["R1", "R2"], "tenantId": "t1"},
+                json={
+                    "roles": [
+                        {"name": "R1", "tenantId": "t1"},
+                        {"name": "R2"},
+                    ]
+                },
                 follow_redirects=False,
                 verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-        # Test success flow — by IDs (new kwarg)
+    def test_delete_batch_by_ids(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flow
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.role.delete_batch_by_ids,
+                ["ROL1"],
+            )
+
+        # Test success flow
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
-            self.assertIsNone(
-                client.mgmt.role.delete_batch(role_ids=["ROL1", "ROL2"])
-            )
+            self.assertIsNone(client.mgmt.role.delete_batch_by_ids(["ROL1", "ROL2"], "t1"))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.role_delete_batch_path}",
                 headers={
@@ -425,7 +447,7 @@ class TestRole(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
-                json={"roleIds": ["ROL1", "ROL2"]},
+                json={"roleIds": ["ROL1", "ROL2"], "tenantId": "t1"},
                 follow_redirects=False,
                 verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -584,7 +606,6 @@ class TestRole(common.DescopeTest):
             self.dummy_management_key,
         )
 
-        # Test private=True
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
             self.assertIsNone(
@@ -621,7 +642,6 @@ class TestRole(common.DescopeTest):
             self.dummy_management_key,
         )
 
-        # Test private=True
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
             self.assertIsNone(
@@ -665,7 +685,6 @@ class TestRole(common.DescopeTest):
             self.dummy_management_key,
         )
 
-        # Test without private parameter (should be None)
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
             self.assertIsNone(client.mgmt.role.create("SimpleRole", "Simple role"))

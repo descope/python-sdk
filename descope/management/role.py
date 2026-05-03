@@ -77,7 +77,7 @@ class Role(HTTPBase):
 
         Args:
         roles (List[dict]): List of role objects, each with:
-            - name (str): current role name (or id: role ID).
+            - name (str): current role name.
             - newName (str): new role name.
             - description (str): Optional new description.
             - permissionNames (List[str]): Optional list of permission names.
@@ -95,9 +95,7 @@ class Role(HTTPBase):
 
     def delete_batch(
         self,
-        roles: Optional[List[dict]] = None,
-        *,
-        role_ids: Optional[List[str]] = None,
+        roles: List[dict],
     ):
         """
         Delete a batch of roles in a single atomic transaction.
@@ -107,101 +105,153 @@ class Role(HTTPBase):
         roles (List[dict]): List of role objects to delete, each with:
             - name (str): role name.
             - tenantId (str): Optional tenant ID.
-        role_ids (List[str]): Optional list of role IDs to delete (e.g. ROL...).
 
         Raise:
         AuthException: raised if deletion operation fails
         """
-        body: dict = {}
-        if roles:
-            names = [r["name"] for r in roles if r.get("name")]
-            if names:
-                body["roleNames"] = names
-            tenant_id = next((r.get("tenantId") for r in roles if r.get("tenantId")), None)
-            if tenant_id:
-                body["tenantId"] = tenant_id
-        if role_ids:
-            body["roleIds"] = role_ids
         self._http.post(
             MgmtV1.role_delete_batch_path,
-            body=body,
+            body={"roles": roles},
+        )
+
+    def delete_batch_by_ids(
+        self,
+        role_ids: List[str],
+        tenant_id: Optional[str] = None,
+    ):
+        """
+        Delete a batch of roles by their IDs in a single atomic transaction.
+        IMPORTANT: This action is irreversible. Use carefully.
+
+        Args:
+        role_ids (List[str]): List of role IDs to delete (e.g. ROL...).
+        tenant_id (str): Optional tenant ID the roles belong to.
+
+        Raise:
+        AuthException: raised if deletion operation fails
+        """
+        self._http.post(
+            MgmtV1.role_delete_batch_path,
+            body={"roleIds": role_ids, "tenantId": tenant_id},
         )
 
     def update(
         self,
-        name: Optional[str] = None,
-        new_name: str = "",
+        name: str,
+        new_name: str,
         description: Optional[str] = None,
         permission_names: Optional[List[str]] = None,
         tenant_id: Optional[str] = None,
         default: Optional[bool] = None,
         private: Optional[bool] = None,
-        *,
-        id: Optional[str] = None,
     ):
         """
-        Update an existing role. Identify by name or ID (exactly one required).
-        IMPORTANT: All parameters are used as overrides to the existing role.
-        Empty fields will override populated fields. Use carefully.
+        Update an existing role with the given various fields. IMPORTANT: All parameters are used as overrides
+        to the existing role. Empty fields will override populated fields. Use carefully.
 
         Args:
-        name (str): current role name (mutually exclusive with id).
+        name (str): role name.
         new_name (str): role updated name.
         description (str): Optional description to briefly explain what this role allows.
         permission_names (List[str]): Optional list of names of permissions this role grants.
         tenant_id (str): Optional tenant ID to update the role in.
         default (bool): Optional marks this role as default role.
         private (bool): Optional marks this role as private role.
-        id (str): role ID, e.g. ROL... (mutually exclusive with name).
 
         Raise:
         AuthException: raised if update operation fails
         """
         permission_names = [] if permission_names is None else permission_names
-        body: dict = {
-            "newName": new_name,
-            "description": description,
-            "permissionNames": permission_names,
-            "tenantId": tenant_id,
-            "default": default,
-            "private": private,
-        }
-        if id is not None:
-            body["id"] = id
-        else:
-            body["name"] = name
         self._http.post(
             MgmtV1.role_update_path,
-            body=body,
+            body={
+                "name": name,
+                "newName": new_name,
+                "description": description,
+                "permissionNames": permission_names,
+                "tenantId": tenant_id,
+                "default": default,
+                "private": private,
+            },
+        )
+
+    def update_by_id(
+        self,
+        id: str,
+        new_name: str,
+        description: Optional[str] = None,
+        permission_names: Optional[List[str]] = None,
+        tenant_id: Optional[str] = None,
+        default: Optional[bool] = None,
+        private: Optional[bool] = None,
+    ):
+        """
+        Update an existing role identified by its ID. IMPORTANT: All parameters are used as overrides
+        to the existing role. Empty fields will override populated fields. Use carefully.
+
+        Args:
+        id (str): role ID (e.g. ROL...).
+        new_name (str): role updated name.
+        description (str): Optional description to briefly explain what this role allows.
+        permission_names (List[str]): Optional list of names of permissions this role grants.
+        tenant_id (str): Optional tenant ID to update the role in.
+        default (bool): Optional marks this role as default role.
+        private (bool): Optional marks this role as private role.
+
+        Raise:
+        AuthException: raised if update operation fails
+        """
+        permission_names = [] if permission_names is None else permission_names
+        self._http.post(
+            MgmtV1.role_update_path,
+            body={
+                "id": id,
+                "newName": new_name,
+                "description": description,
+                "permissionNames": permission_names,
+                "tenantId": tenant_id,
+                "default": default,
+                "private": private,
+            },
         )
 
     def delete(
         self,
-        name: Optional[str] = None,
+        name: str,
         tenant_id: Optional[str] = None,
-        *,
-        id: Optional[str] = None,
     ):
         """
-        Delete an existing role. Identify by name or ID (exactly one required).
-        IMPORTANT: This action is irreversible. Use carefully.
+        Delete an existing role. IMPORTANT: This action is irreversible. Use carefully.
 
         Args:
-        name (str): The name of the role to be deleted (mutually exclusive with id).
+        name (str): The name of the role to be deleted.
+
+        Raise:
+        AuthException: raised if creation operation fails
+        """
+        self._http.post(
+            MgmtV1.role_delete_path,
+            body={"name": name, "tenantId": tenant_id},
+        )
+
+    def delete_by_id(
+        self,
+        id: str,
+        tenant_id: Optional[str] = None,
+    ):
+        """
+        Delete an existing role by its ID. IMPORTANT: This action is irreversible. Use carefully.
+
+        Args:
+        id (str): The ID of the role to be deleted (e.g. ROL...).
         tenant_id (str): Optional tenant ID the role belongs to.
-        id (str): The ID of the role to be deleted, e.g. ROL... (mutually exclusive with name).
 
         Raise:
         AuthException: raised if deletion operation fails
         """
-        body: dict = {"tenantId": tenant_id}
-        if id is not None:
-            body["id"] = id
-        else:
-            body["name"] = name
         self._http.post(
             MgmtV1.role_delete_path,
-            body=body,
+            body={"id": id, "tenantId": tenant_id},
         )
 
     def load_all(
