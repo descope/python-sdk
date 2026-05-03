@@ -12,9 +12,7 @@ def main():
     try:
         descope_client = DescopeClient(project_id=project_id)
 
-        logging.info(
-            "Going to login with SSO auth method (saml/oidc based on tenant settings)..."
-        )
+        logging.info("Going to login with SSO auth method (saml/oidc based on tenant settings)...")
         resp = descope_client.sso.start(tenant_id, "https://www.google.com")
         logging.info(f"sso response: {resp}")
 

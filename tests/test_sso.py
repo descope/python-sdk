@@ -33,9 +33,7 @@ class TestSSO(common.DescopeTest):
         )
 
         self.assertEqual(
-            SSO._compose_start_params(
-                "tenant1", "http://dummy.com", "bla", "blue", "", None
-            ),
+            SSO._compose_start_params("tenant1", "http://dummy.com", "bla", "blue", "", None),
             {
                 "tenant": "tenant1",
                 "redirectURL": "http://dummy.com",

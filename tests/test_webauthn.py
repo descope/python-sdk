@@ -28,9 +28,7 @@ class TestWebauthN(common.DescopeTest):
 
     def test_compose_signup_body(self):
         self.assertEqual(
-            WebAuthn._compose_sign_up_start_body(
-                "dummy@dummy.com", {"name": "dummy"}, "https://example.com"
-            ),
+            WebAuthn._compose_sign_up_start_body("dummy@dummy.com", {"name": "dummy"}, "https://example.com"),
             {
                 "user": {"loginId": "dummy@dummy.com", "name": "dummy"},
                 "origin": "https://example.com",
@@ -45,9 +43,7 @@ class TestWebauthN(common.DescopeTest):
 
     def test_compose_signin_body(self):
         self.assertEqual(
-            WebAuthn._compose_sign_in_start_body(
-                "dummy@dummy.com", "https://example.com"
-            ),
+            WebAuthn._compose_sign_in_start_body("dummy@dummy.com", "https://example.com"),
             {
                 "loginId": "dummy@dummy.com",
                 "origin": "https://example.com",
@@ -57,9 +53,7 @@ class TestWebauthN(common.DescopeTest):
 
     def test_compose_signup_or_in_body(self):
         self.assertEqual(
-            WebAuthn._compose_sign_up_or_in_start_body(
-                "dummy@dummy.com", "https://example.com"
-            ),
+            WebAuthn._compose_sign_up_or_in_start_body("dummy@dummy.com", "https://example.com"),
             {
                 "loginId": "dummy@dummy.com",
                 "origin": "https://example.com",
@@ -68,9 +62,7 @@ class TestWebauthN(common.DescopeTest):
 
     def test_compose_update_start_body(self):
         self.assertEqual(
-            WebAuthn._compose_update_start_body(
-                "dummy@dummy.com", "https://example.com"
-            ),
+            WebAuthn._compose_update_start_body("dummy@dummy.com", "https://example.com"),
             {"loginId": "dummy@dummy.com", "origin": "https://example.com"},
         )
 
@@ -90,16 +82,12 @@ class TestWebauthN(common.DescopeTest):
         )
 
         # Test failed flows
-        self.assertRaises(
-            AuthException, webauthn.sign_up_start, "", "https://example.com"
-        )
+        self.assertRaises(AuthException, webauthn.sign_up_start, "", "https://example.com")
         self.assertRaises(AuthException, webauthn.sign_up_start, "id1", "")
 
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException, webauthn.sign_up_start, "id1", "https://example.com"
-            )
+            self.assertRaises(AuthException, webauthn.sign_up_start, "id1", "https://example.com")
 
         # Test success flow
         valid_response = json.loads(
@@ -149,9 +137,7 @@ class TestWebauthN(common.DescopeTest):
 
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException, webauthn.sign_up_finish, "t01", "response01"
-            )
+            self.assertRaises(AuthException, webauthn.sign_up_finish, "t01", "response01")
 
         # Test success flow
         with patch("httpx.post") as mock_post:
@@ -198,9 +184,7 @@ class TestWebauthN(common.DescopeTest):
         )
 
         # Test failed flows
-        self.assertRaises(
-            AuthException, webauthn.sign_in_start, "", "https://example.com"
-        )
+        self.assertRaises(AuthException, webauthn.sign_in_start, "", "https://example.com")
         self.assertRaises(AuthException, webauthn.sign_in_start, "id", "")
 
         with patch("httpx.post") as mock_post:
@@ -218,9 +202,7 @@ class TestWebauthN(common.DescopeTest):
         )
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
-            self.assertIsNotNone(
-                webauthn.sign_in_start("dummy@dummy.com", "https://example.com")
-            )
+            self.assertIsNotNone(webauthn.sign_in_start("dummy@dummy.com", "https://example.com"))
             self.assertRaises(
                 AuthException,
                 webauthn.sign_in_start,
@@ -265,9 +247,7 @@ class TestWebauthN(common.DescopeTest):
         )
 
         # Test failed flows
-        self.assertRaises(
-            AuthException, webauthn.sign_in_start, "", "https://example.com"
-        )
+        self.assertRaises(AuthException, webauthn.sign_in_start, "", "https://example.com")
         self.assertRaises(AuthException, webauthn.sign_in_start, "id", "")
 
         with patch("httpx.post") as mock_post:
@@ -285,9 +265,7 @@ class TestWebauthN(common.DescopeTest):
         )
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
-            self.assertIsNotNone(
-                webauthn.sign_in_start("dummy@dummy.com", "https://example.com")
-            )
+            self.assertIsNotNone(webauthn.sign_in_start("dummy@dummy.com", "https://example.com"))
 
         with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
@@ -337,9 +315,7 @@ class TestWebauthN(common.DescopeTest):
 
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException, webauthn.sign_in_finish, "t01", "response01"
-            )
+            self.assertRaises(AuthException, webauthn.sign_in_finish, "t01", "response01")
 
         # Test success flow
         with patch("httpx.post") as mock_post:
@@ -380,9 +356,7 @@ class TestWebauthN(common.DescopeTest):
         )
 
         # Test failed flows
-        self.assertRaises(
-            AuthException, webauthn.sign_up_or_in_start, "", "https://example.com"
-        )
+        self.assertRaises(AuthException, webauthn.sign_up_or_in_start, "", "https://example.com")
         self.assertRaises(AuthException, webauthn.sign_up_or_in_start, "id", "")
 
         with patch("httpx.post") as mock_post:
@@ -400,9 +374,7 @@ class TestWebauthN(common.DescopeTest):
         )
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
-            self.assertIsNotNone(
-                webauthn.sign_up_or_in_start("dummy@dummy.com", "https://example.com")
-            )
+            self.assertIsNotNone(webauthn.sign_up_or_in_start("dummy@dummy.com", "https://example.com"))
 
         with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
@@ -440,12 +412,8 @@ class TestWebauthN(common.DescopeTest):
         )
 
         # Test failed flows
-        self.assertRaises(
-            AuthException, webauthn.update_start, "", "", "https://example.com"
-        )
-        self.assertRaises(
-            AuthException, webauthn.update_start, None, "", "https://example.com"
-        )
+        self.assertRaises(AuthException, webauthn.update_start, "", "", "https://example.com")
+        self.assertRaises(AuthException, webauthn.update_start, None, "", "https://example.com")
         self.assertRaises(
             AuthException,
             webauthn.update_start,
@@ -474,11 +442,7 @@ class TestWebauthN(common.DescopeTest):
         # Test success flow
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
-            self.assertIsNotNone(
-                webauthn.update_start(
-                    "dummy@dummy.com", valid_jwt_token, "https://example.com"
-                )
-            )
+            self.assertIsNotNone(webauthn.update_start("dummy@dummy.com", valid_jwt_token, "https://example.com"))
 
         with patch("httpx.post") as mock_post:
             valid_response = json.loads("{}")
@@ -486,9 +450,7 @@ class TestWebauthN(common.DescopeTest):
             my_mock_response.is_success = True
             my_mock_response.json.return_value = valid_response
             mock_post.return_value = my_mock_response
-            res = webauthn.update_start(
-                "dummy@dummy.com", "asdasd", "https://example.com"
-            )
+            res = webauthn.update_start("dummy@dummy.com", "asdasd", "https://example.com")
             expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_auth_webauthn_start_path}"
             mock_post.assert_called_with(
                 expected_uri,
@@ -522,9 +484,7 @@ class TestWebauthN(common.DescopeTest):
 
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException, webauthn.update_finish, "t01", "response01"
-            )
+            self.assertRaises(AuthException, webauthn.update_finish, "t01", "response01")
 
         # Test success flow
         with patch("httpx.post") as mock_post:

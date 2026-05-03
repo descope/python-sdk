@@ -35,9 +35,7 @@ class SSO(AuthBase):
              {'url': 'http://dummy.com/login..'}
         """
         if not tenant:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "Tenant cannot be empty"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Tenant cannot be empty")
 
         validate_refresh_token_provided(login_options, refresh_token)
 

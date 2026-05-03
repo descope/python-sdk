@@ -46,9 +46,7 @@ def webauthn_signup_start():
 @APP.route("/webauthn/signup/finish", methods=["POST"])
 def webauthn_signup_finish():
     data = request.get_json()
-    response = descope_client.webauthn.sign_up_finish(
-        data["transactionId"], data["response"]
-    )
+    response = descope_client.webauthn.sign_up_finish(data["transactionId"], data["response"])
     return response
 
 
@@ -62,9 +60,7 @@ def webauthn_signin_start():
 @APP.route("/webauthn/signin/finish", methods=["POST"])
 def webauthn_signin_finish():
     data = request.get_json()
-    response = descope_client.webauthn.sign_in_finish(
-        data["transactionId"], data["response"]
-    )
+    response = descope_client.webauthn.sign_in_finish(data["transactionId"], data["response"])
     return response
 
 
@@ -72,9 +68,7 @@ def webauthn_signin_finish():
 def webauthn_update_start():
     data = request.get_json()
     refresh_token = request.cookies.get("DSR")
-    response = descope_client.webauthn.update_start(
-        data["loginId"], refresh_token, data["origin"]
-    )
+    response = descope_client.webauthn.update_start(data["loginId"], refresh_token, data["origin"])
     return response
 
 

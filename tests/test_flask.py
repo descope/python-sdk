@@ -80,9 +80,7 @@ class TestFlaskIntegration(DescopeTest):
             )
 
             self.assertEqual(response.status_code, 200)
-            mock_signup.assert_called_once_with(
-                DeliveryMethod.EMAIL, "test@example.com", {"name": "Test User"}
-            )
+            mock_signup.assert_called_once_with(DeliveryMethod.EMAIL, "test@example.com", {"name": "Test User"})
 
     def test_otp_signup_decorator_missing_email(self):
         """Test OTP signup decorator with missing email"""
@@ -106,13 +104,9 @@ class TestFlaskIntegration(DescopeTest):
             return Response("Success", 200)
 
         with patch.object(self.descope_client.otp, "sign_up") as mock_signup:
-            mock_signup.side_effect = AuthException(
-                400, "invalid_request", "Invalid email"
-            )
+            mock_signup.side_effect = AuthException(400, "invalid_request", "Invalid email")
 
-            response = self.client.post(
-                "/signup", json={"email": "invalid@example.com"}
-            )
+            response = self.client.post("/signup", json={"email": "invalid@example.com"})
 
             self.assertEqual(response.status_code, 500)
             self.assertIn(b"Unable to sign-up user", response.data)
@@ -131,9 +125,7 @@ class TestFlaskIntegration(DescopeTest):
             response = self.client.post("/signin", json={"email": "test@example.com"})
 
             self.assertEqual(response.status_code, 200)
-            mock_signin.assert_called_once_with(
-                DeliveryMethod.EMAIL, "test@example.com"
-            )
+            mock_signin.assert_called_once_with(DeliveryMethod.EMAIL, "test@example.com")
 
     def test_otp_verify_decorator_success(self):
         """Test OTP verify decorator with valid code"""
@@ -146,14 +138,10 @@ class TestFlaskIntegration(DescopeTest):
         with patch.object(self.descope_client.otp, "verify_code") as mock_verify:
             mock_verify.return_value = self.mock_jwt_response
 
-            response = self.client.post(
-                "/verify", json={"email": "test@example.com", "code": "123456"}
-            )
+            response = self.client.post("/verify", json={"email": "test@example.com", "code": "123456"})
 
             self.assertEqual(response.status_code, 200)
-            mock_verify.assert_called_once_with(
-                DeliveryMethod.EMAIL, "test@example.com", "123456"
-            )
+            mock_verify.assert_called_once_with(DeliveryMethod.EMAIL, "test@example.com", "123456")
 
     def test_otp_verify_decorator_missing_data(self):
         """Test OTP verify decorator with missing email or code"""
@@ -182,14 +170,10 @@ class TestFlaskIntegration(DescopeTest):
         with patch.object(self.descope_client.otp, "verify_code") as mock_verify:
             mock_verify.return_value = self.mock_jwt_response
 
-            response = self.client.post(
-                "/verify-sms", json={"phone": "+1234567890", "code": "123456"}
-            )
+            response = self.client.post("/verify-sms", json={"phone": "+1234567890", "code": "123456"})
 
             self.assertEqual(response.status_code, 200)
-            mock_verify.assert_called_once_with(
-                DeliveryMethod.SMS, "+1234567890", "123456"
-            )
+            mock_verify.assert_called_once_with(DeliveryMethod.SMS, "+1234567890", "123456")
 
     def test_validate_auth_decorator_success(self):
         """Test auth validation decorator with valid session"""
@@ -199,16 +183,12 @@ class TestFlaskIntegration(DescopeTest):
         def protected():
             return Response("Protected content", 200)
 
-        with patch.object(
-            self.descope_client, "validate_and_refresh_session"
-        ) as mock_validate:
+        with patch.object(self.descope_client, "validate_and_refresh_session") as mock_validate:
             mock_validate.return_value = self.mock_jwt_response
 
             response = self.client.get(
                 "/protected",
-                headers={
-                    "Cookie": f"{SESSION_COOKIE_NAME}=mock-session; {REFRESH_SESSION_COOKIE_NAME}=mock-refresh"
-                },
+                headers={"Cookie": f"{SESSION_COOKIE_NAME}=mock-session; {REFRESH_SESSION_COOKIE_NAME}=mock-refresh"},
             )
 
             self.assertEqual(response.status_code, 200)
@@ -222,12 +202,8 @@ class TestFlaskIntegration(DescopeTest):
         def protected():
             return Response("Protected content", 200)
 
-        with patch.object(
-            self.descope_client, "validate_and_refresh_session"
-        ) as mock_validate:
-            mock_validate.side_effect = AuthException(
-                401, "unauthorized", "Invalid session"
-            )
+        with patch.object(self.descope_client, "validate_and_refresh_session") as mock_validate:
+            mock_validate.side_effect = AuthException(401, "unauthorized", "Invalid session")
 
             response = self.client.get("/protected")
 
@@ -242,12 +218,8 @@ class TestFlaskIntegration(DescopeTest):
         def admin():
             return Response("Admin content", 200)
 
-        with patch.object(
-            self.descope_client, "validate_and_refresh_session"
-        ) as mock_validate:
-            with patch.object(
-                self.descope_client, "validate_permissions"
-            ) as mock_perms:
+        with patch.object(self.descope_client, "validate_and_refresh_session") as mock_validate:
+            with patch.object(self.descope_client, "validate_permissions") as mock_perms:
                 mock_validate.return_value = self.mock_jwt_response
                 mock_perms.return_value = True
 
@@ -269,12 +241,8 @@ class TestFlaskIntegration(DescopeTest):
         def admin():
             return Response("Admin content", 200)
 
-        with patch.object(
-            self.descope_client, "validate_and_refresh_session"
-        ) as mock_validate:
-            with patch.object(
-                self.descope_client, "validate_permissions"
-            ) as mock_perms:
+        with patch.object(self.descope_client, "validate_and_refresh_session") as mock_validate:
+            with patch.object(self.descope_client, "validate_permissions") as mock_perms:
                 mock_validate.return_value = self.mock_jwt_response
                 mock_perms.return_value = False
 
@@ -295,9 +263,7 @@ class TestFlaskIntegration(DescopeTest):
         def manager():
             return Response("Manager content", 200)
 
-        with patch.object(
-            self.descope_client, "validate_and_refresh_session"
-        ) as mock_validate:
+        with patch.object(self.descope_client, "validate_and_refresh_session") as mock_validate:
             with patch.object(self.descope_client, "validate_roles") as mock_roles:
                 mock_validate.return_value = self.mock_jwt_response
                 mock_roles.return_value = True
@@ -316,18 +282,12 @@ class TestFlaskIntegration(DescopeTest):
         """Test auth validation decorator with tenant-specific permissions"""
 
         @self.app.route("/tenant-admin")
-        @descope_validate_auth(
-            self.descope_client, permissions=["manage"], tenant="tenant1"
-        )
+        @descope_validate_auth(self.descope_client, permissions=["manage"], tenant="tenant1")
         def tenant_admin():
             return Response("Tenant admin content", 200)
 
-        with patch.object(
-            self.descope_client, "validate_and_refresh_session"
-        ) as mock_validate:
-            with patch.object(
-                self.descope_client, "validate_tenant_permissions"
-            ) as mock_tenant_perms:
+        with patch.object(self.descope_client, "validate_and_refresh_session") as mock_validate:
+            with patch.object(self.descope_client, "validate_tenant_permissions") as mock_tenant_perms:
                 mock_validate.return_value = self.mock_jwt_response
                 mock_tenant_perms.return_value = True
 
@@ -339,17 +299,13 @@ class TestFlaskIntegration(DescopeTest):
                 )
 
                 self.assertEqual(response.status_code, 200)
-                mock_tenant_perms.assert_called_once_with(
-                    self.mock_jwt_response, ["manage"]
-                )
+                mock_tenant_perms.assert_called_once_with(self.mock_jwt_response, ["manage"])
 
     def test_magiclink_signup_decorator_success(self):
         """Test MagicLink signup decorator with valid data"""
 
         @self.app.route("/magiclink-signup", methods=["POST"])
-        @descope_signup_magiclink_by_email(
-            self.descope_client, "http://example.com/verify"
-        )
+        @descope_signup_magiclink_by_email(self.descope_client, "http://example.com/verify")
         def magiclink_signup():
             return Response("Success", 200)
 
@@ -373,23 +329,17 @@ class TestFlaskIntegration(DescopeTest):
         """Test MagicLink signin decorator with valid data"""
 
         @self.app.route("/magiclink-signin", methods=["POST"])
-        @descope_signin_magiclink_by_email(
-            self.descope_client, "http://example.com/verify"
-        )
+        @descope_signin_magiclink_by_email(self.descope_client, "http://example.com/verify")
         def magiclink_signin():
             return Response("Success", 200)
 
         with patch.object(self.descope_client.magiclink, "sign_in") as mock_signin:
             mock_signin.return_value = "masked-email@example.com"
 
-            response = self.client.post(
-                "/magiclink-signin", json={"email": "test@example.com"}
-            )
+            response = self.client.post("/magiclink-signin", json={"email": "test@example.com"})
 
             self.assertEqual(response.status_code, 200)
-            mock_signin.assert_called_once_with(
-                DeliveryMethod.EMAIL, "test@example.com", "http://example.com/verify"
-            )
+            mock_signin.assert_called_once_with(DeliveryMethod.EMAIL, "test@example.com", "http://example.com/verify")
 
     def test_magiclink_verify_decorator_success(self):
         """Test MagicLink verify decorator with valid token"""
@@ -445,9 +395,7 @@ class TestFlaskIntegration(DescopeTest):
             return Response("OAuth initiated", 200)
 
         with patch.object(self.descope_client.oauth, "start") as mock_start:
-            mock_start.side_effect = AuthException(
-                400, "invalid_provider", "Invalid provider"
-            )
+            mock_start.side_effect = AuthException(400, "invalid_provider", "Invalid provider")
 
             response = self.client.get("/oauth?provider=invalid")
 
@@ -485,9 +433,7 @@ class TestFlaskIntegration(DescopeTest):
             return Response("Logged out", 200)
 
         with patch.object(self.descope_client, "logout") as mock_logout:
-            mock_logout.side_effect = AuthException(
-                400, "invalid_token", "Invalid token"
-            )
+            mock_logout.side_effect = AuthException(400, "invalid_token", "Invalid token")
 
             response = self.client.post(
                 "/logout",
@@ -546,16 +492,12 @@ class TestFlaskIntegration(DescopeTest):
                 return Response(f"Claims found: {claims.get('permissions', [])}", 200)
             return Response("No claims", 400)
 
-        with patch.object(
-            self.descope_client, "validate_and_refresh_session"
-        ) as mock_validate:
+        with patch.object(self.descope_client, "validate_and_refresh_session") as mock_validate:
             mock_validate.return_value = self.mock_jwt_response
 
             response = self.client.get(
                 "/context-test",
-                headers={
-                    "Cookie": f"{SESSION_COOKIE_NAME}=mock-session; {REFRESH_SESSION_COOKIE_NAME}=mock-refresh"
-                },
+                headers={"Cookie": f"{SESSION_COOKIE_NAME}=mock-session; {REFRESH_SESSION_COOKIE_NAME}=mock-refresh"},
             )
 
             self.assertEqual(response.status_code, 200)

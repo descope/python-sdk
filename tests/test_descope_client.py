@@ -42,34 +42,22 @@ class TestDescopeClient(common.DescopeTest):
         self.public_key_str = json.dumps(self.public_key_dict)
 
     def test_descope_client(self):
-        self.assertRaises(
-            AuthException, DescopeClient, project_id=None, public_key="dummy"
-        )
-        self.assertRaises(
-            AuthException, DescopeClient, project_id="", public_key="dummy"
-        )
+        self.assertRaises(AuthException, DescopeClient, project_id=None, public_key="dummy")
+        self.assertRaises(AuthException, DescopeClient, project_id="", public_key="dummy")
 
         with patch("os.getenv") as mock_getenv:
             mock_getenv.return_value = ""
-            self.assertRaises(
-                AuthException, DescopeClient, project_id=None, public_key="dummy"
-            )
+            self.assertRaises(AuthException, DescopeClient, project_id=None, public_key="dummy")
 
-        self.assertIsNotNone(
-            AuthException, DescopeClient(project_id="dummy", public_key=None)
-        )
-        self.assertIsNotNone(
-            AuthException, DescopeClient(project_id="dummy", public_key="")
-        )
+        self.assertIsNotNone(AuthException, DescopeClient(project_id="dummy", public_key=None))
+        self.assertIsNotNone(AuthException, DescopeClient(project_id="dummy", public_key=""))
         self.assertRaises(
             AuthException,
             DescopeClient,
             project_id="dummy",
             public_key="not dict object",
         )
-        self.assertIsNotNone(
-            DescopeClient(project_id="dummy", public_key=self.public_key_str)
-        )
+        self.assertIsNotNone(DescopeClient(project_id="dummy", public_key=self.public_key_str))
 
     def test_project_id_from_env_without_env(self):
         os.environ["DESCOPE_PROJECT_ID"] = ""
@@ -99,9 +87,7 @@ class TestDescopeClient(common.DescopeTest):
         try:
             client.mgmt.outbound_application_by_token
         except AuthException:
-            self.fail(
-                "failed to initiate outbound_application_by_token without management key"
-            )
+            self.fail("failed to initiate outbound_application_by_token without management key")
 
     def test_logout(self):
         dummy_refresh_token = ""
@@ -150,9 +136,7 @@ class TestDescopeClient(common.DescopeTest):
         with patch("httpx.get") as mock_get:
             my_mock_response = mock.Mock()
             my_mock_response.is_success = True
-            data = json.loads(
-                """{"name": "Testy McTester", "email": "testy@tester.com"}"""
-            )
+            data = json.loads("""{"name": "Testy McTester", "email": "testy@tester.com"}""")
             my_mock_response.json.return_value = data
             mock_get.return_value = my_mock_response
             user_response = client.me(dummy_refresh_token)
@@ -177,31 +161,23 @@ class TestDescopeClient(common.DescopeTest):
 
         self.assertRaises(AuthException, client.my_tenants, None)
         self.assertRaises(AuthException, client.my_tenants, dummy_refresh_token)
-        self.assertRaises(
-            AuthException, client.my_tenants, dummy_refresh_token, True, ["a"]
-        )
+        self.assertRaises(AuthException, client.my_tenants, dummy_refresh_token, True, ["a"])
 
         # Test failed flow
         with patch("httpx.post") as mock_get:
             mock_get.return_value.is_success = False
-            self.assertRaises(
-                AuthException, client.my_tenants, dummy_refresh_token, True
-            )
+            self.assertRaises(AuthException, client.my_tenants, dummy_refresh_token, True)
 
         # Test success flow
         with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
             my_mock_response.is_success = True
-            data = json.loads(
-                """{"tenants": [{"id": "tenant_id", "name": "tenant_name"}]}"""
-            )
+            data = json.loads("""{"tenants": [{"id": "tenant_id", "name": "tenant_name"}]}""")
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
             tenant_response = client.my_tenants(dummy_refresh_token, False, ["a"])
             self.assertIsNotNone(tenant_response)
-            self.assertEqual(
-                data["tenants"][0]["name"], tenant_response["tenants"][0]["name"]
-            )
+            self.assertEqual(data["tenants"][0]["name"], tenant_response["tenants"][0]["name"])
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.my_tenants_path}",
                 headers={
@@ -368,9 +344,7 @@ class TestDescopeClient(common.DescopeTest):
         except AuthException:
             self.fail("Should pass validation")
 
-        self.assertIsNotNone(
-            client.validate_and_refresh_session(valid_jwt_token, dummy_refresh_token)
-        )
+        self.assertIsNotNone(client.validate_and_refresh_session(valid_jwt_token, dummy_refresh_token))
 
         # Test case where key id cannot be found
         client2 = DescopeClient(self.dummy_project_id, None)
@@ -457,9 +431,7 @@ class TestDescopeClient(common.DescopeTest):
         self.assertEqual(ex.error_type, ERROR_TYPE_API_RATE_LIMIT)
         self.assertEqual(ex.error_description, "API rate limit exceeded description")
         self.assertEqual(ex.error_message, "API rate limit exceeded")
-        self.assertEqual(
-            ex.rate_limit_parameters.get(API_RATE_LIMIT_RETRY_AFTER_HEADER, ""), "9"
-        )
+        self.assertEqual(ex.rate_limit_parameters.get(API_RATE_LIMIT_RETRY_AFTER_HEADER, ""), "9")
 
     def test_expired_token(self):
         expired_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg5NzI4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEUyIsImNvb2tpZVBhdGgiOiIvIiwiZXhwIjoxNjU3Nzk4MzI4LCJpYXQiOjE2NTc3OTc3MjgsImlzcyI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInN1YiI6IjJCdEVIa2dPdTAybG1NeHpQSWV4ZE10VXcxTSJ9.i-JoPoYmXl3jeLTARvYnInBiRdTT4uHZ3X3xu_n1dhUb1Qy_gqK7Ru8ErYXeENdfPOe4mjShc_HsVyb5PjE2LMFmb58WR8wixtn0R-u_MqTpuI_422Dk6hMRjTFEVRWu"
@@ -519,9 +491,7 @@ class TestDescopeClient(common.DescopeTest):
             mock_request.return_value.cookies = {}
 
             # Refresh because of expiration
-            resp = client.validate_and_refresh_session(
-                expired_token, valid_refresh_token
-            )
+            resp = client.validate_and_refresh_session(expired_token, valid_refresh_token)
 
             new_session_token_from_request = resp[SESSION_TOKEN_NAME]["jwt"]
             self.assertEqual(
@@ -542,9 +512,7 @@ class TestDescopeClient(common.DescopeTest):
 
         expired_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3VDOXl2MlVHdEdJMW84NGdDWkViOXFFUVciLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEUyIsImV4cCI6MTY1OTY0NDI5OCwiaWF0IjoxNjU5NjQ0Mjk3LCJpc3MiOiJQMkN1Qzl5djJVR3RHSTFvODRnQ1pFYjlxRVFXIiwic3ViIjoiVTJDdUNQdUpnUFdIR0I1UDRHbWZidVBHaEdWbSJ9.wBuOnIQI_z3SXOszqsWCg8ilOPdE5ruWYHA3jkaeQ3uX9hWgCTd69paFajc-xdMYbqlIF7JHji7T9oVmkCUJvDNgRZRZO9boMFANPyXitLOK4aX3VZpMJBpFxdrWV3GE"
         valid_refresh_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3VDOXl2MlVHdEdJMW84NGdDWkViOXFFUVciLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0NDMwNjEsImlhdCI6MTY1OTY0MzA2MSwiaXNzIjoiUDJDdUM5eXYyVUd0R0kxbzg0Z0NaRWI5cUVRVyIsInN1YiI6IlUyQ3VDUHVKZ1BXSEdCNVA0R21mYnVQR2hHVm0ifQ.mRo9FihYMR3qnQT06Mj3CJ5X0uTCEcXASZqfLLUv0cPCLBtBqYTbuK-ZRDnV4e4N6zGCNX2a3jjpbyqbViOxICCNSxJsVb-sdsSujtEXwVMsTTLnpWmNsMbOUiKmoME0"
-        new_refreshed_token = (
-            expired_jwt_token  # the refreshed token should be invalid (or expired)
-        )
+        new_refreshed_token = expired_jwt_token  # the refreshed token should be invalid (or expired)
         with patch("httpx.get") as mock_request:
             my_mock_response = mock.Mock()
             my_mock_response.is_success = True
@@ -607,26 +575,16 @@ class TestDescopeClient(common.DescopeTest):
 
         # Tenant level
         jwt_response = {"tenants": {}}
-        self.assertFalse(
-            client.validate_tenant_permissions(jwt_response, "t1", ["Perm 2"])
-        )
+        self.assertFalse(client.validate_tenant_permissions(jwt_response, "t1", ["Perm 2"]))
 
         jwt_response = {"tenants": {"t1": {}}}
-        self.assertFalse(
-            client.validate_tenant_permissions(jwt_response, "t1", ["Perm 2"])
-        )
+        self.assertFalse(client.validate_tenant_permissions(jwt_response, "t1", ["Perm 2"]))
 
         jwt_response = {"tenants": {"t1": {"permissions": "Perm 1"}}}
         self.assertTrue(client.validate_tenant_permissions(jwt_response, "t1", []))
-        self.assertTrue(
-            client.validate_tenant_permissions(jwt_response, "t1", ["Perm 1"])
-        )
-        self.assertFalse(
-            client.validate_tenant_permissions(jwt_response, "t1", ["Perm 2"])
-        )
-        self.assertFalse(
-            client.validate_tenant_permissions(jwt_response, "t1", ["Perm 1", "Perm 2"])
-        )
+        self.assertTrue(client.validate_tenant_permissions(jwt_response, "t1", ["Perm 1"]))
+        self.assertFalse(client.validate_tenant_permissions(jwt_response, "t1", ["Perm 2"]))
+        self.assertFalse(client.validate_tenant_permissions(jwt_response, "t1", ["Perm 1", "Perm 2"]))
         self.assertFalse(client.validate_tenant_permissions(jwt_response, "t2", []))
 
     def test_get_matched_permissions(self):
@@ -638,30 +596,22 @@ class TestDescopeClient(common.DescopeTest):
         self.assertEqual(client.get_matched_permissions(jwt_response, ["Perm 1"]), [])
 
         jwt_response = {"permissions": ["Perm 1", "Perm 2"]}
-        self.assertEqual(
-            client.get_matched_permissions(jwt_response, ["Perm 1"]), ["Perm 1"]
-        )
+        self.assertEqual(client.get_matched_permissions(jwt_response, ["Perm 1"]), ["Perm 1"])
         self.assertEqual(
             client.get_matched_permissions(jwt_response, ["Perm 1", "Perm 2"]),
             ["Perm 1", "Perm 2"],
         )
         self.assertEqual(
-            client.get_matched_permissions(
-                jwt_response, ["Perm 1", "Perm 2", "Perm 3"]
-            ),
+            client.get_matched_permissions(jwt_response, ["Perm 1", "Perm 2", "Perm 3"]),
             ["Perm 1", "Perm 2"],
         )
 
         # Tenant level
         jwt_response = {"tenants": {}}
-        self.assertEqual(
-            client.get_matched_tenant_permissions(jwt_response, "t1", ["Perm 1"]), []
-        )
+        self.assertEqual(client.get_matched_tenant_permissions(jwt_response, "t1", ["Perm 1"]), [])
 
         jwt_response = {"tenants": {"t1": {}}}
-        self.assertEqual(
-            client.get_matched_tenant_permissions(jwt_response, "t1", ["Perm 1"]), []
-        )
+        self.assertEqual(client.get_matched_tenant_permissions(jwt_response, "t1", ["Perm 1"]), [])
 
         jwt_response = {"tenants": {"t1": {"permissions": ["Perm 1", "Perm 2"]}}}
         self.assertEqual(
@@ -669,15 +619,11 @@ class TestDescopeClient(common.DescopeTest):
             ["Perm 1"],
         )
         self.assertEqual(
-            client.get_matched_tenant_permissions(
-                jwt_response, "t1", ["Perm 1", "Perm 2"]
-            ),
+            client.get_matched_tenant_permissions(jwt_response, "t1", ["Perm 1", "Perm 2"]),
             ["Perm 1", "Perm 2"],
         )
         self.assertEqual(
-            client.get_matched_tenant_permissions(
-                jwt_response, "t1", ["Perm 1", "Perm 2", "Perm 3"]
-            ),
+            client.get_matched_tenant_permissions(jwt_response, "t1", ["Perm 1", "Perm 2", "Perm 3"]),
             ["Perm 1", "Perm 2"],
         )
 
@@ -706,12 +652,8 @@ class TestDescopeClient(common.DescopeTest):
         self.assertTrue(client.validate_tenant_roles(jwt_response, "t1", ["Role 1"]))
         self.assertTrue(client.validate_tenant_roles(jwt_response, "t1", []))
         self.assertFalse(client.validate_tenant_roles(jwt_response, "t1", ["Role 2"]))
-        self.assertFalse(
-            client.validate_tenant_roles(jwt_response, "t1", ["Role 1", "Role 2"])
-        )
-        self.assertFalse(
-            client.validate_tenant_roles(jwt_response, "t1", ["Perm 1", "Perm 2"])
-        )
+        self.assertFalse(client.validate_tenant_roles(jwt_response, "t1", ["Role 1", "Role 2"]))
+        self.assertFalse(client.validate_tenant_roles(jwt_response, "t1", ["Perm 1", "Perm 2"]))
 
     def test_get_matched_roles(self):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)
@@ -734,27 +676,19 @@ class TestDescopeClient(common.DescopeTest):
 
         # Tenant level
         jwt_response = {"tenants": {}}
-        self.assertEqual(
-            client.get_matched_tenant_roles(jwt_response, "t1", ["Role 1"]), []
-        )
+        self.assertEqual(client.get_matched_tenant_roles(jwt_response, "t1", ["Role 1"]), [])
 
         jwt_response = {"tenants": {"t1": {}}}
-        self.assertEqual(
-            client.get_matched_tenant_roles(jwt_response, "t1", ["Role 1"]), []
-        )
+        self.assertEqual(client.get_matched_tenant_roles(jwt_response, "t1", ["Role 1"]), [])
 
         jwt_response = {"tenants": {"t1": {"roles": ["Role 1", "Role 2"]}}}
-        self.assertEqual(
-            client.get_matched_tenant_roles(jwt_response, "t1", ["Role 1"]), ["Role 1"]
-        )
+        self.assertEqual(client.get_matched_tenant_roles(jwt_response, "t1", ["Role 1"]), ["Role 1"])
         self.assertEqual(
             client.get_matched_tenant_roles(jwt_response, "t1", ["Role 1", "Role 2"]),
             ["Role 1", "Role 2"],
         )
         self.assertEqual(
-            client.get_matched_tenant_roles(
-                jwt_response, "t1", ["Role 1", "Role 2", "Role 3"]
-            ),
+            client.get_matched_tenant_roles(jwt_response, "t1", ["Role 1", "Role 2", "Role 3"]),
             ["Role 1", "Role 2"],
         )
 
@@ -915,9 +849,7 @@ class TestDescopeClient(common.DescopeTest):
 
         # Test 2: Environment variable auth_management_key setting
         env_auth_mgmt_key = "env-auth-mgmt-key"
-        with patch.dict(
-            "os.environ", {"DESCOPE_AUTH_MANAGEMENT_KEY": env_auth_mgmt_key}
-        ):
+        with patch.dict("os.environ", {"DESCOPE_AUTH_MANAGEMENT_KEY": env_auth_mgmt_key}):
             client_env = DescopeClient(self.dummy_project_id, self.public_key_dict)
 
             with patch("httpx.post") as mock_post:
@@ -948,9 +880,7 @@ class TestDescopeClient(common.DescopeTest):
 
         # Test 3: Direct parameter takes priority over environment variable
         direct_auth_mgmt_key = "direct-auth-mgmt-key"
-        with patch.dict(
-            "os.environ", {"DESCOPE_AUTH_MANAGEMENT_KEY": env_auth_mgmt_key}
-        ):
+        with patch.dict("os.environ", {"DESCOPE_AUTH_MANAGEMENT_KEY": env_auth_mgmt_key}):
             client_priority = DescopeClient(
                 self.dummy_project_id,
                 self.public_key_dict,
@@ -999,9 +929,7 @@ class TestDescopeClient(common.DescopeTest):
             my_mock_response.json.return_value = {"maskedEmail": "n***@example.com"}
             mock_post.return_value = my_mock_response
 
-            client.otp.update_user_email(
-                "old@example.com", "new@example.com", refresh_token
-            )
+            client.otp.update_user_email("old@example.com", "new@example.com", refresh_token)
 
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_user_email_otp_path}",
@@ -1030,9 +958,7 @@ class TestDescopeClient(common.DescopeTest):
             my_mock_response.json.return_value = {"maskedEmail": "n***@example.com"}
             mock_post.return_value = my_mock_response
 
-            client_no_auth.otp.update_user_email(
-                "old@example.com", "new@example.com", refresh_token
-            )
+            client_no_auth.otp.update_user_email("old@example.com", "new@example.com", refresh_token)
 
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_user_email_otp_path}",
@@ -1104,9 +1030,7 @@ class TestDescopeClient(common.DescopeTest):
         """Test that management API responses are captured in verbose mode."""
         mock_response = mock.Mock()
         mock_response.is_success = True
-        mock_response.json.return_value = {
-            "user": {"id": "u1", "loginIds": ["test@example.com"]}
-        }
+        mock_response.json.return_value = {"user": {"id": "u1", "loginIds": ["test@example.com"]}}
         mock_response.headers = {"cf-ray": "mgmt-ray-123", "x-request-id": "req-456"}
         mock_response.status_code = 200
         mock_post.return_value = mock_response

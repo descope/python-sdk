@@ -18,17 +18,11 @@ def main():
 
         logging.info("Going to signup or in using OTP...")
         email = input("Please insert email to signup or in:\n")
-        masked_email = descope_client.otp.sign_up_or_in(
-            method=DeliveryMethod.EMAIL, login_id=email
-        )
+        masked_email = descope_client.otp.sign_up_or_in(method=DeliveryMethod.EMAIL, login_id=email)
 
-        value = input(
-            f"Please insert the code you received by email to {masked_email}:\n"
-        )
+        value = input(f"Please insert the code you received by email to {masked_email}:\n")
         try:
-            jwt_response = descope_client.otp.verify_code(
-                method=DeliveryMethod.EMAIL, login_id=email, code=value
-            )
+            jwt_response = descope_client.otp.verify_code(method=DeliveryMethod.EMAIL, login_id=email, code=value)
             logging.info("Code is valid")
             session_token = jwt_response[SESSION_TOKEN_NAME].get("jwt")
             refresh_token = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("jwt")
@@ -47,14 +41,10 @@ def main():
         try:
             logging.info("refreshing the session token..")
             claims = descope_client.refresh_session(refresh_token)
-            logging.info(
-                "going to revalidate the session with the newly refreshed token.."
-            )
+            logging.info("going to revalidate the session with the newly refreshed token..")
 
             new_session_token = claims.get(SESSION_TOKEN_NAME).get("jwt")
-            descope_client.validate_and_refresh_session(
-                new_session_token, refresh_token
-            )
+            descope_client.validate_and_refresh_session(new_session_token, refresh_token)
             logging.info("Session is valid also for the refreshed token.")
         except AuthException as e:
             logging.info(f"Session is not valid for the refreshed token: {e}")

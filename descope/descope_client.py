@@ -68,8 +68,7 @@ class DescopeClient:
             base_url=base_url,
             timeout_seconds=timeout_seconds,
             secure=not skip_verify,
-            management_key=auth_management_key
-            or os.getenv("DESCOPE_AUTH_MANAGEMENT_KEY"),
+            management_key=auth_management_key or os.getenv("DESCOPE_AUTH_MANAGEMENT_KEY"),
             verbose=verbose,
         )
         self._auth = Auth(
@@ -163,9 +162,7 @@ class DescopeClient:
         """
         return self.validate_tenant_permissions(jwt_response, "", permissions)
 
-    def get_matched_permissions(
-        self, jwt_response: dict, permissions: list[str]
-    ) -> list[str]:
+    def get_matched_permissions(self, jwt_response: dict, permissions: list[str]) -> list[str]:
         """
         Get the list of permissions that a jwt_response has been granted from the provided list of permissions.
             For a multi-tenant environment use get_matched_tenant_permissions function
@@ -178,9 +175,7 @@ class DescopeClient:
         """
         return self.get_matched_tenant_permissions(jwt_response, "", permissions)
 
-    def validate_tenant_permissions(
-        self, jwt_response: dict, tenant: str, permissions: list[str]
-    ) -> bool:
+    def validate_tenant_permissions(self, jwt_response: dict, tenant: str, permissions: list[str]) -> bool:
         """
         Validate that a jwt_response has been granted the specified permissions on the specified tenant.
             For a multi-tenant environment use validate_tenant_permissions function
@@ -205,18 +200,14 @@ class DescopeClient:
             # ensure that the tenant is associated with the jwt_response
             if tenant not in jwt_response.get("tenants", {}):
                 return False
-            granted = (
-                jwt_response.get("tenants", {}).get(tenant, {}).get("permissions", [])
-            )
+            granted = jwt_response.get("tenants", {}).get(tenant, {}).get("permissions", [])
 
         for perm in permissions:
             if perm not in granted:
                 return False
         return True
 
-    def get_matched_tenant_permissions(
-        self, jwt_response: dict, tenant: str, permissions: list[str]
-    ) -> list[str]:
+    def get_matched_tenant_permissions(self, jwt_response: dict, tenant: str, permissions: list[str]) -> list[str]:
         """
         Get the list of permissions that a jwt_response has been granted from the provided list of permissions on the specified tenant.
             For a multi-tenant environment use get_matched_tenant_permissions function
@@ -241,9 +232,7 @@ class DescopeClient:
             # ensure that the tenant is associated with the jwt_response
             if tenant not in jwt_response.get("tenants", {}):
                 return []
-            granted = (
-                jwt_response.get("tenants", {}).get(tenant, {}).get("permissions", [])
-            )
+            granted = jwt_response.get("tenants", {}).get(tenant, {}).get("permissions", [])
 
         matched = []
         for perm in permissions:
@@ -277,9 +266,7 @@ class DescopeClient:
         """
         return self.get_matched_tenant_roles(jwt_response, "", roles)
 
-    def validate_tenant_roles(
-        self, jwt_response: dict, tenant: str, roles: list[str]
-    ) -> bool:
+    def validate_tenant_roles(self, jwt_response: dict, tenant: str, roles: list[str]) -> bool:
         """
         Validate that a jwt_response has been granted the specified roles on the specified tenant.
             For a multi-tenant environment use validate_tenant_roles function
@@ -311,9 +298,7 @@ class DescopeClient:
                 return False
         return True
 
-    def get_matched_tenant_roles(
-        self, jwt_response: dict, tenant: str, roles: list[str]
-    ) -> list[str]:
+    def get_matched_tenant_roles(self, jwt_response: dict, tenant: str, roles: list[str]) -> list[str]:
         """
         Get the list of roles that a jwt_response has been granted from the provided list of roles on the specified tenant.
             For a multi-tenant environment use get_matched_tenant_roles function
@@ -346,9 +331,7 @@ class DescopeClient:
                 matched.append(role)
         return matched
 
-    def validate_session(
-        self, session_token: str, audience: Iterable[str] | str | None = None
-    ) -> dict:
+    def validate_session(self, session_token: str, audience: Iterable[str] | str | None = None) -> dict:
         """
         Validate a session token. Call this function for every incoming request to your
         private endpoints. Alternatively, use validate_and_refresh_session in order to
@@ -369,9 +352,7 @@ class DescopeClient:
         """
         return self._auth.validate_session(session_token, audience)
 
-    def refresh_session(
-        self, refresh_token: str, audience: Iterable[str] | str | None = None
-    ) -> dict:
+    def refresh_session(self, refresh_token: str, audience: Iterable[str] | str | None = None) -> dict:
         """
         Refresh a session. Call this function when a session expires and needs to be refreshed.
 
@@ -410,9 +391,7 @@ class DescopeClient:
         Raise:
         AuthException: Exception is raised if session is not authorized or another error occurs
         """
-        return self._auth.validate_and_refresh_session(
-            session_token, refresh_token, audience
-        )
+        return self._auth.validate_and_refresh_session(session_token, refresh_token, audience)
 
     def logout(self, refresh_token: str) -> httpx.Response:
         """
@@ -482,9 +461,7 @@ class DescopeClient:
             )
 
         uri = EndpointsV1.me_path
-        response = self._auth.http_client.get(
-            uri=uri, allow_redirects=None, pswd=refresh_token
-        )
+        response = self._auth.http_client.get(uri=uri, allow_redirects=None, pswd=refresh_token)
         return response.json()
 
     def my_tenants(
@@ -564,9 +541,7 @@ class DescopeClient:
             )
 
         uri = EndpointsV1.history_path
-        response = self._auth.http_client.get(
-            uri=uri, allow_redirects=None, pswd=refresh_token
-        )
+        response = self._auth.http_client.get(uri=uri, allow_redirects=None, pswd=refresh_token)
         return response.json()
 
     def exchange_access_key(
@@ -589,9 +564,7 @@ class DescopeClient:
         AuthException: Exception is raised if access key is not valid or another error occurs
         """
         if not access_key:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "Access key cannot be empty"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Access key cannot be empty")
 
         return self._auth.exchange_access_key(access_key, audience, login_options)
 

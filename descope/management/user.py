@@ -238,12 +238,8 @@ class User(HTTPBase):
         verified_email: Optional[bool] = None,
         verified_phone: Optional[bool] = None,
         invite_url: Optional[str] = None,
-        send_mail: Optional[
-            bool
-        ] = None,  # send invite via mail, default is according to project settings
-        send_sms: Optional[
-            bool
-        ] = None,  # send invite via text message, default is according to project settings
+        send_mail: Optional[bool] = None,  # send invite via mail, default is according to project settings
+        send_sms: Optional[bool] = None,  # send invite via text message, default is according to project settings
         additional_login_ids: Optional[List[str]] = None,
         sso_app_ids: Optional[List[str]] = None,
         template_id: str = "",
@@ -295,12 +291,8 @@ class User(HTTPBase):
         self,
         users: List[UserObj],
         invite_url: Optional[str] = None,
-        send_mail: Optional[
-            bool
-        ] = None,  # send invite via mail, default is according to project settings
-        send_sms: Optional[
-            bool
-        ] = None,  # send invite via text message, default is according to project settings
+        send_mail: Optional[bool] = None,  # send invite via mail, default is according to project settings
+        send_sms: Optional[bool] = None,  # send invite via text message, default is according to project settings
     ) -> dict:
         """
         Create users in batch and invite them via an email / text message.
@@ -763,14 +755,10 @@ class User(HTTPBase):
         role_names = [] if role_names is None else role_names
 
         if limit < 0:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "limit must be non-negative"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "limit must be non-negative")
 
         if page < 0:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "page must be non-negative"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "page must be non-negative")
         body = {
             "tenantIds": tenant_ids,
             "roleNames": role_names,
@@ -884,14 +872,10 @@ class User(HTTPBase):
         role_names = [] if role_names is None else role_names
 
         if limit < 0:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "limit must be non-negative"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "limit must be non-negative")
 
         if page < 0:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "page must be non-negative"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "page must be non-negative")
         body = {
             "tenantIds": tenant_ids,
             "roleNames": role_names,
@@ -1190,9 +1174,7 @@ class User(HTTPBase):
         )
         return response.json()
 
-    def update_custom_attribute(
-        self, login_id: str, attribute_key: str, attribute_val: Union[str, int, bool]
-    ) -> dict:
+    def update_custom_attribute(self, login_id: str, attribute_key: str, attribute_val: Union[str, int, bool]) -> dict:
         """
         Update a custom attribute of an existing user.
 
@@ -1762,9 +1744,7 @@ class User(HTTPBase):
         )
         return response.json()
 
-    def generate_embedded_link(
-        self, login_id: str, custom_claims: Optional[dict] = None, timeout: int = 0
-    ) -> str:
+    def generate_embedded_link(self, login_id: str, custom_claims: Optional[dict] = None, timeout: int = 0) -> str:
         """
         Generate Embedded Link for the given user login ID.
         The return value is a token that can be verified via magic link, or using flows

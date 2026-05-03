@@ -104,9 +104,7 @@ class TestOTP(common.DescopeTest):
 
     def test_compose_update_user_phone_body(self):
         self.assertEqual(
-            OTP._compose_update_user_phone_body(
-                "dummy@dummy.com", "+11111111", False, True
-            ),
+            OTP._compose_update_user_phone_body("dummy@dummy.com", "+11111111", False, True),
             {
                 "loginId": "dummy@dummy.com",
                 "phone": "+11111111",
@@ -117,9 +115,7 @@ class TestOTP(common.DescopeTest):
 
     def test_compose_update_user_email_body(self):
         self.assertEqual(
-            OTP._compose_update_user_email_body(
-                "dummy@dummy.com", "dummy@dummy.com", False, True
-            ),
+            OTP._compose_update_user_email_body("dummy@dummy.com", "dummy@dummy.com", False, True),
             {
                 "loginId": "dummy@dummy.com",
                 "email": "dummy@dummy.com",
@@ -201,9 +197,7 @@ class TestOTP(common.DescopeTest):
             mock_post.return_value = my_mock_response
             self.assertEqual(
                 "t***@example.com",
-                client.otp.sign_up(
-                    DeliveryMethod.EMAIL, "dummy@dummy.com", signup_user_details
-                ),
+                client.otp.sign_up(DeliveryMethod.EMAIL, "dummy@dummy.com", signup_user_details),
             )
 
         # Test flow where username set as empty and we used the login_id as default
@@ -221,9 +215,7 @@ class TestOTP(common.DescopeTest):
             mock_post.return_value = my_mock_response
             self.assertEqual(
                 "t***@example.com",
-                client.otp.sign_up(
-                    DeliveryMethod.EMAIL, "dummy@dummy.com", signup_user_details
-                ),
+                client.otp.sign_up(DeliveryMethod.EMAIL, "dummy@dummy.com", signup_user_details),
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_otp_path}/email",
@@ -394,9 +386,7 @@ class TestOTP(common.DescopeTest):
             client.otp.sign_in(
                 DeliveryMethod.EMAIL,
                 "dummy@dummy.com",
-                LoginOptions(
-                    stepup=True, template_options={"blue": "bla"}, template_id="foo"
-                ),
+                LoginOptions(stepup=True, template_options={"blue": "bla"}, template_id="foo"),
                 refresh_token=refresh_token,
             )
             mock_post.assert_called_with(
@@ -457,9 +447,7 @@ class TestOTP(common.DescopeTest):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)
 
         # Test failed flows
-        self.assertRaises(
-            AuthException, client.otp.sign_up_or_in, DeliveryMethod.EMAIL, ""
-        )
+        self.assertRaises(AuthException, client.otp.sign_up_or_in, DeliveryMethod.EMAIL, "")
 
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = False
@@ -523,12 +511,8 @@ class TestOTP(common.DescopeTest):
 
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)
 
-        self.assertRaises(
-            AuthException, client.otp.verify_code, DeliveryMethod.EMAIL, "", code
-        )
-        self.assertRaises(
-            AuthException, client.otp.verify_code, DeliveryMethod.EMAIL, None, code
-        )
+        self.assertRaises(AuthException, client.otp.verify_code, DeliveryMethod.EMAIL, "", code)
+        self.assertRaises(AuthException, client.otp.verify_code, DeliveryMethod.EMAIL, None, code)
 
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = False
@@ -551,9 +535,7 @@ class TestOTP(common.DescopeTest):
                 SESSION_COOKIE_NAME: "dummy session token",
                 REFRESH_SESSION_COOKIE_NAME: valid_jwt_token,
             }
-            self.assertIsNotNone(
-                client.otp.verify_code(DeliveryMethod.EMAIL, "dummy@dummy.com", code)
-            )
+            self.assertIsNotNone(client.otp.verify_code(DeliveryMethod.EMAIL, "dummy@dummy.com", code))
 
     def test_update_user_email(self):
         client = DescopeClient(self.dummy_project_id, self.public_key_dict)
@@ -593,9 +575,7 @@ class TestOTP(common.DescopeTest):
             mock_post.return_value = my_mock_response
             self.assertEqual(
                 "t***@example.com",
-                client.otp.update_user_email(
-                    "id1", "dummy@dummy.com", "refresh_token1"
-                ),
+                client.otp.update_user_email("id1", "dummy@dummy.com", "refresh_token1"),
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_user_email_otp_path}",
@@ -699,9 +679,7 @@ class TestOTP(common.DescopeTest):
             mock_post.return_value = my_mock_response
             self.assertEqual(
                 "*****111",
-                client.otp.update_user_phone(
-                    DeliveryMethod.SMS, "id1", "+1111111", "refresh_token1"
-                ),
+                client.otp.update_user_phone(DeliveryMethod.SMS, "id1", "+1111111", "refresh_token1"),
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_user_phone_otp_path}/sms",
@@ -729,9 +707,7 @@ class TestOTP(common.DescopeTest):
             mock_post.return_value = my_mock_response
             self.assertEqual(
                 "*****111",
-                client.otp.update_user_phone(
-                    DeliveryMethod.VOICE, "id1", "+1111111", "refresh_token1"
-                ),
+                client.otp.update_user_phone(DeliveryMethod.VOICE, "id1", "+1111111", "refresh_token1"),
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_user_phone_otp_path}/voice",
@@ -759,9 +735,7 @@ class TestOTP(common.DescopeTest):
             mock_post.return_value = my_mock_response
             self.assertEqual(
                 "*****111",
-                client.otp.update_user_phone(
-                    DeliveryMethod.WHATSAPP, "id1", "+1111111", "refresh_token1"
-                ),
+                client.otp.update_user_phone(DeliveryMethod.WHATSAPP, "id1", "+1111111", "refresh_token1"),
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_user_phone_otp_path}/whatsapp",

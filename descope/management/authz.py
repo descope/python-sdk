@@ -8,7 +8,6 @@ from descope.management.common import MgmtV1
 
 
 class Authz(HTTPBase):
-
     def __init__(self, http_client, fga_cache_url: Optional[str] = None):
         super().__init__(http_client)
         self._fga_cache_url = fga_cache_url
@@ -75,9 +74,7 @@ class Authz(HTTPBase):
         )
         return response.json()["schema"]
 
-    def save_namespace(
-        self, namespace: dict, old_name: str = "", schema_name: str = ""
-    ):
+    def save_namespace(self, namespace: dict, old_name: str = "", schema_name: str = ""):
         """
         Create or update the given namespace
         Will not delete relation definitions not mentioned in the namespace.
@@ -146,9 +143,7 @@ class Authz(HTTPBase):
             body=body,
         )
 
-    def delete_relation_definition(
-        self, name: str, namespace: str, schema_name: str = ""
-    ):
+    def delete_relation_definition(self, name: str, namespace: str, schema_name: str = ""):
         """
         delete_relation_definition will also delete the relevant relations.
         Args:
@@ -272,9 +267,7 @@ class Authz(HTTPBase):
         )
         return response.json()["relationQueries"]
 
-    def who_can_access(
-        self, resource: str, relation_definition: str, namespace: str
-    ) -> List[dict]:
+    def who_can_access(self, resource: str, relation_definition: str, namespace: str) -> List[dict]:
         """
         Finds the list of targets (usually users) who can access the given resource with the given RD
         Args:
@@ -349,9 +342,7 @@ class Authz(HTTPBase):
         )
         return response.json()["relations"]
 
-    def what_can_target_access_with_relation(
-        self, target: str, relation_definition: str, namespace: str
-    ) -> List[dict]:
+    def what_can_target_access_with_relation(self, target: str, relation_definition: str, namespace: str) -> List[dict]:
         """
         Returns the list of all resources that the target has the given relation to including all derived relations
         Args:
@@ -387,12 +378,6 @@ class Authz(HTTPBase):
         """
         response = self._http.post(
             MgmtV1.authz_get_modified,
-            body={
-                "since": (
-                    int(since.replace(tzinfo=timezone.utc).timestamp() * 1000)
-                    if since
-                    else 0
-                )
-            },
+            body={"since": (int(since.replace(tzinfo=timezone.utc).timestamp() * 1000) if since else 0)},
         )
         return response.json()["relations"]

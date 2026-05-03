@@ -94,9 +94,7 @@ class Audit(HTTPBase):
             body["to"] = int(to_ts.timestamp() * 1000)
 
         response = self._http.post(MgmtV1.audit_search, body=body)
-        return {
-            "audits": list(map(Audit._convert_audit_record, response.json()["audits"]))
-        }
+        return {"audits": list(map(Audit._convert_audit_record, response.json()["audits"]))}
 
     def create_event(
         self,

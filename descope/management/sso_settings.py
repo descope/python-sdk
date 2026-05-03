@@ -92,9 +92,7 @@ class SSOOIDCSettings:
         prompt: Optional[List[str]] = None,
         grant_type: Optional[str] = None,
         issuer: Optional[str] = None,
-        groups_priority: Optional[
-            List[str]
-        ] = None,  # list of group names in priority order (first = highest priority)
+        groups_priority: Optional[List[str]] = None,  # list of group names in priority order (first = highest priority)
     ):
         self.name = name
         self.client_id = client_id
@@ -128,9 +126,7 @@ class SSOSAMLSettings:
         role_mappings: Optional[List[RoleMapping]] = None,
         default_sso_roles: Optional[List[str]] = None,
         idp_additional_certs: Optional[List[str]] = None,
-        groups_priority: Optional[
-            List[str]
-        ] = None,  # list of group names in priority order (first = highest priority)
+        groups_priority: Optional[List[str]] = None,  # list of group names in priority order (first = highest priority)
         # NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
         sp_acs_url: Optional[str] = None,
         sp_entity_id: Optional[str] = None,
@@ -158,9 +154,7 @@ class SSOSAMLSettingsByMetadata:
         attribute_mapping: Optional[AttributeMapping] = None,
         role_mappings: Optional[List[RoleMapping]] = None,
         default_sso_roles: Optional[List[str]] = None,
-        groups_priority: Optional[
-            List[str]
-        ] = None,  # list of group names in priority order (first = highest priority)
+        groups_priority: Optional[List[str]] = None,  # list of group names in priority order (first = highest priority)
         # NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
         sp_acs_url: Optional[str] = None,
         sp_entity_id: Optional[str] = None,
@@ -264,9 +258,7 @@ class SSOSettings(HTTPBase):
 
         self._http.post(
             MgmtV1.sso_configure_oidc_settings,
-            body=SSOSettings._compose_configure_oidc_settings_body(
-                tenant_id, settings, domains
-            ),
+            body=SSOSettings._compose_configure_oidc_settings_body(tenant_id, settings, domains),
         )
 
     def configure_saml_settings(
@@ -291,9 +283,7 @@ class SSOSettings(HTTPBase):
 
         self._http.post(
             MgmtV1.sso_configure_saml_settings,
-            body=SSOSettings._compose_configure_saml_settings_body(
-                tenant_id, settings, redirect_url, domains
-            ),
+            body=SSOSettings._compose_configure_saml_settings_body(tenant_id, settings, redirect_url, domains),
         )
 
     def configure_saml_settings_by_metadata(
@@ -376,9 +366,7 @@ class SSOSettings(HTTPBase):
         """
         self._http.post(
             MgmtV1.sso_settings_path,
-            body=SSOSettings._compose_configure_body(
-                tenant_id, idp_url, entity_id, idp_cert, redirect_url, domains
-            ),
+            body=SSOSettings._compose_configure_body(tenant_id, idp_url, entity_id, idp_cert, redirect_url, domains),
         )
 
     # DEPRECATED
@@ -405,9 +393,7 @@ class SSOSettings(HTTPBase):
         """
         self._http.post(
             MgmtV1.sso_metadata_path,
-            body=SSOSettings._compose_metadata_body(
-                tenant_id, idp_metadata_url, redirect_url, domains
-            ),
+            body=SSOSettings._compose_metadata_body(tenant_id, idp_metadata_url, redirect_url, domains),
         )
 
     # DEPRECATED
@@ -432,9 +418,7 @@ class SSOSettings(HTTPBase):
         """
         self._http.post(
             MgmtV1.sso_mapping_path,
-            body=SSOSettings._compose_mapping_body(
-                tenant_id, role_mappings, attribute_mapping
-            ),
+            body=SSOSettings._compose_mapping_body(tenant_id, role_mappings, attribute_mapping),
         )
 
     @staticmethod
@@ -478,9 +462,7 @@ class SSOSettings(HTTPBase):
         return {
             "tenantId": tenant_id,
             "roleMappings": SSOSettings._role_mapping_to_dict(role_mapping),
-            "attributeMapping": SSOSettings._attribute_mapping_to_dict(
-                attribute_mapping
-            ),
+            "attributeMapping": SSOSettings._attribute_mapping_to_dict(attribute_mapping),
         }
 
     @staticmethod
@@ -569,9 +551,7 @@ class SSOSettings(HTTPBase):
     ) -> dict:
         attr_mapping = None
         if settings.attribute_mapping:
-            attr_mapping = SSOSettings._attribute_mapping_to_dict(
-                settings.attribute_mapping
-            )
+            attr_mapping = SSOSettings._attribute_mapping_to_dict(settings.attribute_mapping)
 
         return {
             "tenantId": tenant_id,
@@ -583,9 +563,7 @@ class SSOSettings(HTTPBase):
                 "spACSUrl": settings.sp_acs_url,
                 "spEntityId": settings.sp_entity_id,
                 "attributeMapping": attr_mapping,
-                "roleMappings": SSOSettings._role_mapping_to_dict(
-                    settings.role_mappings
-                ),
+                "roleMappings": SSOSettings._role_mapping_to_dict(settings.role_mappings),
                 "defaultSSORoles": settings.default_sso_roles,
                 "groupsPriority": settings.groups_priority,
             },
@@ -602,9 +580,7 @@ class SSOSettings(HTTPBase):
     ) -> dict:
         attr_mapping = None
         if settings.attribute_mapping:
-            attr_mapping = SSOSettings._attribute_mapping_to_dict(
-                settings.attribute_mapping
-            )
+            attr_mapping = SSOSettings._attribute_mapping_to_dict(settings.attribute_mapping)
 
         return {
             "tenantId": tenant_id,
@@ -613,9 +589,7 @@ class SSOSettings(HTTPBase):
                 "spACSUrl": settings.sp_acs_url,
                 "spEntityId": settings.sp_entity_id,
                 "attributeMapping": attr_mapping,
-                "roleMappings": SSOSettings._role_mapping_to_dict(
-                    settings.role_mappings
-                ),
+                "roleMappings": SSOSettings._role_mapping_to_dict(settings.role_mappings),
                 "defaultSSORoles": settings.default_sso_roles,
                 "groupsPriority": settings.groups_priority,
             },

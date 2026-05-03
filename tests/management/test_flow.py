@@ -151,9 +151,7 @@ class TestFlow(common.DescopeTest):
         # Test success flow
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
-            self.assertIsNotNone(
-                client.mgmt.flow.import_flow("name", {"name": "test"}, [{"id": "test"}])
-            )
+            self.assertIsNotNone(client.mgmt.flow.import_flow("name", {"name": "test"}, [{"id": "test"}]))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.flow_import_path}",
                 headers={
@@ -214,9 +212,7 @@ class TestFlow(common.DescopeTest):
         # Test failed flows
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException, client.mgmt.flow.import_theme, {"id": "test"}
-            )
+            self.assertRaises(AuthException, client.mgmt.flow.import_theme, {"id": "test"})
 
         # Test success flow
         with patch("httpx.post") as mock_post:
@@ -332,9 +328,7 @@ class TestFlow(common.DescopeTest):
         self.assertIsNone(FlowRunOptions.from_dict(None))
 
         # Test from_dict with valid dict
-        options = FlowRunOptions.from_dict(
-            {"input": {"key": "value"}, "preview": True, "tenant": "tenant-id"}
-        )
+        options = FlowRunOptions.from_dict({"input": {"key": "value"}, "preview": True, "tenant": "tenant-id"})
         self.assertIsNotNone(options)
         self.assertEqual(options.flow_input, {"key": "value"})
         self.assertEqual(options.preview, True)
@@ -451,9 +445,7 @@ class TestFlow(common.DescopeTest):
         # Test success get flow async result
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
-            self.assertIsNotNone(
-                client.mgmt.flow.get_flow_async_result("execution-123")
-            )
+            self.assertIsNotNone(client.mgmt.flow.get_flow_async_result("execution-123"))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.flow_async_result_path}",
                 headers={

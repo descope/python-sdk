@@ -5,7 +5,6 @@ from descope.management.common import MgmtV1
 
 
 class FGA(HTTPBase):
-
     def __init__(self, http_client, fga_cache_url: Optional[str] = None):
         super().__init__(http_client)
         self._fga_cache_url = fga_cache_url

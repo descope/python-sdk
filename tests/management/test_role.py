@@ -45,9 +45,7 @@ class TestRole(common.DescopeTest):
         # Test success flow
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
-            self.assertIsNone(
-                client.mgmt.role.create("R1", "Something", ["P1"], "t1", True, False)
-            )
+            self.assertIsNone(client.mgmt.role.create("R1", "Something", ["P1"], "t1", True, False))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.role_create_path}",
                 headers={
@@ -468,9 +466,7 @@ class TestRole(common.DescopeTest):
         # Test success flow
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
-            self.assertIsNone(
-                client.mgmt.role.delete_batch_by_ids(["ROL1", "ROL2"], "t1")
-            )
+            self.assertIsNone(client.mgmt.role.delete_batch_by_ids(["ROL1", "ROL2"], "t1"))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.role_delete_batch_path}",
                 headers={
@@ -603,9 +599,7 @@ class TestRole(common.DescopeTest):
         with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.is_success = True
-            network_resp.json.return_value = json.loads(
-                """{"roles": [{"id": "ROL123", "name": "R1"}]}"""
-            )
+            network_resp.json.return_value = json.loads("""{"roles": [{"id": "ROL123", "name": "R1"}]}""")
             mock_post.return_value = network_resp
             resp = client.mgmt.role.search(role_ids=["ROL123"])
             roles = resp["roles"]
@@ -637,11 +631,7 @@ class TestRole(common.DescopeTest):
         # Test private=True
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
-            self.assertIsNone(
-                client.mgmt.role.create(
-                    "PrivateRole", "Private role", ["P1"], "t1", False, True
-                )
-            )
+            self.assertIsNone(client.mgmt.role.create("PrivateRole", "Private role", ["P1"], "t1", False, True))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.role_create_path}",
                 headers={

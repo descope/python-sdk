@@ -45,8 +45,8 @@ def signup():
     try:
         user = {"name": name, "phone": "", "email": email}
         descope_client.password.sign_up(email, password, user)
-    except AuthException as ex:
-        return Response(f"Unauthorized, failed to sign up with password {ex}", 401)
+    except AuthException:
+        return Response("Unauthorized, failed to sign up with password", 401)
 
     return Response("This is SignUp API handling", 200)
 
@@ -61,10 +61,8 @@ def signin():
 
     try:
         descope_client.password.sign_in(email, password)
-    except AuthException as ex:
-        return Response(
-            f"Unauthorized, failed to authenticated with password {ex}", 401
-        )
+    except AuthException:
+        return Response("Unauthorized, failed to authenticate with password", 401)
 
     return Response("This is SignIn API handling", 200)
 
@@ -76,20 +74,14 @@ def private():
     session_token = cookies.get(SESSION_COOKIE_NAME, None)
     refresh_token = cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
     try:
-        jwt_response = descope_client.validate_and_refresh_session(
-            session_token, refresh_token
-        )
+        jwt_response = descope_client.validate_and_refresh_session(session_token, refresh_token)
     except AuthException:
         return Response("Access denied", 401)
 
-    response = Response(
-        "This is a private API and you must be authenticated to see this", 200
-    )
+    response = Response("This is a private API and you must be authenticated to see this", 200)
 
     if jwt_response.get(COOKIE_DATA_NAME, None):
-        set_cookie_on_response(
-            response, jwt_response[SESSION_TOKEN_NAME], jwt_response[COOKIE_DATA_NAME]
-        )
+        set_cookie_on_response(response, jwt_response[SESSION_TOKEN_NAME], jwt_response[COOKIE_DATA_NAME])
 
     return response
 

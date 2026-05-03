@@ -28,18 +28,14 @@ def main():
             logging.info(json.dumps(totp_info, indent=2, sort_keys=True))
             logging.info("=========================================")
         else:
-            register = input(
-                "Do you need to register an authenticator to an existing account? (yes/y):\n"
-            )
+            register = input("Do you need to register an authenticator to an existing account? (yes/y):\n")
             if register == "yes" or register == "y":
                 logging.info("Please sign in via OTP...")
                 descope_client.otp.sign_up_or_in(DeliveryMethod.EMAIL, email)
 
                 code = input("Please insert the code you received by email:\n")
 
-                jwt_response = descope_client.otp.verify_code(
-                    DeliveryMethod.EMAIL, email, code
-                )
+                jwt_response = descope_client.otp.verify_code(DeliveryMethod.EMAIL, email, code)
                 refresh_token = jwt_response.get(REFRESH_SESSION_TOKEN_NAME).get("jwt")
                 totp_info = descope_client.totp.update_user(email, refresh_token)
                 logging.info("=== use this info in Authenticator app ===")
@@ -61,9 +57,7 @@ def main():
         # validate session
         try:
             logging.info("going to validate session...")
-            jwt_response = descope_client.validate_and_refresh_session(
-                session_token, refresh_token
-            )
+            jwt_response = descope_client.validate_and_refresh_session(session_token, refresh_token)
             logging.info(f"Session is valid and all is OK, claims: {jwt_response}")
         except AuthException as e:
             logging.info(f"Session is not valid {e}")

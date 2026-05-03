@@ -10,9 +10,7 @@ def main():
     management_key = ""
 
     try:
-        descope_client = DescopeClient(
-            project_id=project_id, management_key=management_key
-        )
+        descope_client = DescopeClient(project_id=project_id, management_key=management_key)
         tenant_id = ""
 
         try:
@@ -46,9 +44,7 @@ def main():
             logging.info("Updating newly created tenant")
             # update overrides all fields, must provide the entire entity
             # we mean to update.
-            descope_client.mgmt.tenant.update(
-                tenant_id, "My First Tenant", ["mydomain.com"]
-            )
+            descope_client.mgmt.tenant.update(tenant_id, "My First Tenant", ["mydomain.com"])
 
         except AuthException as e:
             logging.info(f"Tenant update failed {e}")

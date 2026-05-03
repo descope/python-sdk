@@ -20,9 +20,7 @@ def main():
     tenant_id = ""
 
     try:
-        descope_client = DescopeClient(
-            project_id=project_id, management_key=management_key
-        )
+        descope_client = DescopeClient(project_id=project_id, management_key=management_key)
 
         try:
             logging.info("Configuring tenant with OIDC settings")
@@ -107,9 +105,7 @@ def main():
                 role_mappings=[RoleMapping(groups=["grp1"], role_name="rl1")],
                 groups_priority=["admin_group", "user_group"],
             )
-            descope_client.mgmt.sso.configure_saml_settings_by_metadata(
-                tenant_id, settings, domains=["kuki.com"]
-            )
+            descope_client.mgmt.sso.configure_saml_settings_by_metadata(tenant_id, settings, domains=["kuki.com"])
         except AuthException as e:
             logging.info(f"Configure tenant SAML settings by metadata failed {e}")
 

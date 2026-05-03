@@ -81,9 +81,7 @@ class TestGroup(common.DescopeTest):
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
             self.assertIsNotNone(
-                client.mgmt.group.load_all_groups_for_members(
-                    "someTenantId", ["one", "two"], ["three", "four"]
-                )
+                client.mgmt.group.load_all_groups_for_members("someTenantId", ["one", "two"], ["three", "four"])
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.group_load_all_for_member_path}",
@@ -124,9 +122,7 @@ class TestGroup(common.DescopeTest):
         # Test success flow
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
-            self.assertIsNotNone(
-                client.mgmt.group.load_all_group_members("someTenantId", "someGroupId")
-            )
+            self.assertIsNotNone(client.mgmt.group.load_all_group_members("someTenantId", "someGroupId"))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.group_load_all_group_members_path}",
                 headers={

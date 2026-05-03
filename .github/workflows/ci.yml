@@ -46,13 +46,37 @@ jobs:
           validateSingleCommit: false
           validateSingleCommitMatchesPrTitle: false
 
+  lint:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          enable-cache: true
+          python-version: "3.13"
+      - name: Install dependencies
+        run: uv sync --all-extras --locked
+      - name: Ruff lint
+        run: uv run ruff check .
+      - name: Ruff format
+        run: uv run ruff format --check .
+      - name: Mypy
+        run: uv run mypy descope tests samples
+      - name: License check
+        run: uv run --with pylic pylic check
+
   build:
     name: test with ${{ matrix.py }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    permissions: {}
     strategy:
       fail-fast: false
       matrix:
         py:
+          - "3.14"
           - "3.13"
           - "3.12"
           - "3.11"
@@ -66,16 +90,15 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
-      - name: Setup python for test ${{ matrix.py }}
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
+          enable-cache: true
           python-version: ${{ matrix.py }}
-      - name: Install tox
-        run: python -m pip install "tox-gh>=1.2" poetry
-      - name: Setup test suite
-        run: tox -vv --notest
+      - name: Install dependencies
+        run: uv sync --all-extras --locked
       - name: Run test suite
-        run: tox --skip-pkg-install
+        run: uv run coverage run -m pytest tests
         env:
           COVERAGE_FILE: "coverage.${{ matrix.os }}.${{ matrix.py }}"
       - name: Store coverage file
@@ -136,7 +159,8 @@ jobs:
     name: All Checks Passed
     runs-on: ubuntu-latest
     permissions: {}
-    needs: [validate-pr-title, build, coverage, gitleaks]
+    needs: [validate-pr-title, lint, build, coverage, gitleaks]
+    if: always() && !cancelled() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
     steps:
       - name: Yey, all checks passed!
         run: echo "All checks passed! :tada:"

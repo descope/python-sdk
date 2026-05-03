@@ -154,6 +154,4 @@ class Project(HTTPBase):
 
     # Function to remove 'tag' field from each project
     def remove_tag_field(self, projects):
-        return [
-            {k: v for k, v in project.items() if k != "tag"} for project in projects
-        ]
+        return [{k: v for k, v in project.items() if k != "tag"} for project in projects]

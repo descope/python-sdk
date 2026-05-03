@@ -83,11 +83,7 @@ class Auth:
                 ERROR_TYPE_API_RATE_LIMIT,
                 resp.get("errorDescription", ""),
                 resp.get("errorMessage", ""),
-                rate_limit_parameters={
-                    API_RATE_LIMIT_RETRY_AFTER_HEADER: self._parse_retry_after(
-                        response.headers
-                    )
-                },
+                rate_limit_parameters={API_RATE_LIMIT_RETRY_AFTER_HEADER: self._parse_retry_after(response.headers)},
             )
         except RateLimitException:
             raise
@@ -109,9 +105,7 @@ class Auth:
     def http_client(self) -> HTTPClient:
         return self._http
 
-    def exchange_token(
-        self, uri, code: str, audience: Optional[Iterable[str] | str] = None
-    ) -> dict:
+    def exchange_token(self, uri, code: str, audience: Optional[Iterable[str] | str] = None) -> dict:
         if not code:
             raise AuthException(
                 400,
@@ -122,9 +116,7 @@ class Auth:
         body = Auth._compose_exchange_body(code)
         response = self._http.post(uri, body=body)
         resp = response.json()
-        jwt_response = self.generate_jwt_response(
-            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME), audience
-        )
+        jwt_response = self.generate_jwt_response(resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME), audience)
         return jwt_response
 
     @staticmethod
@@ -135,9 +127,7 @@ class Auth:
         return DEFAULT_BASE_URL
 
     @staticmethod
-    def adjust_and_verify_delivery_method(
-        method: DeliveryMethod, login_id: str, user: dict
-    ) -> bool:
+    def adjust_and_verify_delivery_method(method: DeliveryMethod, login_id: str, user: dict) -> bool:
         if not login_id:
             return False
 
@@ -182,9 +172,7 @@ class Auth:
         }.get(method)
 
         if not suffix:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, f"Unknown delivery method: {method}"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, f"Unknown delivery method: {method}")
 
         return f"{base}/{suffix}"
 
@@ -198,9 +186,7 @@ class Auth:
         }.get(method)
 
         if not login_id:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, f"Unknown delivery method: {method}"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, f"Unknown delivery method: {method}")
 
         return login_id
 
@@ -216,9 +202,7 @@ class Auth:
         try:
             validate_email(email, check_deliverability=False)
         except EmailNotValidError as ex:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, f"Invalid email address: {ex}"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, f"Invalid email address: {ex}")
 
     @staticmethod
     def validate_phone(method: DeliveryMethod, phone: str):
@@ -230,18 +214,10 @@ class Auth:
             )
 
         if not re.match(PHONE_REGEX, phone):
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "Invalid phone number"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Invalid phone number")
 
-        if (
-            method != DeliveryMethod.SMS
-            and method != DeliveryMethod.VOICE
-            and method != DeliveryMethod.WHATSAPP
-        ):
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "Invalid delivery method"
-            )
+        if method != DeliveryMethod.SMS and method != DeliveryMethod.VOICE and method != DeliveryMethod.WHATSAPP:
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Invalid delivery method")
 
     def exchange_access_key(
         self,
@@ -252,9 +228,7 @@ class Auth:
         uri = EndpointsV1.exchange_auth_access_key_path
         body = {
             "loginOptions": (
-                {k: v for k, v in login_options.__dict__.items() if v is not None}
-                if login_options
-                else {}
+                {k: v for k, v in login_options.__dict__.items() if v is not None} if login_options else {}
             ),
         }
         server_response = self._http.post(uri, body=body, pswd=access_key)
@@ -339,9 +313,7 @@ class Auth:
             jwkeys_wrapper = json.loads(jwks_data)
             jwkeys = jwkeys_wrapper["keys"]
         except (ValueError, TypeError, KeyError) as e:
-            raise AuthException(
-                500, ERROR_TYPE_INVALID_PUBLIC_KEY, f"Unable to load jwks. Error: {e}"
-            )
+            raise AuthException(500, ERROR_TYPE_INVALID_PUBLIC_KEY, f"Unable to load jwks. Error: {e}")
 
         # Load all public keys for this project
         self.public_keys = {}
@@ -388,15 +360,11 @@ class Auth:
         )
 
     # public method to validate a token from the management class
-    def validate_token(
-        self, token: str, audience: str | None | Iterable[str] = None
-    ) -> dict:
+    def validate_token(self, token: str, audience: str | None | Iterable[str] = None) -> dict:
         return self._validate_token(token, audience)
 
     # Validate a token and load the public key if needed
-    def _validate_token(
-        self, token: str, audience: str | None | Iterable[str] = None
-    ) -> dict:
+    def _validate_token(self, token: str, audience: str | None | Iterable[str] = None) -> dict:
         if not token:
             raise AuthException(
                 500,
@@ -414,15 +382,11 @@ class Auth:
 
         alg_header = unverified_header.get(Auth.ALGORITHM_KEY, None)
         if alg_header is None or alg_header == "none":
-            raise AuthException(
-                500, ERROR_TYPE_INVALID_TOKEN, "Token header is missing property: alg"
-            )
+            raise AuthException(500, ERROR_TYPE_INVALID_TOKEN, "Token header is missing property: alg")
 
         kid = unverified_header.get("kid", None)
         if kid is None:
-            raise AuthException(
-                500, ERROR_TYPE_INVALID_TOKEN, "Token header is missing property: kid"
-            )
+            raise AuthException(500, ERROR_TYPE_INVALID_TOKEN, "Token header is missing property: kid")
 
         with self.lock_public_keys:
             if self.public_keys == {} or self.public_keys.get(kid, None) is None:
@@ -496,9 +460,7 @@ class Auth:
         claims["jwt"] = token
         return claims
 
-    def validate_session(
-        self, session_token: str, audience: str | None | Iterable[str] = None
-    ) -> dict:
+    def validate_session(self, session_token: str, audience: str | None | Iterable[str] = None) -> dict:
         if not session_token:
             raise AuthException(
                 400,
@@ -512,9 +474,7 @@ class Auth:
         )  # Duplicate for saving backward compatibility but keep the same structure as the refresh operation response
         return self.adjust_properties(res, True)
 
-    def refresh_session(
-        self, refresh_token: str, audience: str | None | Iterable[str] = None
-    ) -> dict:
+    def refresh_session(self, refresh_token: str, audience: str | None | Iterable[str] = None) -> dict:
         if not refresh_token:
             raise AuthException(
                 400,
@@ -528,9 +488,7 @@ class Auth:
         response = self._http.post(uri, body={}, pswd=refresh_token)
 
         resp = response.json()
-        refresh_token = (
-            response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None) or refresh_token
-        )
+        refresh_token = response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None) or refresh_token
         return self.generate_jwt_response(resp, refresh_token, audience)
 
     def validate_and_refresh_session(
@@ -582,11 +540,7 @@ class Auth:
 
     @staticmethod
     def extract_masked_address(response: dict, method: DeliveryMethod) -> str:
-        if (
-            method == DeliveryMethod.SMS
-            or method == DeliveryMethod.VOICE
-            or method == DeliveryMethod.WHATSAPP
-        ):
+        if method == DeliveryMethod.SMS or method == DeliveryMethod.VOICE or method == DeliveryMethod.WHATSAPP:
             return response["maskedPhone"]
         elif method == DeliveryMethod.EMAIL:
             return response["maskedEmail"]

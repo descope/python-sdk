@@ -46,9 +46,7 @@ class TestAccessKey(common.DescopeTest):
         with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.is_success = True
-            network_resp.json.return_value = json.loads(
-                """{"key": {"id": "ak1"}, "cleartext": "abc"}"""
-            )
+            network_resp.json.return_value = json.loads("""{"key": {"id": "ak1"}, "cleartext": "abc"}""")
             mock_post.return_value = network_resp
             resp = client.mgmt.access_key.create(
                 name="key-name",
@@ -152,9 +150,7 @@ class TestAccessKey(common.DescopeTest):
         with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.is_success = True
-            network_resp.json.return_value = json.loads(
-                """{"keys": [{"id": "ak1"}, {"id": "ak2"}]}"""
-            )
+            network_resp.json.return_value = json.loads("""{"keys": [{"id": "ak1"}, {"id": "ak2"}]}""")
             mock_post.return_value = network_resp
             resp = client.mgmt.access_key.search_all_access_keys(
                 ["t1, t2"], "bound-user-id", "creator-user", {"attr1": "value1"}

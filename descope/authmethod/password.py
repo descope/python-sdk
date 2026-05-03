@@ -35,14 +35,10 @@ class Password(AuthBase):
         """
 
         if not login_id:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "login_id cannot be empty"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "login_id cannot be empty")
 
         if not password:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "password cannot be empty"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "password cannot be empty")
 
         uri = EndpointsV1.sign_up_password_path
         body = Password._compose_signup_body(login_id, password, user)
@@ -77,19 +73,13 @@ class Password(AuthBase):
         """
 
         if not login_id:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "login_id cannot be empty"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "login_id cannot be empty")
 
         if not password:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "Password cannot be empty"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Password cannot be empty")
 
         uri = EndpointsV1.sign_in_password_path
-        response = self._http.post(
-            uri, body={"loginId": login_id, "password": password}
-        )
+        response = self._http.post(uri, body={"loginId": login_id, "password": password})
 
         resp = response.json()
         jwt_response = self._auth.generate_jwt_response(
@@ -125,9 +115,7 @@ class Password(AuthBase):
         """
 
         if not login_id:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "login_id cannot be empty"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "login_id cannot be empty")
 
         uri = EndpointsV1.send_reset_password_path
         body: dict[str, str | bool | dict | None] = {
@@ -155,19 +143,13 @@ class Password(AuthBase):
         """
 
         if not login_id:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "login_id cannot be empty"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "login_id cannot be empty")
 
         if not new_password:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "new_password cannot be empty"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "new_password cannot be empty")
 
         if not refresh_token:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "Refresh token cannot be empty"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Refresh token cannot be empty")
 
         uri = EndpointsV1.update_password_path
         self._http.post(
@@ -203,19 +185,13 @@ class Password(AuthBase):
         """
 
         if not login_id:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "login_id cannot be empty"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "login_id cannot be empty")
 
         if not old_password:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "old_password cannot be empty"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "old_password cannot be empty")
 
         if not new_password:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "new_password cannot be empty"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "new_password cannot be empty")
 
         uri = EndpointsV1.replace_password_path
         response = self._http.post(

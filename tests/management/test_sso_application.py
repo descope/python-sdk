@@ -132,9 +132,7 @@ class TestSSOApplication(common.DescopeTest):
                 login_page_url="http://dummy.com",
                 use_metadata_info=True,
                 metadata_url="http://dummy.com/md",
-                attribute_mapping=[
-                    SAMLIDPAttributeMappingInfo("name1", "type1", "val1")
-                ],
+                attribute_mapping=[SAMLIDPAttributeMappingInfo("name1", "type1", "val1")],
                 groups_mapping=[
                     SAMLIDPGroupsMappingInfo(
                         "name1",
@@ -171,9 +169,7 @@ class TestSSOApplication(common.DescopeTest):
                     "entityId": None,
                     "acsUrl": None,
                     "certificate": None,
-                    "attributeMapping": [
-                        {"name": "name1", "type": "type1", "value": "val1"}
-                    ],
+                    "attributeMapping": [{"name": "name1", "type": "type1", "value": "val1"}],
                     "groupsMapping": [
                         {
                             "name": "name1",
@@ -219,11 +215,7 @@ class TestSSOApplication(common.DescopeTest):
         with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.is_success = True
-            self.assertIsNone(
-                client.mgmt.sso_application.update_oidc_application(
-                    "app1", "name", "http://dummy.com"
-                )
-            )
+            self.assertIsNone(client.mgmt.sso_application.update_oidc_application("app1", "name", "http://dummy.com"))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_application_oidc_update_path}",
                 headers={
@@ -301,9 +293,7 @@ class TestSSOApplication(common.DescopeTest):
                     entity_id="ent1234",
                     acs_url="http://dummy.com/acs",
                     certificate="cert",
-                    attribute_mapping=[
-                        SAMLIDPAttributeMappingInfo("name1", "type1", "val1")
-                    ],
+                    attribute_mapping=[SAMLIDPAttributeMappingInfo("name1", "type1", "val1")],
                     groups_mapping=[
                         SAMLIDPGroupsMappingInfo(
                             "name1",
@@ -336,9 +326,7 @@ class TestSSOApplication(common.DescopeTest):
                     "entityId": "ent1234",
                     "acsUrl": "http://dummy.com/acs",
                     "certificate": "cert",
-                    "attributeMapping": [
-                        {"name": "name1", "type": "type1", "value": "val1"}
-                    ],
+                    "attributeMapping": [{"name": "name1", "type": "type1", "value": "val1"}],
                     "groupsMapping": [
                         {
                             "name": "name1",
@@ -428,9 +416,7 @@ class TestSSOApplication(common.DescopeTest):
             resp = client.mgmt.sso_application.load("app1")
             self.assertEqual(resp["name"], "App1")
             self.assertEqual(resp["appType"], "saml")
-            self.assertEqual(
-                resp["samlSettings"]["loginPageUrl"], "http://dummy.com/login"
-            )
+            self.assertEqual(resp["samlSettings"]["loginPageUrl"], "http://dummy.com/login")
             self.assertEqual(resp["samlSettings"]["useMetadataInfo"], True)
             self.assertEqual(resp["samlSettings"]["metadataUrl"], "http://dummy.com/md")
             self.assertEqual(
@@ -495,13 +481,9 @@ class TestSSOApplication(common.DescopeTest):
             self.assertEqual(len(apps), 2)
             self.assertEqual(apps[0]["name"], "App1")
             self.assertEqual(apps[0]["appType"], "saml")
-            self.assertEqual(
-                apps[0]["samlSettings"]["loginPageUrl"], "http://dummy.com/login"
-            )
+            self.assertEqual(apps[0]["samlSettings"]["loginPageUrl"], "http://dummy.com/login")
             self.assertEqual(apps[0]["samlSettings"]["useMetadataInfo"], True)
-            self.assertEqual(
-                apps[0]["samlSettings"]["metadataUrl"], "http://dummy.com/md"
-            )
+            self.assertEqual(apps[0]["samlSettings"]["metadataUrl"], "http://dummy.com/md")
             self.assertEqual(
                 apps[0]["samlSettings"]["attributeMapping"],
                 [{"name": "email", "type": "", "value": "attrVal1"}],
@@ -521,15 +503,9 @@ class TestSSOApplication(common.DescopeTest):
 
             self.assertEqual(apps[1]["name"], "App2")
             self.assertEqual(apps[1]["appType"], "oidc")
-            self.assertEqual(
-                apps[1]["oidcSettings"]["loginPageUrl"], "http://dummy.com/login"
-            )
-            self.assertEqual(
-                apps[1]["oidcSettings"]["issuer"], "http://dummy.com/issuer"
-            )
-            self.assertEqual(
-                apps[1]["oidcSettings"]["discoveryUrl"], "http://dummy.com/wellknown"
-            )
+            self.assertEqual(apps[1]["oidcSettings"]["loginPageUrl"], "http://dummy.com/login")
+            self.assertEqual(apps[1]["oidcSettings"]["issuer"], "http://dummy.com/issuer")
+            self.assertEqual(apps[1]["oidcSettings"]["discoveryUrl"], "http://dummy.com/wellknown")
             mock_get.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_application_load_all_path}",
                 headers={

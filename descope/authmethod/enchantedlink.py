@@ -48,9 +48,7 @@ class EnchantedLink(AuthBase):
         if not user:
             user = {}
 
-        if not self._auth.adjust_and_verify_delivery_method(
-            DeliveryMethod.EMAIL, login_id, user
-        ):
+        if not self._auth.adjust_and_verify_delivery_method(DeliveryMethod.EMAIL, login_id, user):
             raise AuthException(
                 400,
                 ERROR_TYPE_INVALID_ARGUMENT,
@@ -62,9 +60,7 @@ class EnchantedLink(AuthBase):
         response = self._http.post(url, body=body)
         return EnchantedLink._get_pending_ref_from_response(response)
 
-    def sign_up_or_in(
-        self, login_id: str, uri: str, signup_options: SignUpOptions | None = None
-    ) -> dict:
+    def sign_up_or_in(self, login_id: str, uri: str, signup_options: SignUpOptions | None = None) -> dict:
         login_options: LoginOptions | None = None
         if signup_options is not None:
             login_options = LoginOptions(
@@ -109,9 +105,7 @@ class EnchantedLink(AuthBase):
         provider_id: str | None = None,
     ) -> dict:
         if not login_id:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
 
         Auth.validate_email(email)
 
@@ -130,21 +124,15 @@ class EnchantedLink(AuthBase):
 
     @staticmethod
     def _compose_signin_url() -> str:
-        return Auth.compose_url(
-            EndpointsV1.sign_in_auth_enchantedlink_path, DeliveryMethod.EMAIL
-        )
+        return Auth.compose_url(EndpointsV1.sign_in_auth_enchantedlink_path, DeliveryMethod.EMAIL)
 
     @staticmethod
     def _compose_signup_url() -> str:
-        return Auth.compose_url(
-            EndpointsV1.sign_up_auth_enchantedlink_path, DeliveryMethod.EMAIL
-        )
+        return Auth.compose_url(EndpointsV1.sign_up_auth_enchantedlink_path, DeliveryMethod.EMAIL)
 
     @staticmethod
     def _compose_sign_up_or_in_url() -> str:
-        return Auth.compose_url(
-            EndpointsV1.sign_up_or_in_auth_enchantedlink_path, DeliveryMethod.EMAIL
-        )
+        return Auth.compose_url(EndpointsV1.sign_up_or_in_auth_enchantedlink_path, DeliveryMethod.EMAIL)
 
     @staticmethod
     def _compose_signin_body(

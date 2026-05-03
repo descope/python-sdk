@@ -272,9 +272,7 @@ class TestFGA(common.DescopeTest):
             False,
             self.dummy_management_key,
         )
-        details = [
-            {"resourceId": "r1", "resourceType": "type1", "displayName": "Name1"}
-        ]
+        details = [{"resourceId": "r1", "resourceType": "type1", "displayName": "Name1"}]
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
             client.mgmt.fga.save_resources_details(details)
@@ -299,9 +297,7 @@ class TestFGA(common.DescopeTest):
             False,
             self.dummy_management_key,
         )
-        details = [
-            {"resourceId": "r1", "resourceType": "type1", "displayName": "Name1"}
-        ]
+        details = [{"resourceId": "r1", "resourceType": "type1", "displayName": "Name1"}]
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = False
             self.assertRaises(

@@ -33,9 +33,7 @@ def main():
             logging.info(f"Failed to sign up {e}")
             raise
 
-        token = input(
-            "Validation email send, please paste the token you received by email:\n"
-        )
+        token = input("Validation email send, please paste the token you received by email:\n")
         try:
             jwt_response = descope_client.magiclink.verify(token)
             logging.info("Token is valid")
@@ -48,9 +46,7 @@ def main():
 
         logging.info("Going to reset password...")
         descope_client.password.send_reset(email)
-        token = input(
-            "Reset email send, please paste the token you received by email:\n"
-        )
+        token = input("Reset email send, please paste the token you received by email:\n")
         try:
             jwt_response = descope_client.magiclink.verify(token)
             logging.info("Token is valid")
@@ -88,14 +84,10 @@ def main():
         try:
             logging.info("refreshing the session token..")
             claims = descope_client.refresh_session(refresh_token)
-            logging.info(
-                "going to revalidate the session with the newly refreshed token.."
-            )
+            logging.info("going to revalidate the session with the newly refreshed token..")
 
             new_session_token = claims.get(SESSION_TOKEN_NAME).get("jwt")
-            descope_client.validate_and_refresh_session(
-                new_session_token, refresh_token
-            )
+            descope_client.validate_and_refresh_session(new_session_token, refresh_token)
             logging.info("Session is valid also for the refreshed token.")
         except AuthException as e:
             logging.info(f"Session is not valid for the refreshed token: {e}")

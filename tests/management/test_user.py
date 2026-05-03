@@ -379,9 +379,7 @@ class TestUser(common.DescopeTest):
             bcrypt = UserPasswordBcrypt(hash="h")
             self.assertEqual(bcrypt.to_dict(), {"bcrypt": {"hash": "h"}})
 
-            pbkdf2 = UserPasswordPbkdf2(
-                hash="h", salt="s", iterations=14, variant="sha256"
-            )
+            pbkdf2 = UserPasswordPbkdf2(hash="h", salt="s", iterations=14, variant="sha256")
             self.assertEqual(
                 pbkdf2.to_dict(),
                 {
@@ -500,9 +498,7 @@ class TestUser(common.DescopeTest):
             network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.update(
-                "id", verified_email=True, verified_phone=False
-            )
+            resp = self.client.mgmt.user.update("id", verified_email=True, verified_phone=False)
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
@@ -650,9 +646,7 @@ class TestUser(common.DescopeTest):
             with patch("httpx.patch") as mock_patch:
                 network_resp = mock.Mock()
                 network_resp.is_success = True
-                network_resp.json.return_value = json.loads(
-                    """{"user": {"id": "u1"}}"""
-                )
+                network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
                 mock_patch.return_value = network_resp
 
                 resp = self.client.mgmt.user.patch("id", status=status)
@@ -770,9 +764,7 @@ class TestUser(common.DescopeTest):
             )
             mock_patch.return_value = network_resp
 
-            resp = self.client.mgmt.user.patch_batch(
-                [UserObj(login_id="user1"), UserObj(login_id="user2")]
-            )
+            resp = self.client.mgmt.user.patch_batch([UserObj(login_id="user1"), UserObj(login_id="user2")])
 
             self.assertEqual(len(resp["patchedUsers"]), 1)
             self.assertEqual(len(resp["failedUsers"]), 1)
@@ -791,14 +783,10 @@ class TestUser(common.DescopeTest):
         with patch("httpx.patch") as mock_patch:
             network_resp = mock.Mock()
             network_resp.is_success = True
-            network_resp.json.return_value = json.loads(
-                """{"patchedUsers": [{"id": "u1"}], "failedUsers": []}"""
-            )
+            network_resp.json.return_value = json.loads("""{"patchedUsers": [{"id": "u1"}], "failedUsers": []}""")
             mock_patch.return_value = network_resp
 
-            resp = self.client.mgmt.user.patch_batch(
-                [UserObj(login_id="test_user1")], test=True
-            )
+            self.client.mgmt.user.patch_batch([UserObj(login_id="test_user1")], test=True)
 
             call_args = mock_patch.call_args
             json_payload = call_args[1]["json"]
@@ -1026,17 +1014,13 @@ class TestUser(common.DescopeTest):
 
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
-            self.assertRaises(
-                AuthException, self.client.mgmt.user.load_users, None, False
-            )
+            self.assertRaises(AuthException, self.client.mgmt.user.load_users, None, False)
 
         # Test success flow
         with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.is_success = True
-            network_resp.json.return_value = json.loads(
-                """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
-            )
+            network_resp.json.return_value = json.loads("""{"users": [{"id": "u1"}, {"id": "u2"}]}""")
             mock_post.return_value = network_resp
             resp = self.client.mgmt.user.load_users(
                 ["uid"],
@@ -1076,21 +1060,15 @@ class TestUser(common.DescopeTest):
 
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
-            self.assertRaises(
-                AuthException, self.client.mgmt.user.search_all, [], [], -1, 0
-            )
+            self.assertRaises(AuthException, self.client.mgmt.user.search_all, [], [], -1, 0)
 
-            self.assertRaises(
-                AuthException, self.client.mgmt.user.search_all, [], [], 0, -1
-            )
+            self.assertRaises(AuthException, self.client.mgmt.user.search_all, [], [], 0, -1)
 
         # Test success flow
         with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.is_success = True
-            network_resp.json.return_value = json.loads(
-                """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
-            )
+            network_resp.json.return_value = json.loads("""{"users": [{"id": "u1"}, {"id": "u2"}]}""")
             mock_post.return_value = network_resp
             resp = self.client.mgmt.user.search_all(
                 ["t1, t2"],
@@ -1130,9 +1108,7 @@ class TestUser(common.DescopeTest):
         with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.is_success = True
-            network_resp.json.return_value = json.loads(
-                """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
-            )
+            network_resp.json.return_value = json.loads("""{"users": [{"id": "u1"}, {"id": "u2"}]}""")
             mock_post.return_value = network_resp
             sort = [Sort(field="kuku", desc=True), Sort(field="bubu")]
             resp = self.client.mgmt.user.search_all(
@@ -1178,9 +1154,7 @@ class TestUser(common.DescopeTest):
         with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.is_success = True
-            network_resp.json.return_value = json.loads(
-                """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
-            )
+            network_resp.json.return_value = json.loads("""{"users": [{"id": "u1"}, {"id": "u2"}]}""")
             mock_post.return_value = network_resp
             resp = self.client.mgmt.user.search_all(
                 ["t1, t2"],
@@ -1224,9 +1198,7 @@ class TestUser(common.DescopeTest):
         with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.is_success = True
-            network_resp.json.return_value = json.loads(
-                """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
-            )
+            network_resp.json.return_value = json.loads("""{"users": [{"id": "u1"}, {"id": "u2"}]}""")
             mock_post.return_value = network_resp
             resp = self.client.mgmt.user.search_all(
                 from_created_time=100,
@@ -1270,17 +1242,11 @@ class TestUser(common.DescopeTest):
         with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.is_success = True
-            network_resp.json.return_value = json.loads(
-                """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
-            )
+            network_resp.json.return_value = json.loads("""{"users": [{"id": "u1"}, {"id": "u2"}]}""")
             mock_post.return_value = network_resp
             resp = self.client.mgmt.user.search_all(
-                tenant_role_ids={
-                    "tenant1": {"values": ["roleA", "roleB"], "and": True}
-                },
-                tenant_role_names={
-                    "tenant2": {"values": ["admin", "user"], "and": False}
-                },
+                tenant_role_ids={"tenant1": {"values": ["roleA", "roleB"], "and": True}},
+                tenant_role_names={"tenant2": {"values": ["admin", "user"], "and": False}},
             )
             users = resp["users"]
             self.assertEqual(len(users), 2)
@@ -1301,12 +1267,8 @@ class TestUser(common.DescopeTest):
                     "page": 0,
                     "testUsersOnly": False,
                     "withTestUser": False,
-                    "tenantRoleIds": {
-                        "tenant1": {"values": ["roleA", "roleB"], "and": True}
-                    },
-                    "tenantRoleNames": {
-                        "tenant2": {"values": ["admin", "user"], "and": False}
-                    },
+                    "tenantRoleIds": {"tenant1": {"values": ["roleA", "roleB"], "and": True}},
+                    "tenantRoleNames": {"tenant2": {"values": ["admin", "user"], "and": False}},
                 },
                 follow_redirects=False,
                 verify=SSLMatcher(),
@@ -1348,9 +1310,7 @@ class TestUser(common.DescopeTest):
         with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.is_success = True
-            network_resp.json.return_value = json.loads(
-                """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
-            )
+            network_resp.json.return_value = json.loads("""{"users": [{"id": "u1"}, {"id": "u2"}]}""")
             mock_post.return_value = network_resp
             resp = self.client.mgmt.user.search_all_test_users(
                 ["t1, t2"],
@@ -1389,9 +1349,7 @@ class TestUser(common.DescopeTest):
         with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.is_success = True
-            network_resp.json.return_value = json.loads(
-                """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
-            )
+            network_resp.json.return_value = json.loads("""{"users": [{"id": "u1"}, {"id": "u2"}]}""")
             mock_post.return_value = network_resp
             sort = [Sort(field="kuku", desc=True), Sort(field="bubu")]
             resp = self.client.mgmt.user.search_all_test_users(
@@ -1436,9 +1394,7 @@ class TestUser(common.DescopeTest):
         with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.is_success = True
-            network_resp.json.return_value = json.loads(
-                """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
-            )
+            network_resp.json.return_value = json.loads("""{"users": [{"id": "u1"}, {"id": "u2"}]}""")
             mock_post.return_value = network_resp
             resp = self.client.mgmt.user.search_all_test_users(
                 ["t1, t2"],
@@ -1524,17 +1480,11 @@ class TestUser(common.DescopeTest):
         with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.is_success = True
-            network_resp.json.return_value = json.loads(
-                """{"users": [{"id": "u1"}, {"id": "u2"}]}"""
-            )
+            network_resp.json.return_value = json.loads("""{"users": [{"id": "u1"}, {"id": "u2"}]}""")
             mock_post.return_value = network_resp
             resp = self.client.mgmt.user.search_all_test_users(
-                tenant_role_ids={
-                    "tenant1": {"values": ["roleA", "roleB"], "and": True}
-                },
-                tenant_role_names={
-                    "tenant2": {"values": ["admin", "user"], "and": False}
-                },
+                tenant_role_ids={"tenant1": {"values": ["roleA", "roleB"], "and": True}},
+                tenant_role_names={"tenant2": {"values": ["admin", "user"], "and": False}},
             )
             users = resp["users"]
             self.assertEqual(len(users), 2)
@@ -1555,12 +1505,8 @@ class TestUser(common.DescopeTest):
                     "page": 0,
                     "testUsersOnly": True,
                     "withTestUser": True,
-                    "tenantRoleIds": {
-                        "tenant1": {"values": ["roleA", "roleB"], "and": True}
-                    },
-                    "tenantRoleNames": {
-                        "tenant2": {"values": ["admin", "user"], "and": False}
-                    },
+                    "tenantRoleIds": {"tenant1": {"values": ["roleA", "roleB"], "and": True}},
+                    "tenantRoleNames": {"tenant2": {"values": ["admin", "user"], "and": False}},
                 },
                 follow_redirects=False,
                 verify=SSLMatcher(),
@@ -1585,9 +1531,7 @@ class TestUser(common.DescopeTest):
                 """{"provider": "p1", "providerUserId": "puid", "accessToken": "access123", "refreshToken": "refresh456", "expiration": "123123123", "scopes": ["s1", "s2"]}"""
             )
             mock_get.return_value = network_resp
-            resp = self.client.mgmt.user.get_provider_token(
-                "valid-id", "p1", True, True
-            )
+            resp = self.client.mgmt.user.get_provider_token("valid-id", "p1", True, True)
             self.assertEqual(resp["provider"], "p1")
             self.assertEqual(resp["providerUserId"], "puid")
             self.assertEqual(resp["accessToken"], "access123")
@@ -1891,9 +1835,7 @@ class TestUser(common.DescopeTest):
             network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.update_custom_attribute(
-                "valid-id", "foo", "bar"
-            )
+            resp = self.client.mgmt.user.update_custom_attribute("valid-id", "foo", "bar")
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
@@ -2228,9 +2170,7 @@ class TestUser(common.DescopeTest):
             network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.set_tenant_roles(
-                "valid-id", "tid", ["foo", "bar"]
-            )
+            resp = self.client.mgmt.user.set_tenant_roles("valid-id", "tid", ["foo", "bar"])
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
@@ -2269,9 +2209,7 @@ class TestUser(common.DescopeTest):
             network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.add_tenant_roles(
-                "valid-id", "tid", ["foo", "bar"]
-            )
+            resp = self.client.mgmt.user.add_tenant_roles("valid-id", "tid", ["foo", "bar"])
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
@@ -2310,9 +2248,7 @@ class TestUser(common.DescopeTest):
             network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.remove_tenant_roles(
-                "valid-id", "tid", ["foo", "bar"]
-            )
+            resp = self.client.mgmt.user.remove_tenant_roles("valid-id", "tid", ["foo", "bar"])
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
             mock_post.assert_called_with(
@@ -2348,14 +2284,10 @@ class TestUser(common.DescopeTest):
         with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.is_success = True
-            network_resp.json.return_value = json.loads(
-                """{"code": "123456", "loginId": "login-id"}"""
-            )
+            network_resp.json.return_value = json.loads("""{"code": "123456", "loginId": "login-id"}""")
             mock_post.return_value = network_resp
             login_options = LoginOptions(stepup=True)
-            resp = self.client.mgmt.user.generate_otp_for_test_user(
-                DeliveryMethod.EMAIL, "login-id", login_options
-            )
+            resp = self.client.mgmt.user.generate_otp_for_test_user(DeliveryMethod.EMAIL, "login-id", login_options)
             self.assertEqual(resp["code"], "123456")
             self.assertEqual(resp["loginId"], "login-id")
             mock_post.assert_called_with(
@@ -2611,9 +2543,7 @@ class TestUser(common.DescopeTest):
         with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.is_success = True
-            network_resp.json.return_value = json.loads(
-                """{"link": "some-link", "loginId": "login-id"}"""
-            )
+            network_resp.json.return_value = json.loads("""{"link": "some-link", "loginId": "login-id"}""")
             mock_post.return_value = network_resp
             login_options = LoginOptions(stepup=True)
             resp = self.client.mgmt.user.generate_magic_link_for_test_user(
@@ -2664,9 +2594,7 @@ class TestUser(common.DescopeTest):
             )
             mock_post.return_value = network_resp
             login_options = LoginOptions(stepup=True)
-            resp = self.client.mgmt.user.generate_enchanted_link_for_test_user(
-                "login-id", "bla", login_options
-            )
+            resp = self.client.mgmt.user.generate_enchanted_link_for_test_user("login-id", "bla", login_options)
             self.assertEqual(resp["link"], "some-link")
             self.assertEqual(resp["loginId"], "login-id")
             self.assertEqual(resp["pendingRef"], "some-ref")
@@ -2696,9 +2624,7 @@ class TestUser(common.DescopeTest):
         # Test failed flows
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException, self.client.mgmt.user.generate_embedded_link, "login-id"
-            )
+            self.assertRaises(AuthException, self.client.mgmt.user.generate_embedded_link, "login-id")
 
         # Test success flow
         with patch("httpx.post") as mock_post:
@@ -2706,9 +2632,7 @@ class TestUser(common.DescopeTest):
             network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"token": "some-token"}""")
             mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.generate_embedded_link(
-                "login-id", {"k1": "v1"}
-            )
+            resp = self.client.mgmt.user.generate_embedded_link("login-id", {"k1": "v1"})
             self.assertEqual(resp, "some-token")
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.user_generate_embedded_link_path}",
@@ -2773,9 +2697,7 @@ class TestUser(common.DescopeTest):
         # Test failed flows
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException, self.client.mgmt.user.history, ["user-id-1", "user-id-2"]
-            )
+            self.assertRaises(AuthException, self.client.mgmt.user.history, ["user-id-1", "user-id-2"])
 
         # Test success flow
         with patch("httpx.post") as mock_post:

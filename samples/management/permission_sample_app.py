@@ -10,9 +10,7 @@ def main():
     management_key = ""
 
     try:
-        descope_client = DescopeClient(
-            project_id=project_id, management_key=management_key
-        )
+        descope_client = DescopeClient(project_id=project_id, management_key=management_key)
         name = "My Permission"
 
         try:
@@ -54,9 +52,7 @@ def main():
             logging.info("Updating newly created permission")
             # update overrides all fields, must provide the entire entity
             # we mean to update.
-            descope_client.mgmt.permission.update(
-                name, new_name="My Updated Permission", description="New Description"
-            )
+            descope_client.mgmt.permission.update(name, new_name="My Updated Permission", description="New Description")
 
         except AuthException as e:
             logging.info(f"Permission update failed {e}")
@@ -85,9 +81,7 @@ def main():
 
         try:
             logging.info("Deleting a batch of permissions")
-            descope_client.mgmt.permission.delete_batch(
-                ["Updated Batch Permission 1", "Batch Permission 2"]
-            )
+            descope_client.mgmt.permission.delete_batch(["Updated Batch Permission 1", "Batch Permission 2"])
 
         except AuthException as e:
             logging.info(f"Permission batch deletion failed {e}")

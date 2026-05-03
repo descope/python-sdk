@@ -43,9 +43,7 @@ class Tenant(HTTPBase):
         Raise:
         AuthException: raised if creation operation fails
         """
-        self_provisioning_domains = (
-            [] if self_provisioning_domains is None else self_provisioning_domains
-        )
+        self_provisioning_domains = [] if self_provisioning_domains is None else self_provisioning_domains
 
         response = self._http.post(
             MgmtV1.tenant_create_path,
@@ -91,9 +89,7 @@ class Tenant(HTTPBase):
         Raise:
         AuthException: raised if creation operation fails
         """
-        self_provisioning_domains = (
-            [] if self_provisioning_domains is None else self_provisioning_domains
-        )
+        self_provisioning_domains = [] if self_provisioning_domains is None else self_provisioning_domains
 
         self._http.post(
             MgmtV1.tenant_update_path,
@@ -174,9 +170,7 @@ class Tenant(HTTPBase):
             "inactivityTime": inactivity_time,
             "inactivityTimeUnit": inactivity_time_unit,
             "JITDisabled": JITDisabled,
-            "ssoSetupSuiteSettings": (
-                sso_setup_suite_settings.to_dict() if sso_setup_suite_settings else None
-            ),
+            "ssoSetupSuiteSettings": (sso_setup_suite_settings.to_dict() if sso_setup_suite_settings else None),
             "enforceSSO": enforce_sso,
             "enforceSSOExclusions": enforce_sso_exclusions,
             "federatedAppIds": federated_app_ids,

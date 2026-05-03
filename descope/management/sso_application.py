@@ -126,9 +126,7 @@ class SSOApplication(HTTPBase):
 
         groups_mapping = [] if groups_mapping is None else groups_mapping
 
-        acs_allowed_callbacks = (
-            [] if acs_allowed_callbacks is None else acs_allowed_callbacks
-        )
+        acs_allowed_callbacks = [] if acs_allowed_callbacks is None else acs_allowed_callbacks
 
         uri = MgmtV1.sso_application_saml_create_path
         response = self._http.post(
@@ -263,9 +261,7 @@ class SSOApplication(HTTPBase):
 
         groups_mapping = [] if groups_mapping is None else groups_mapping
 
-        acs_allowed_callbacks = (
-            [] if acs_allowed_callbacks is None else acs_allowed_callbacks
-        )
+        acs_allowed_callbacks = [] if acs_allowed_callbacks is None else acs_allowed_callbacks
 
         uri = MgmtV1.sso_application_saml_update_path
         self._http.post(
@@ -410,9 +406,7 @@ class SSOApplication(HTTPBase):
             "entityId": entity_id,
             "acsUrl": acs_url,
             "certificate": certificate,
-            "attributeMapping": saml_idp_attribute_mapping_info_to_dict(
-                attribute_mapping
-            ),
+            "attributeMapping": saml_idp_attribute_mapping_info_to_dict(attribute_mapping),
             "groupsMapping": saml_idp_groups_mapping_info_to_dict(groups_mapping),
             "acsAllowedCallbacks": acs_allowed_callbacks,
             "subjectNameIdType": subject_name_id_type,

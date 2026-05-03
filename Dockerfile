@@ -1,43 +1,34 @@
-ARG PYTHON_VERSION=3.9
+ARG PYTHON_VERSION=3.13
+ARG UV_VERSION=0.11.8
 
-FROM python:${PYTHON_VERSION}-slim as python-base
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=off \
-    PIP_DISABLE_PIP_VERSION_CHECK=on \
-    PIP_DEFAULT_TIMEOUT=100 \
-    POETRY_HOME="/opt/poetry" \
-    POETRY_VIRTUALENVS_IN_PROJECT=true \
-    POETRY_NO_INTERACTION=1 \
-    PYSETUP_PATH="/opt/pysetup" \
-    VENV_PATH="/opt/pysetup/.venv"
+FROM ghcr.io/astral-sh/uv:${UV_VERSION} AS uv
 
-ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
+FROM python:${PYTHON_VERSION}-slim AS builder
+COPY --from=uv /uv /uvx /bin/
 
-FROM python-base as builder-base
-RUN apt-get update \
-    && apt-get install --no-install-recommends -y \
-        curl \
-        build-essential \
-        libpq-dev \
-        git
+ENV UV_LINK_MODE=copy \
+    UV_COMPILE_BYTECODE=1 \
+    UV_PYTHON_DOWNLOADS=never \
+    UV_PROJECT_ENVIRONMENT=/opt/venv
 
-# Install Poetry - respects $POETRY_VERSION & $POETRY_HOME
-ENV POETRY_VERSION=1.3.2
-RUN curl -sSL https://install.python-poetry.org | python
+WORKDIR /app
+COPY pyproject.toml uv.lock README.md LICENSE ./
+COPY descope ./descope
+RUN uv sync --frozen --no-dev --extra Flask
 
-# We copy our Python requirements here to cache them
-# and install only runtime deps using poetry
-WORKDIR $PYSETUP_PATH
-COPY . .
-RUN poetry install
+FROM python:${PYTHON_VERSION}-slim AS production
+ENV PATH="/opt/venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
 
-FROM python-base as production
-ENV FASTAPI_ENV=production
+# Run as a non-root user
+RUN groupadd --system --gid 1001 app \
+    && useradd --system --uid 1001 --gid app --create-home --home-dir /home/app app
 
-COPY --from=builder-base $VENV_PATH $VENV_PATH
-
-COPY . /app
+COPY --from=builder --chown=app:app /opt/venv /opt/venv
+COPY --chown=app:app . /app
 WORKDIR /app
 
-CMD python samples/otp_web_sample_app.py
+USER app
+
+CMD ["python", "samples/otp_web_sample_app.py"]

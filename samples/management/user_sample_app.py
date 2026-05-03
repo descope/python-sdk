@@ -10,9 +10,7 @@ def main():
     management_key = ""
 
     try:
-        descope_client = DescopeClient(
-            project_id=project_id, management_key=management_key
-        )
+        descope_client = DescopeClient(project_id=project_id, management_key=management_key)
         user_login_id = "des@copeland.com"
 
         try:
@@ -45,9 +43,7 @@ def main():
             logging.info("Updating newly created user")
             # update overrides all fields, must provide the entire entity
             # we mean to update.
-            descope_client.mgmt.user.update(
-                user_login_id, display_name="Desmond Copeland"
-            )
+            descope_client.mgmt.user.update(user_login_id, display_name="Desmond Copeland")
 
         except AuthException as e:
             logging.info(f"User update failed {e}")

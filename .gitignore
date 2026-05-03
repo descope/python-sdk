@@ -110,6 +110,13 @@ ENV/
 env.bak/
 venv.bak/
 
+# uv / ruff caches
+.ruff_cache/
+uv-*.lock
+
+# Local agent state
+.nomadworks/
+
 # Spyder project settings
 .spyderproject
 .spyproject

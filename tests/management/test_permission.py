@@ -130,9 +130,7 @@ class TestPermission(common.DescopeTest):
         # Test success flow
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
-            self.assertIsNone(
-                client.mgmt.permission.update_by_id("PERM123", "new-name", "new-description")
-            )
+            self.assertIsNone(client.mgmt.permission.update_by_id("PERM123", "new-name", "new-description"))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.permission_update_path}",
                 headers={
@@ -434,9 +432,7 @@ class TestPermission(common.DescopeTest):
         with patch("httpx.get") as mock_get:
             network_resp = mock.Mock()
             network_resp.is_success = True
-            network_resp.json.return_value = json.loads(
-                """{"permissions": [{"name": "p1"}, {"name": "p2"}]}"""
-            )
+            network_resp.json.return_value = json.loads("""{"permissions": [{"name": "p1"}, {"name": "p2"}]}""")
             mock_get.return_value = network_resp
             resp = client.mgmt.permission.load_all()
             permissions = resp["permissions"]

@@ -94,9 +94,7 @@ class TestAudit(common.DescopeTest):
         # Test failed search
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException, client.mgmt.audit.create_event, "a", "b", "c", "d"
-            )
+            self.assertRaises(AuthException, client.mgmt.audit.create_event, "a", "b", "c", "d")
 
         # Test success search
         with patch("httpx.post") as mock_post:

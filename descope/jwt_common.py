@@ -20,21 +20,13 @@ def adjust_properties(jwt_response: dict, user_jwt: bool) -> dict:
     """
     # Save permissions, roles and tenants info from Session token or from refresh token on the json top level
     if SESSION_TOKEN_NAME in jwt_response:
-        jwt_response["permissions"] = jwt_response[SESSION_TOKEN_NAME].get(
-            "permissions", []
-        )
+        jwt_response["permissions"] = jwt_response[SESSION_TOKEN_NAME].get("permissions", [])
         jwt_response["roles"] = jwt_response[SESSION_TOKEN_NAME].get("roles", [])
         jwt_response["tenants"] = jwt_response[SESSION_TOKEN_NAME].get("tenants", {})
     elif REFRESH_SESSION_TOKEN_NAME in jwt_response:
-        jwt_response["permissions"] = jwt_response[REFRESH_SESSION_TOKEN_NAME].get(
-            "permissions", []
-        )
-        jwt_response["roles"] = jwt_response[REFRESH_SESSION_TOKEN_NAME].get(
-            "roles", []
-        )
-        jwt_response["tenants"] = jwt_response[REFRESH_SESSION_TOKEN_NAME].get(
-            "tenants", {}
-        )
+        jwt_response["permissions"] = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("permissions", [])
+        jwt_response["roles"] = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("roles", [])
+        jwt_response["tenants"] = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("tenants", {})
     else:
         jwt_response["permissions"] = jwt_response.get("permissions", [])
         jwt_response["roles"] = jwt_response.get("roles", [])
@@ -46,9 +38,7 @@ def adjust_properties(jwt_response: dict, user_jwt: bool) -> dict:
         or jwt_response.get(REFRESH_SESSION_TOKEN_NAME, {}).get("iss", None)
         or jwt_response.get("iss", "")
     )
-    jwt_response["projectId"] = issuer.rsplit("/")[
-        -1
-    ]  # support both url issuer and project ID issuer
+    jwt_response["projectId"] = issuer.rsplit("/")[-1]  # support both url issuer and project ID issuer
 
     sub = (
         jwt_response.get(SESSION_TOKEN_NAME, {}).get("dsub", None)
@@ -67,9 +57,7 @@ def adjust_properties(jwt_response: dict, user_jwt: bool) -> dict:
     return jwt_response
 
 
-def decode_token_unverified(
-    token: str, audience: Optional[str | Iterable[str]] = None
-) -> dict:
+def decode_token_unverified(token: str, audience: Optional[str | Iterable[str]] = None) -> dict:
     """Decode a JWT without verifying signature (used when no validator is provided).
 
     WARNING: This function does NOT verify JWT signatures and should NEVER be used
@@ -87,9 +75,7 @@ def decode_token_unverified(
         stacklevel=2,
     )
     try:
-        return jwt.decode(
-            token, options={"verify_signature": False, "verify_aud": False}
-        )
+        return jwt.decode(token, options={"verify_signature": False, "verify_aud": False})
     except Exception:
         return {}
 
@@ -99,9 +85,7 @@ def generate_auth_info(
     refresh_token: Optional[str],
     user_jwt: bool,
     audience: Optional[str | Iterable[str]] = None,
-    token_validator: Optional[
-        Callable[[str, Optional[str | Iterable[str]]], dict]
-    ] = None,
+    token_validator: Optional[Callable[[str, Optional[str | Iterable[str]]], dict]] = None,
 ) -> dict:
     """Build the normalized JWT info dict using a provided token validator.
 
@@ -121,9 +105,7 @@ def generate_auth_info(
     if rt_jwt:
         jwt_response[REFRESH_SESSION_TOKEN_NAME] = token_validator(rt_jwt, audience)
     elif refresh_token:
-        jwt_response[REFRESH_SESSION_TOKEN_NAME] = token_validator(
-            refresh_token, audience
-        )
+        jwt_response[REFRESH_SESSION_TOKEN_NAME] = token_validator(refresh_token, audience)
 
     jwt_response = adjust_properties(jwt_response, user_jwt)
 
@@ -142,14 +124,10 @@ def generate_jwt_response(
     response_body: dict,
     refresh_cookie: Optional[str],
     audience: Optional[str | Iterable[str]] = None,
-    token_validator: Optional[
-        Callable[[str, Optional[str | Iterable[str]]], dict]
-    ] = None,
+    token_validator: Optional[Callable[[str, Optional[str | Iterable[str]]], dict]] = None,
 ) -> dict:
     """Compose the final JWT response body using the provided token validator."""
-    jwt_response = generate_auth_info(
-        response_body, refresh_cookie, True, audience, token_validator
-    )
+    jwt_response = generate_auth_info(response_body, refresh_cookie, True, audience, token_validator)
     jwt_response["user"] = response_body.get("user", {})
     jwt_response["firstSeen"] = response_body.get("firstSeen", True)
     return jwt_response

@@ -59,9 +59,7 @@ class TestSAML(common.DescopeTest):
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
             saml.start("tenant1", "http://dummy.com")
-            expected_uri = (
-                f"{common.DEFAULT_BASE_URL}{EndpointsV1.auth_saml_start_path}"
-            )
+            expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.auth_saml_start_path}"
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
@@ -111,9 +109,7 @@ class TestSAML(common.DescopeTest):
             mock_post.return_value.is_success = True
             lo = LoginOptions(stepup=True, custom_claims={"k1": "v1"})
             saml.start("tenant1", "http://dummy.com", lo, "refresh")
-            expected_uri = (
-                f"{common.DEFAULT_BASE_URL}{EndpointsV1.auth_saml_start_path}"
-            )
+            expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.auth_saml_start_path}"
             mock_post.assert_called_with(
                 expected_uri,
                 headers={
