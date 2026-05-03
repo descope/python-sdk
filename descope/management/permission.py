@@ -83,8 +83,8 @@ class Permission(HTTPBase):
         Raise:
         AuthException: raised if deletion operation fails
         """
-        body = {}
-        if names:
+        body: dict = {}
+        if names is not None:
             body["names"] = names
         if ids:
             body["ids"] = ids

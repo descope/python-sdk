@@ -95,8 +95,7 @@ class Role(HTTPBase):
 
     def delete_batch(
         self,
-        role_names: Optional[List[str]] = None,
-        tenant_id: Optional[str] = None,
+        roles: Optional[List[dict]] = None,
         *,
         role_ids: Optional[List[str]] = None,
     ):
@@ -105,18 +104,22 @@ class Role(HTTPBase):
         IMPORTANT: This action is irreversible. Use carefully.
 
         Args:
-        role_names (List[str]): Optional list of role names to delete.
-        tenant_id (str): Optional tenant ID the roles belong to.
+        roles (List[dict]): List of role objects to delete, each with:
+            - name (str): role name.
+            - tenantId (str): Optional tenant ID.
         role_ids (List[str]): Optional list of role IDs to delete (e.g. ROL...).
 
         Raise:
         AuthException: raised if deletion operation fails
         """
         body: dict = {}
-        if role_names:
-            body["roleNames"] = role_names
-        if tenant_id is not None:
-            body["tenantId"] = tenant_id
+        if roles:
+            names = [r["name"] for r in roles if r.get("name")]
+            if names:
+                body["roleNames"] = names
+            tenant_id = next((r.get("tenantId") for r in roles if r.get("tenantId")), None)
+            if tenant_id:
+                body["tenantId"] = tenant_id
         if role_ids:
             body["roleIds"] = role_ids
         self._http.post(
@@ -191,13 +194,11 @@ class Role(HTTPBase):
         Raise:
         AuthException: raised if deletion operation fails
         """
-        body: dict = {}
+        body: dict = {"tenantId": tenant_id}
         if id is not None:
             body["id"] = id
         else:
             body["name"] = name
-        if tenant_id is not None:
-            body["tenantId"] = tenant_id
         self._http.post(
             MgmtV1.role_delete_path,
             body=body,

@@ -276,7 +276,7 @@ class TestRole(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
-                json={"name": "name"},
+                json={"name": "name", "tenantId": None},
                 follow_redirects=False,
                 verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
@@ -379,20 +379,23 @@ class TestRole(common.DescopeTest):
             self.dummy_management_key,
         )
 
-        # Test failed flow (by names)
+        # Test failed flow (by names, original call style)
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 client.mgmt.role.delete_batch,
-                ["R1"],
+                [{"name": "R1"}],
             )
 
-        # Test success flow — by names with tenantId
+        # Test success flow — by names with tenantId (original call style)
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
             self.assertIsNone(
-                client.mgmt.role.delete_batch(["R1", "R2"], "t1")
+                client.mgmt.role.delete_batch([
+                    {"name": "R1", "tenantId": "t1"},
+                    {"name": "R2"},
+                ])
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.role_delete_batch_path}",
@@ -408,7 +411,7 @@ class TestRole(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-        # Test success flow — by IDs
+        # Test success flow — by IDs (new kwarg)
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
             self.assertIsNone(
