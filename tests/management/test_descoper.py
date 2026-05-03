@@ -16,6 +16,7 @@ from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
 from .. import common
+from ..testutils import SSLMatcher
 
 
 class TestDescoper(common.DescopeTest):
@@ -33,8 +34,8 @@ class TestDescoper(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.put") as mock_put:
-            mock_put.return_value.ok = False
+        with patch("httpx.put") as mock_put:
+            mock_put.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 client.mgmt.descoper.create,
@@ -53,9 +54,9 @@ class TestDescoper(common.DescopeTest):
         )
 
         # Test success flow
-        with patch("requests.put") as mock_put:
+        with patch("httpx.put") as mock_put:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """{
                     "descopers": [{
@@ -134,8 +135,8 @@ class TestDescoper(common.DescopeTest):
                         }
                     ]
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -148,9 +149,9 @@ class TestDescoper(common.DescopeTest):
         )
 
         # Test success flow with tag roles
-        with patch("requests.put") as mock_put:
+        with patch("httpx.put") as mock_put:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = {
                 "descopers": [
                     {
@@ -212,8 +213,8 @@ class TestDescoper(common.DescopeTest):
                         }
                     ]
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -226,8 +227,8 @@ class TestDescoper(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.get") as mock_get:
-            mock_get.return_value.ok = False
+        with patch("httpx.get") as mock_get:
+            mock_get.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 client.mgmt.descoper.load,
@@ -242,9 +243,9 @@ class TestDescoper(common.DescopeTest):
         )
 
         # Test success flow
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """{
                     "descoper": {
@@ -278,8 +279,8 @@ class TestDescoper(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 params={"id": "U2222222222222222222222222"},
-                allow_redirects=True,
-                verify=True,
+                follow_redirects=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -292,8 +293,8 @@ class TestDescoper(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.patch") as mock_patch:
-            mock_patch.return_value.ok = False
+        with patch("httpx.patch") as mock_patch:
+            mock_patch.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 client.mgmt.descoper.update,
@@ -310,9 +311,9 @@ class TestDescoper(common.DescopeTest):
         )
 
         # Test success flow
-        with patch("requests.patch") as mock_patch:
+        with patch("httpx.patch") as mock_patch:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """{
                     "descoper": {
@@ -361,8 +362,8 @@ class TestDescoper(common.DescopeTest):
                         "phone": "+1234358730",
                     },
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -375,8 +376,8 @@ class TestDescoper(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.delete") as mock_delete:
-            mock_delete.return_value.ok = False
+        with patch("httpx.delete") as mock_delete:
+            mock_delete.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 client.mgmt.descoper.delete,
@@ -391,20 +392,19 @@ class TestDescoper(common.DescopeTest):
         )
 
         # Test success flow
-        with patch("requests.delete") as mock_delete:
-            mock_delete.return_value.ok = True
+        with patch("httpx.delete") as mock_delete:
+            mock_delete.return_value.is_success = True
             self.assertIsNone(client.mgmt.descoper.delete("U2111111111111111111111111"))
             mock_delete.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.descoper_delete_path}",
                 params={"id": "U2111111111111111111111111"},
-                json=None,
                 headers={
                     **common.default_headers,
                     "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
                     "x-descope-project-id": self.dummy_project_id,
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -417,17 +417,17 @@ class TestDescoper(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 client.mgmt.descoper.list,
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """{
                     "descopers": [
@@ -509,7 +509,7 @@ class TestDescoper(common.DescopeTest):
                 },
                 params=None,
                 json={},
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

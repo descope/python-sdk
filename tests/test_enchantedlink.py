@@ -13,6 +13,7 @@ from descope.common import (
     LoginOptions,
     SignUpOptions,
 )
+from tests.testutils import SSLMatcher
 
 from . import common
 
@@ -103,9 +104,9 @@ class TestEnchantedLink(common.DescopeTest):
                 http_client=self.make_http_client(),
             )
         )
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             # Test failed flows
             with self.assertRaises(AuthException):
                 enchantedlink.sign_in("", "http://test.me")
@@ -126,15 +127,15 @@ class TestEnchantedLink(common.DescopeTest):
                     "URI": "http://test.me",
                     "loginOptions": {},
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(res["pendingRef"], "aaaa")
             self.assertEqual(res["linkId"], "24")
 
         # Validate refresh token used while provided
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             refresh_token = "dummy refresh token"
             enchantedlink.sign_in(
                 "dummy@dummy.com",
@@ -159,13 +160,13 @@ class TestEnchantedLink(common.DescopeTest):
                         "mfa": False,
                     },
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # With template options
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             refresh_token = "dummy refresh token"
             enchantedlink.sign_in(
                 "dummy@dummy.com",
@@ -198,8 +199,8 @@ class TestEnchantedLink(common.DescopeTest):
                         "mfa": False,
                     },
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -211,9 +212,9 @@ class TestEnchantedLink(common.DescopeTest):
                 http_client=self.make_http_client(),
             )
         )
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             data = json.loads("""{"pendingRef": "aaaa", "linkId":"24"}""")
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
@@ -236,8 +237,8 @@ class TestEnchantedLink(common.DescopeTest):
                         "mfa": False,
                     },
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -249,9 +250,9 @@ class TestEnchantedLink(common.DescopeTest):
                 http_client=self.make_http_client(),
             )
         )
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
 
             # Test failed flows
             self.assertRaises(
@@ -284,14 +285,14 @@ class TestEnchantedLink(common.DescopeTest):
                     "user": {"username": "user1", "email": "dummy@dummy.com"},
                     "email": "dummy@dummy.com",
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(res["pendingRef"], "aaaa")
 
         # Test user is None so using the login_id as default
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             data = json.loads("""{"pendingRef": "aaaa"}""")
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
@@ -314,14 +315,14 @@ class TestEnchantedLink(common.DescopeTest):
                     "user": {"email": "dummy@dummy.com"},
                     "email": "dummy@dummy.com",
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(res["pendingRef"], "aaaa")
 
         # Test success flow with sign up options
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             data = json.loads("""{"pendingRef": "aaaa"}""")
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
@@ -354,8 +355,8 @@ class TestEnchantedLink(common.DescopeTest):
                         "revokeOtherSessions": True,
                     },
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(res["pendingRef"], "aaaa")
@@ -368,9 +369,9 @@ class TestEnchantedLink(common.DescopeTest):
                 http_client=self.make_http_client(),
             )
         )
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             data = json.loads("""{"pendingRef": "aaaa"}""")
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
@@ -391,15 +392,15 @@ class TestEnchantedLink(common.DescopeTest):
                     "URI": "http://test.me",
                     "loginOptions": {},
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Test success flow with sign up options
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             data = json.loads("""{"pendingRef": "aaaa"}""")
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
@@ -426,8 +427,8 @@ class TestEnchantedLink(common.DescopeTest):
                         "templateOptions": {"bla": "blue"},
                     },
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -442,8 +443,8 @@ class TestEnchantedLink(common.DescopeTest):
             )
         )
 
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 enchantedlink.verify,
@@ -452,9 +453,9 @@ class TestEnchantedLink(common.DescopeTest):
 
         # Test success flow
         valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3R6VWhkcXBJRjJ5czlnZzdtczA2VXZ0QzQiLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0Mzc1OTYsImlhdCI6MTY1OTYzNzU5NiwiaXNzIjoiUDJDdHpVaGRxcElGMnlzOWdnN21zMDZVdnRDNCIsInN1YiI6IlUyQ3UwajBXUHczWU9pUElTSmI1Mkwwd1VWTWcifQ.WLnlHugvzZtrV9OzBB7SjpCLNRvKF3ImFpVyIN5orkrjO2iyAKg_Rb4XHk9sXGC1aW8puYzLbhE1Jv3kk2hDcKggfE8OaRNRm8byhGFZHnvPJwcP_Ya-aRmfAvCLcKOL"
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {}
             mock_post.return_value = my_mock_response
             mock_post.return_value.cookies = {
@@ -473,9 +474,9 @@ class TestEnchantedLink(common.DescopeTest):
         )
 
         valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3R6VWhkcXBJRjJ5czlnZzdtczA2VXZ0QzQiLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0Mzc1OTYsImlhdCI6MTY1OTYzNzU5NiwiaXNzIjoiUDJDdHpVaGRxcElGMnlzOWdnN21zMDZVdnRDNCIsInN1YiI6IlUyQ3UwajBXUHczWU9pUElTSmI1Mkwwd1VWTWcifQ.WLnlHugvzZtrV9OzBB7SjpCLNRvKF3ImFpVyIN5orkrjO2iyAKg_Rb4XHk9sXGC1aW8puYzLbhE1Jv3kk2hDcKggfE8OaRNRm8byhGFZHnvPJwcP_Ya-aRmfAvCLcKOL"
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.json.return_value = {}
             mock_post.return_value = my_mock_response
             mock_post.return_value.cookies = {
@@ -492,9 +493,9 @@ class TestEnchantedLink(common.DescopeTest):
                 http_client=self.make_http_client(),
             )
         )
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             # Test failed flows
             self.assertRaises(
                 AuthException,
@@ -523,16 +524,16 @@ class TestEnchantedLink(common.DescopeTest):
                     "addToLoginIDs": False,
                     "onMergeUseExisting": False,
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
                 params=None,
             )
 
         # with template options
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             data = json.loads("""{"pendingRef": "aaaa"}""")
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
@@ -557,8 +558,8 @@ class TestEnchantedLink(common.DescopeTest):
                     "onMergeUseExisting": False,
                     "templateOptions": {"bla": "blue"},
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
                 params=None,
             )

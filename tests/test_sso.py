@@ -7,6 +7,7 @@ from descope import AuthException
 from descope.auth import Auth
 from descope.authmethod.sso import SSO
 from descope.common import DEFAULT_TIMEOUT_SECONDS, EndpointsV1, LoginOptions
+from tests.testutils import SSLMatcher
 
 from . import common
 
@@ -86,17 +87,17 @@ class TestSSO(common.DescopeTest):
         self.assertRaises(AuthException, sso.start, "", "http://dummy.com")
         self.assertRaises(AuthException, sso.start, None, "http://dummy.com")
 
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(AuthException, sso.start, "tenant1", "http://dummy.com")
 
         # Test success flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNotNone(sso.start("tenant1", "http://dummy.com"))
 
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             sso.start("tenant1", "http://dummy.com", sso_id="some-sso-id")
             expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.auth_sso_start_path}"
             mock_post.assert_called_with(
@@ -112,8 +113,8 @@ class TestSSO(common.DescopeTest):
                     "ssoId": "some-sso-id",
                 },
                 json={},
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertRaises(
@@ -137,17 +138,17 @@ class TestSSO(common.DescopeTest):
         self.assertRaises(AuthException, sso.start, "", "http://dummy.com")
         self.assertRaises(AuthException, sso.start, None, "http://dummy.com")
 
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(AuthException, sso.start, "tenant1", "http://dummy.com")
 
         # Test success flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNotNone(sso.start("tenant1", "http://dummy.com"))
 
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             lo = LoginOptions(stepup=True, custom_claims={"k1": "v1"})
             sso.start("tenant1", "http://dummy.com", lo, "refresh")
             expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.auth_sso_start_path}"
@@ -160,8 +161,8 @@ class TestSSO(common.DescopeTest):
                 },
                 params={"tenant": "tenant1", "redirectURL": "http://dummy.com"},
                 json={"stepup": True, "customClaims": {"k1": "v1"}, "mfa": False},
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -175,8 +176,8 @@ class TestSSO(common.DescopeTest):
         )
 
         # Test with new parameters
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             sso.start(
                 "tenant1",
                 "http://dummy.com",
@@ -198,14 +199,14 @@ class TestSSO(common.DescopeTest):
                     "forceAuthn": True,
                 },
                 json={},
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Test with boolean parameters set to False
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             sso.start("tenant1", "http://dummy.com", force_authn=False)
             expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.auth_sso_start_path}"
             mock_post.assert_called_with(
@@ -221,14 +222,14 @@ class TestSSO(common.DescopeTest):
                     "forceAuthn": False,
                 },
                 json={},
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Test with mixed parameters
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             lo = LoginOptions(stepup=True, custom_claims={"role": "admin"})
             sso.start(
                 "tenant1",
@@ -257,8 +258,8 @@ class TestSSO(common.DescopeTest):
                     "forceAuthn": True,
                 },
                 json={"stepup": True, "customClaims": {"role": "admin"}, "mfa": False},
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -278,14 +279,14 @@ class TestSSO(common.DescopeTest):
         self.assertRaises(AuthException, sso.exchange_token, "")
         self.assertRaises(AuthException, sso.exchange_token, None)
 
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(AuthException, sso.exchange_token, "c1")
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             my_mock_response = mock.Mock()
-            my_mock_response.ok = True
+            my_mock_response.is_success = True
             my_mock_response.cookies = {}
             data = json.loads(
                 """{"jwts": ["eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg4MDc4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MTY2MDIxNTI3OCwiaWF0IjoxNjU3Nzk2MDc4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQnRFSGtnT3UwMmxtTXh6UElleGRNdFV3MU0ifQ.oAnvJ7MJvCyL_33oM7YCF12JlQ0m6HWRuteUVAdaswfnD4rHEBmPeuVHGljN6UvOP4_Cf0559o39UHVgm3Fwb-q7zlBbsu_nP1-PRl-F8NJjvBgC5RsAYabtJq7LlQmh"], "user": {"loginIds": ["guyp@descope.com"], "name": "", "email": "guyp@descope.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false}, "firstSeen": false}"""
@@ -302,8 +303,8 @@ class TestSSO(common.DescopeTest):
                 },
                 params=None,
                 json={"code": "c1"},
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 

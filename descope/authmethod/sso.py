@@ -1,4 +1,4 @@
-from typing import Any, Optional, Dict
+from typing import Any, Dict, Optional
 
 from descope._auth_base import AuthBase
 from descope.common import EndpointsV1, LoginOptions, validate_refresh_token_provided

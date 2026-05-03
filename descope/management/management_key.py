@@ -1,11 +1,7 @@
-from typing import List, Optional, Any
+from typing import Any, List, Optional
 
 from descope._http_base import HTTPBase
-from descope.management.common import (
-    MgmtKeyReBac,
-    MgmtKeyStatus,
-    MgmtV1,
-)
+from descope.management.common import MgmtKeyReBac, MgmtKeyStatus, MgmtV1
 
 
 class ManagementKey(HTTPBase):

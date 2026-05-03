@@ -13,6 +13,7 @@ from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
 from .. import common
+from ..testutils import SSLMatcher
 
 
 class TestSSOApplication(common.DescopeTest):
@@ -39,8 +40,8 @@ class TestSSOApplication(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 client.mgmt.sso_application.create_oidc_application,
@@ -49,9 +50,9 @@ class TestSSOApplication(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"id": "app1"}""")
             mock_post.return_value = network_resp
             resp = client.mgmt.sso_application.create_oidc_application(
@@ -77,8 +78,8 @@ class TestSSOApplication(common.DescopeTest):
                     "logo": None,
                     "forceAuthentication": True,
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -109,8 +110,8 @@ class TestSSOApplication(common.DescopeTest):
             entity_id="",
         )
 
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 client.mgmt.sso_application.create_saml_application,
@@ -121,9 +122,9 @@ class TestSSOApplication(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads("""{"id": "app1"}""")
             mock_post.return_value = network_resp
             resp = client.mgmt.sso_application.create_saml_application(
@@ -190,8 +191,8 @@ class TestSSOApplication(common.DescopeTest):
                     "logoutRedirectUrl": "http://dummy.com/logout",
                     "defaultSignatureAlgorithm": "sha256",
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -204,8 +205,8 @@ class TestSSOApplication(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 client.mgmt.sso_application.update_oidc_application,
@@ -215,9 +216,9 @@ class TestSSOApplication(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             self.assertIsNone(
                 client.mgmt.sso_application.update_oidc_application(
                     "app1", "name", "http://dummy.com"
@@ -240,8 +241,8 @@ class TestSSOApplication(common.DescopeTest):
                     "logo": None,
                     "forceAuthentication": False,
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -274,8 +275,8 @@ class TestSSOApplication(common.DescopeTest):
             entity_id="",
         )
 
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 client.mgmt.sso_application.update_saml_application,
@@ -287,9 +288,9 @@ class TestSSOApplication(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
+        with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             self.assertIsNone(
                 client.mgmt.sso_application.update_saml_application(
                     id="id1",
@@ -355,8 +356,8 @@ class TestSSOApplication(common.DescopeTest):
                     "logoutRedirectUrl": None,
                     "defaultSignatureAlgorithm": None,
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -369,8 +370,8 @@ class TestSSOApplication(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = False
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 client.mgmt.sso_application.delete,
@@ -378,8 +379,8 @@ class TestSSOApplication(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.post") as mock_post:
-            mock_post.return_value.ok = True
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
             self.assertIsNone(client.mgmt.sso_application.delete("app1"))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_application_delete_path}",
@@ -392,8 +393,8 @@ class TestSSOApplication(common.DescopeTest):
                 json={
                     "id": "app1",
                 },
-                allow_redirects=False,
-                verify=True,
+                follow_redirects=False,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -406,8 +407,8 @@ class TestSSOApplication(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.get") as mock_get:
-            mock_get.return_value.ok = False
+        with patch("httpx.get") as mock_get:
+            mock_get.return_value.is_success = False
             self.assertRaises(
                 AuthException,
                 client.mgmt.sso_application.load,
@@ -415,9 +416,9 @@ class TestSSOApplication(common.DescopeTest):
             )
 
         # Test success flow
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """
                 {"id":"app1","name":"App1","description":"","enabled":true,"logo":"","appType":"saml","samlSettings":{"loginPageUrl":"http://dummy.com/login","idpCert":"cert","useMetadataInfo":true,"metadataUrl":"http://dummy.com/md","entityId":"","acsUrl":"","certificate":"","attributeMapping":[{"name":"email","type":"","value":"attrVal1"}],"groupsMapping":[{"name":"grp1","type":"","filterType":"roles","value":"","roles":[{"id":"myRoleId","name":"myRole"}]}],"idpMetadataUrl":"","idpEntityId":"","idpSsoUrl":"","acsAllowedCallbacks":[],"subjectNameIdType":"","subjectNameIdFormat":""},"oidcSettings":{"loginPageUrl":"","issuer":"","discoveryUrl":""}}
@@ -456,8 +457,8 @@ class TestSSOApplication(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 params={"id": "app1"},
-                allow_redirects=True,
-                verify=True,
+                follow_redirects=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
@@ -470,14 +471,14 @@ class TestSSOApplication(common.DescopeTest):
         )
 
         # Test failed flows
-        with patch("requests.get") as mock_get:
-            mock_get.return_value.ok = False
+        with patch("httpx.get") as mock_get:
+            mock_get.return_value.is_success = False
             self.assertRaises(AuthException, client.mgmt.sso_application.load_all)
 
         # Test success flow
-        with patch("requests.get") as mock_get:
+        with patch("httpx.get") as mock_get:
             network_resp = mock.Mock()
-            network_resp.ok = True
+            network_resp.is_success = True
             network_resp.json.return_value = json.loads(
                 """
                 {
@@ -537,7 +538,7 @@ class TestSSOApplication(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
-                allow_redirects=True,
-                verify=True,
+                follow_redirects=True,
+                verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )

@@ -1,5 +1,6 @@
 import importlib
 import importlib.util
+import os
 import sys
 import types
 import unittest
@@ -36,7 +37,7 @@ class TestDescopeResponse(unittest.TestCase):
         mock_response.status_code = 201
         mock_response.text = '{"result":"success"}'
         mock_response.url = "https://api.descope.com/test"
-        mock_response.ok = True
+        mock_response.is_success = True
 
         resp = DescopeResponse(mock_response)
 
@@ -127,7 +128,7 @@ class TestDescopeResponse(unittest.TestCase):
         assert resp.cookies.get("session") == "abc123"
         assert resp.content == b'{"data":"test"}'
 
-    @patch("requests.get")
+    @patch("httpx.get")
     def test_verbose_mode_captures_response_before_error(self, mock_get):
         """Test that verbose mode captures response even when errors are raised.
 
@@ -137,7 +138,7 @@ class TestDescopeResponse(unittest.TestCase):
         from descope.exceptions import AuthException
 
         mock_response = Mock()
-        mock_response.ok = False
+        mock_response.is_success = False
         mock_response.status_code = 401
         mock_response.text = "Unauthorized"
         mock_response.headers = {"cf-ray": "error123"}
@@ -147,7 +148,7 @@ class TestDescopeResponse(unittest.TestCase):
         client = HTTPClient(project_id="test123", verbose=True)
         try:
             client.get("/test")
-            assert False, "Should have raised AuthException"
+            raise AssertionError("Should have raised AuthException")
         except AuthException:
             pass
 
@@ -179,12 +180,12 @@ class TestHTTPClient(unittest.TestCase):
         client = HTTPClient(project_id="test123", verbose=True)
         assert client.verbose is True
 
-    @patch("requests.get")
+    @patch("httpx.get")
     def test_verbose_mode_captures_response(self, mock_get):
         """Test that responses are captured when verbose mode is enabled."""
         # Setup mock response
         mock_response = Mock()
-        mock_response.ok = True
+        mock_response.is_success = True
         mock_response.json.return_value = {"data": "test"}
         mock_response.headers = {"cf-ray": "xyz789"}
         mock_response.status_code = 200
@@ -203,11 +204,11 @@ class TestHTTPClient(unittest.TestCase):
         assert last_resp.headers.get("cf-ray") == "xyz789"
         assert last_resp.status_code == 200
 
-    @patch("requests.get")
+    @patch("httpx.get")
     def test_verbose_mode_not_capture_when_disabled(self, mock_get):
         """Test that responses are NOT captured when verbose mode is disabled."""
         mock_response = Mock()
-        mock_response.ok = True
+        mock_response.is_success = True
         mock_response.json.return_value = {"data": "test"}
         mock_get.return_value = mock_response
 
@@ -220,11 +221,11 @@ class TestHTTPClient(unittest.TestCase):
         # Verify response was NOT captured
         assert client.get_last_response() is None
 
-    @patch("requests.post")
+    @patch("httpx.post")
     def test_verbose_mode_captures_post_response(self, mock_post):
         """Test that POST responses are captured in verbose mode."""
         mock_response = Mock()
-        mock_response.ok = True
+        mock_response.is_success = True
         mock_response.json.return_value = {"created": "user1"}
         mock_response.headers = {"cf-ray": "post123"}
         mock_response.status_code = 201
@@ -238,11 +239,11 @@ class TestHTTPClient(unittest.TestCase):
         assert last_resp["created"] == "user1"
         assert last_resp.status_code == 201
 
-    @patch("requests.patch")
+    @patch("httpx.patch")
     def test_verbose_mode_captures_patch_response(self, mock_patch):
         """Test that PATCH responses are captured in verbose mode."""
         mock_response = Mock()
-        mock_response.ok = True
+        mock_response.is_success = True
         mock_response.json.return_value = {"updated": "user1"}
         mock_response.headers = {"cf-ray": "patch123"}
         mock_response.status_code = 200
@@ -256,11 +257,11 @@ class TestHTTPClient(unittest.TestCase):
         assert last_resp["updated"] == "user1"
         assert last_resp.status_code == 200
 
-    @patch("requests.delete")
+    @patch("httpx.delete")
     def test_verbose_mode_captures_delete_response(self, mock_delete):
         """Test that DELETE responses are captured in verbose mode."""
         mock_response = Mock()
-        mock_response.ok = True
+        mock_response.is_success = True
         mock_response.json.return_value = {"deleted": "user1"}
         mock_response.headers = {"cf-ray": "delete123"}
         mock_response.status_code = 204
@@ -283,13 +284,13 @@ class TestHTTPClient(unittest.TestCase):
 
         assert cm.exception.status_code == 400
 
-    @patch("requests.get")
+    @patch("httpx.get")
     def test_raises_rate_limit_exception(self, mock_get):
         """Test that HTTPClient raises RateLimitException on 429."""
         from descope.exceptions import RateLimitException
 
         mock_response = Mock()
-        mock_response.ok = False
+        mock_response.is_success = False
         mock_response.status_code = 429
         mock_response.json.return_value = {
             "errorCode": "E010",
@@ -306,13 +307,13 @@ class TestHTTPClient(unittest.TestCase):
 
         assert cm.exception.error_type == "API rate limit exceeded"
 
-    @patch("requests.get")
+    @patch("httpx.get")
     def test_raises_rate_limit_exception_without_json_body(self, mock_get):
         """Test that RateLimitException is raised even when JSON parsing fails."""
         from descope.exceptions import RateLimitException
 
         mock_response = Mock()
-        mock_response.ok = False
+        mock_response.is_success = False
         mock_response.status_code = 429
         mock_response.json.side_effect = ValueError("Invalid JSON")
         mock_response.headers = {"Retry-After": "30"}
@@ -325,13 +326,13 @@ class TestHTTPClient(unittest.TestCase):
 
         assert cm.exception.error_type == "API rate limit exceeded"
 
-    @patch("requests.get")
+    @patch("httpx.get")
     def test_raises_auth_exception_on_server_error(self, mock_get):
         """Test that HTTPClient raises AuthException on 500."""
         from descope.exceptions import AuthException
 
         mock_response = Mock()
-        mock_response.ok = False
+        mock_response.is_success = False
         mock_response.status_code = 500
         mock_response.text = "Internal Server Error"
         mock_get.return_value = mock_response
@@ -426,7 +427,7 @@ class TestVerboseModeThreadSafety(unittest.TestCase):
     each thread gets its own response when sharing a client instance.
     """
 
-    @patch("requests.get")
+    @patch("httpx.get")
     def test_verbose_mode_thread_safe_with_shared_client(self, mock_get):
         """Verify that shared client is thread-safe for verbose mode.
 
@@ -445,7 +446,7 @@ class TestVerboseModeThreadSafety(unittest.TestCase):
             """Return different cf-ray based on which thread is calling."""
             thread_name = threading.current_thread().name
             response = Mock()
-            response.ok = True
+            response.is_success = True
             response.json.return_value = {"thread": thread_name}
             # Each thread gets a unique cf-ray
             if "thread1" in thread_name:
@@ -490,7 +491,7 @@ class TestVerboseModeThreadSafety(unittest.TestCase):
             results["thread2_ray"] == "ray-thread2"
         ), f"Thread2 should see its own cf-ray, got: {results['thread2_ray']}"
 
-    @patch("requests.get")
+    @patch("httpx.get")
     def test_verbose_mode_separate_clients_per_thread(self, mock_get):
         """Verify separate clients per thread also works (alternative pattern).
 
@@ -505,7 +506,7 @@ class TestVerboseModeThreadSafety(unittest.TestCase):
         def mock_get_side_effect(*args, **kwargs):
             thread_name = threading.current_thread().name
             response = Mock()
-            response.ok = True
+            response.is_success = True
             response.json.return_value = {"thread": thread_name}
             if "thread1" in thread_name:
                 response.headers = {"cf-ray": "ray-thread1"}
@@ -555,7 +556,7 @@ class TestRetryMechanism(unittest.TestCase):
     """Tests for automatic retry on specific HTTP status codes."""
 
     @patch("time.sleep")
-    @patch("requests.get")
+    @patch("httpx.get")
     def test_retries_on_retryable_codes(self, mock_get, mock_sleep):
         """Test that all retryable status codes (503, 521, 522, 524, 530) trigger a retry."""
         for status_code in [503, 521, 522, 524, 530]:
@@ -563,12 +564,12 @@ class TestRetryMechanism(unittest.TestCase):
             mock_sleep.reset_mock()
 
             error_response = Mock()
-            error_response.ok = False
+            error_response.is_success = False
             error_response.status_code = status_code
             error_response.text = f"Error {status_code}"
 
             success_response = Mock()
-            success_response.ok = True
+            success_response.is_success = True
             success_response.status_code = 200
             success_response.json.return_value = {"result": "ok"}
 
@@ -582,11 +583,11 @@ class TestRetryMechanism(unittest.TestCase):
             mock_sleep.assert_called_once_with(0.1)
 
     @patch("time.sleep")
-    @patch("requests.get")
+    @patch("httpx.get")
     def test_retries_up_to_three_times(self, mock_get, mock_sleep):
         """Test that the client retries up to 3 times (original + 3 retries = 4 calls)."""
         error_response = Mock()
-        error_response.ok = False
+        error_response.is_success = False
         error_response.status_code = 503
         error_response.text = "Service Unavailable"
 
@@ -603,11 +604,11 @@ class TestRetryMechanism(unittest.TestCase):
         assert mock_sleep.call_count == 3
 
     @patch("time.sleep")
-    @patch("requests.get")
+    @patch("httpx.get")
     def test_retry_delays_are_correct(self, mock_get, mock_sleep):
         """Test that retry delays are: 100ms first, 5s for subsequent retries."""
         error_response = Mock()
-        error_response.ok = False
+        error_response.is_success = False
         error_response.status_code = 503
         error_response.text = "Service Unavailable"
 
@@ -623,7 +624,7 @@ class TestRetryMechanism(unittest.TestCase):
         assert sleep_calls == [0.1, 5.0, 5.0]
 
     @patch("time.sleep")
-    @patch("requests.get")
+    @patch("httpx.get")
     def test_no_retry_on_non_retryable_codes(self, mock_get, mock_sleep):
         """Test that non-retryable status codes do not trigger retries."""
         for status_code in [400, 401, 403, 404, 500, 502]:
@@ -631,7 +632,7 @@ class TestRetryMechanism(unittest.TestCase):
             mock_sleep.reset_mock()
 
             error_response = Mock()
-            error_response.ok = False
+            error_response.is_success = False
             error_response.status_code = status_code
             error_response.text = f"Error {status_code}"
             mock_get.return_value = error_response
@@ -646,16 +647,16 @@ class TestRetryMechanism(unittest.TestCase):
             mock_sleep.assert_not_called()
 
     @patch("time.sleep")
-    @patch("requests.post")
+    @patch("httpx.post")
     def test_retry_works_for_post(self, mock_post, mock_sleep):
         """Test that retry works for POST requests."""
         error_response = Mock()
-        error_response.ok = False
+        error_response.is_success = False
         error_response.status_code = 503
         error_response.text = "Service Unavailable"
 
         success_response = Mock()
-        success_response.ok = True
+        success_response.is_success = True
         success_response.status_code = 200
         success_response.json.return_value = {"created": "ok"}
 
@@ -669,16 +670,16 @@ class TestRetryMechanism(unittest.TestCase):
         mock_sleep.assert_called_once_with(0.1)
 
     @patch("time.sleep")
-    @patch("requests.put")
+    @patch("httpx.put")
     def test_retry_works_for_put(self, mock_put, mock_sleep):
         """Test that retry works for PUT requests."""
         error_response = Mock()
-        error_response.ok = False
+        error_response.is_success = False
         error_response.status_code = 522
         error_response.text = "Connection Timed Out"
 
         success_response = Mock()
-        success_response.ok = True
+        success_response.is_success = True
         success_response.status_code = 200
         success_response.json.return_value = {"updated": "ok"}
 
@@ -692,16 +693,16 @@ class TestRetryMechanism(unittest.TestCase):
         mock_sleep.assert_called_once_with(0.1)
 
     @patch("time.sleep")
-    @patch("requests.patch")
+    @patch("httpx.patch")
     def test_retry_works_for_patch(self, mock_patch, mock_sleep):
         """Test that retry works for PATCH requests."""
         error_response = Mock()
-        error_response.ok = False
+        error_response.is_success = False
         error_response.status_code = 530
         error_response.text = "Cloudflare Error"
 
         success_response = Mock()
-        success_response.ok = True
+        success_response.is_success = True
         success_response.status_code = 200
         success_response.json.return_value = {"patched": "ok"}
 
@@ -715,16 +716,16 @@ class TestRetryMechanism(unittest.TestCase):
         mock_sleep.assert_called_once_with(0.1)
 
     @patch("time.sleep")
-    @patch("requests.delete")
+    @patch("httpx.delete")
     def test_retry_works_for_delete(self, mock_delete, mock_sleep):
         """Test that retry works for DELETE requests."""
         error_response = Mock()
-        error_response.ok = False
+        error_response.is_success = False
         error_response.status_code = 503
         error_response.text = "Service Unavailable"
 
         success_response = Mock()
-        success_response.ok = True
+        success_response.is_success = True
         success_response.status_code = 200
         success_response.json.return_value = {"deleted": "ok"}
 
@@ -738,16 +739,16 @@ class TestRetryMechanism(unittest.TestCase):
         mock_sleep.assert_called_once_with(0.1)
 
     @patch("time.sleep")
-    @patch("requests.get")
+    @patch("httpx.get")
     def test_retry_succeeds_on_third_attempt(self, mock_get, mock_sleep):
         """Test successful response on 3rd retry (4th total call)."""
         error_response = Mock()
-        error_response.ok = False
+        error_response.is_success = False
         error_response.status_code = 503
         error_response.text = "Service Unavailable"
 
         success_response = Mock()
-        success_response.ok = True
+        success_response.is_success = True
         success_response.status_code = 200
         success_response.json.return_value = {"result": "ok"}
 
@@ -768,21 +769,21 @@ class TestRetryMechanism(unittest.TestCase):
         assert sleep_calls == [0.1, 5.0, 5.0]
 
     @patch("time.sleep")
-    @patch("requests.get")
+    @patch("httpx.get")
     def test_prior_response_closed_before_retry(self, mock_get, mock_sleep):
         """Test that each retried response is closed to release the connection pool slot."""
         error_response1 = Mock()
-        error_response1.ok = False
+        error_response1.is_success = False
         error_response1.status_code = 503
         error_response1.text = "Service Unavailable"
 
         error_response2 = Mock()
-        error_response2.ok = False
+        error_response2.is_success = False
         error_response2.status_code = 503
         error_response2.text = "Service Unavailable"
 
         success_response = Mock()
-        success_response.ok = True
+        success_response.is_success = True
         success_response.status_code = 200
         success_response.json.return_value = {"result": "ok"}
 
@@ -798,11 +799,11 @@ class TestRetryMechanism(unittest.TestCase):
         success_response.close.assert_not_called()
 
     @patch("time.sleep")
-    @patch("requests.get")
+    @patch("httpx.get")
     def test_success_on_first_attempt_no_retry(self, mock_get, mock_sleep):
         """Test that no retry happens when the first attempt succeeds."""
         success_response = Mock()
-        success_response.ok = True
+        success_response.is_success = True
         success_response.status_code = 200
         success_response.json.return_value = {"result": "ok"}
 
@@ -813,6 +814,239 @@ class TestRetryMechanism(unittest.TestCase):
 
         assert mock_get.call_count == 1
         mock_sleep.assert_not_called()
+
+
+class TestSSLConfiguration(unittest.TestCase):
+    """Tests for SSL/TLS verification setup in HTTPClient."""
+
+    # ------------------------------------------------------------------ #
+    # client_verify attribute                                              #
+    # ------------------------------------------------------------------ #
+
+    def test_secure_default_uses_ssl_context(self):
+        """secure=True (default) → client_verify is an SSLContext."""
+        import ssl
+
+        client = HTTPClient(project_id="test123")
+        assert isinstance(client.client_verify, ssl.SSLContext)
+
+    def test_secure_false_uses_plain_false(self):
+        """secure=False → client_verify is the boolean False."""
+        client = HTTPClient(project_id="test123", secure=False)
+        assert client.client_verify is False
+
+    def test_default_cert_source_is_certifi(self):
+        """When no SSL env vars are set, certifi.where() is used as cafile."""
+        import certifi
+
+        with patch.dict(
+            "os.environ",
+            {},
+            clear=False,
+        ):
+            # Remove all SSL overrides if present so we hit the default path
+            for key in ("SSL_CERT_FILE", "SSL_CERT_DIR", "REQUESTS_CA_BUNDLE"):
+                os.environ.pop(key, None)
+
+            with patch(
+                "descope.http_client.ssl.create_default_context"
+            ) as mock_ctx_factory:
+                mock_ssl_ctx = Mock()
+                mock_ctx_factory.return_value = mock_ssl_ctx
+
+                HTTPClient(project_id="test123", secure=True)
+
+                mock_ctx_factory.assert_called_once_with(
+                    cafile=certifi.where(),
+                    capath=None,
+                )
+
+    def test_ssl_cert_file_env_overrides_certifi(self):
+        """SSL_CERT_FILE replaces certifi.where() as the cafile."""
+        with patch.dict(
+            "os.environ", {"SSL_CERT_FILE": "/tmp/custom.pem"}, clear=False
+        ):
+            os.environ.pop("SSL_CERT_DIR", None)
+            os.environ.pop("REQUESTS_CA_BUNDLE", None)
+
+            with patch(
+                "descope.http_client.ssl.create_default_context"
+            ) as mock_ctx_factory:
+                mock_ctx_factory.return_value = Mock()
+
+                HTTPClient(project_id="test123", secure=True)
+
+                mock_ctx_factory.assert_called_once_with(
+                    cafile="/tmp/custom.pem",
+                    capath=None,
+                )
+
+    def test_ssl_cert_dir_env_passed_as_capath(self):
+        """SSL_CERT_DIR is forwarded as the capath argument."""
+        import certifi
+
+        with patch.dict("os.environ", {"SSL_CERT_DIR": "/tmp/certs"}, clear=False):
+            os.environ.pop("SSL_CERT_FILE", None)
+            os.environ.pop("REQUESTS_CA_BUNDLE", None)
+
+            with patch(
+                "descope.http_client.ssl.create_default_context"
+            ) as mock_ctx_factory:
+                mock_ctx_factory.return_value = Mock()
+
+                HTTPClient(project_id="test123", secure=True)
+
+                mock_ctx_factory.assert_called_once_with(
+                    cafile=certifi.where(),
+                    capath="/tmp/certs",
+                )
+
+    def test_requests_ca_bundle_env_loaded_into_context(self):
+        """REQUESTS_CA_BUNDLE triggers an extra load_verify_locations call."""
+        with patch.dict(
+            "os.environ", {"REQUESTS_CA_BUNDLE": "/tmp/extra.pem"}, clear=False
+        ):
+            os.environ.pop("SSL_CERT_FILE", None)
+            os.environ.pop("SSL_CERT_DIR", None)
+
+            with patch(
+                "descope.http_client.ssl.create_default_context"
+            ) as mock_ctx_factory:
+                mock_ssl_ctx = Mock()
+                mock_ctx_factory.return_value = mock_ssl_ctx
+
+                HTTPClient(project_id="test123", secure=True)
+
+                mock_ssl_ctx.load_verify_locations.assert_called_once_with(
+                    cafile="/tmp/extra.pem"
+                )
+
+    def test_no_extra_load_when_requests_ca_bundle_unset(self):
+        """load_verify_locations is NOT called when REQUESTS_CA_BUNDLE is absent."""
+        with patch.dict("os.environ", {}, clear=False):
+            os.environ.pop("REQUESTS_CA_BUNDLE", None)
+
+            with patch(
+                "descope.http_client.ssl.create_default_context"
+            ) as mock_ctx_factory:
+                mock_ssl_ctx = Mock()
+                mock_ctx_factory.return_value = mock_ssl_ctx
+
+                HTTPClient(project_id="test123", secure=True)
+
+                mock_ssl_ctx.load_verify_locations.assert_not_called()
+
+    # ------------------------------------------------------------------ #
+    # verify= forwarded to every httpx verb                               #
+    # ------------------------------------------------------------------ #
+
+    def _make_success_response(self):
+        resp = Mock()
+        resp.is_success = True
+        resp.status_code = 200
+        resp.json.return_value = {}
+        return resp
+
+    @patch("httpx.get")
+    def test_get_forwards_verify(self, mock_get):
+        """GET passes SSLContext (secure) or False (insecure) as verify=."""
+        from tests.testutils import SSLMatcher
+
+        mock_get.return_value = self._make_success_response()
+
+        HTTPClient(project_id="test123", secure=True).get("/x")
+        assert mock_get.call_args.kwargs["verify"] == SSLMatcher()
+
+        mock_get.reset_mock()
+        mock_get.return_value = self._make_success_response()
+
+        HTTPClient(project_id="test123", secure=False).get("/x")
+        assert mock_get.call_args.kwargs["verify"] == SSLMatcher(insecure=True)
+
+    @patch("httpx.post")
+    def test_post_forwards_verify(self, mock_post):
+        """POST passes SSLContext (secure) or False (insecure) as verify=."""
+        from tests.testutils import SSLMatcher
+
+        mock_post.return_value = self._make_success_response()
+
+        HTTPClient(project_id="test123", secure=True).post("/x", body={})
+        assert mock_post.call_args.kwargs["verify"] == SSLMatcher()
+
+        mock_post.reset_mock()
+        mock_post.return_value = self._make_success_response()
+
+        HTTPClient(project_id="test123", secure=False).post("/x", body={})
+        assert mock_post.call_args.kwargs["verify"] == SSLMatcher(insecure=True)
+
+    @patch("httpx.put")
+    def test_put_forwards_verify(self, mock_put):
+        """PUT passes SSLContext (secure) or False (insecure) as verify=."""
+        from tests.testutils import SSLMatcher
+
+        mock_put.return_value = self._make_success_response()
+
+        HTTPClient(project_id="test123", secure=True).put("/x", body={})
+        assert mock_put.call_args.kwargs["verify"] == SSLMatcher()
+
+        mock_put.reset_mock()
+        mock_put.return_value = self._make_success_response()
+
+        HTTPClient(project_id="test123", secure=False).put("/x", body={})
+        assert mock_put.call_args.kwargs["verify"] == SSLMatcher(insecure=True)
+
+    @patch("httpx.patch")
+    def test_patch_forwards_verify(self, mock_patch):
+        """PATCH passes SSLContext (secure) or False (insecure) as verify=."""
+        from tests.testutils import SSLMatcher
+
+        mock_patch.return_value = self._make_success_response()
+
+        HTTPClient(project_id="test123", secure=True).patch("/x", body={})
+        assert mock_patch.call_args.kwargs["verify"] == SSLMatcher()
+
+        mock_patch.reset_mock()
+        mock_patch.return_value = self._make_success_response()
+
+        HTTPClient(project_id="test123", secure=False).patch("/x", body={})
+        assert mock_patch.call_args.kwargs["verify"] == SSLMatcher(insecure=True)
+
+    @patch("httpx.delete")
+    def test_delete_forwards_verify(self, mock_delete):
+        """DELETE passes SSLContext (secure) or False (insecure) as verify=."""
+        from tests.testutils import SSLMatcher
+
+        mock_delete.return_value = self._make_success_response()
+
+        HTTPClient(project_id="test123", secure=True).delete("/x")
+        assert mock_delete.call_args.kwargs["verify"] == SSLMatcher()
+
+        mock_delete.reset_mock()
+        mock_delete.return_value = self._make_success_response()
+
+        HTTPClient(project_id="test123", secure=False).delete("/x")
+        assert mock_delete.call_args.kwargs["verify"] == SSLMatcher(insecure=True)
+
+    # ------------------------------------------------------------------ #
+    # SSLMatcher self-tests                                                #
+    # ------------------------------------------------------------------ #
+
+    def test_ssl_matcher_repr(self):
+        from tests.testutils import SSLMatcher
+
+        assert repr(SSLMatcher()) == "SSLMatcher()"
+        assert repr(SSLMatcher(insecure=True)) == "SSLMatcher(insecure=True)"
+
+    def test_ssl_matcher_equality(self):
+        import ssl
+
+        from tests.testutils import SSLMatcher
+
+        real_ctx = ssl.create_default_context()
+        assert SSLMatcher() == real_ctx
+        assert not (SSLMatcher() == False)  # noqa: E712
+        assert SSLMatcher(insecure=True) == False  # noqa: E712
+        assert not (SSLMatcher(insecure=True) == real_ctx)
 
 
 if __name__ == "__main__":
