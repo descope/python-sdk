@@ -77,7 +77,7 @@ class Role(HTTPBase):
 
         Args:
         roles (List[dict]): List of role objects, each with:
-            - name (str): current role name.
+            - name (str): current role name (or id (str): role ID, e.g. ROL...).
             - newName (str): new role name.
             - description (str): Optional new description.
             - permissionNames (List[str]): Optional list of permission names.

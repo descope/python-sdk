@@ -54,7 +54,7 @@ class Permission(HTTPBase):
 
         Args:
         permissions (List[dict]): List of permission objects, each with:
-            - name (str): current permission name.
+            - name (str): current permission name (or id (str): permission ID, e.g. PERM...).
             - newName (str): new permission name.
             - description (str): Optional new description.
 
