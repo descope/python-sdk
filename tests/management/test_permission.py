@@ -146,6 +146,83 @@ class TestPermission(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+    def test_update_with_id(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flow
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.permission.update_with_id,
+                "PERM123",
+                "new-name",
+            )
+
+        # Test success flow
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
+            self.assertIsNone(
+                client.mgmt.permission.update_with_id("PERM123", "new-name", "new-description")
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.permission_update_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "id": "PERM123",
+                    "newName": "new-name",
+                    "description": "new-description",
+                },
+                follow_redirects=False,
+                verify=SSLMatcher(),
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_delete_with_id(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flow
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.permission.delete_with_id,
+                "PERM123",
+            )
+
+        # Test success flow
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
+            self.assertIsNone(client.mgmt.permission.delete_with_id("PERM123"))
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.permission_delete_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={"id": "PERM123"},
+                follow_redirects=False,
+                verify=SSLMatcher(),
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
     def test_create_batch(self):
         client = DescopeClient(
             self.dummy_project_id,
