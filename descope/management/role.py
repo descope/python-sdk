@@ -77,7 +77,7 @@ class Role(HTTPBase):
 
         Args:
         roles (List[dict]): List of role objects, each with:
-            - name (str): current role name.
+            - name (str): current role name (or id (str): role ID, e.g. ROL...).
             - newName (str): new role name.
             - description (str): Optional new description.
             - permissionNames (List[str]): Optional list of permission names.
@@ -112,6 +112,27 @@ class Role(HTTPBase):
         self._http.post(
             MgmtV1.role_delete_batch_path,
             body={"roles": roles},
+        )
+
+    def delete_batch_by_ids(
+        self,
+        role_ids: List[str],
+        tenant_id: Optional[str] = None,
+    ):
+        """
+        Delete a batch of roles by their IDs in a single atomic transaction.
+        IMPORTANT: This action is irreversible. Use carefully.
+
+        Args:
+        role_ids (List[str]): List of role IDs to delete (e.g. ROL...).
+        tenant_id (str): Optional tenant ID the roles belong to.
+
+        Raise:
+        AuthException: raised if deletion operation fails
+        """
+        self._http.post(
+            MgmtV1.role_delete_batch_path,
+            body={"roleIds": role_ids, "tenantId": tenant_id},
         )
 
     def update(
@@ -154,6 +175,46 @@ class Role(HTTPBase):
             },
         )
 
+    def update_by_id(
+        self,
+        id: str,
+        new_name: str,
+        description: Optional[str] = None,
+        permission_names: Optional[List[str]] = None,
+        tenant_id: Optional[str] = None,
+        default: Optional[bool] = None,
+        private: Optional[bool] = None,
+    ):
+        """
+        Update an existing role identified by its ID. IMPORTANT: All parameters are used as overrides
+        to the existing role. Empty fields will override populated fields. Use carefully.
+
+        Args:
+        id (str): role ID (e.g. ROL...).
+        new_name (str): role updated name.
+        description (str): Optional description to briefly explain what this role allows.
+        permission_names (List[str]): Optional list of names of permissions this role grants.
+        tenant_id (str): Optional tenant ID to update the role in.
+        default (bool): Optional marks this role as default role.
+        private (bool): Optional marks this role as private role.
+
+        Raise:
+        AuthException: raised if update operation fails
+        """
+        permission_names = [] if permission_names is None else permission_names
+        self._http.post(
+            MgmtV1.role_update_path,
+            body={
+                "id": id,
+                "newName": new_name,
+                "description": description,
+                "permissionNames": permission_names,
+                "tenantId": tenant_id,
+                "default": default,
+                "private": private,
+            },
+        )
+
     def delete(
         self,
         name: str,
@@ -171,6 +232,26 @@ class Role(HTTPBase):
         self._http.post(
             MgmtV1.role_delete_path,
             body={"name": name, "tenantId": tenant_id},
+        )
+
+    def delete_by_id(
+        self,
+        id: str,
+        tenant_id: Optional[str] = None,
+    ):
+        """
+        Delete an existing role by its ID. IMPORTANT: This action is irreversible. Use carefully.
+
+        Args:
+        id (str): The ID of the role to be deleted (e.g. ROL...).
+        tenant_id (str): Optional tenant ID the role belongs to.
+
+        Raise:
+        AuthException: raised if deletion operation fails
+        """
+        self._http.post(
+            MgmtV1.role_delete_path,
+            body={"id": id, "tenantId": tenant_id},
         )
 
     def load_all(
@@ -199,6 +280,7 @@ class Role(HTTPBase):
         role_name_like: Optional[str] = None,
         permission_names: Optional[List[str]] = None,
         include_project_roles: Optional[bool] = None,
+        role_ids: Optional[List[str]] = None,
     ) -> dict:
         """
         Search roles based on the given filters.
@@ -208,10 +290,11 @@ class Role(HTTPBase):
         role_names (List[str]): Only return matching roles to the given names
         role_name_like (str): Return roles that contain the given string ignoring case
         permission_names (List[str]): Only return roles that have the given permissions
+        role_ids (List[str]): Only return roles matching the given IDs (e.g. ROL...)
 
         Return value (dict):
         Return dict in the format
-             {"roles": [{"name": <name>, "description": <description>, "permissionNames":[]}] }
+             {"roles": [{"id": <id>, "name": <name>, "description": <description>, "permissionNames":[]}] }
         Containing the loaded role information.
 
         Raise:
@@ -228,6 +311,8 @@ class Role(HTTPBase):
             body["permissionNames"] = permission_names
         if include_project_roles is not None:
             body["includeProjectRoles"] = include_project_roles
+        if role_ids is not None:
+            body["roleIds"] = role_ids
 
         response = self._http.post(
             MgmtV1.role_search_path,

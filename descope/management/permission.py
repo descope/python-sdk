@@ -54,7 +54,7 @@ class Permission(HTTPBase):
 
         Args:
         permissions (List[dict]): List of permission objects, each with:
-            - name (str): current permission name.
+            - name (str): current permission name (or id (str): permission ID, e.g. PERM...).
             - newName (str): new permission name.
             - description (str): Optional new description.
 
@@ -85,6 +85,25 @@ class Permission(HTTPBase):
             body={"names": names},
         )
 
+    def delete_batch_by_ids(
+        self,
+        ids: List[str],
+    ):
+        """
+        Delete a batch of permissions by their IDs in a single atomic transaction.
+        IMPORTANT: This action is irreversible. Use carefully.
+
+        Args:
+        ids (List[str]): List of permission IDs to delete (e.g. PERM...).
+
+        Raise:
+        AuthException: raised if deletion operation fails
+        """
+        self._http.post(
+            MgmtV1.permission_delete_batch_path,
+            body={"ids": ids},
+        )
+
     def update(
         self,
         name: str,
@@ -108,6 +127,29 @@ class Permission(HTTPBase):
             body={"name": name, "newName": new_name, "description": description},
         )
 
+    def update_by_id(
+        self,
+        id: str,
+        new_name: str,
+        description: Optional[str] = None,
+    ):
+        """
+        Update an existing permission identified by its ID. IMPORTANT: All parameters are used as overrides
+        to the existing permission. Empty fields will override populated fields. Use carefully.
+
+        Args:
+        id (str): permission ID (e.g. PERM...).
+        new_name (str): permission updated name.
+        description (str): Optional description to briefly explain what this permission allows.
+
+        Raise:
+        AuthException: raised if update operation fails
+        """
+        self._http.post(
+            MgmtV1.permission_update_path,
+            body={"id": id, "newName": new_name, "description": description},
+        )
+
     def delete(
         self,
         name: str,
@@ -124,6 +166,24 @@ class Permission(HTTPBase):
         self._http.post(
             MgmtV1.permission_delete_path,
             body={"name": name},
+        )
+
+    def delete_by_id(
+        self,
+        id: str,
+    ):
+        """
+        Delete an existing permission by its ID. IMPORTANT: This action is irreversible. Use carefully.
+
+        Args:
+        id (str): The ID of the permission to be deleted (e.g. PERM...).
+
+        Raise:
+        AuthException: raised if deletion operation fails
+        """
+        self._http.post(
+            MgmtV1.permission_delete_path,
+            body={"id": id},
         )
 
     def load_all(
