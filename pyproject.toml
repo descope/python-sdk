@@ -54,7 +54,7 @@ black = "26.3.1"
 
 [tool.poetry.group.types.dependencies]
 mypy = "1.20.1"
-types-setuptools = "75.1.0.20240917"
+types-setuptools = "75.8.2.20250305"
 
 [tool.poetry.group.tests.dependencies]
 pytest = "8.3.5"
