@@ -19,7 +19,7 @@ repos:
       - id: isort
         args: ["--profile", "black"]
   - repo: https://github.com/psf/black
-    rev: 25.12.0
+    rev: 24.10.0
     hooks:
       - id: black
         language_version: python3
@@ -27,9 +27,9 @@ repos:
     rev: v3.21.2
     hooks:
       - id: pyupgrade
-        args: [--py38-plus]
+        args: [--py39-plus]
   - repo: https://github.com/pycqa/flake8
-    rev: 7.3.0
+    rev: 7.1.2
     hooks:
       - id: flake8
         additional_dependencies: [Flake8-pyproject]
@@ -64,6 +64,11 @@ repos:
       - id: conventional-pre-commit
         stages: [commit-msg]
         args: [--strict]
+  - repo: https://github.com/ubersan/pylic
+    rev: v5.0.1
+    hooks:
+      - id: pylic
+        files: ^(pyproject\.toml|requirements.*\.txt)$
   - repo: local
     hooks:
       - id: print_statement
@@ -71,11 +76,3 @@ repos:
         types: [python]
         entry: "print"
         language: pygrep
-      - id: liccheck
-        name: Run Python License Checker
-        description: Check license compliance of python requirements
-        entry: poetry
-        args: [run, liccheck, --level, paranoid]
-        language: system
-        files: ^(.*requirements.*\.txt|setup\.cfg|setup\.py|pyproject\.toml|liccheck\.ini)$
-        pass_filenames: false

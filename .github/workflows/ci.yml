@@ -58,7 +58,6 @@ jobs:
           - "3.11"
           - "3.10"
           - "3.9"
-          - "3.8"
         os:
           - ubuntu-latest
           - macos-latest
@@ -132,3 +131,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+  done:
+    name: All Checks Passed
+    runs-on: ubuntu-latest
+    permissions: {}
+    needs: [validate-pr-title, build, coverage, gitleaks]
+    steps:
+      - name: Yey, all checks passed!
+        run: echo "All checks passed! :tada:"
