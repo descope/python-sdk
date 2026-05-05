@@ -1,5 +1,34 @@
 # Changelog
 
+## [2.0.0](https://github.com/descope/python-sdk/compare/descope-1.13.0...descope-2.0.0) (2026-05-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* drop support for python 3.8 ([#1371](https://github.com/descope/python-sdk/issues/1371))
+* **sdk:** migrate from requests to httpx ([#1123](https://github.com/descope/python-sdk/issues/1123))
+
+### Features
+
+* drop support for python 3.8 ([#1371](https://github.com/descope/python-sdk/issues/1371)) ([5114a01](https://github.com/descope/python-sdk/commit/5114a019f6bd5cfbabbebff62d873c86f50e3d06))
+* **roles-permissions:** add id-based management methods and role_ids search ([#1456](https://github.com/descope/python-sdk/issues/1456)) ([3d3b0ac](https://github.com/descope/python-sdk/commit/3d3b0acf1a9b82fe4c7ceb1d9272550be6efb63a))
+
+
+### Bug Fixes
+
+* **deps:** pin pytest &lt;9 on Python 3.9 to keep lock satisfiable ([#1512](https://github.com/descope/python-sdk/issues/1512)) ([e1666ca](https://github.com/descope/python-sdk/commit/e1666ca37e6cbd91df9cd97422c4603c235af808))
+* **deps:** update dependency httpx to ^0.28.0 ([#1450](https://github.com/descope/python-sdk/issues/1450)) ([4bd6275](https://github.com/descope/python-sdk/commit/4bd6275f652d74bffc8082083c4ed5318aa2f2b9))
+
+
+### Reverts
+
+* "chore(deps): update dependency pytest to &gt;=9,&lt;10" ([#1514](https://github.com/descope/python-sdk/issues/1514)) ([0f3cc5f](https://github.com/descope/python-sdk/commit/0f3cc5fa446f0a8d4fcba346c366d5cf70b16cb8))
+
+
+### Code Refactoring
+
+* **sdk:** migrate from requests to httpx ([#1123](https://github.com/descope/python-sdk/issues/1123)) ([5d4cfd5](https://github.com/descope/python-sdk/commit/5d4cfd53933dd96af1179885571b2d27cf171507))
+
 ## [1.13.0](https://github.com/descope/python-sdk/compare/descope-1.12.2...descope-1.13.0) (2026-04-20)
 
 
