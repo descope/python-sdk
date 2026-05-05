@@ -57,7 +57,7 @@ tests = [
     # CVE-2025-71176 (pytest <9.0.3 tmp-dir predictability) is dev-only and
     # not fixable on 3.9 — risk is bounded to local CI runners.
     "pytest>=9.0.3; python_version >= '3.10'",
-    "pytest==8.4.2; python_version < '3.10'",
+    "pytest==9.0.3; python_version < '3.10'",
     "pytest-cov>=5",
     "coverage[toml]>=7.3.1,<8",
 ]
