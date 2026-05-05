@@ -50,7 +50,7 @@ types = [
     # mypy is only run in the lint job (Python 3.13) so 3.9 never installs it in CI.
     "mypy>=1.20.1; python_version >= '3.10'",
     "mypy==1.11.2; python_version < '3.10'",
-    "types-setuptools==75.8.2.20250305",
+    "types-setuptools==77.0.2.20250328",
 ]
 tests = [
     # pytest 9 requires Python 3.10+; on 3.9 we stay on the last 8.x line.
