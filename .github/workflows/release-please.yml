@@ -15,6 +15,7 @@ jobs:
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
+      pr_branch: ${{ steps.pr_info.outputs.branch }}
     steps:
       - name: Generate GitHub App Token
         id: app-token
@@ -29,6 +30,61 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+      - name: Extract release-please PR branch
+        id: pr_info
+        if: ${{ steps.release.outputs.pr }}
+        env:
+          PR_JSON: ${{ steps.release.outputs.pr }}
+        run: |
+          branch="$(echo "$PR_JSON" | jq -r '.headBranchName')"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+
+  sync-uv-lock:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.pr_branch != '' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+        with:
+          app-id: ${{ secrets.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PEM }}
+
+      - name: Checkout release-please PR branch
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ needs.release-please.outputs.pr_branch }}
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          enable-cache: true
+          python-version: "3.13"
+
+      - name: Sync uv.lock with bumped version
+        run: uv lock
+
+      - name: Commit and push if changed
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+          PR_BRANCH: ${{ needs.release-please.outputs.pr_branch }}
+        run: |
+          if git diff --quiet uv.lock; then
+            echo "uv.lock already in sync; nothing to do."
+            exit 0
+          fi
+          APP_USER_ID="$(gh api "/users/${APP_SLUG}[bot]" --jq .id)"
+          git config user.name  "${APP_SLUG}[bot]"
+          git config user.email "${APP_USER_ID}+${APP_SLUG}[bot]@users.noreply.github.com"
+          git add uv.lock
+          git commit -m "chore: sync uv.lock with release version"
+          git push origin "HEAD:${PR_BRANCH}"
 
   publish:
     needs: release-please
