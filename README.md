@@ -4,18 +4,18 @@
 
 | Name                                |    Stmts |     Miss |   Cover |   Missing |
 |------------------------------------ | -------: | -------: | ------: | --------: |
-| descope/auth.py                     |      261 |        6 |     98% |320, 352-354, 394, 519, 554 |
-| descope/authmethod/enchantedlink.py |       92 |        2 |     98% |  202, 204 |
-| descope/authmethod/magiclink.py     |      103 |        4 |     96% |233, 235, 258, 260 |
-| descope/authmethod/otp.py           |      110 |        4 |     96% |330, 332, 355, 357 |
-| descope/common.py                   |      116 |        1 |     99% |       187 |
-| descope/descope\_client.py          |      193 |        5 |     97% |56, 120, 151, 235, 332 |
-| descope/jwt\_common.py              |       51 |        1 |     98% |       112 |
+| descope/auth.py                     |      261 |        6 |     98% |294, 324-326, 364, 479, 512 |
+| descope/authmethod/enchantedlink.py |       92 |        2 |     98% |  190, 192 |
+| descope/authmethod/magiclink.py     |      103 |        4 |     96% |227, 229, 252, 254 |
+| descope/authmethod/otp.py           |      110 |        4 |     96% |318, 320, 343, 345 |
+| descope/common.py                   |      116 |        1 |     99% |       183 |
+| descope/descope\_client.py          |      193 |        5 |     97% |56, 119, 150, 226, 317 |
+| descope/jwt\_common.py              |       51 |        1 |     98% |        96 |
 | descope/management/audit.py         |       44 |       11 |     75% |74, 76, 78, 80, 82, 84, 86, 88, 90, 92, 94 |
 | descope/management/common.py        |      378 |        1 |     99% |        86 |
 | descope/management/role.py          |       45 |        1 |     98% |       313 |
-| descope/management/user.py          |      377 |       15 |     96% |68-73, 801, 1156, 1158, 1160, 1908, 1960, 2003, 2005, 2007 |
-|                           **TOTAL** | **3132** |   **51** | **98%** |           |
+| descope/management/user.py          |      377 |       15 |     96% |68-73, 789, 1140, 1142, 1144, 1888, 1940, 1983, 1985, 1987 |
+|                           **TOTAL** | **3130** |   **51** | **98%** |           |
 
 28 files skipped due to complete coverage.
 
