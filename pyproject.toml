@@ -41,7 +41,6 @@ Documentation = "https://docs.descope.com"
 
 [dependency-groups]
 dev = [
-    "mock==5.2.0",
     "pre-commit==3.8.0",
     "ruff==0.15.12",
 ]
@@ -50,7 +49,6 @@ types = [
     # mypy is only run in the lint job (Python 3.13) so 3.9 never installs it in CI.
     "mypy>=1.20.1; python_version >= '3.10'",
     "mypy==1.11.2; python_version < '3.10'",
-    "types-setuptools==75.8.2.20250305",
 ]
 tests = [
     # pytest 9 requires Python 3.10+; on 3.9 we stay on the last 8.x line.
@@ -119,7 +117,6 @@ safe_licenses = [
     "MIT License",
     "MIT",
     "ISC License (ISCL)",
-    "Apache Software License",
     "Apache-2.0",
     "BSD License",
     "BSD-2-Clause",
