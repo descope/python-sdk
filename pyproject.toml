@@ -47,7 +47,7 @@ flake8-pyproject = "1.2.4"
 flake8-bugbear = "24.12.12"
 isort = "5.13.2"
 pep8-naming = "0.15.1"
-tox = "4.52.1"
+tox = "4.53.0"
 
 [tool.poetry.group.format.dependencies]
 black = "26.3.1"
