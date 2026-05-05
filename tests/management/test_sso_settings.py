@@ -100,9 +100,7 @@ class TestSSOSettings(common.DescopeTest):
             self.assertEqual(tenant.get("id", ""), "T2AAAA")
             self.assertEqual(tenant.get("domains", []), ["lulu", "kuku"])
             saml_settings = resp.get("saml", {})
-            self.assertEqual(
-                saml_settings.get("idpMetadataUrl", ""), "https://dummy.com/metadata"
-            )
+            self.assertEqual(saml_settings.get("idpMetadataUrl", ""), "https://dummy.com/metadata")
             self.assertEqual(
                 saml_settings.get("defaultSSORoles", ""),
                 ["aa", "bb"],
@@ -504,9 +502,7 @@ class TestSSOSettings(common.DescopeTest):
         with patch("httpx.get") as mock_get:
             network_resp = mock.Mock()
             network_resp.is_success = True
-            network_resp.json.return_value = json.loads(
-                """{"domains": ["lulu", "kuku"], "tenantId": "tenant-id"}"""
-            )
+            network_resp.json.return_value = json.loads("""{"domains": ["lulu", "kuku"], "tenantId": "tenant-id"}""")
             mock_get.return_value = network_resp
             resp = client.mgmt.sso.get_settings("tenant-id")
             self.assertEqual(resp["tenantId"], "tenant-id")
@@ -803,9 +799,7 @@ class TestSSOSettings(common.DescopeTest):
         with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.is_success = True
-            network_resp.json.return_value = {
-                "affectedUserIds": ["user1", "user2", "user3"]
-            }
+            network_resp.json.return_value = {"affectedUserIds": ["user1", "user2", "user3"]}
             mock_post.return_value = network_resp
             client.mgmt.sso.recalculate_sso_mappings("tenant-id", "sso-456")
             mock_post.assert_called_with(

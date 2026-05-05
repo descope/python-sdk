@@ -10,9 +10,7 @@ def main():
     management_key = ""
 
     try:
-        descope_client = DescopeClient(
-            project_id=project_id, management_key=management_key
-        )
+        descope_client = DescopeClient(project_id=project_id, management_key=management_key)
         name = "My Role"
 
         try:

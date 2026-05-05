@@ -20,9 +20,7 @@ class JWT(HTTPBase):
         super().__init__(http_client)
         self._auth = auth
 
-    def update_jwt(
-        self, jwt: str, custom_claims: dict, refresh_duration: int = 0
-    ) -> str:
+    def update_jwt(self, jwt: str, custom_claims: dict, refresh_duration: int = 0) -> str:
         """
         Given a valid JWT, update it with custom claims, and update its authz claims as well
 
@@ -77,13 +75,9 @@ class JWT(HTTPBase):
         AuthException: raised if update failed
         """
         if not impersonator_id:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "impersonator_id cannot be empty"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "impersonator_id cannot be empty")
         if not login_id:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "login_id cannot be empty"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "login_id cannot be empty")
         response = self._http.post(
             MgmtV1.impersonate_path,
             body={
@@ -134,9 +128,7 @@ class JWT(HTTPBase):
         )
         return response.json().get("jwt", "")
 
-    def sign_in(
-        self, login_id: str, login_options: Optional[MgmtLoginOptions] = None
-    ) -> dict:
+    def sign_in(self, login_id: str, login_options: Optional[MgmtLoginOptions] = None) -> dict:
         """
         Generate a JWT for a user, simulating a signin request.
 
@@ -146,9 +138,7 @@ class JWT(HTTPBase):
         """
 
         if not login_id:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "login_id cannot be empty"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "login_id cannot be empty")
 
         if login_options is None:
             login_options = MgmtLoginOptions()
@@ -170,9 +160,7 @@ class JWT(HTTPBase):
             params=None,
         )
         resp = response.json()
-        jwt_response = generate_jwt_response(
-            resp, None, None, self._auth.validate_token
-        )
+        jwt_response = generate_jwt_response(resp, None, None, self._auth.validate_token)
         return jwt_response
 
     def sign_up(
@@ -190,9 +178,7 @@ class JWT(HTTPBase):
         signup_options (MgmtSignUpOptions): signup options.
         """
 
-        return self._sign_up_internal(
-            login_id, MgmtV1.mgmt_sign_up_path, user, signup_options
-        )
+        return self._sign_up_internal(login_id, MgmtV1.mgmt_sign_up_path, user, signup_options)
 
     def sign_up_or_in(
         self,
@@ -208,9 +194,7 @@ class JWT(HTTPBase):
         user (MgmtUserRequest): user details.
         signup_options (MgmtSignUpOptions): signup options.
         """
-        return self._sign_up_internal(
-            login_id, MgmtV1.mgmt_sign_up_or_in_path, user, signup_options
-        )
+        return self._sign_up_internal(login_id, MgmtV1.mgmt_sign_up_or_in_path, user, signup_options)
 
     def _sign_up_internal(
         self,
@@ -223,9 +207,7 @@ class JWT(HTTPBase):
             user = MgmtUserRequest()
 
         if not login_id:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "login_id cannot be empty"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "login_id cannot be empty")
 
         if signup_options is None:
             signup_options = MgmtSignUpOptions()
@@ -244,9 +226,7 @@ class JWT(HTTPBase):
             params=None,
         )
         resp = response.json()
-        jwt_response = generate_jwt_response(
-            resp, None, None, self._auth.validate_token
-        )
+        jwt_response = generate_jwt_response(resp, None, None, self._auth.validate_token)
         return jwt_response
 
     def anonymous(
@@ -273,9 +253,7 @@ class JWT(HTTPBase):
             params=None,
         )
         resp = response.json()
-        jwt_response = generate_jwt_response(
-            resp, None, None, self._auth.validate_token
-        )
+        jwt_response = generate_jwt_response(resp, None, None, self._auth.validate_token)
         del jwt_response["firstSeen"]
         del jwt_response["user"]
         return jwt_response

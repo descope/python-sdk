@@ -1,4 +1,3 @@
-import json
 from unittest import mock
 from unittest.mock import patch
 
@@ -156,9 +155,7 @@ class TestManagementKey(common.DescopeTest):
             resp = client.mgmt.management_key.create(
                 name="test-key",
                 rebac=MgmtKeyReBac(
-                    project_roles=[
-                        MgmtKeyProjectRole(project_ids=["proj1"], roles=["admin"])
-                    ],
+                    project_roles=[MgmtKeyProjectRole(project_ids=["proj1"], roles=["admin"])],
                     tag_roles=[MgmtKeyTagRole(tags=["tag1"], roles=["viewer"])],
                 ),
             )

@@ -87,9 +87,7 @@ class TestTOTP(common.DescopeTest):
 
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException, totp.sign_in_code, "dummy@dummy.com", "1234"
-            )
+            self.assertRaises(AuthException, totp.sign_in_code, "dummy@dummy.com", "1234")
 
         # Test success flow
         with patch("httpx.post") as mock_post:

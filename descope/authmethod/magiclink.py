@@ -57,9 +57,7 @@ class MagicLink(AuthBase):
                 f"Login ID {login_id} is not valid by delivery method {method}",
             )
 
-        body = MagicLink._compose_signup_body(
-            method, login_id, uri, user, signup_options
-        )
+        body = MagicLink._compose_signup_body(method, login_id, uri, user, signup_options)
         url = MagicLink._compose_signup_url(method)
         response = self._http.post(url, body=body)
         return Auth.extract_masked_address(response.json(), method)
@@ -109,9 +107,7 @@ class MagicLink(AuthBase):
         provider_id: str | None = None,
     ) -> str:
         if not login_id:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
 
         Auth.validate_email(email)
 
@@ -141,9 +137,7 @@ class MagicLink(AuthBase):
         provider_id: str | None = None,
     ) -> str:
         if not login_id:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
 
         Auth.validate_phone(method, phone)
 

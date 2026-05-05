@@ -22,9 +22,7 @@ def main():
 
         value = input("Please insert the code you received by email:\n")
         try:
-            jwt_response = descope_client.otp.verify_code(
-                method=DeliveryMethod.EMAIL, login_id=email, code=value
-            )
+            jwt_response = descope_client.otp.verify_code(method=DeliveryMethod.EMAIL, login_id=email, code=value)
             logging.info("Code is valid")
             session_token = jwt_response[SESSION_TOKEN_NAME].get("jwt")
             refresh_token = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("jwt")
@@ -38,21 +36,15 @@ def main():
                 refresh_token=refresh_token,
             )
             value = input("Please insert the code you received by sms:\n")
-            jwt_response = descope_client.otp.verify_code(
-                method=DeliveryMethod.SMS, login_id=email, code=value
-            )
+            jwt_response = descope_client.otp.verify_code(method=DeliveryMethod.SMS, login_id=email, code=value)
             logging.info("Code is valid")
             session_token = jwt_response[SESSION_TOKEN_NAME].get("jwt")
             refresh_token = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("jwt")
 
             # Now start all over again, and do a stepup flow with given email and phone
             descope_client.otp.sign_in(method=DeliveryMethod.EMAIL, login_id=email)
-            value = input(
-                "Please insert the code you received by email to start stepup flow:\n"
-            )
-            jwt_response = descope_client.otp.verify_code(
-                method=DeliveryMethod.EMAIL, login_id=email, code=value
-            )
+            value = input("Please insert the code you received by email to start stepup flow:\n")
+            jwt_response = descope_client.otp.verify_code(method=DeliveryMethod.EMAIL, login_id=email, code=value)
             logging.info("Initial login is valid, lets continue to the stepup")
             session_token = jwt_response[SESSION_TOKEN_NAME].get("jwt")
             refresh_token = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("jwt")
@@ -63,12 +55,8 @@ def main():
                 login_options=common.LoginOptions(True, {"k1": "v1"}),
                 refresh_token=refresh_token,
             )
-            value = input(
-                "Please insert the code you received by sms to complete stepup:\n"
-            )
-            jwt_response = descope_client.otp.verify_code(
-                method=DeliveryMethod.SMS, login_id=email, code=value
-            )
+            value = input("Please insert the code you received by sms to complete stepup:\n")
+            jwt_response = descope_client.otp.verify_code(method=DeliveryMethod.SMS, login_id=email, code=value)
 
             logging.info("Code is valid, user properly stepped up")
             session_token = jwt_response[SESSION_TOKEN_NAME].get("jwt")
@@ -89,14 +77,10 @@ def main():
         try:
             logging.info("refreshing the session token..")
             claims = descope_client.refresh_session(refresh_token)
-            logging.info(
-                "going to revalidate the session with the newly refreshed token.."
-            )
+            logging.info("going to revalidate the session with the newly refreshed token..")
 
             new_session_token = claims.get(SESSION_TOKEN_NAME).get("jwt")
-            descope_client.validate_and_refresh_session(
-                new_session_token, refresh_token
-            )
+            descope_client.validate_and_refresh_session(new_session_token, refresh_token)
             logging.info("Session is valid also for the refreshed token.")
         except AuthException as e:
             logging.info(f"Session is not valid for the refreshed token: {e}")

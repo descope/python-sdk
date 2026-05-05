@@ -3,9 +3,15 @@
   "python.testing.pytestArgs": [
     "tests"
   ],
-  "flake8.importStrategy": "fromEnvironment",
+  "ruff.importStrategy": "fromEnvironment",
   "mypy-type-checker.importStrategy": "fromEnvironment",
-  "isort.importStrategy": "fromEnvironment",
-  "black-formatter.importStrategy": "fromEnvironment",
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.ruff": "explicit",
+      "source.organizeImports.ruff": "explicit"
+    }
+  },
   "workbench.colorCustomizations": { /* do not change please... */}
 }

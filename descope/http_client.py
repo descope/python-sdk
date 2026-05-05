@@ -6,15 +6,10 @@ import ssl
 import threading
 import time
 from http import HTTPStatus
+from importlib.metadata import version
 from typing import cast
 
 import certifi
-
-try:
-    from importlib.metadata import version
-except ImportError:  # pragma: no cover
-    from pkg_resources import get_distribution
-
 import httpx
 
 from descope.common import (
@@ -34,10 +29,7 @@ from descope.exceptions import (
 
 
 def sdk_version():
-    try:
-        return version("descope")  # type: ignore
-    except NameError:  # pragma: no cover
-        return get_distribution("descope").version  # type: ignore
+    return version("descope")
 
 
 # HTTP status codes that should trigger automatic retries
@@ -191,9 +183,7 @@ class HTTPClient:
                 capath=os.environ.get("SSL_CERT_DIR"),
             )
             if os.environ.get("REQUESTS_CA_BUNDLE"):
-                ssl_ctx.load_verify_locations(
-                    cafile=os.environ.get("REQUESTS_CA_BUNDLE")
-                )
+                ssl_ctx.load_verify_locations(cafile=os.environ.get("REQUESTS_CA_BUNDLE"))
             self.client_verify = ssl_ctx
 
     # ------------- public API -------------
@@ -378,11 +368,7 @@ class HTTPClient:
                 ERROR_TYPE_API_RATE_LIMIT,
                 resp.get("errorDescription", ""),
                 resp.get("errorMessage", ""),
-                rate_limit_parameters={
-                    API_RATE_LIMIT_RETRY_AFTER_HEADER: self._parse_retry_after(
-                        response.headers
-                    )
-                },
+                rate_limit_parameters={API_RATE_LIMIT_RETRY_AFTER_HEADER: self._parse_retry_after(response.headers)},
             )
         except RateLimitException:
             raise

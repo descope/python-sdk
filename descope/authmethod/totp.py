@@ -33,9 +33,7 @@ class TOTP(AuthBase):
         """
 
         if not login_id:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
 
         uri = EndpointsV1.sign_up_auth_totp_path
         body = TOTP._compose_signup_body(login_id, user)
@@ -70,14 +68,10 @@ class TOTP(AuthBase):
         """
 
         if not login_id:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
 
         if not code:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "Code cannot be empty"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Code cannot be empty")
 
         validate_refresh_token_provided(login_options, refresh_token)
 
@@ -111,14 +105,10 @@ class TOTP(AuthBase):
         """
 
         if not login_id:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
 
         if not refresh_token:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "Refresh token cannot be empty"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Refresh token cannot be empty")
 
         uri = EndpointsV1.update_totp_path
         body = TOTP._compose_update_user_body(login_id)
@@ -134,9 +124,7 @@ class TOTP(AuthBase):
         return body
 
     @staticmethod
-    def _compose_signin_body(
-        login_id: str, code: str, login_options: Optional[LoginOptions] = None
-    ) -> dict:
+    def _compose_signin_body(login_id: str, code: str, login_options: Optional[LoginOptions] = None) -> dict:
         return {
             "loginId": login_id,
             "code": code,

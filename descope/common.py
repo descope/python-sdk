@@ -147,12 +147,8 @@ class AccessKeyLoginOptions:
         self.selectedTenant = selected_tenant
 
 
-def validate_refresh_token_provided(
-    login_options: Optional[LoginOptions] = None, refresh_token: Optional[str] = None
-):
-    refresh_required = login_options is not None and (
-        login_options.mfa or login_options.stepup
-    )
+def validate_refresh_token_provided(login_options: Optional[LoginOptions] = None, refresh_token: Optional[str] = None):
+    refresh_required = login_options is not None and (login_options.mfa or login_options.stepup)
     refresh_missing = refresh_token is None or refresh_token == ""
     if refresh_required and refresh_missing:
         raise AuthException(
@@ -204,8 +200,6 @@ def get_method_string(method: DeliveryMethod) -> str:
     }.get(method)
 
     if not name:
-        raise AuthException(
-            400, ERROR_TYPE_INVALID_ARGUMENT, f"Unknown delivery method: {method}"
-        )
+        raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, f"Unknown delivery method: {method}")
 
     return name

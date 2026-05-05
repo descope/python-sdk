@@ -3,20 +3,13 @@ from __future__ import annotations
 import os
 import platform
 import unittest
-
-try:
-    from importlib.metadata import version
-except ImportError:
-    import pkg_resources
+from importlib.metadata import version
 
 DEFAULT_BASE_URL = "http://127.0.0.1"
 
 
 def sdk_version():
-    try:
-        return version("descope")
-    except NameError:
-        return pkg_resources.get_distribution("descope").version
+    return version("descope")
 
 
 default_headers = {
@@ -29,9 +22,7 @@ default_headers = {
 
 class DescopeTest(unittest.TestCase):
     def setUp(self) -> None:
-        os.environ["DESCOPE_BASE_URI"] = (
-            DEFAULT_BASE_URL  # Make sure tests always running against localhost
-        )
+        os.environ["DESCOPE_BASE_URI"] = DEFAULT_BASE_URL  # Make sure tests always running against localhost
         # Some tests instantiate Auth directly; provide defaults they can use
         self.dummy_project_id = getattr(self, "dummy_project_id", "dummy")
         self.public_key_dict = getattr(
@@ -49,7 +40,7 @@ class DescopeTest(unittest.TestCase):
         )
 
     # Test helper to build a default HTTP client
-    def make_http_client(self, management_key: "str | None" = None):
+    def make_http_client(self, management_key: str | None = None):
         from descope.http_client import HTTPClient
 
         return HTTPClient(

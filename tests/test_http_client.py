@@ -1,8 +1,4 @@
-import importlib
-import importlib.util
 import os
-import sys
-import types
 import unittest
 from unittest.mock import Mock, patch
 
@@ -153,9 +149,7 @@ class TestDescopeResponse(unittest.TestCase):
             pass
 
         last_resp = client.get_last_response()
-        assert (
-            last_resp is not None
-        ), "Response should be captured even when error occurs"
+        assert last_resp is not None, "Response should be captured even when error occurs"
         assert last_resp.status_code == 401
         assert last_resp.headers.get("cf-ray") == "error123"
         assert last_resp.text == "Unauthorized"
@@ -379,46 +373,6 @@ class TestHTTPClient(unittest.TestCase):
         result = client._parse_retry_after(headers)
         assert result == 0
 
-    @unittest.skipIf(
-        importlib.util.find_spec("importlib.metadata") is not None,
-        "Stdlib metadata available; skip fallback path test",
-    )
-    def test_sdk_version_import_fallback(self):
-        # Simulate absence of importlib.metadata to take fallback path
-        import builtins
-
-        import descope.http_client as http_client_mod
-
-        original_import = builtins.__import__
-
-        def fake_import(name, globals=None, locals=None, fromlist=(), level=0):
-            if name == "importlib.metadata":
-                raise ImportError("simulated")
-            return original_import(name, globals, locals, fromlist, level)
-
-        # Prepare a fake pkg_resources for fallback path
-        class FakeDist:
-            def __init__(self, version="0.0.0"):
-                self.version = version
-
-        fake_pkg = types.ModuleType("pkg_resources")
-        fake_pkg.get_distribution = lambda name: FakeDist("9.9.9")  # type: ignore
-
-        saved_pkg = sys.modules.get("pkg_resources")
-        sys.modules["pkg_resources"] = fake_pkg
-
-        try:
-            builtins.__import__ = fake_import
-            reloaded = importlib.reload(http_client_mod)
-            v = reloaded.sdk_version()
-            assert isinstance(v, str)
-        finally:
-            builtins.__import__ = original_import
-            if saved_pkg is not None:
-                sys.modules["pkg_resources"] = saved_pkg
-            else:
-                sys.modules.pop("pkg_resources", None)
-
 
 class TestVerboseModeThreadSafety(unittest.TestCase):
     """Tests demonstrating verbose mode thread safety.
@@ -484,12 +438,12 @@ class TestVerboseModeThreadSafety(unittest.TestCase):
         t2.join()
 
         # With thread-local storage, each thread sees its OWN response
-        assert (
-            results["thread1_ray"] == "ray-thread1"
-        ), f"Thread1 should see its own cf-ray, got: {results['thread1_ray']}"
-        assert (
-            results["thread2_ray"] == "ray-thread2"
-        ), f"Thread2 should see its own cf-ray, got: {results['thread2_ray']}"
+        assert results["thread1_ray"] == "ray-thread1", (
+            f"Thread1 should see its own cf-ray, got: {results['thread1_ray']}"
+        )
+        assert results["thread2_ray"] == "ray-thread2", (
+            f"Thread2 should see its own cf-ray, got: {results['thread2_ray']}"
+        )
 
     @patch("httpx.get")
     def test_verbose_mode_separate_clients_per_thread(self, mock_get):
@@ -544,12 +498,12 @@ class TestVerboseModeThreadSafety(unittest.TestCase):
         t2.join()
 
         # With separate clients, each thread has its own response
-        assert (
-            results["thread1_ray"] == "ray-thread1"
-        ), f"Thread1 should see its own cf-ray, got: {results['thread1_ray']}"
-        assert (
-            results["thread2_ray"] == "ray-thread2"
-        ), f"Thread2 should see its own cf-ray, got: {results['thread2_ray']}"
+        assert results["thread1_ray"] == "ray-thread1", (
+            f"Thread1 should see its own cf-ray, got: {results['thread1_ray']}"
+        )
+        assert results["thread2_ray"] == "ray-thread2", (
+            f"Thread2 should see its own cf-ray, got: {results['thread2_ray']}"
+        )
 
 
 class TestRetryMechanism(unittest.TestCase):
@@ -848,9 +802,7 @@ class TestSSLConfiguration(unittest.TestCase):
             for key in ("SSL_CERT_FILE", "SSL_CERT_DIR", "REQUESTS_CA_BUNDLE"):
                 os.environ.pop(key, None)
 
-            with patch(
-                "descope.http_client.ssl.create_default_context"
-            ) as mock_ctx_factory:
+            with patch("descope.http_client.ssl.create_default_context") as mock_ctx_factory:
                 mock_ssl_ctx = Mock()
                 mock_ctx_factory.return_value = mock_ssl_ctx
 
@@ -863,15 +815,11 @@ class TestSSLConfiguration(unittest.TestCase):
 
     def test_ssl_cert_file_env_overrides_certifi(self):
         """SSL_CERT_FILE replaces certifi.where() as the cafile."""
-        with patch.dict(
-            "os.environ", {"SSL_CERT_FILE": "/tmp/custom.pem"}, clear=False
-        ):
+        with patch.dict("os.environ", {"SSL_CERT_FILE": "/tmp/custom.pem"}, clear=False):
             os.environ.pop("SSL_CERT_DIR", None)
             os.environ.pop("REQUESTS_CA_BUNDLE", None)
 
-            with patch(
-                "descope.http_client.ssl.create_default_context"
-            ) as mock_ctx_factory:
+            with patch("descope.http_client.ssl.create_default_context") as mock_ctx_factory:
                 mock_ctx_factory.return_value = Mock()
 
                 HTTPClient(project_id="test123", secure=True)
@@ -889,9 +837,7 @@ class TestSSLConfiguration(unittest.TestCase):
             os.environ.pop("SSL_CERT_FILE", None)
             os.environ.pop("REQUESTS_CA_BUNDLE", None)
 
-            with patch(
-                "descope.http_client.ssl.create_default_context"
-            ) as mock_ctx_factory:
+            with patch("descope.http_client.ssl.create_default_context") as mock_ctx_factory:
                 mock_ctx_factory.return_value = Mock()
 
                 HTTPClient(project_id="test123", secure=True)
@@ -903,32 +849,24 @@ class TestSSLConfiguration(unittest.TestCase):
 
     def test_requests_ca_bundle_env_loaded_into_context(self):
         """REQUESTS_CA_BUNDLE triggers an extra load_verify_locations call."""
-        with patch.dict(
-            "os.environ", {"REQUESTS_CA_BUNDLE": "/tmp/extra.pem"}, clear=False
-        ):
+        with patch.dict("os.environ", {"REQUESTS_CA_BUNDLE": "/tmp/extra.pem"}, clear=False):
             os.environ.pop("SSL_CERT_FILE", None)
             os.environ.pop("SSL_CERT_DIR", None)
 
-            with patch(
-                "descope.http_client.ssl.create_default_context"
-            ) as mock_ctx_factory:
+            with patch("descope.http_client.ssl.create_default_context") as mock_ctx_factory:
                 mock_ssl_ctx = Mock()
                 mock_ctx_factory.return_value = mock_ssl_ctx
 
                 HTTPClient(project_id="test123", secure=True)
 
-                mock_ssl_ctx.load_verify_locations.assert_called_once_with(
-                    cafile="/tmp/extra.pem"
-                )
+                mock_ssl_ctx.load_verify_locations.assert_called_once_with(cafile="/tmp/extra.pem")
 
     def test_no_extra_load_when_requests_ca_bundle_unset(self):
         """load_verify_locations is NOT called when REQUESTS_CA_BUNDLE is absent."""
         with patch.dict("os.environ", {}, clear=False):
             os.environ.pop("REQUESTS_CA_BUNDLE", None)
 
-            with patch(
-                "descope.http_client.ssl.create_default_context"
-            ) as mock_ctx_factory:
+            with patch("descope.http_client.ssl.create_default_context") as mock_ctx_factory:
                 mock_ssl_ctx = Mock()
                 mock_ctx_factory.return_value = mock_ssl_ctx
 

@@ -18,14 +18,10 @@ class SAML(AuthBase):
         DEPRECATED
         """
         if not tenant:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "Tenant cannot be empty"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Tenant cannot be empty")
 
         if not return_url:
-            raise AuthException(
-                400, ERROR_TYPE_INVALID_ARGUMENT, "Return url cannot be empty"
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Return url cannot be empty")
 
         validate_refresh_token_provided(login_options, refresh_token)
 

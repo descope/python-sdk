@@ -525,9 +525,7 @@ class OutboundApplication(HTTPBase):
         if authorization_url:
             body["authorizationUrl"] = authorization_url
         if authorization_url_params is not None:
-            body["authorizationUrlParams"] = url_params_to_dict(
-                authorization_url_params
-            )
+            body["authorizationUrlParams"] = url_params_to_dict(authorization_url_params)
         if token_url:
             body["tokenUrl"] = token_url
         if token_url_params is not None:
@@ -681,9 +679,7 @@ class OutboundApplicationByToken(HTTPBase):
             options=options,
         )
 
-    def fetch_tenant_token(
-        self, token: str, app_id: str, tenant_id: str, options: Optional[dict] = None
-    ) -> dict:
+    def fetch_tenant_token(self, token: str, app_id: str, tenant_id: str, options: Optional[dict] = None) -> dict:
         """
         Fetch an outbound application token for a tenant.
 

@@ -136,9 +136,7 @@ class TestTenant(common.DescopeTest):
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
             self.assertIsNone(
-                client.mgmt.tenant.update(
-                    "t1", "new-name", ["domain.com"], enforce_sso=True, disabled=True
-                )
+                client.mgmt.tenant.update("t1", "new-name", ["domain.com"], enforce_sso=True, disabled=True)
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_update_path}",
@@ -547,9 +545,7 @@ class TestTenant(common.DescopeTest):
         # Test success flow
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
-            self.assertIsNone(
-                client.mgmt.tenant.update_default_roles("t1", ["role1", "role2"])
-            )
+            self.assertIsNone(client.mgmt.tenant.update_default_roles("t1", ["role1", "role2"]))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_update_default_roles_path}",
                 headers={

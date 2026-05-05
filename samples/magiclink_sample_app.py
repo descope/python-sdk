@@ -25,9 +25,7 @@ def main():
             uri="http://test.me",
         )
 
-        token = input(
-            f"Please insert the token you received by email ({masked_mail}):\n"
-        )
+        token = input(f"Please insert the token you received by email ({masked_mail}):\n")
         try:
             jwt_response = descope_client.magiclink.verify(token=token)
             logging.info("Token is valid")
@@ -45,9 +43,7 @@ def main():
             logging.info(f"Failed to logged after sign-in / sign-up, err: {e}")
 
         logging.info("Going to sign in same user again...")
-        descope_client.magiclink.sign_in(
-            method=DeliveryMethod.EMAIL, login_id=email, uri="http://test.me"
-        )
+        descope_client.magiclink.sign_in(method=DeliveryMethod.EMAIL, login_id=email, uri="http://test.me")
 
         token = input("Please insert the Token you received by email:\n")
         try:
@@ -62,17 +58,13 @@ def main():
 
         try:
             logging.info(f"going to validate session...{session_token_1}")
-            descope_client.validate_and_refresh_session(
-                session_token_1, refresh_token_1
-            )
+            descope_client.validate_and_refresh_session(session_token_1, refresh_token_1)
             logging.info("Session is valid and all is OK")
         except AuthException as e:
             logging.info(f"Session is not valid {e}")
 
         try:
-            logging.info(
-                f"Going to logout at the second time\nrefresh_token: {refresh_token_1}"
-            )
+            logging.info(f"Going to logout at the second time\nrefresh_token: {refresh_token_1}")
             descope_client.logout(refresh_token_1)
             logging.info("User logged out")
         except AuthException as e:

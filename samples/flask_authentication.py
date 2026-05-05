@@ -23,9 +23,7 @@ def login():
 
 # This needs authentication
 @APP.route("/private")
-@descope_validate_auth(
-    descope_client
-)  # Can add permissions=["Perm 1"], roles=["Role 1"], tenant="t1" conditions
+@descope_validate_auth(descope_client)  # Can add permissions=["Perm 1"], roles=["Role 1"], tenant="t1" conditions
 def private():
     return Response("<h1>Restricted page, authentication needed.</h1>")
 

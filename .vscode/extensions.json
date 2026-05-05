@@ -1,11 +1,9 @@
 {
     "recommendations": [
         "ms-python.python",
-        "ms-python.black-formatter",
-        "ms-python.flake8",
-        "ms-python.isort",
         "ms-python.vscode-pylance",
         "ms-python.mypy-type-checker",
-        "bodil.prettier-toml",
+        "charliermarsh.ruff",
+        "bodil.prettier-toml"
     ]
 }

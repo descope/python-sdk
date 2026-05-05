@@ -1885,12 +1885,12 @@ You can find various usage samples in the [samples folder](https://github.com/de
 ### Prerequisites
 
 - Python 3.9 or higher
-- [Poetry](https://python-poetry.org) installed
+- [uv](https://docs.astral.sh/uv/) installed
 
 ### Install dependencies
 
 ```bash
-poetry install
+uv sync --all-extras
 ```
 
 ### Run tests
@@ -1898,13 +1898,20 @@ poetry install
 Running all tests:
 
 ```bash
-poetry run pytest tests
+uv run pytest tests
 ```
 
 Running all tests with coverage:
 
 ```bash
-poetry run pytest --junitxml=/tmp/pytest.xml --cov-report=term-missing:skip-covered --cov=descope tests/ --cov-report=xml:/tmp/cov.xml
+uv run pytest --junitxml=/tmp/pytest.xml --cov-report=term-missing:skip-covered --cov=descope tests/ --cov-report=xml:/tmp/cov.xml
+```
+
+### Lint and format
+
+```bash
+uv run ruff check --fix .
+uv run ruff format .
 ```
 
 ## Learn More

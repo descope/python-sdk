@@ -36,13 +36,9 @@ class TestJWT(common.DescopeTest):
         # Test failed flows
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException, client.mgmt.jwt.update_jwt, "jwt", {"k1": "v1"}, 0
-            )
+            self.assertRaises(AuthException, client.mgmt.jwt.update_jwt, "jwt", {"k1": "v1"}, 0)
 
-            self.assertRaises(
-                AuthException, client.mgmt.jwt.update_jwt, "", {"k1": "v1"}, 0
-            )
+            self.assertRaises(AuthException, client.mgmt.jwt.update_jwt, "", {"k1": "v1"}, 0)
 
         # Test success flow
         with patch("httpx.post") as mock_post:
@@ -103,17 +99,11 @@ class TestJWT(common.DescopeTest):
         # Test failed flows
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException, client.mgmt.jwt.impersonate, "imp1", "imp2", False
-            )
+            self.assertRaises(AuthException, client.mgmt.jwt.impersonate, "imp1", "imp2", False)
 
-            self.assertRaises(
-                AuthException, client.mgmt.jwt.impersonate, "", "imp2", False
-            )
+            self.assertRaises(AuthException, client.mgmt.jwt.impersonate, "", "imp2", False)
 
-            self.assertRaises(
-                AuthException, client.mgmt.jwt.impersonate, "imp1", "", False
-            )
+            self.assertRaises(AuthException, client.mgmt.jwt.impersonate, "imp1", "", False)
 
         # Test success flow
         with patch("httpx.post") as mock_post:
@@ -150,9 +140,7 @@ class TestJWT(common.DescopeTest):
         with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.is_success = True
-            network_resp.json.return_value = json.loads(
-                """{"jwt": "stepup_response"}"""
-            )
+            network_resp.json.return_value = json.loads("""{"jwt": "stepup_response"}""")
             mock_post.return_value = network_resp
             resp = client.mgmt.jwt.impersonate("imp1", "imp2", True, stepup=True)
             self.assertEqual(resp, "stepup_response")

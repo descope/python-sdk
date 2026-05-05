@@ -507,9 +507,7 @@ class TestEnchantedLink(common.DescopeTest):
             data = json.loads("""{"pendingRef": "aaaa"}""")
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
-            res = enchantedlink.update_user_email(
-                "id1", "dummy@dummy.com", "refresh_token1"
-            )
+            res = enchantedlink.update_user_email("id1", "dummy@dummy.com", "refresh_token1")
             self.assertEqual(res["pendingRef"], "aaaa")
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_user_email_enchantedlink_path}",

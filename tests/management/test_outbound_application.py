@@ -780,9 +780,7 @@ class TestOutboundApplication(common.DescopeTest):
             network_resp = mock.Mock()
             network_resp.is_success = True
             mock_delete.return_value = network_resp
-            client.mgmt.outbound_application.delete_user_tokens(
-                app_id="app123", user_id="user456"
-            )
+            client.mgmt.outbound_application.delete_user_tokens(app_id="app123", user_id="user456")
 
             mock_delete.assert_called_once()
             call_args = mock_delete.call_args
@@ -1051,14 +1049,12 @@ class TestOutboundApplicationByToken(common.DescopeTest):
                 }
             }
             mock_post.return_value = network_resp
-            response = (
-                client.mgmt.outbound_application_by_token.fetch_tenant_token_by_scopes(
-                    self.dummy_token,
-                    "app123",
-                    "tenant789",
-                    ["read", "write"],
-                    {"refreshToken": True},
-                )
+            response = client.mgmt.outbound_application_by_token.fetch_tenant_token_by_scopes(
+                self.dummy_token,
+                "app123",
+                "tenant789",
+                ["read", "write"],
+                {"refreshToken": True},
             )
 
             assert response == {

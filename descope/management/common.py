@@ -115,12 +115,8 @@ class MgmtV1:
     outbound_application_load_all_path = "/v1/mgmt/outbound/apps"
     outbound_application_fetch_token_by_scopes_path = "/v1/mgmt/outbound/app/user/token"
     outbound_application_fetch_token_path = "/v1/mgmt/outbound/app/user/token/latest"
-    outbound_application_fetch_tenant_token_by_scopes_path = (
-        "/v1/mgmt/outbound/app/tenant/token"
-    )
-    outbound_application_fetch_tenant_token_path = (
-        "/v1/mgmt/outbound/app/tenant/token/latest"
-    )
+    outbound_application_fetch_tenant_token_by_scopes_path = "/v1/mgmt/outbound/app/tenant/token"
+    outbound_application_fetch_tenant_token_path = "/v1/mgmt/outbound/app/tenant/token/latest"
     outbound_application_delete_user_tokens_path = "/v1/mgmt/outbound/user/tokens"
     outbound_application_delete_token_path = "/v1/mgmt/outbound/token"
 
@@ -502,9 +498,7 @@ def saml_idp_groups_mapping_info_to_dict(
                     "type": group_mapping.type,
                     "filterType": group_mapping.filter_type,
                     "value": group_mapping.value,
-                    "roles": saml_idp_role_group_mapping_info_to_dict(
-                        group_mapping.roles
-                    ),
+                    "roles": saml_idp_role_group_mapping_info_to_dict(group_mapping.roles),
                 }
             )
     return groups_mapping_list

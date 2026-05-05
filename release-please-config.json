@@ -10,7 +10,7 @@
         {
           "type": "toml",
           "path": "pyproject.toml",
-          "jsonpath": "$.tool.poetry.version"
+          "jsonpath": "$.project.version"
         }
       ]
     }

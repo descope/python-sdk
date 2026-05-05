@@ -101,9 +101,7 @@ def verify():
 
     response = Response("Token verified", 200)
 
-    set_cookie_on_response(
-        response, jwt_response[SESSION_TOKEN_NAME], jwt_response[COOKIE_DATA_NAME]
-    )
+    set_cookie_on_response(response, jwt_response[SESSION_TOKEN_NAME], jwt_response[COOKIE_DATA_NAME])
     set_cookie_on_response(
         response,
         jwt_response[REFRESH_SESSION_TOKEN_NAME],

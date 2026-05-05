@@ -77,9 +77,7 @@ class TestMagicLink(common.DescopeTest):
         )
 
         self.assertEqual(
-            MagicLink._compose_signup_body(
-                DeliveryMethod.EMAIL, "id1", "uri1", {"email": "email1"}
-            ),
+            MagicLink._compose_signup_body(DeliveryMethod.EMAIL, "id1", "uri1", {"email": "email1"}),
             {
                 "loginId": "id1",
                 "URI": "uri1",
@@ -149,9 +147,7 @@ class TestMagicLink(common.DescopeTest):
             mock_post.return_value = my_mock_response
             self.assertEqual(
                 "t***@example.com",
-                magiclink.sign_in(
-                    DeliveryMethod.EMAIL, "dummy@dummy.com", "http://test.me"
-                ),
+                magiclink.sign_in(DeliveryMethod.EMAIL, "dummy@dummy.com", "http://test.me"),
             )
 
             self.assertRaises(
@@ -202,9 +198,7 @@ class TestMagicLink(common.DescopeTest):
                 DeliveryMethod.EMAIL,
                 "dummy@dummy.com",
                 "http://test.me",
-                LoginOptions(
-                    stepup=True, template_options={"blue": "bla"}, template_id=None
-                ),
+                LoginOptions(stepup=True, template_options={"blue": "bla"}, template_id=None),
                 refresh_token=refresh_token,
             )
             mock_post.assert_called_with(
@@ -433,9 +427,7 @@ class TestMagicLink(common.DescopeTest):
             mock_post.return_value = my_mock_response
             self.assertEqual(
                 "t***@example.com",
-                magiclink.sign_up_or_in(
-                    DeliveryMethod.EMAIL, "dummy@dummy.com", "http://test.me"
-                ),
+                magiclink.sign_up_or_in(DeliveryMethod.EMAIL, "dummy@dummy.com", "http://test.me"),
             )
 
         # Test success flow with sign up options
@@ -660,9 +652,7 @@ class TestMagicLink(common.DescopeTest):
             mock_post.return_value = my_mock_response
             self.assertEqual(
                 "*****1111",
-                magiclink.update_user_phone(
-                    DeliveryMethod.SMS, "id1", "+11111111", "refresh_token1"
-                ),
+                magiclink.update_user_phone(DeliveryMethod.SMS, "id1", "+11111111", "refresh_token1"),
             )
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_user_phone_magiclink_path}",

@@ -111,31 +111,23 @@ def descope_validate_auth(
             session_token = cookies.get(SESSION_COOKIE_NAME, None)
             refresh_token = cookies.get(REFRESH_SESSION_COOKIE_NAME, None)
             try:
-                jwt_response = descope_client.validate_and_refresh_session(
-                    session_token, refresh_token
-                )
+                jwt_response = descope_client.validate_and_refresh_session(session_token, refresh_token)
 
             except AuthException:
                 return Response("Access denied", 401)
 
             if _permissions:
                 if tenant:
-                    valid_permissions = descope_client.validate_tenant_permissions(
-                        jwt_response, _permissions
-                    )
+                    valid_permissions = descope_client.validate_tenant_permissions(jwt_response, _permissions)
                 else:
-                    valid_permissions = descope_client.validate_permissions(
-                        jwt_response, _permissions
-                    )
+                    valid_permissions = descope_client.validate_permissions(jwt_response, _permissions)
 
                 if not valid_permissions:
                     return Response("Access denied", 401)
 
             if _roles:
                 if tenant:
-                    valid_roles = descope_client.validate_tenant_roles(
-                        jwt_response, _roles
-                    )
+                    valid_roles = descope_client.validate_tenant_roles(jwt_response, _roles)
                 else:
                     valid_roles = descope_client.validate_roles(jwt_response, _roles)
 
@@ -174,9 +166,7 @@ def descope_verify_code_by_email(descope_client: DescopeClient):
                 return Response("Unauthorized", 401)
 
             try:
-                jwt_response = descope_client.otp.verify_code(
-                    DeliveryMethod.EMAIL, email, code
-                )
+                jwt_response = descope_client.otp.verify_code(DeliveryMethod.EMAIL, email, code)
             except AuthException:
                 return Response("Unauthorized", 401)
 
@@ -216,9 +206,7 @@ def descope_verify_code_by_phone_sms(descope_client: DescopeClient):
                 return Response("Unauthorized", 401)
 
             try:
-                jwt_response = descope_client.otp.verify_code(
-                    DeliveryMethod.SMS, phone, code
-                )
+                jwt_response = descope_client.otp.verify_code(DeliveryMethod.SMS, phone, code)
             except AuthException:
                 return Response("Unauthorized", 401)
 
@@ -259,9 +247,7 @@ def descope_verify_code_by_phone_voice_call(descope_client: DescopeClient):
                 return Response("Unauthorized", 401)
 
             try:
-                jwt_response = descope_client.otp.verify_code(
-                    DeliveryMethod.VOICE, phone, code
-                )
+                jwt_response = descope_client.otp.verify_code(DeliveryMethod.VOICE, phone, code)
             except AuthException:
                 return Response("Unauthorized", 401)
 
@@ -302,9 +288,7 @@ def descope_verify_code_by_phone_whatsapp(descope_client: DescopeClient):
                 return Response("Unauthorized", 401)
 
             try:
-                jwt_response = descope_client.otp.verify_code(
-                    DeliveryMethod.WHATSAPP, phone, code
-                )
+                jwt_response = descope_client.otp.verify_code(DeliveryMethod.WHATSAPP, phone, code)
             except AuthException:
                 return Response("Unauthorized", 401)
 

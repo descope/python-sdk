@@ -132,9 +132,7 @@ class TestAuthz(common.DescopeTest):
         # Test success flow
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
-            self.assertIsNone(
-                client.mgmt.authz.save_namespace({"name": "kuku"}, "old", "v1")
-            )
+            self.assertIsNone(client.mgmt.authz.save_namespace({"name": "kuku"}, "old", "v1"))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.authz_ns_save}",
                 headers={
@@ -195,18 +193,12 @@ class TestAuthz(common.DescopeTest):
         # Test failed save_relation_definition
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException, client.mgmt.authz.save_relation_definition, {}, "a"
-            )
+            self.assertRaises(AuthException, client.mgmt.authz.save_relation_definition, {}, "a")
 
         # Test success flow
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
-            self.assertIsNone(
-                client.mgmt.authz.save_relation_definition(
-                    {"name": "kuku"}, "a", "old", "v1"
-                )
-            )
+            self.assertIsNone(client.mgmt.authz.save_relation_definition({"name": "kuku"}, "a", "old", "v1"))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.authz_rd_save}",
                 headers={
@@ -237,16 +229,12 @@ class TestAuthz(common.DescopeTest):
         # Test failed delete_relation_definition
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException, client.mgmt.authz.delete_relation_definition, "a", "b"
-            )
+            self.assertRaises(AuthException, client.mgmt.authz.delete_relation_definition, "a", "b")
 
         # Test success flow
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
-            self.assertIsNone(
-                client.mgmt.authz.delete_relation_definition("a", "b", "c")
-            )
+            self.assertIsNone(client.mgmt.authz.delete_relation_definition("a", "b", "c"))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.authz_rd_delete}",
                 headers={
@@ -374,9 +362,7 @@ class TestAuthz(common.DescopeTest):
         # Test failed delete_relations_for_resources
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException, client.mgmt.authz.delete_relations_for_resources, []
-            )
+            self.assertRaises(AuthException, client.mgmt.authz.delete_relations_for_resources, [])
 
         # Test success flow
         with patch("httpx.post") as mock_post:
@@ -458,9 +444,7 @@ class TestAuthz(common.DescopeTest):
         # Test failed who_can_access
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException, client.mgmt.authz.who_can_access, "a", "b", "c"
-            )
+            self.assertRaises(AuthException, client.mgmt.authz.who_can_access, "a", "b", "c")
 
         # Test success flow
         with patch("httpx.post") as mock_post:
@@ -553,9 +537,7 @@ class TestAuthz(common.DescopeTest):
         # Test failed what_can_target_access
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException, client.mgmt.authz.what_can_target_access, "a"
-            )
+            self.assertRaises(AuthException, client.mgmt.authz.what_can_target_access, "a")
 
         # Test success flow
         with patch("httpx.post") as mock_post:
@@ -597,9 +579,7 @@ class TestAuthz(common.DescopeTest):
         # Test success flow
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
-            self.assertIsNotNone(
-                client.mgmt.authz.what_can_target_access_with_relation("a", "b", "c")
-            )
+            self.assertIsNotNone(client.mgmt.authz.what_can_target_access_with_relation("a", "b", "c"))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.authz_re_target_with_relation}",
                 headers={
@@ -690,9 +670,7 @@ class TestAuthz(common.DescopeTest):
 
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
-            mock_post.return_value.json.return_value = {
-                "relations": [{"resource": "r1"}]
-            }
+            mock_post.return_value.json.return_value = {"relations": [{"resource": "r1"}]}
             result = client.mgmt.authz.what_can_target_access("a")
             mock_post.assert_called_with(
                 f"{fga_cache_url}{MgmtV1.authz_re_target_all}",

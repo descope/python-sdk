@@ -16,9 +16,7 @@ def main():
     management_key = ""
 
     try:
-        descope_client = DescopeClient(
-            project_id=project_id, management_key=management_key
-        )
+        descope_client = DescopeClient(project_id=project_id, management_key=management_key)
         sso_app_id = ""
 
         # OIDC APP
@@ -82,9 +80,7 @@ def main():
                 login_page_url="http://dummy.com",
                 use_metadata_info=True,
                 metadata_url="http://dummy.com/metadata",
-                attribute_mapping=[
-                    SAMLIDPAttributeMappingInfo("email", "", "attrVal1")
-                ],
+                attribute_mapping=[SAMLIDPAttributeMappingInfo("email", "", "attrVal1")],
                 groups_mapping=[
                     SAMLIDPGroupsMappingInfo(
                         "grp1",

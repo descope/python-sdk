@@ -10,9 +10,7 @@ def main():
     management_key = ""
 
     try:
-        descope_client = DescopeClient(
-            project_id=project_id, management_key=management_key
-        )
+        descope_client = DescopeClient(project_id=project_id, management_key=management_key)
         name = "sign-up-or-in"
 
         try:
@@ -25,9 +23,7 @@ def main():
         try:
             logging.info("Importing sign-up-or-in flow and change name")
             res["flow"]["name"] = "Importing from SDK"
-            res = descope_client.mgmt.flow.import_flow(
-                "sign-up-or-in", res["flow"], res["screens"]
-            )
+            res = descope_client.mgmt.flow.import_flow("sign-up-or-in", res["flow"], res["screens"])
 
         except AuthException as e:
             logging.info(f"Importing flow failed {e}")

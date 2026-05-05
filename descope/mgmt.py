@@ -30,9 +30,7 @@ from descope.management.user import User
 class MGMT:
     _http: HTTPClient
 
-    def __init__(
-        self, http_client: HTTPClient, auth: Auth, fga_cache_url: Optional[str] = None
-    ):
+    def __init__(self, http_client: HTTPClient, auth: Auth, fga_cache_url: Optional[str] = None):
         """Create a management API facade.
 
         Args:

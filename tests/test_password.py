@@ -96,9 +96,7 @@ class TestPassword(common.DescopeTest):
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
 
-            self.assertIsNotNone(
-                password.sign_up("dummy@dummy.com", "123456", signup_user_details)
-            )
+            self.assertIsNotNone(password.sign_up("dummy@dummy.com", "123456", signup_user_details))
 
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_password_path}",
@@ -237,15 +235,11 @@ class TestPassword(common.DescopeTest):
             my_mock_response = mock.Mock()
             my_mock_response.is_success = True
             my_mock_response.cookies = {}
-            data = json.loads(
-                """{"resetMethod": "magiclink", "maskedEmail": "du***@***my.com"}"""
-            )
+            data = json.loads("""{"resetMethod": "magiclink", "maskedEmail": "du***@***my.com"}""")
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
 
-            self.assertIsNotNone(
-                password.send_reset("dummy@dummy.com", "https://redirect.here.com")
-            )
+            self.assertIsNotNone(password.send_reset("dummy@dummy.com", "https://redirect.here.com"))
 
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.send_reset_password_path}",
@@ -270,9 +264,7 @@ class TestPassword(common.DescopeTest):
             my_mock_response = mock.Mock()
             my_mock_response.is_success = True
             my_mock_response.cookies = {}
-            data = json.loads(
-                """{"resetMethod": "magiclink", "maskedEmail": "du***@***my.com"}"""
-            )
+            data = json.loads("""{"resetMethod": "magiclink", "maskedEmail": "du***@***my.com"}""")
             my_mock_response.json.return_value = data
             mock_post.return_value = my_mock_response
 
@@ -374,9 +366,7 @@ class TestPassword(common.DescopeTest):
         with patch("httpx.post") as mock_post:
             mock_post.return_value.is_success = True
             valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkVGVuYW50cyI6eyIiOm51bGx9LCJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwNjc5MjA4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MjA5MDA4NzIwOCwiaWF0IjoxNjU4MDg3MjA4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQzU1dnl4dzBzUkw2RmRNNjhxUnNDRGRST1YifQ.cWP5up4R5xeIl2qoG2NtfLH3Q5nRJVKdz-FDoAXctOQW9g3ceZQi6rZQ-TPBaXMKw68bijN3bLJTqxWW5WHzqRUeopfuzTcMYmC0wP2XGJkrdF6A8D5QW6acSGqglFgu"
-            self.assertIsNone(
-                password.update("dummy@dummy.com", "123456", valid_jwt_token)
-            )
+            self.assertIsNone(password.update("dummy@dummy.com", "123456", valid_jwt_token))
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_password_path}",
                 headers={
