@@ -9,7 +9,7 @@ import threading
 import time
 from http import HTTPStatus
 from importlib.metadata import version
-from typing import Awaitable, cast
+from typing import Awaitable, Literal, cast, overload
 
 import certifi
 import httpx
@@ -202,6 +202,28 @@ class HTTPClient:
             )
 
     # ------------- public API -------------
+    @overload
+    def get(
+        self,
+        uri: str,
+        *,
+        params=None,
+        allow_redirects: bool | None = ...,
+        pswd: str | None = ...,
+        async_mode: Literal[False] = ...,
+    ) -> httpx.Response: ...
+
+    @overload
+    def get(
+        self,
+        uri: str,
+        *,
+        params=None,
+        allow_redirects: bool | None = ...,
+        pswd: str | None = ...,
+        async_mode: Literal[True],
+    ) -> Awaitable[httpx.Response]: ...
+
     def get(
         self,
         uri: str,
@@ -233,6 +255,30 @@ class HTTPClient:
             self._thread_local.last_response = DescopeResponse(response)
         self._raise_from_response(response)
         return response
+
+    @overload
+    def post(
+        self,
+        uri: str,
+        *,
+        body: dict | list[dict] | list[str] | None = ...,
+        params=...,
+        pswd: str | None = ...,
+        base_url: str | None = ...,
+        async_mode: Literal[False] = ...,
+    ) -> httpx.Response: ...
+
+    @overload
+    def post(
+        self,
+        uri: str,
+        *,
+        body: dict | list[dict] | list[str] | None = ...,
+        params=...,
+        pswd: str | None = ...,
+        base_url: str | None = ...,
+        async_mode: Literal[True],
+    ) -> Awaitable[httpx.Response]: ...
 
     def post(
         self,
@@ -268,6 +314,28 @@ class HTTPClient:
         self._raise_from_response(response)
         return response
 
+    @overload
+    def put(
+        self,
+        uri: str,
+        *,
+        body: dict | list[dict] | list[str] | None = ...,
+        params=...,
+        pswd: str | None = ...,
+        async_mode: Literal[False] = ...,
+    ) -> httpx.Response: ...
+
+    @overload
+    def put(
+        self,
+        uri: str,
+        *,
+        body: dict | list[dict] | list[str] | None = ...,
+        params=...,
+        pswd: str | None = ...,
+        async_mode: Literal[True],
+    ) -> Awaitable[httpx.Response]: ...
+
     def put(
         self,
         uri: str,
@@ -298,6 +366,28 @@ class HTTPClient:
         )
         self._raise_from_response(response)
         return response
+
+    @overload
+    def patch(
+        self,
+        uri: str,
+        *,
+        body: dict | list[dict] | list[str] | None,
+        params=...,
+        pswd: str | None = ...,
+        async_mode: Literal[False] = ...,
+    ) -> httpx.Response: ...
+
+    @overload
+    def patch(
+        self,
+        uri: str,
+        *,
+        body: dict | list[dict] | list[str] | None,
+        params=...,
+        pswd: str | None = ...,
+        async_mode: Literal[True],
+    ) -> Awaitable[httpx.Response]: ...
 
     def patch(
         self,
@@ -331,6 +421,26 @@ class HTTPClient:
             self._thread_local.last_response = DescopeResponse(response)
         self._raise_from_response(response)
         return response
+
+    @overload
+    def delete(
+        self,
+        uri: str,
+        *,
+        params=...,
+        pswd: str | None = ...,
+        async_mode: Literal[False] = ...,
+    ) -> httpx.Response: ...
+
+    @overload
+    def delete(
+        self,
+        uri: str,
+        *,
+        params=...,
+        pswd: str | None = ...,
+        async_mode: Literal[True],
+    ) -> Awaitable[httpx.Response]: ...
 
     def delete(
         self,
@@ -488,6 +598,7 @@ class HTTPClient:
         allow_redirects: bool | None = True,
         pswd: str | None = None,
     ) -> httpx.Response:
+        assert self._async_client is not None
         response = await self._async_execute_with_retry(
             lambda: self._async_client.get(
                 f"{self.base_url}{uri}",
@@ -510,6 +621,7 @@ class HTTPClient:
         pswd: str | None = None,
         base_url: str | None = None,
     ) -> httpx.Response:
+        assert self._async_client is not None
         response = await self._async_execute_with_retry(
             lambda: self._async_client.post(
                 f"{base_url or self.base_url}{uri}",
@@ -532,6 +644,7 @@ class HTTPClient:
         params=None,
         pswd: str | None = None,
     ) -> httpx.Response:
+        assert self._async_client is not None
         response = await self._async_execute_with_retry(
             lambda: self._async_client.put(
                 f"{self.base_url}{uri}",
@@ -552,6 +665,7 @@ class HTTPClient:
         params=None,
         pswd: str | None = None,
     ) -> httpx.Response:
+        assert self._async_client is not None
         response = await self._async_execute_with_retry(
             lambda: self._async_client.patch(
                 f"{self.base_url}{uri}",
@@ -573,6 +687,7 @@ class HTTPClient:
         params=None,
         pswd: str | None = None,
     ) -> httpx.Response:
+        assert self._async_client is not None
         response = await self._async_execute_with_retry(
             lambda: self._async_client.delete(
                 f"{self.base_url}{uri}",
