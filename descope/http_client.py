@@ -210,8 +210,9 @@ class HTTPClient:
         params=None,
         allow_redirects: bool | None = ...,
         pswd: str | None = ...,
-        async_mode: Literal[False] = ...,
-    ) -> httpx.Response: ...
+        async_mode: Literal[False] = False,
+    ) -> httpx.Response:
+        pass
 
     @overload
     def get(
@@ -222,7 +223,8 @@ class HTTPClient:
         allow_redirects: bool | None = ...,
         pswd: str | None = ...,
         async_mode: Literal[True],
-    ) -> Awaitable[httpx.Response]: ...
+    ) -> Awaitable[httpx.Response]:
+        pass
 
     def get(
         self,
@@ -265,8 +267,9 @@ class HTTPClient:
         params=...,
         pswd: str | None = ...,
         base_url: str | None = ...,
-        async_mode: Literal[False] = ...,
-    ) -> httpx.Response: ...
+        async_mode: Literal[False] = False,
+    ) -> httpx.Response:
+        pass
 
     @overload
     def post(
@@ -278,7 +281,8 @@ class HTTPClient:
         pswd: str | None = ...,
         base_url: str | None = ...,
         async_mode: Literal[True],
-    ) -> Awaitable[httpx.Response]: ...
+    ) -> Awaitable[httpx.Response]:
+        pass
 
     def post(
         self,
@@ -322,8 +326,9 @@ class HTTPClient:
         body: dict | list[dict] | list[str] | None = ...,
         params=...,
         pswd: str | None = ...,
-        async_mode: Literal[False] = ...,
-    ) -> httpx.Response: ...
+        async_mode: Literal[False] = False,
+    ) -> httpx.Response:
+        pass
 
     @overload
     def put(
@@ -334,7 +339,8 @@ class HTTPClient:
         params=...,
         pswd: str | None = ...,
         async_mode: Literal[True],
-    ) -> Awaitable[httpx.Response]: ...
+    ) -> Awaitable[httpx.Response]:
+        pass
 
     def put(
         self,
@@ -364,6 +370,8 @@ class HTTPClient:
                 timeout=self.timeout_seconds,
             )
         )
+        if self.verbose:
+            self._thread_local.last_response = DescopeResponse(response)
         self._raise_from_response(response)
         return response
 
@@ -375,8 +383,9 @@ class HTTPClient:
         body: dict | list[dict] | list[str] | None,
         params=...,
         pswd: str | None = ...,
-        async_mode: Literal[False] = ...,
-    ) -> httpx.Response: ...
+        async_mode: Literal[False] = False,
+    ) -> httpx.Response:
+        pass
 
     @overload
     def patch(
@@ -387,7 +396,8 @@ class HTTPClient:
         params=...,
         pswd: str | None = ...,
         async_mode: Literal[True],
-    ) -> Awaitable[httpx.Response]: ...
+    ) -> Awaitable[httpx.Response]:
+        pass
 
     def patch(
         self,
@@ -429,8 +439,9 @@ class HTTPClient:
         *,
         params=...,
         pswd: str | None = ...,
-        async_mode: Literal[False] = ...,
-    ) -> httpx.Response: ...
+        async_mode: Literal[False] = False,
+    ) -> httpx.Response:
+        pass
 
     @overload
     def delete(
@@ -440,7 +451,8 @@ class HTTPClient:
         params=...,
         pswd: str | None = ...,
         async_mode: Literal[True],
-    ) -> Awaitable[httpx.Response]: ...
+    ) -> Awaitable[httpx.Response]:
+        pass
 
     def delete(
         self,
@@ -654,6 +666,8 @@ class HTTPClient:
                 params=params,
             )
         )
+        if self.verbose:
+            self._async_last_response.set(DescopeResponse(response))
         self._raise_from_response(response)
         return response
 
