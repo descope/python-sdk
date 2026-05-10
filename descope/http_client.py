@@ -213,7 +213,11 @@ class HTTPClient:
     ) -> httpx.Response | Awaitable[httpx.Response]:
         if async_mode:
             if self._async_client is None:
-                raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "async_mode requires async_mode_experimental=True at client construction")
+                raise AuthException(
+                    400,
+                    ERROR_TYPE_INVALID_ARGUMENT,
+                    "async_mode requires async_mode_experimental=True at client construction",
+                )
             return self._async_get(uri, params=params, allow_redirects=allow_redirects, pswd=pswd)
         response = self._execute_with_retry(
             lambda: httpx.get(
@@ -242,7 +246,11 @@ class HTTPClient:
     ) -> httpx.Response | Awaitable[httpx.Response]:
         if async_mode:
             if self._async_client is None:
-                raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "async_mode requires async_mode_experimental=True at client construction")
+                raise AuthException(
+                    400,
+                    ERROR_TYPE_INVALID_ARGUMENT,
+                    "async_mode requires async_mode_experimental=True at client construction",
+                )
             return self._async_post(uri, body=body, params=params, pswd=pswd, base_url=base_url)
         response = self._execute_with_retry(
             lambda: httpx.post(
@@ -271,7 +279,11 @@ class HTTPClient:
     ) -> httpx.Response | Awaitable[httpx.Response]:
         if async_mode:
             if self._async_client is None:
-                raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "async_mode requires async_mode_experimental=True at client construction")
+                raise AuthException(
+                    400,
+                    ERROR_TYPE_INVALID_ARGUMENT,
+                    "async_mode requires async_mode_experimental=True at client construction",
+                )
             return self._async_put(uri, body=body, params=params, pswd=pswd)
         response = self._execute_with_retry(
             lambda: httpx.put(
@@ -298,7 +310,11 @@ class HTTPClient:
     ) -> httpx.Response | Awaitable[httpx.Response]:
         if async_mode:
             if self._async_client is None:
-                raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "async_mode requires async_mode_experimental=True at client construction")
+                raise AuthException(
+                    400,
+                    ERROR_TYPE_INVALID_ARGUMENT,
+                    "async_mode requires async_mode_experimental=True at client construction",
+                )
             return self._async_patch(uri, body=body, params=params, pswd=pswd)
         response = self._execute_with_retry(
             lambda: httpx.patch(
@@ -326,7 +342,11 @@ class HTTPClient:
     ) -> httpx.Response | Awaitable[httpx.Response]:
         if async_mode:
             if self._async_client is None:
-                raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "async_mode requires async_mode_experimental=True at client construction")
+                raise AuthException(
+                    400,
+                    ERROR_TYPE_INVALID_ARGUMENT,
+                    "async_mode requires async_mode_experimental=True at client construction",
+                )
             return self._async_delete(uri, params=params, pswd=pswd)
         response = self._execute_with_retry(
             lambda: httpx.delete(

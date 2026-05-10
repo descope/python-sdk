@@ -6,9 +6,7 @@ from typing import Any, Awaitable, Callable, TypeVar, Union
 T = TypeVar("T")
 
 
-def then(
-    result_or_coro: Union[T, Awaitable[T]], modifier: Callable[[T], Any]
-) -> Union[Any, Awaitable[Any]]:
+def then(result_or_coro: Union[T, Awaitable[T]], modifier: Callable[[T], Any]) -> Union[Any, Awaitable[Any]]:
     if inspect.isawaitable(result_or_coro):
 
         async def process_async():

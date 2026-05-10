@@ -54,9 +54,7 @@ class DescopeClient:
 
         async_mode_experimental = bool(kwargs.pop("async_mode_experimental", False))
         if kwargs:
-            raise TypeError(
-                f"DescopeClient.__init__() got unexpected keyword arguments: {list(kwargs)}"
-            )
+            raise TypeError(f"DescopeClient.__init__() got unexpected keyword arguments: {list(kwargs)}")
 
         # Warn about TLS verification bypass
         if skip_verify:

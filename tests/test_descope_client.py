@@ -1062,9 +1062,7 @@ class TestDescopeClient(common.DescopeTest):
 
     @patch("httpx.AsyncClient")
     @patch("httpx.post")
-    def test_async_mode_experimental_flag_does_not_return_coroutine(
-        self, mock_post, mock_async_client
-    ):
+    def test_async_mode_experimental_flag_does_not_return_coroutine(self, mock_post, mock_async_client):
         """DescopeClient with async_mode_experimental=True still returns sync results from auth methods."""
         import asyncio
 

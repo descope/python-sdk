@@ -532,8 +532,6 @@ class TestDescoper(common.DescopeTest):
                 '{"descopers": [{"id": "U2111111111111111111111111", "status": "invited"}], "total": 1}'
             )
             mock_put.return_value = network_resp
-            result = client.mgmt.descoper.create(
-                descopers=[DescoperCreate(login_id="user1@example.com")]
-            )
+            result = client.mgmt.descoper.create(descopers=[DescoperCreate(login_id="user1@example.com")])
             self.assertFalse(asyncio.iscoroutine(result))
             self.assertEqual(result["total"], 1)
