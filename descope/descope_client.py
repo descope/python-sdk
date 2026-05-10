@@ -38,6 +38,7 @@ class DescopeClient:
         *,
         base_url: str | None = None,
         verbose: bool = False,
+        **kwargs,
     ):
         # validate project id
         project_id = project_id or os.getenv("DESCOPE_PROJECT_ID", "")
@@ -49,6 +50,12 @@ class DescopeClient:
                     "Unable to init DescopeClient because project_id cannot be empty. "
                     "Set environment variable DESCOPE_PROJECT_ID or pass your Project ID to the init function."
                 ),
+            )
+
+        async_mode_experimental = bool(kwargs.pop("async_mode_experimental", False))
+        if kwargs:
+            raise TypeError(
+                f"DescopeClient.__init__() got unexpected keyword arguments: {list(kwargs)}"
             )
 
         # Warn about TLS verification bypass
@@ -70,6 +77,7 @@ class DescopeClient:
             secure=not skip_verify,
             management_key=auth_management_key or os.getenv("DESCOPE_AUTH_MANAGEMENT_KEY"),
             verbose=verbose,
+            async_mode_experimental=async_mode_experimental,
         )
         self._auth = Auth(
             project_id,
@@ -95,6 +103,7 @@ class DescopeClient:
             secure=auth_http_client.secure,
             management_key=management_key or os.getenv("DESCOPE_MANAGEMENT_KEY"),
             verbose=verbose,
+            async_mode_experimental=async_mode_experimental,
         )
         self._mgmt = MGMT(
             http_client=mgmt_http_client,

@@ -987,5 +987,25 @@ class TestSSLConfiguration(unittest.TestCase):
         assert not (SSLMatcher(insecure=True) == real_ctx)
 
 
+class TestAsyncModeExperimental(unittest.TestCase):
+    @patch("httpx.AsyncClient")
+    @patch("httpx.get")
+    def test_class_flag_does_not_trigger_async(self, mock_get, mock_async_client):
+        """Class-level async_mode_experimental flag is inert; calling get() returns sync response."""
+        import asyncio
+
+        mock_response = Mock()
+        mock_response.is_success = True
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"data": "test"}
+        mock_get.return_value = mock_response
+
+        client = HTTPClient(project_id="Ptest1234567890123456789", async_mode_experimental=True)
+        result = client.get("/test")
+
+        self.assertFalse(asyncio.iscoroutine(result))
+        assert isinstance(result, type(mock_response))
+
+
 if __name__ == "__main__":
     unittest.main()

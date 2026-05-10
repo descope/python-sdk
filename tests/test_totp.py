@@ -1,3 +1,4 @@
+import asyncio
 import json
 from unittest import mock
 from unittest.mock import patch
@@ -195,3 +196,26 @@ class TestTOTP(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(res, valid_response)
+
+    @patch("httpx.AsyncClient")
+    @patch("httpx.post")
+    def test_sync_behavior_with_async_mode_experimental(self, mock_post, _mock_async):
+        """With async_mode_experimental=True, totp.sign_up still returns synchronously."""
+        from descope.http_client import HTTPClient
+
+        mock_post.return_value.is_success = True
+        mock_post.return_value.json.return_value = {"provisioningUrl": "otpauth://totp/test"}
+
+        totp = TOTP(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=HTTPClient(
+                    project_id=self.dummy_project_id,
+                    async_mode_experimental=True,
+                ),
+            )
+        )
+        result = totp.sign_up("dummy@dummy.com", {"email": "dummy@dummy.com"})
+        self.assertFalse(asyncio.iscoroutine(result))
+        self.assertIsNotNone(result)

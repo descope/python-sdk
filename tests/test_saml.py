@@ -1,3 +1,4 @@
+import asyncio
 import json
 import unittest
 from unittest import mock
@@ -168,6 +169,29 @@ class TestSAML(common.DescopeTest):
                 verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
+
+    @patch("httpx.AsyncClient")
+    @patch("httpx.post")
+    def test_sync_behavior_with_async_mode_experimental(self, mock_post, _mock_async):
+        """With async_mode_experimental=True, saml.start still returns synchronously."""
+        from descope.http_client import HTTPClient
+
+        mock_post.return_value.is_success = True
+        mock_post.return_value.json.return_value = {}
+
+        saml = SAML(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=HTTPClient(
+                    project_id=self.dummy_project_id,
+                    async_mode_experimental=True,
+                ),
+            )
+        )
+        result = saml.start("tenant1", "http://dummy.com")
+        self.assertFalse(asyncio.iscoroutine(result))
+        self.assertIsNotNone(result)
 
 
 if __name__ == "__main__":

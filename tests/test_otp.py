@@ -1,3 +1,4 @@
+import asyncio
 from enum import Enum
 from unittest import mock
 from unittest.mock import patch
@@ -791,3 +792,21 @@ class TestOTP(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
                 params=None,
             )
+
+    @patch("httpx.AsyncClient")
+    @patch("httpx.post")
+    def test_sync_behavior_with_async_mode_experimental(self, mock_post, _mock_async):
+        """With async_mode_experimental=True, otp.sign_in still returns synchronously."""
+        my_mock_response = mock.Mock()
+        my_mock_response.is_success = True
+        my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
+        mock_post.return_value = my_mock_response
+
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            async_mode_experimental=True,
+        )
+        result = client.otp.sign_in(DeliveryMethod.EMAIL, "dummy@dummy.com")
+        self.assertFalse(asyncio.iscoroutine(result))
+        self.assertIsNotNone(result)

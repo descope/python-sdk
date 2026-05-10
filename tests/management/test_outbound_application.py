@@ -1,3 +1,4 @@
+import asyncio
 from unittest import mock
 from unittest.mock import patch
 
@@ -895,6 +896,33 @@ class TestOutboundApplication(common.DescopeTest):
         assert PromptType.LOGIN.value == "login"
         assert PromptType.CONSENT.value == "consent"
         assert PromptType.SELECT_ACCOUNT.value == "select_account"
+
+    @patch("httpx.AsyncClient")
+    def test_sync_behavior_with_async_mode_experimental(self, _mock_async):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+            async_mode_experimental=True,
+        )
+
+        with patch("httpx.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.is_success = True
+            network_resp.json.return_value = {
+                "app": {
+                    "id": "app123",
+                    "name": "Test App",
+                    "description": "Test Description",
+                }
+            }
+            mock_post.return_value = network_resp
+            result = client.mgmt.outbound_application.create_application(
+                "Test App", description="Test Description", client_secret="secret"
+            )
+            self.assertFalse(asyncio.iscoroutine(result))
+            self.assertEqual(result["app"]["id"], "app123")
 
 
 class TestOutboundApplicationByToken(common.DescopeTest):

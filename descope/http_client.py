@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import os
 import platform
 import ssl
@@ -7,7 +8,7 @@ import threading
 import time
 from http import HTTPStatus
 from importlib.metadata import version
-from typing import cast
+from typing import Awaitable, cast
 
 import certifi
 import httpx
@@ -153,6 +154,7 @@ class HTTPClient:
         secure: bool = True,
         management_key: str | None = None,
         verbose: bool = False,
+        async_mode_experimental: bool = False,
     ) -> None:
         if not project_id:
             raise AuthException(
@@ -173,6 +175,8 @@ class HTTPClient:
         self.secure = secure
         self.management_key = management_key
         self.verbose = verbose
+        # Reserved for the future global async rollout (see big-plan.md "Final stage")
+        self.async_mode_experimental = async_mode_experimental
         self._thread_local = threading.local()
 
         # Setup SSL verification for httpx (backwards compatibility with requests)
@@ -186,6 +190,13 @@ class HTTPClient:
                 ssl_ctx.load_verify_locations(cafile=os.environ.get("REQUESTS_CA_BUNDLE"))
             self.client_verify = ssl_ctx
 
+        self._async_client: httpx.AsyncClient | None = None
+        if async_mode_experimental:
+            self._async_client = httpx.AsyncClient(
+                verify=self.client_verify,
+                timeout=self.timeout_seconds,
+            )
+
     # ------------- public API -------------
     def get(
         self,
@@ -194,7 +205,10 @@ class HTTPClient:
         params=None,
         allow_redirects: bool | None = True,
         pswd: str | None = None,
-    ) -> httpx.Response:
+        async_mode: bool = False,
+    ) -> httpx.Response | Awaitable[httpx.Response]:
+        if async_mode:
+            return self._async_get(uri, params=params, allow_redirects=allow_redirects, pswd=pswd)
         response = self._execute_with_retry(
             lambda: httpx.get(
                 f"{self.base_url}{uri}",
@@ -218,7 +232,10 @@ class HTTPClient:
         params=None,
         pswd: str | None = None,
         base_url: str | None = None,
-    ) -> httpx.Response:
+        async_mode: bool = False,
+    ) -> httpx.Response | Awaitable[httpx.Response]:
+        if async_mode:
+            return self._async_post(uri, body=body, params=params, pswd=pswd, base_url=base_url)
         response = self._execute_with_retry(
             lambda: httpx.post(
                 f"{base_url or self.base_url}{uri}",
@@ -242,7 +259,10 @@ class HTTPClient:
         body: dict | list[dict] | list[str] | None = None,
         params=None,
         pswd: str | None = None,
-    ) -> httpx.Response:
+        async_mode: bool = False,
+    ) -> httpx.Response | Awaitable[httpx.Response]:
+        if async_mode:
+            return self._async_put(uri, body=body, params=params, pswd=pswd)
         response = self._execute_with_retry(
             lambda: httpx.put(
                 f"{self.base_url}{uri}",
@@ -264,7 +284,10 @@ class HTTPClient:
         body: dict | list[dict] | list[str] | None,
         params=None,
         pswd: str | None = None,
-    ) -> httpx.Response:
+        async_mode: bool = False,
+    ) -> httpx.Response | Awaitable[httpx.Response]:
+        if async_mode:
+            return self._async_patch(uri, body=body, params=params, pswd=pswd)
         response = self._execute_with_retry(
             lambda: httpx.patch(
                 f"{self.base_url}{uri}",
@@ -287,7 +310,10 @@ class HTTPClient:
         *,
         params=None,
         pswd: str | None = None,
-    ) -> httpx.Response:
+        async_mode: bool = False,
+    ) -> httpx.Response | Awaitable[httpx.Response]:
+        if async_mode:
+            return self._async_delete(uri, params=params, pswd=pswd)
         response = self._execute_with_retry(
             lambda: httpx.delete(
                 f"{self.base_url}{uri}",
@@ -329,6 +355,10 @@ class HTTPClient:
 
     def get_default_headers(self, pswd: str | None = None) -> dict:
         return self._get_default_headers(pswd)
+
+    async def aclose(self) -> None:
+        if self._async_client is not None:
+            await self._async_client.aclose()
 
     # ------------- helpers -------------
     def _execute_with_retry(self, request_fn) -> httpx.Response:
@@ -401,3 +431,120 @@ class HTTPClient:
             bearer = f"{bearer}:{self.management_key}"
         headers["Authorization"] = f"Bearer {bearer}"
         return headers
+
+    # ------------- async helpers -------------
+    async def _async_execute_with_retry(self, request_fn) -> httpx.Response:
+        response = await request_fn()
+        for delay in _RETRY_DELAYS_SECONDS:
+            if response.status_code not in _RETRY_STATUS_CODES:
+                break
+            await response.aclose()
+            await asyncio.sleep(delay)
+            response = await request_fn()
+        return response
+
+    async def _async_get(
+        self,
+        uri: str,
+        *,
+        params=None,
+        allow_redirects: bool | None = True,
+        pswd: str | None = None,
+    ) -> httpx.Response:
+        response = await self._async_execute_with_retry(
+            lambda: self._async_client.get(
+                f"{self.base_url}{uri}",
+                headers=self._get_default_headers(pswd),
+                params=params,
+                follow_redirects=cast(bool, allow_redirects),
+            )
+        )
+        if self.verbose:
+            self._thread_local.last_response = DescopeResponse(response)
+        self._raise_from_response(response)
+        return response
+
+    async def _async_post(
+        self,
+        uri: str,
+        *,
+        body: dict | list[dict] | list[str] | None = None,
+        params=None,
+        pswd: str | None = None,
+        base_url: str | None = None,
+    ) -> httpx.Response:
+        response = await self._async_execute_with_retry(
+            lambda: self._async_client.post(
+                f"{base_url or self.base_url}{uri}",
+                headers=self._get_default_headers(pswd),
+                json=body,
+                follow_redirects=False,
+                params=params,
+            )
+        )
+        if self.verbose:
+            self._thread_local.last_response = DescopeResponse(response)
+        self._raise_from_response(response)
+        return response
+
+    async def _async_put(
+        self,
+        uri: str,
+        *,
+        body: dict | list[dict] | list[str] | None = None,
+        params=None,
+        pswd: str | None = None,
+    ) -> httpx.Response:
+        response = await self._async_execute_with_retry(
+            lambda: self._async_client.put(
+                f"{self.base_url}{uri}",
+                headers=self._get_default_headers(pswd),
+                json=body,
+                follow_redirects=False,
+                params=params,
+            )
+        )
+        self._raise_from_response(response)
+        return response
+
+    async def _async_patch(
+        self,
+        uri: str,
+        *,
+        body: dict | list[dict] | list[str] | None,
+        params=None,
+        pswd: str | None = None,
+    ) -> httpx.Response:
+        response = await self._async_execute_with_retry(
+            lambda: self._async_client.patch(
+                f"{self.base_url}{uri}",
+                headers=self._get_default_headers(pswd),
+                json=body,
+                follow_redirects=False,
+                params=params,
+            )
+        )
+        if self.verbose:
+            self._thread_local.last_response = DescopeResponse(response)
+        self._raise_from_response(response)
+        return response
+
+    async def _async_delete(
+        self,
+        uri: str,
+        *,
+        params=None,
+        pswd: str | None = None,
+    ) -> httpx.Response:
+        response = await self._async_execute_with_retry(
+            lambda: self._async_client.delete(
+                f"{self.base_url}{uri}",
+                params=params,
+                headers=self._get_default_headers(pswd),
+                follow_redirects=False,
+            )
+        )
+        if self.verbose:
+            self._thread_local.last_response = DescopeResponse(response)
+        self._raise_from_response(response)
+        return response
