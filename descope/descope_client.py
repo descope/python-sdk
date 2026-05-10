@@ -115,6 +115,16 @@ class DescopeClient:
         self._auth_http_client = auth_http_client
         self._mgmt_http_client = mgmt_http_client
 
+    async def aclose(self) -> None:
+        await self._auth_http_client.aclose()
+        await self._mgmt_http_client.aclose()
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *_):
+        await self.aclose()
+
     @property
     def mgmt(self):
         return self._mgmt

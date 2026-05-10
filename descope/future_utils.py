@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import asyncio
+import inspect
 from typing import Any, Awaitable, Callable, TypeVar, Union
 
 T = TypeVar("T")
@@ -9,7 +9,7 @@ T = TypeVar("T")
 def then(
     result_or_coro: Union[T, Awaitable[T]], modifier: Callable[[T], Any]
 ) -> Union[Any, Awaitable[Any]]:
-    if asyncio.iscoroutine(result_or_coro) or asyncio.isfuture(result_or_coro):
+    if inspect.isawaitable(result_or_coro):
 
         async def process_async():
             result = await result_or_coro
@@ -32,6 +32,6 @@ def wrap(result: T, as_awaitable: bool) -> Union[Any, Awaitable[Any]]:
 
 
 async def resolve(obj: Union[Any, Awaitable[Any]]) -> Any:
-    if asyncio.iscoroutine(obj) or asyncio.isfuture(obj):
+    if inspect.isawaitable(obj):
         return await obj
     return obj

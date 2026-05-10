@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextvars
 import os
 import platform
 import ssl
@@ -178,6 +179,9 @@ class HTTPClient:
         # Reserved for the future global async rollout (see big-plan.md "Final stage")
         self.async_mode_experimental = async_mode_experimental
         self._thread_local = threading.local()
+        self._async_last_response: contextvars.ContextVar[DescopeResponse | None] = contextvars.ContextVar(
+            "last_response", default=None
+        )
 
         # Setup SSL verification for httpx (backwards compatibility with requests)
         self.client_verify: bool | ssl.SSLContext = False
@@ -208,6 +212,8 @@ class HTTPClient:
         async_mode: bool = False,
     ) -> httpx.Response | Awaitable[httpx.Response]:
         if async_mode:
+            if self._async_client is None:
+                raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "async_mode requires async_mode_experimental=True at client construction")
             return self._async_get(uri, params=params, allow_redirects=allow_redirects, pswd=pswd)
         response = self._execute_with_retry(
             lambda: httpx.get(
@@ -235,6 +241,8 @@ class HTTPClient:
         async_mode: bool = False,
     ) -> httpx.Response | Awaitable[httpx.Response]:
         if async_mode:
+            if self._async_client is None:
+                raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "async_mode requires async_mode_experimental=True at client construction")
             return self._async_post(uri, body=body, params=params, pswd=pswd, base_url=base_url)
         response = self._execute_with_retry(
             lambda: httpx.post(
@@ -262,6 +270,8 @@ class HTTPClient:
         async_mode: bool = False,
     ) -> httpx.Response | Awaitable[httpx.Response]:
         if async_mode:
+            if self._async_client is None:
+                raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "async_mode requires async_mode_experimental=True at client construction")
             return self._async_put(uri, body=body, params=params, pswd=pswd)
         response = self._execute_with_retry(
             lambda: httpx.put(
@@ -287,6 +297,8 @@ class HTTPClient:
         async_mode: bool = False,
     ) -> httpx.Response | Awaitable[httpx.Response]:
         if async_mode:
+            if self._async_client is None:
+                raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "async_mode requires async_mode_experimental=True at client construction")
             return self._async_patch(uri, body=body, params=params, pswd=pswd)
         response = self._execute_with_retry(
             lambda: httpx.patch(
@@ -313,6 +325,8 @@ class HTTPClient:
         async_mode: bool = False,
     ) -> httpx.Response | Awaitable[httpx.Response]:
         if async_mode:
+            if self._async_client is None:
+                raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "async_mode requires async_mode_experimental=True at client construction")
             return self._async_delete(uri, params=params, pswd=pswd)
         response = self._execute_with_retry(
             lambda: httpx.delete(
@@ -351,6 +365,9 @@ class HTTPClient:
                 if resp:
                     logger.error(f"cf-ray: {resp.headers.get('cf-ray')}")
         """
+        async_resp = self._async_last_response.get(None)
+        if async_resp is not None:
+            return async_resp
         return getattr(self._thread_local, "last_response", None)
 
     def get_default_headers(self, pswd: str | None = None) -> dict:
@@ -460,7 +477,7 @@ class HTTPClient:
             )
         )
         if self.verbose:
-            self._thread_local.last_response = DescopeResponse(response)
+            self._async_last_response.set(DescopeResponse(response))
         self._raise_from_response(response)
         return response
 
@@ -483,7 +500,7 @@ class HTTPClient:
             )
         )
         if self.verbose:
-            self._thread_local.last_response = DescopeResponse(response)
+            self._async_last_response.set(DescopeResponse(response))
         self._raise_from_response(response)
         return response
 
@@ -525,7 +542,7 @@ class HTTPClient:
             )
         )
         if self.verbose:
-            self._thread_local.last_response = DescopeResponse(response)
+            self._async_last_response.set(DescopeResponse(response))
         self._raise_from_response(response)
         return response
 
@@ -545,6 +562,6 @@ class HTTPClient:
             )
         )
         if self.verbose:
-            self._thread_local.last_response = DescopeResponse(response)
+            self._async_last_response.set(DescopeResponse(response))
         self._raise_from_response(response)
         return response
