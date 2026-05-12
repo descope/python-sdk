@@ -212,7 +212,7 @@ class HTTPClient:
         pswd: str | None = ...,
         async_mode: Literal[False] = False,
     ) -> httpx.Response:
-        pass
+        pass  # pragma: no cover
 
     @overload
     def get(
@@ -224,7 +224,7 @@ class HTTPClient:
         pswd: str | None = ...,
         async_mode: Literal[True],
     ) -> Awaitable[httpx.Response]:
-        pass
+        pass  # pragma: no cover
 
     def get(
         self,
@@ -269,7 +269,7 @@ class HTTPClient:
         base_url: str | None = ...,
         async_mode: Literal[False] = False,
     ) -> httpx.Response:
-        pass
+        pass  # pragma: no cover
 
     @overload
     def post(
@@ -282,7 +282,7 @@ class HTTPClient:
         base_url: str | None = ...,
         async_mode: Literal[True],
     ) -> Awaitable[httpx.Response]:
-        pass
+        pass  # pragma: no cover
 
     def post(
         self,
@@ -328,7 +328,7 @@ class HTTPClient:
         pswd: str | None = ...,
         async_mode: Literal[False] = False,
     ) -> httpx.Response:
-        pass
+        pass  # pragma: no cover
 
     @overload
     def put(
@@ -340,7 +340,7 @@ class HTTPClient:
         pswd: str | None = ...,
         async_mode: Literal[True],
     ) -> Awaitable[httpx.Response]:
-        pass
+        pass  # pragma: no cover
 
     def put(
         self,
@@ -385,7 +385,7 @@ class HTTPClient:
         pswd: str | None = ...,
         async_mode: Literal[False] = False,
     ) -> httpx.Response:
-        pass
+        pass  # pragma: no cover
 
     @overload
     def patch(
@@ -397,7 +397,7 @@ class HTTPClient:
         pswd: str | None = ...,
         async_mode: Literal[True],
     ) -> Awaitable[httpx.Response]:
-        pass
+        pass  # pragma: no cover
 
     def patch(
         self,
@@ -441,7 +441,7 @@ class HTTPClient:
         pswd: str | None = ...,
         async_mode: Literal[False] = False,
     ) -> httpx.Response:
-        pass
+        pass  # pragma: no cover
 
     @overload
     def delete(
@@ -452,7 +452,7 @@ class HTTPClient:
         pswd: str | None = ...,
         async_mode: Literal[True],
     ) -> Awaitable[httpx.Response]:
-        pass
+        pass  # pragma: no cover
 
     def delete(
         self,

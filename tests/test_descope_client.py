@@ -1060,6 +1060,14 @@ class TestDescopeClient(common.DescopeTest):
                 bogus_kwarg=1,
             )
 
+    def test_async_mode_experimental_non_bool_raises_type_error(self):
+        with self.assertRaises(TypeError):
+            DescopeClient(
+                project_id=self.dummy_project_id,
+                public_key=self.public_key_dict,
+                async_mode_experimental="True",
+            )
+
     @patch("httpx.AsyncClient")
     @patch("httpx.post")
     def test_async_mode_experimental_flag_does_not_return_coroutine(self, mock_post, mock_async_client):

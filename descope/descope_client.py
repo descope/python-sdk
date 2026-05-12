@@ -54,9 +54,7 @@ class DescopeClient:
 
         raw_async_mode = kwargs.pop("async_mode_experimental", False)
         if not isinstance(raw_async_mode, bool):
-            raise TypeError(
-                f"async_mode_experimental must be a bool, got {type(raw_async_mode).__name__!r}"
-            )
+            raise TypeError(f"async_mode_experimental must be a bool, got {type(raw_async_mode).__name__!r}")
         async_mode_experimental: bool = raw_async_mode
         if kwargs:
             raise TypeError(f"DescopeClient.__init__() got unexpected keyword arguments: {list(kwargs)}")
