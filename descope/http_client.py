@@ -5,7 +5,6 @@ import contextvars
 import os
 import platform
 import ssl
-import threading
 import time
 from http import HTTPStatus
 from importlib.metadata import version
@@ -178,7 +177,6 @@ class HTTPClient:
         self.verbose = verbose
         # Reserved for the future global async rollout (see big-plan.md "Final stage")
         self.async_mode_experimental = async_mode_experimental
-        self._thread_local = threading.local()
         self._async_last_response: contextvars.ContextVar[DescopeResponse | None] = contextvars.ContextVar(
             "last_response", default=None
         )
@@ -254,7 +252,7 @@ class HTTPClient:
             )
         )
         if self.verbose:
-            self._thread_local.last_response = DescopeResponse(response)
+            self._async_last_response.set(DescopeResponse(response))
         self._raise_from_response(response)
         return response
 
@@ -314,7 +312,7 @@ class HTTPClient:
             )
         )
         if self.verbose:
-            self._thread_local.last_response = DescopeResponse(response)
+            self._async_last_response.set(DescopeResponse(response))
         self._raise_from_response(response)
         return response
 
@@ -371,7 +369,7 @@ class HTTPClient:
             )
         )
         if self.verbose:
-            self._thread_local.last_response = DescopeResponse(response)
+            self._async_last_response.set(DescopeResponse(response))
         self._raise_from_response(response)
         return response
 
@@ -428,7 +426,7 @@ class HTTPClient:
             )
         )
         if self.verbose:
-            self._thread_local.last_response = DescopeResponse(response)
+            self._async_last_response.set(DescopeResponse(response))
         self._raise_from_response(response)
         return response
 
@@ -481,7 +479,7 @@ class HTTPClient:
             )
         )
         if self.verbose:
-            self._thread_local.last_response = DescopeResponse(response)
+            self._async_last_response.set(DescopeResponse(response))
         self._raise_from_response(response)
         return response
 
@@ -507,10 +505,7 @@ class HTTPClient:
                 if resp:
                     logger.error(f"cf-ray: {resp.headers.get('cf-ray')}")
         """
-        async_resp = self._async_last_response.get(None)
-        if async_resp is not None:
-            return async_resp
-        return getattr(self._thread_local, "last_response", None)
+        return self._async_last_response.get(None)
 
     def get_default_headers(self, pswd: str | None = None) -> dict:
         return self._get_default_headers(pswd)

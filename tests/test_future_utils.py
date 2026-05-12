@@ -116,7 +116,7 @@ class TestFutureUtils(unittest.TestCase):
 
         async def run_test():
             with self.assertRaises(ValueError):
-                await result
+                _ = await result
 
         asyncio.run(run_test())
 

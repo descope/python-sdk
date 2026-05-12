@@ -2,6 +2,7 @@ import os
 import unittest
 from unittest.mock import Mock, patch
 
+from descope.exceptions import AuthException
 from descope.http_client import DescopeResponse, HTTPClient
 
 
@@ -1203,6 +1204,55 @@ class TestAsyncMethods(unittest.TestCase):
 
         client = HTTPClient(project_id="test123")
         asyncio.run(client.aclose())  # no-op, must not raise
+
+    @patch("httpx.AsyncClient")
+    def test_async_get_retries_on_503(self, mock_cls):
+        import asyncio
+        from unittest.mock import AsyncMock
+        from unittest.mock import patch as mock_patch
+
+        resp_503 = Mock()
+        resp_503.is_success = False
+        resp_503.status_code = 503
+        resp_503.aclose = AsyncMock()
+
+        resp_200 = Mock()
+        resp_200.is_success = True
+        resp_200.status_code = 200
+        resp_200.json.return_value = {"ok": True}
+        resp_200.headers = {}
+
+        mock_client = Mock()
+        mock_client.get = AsyncMock(side_effect=[resp_503, resp_200])
+        mock_cls.return_value = mock_client
+
+        client = HTTPClient(project_id="test123", async_mode_experimental=True)
+        with mock_patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+            result = asyncio.run(client.get("/path", async_mode=True))
+
+        assert result.status_code == 200
+        assert mock_client.get.await_count == 2
+        mock_sleep.assert_awaited_once()
+
+    @patch("httpx.AsyncClient")
+    def test_async_get_no_retry_on_non_retryable(self, mock_cls):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        resp_404 = Mock()
+        resp_404.is_success = False
+        resp_404.status_code = 404
+        resp_404.text = "not found"
+
+        mock_client = Mock()
+        mock_client.get = AsyncMock(return_value=resp_404)
+        mock_cls.return_value = mock_client
+
+        client = HTTPClient(project_id="test123", async_mode_experimental=True)
+        with self.assertRaises(AuthException):
+            asyncio.run(client.get("/path", async_mode=True))
+
+        assert mock_client.get.await_count == 1
 
 
 class TestVerbosePut(unittest.TestCase):

@@ -1,9 +1,9 @@
 # Async Rollout Plan — python-sdk
 
-## Current state
+## Current state (as of Stage 0)
 - `future_utils.py` exists with `then`, `wrap`, `resolve` helpers
-- `HTTPClient` stores `async_mode_experimental` but doesn't act on it yet
-- `DescopeClient.__init__` accepts and forwards the flag
+- `HTTPClient` supports an async transport path gated by `async_mode_experimental` — Stage 0 complete
+- `DescopeClient` accepts the flag, forwards it, and exposes `aclose()` / `__aenter__` / `__aexit__` for lifecycle management
 
 ---
 

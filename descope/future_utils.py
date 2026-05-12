@@ -4,9 +4,10 @@ import inspect
 from typing import Any, Awaitable, Callable, TypeVar, Union
 
 T = TypeVar("T")
+R = TypeVar("R")
 
 
-def then(result_or_coro: Union[T, Awaitable[T]], modifier: Callable[[T], Any]) -> Union[Any, Awaitable[Any]]:
+def then(result_or_coro: Union[T, Awaitable[T]], modifier: Callable[[T], R]) -> Union[R, Awaitable[R]]:
     if inspect.isawaitable(result_or_coro):
 
         async def process_async():
@@ -18,7 +19,7 @@ def then(result_or_coro: Union[T, Awaitable[T]], modifier: Callable[[T], Any]) -
     return modifier(result_or_coro)  # type: ignore[arg-type]
 
 
-def wrap(result: T, as_awaitable: bool) -> Union[Any, Awaitable[Any]]:
+def wrap(result: T, as_awaitable: bool) -> Union[T, Awaitable[T]]:
     if as_awaitable:
 
         async def awaitable_wrapper():
