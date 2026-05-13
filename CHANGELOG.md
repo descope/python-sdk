@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/descope/python-sdk/compare/descope-2.0.0...descope-2.1.0) (2026-05-13)
+
+
+### Features
+
+* add generate_sso_configuration_link method to Tenant management ([#1530](https://github.com/descope/python-sdk/issues/1530)) ([463ff32](https://github.com/descope/python-sdk/commit/463ff32f51218c8d67bf60f5555b561f636cb62e))
+
 ## [2.0.0](https://github.com/descope/python-sdk/compare/descope-1.13.0...descope-2.0.0) (2026-05-06)
 
 
