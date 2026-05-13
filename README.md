@@ -638,6 +638,13 @@ tenants_resp = descope_client.mgmt.tenant.search_all(ids=["id1"], names=["name1"
 tenants = tenants_resp["tenants"]
     for tenant in tenants:
         # Do something
+
+# Generate tenant admin self-service link for SSO configuration
+# The link will be valid for the specified duration in seconds (e.g., 21600 seconds = 6 hours)
+sso_link = descope_client.mgmt.tenant.generate_sso_configuration_link(
+    tenant_id="my-custom-id",
+    expire_time=21600  # 6 hours in seconds
+)
 ```
 
 ### Manage Users
