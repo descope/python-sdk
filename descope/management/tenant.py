@@ -326,6 +326,34 @@ class Tenant(HTTPBase):
         )
         return response.json()
 
+    def generate_sso_configuration_link(
+        self,
+        tenant_id: str,
+        expire_time: int,
+    ) -> str:
+        """
+        Generate a tenant admin self-service link for SSO configuration.
+
+        Args:
+        tenant_id (str): The ID of the tenant to generate the link for.
+        expire_time (int): The expiration duration in seconds. For a link valid for 6 hours, use 21600.
+
+        Return value (str):
+        Returns the admin SSO configuration link as a string.
+
+        Raise:
+        AuthException: raised if generation operation fails
+        """
+        response = self._http.post(
+            MgmtV1.tenant_generate_sso_configuration_link_path,
+            body={
+                "tenantId": tenant_id,
+                "expireTime": expire_time,
+            },
+        )
+        result = response.json()
+        return result.get("adminSSOConfigurationLink", "")
+
     @staticmethod
     def _compose_create_update_body(
         name: str,
