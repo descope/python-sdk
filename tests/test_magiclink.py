@@ -1,3 +1,4 @@
+import asyncio
 import json
 import unittest
 from unittest import mock
@@ -708,6 +709,31 @@ class TestMagicLink(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
                 params=None,
             )
+
+    @patch("httpx.AsyncClient")
+    @patch("httpx.post")
+    def test_sync_behavior_with_async_mode_experimental(self, mock_post, _mock_async):
+        """With async_mode_experimental=True, magiclink.sign_in still returns synchronously."""
+        from descope.http_client import HTTPClient
+
+        my_mock_response = mock.Mock()
+        my_mock_response.is_success = True
+        my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
+        mock_post.return_value = my_mock_response
+
+        magiclink = MagicLink(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=HTTPClient(
+                    project_id=self.dummy_project_id,
+                    async_mode_experimental=True,
+                ),
+            )
+        )
+        result = magiclink.sign_in(DeliveryMethod.EMAIL, "dummy@dummy.com", "http://test.me")
+        self.assertFalse(asyncio.iscoroutine(result))
+        self.assertIsNotNone(result)
 
 
 if __name__ == "__main__":

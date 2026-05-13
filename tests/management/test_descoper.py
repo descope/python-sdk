@@ -1,3 +1,4 @@
+import asyncio
 import json
 from unittest import mock
 from unittest.mock import patch
@@ -513,3 +514,24 @@ class TestDescoper(common.DescopeTest):
                 verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
+
+    @patch("httpx.AsyncClient")
+    def test_sync_behavior_with_async_mode_experimental(self, _mock_async):
+        client = DescopeClient(
+            self.dummy_project_id,
+            None,
+            False,
+            self.dummy_management_key,
+            async_mode_experimental=True,
+        )
+
+        with patch("httpx.put") as mock_put:
+            network_resp = mock.Mock()
+            network_resp.is_success = True
+            network_resp.json.return_value = json.loads(
+                '{"descopers": [{"id": "U2111111111111111111111111", "status": "invited"}], "total": 1}'
+            )
+            mock_put.return_value = network_resp
+            result = client.mgmt.descoper.create(descopers=[DescoperCreate(login_id="user1@example.com")])
+            self.assertFalse(asyncio.iscoroutine(result))
+            self.assertEqual(result["total"], 1)

@@ -1,3 +1,4 @@
+import asyncio
 from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
@@ -486,3 +487,19 @@ class TestFGA(common.DescopeTest):
                 verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
+
+    @patch("httpx.AsyncClient")
+    def test_sync_behavior_with_async_mode_experimental(self, _mock_async):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+            async_mode_experimental=True,
+        )
+
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
+            result = client.mgmt.fga.save_schema("model AuthZ 1.0")
+            self.assertFalse(asyncio.iscoroutine(result))
+            self.assertIsNone(result)

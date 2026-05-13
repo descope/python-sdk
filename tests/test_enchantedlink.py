@@ -1,3 +1,4 @@
+import asyncio
 import json
 import unittest
 from unittest import mock
@@ -561,6 +562,31 @@ class TestEnchantedLink(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
                 params=None,
             )
+
+    @patch("httpx.AsyncClient")
+    @patch("httpx.post")
+    def test_sync_behavior_with_async_mode_experimental(self, mock_post, _mock_async):
+        """With async_mode_experimental=True, enchantedlink.sign_in still returns synchronously."""
+        from descope.http_client import HTTPClient
+
+        my_mock_response = mock.Mock()
+        my_mock_response.is_success = True
+        my_mock_response.json.return_value = {"pendingRef": "aaaa", "linkId": "24"}
+        mock_post.return_value = my_mock_response
+
+        enchantedlink = EnchantedLink(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=HTTPClient(
+                    project_id=self.dummy_project_id,
+                    async_mode_experimental=True,
+                ),
+            )
+        )
+        result = enchantedlink.sign_in("dummy@dummy.com", "http://test.me")
+        self.assertFalse(asyncio.iscoroutine(result))
+        self.assertIsNotNone(result)
 
 
 if __name__ == "__main__":

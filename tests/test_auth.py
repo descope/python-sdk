@@ -1260,6 +1260,29 @@ class TestAuth(common.DescopeTest):
             out = auth._validate_token("tok")
             self.assertEqual(out["jwt"], "tok")
 
+    @patch("httpx.AsyncClient")
+    @patch("httpx.get")
+    def test_sync_behavior_with_async_mode_experimental(self, mock_get, _mock_async):
+        """With async_mode_experimental=True, _fetch_public_keys still returns synchronously."""
+        import asyncio
+
+        from descope.http_client import HTTPClient
+
+        mock_get.return_value.is_success = True
+        mock_get.return_value.text = '{"keys": []}'
+
+        http_client = HTTPClient(
+            project_id=self.dummy_project_id,
+            async_mode_experimental=True,
+        )
+        auth = Auth(
+            self.dummy_project_id,
+            self.public_key_dict,
+            http_client=http_client,
+        )
+        result = auth._fetch_public_keys()
+        self.assertFalse(asyncio.iscoroutine(result))
+
 
 if __name__ == "__main__":
     unittest.main()

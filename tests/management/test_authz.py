@@ -1,3 +1,4 @@
+import asyncio
 from unittest.mock import patch
 
 from descope import AuthException, DescopeClient
@@ -686,3 +687,19 @@ class TestAuthz(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
             self.assertEqual(result, [{"resource": "r1"}])
+
+    @patch("httpx.AsyncClient")
+    def test_sync_behavior_with_async_mode_experimental(self, _mock_async):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+            async_mode_experimental=True,
+        )
+
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
+            result = client.mgmt.authz.save_schema({"name": "kuku"}, True)
+            self.assertFalse(asyncio.iscoroutine(result))
+            self.assertIsNone(result)

@@ -1,3 +1,4 @@
+import asyncio
 from unittest import mock
 from unittest.mock import patch
 
@@ -478,3 +479,28 @@ class TestManagementKey(common.DescopeTest):
                 verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
+
+    @patch("httpx.AsyncClient")
+    def test_sync_behavior_with_async_mode_experimental(self, _mock_async):
+        client = DescopeClient(
+            self.dummy_project_id,
+            None,
+            False,
+            self.dummy_management_key,
+            async_mode_experimental=True,
+        )
+
+        with patch("httpx.put") as mock_put:
+            network_resp = mock.Mock()
+            network_resp.is_success = True
+            network_resp.json.return_value = {
+                "cleartext": "cleartext-secret",
+                "key": {"id": "mk1", "name": "test-key"},
+            }
+            mock_put.return_value = network_resp
+            result = client.mgmt.management_key.create(
+                name="test-key",
+                rebac=MgmtKeyReBac(company_roles=["role1"]),
+            )
+            self.assertFalse(asyncio.iscoroutine(result))
+            self.assertEqual(result["cleartext"], "cleartext-secret")

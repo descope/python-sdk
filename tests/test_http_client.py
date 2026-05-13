@@ -2,6 +2,7 @@ import os
 import unittest
 from unittest.mock import Mock, patch
 
+from descope.exceptions import AuthException
 from descope.http_client import DescopeResponse, HTTPClient
 
 
@@ -985,6 +986,292 @@ class TestSSLConfiguration(unittest.TestCase):
         assert not (SSLMatcher() == False)  # noqa: E712
         assert SSLMatcher(insecure=True) == False  # noqa: E712
         assert not (SSLMatcher(insecure=True) == real_ctx)
+
+
+class TestAsyncModeExperimental(unittest.TestCase):
+    @patch("httpx.AsyncClient")
+    @patch("httpx.get")
+    def test_class_flag_does_not_trigger_async(self, mock_get, mock_async_client):
+        """Class-level async_mode_experimental flag is inert; calling get() returns sync response."""
+        import asyncio
+
+        mock_response = Mock()
+        mock_response.is_success = True
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"data": "test"}
+        mock_get.return_value = mock_response
+
+        client = HTTPClient(project_id="Ptest1234567890123456789", async_mode_experimental=True)
+        result = client.get("/test")
+
+        self.assertFalse(asyncio.iscoroutine(result))
+        assert isinstance(result, type(mock_response))
+
+
+class TestAsyncModeGuards(unittest.TestCase):
+    """async_mode=True without async_mode_experimental raises AuthException."""
+
+    def _sync_client(self):
+        return HTTPClient(project_id="test123")
+
+    def test_get_raises_without_experimental(self):
+        from descope.exceptions import AuthException
+
+        with self.assertRaises(AuthException) as cm:
+            self._sync_client().get("/path", async_mode=True)
+        assert cm.exception.status_code == 400
+
+    def test_post_raises_without_experimental(self):
+        from descope.exceptions import AuthException
+
+        with self.assertRaises(AuthException) as cm:
+            self._sync_client().post("/path", async_mode=True)
+        assert cm.exception.status_code == 400
+
+    def test_put_raises_without_experimental(self):
+        from descope.exceptions import AuthException
+
+        with self.assertRaises(AuthException) as cm:
+            self._sync_client().put("/path", async_mode=True)
+        assert cm.exception.status_code == 400
+
+    def test_patch_raises_without_experimental(self):
+        from descope.exceptions import AuthException
+
+        with self.assertRaises(AuthException) as cm:
+            self._sync_client().patch("/path", body={}, async_mode=True)
+        assert cm.exception.status_code == 400
+
+    def test_delete_raises_without_experimental(self):
+        from descope.exceptions import AuthException
+
+        with self.assertRaises(AuthException) as cm:
+            self._sync_client().delete("/path", async_mode=True)
+        assert cm.exception.status_code == 400
+
+
+class TestAsyncMethods(unittest.TestCase):
+    """Tests for async HTTP methods and aclose()."""
+
+    def _make_mock_response(self, body=None):
+        resp = Mock()
+        resp.is_success = True
+        resp.status_code = 200
+        resp.json.return_value = body or {"data": "ok"}
+        resp.headers = {"cf-ray": "async123"}
+        return resp
+
+    def _async_client_with_mock(self, mock_async_client_class, **verb_mocks):
+        from unittest.mock import AsyncMock
+
+        mock_client = Mock()
+        for verb, response in verb_mocks.items():
+            setattr(mock_client, verb, AsyncMock(return_value=response))
+        mock_async_client_class.return_value = mock_client
+        return mock_client
+
+    @patch("httpx.AsyncClient")
+    def test_async_get(self, mock_cls):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        resp = self._make_mock_response()
+        mock_client = Mock()
+        mock_client.get = AsyncMock(return_value=resp)
+        mock_cls.return_value = mock_client
+
+        client = HTTPClient(project_id="test123", async_mode_experimental=True)
+        result = asyncio.run(client.get("/path", async_mode=True))
+
+        assert result.status_code == 200
+        mock_client.get.assert_awaited_once()
+
+    @patch("httpx.AsyncClient")
+    def test_async_get_verbose(self, mock_cls):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        resp = self._make_mock_response()
+        mock_client = Mock()
+        mock_client.get = AsyncMock(return_value=resp)
+        mock_cls.return_value = mock_client
+
+        client = HTTPClient(project_id="test123", async_mode_experimental=True, verbose=True)
+
+        async def run():
+            await client.get("/path", async_mode=True)
+            return client.get_last_response()
+
+        last = asyncio.run(run())
+        assert last is not None
+        assert last.status_code == 200
+
+    @patch("httpx.AsyncClient")
+    def test_async_post(self, mock_cls):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        resp = self._make_mock_response()
+        mock_client = Mock()
+        mock_client.post = AsyncMock(return_value=resp)
+        mock_cls.return_value = mock_client
+
+        client = HTTPClient(project_id="test123", async_mode_experimental=True)
+        result = asyncio.run(client.post("/path", body={"k": "v"}, async_mode=True))
+
+        assert result.status_code == 200
+
+    @patch("httpx.AsyncClient")
+    def test_async_put(self, mock_cls):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        resp = self._make_mock_response()
+        mock_client = Mock()
+        mock_client.put = AsyncMock(return_value=resp)
+        mock_cls.return_value = mock_client
+
+        client = HTTPClient(project_id="test123", async_mode_experimental=True)
+        result = asyncio.run(client.put("/path", body={"k": "v"}, async_mode=True))
+
+        assert result.status_code == 200
+
+    @patch("httpx.AsyncClient")
+    def test_async_put_verbose(self, mock_cls):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        resp = self._make_mock_response()
+        mock_client = Mock()
+        mock_client.put = AsyncMock(return_value=resp)
+        mock_cls.return_value = mock_client
+
+        client = HTTPClient(project_id="test123", async_mode_experimental=True, verbose=True)
+
+        async def run():
+            await client.put("/path", body={}, async_mode=True)
+            return client.get_last_response()
+
+        last = asyncio.run(run())
+        assert last is not None
+
+    @patch("httpx.AsyncClient")
+    def test_async_patch(self, mock_cls):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        resp = self._make_mock_response()
+        mock_client = Mock()
+        mock_client.patch = AsyncMock(return_value=resp)
+        mock_cls.return_value = mock_client
+
+        client = HTTPClient(project_id="test123", async_mode_experimental=True)
+        result = asyncio.run(client.patch("/path", body={"k": "v"}, async_mode=True))
+
+        assert result.status_code == 200
+
+    @patch("httpx.AsyncClient")
+    def test_async_delete(self, mock_cls):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        resp = self._make_mock_response()
+        mock_client = Mock()
+        mock_client.delete = AsyncMock(return_value=resp)
+        mock_cls.return_value = mock_client
+
+        client = HTTPClient(project_id="test123", async_mode_experimental=True)
+        result = asyncio.run(client.delete("/path", async_mode=True))
+
+        assert result.status_code == 200
+
+    @patch("httpx.AsyncClient")
+    def test_aclose_with_async_client(self, mock_cls):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        mock_client = Mock()
+        mock_client.aclose = AsyncMock()
+        mock_cls.return_value = mock_client
+
+        client = HTTPClient(project_id="test123", async_mode_experimental=True)
+        asyncio.run(client.aclose())
+
+        mock_client.aclose.assert_awaited_once()
+
+    def test_aclose_without_async_client(self):
+        import asyncio
+
+        client = HTTPClient(project_id="test123")
+        asyncio.run(client.aclose())  # no-op, must not raise
+
+    @patch("httpx.AsyncClient")
+    def test_async_get_retries_on_503(self, mock_cls):
+        import asyncio
+        from unittest.mock import AsyncMock
+        from unittest.mock import patch as mock_patch
+
+        resp_503 = Mock()
+        resp_503.is_success = False
+        resp_503.status_code = 503
+        resp_503.aclose = AsyncMock()
+
+        resp_200 = Mock()
+        resp_200.is_success = True
+        resp_200.status_code = 200
+        resp_200.json.return_value = {"ok": True}
+        resp_200.headers = {}
+
+        mock_client = Mock()
+        mock_client.get = AsyncMock(side_effect=[resp_503, resp_200])
+        mock_cls.return_value = mock_client
+
+        client = HTTPClient(project_id="test123", async_mode_experimental=True)
+        with mock_patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+            result = asyncio.run(client.get("/path", async_mode=True))
+
+        assert result.status_code == 200
+        assert mock_client.get.await_count == 2
+        mock_sleep.assert_awaited_once()
+
+    @patch("httpx.AsyncClient")
+    def test_async_get_no_retry_on_non_retryable(self, mock_cls):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        resp_404 = Mock()
+        resp_404.is_success = False
+        resp_404.status_code = 404
+        resp_404.text = "not found"
+
+        mock_client = Mock()
+        mock_client.get = AsyncMock(return_value=resp_404)
+        mock_cls.return_value = mock_client
+
+        client = HTTPClient(project_id="test123", async_mode_experimental=True)
+        with self.assertRaises(AuthException):
+            asyncio.run(client.get("/path", async_mode=True))
+
+        assert mock_client.get.await_count == 1
+
+
+class TestVerbosePut(unittest.TestCase):
+    @patch("httpx.put")
+    def test_verbose_mode_captures_put_response(self, mock_put):
+        mock_response = Mock()
+        mock_response.is_success = True
+        mock_response.json.return_value = {"updated": "user1"}
+        mock_response.headers = {"cf-ray": "put123"}
+        mock_response.status_code = 200
+        mock_put.return_value = mock_response
+
+        client = HTTPClient(project_id="test123", verbose=True)
+        client.put("/users/1", body={"name": "updated"})
+
+        last_resp = client.get_last_response()
+        assert last_resp is not None
+        assert last_resp["updated"] == "user1"
+        assert last_resp.status_code == 200
 
 
 if __name__ == "__main__":

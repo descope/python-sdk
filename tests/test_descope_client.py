@@ -1052,6 +1052,64 @@ class TestDescopeClient(common.DescopeTest):
         assert last_resp.headers.get("cf-ray") == "mgmt-ray-123"
         assert last_resp.status_code == 200
 
+    def test_unknown_kwargs_raise_type_error(self):
+        with self.assertRaises(TypeError):
+            DescopeClient(
+                project_id=self.dummy_project_id,
+                public_key=self.public_key_dict,
+                bogus_kwarg=1,
+            )
+
+    def test_async_mode_experimental_non_bool_raises_type_error(self):
+        with self.assertRaises(TypeError):
+            DescopeClient(
+                project_id=self.dummy_project_id,
+                public_key=self.public_key_dict,
+                async_mode_experimental="True",
+            )
+
+    @patch("httpx.AsyncClient")
+    @patch("httpx.post")
+    def test_async_mode_experimental_flag_does_not_return_coroutine(self, mock_post, mock_async_client):
+        """DescopeClient with async_mode_experimental=True still returns sync results from auth methods."""
+        import asyncio
+
+        my_mock_response = mock.Mock()
+        my_mock_response.is_success = True
+        my_mock_response.status_code = 200
+        my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
+        mock_post.return_value = my_mock_response
+
+        client = DescopeClient(
+            project_id=self.dummy_project_id,
+            public_key=self.public_key_dict,
+            async_mode_experimental=True,
+        )
+        result = client.otp.sign_in(DeliveryMethod.EMAIL, "dummy@dummy.com")
+        self.assertFalse(asyncio.iscoroutine(result))
+        self.assertIsNotNone(result)
+
+    @patch("httpx.AsyncClient")
+    def test_async_context_manager(self, mock_async_cls):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        mock_async_instance = mock.Mock()
+        mock_async_instance.aclose = AsyncMock()
+        mock_async_cls.return_value = mock_async_instance
+
+        async def run():
+            async with DescopeClient(
+                project_id=self.dummy_project_id,
+                public_key=self.public_key_dict,
+                async_mode_experimental=True,
+            ) as client:
+                self.assertIsNotNone(client)
+            # aclose called once for auth client + once for mgmt client
+            self.assertEqual(mock_async_instance.aclose.await_count, 2)
+
+        asyncio.run(run())
+
 
 if __name__ == "__main__":
     unittest.main()

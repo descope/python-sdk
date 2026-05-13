@@ -1,3 +1,4 @@
+import asyncio
 import json
 from unittest import mock
 from unittest.mock import patch
@@ -524,3 +525,31 @@ class TestPassword(common.DescopeTest):
                 verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
+
+    @patch("httpx.AsyncClient")
+    @patch("httpx.post")
+    def test_sync_behavior_with_async_mode_experimental(self, mock_post, _mock_async):
+        """With async_mode_experimental=True, password.sign_up still returns synchronously."""
+        from descope.http_client import HTTPClient
+
+        my_mock_response = mock.Mock()
+        my_mock_response.is_success = True
+        my_mock_response.cookies = {}
+        my_mock_response.json.return_value = json.loads(
+            '{"jwts": [], "user": {"loginIds": ["dummy@dummy.com"]}, "firstSeen": false}'
+        )
+        mock_post.return_value = my_mock_response
+
+        password = Password(
+            Auth(
+                self.dummy_project_id,
+                self.public_key_dict,
+                http_client=HTTPClient(
+                    project_id=self.dummy_project_id,
+                    async_mode_experimental=True,
+                ),
+            )
+        )
+        result = password.sign_up("dummy@dummy.com", "123456", {"email": "dummy@dummy.com"})
+        self.assertFalse(asyncio.iscoroutine(result))
+        self.assertIsNotNone(result)

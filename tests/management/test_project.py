@@ -1,3 +1,4 @@
+import asyncio
 import json
 from unittest import mock
 from unittest.mock import patch
@@ -296,3 +297,19 @@ class TestProject(common.DescopeTest):
                 verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
+
+    @patch("httpx.AsyncClient")
+    def test_sync_behavior_with_async_mode_experimental(self, _mock_async):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+            async_mode_experimental=True,
+        )
+
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
+            result = client.mgmt.project.update_name("new-name")
+            self.assertFalse(asyncio.iscoroutine(result))
+            self.assertIsNone(result)

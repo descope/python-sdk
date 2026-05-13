@@ -38,6 +38,7 @@ class DescopeClient:
         *,
         base_url: str | None = None,
         verbose: bool = False,
+        **kwargs,
     ):
         # validate project id
         project_id = project_id or os.getenv("DESCOPE_PROJECT_ID", "")
@@ -50,6 +51,13 @@ class DescopeClient:
                     "Set environment variable DESCOPE_PROJECT_ID or pass your Project ID to the init function."
                 ),
             )
+
+        raw_async_mode = kwargs.pop("async_mode_experimental", False)
+        if not isinstance(raw_async_mode, bool):
+            raise TypeError(f"async_mode_experimental must be a bool, got {type(raw_async_mode).__name__!r}")
+        async_mode_experimental: bool = raw_async_mode
+        if kwargs:
+            raise TypeError(f"DescopeClient.__init__() got unexpected keyword arguments: {list(kwargs)}")
 
         # Warn about TLS verification bypass
         if skip_verify:
@@ -70,6 +78,7 @@ class DescopeClient:
             secure=not skip_verify,
             management_key=auth_management_key or os.getenv("DESCOPE_AUTH_MANAGEMENT_KEY"),
             verbose=verbose,
+            async_mode_experimental=async_mode_experimental,
         )
         self._auth = Auth(
             project_id,
@@ -95,6 +104,7 @@ class DescopeClient:
             secure=auth_http_client.secure,
             management_key=management_key or os.getenv("DESCOPE_MANAGEMENT_KEY"),
             verbose=verbose,
+            async_mode_experimental=async_mode_experimental,
         )
         self._mgmt = MGMT(
             http_client=mgmt_http_client,
@@ -105,6 +115,16 @@ class DescopeClient:
         # Store references to HTTP clients for verbose mode access
         self._auth_http_client = auth_http_client
         self._mgmt_http_client = mgmt_http_client
+
+    async def aclose(self) -> None:
+        await self._auth_http_client.aclose()
+        await self._mgmt_http_client.aclose()
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *_):
+        await self.aclose()
 
     @property
     def mgmt(self):
