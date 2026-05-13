@@ -714,7 +714,7 @@ class TestTenant(common.DescopeTest):
             self.dummy_management_key,
         )
 
-        # Test success flow with minimal parameters
+        # Test success flow with only required parameter
         with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.is_success = True
@@ -722,7 +722,7 @@ class TestTenant(common.DescopeTest):
                 """{"adminSSOConfigurationLink": "https://example.com/sso-config-link"}"""
             )
             mock_post.return_value = network_resp
-            link = client.mgmt.tenant.generate_sso_configuration_link()
+            link = client.mgmt.tenant.generate_sso_configuration_link("t1")
             self.assertEqual(link, "https://example.com/sso-config-link")
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_generate_sso_configuration_link_path}",
@@ -732,7 +732,7 @@ class TestTenant(common.DescopeTest):
                     "x-descope-project-id": self.dummy_project_id,
                 },
                 params=None,
-                json={},
+                json={"tenantId": "t1"},
                 follow_redirects=False,
                 verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
