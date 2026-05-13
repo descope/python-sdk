@@ -663,3 +663,77 @@ class TestTenant(common.DescopeTest):
                 "t1",
                 21600,
             )
+
+    def test_generate_sso_configuration_link_with_all_params(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test success flow with all parameters
+        with patch("httpx.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.is_success = True
+            network_resp.json.return_value = json.loads(
+                """{"adminSSOConfigurationLink": "https://example.com/sso-config-link"}"""
+            )
+            mock_post.return_value = network_resp
+            link = client.mgmt.tenant.generate_sso_configuration_link(
+                tenant_id="t1",
+                expire_time=21600,
+                email="admin@example.com",
+                sso_id="sso123",
+            )
+            self.assertEqual(link, "https://example.com/sso-config-link")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_generate_sso_configuration_link_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "tenantId": "t1",
+                    "expireTime": 21600,
+                    "email": "admin@example.com",
+                    "ssoId": "sso123",
+                },
+                follow_redirects=False,
+                verify=SSLMatcher(),
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_generate_sso_configuration_link_minimal_params(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test success flow with only required parameter
+        with patch("httpx.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.is_success = True
+            network_resp.json.return_value = json.loads(
+                """{"adminSSOConfigurationLink": "https://example.com/sso-config-link"}"""
+            )
+            mock_post.return_value = network_resp
+            link = client.mgmt.tenant.generate_sso_configuration_link("t1")
+            self.assertEqual(link, "https://example.com/sso-config-link")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_generate_sso_configuration_link_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={"tenantId": "t1"},
+                follow_redirects=False,
+                verify=SSLMatcher(),
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
