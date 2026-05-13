@@ -610,3 +610,67 @@ class TestTenant(common.DescopeTest):
                 verify=SSLMatcher(),
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
+
+    def test_generate_jit_sso_link(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test failed flows
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.tenant.generate_jit_sso_link,
+                "valid-id",
+            )
+
+        # Test success flow without expire_time
+        with patch("httpx.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.is_success = True
+            network_resp.json.return_value = json.loads("""{"link": "https://example.com/sso/setup/token123"}""")
+            mock_post.return_value = network_resp
+            resp = client.mgmt.tenant.generate_jit_sso_link("t1")
+            self.assertEqual(resp["link"], "https://example.com/sso/setup/token123")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_generate_jit_sso_link_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={"tenantId": "t1"},
+                follow_redirects=False,
+                verify=SSLMatcher(),
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test success flow with expire_time (6 hours = 21600 seconds)
+        with patch("httpx.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.is_success = True
+            network_resp.json.return_value = json.loads(
+                """{"link": "https://example.com/sso/setup/token456", "expiresAt": 1234567890}"""
+            )
+            mock_post.return_value = network_resp
+            resp = client.mgmt.tenant.generate_jit_sso_link("t1", expire_time=21600)
+            self.assertEqual(resp["link"], "https://example.com/sso/setup/token456")
+            self.assertEqual(resp["expiresAt"], 1234567890)
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_generate_jit_sso_link_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={"tenantId": "t1", "expireTime": 21600},
+                follow_redirects=False,
+                verify=SSLMatcher(),
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )

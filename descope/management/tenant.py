@@ -200,6 +200,37 @@ class Tenant(HTTPBase):
             body={"id": tenant_id, "defaultRoles": role_names},
         )
 
+    def generate_jit_sso_link(
+        self,
+        tenant_id: str,
+        expire_time: Optional[int] = None,
+    ) -> dict:
+        """
+        Generate a JIT (Just-In-Time) SSO link for the given tenant.
+        This link can be used to set up SSO configuration for a tenant.
+
+        Args:
+        tenant_id (str): The ID of the tenant to generate the SSO link for.
+        expire_time (int): Optional duration in seconds for how long the link should be valid.
+            For example, for a link valid for 6 hours, use 21600 (6 * 60 * 60).
+            If not specified, the default expiration time will be used.
+
+        Return value (dict):
+        Return dict containing the generated SSO link information.
+
+        Raise:
+        AuthException: raised if link generation fails
+        """
+        body: dict[str, Any] = {"tenantId": tenant_id}
+        if expire_time is not None:
+            body["expireTime"] = expire_time
+
+        response = self._http.post(
+            MgmtV1.tenant_generate_jit_sso_link_path,
+            body=body,
+        )
+        return response.json()
+
     def delete(
         self,
         id: str,
