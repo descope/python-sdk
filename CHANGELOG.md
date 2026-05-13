@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.0](https://github.com/descope/python-sdk/compare/descope-2.1.0...descope-2.2.0) (2026-05-13)
+
+
+### Features
+
+* add email and sso_id parameters to generate_sso_configuration_link ([#1534](https://github.com/descope/python-sdk/issues/1534)) ([b56a35d](https://github.com/descope/python-sdk/commit/b56a35d92e09f771c9aec74d02c43ce21e63942e))
+
 ## [2.1.0](https://github.com/descope/python-sdk/compare/descope-2.0.0...descope-2.1.0) (2026-05-13)
 
 
