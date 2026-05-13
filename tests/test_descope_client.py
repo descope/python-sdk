@@ -1089,6 +1089,27 @@ class TestDescopeClient(common.DescopeTest):
         self.assertFalse(asyncio.iscoroutine(result))
         self.assertIsNotNone(result)
 
+    @patch("httpx.AsyncClient")
+    def test_async_context_manager(self, mock_async_cls):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        mock_async_instance = mock.Mock()
+        mock_async_instance.aclose = AsyncMock()
+        mock_async_cls.return_value = mock_async_instance
+
+        async def run():
+            async with DescopeClient(
+                project_id=self.dummy_project_id,
+                public_key=self.public_key_dict,
+                async_mode_experimental=True,
+            ) as client:
+                self.assertIsNotNone(client)
+            # aclose called once for auth client + once for mgmt client
+            self.assertEqual(mock_async_instance.aclose.await_count, 2)
+
+        asyncio.run(run())
+
 
 if __name__ == "__main__":
     unittest.main()
