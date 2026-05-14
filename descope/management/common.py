@@ -282,6 +282,9 @@ class MgmtV1:
     mgmt_key_delete_path = "/v1/mgmt/managementkey/delete"
     mgmt_key_search_path = "/v1/mgmt/managementkey/search"
 
+    # license
+    license_get_path = "/v1/mgmt/license"
+
 
 class MgmtSignUpOptions:
     def __init__(

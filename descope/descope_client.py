@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import threading
 import warnings
 from typing import Iterable
 
@@ -105,6 +106,27 @@ class DescopeClient:
         # Store references to HTTP clients for verbose mode access
         self._auth_http_client = auth_http_client
         self._mgmt_http_client = mgmt_http_client
+
+        # Fire-and-forget license handshake. Populates the rate limit tier so
+        # subsequent management requests carry the x-descope-license header.
+        # Backend skips license-header validation for the GetLicense endpoint
+        # itself, so the initial request is safe even before the tier is cached.
+        if mgmt_http_client.management_key:
+            threading.Thread(
+                target=self._fetch_rate_limit_tier,
+                daemon=True,
+                name="descope-license-handshake",
+            ).start()
+
+    def _fetch_rate_limit_tier(self) -> None:
+        try:
+            resp = self._mgmt._license.get()
+            tier = resp.get("rateLimitTier") if isinstance(resp, dict) else None
+            if tier:
+                self._mgmt_http_client.rate_limit_tier = tier
+        except Exception:
+            # Handshake failure is non-fatal, SDK continues without the header.
+            pass
 
     @property
     def mgmt(self):
