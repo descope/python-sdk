@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+import logging
 import os
-import threading
 import warnings
 from typing import Iterable
 
@@ -20,7 +20,12 @@ from descope.authmethod.webauthn import WebAuthn  # noqa: F401
 from descope.common import DEFAULT_TIMEOUT_SECONDS, AccessKeyLoginOptions, EndpointsV1
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 from descope.http_client import HTTPClient
+from descope.management.common import MgmtV1
 from descope.mgmt import MGMT  # noqa: F401
+
+logger = logging.getLogger(__name__)
+
+LICENSE_HANDSHAKE_TIMEOUT_SECONDS = 5.0
 
 
 class DescopeClient:
@@ -107,26 +112,37 @@ class DescopeClient:
         self._auth_http_client = auth_http_client
         self._mgmt_http_client = mgmt_http_client
 
-        # Fire-and-forget license handshake. Populates the rate limit tier so
-        # subsequent management requests carry the x-descope-license header.
-        # Backend skips license-header validation for the GetLicense endpoint
-        # itself, so the initial request is safe even before the tier is cached.
+        # Synchronous license handshake so the first management request after
+        # construction can carry the x-descope-license header. Backend skips
+        # license-header validation for the GetLicense endpoint itself, so the
+        # initial request is safe before the tier is cached.
         if mgmt_http_client.management_key:
-            threading.Thread(
-                target=self._fetch_rate_limit_tier,
-                daemon=True,
-                name="descope-license-handshake",
-            ).start()
+            self._fetch_rate_limit_tier()
 
     def _fetch_rate_limit_tier(self) -> None:
         try:
-            resp = self._mgmt._license.get()
-            tier = resp.get("rateLimitTier") if isinstance(resp, dict) else None
+            response = httpx.get(
+                f"{self._mgmt_http_client.base_url}{MgmtV1.license_get_path}",
+                headers={
+                    "Authorization": (
+                        f"Bearer {self._mgmt_http_client.project_id}:{self._mgmt_http_client.management_key}"
+                    )
+                },
+                follow_redirects=True,
+                verify=self._mgmt_http_client.client_verify,
+                timeout=LICENSE_HANDSHAKE_TIMEOUT_SECONDS,
+            )
+            if not response.is_success:
+                logger.warning(
+                    "License handshake returned non-success status %s",
+                    response.status_code,
+                )
+                return
+            tier = response.json().get("rateLimitTier")
             if tier:
                 self._mgmt_http_client.rate_limit_tier = tier
-        except Exception:
-            # Handshake failure is non-fatal, SDK continues without the header.
-            pass
+        except Exception as e:
+            logger.warning("License handshake failed: %s", e)
 
     @property
     def mgmt(self):
