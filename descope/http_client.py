@@ -174,6 +174,10 @@ class HTTPClient:
         self.management_key = management_key
         self.verbose = verbose
         self._thread_local = threading.local()
+        # Populated by the license handshake when a management key is configured.
+        # Sent in the x-descope-license header so Cloudflare can apply the right
+        # rate limit bucket per customer tier.
+        self.rate_limit_tier: str | None = None
 
         # Setup SSL verification for httpx (backwards compatibility with requests)
         self.client_verify: bool | ssl.SSLContext = False
@@ -400,4 +404,6 @@ class HTTPClient:
         if self.management_key:
             bearer = f"{bearer}:{self.management_key}"
         headers["Authorization"] = f"Bearer {bearer}"
+        if self.rate_limit_tier:
+            headers["x-descope-license"] = self.rate_limit_tier
         return headers

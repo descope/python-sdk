@@ -11,6 +11,7 @@ from descope.management.fga import FGA
 from descope.management.flow import Flow
 from descope.management.group import Group
 from descope.management.jwt import JWT
+from descope.management.license import License
 from descope.management.management_key import ManagementKey
 from descope.management.outbound_application import (
     OutboundApplication,
@@ -45,6 +46,7 @@ class MGMT:
         self._flow = Flow(http_client)
         self._group = Group(http_client)
         self._jwt = JWT(http_client, auth=auth)
+        self._license = License(http_client)
         self._management_key = ManagementKey(http_client)
         self._outbound_application = OutboundApplication(http_client)
         self._outbound_application_by_token = OutboundApplicationByToken(http_client)
@@ -93,6 +95,11 @@ class MGMT:
     def jwt(self):
         self._ensure_management_key("jwt")
         return self._jwt
+
+    @property
+    def license(self):
+        self._ensure_management_key("license")
+        return self._license
 
     @property
     def permission(self):
