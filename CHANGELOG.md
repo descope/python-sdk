@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.0](https://github.com/descope/python-sdk/compare/descope-2.2.0...descope-2.3.0) (2026-05-15)
+
+
+### Features
+
+* add license handshake and x-descope-license header ([#1537](https://github.com/descope/python-sdk/issues/1537)) ([0ab28eb](https://github.com/descope/python-sdk/commit/0ab28ebe9520b0f81055d6492cc77df5064d81c4))
+
 ## [2.2.0](https://github.com/descope/python-sdk/compare/descope-2.1.0...descope-2.2.0) (2026-05-13)
 
 
