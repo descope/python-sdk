@@ -37,6 +37,8 @@ from descope.management.common import (
 )
 from descope.management.sso_settings import (
     AttributeMapping,
+    FGAGroupMapping,
+    FGAGroupMappingRelation,
     OIDCAttributeMapping,
     RoleMapping,
     SSOOIDCSettings,
@@ -85,6 +87,8 @@ __all__ = [
     "SAMLIDPGroupsMappingInfo",
     "SAMLIDPRoleGroupMappingInfo",
     "AttributeMapping",
+    "FGAGroupMapping",
+    "FGAGroupMappingRelation",
     "OIDCAttributeMapping",
     "RoleMapping",
     "SSOOIDCSettings",

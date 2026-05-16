@@ -6,6 +6,8 @@ from descope import AttributeMapping, AuthException, DescopeClient, RoleMapping
 from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 from descope.management.sso_settings import (
+    FGAGroupMapping,
+    FGAGroupMappingRelation,
     OIDCAttributeMapping,
     SSOOIDCSettings,
     SSOSAMLSettings,
@@ -216,6 +218,7 @@ class TestSSOSettings(common.DescopeTest):
                             "picture": "picture",
                         },
                         "groupsPriority": ["group1"],
+                        "fgaMappings": None,
                     },
                     "domains": ["domain.com"],
                 },
@@ -312,6 +315,9 @@ class TestSSOSettings(common.DescopeTest):
                         "spEntityId": "spentityid",
                         "defaultSSORoles": ["aa", "bb"],
                         "groupsPriority": ["group1"],
+                        "fgaMappings": None,
+                        "configFGATenantIDResourcePrefix": None,
+                        "configFGATenantIDResourceSuffix": None,
                     },
                     "redirectUrl": "https://redirect.com",
                     "domains": ["domain.com"],
@@ -397,6 +403,9 @@ class TestSSOSettings(common.DescopeTest):
                         "spEntityId": "spentityid",
                         "defaultSSORoles": ["aa", "bb"],
                         "groupsPriority": ["group1"],
+                        "fgaMappings": None,
+                        "configFGATenantIDResourcePrefix": None,
+                        "configFGATenantIDResourceSuffix": None,
                     },
                     "redirectUrl": "https://redirect.com",
                     "domains": ["domain.com"],
@@ -468,6 +477,9 @@ class TestSSOSettings(common.DescopeTest):
                         "spEntityId": None,
                         "defaultSSORoles": ["aa", "bb"],
                         "groupsPriority": ["group1"],
+                        "fgaMappings": None,
+                        "configFGATenantIDResourcePrefix": None,
+                        "configFGATenantIDResourceSuffix": None,
                     },
                     "redirectUrl": "https://redirect.com",
                     "domains": ["domain.com"],
@@ -479,6 +491,277 @@ class TestSSOSettings(common.DescopeTest):
 
     def test_attribute_mapping_to_dict(self):
         self.assertRaises(ValueError, SSOSettings._attribute_mapping_to_dict, None)
+
+    def test_fga_mappings_to_dict(self):
+        # None input returns None
+        self.assertIsNone(SSOSettings._fga_mappings_to_dict(None))
+
+        # Empty dict returns empty dict
+        self.assertEqual(SSOSettings._fga_mappings_to_dict({}), {})
+
+        # Group with relations is serialized into camelCase keys
+        mappings = {
+            "admins": FGAGroupMapping(
+                relations=[
+                    FGAGroupMappingRelation(
+                        resource="tenant:t1",
+                        relation_definition="member",
+                        namespace="tenant",
+                    ),
+                    FGAGroupMappingRelation(
+                        resource="tenant:t1",
+                        relation_definition="owner",
+                        namespace="tenant",
+                    ),
+                ],
+            ),
+            "viewers": FGAGroupMapping(),
+        }
+        self.assertEqual(
+            SSOSettings._fga_mappings_to_dict(mappings),
+            {
+                "admins": {
+                    "relations": [
+                        {
+                            "resource": "tenant:t1",
+                            "relationDefinition": "member",
+                            "namespace": "tenant",
+                        },
+                        {
+                            "resource": "tenant:t1",
+                            "relationDefinition": "owner",
+                            "namespace": "tenant",
+                        },
+                    ],
+                },
+                "viewers": {"relations": []},
+            },
+        )
+
+    def test_configure_saml_settings_with_fga_mappings(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
+            self.assertIsNone(
+                client.mgmt.sso.configure_saml_settings(
+                    "tenant-id",
+                    SSOSAMLSettings(
+                        idp_url="http://dummy.com",
+                        idp_entity_id="ent1234",
+                        idp_cert="cert",
+                        fga_mappings={
+                            "admins": FGAGroupMapping(
+                                relations=[
+                                    FGAGroupMappingRelation(
+                                        resource="tenant:t1",
+                                        relation_definition="member",
+                                        namespace="tenant",
+                                    ),
+                                ],
+                            ),
+                        },
+                        config_fga_tenant_id_resource_prefix="tenant:",
+                        config_fga_tenant_id_resource_suffix="",
+                    ),
+                    "https://redirect.com",
+                    ["domain.com"],
+                )
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_configure_saml_settings}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "tenantId": "tenant-id",
+                    "settings": {
+                        "idpUrl": "http://dummy.com",
+                        "entityId": "ent1234",
+                        "idpCert": "cert",
+                        "idpAdditionalCerts": None,
+                        "attributeMapping": None,
+                        "roleMappings": [],
+                        "spACSUrl": None,
+                        "spEntityId": None,
+                        "defaultSSORoles": None,
+                        "groupsPriority": None,
+                        "fgaMappings": {
+                            "admins": {
+                                "relations": [
+                                    {
+                                        "resource": "tenant:t1",
+                                        "relationDefinition": "member",
+                                        "namespace": "tenant",
+                                    },
+                                ],
+                            },
+                        },
+                        "configFGATenantIDResourcePrefix": "tenant:",
+                        "configFGATenantIDResourceSuffix": "",
+                    },
+                    "redirectUrl": "https://redirect.com",
+                    "domains": ["domain.com"],
+                },
+                follow_redirects=False,
+                verify=SSLMatcher(),
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_configure_saml_settings_by_metadata_with_fga_mappings(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
+            self.assertIsNone(
+                client.mgmt.sso.configure_saml_settings_by_metadata(
+                    "tenant-id",
+                    SSOSAMLSettingsByMetadata(
+                        idp_metadata_url="http://dummy.com/metadata",
+                        fga_mappings={
+                            "admins": FGAGroupMapping(
+                                relations=[
+                                    FGAGroupMappingRelation(
+                                        resource="tenant:t1",
+                                        relation_definition="member",
+                                        namespace="tenant",
+                                    ),
+                                ],
+                            ),
+                        },
+                        config_fga_tenant_id_resource_prefix="tenant:",
+                        config_fga_tenant_id_resource_suffix="-suffix",
+                    ),
+                )
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_configure_saml_by_metadata_settings}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "tenantId": "tenant-id",
+                    "settings": {
+                        "idpMetadataUrl": "http://dummy.com/metadata",
+                        "attributeMapping": None,
+                        "roleMappings": [],
+                        "spACSUrl": None,
+                        "spEntityId": None,
+                        "defaultSSORoles": None,
+                        "groupsPriority": None,
+                        "fgaMappings": {
+                            "admins": {
+                                "relations": [
+                                    {
+                                        "resource": "tenant:t1",
+                                        "relationDefinition": "member",
+                                        "namespace": "tenant",
+                                    },
+                                ],
+                            },
+                        },
+                        "configFGATenantIDResourcePrefix": "tenant:",
+                        "configFGATenantIDResourceSuffix": "-suffix",
+                    },
+                    "redirectUrl": None,
+                    "domains": None,
+                },
+                follow_redirects=False,
+                verify=SSLMatcher(),
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+    def test_configure_oidc_settings_with_fga_mappings(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
+            self.assertIsNone(
+                client.mgmt.sso.configure_oidc_settings(
+                    "tenant-id",
+                    SSOOIDCSettings(
+                        name="myName",
+                        client_id="cid",
+                        fga_mappings={
+                            "admins": FGAGroupMapping(
+                                relations=[
+                                    FGAGroupMappingRelation(
+                                        resource="tenant:t1",
+                                        relation_definition="member",
+                                        namespace="tenant",
+                                    ),
+                                ],
+                            ),
+                        },
+                    ),
+                )
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_configure_oidc_settings}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "tenantId": "tenant-id",
+                    "settings": {
+                        "name": "myName",
+                        "clientId": "cid",
+                        "clientSecret": None,
+                        "redirectUrl": None,
+                        "authUrl": None,
+                        "tokenUrl": None,
+                        "userDataUrl": None,
+                        "scope": None,
+                        "JWKsUrl": None,
+                        "userAttrMapping": None,
+                        "manageProviderTokens": False,
+                        "callbackDomain": None,
+                        "prompt": None,
+                        "grantType": None,
+                        "issuer": None,
+                        "groupsPriority": None,
+                        "fgaMappings": {
+                            "admins": {
+                                "relations": [
+                                    {
+                                        "resource": "tenant:t1",
+                                        "relationDefinition": "member",
+                                        "namespace": "tenant",
+                                    },
+                                ],
+                            },
+                        },
+                    },
+                    "domains": None,
+                },
+                follow_redirects=False,
+                verify=SSLMatcher(),
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
 
     # Testing DEPRECATED functions
     def test_get_settings(self):

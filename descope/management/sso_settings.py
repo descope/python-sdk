@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from descope._http_base import HTTPBase
 from descope.management.common import MgmtV1
@@ -10,6 +10,22 @@ class RoleMapping:
     def __init__(self, groups: List[str], role_name: str):
         self.groups = groups
         self.role_name = role_name
+
+
+class FGAGroupMappingRelation:
+    """A single FGA relation that maps an IDP group to an FGA resource/relation."""
+
+    def __init__(self, resource: str, relation_definition: str, namespace: str):
+        self.resource = resource
+        self.relation_definition = relation_definition
+        self.namespace = namespace
+
+
+class FGAGroupMapping:
+    """A list of FGA relations to apply for an IDP group."""
+
+    def __init__(self, relations: Optional[List[FGAGroupMappingRelation]] = None):
+        self.relations = relations
 
 
 class AttributeMapping:
@@ -93,6 +109,7 @@ class SSOOIDCSettings:
         grant_type: Optional[str] = None,
         issuer: Optional[str] = None,
         groups_priority: Optional[List[str]] = None,  # list of group names in priority order (first = highest priority)
+        fga_mappings: Optional[Dict[str, FGAGroupMapping]] = None,  # map of IDP group name -> FGA relations
     ):
         self.name = name
         self.client_id = client_id
@@ -110,6 +127,7 @@ class SSOOIDCSettings:
         self.grant_type = grant_type
         self.issuer = issuer
         self.groups_priority = groups_priority
+        self.fga_mappings = fga_mappings
 
 
 class SSOSAMLSettings:
@@ -127,6 +145,9 @@ class SSOSAMLSettings:
         default_sso_roles: Optional[List[str]] = None,
         idp_additional_certs: Optional[List[str]] = None,
         groups_priority: Optional[List[str]] = None,  # list of group names in priority order (first = highest priority)
+        fga_mappings: Optional[Dict[str, FGAGroupMapping]] = None,  # map of IDP group name -> FGA relations
+        config_fga_tenant_id_resource_prefix: Optional[str] = None,
+        config_fga_tenant_id_resource_suffix: Optional[str] = None,
         # NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
         sp_acs_url: Optional[str] = None,
         sp_entity_id: Optional[str] = None,
@@ -141,6 +162,9 @@ class SSOSAMLSettings:
         self.sp_acs_url = sp_acs_url
         self.sp_entity_id = sp_entity_id
         self.groups_priority = groups_priority
+        self.fga_mappings = fga_mappings
+        self.config_fga_tenant_id_resource_prefix = config_fga_tenant_id_resource_prefix
+        self.config_fga_tenant_id_resource_suffix = config_fga_tenant_id_resource_suffix
 
 
 class SSOSAMLSettingsByMetadata:
@@ -155,6 +179,9 @@ class SSOSAMLSettingsByMetadata:
         role_mappings: Optional[List[RoleMapping]] = None,
         default_sso_roles: Optional[List[str]] = None,
         groups_priority: Optional[List[str]] = None,  # list of group names in priority order (first = highest priority)
+        fga_mappings: Optional[Dict[str, FGAGroupMapping]] = None,  # map of IDP group name -> FGA relations
+        config_fga_tenant_id_resource_prefix: Optional[str] = None,
+        config_fga_tenant_id_resource_suffix: Optional[str] = None,
         # NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
         sp_acs_url: Optional[str] = None,
         sp_entity_id: Optional[str] = None,
@@ -166,6 +193,9 @@ class SSOSAMLSettingsByMetadata:
         self.sp_acs_url = sp_acs_url
         self.sp_entity_id = sp_entity_id
         self.groups_priority = groups_priority
+        self.fga_mappings = fga_mappings
+        self.config_fga_tenant_id_resource_prefix = config_fga_tenant_id_resource_prefix
+        self.config_fga_tenant_id_resource_suffix = config_fga_tenant_id_resource_suffix
 
 
 class SSOSettings(HTTPBase):
@@ -498,6 +528,27 @@ class SSOSettings(HTTPBase):
         }
 
     @staticmethod
+    def _fga_mappings_to_dict(
+        fga_mappings: Optional[Dict[str, FGAGroupMapping]],
+    ) -> Optional[dict]:
+        if fga_mappings is None:
+            return None
+        result: dict = {}
+        for group_name, mapping in fga_mappings.items():
+            relations = []
+            if mapping is not None and mapping.relations:
+                for relation in mapping.relations:
+                    relations.append(
+                        {
+                            "resource": relation.resource,
+                            "relationDefinition": relation.relation_definition,
+                            "namespace": relation.namespace,
+                        }
+                    )
+            result[group_name] = {"relations": relations}
+        return result
+
+    @staticmethod
     def _compose_configure_oidc_settings_body(
         tenant_id: str,
         settings: SSOOIDCSettings,
@@ -538,6 +589,7 @@ class SSOSettings(HTTPBase):
                 "grantType": settings.grant_type,
                 "issuer": settings.issuer,
                 "groupsPriority": settings.groups_priority,
+                "fgaMappings": SSOSettings._fga_mappings_to_dict(settings.fga_mappings),
             },
             "domains": domains,
         }
@@ -566,6 +618,9 @@ class SSOSettings(HTTPBase):
                 "roleMappings": SSOSettings._role_mapping_to_dict(settings.role_mappings),
                 "defaultSSORoles": settings.default_sso_roles,
                 "groupsPriority": settings.groups_priority,
+                "fgaMappings": SSOSettings._fga_mappings_to_dict(settings.fga_mappings),
+                "configFGATenantIDResourcePrefix": settings.config_fga_tenant_id_resource_prefix,
+                "configFGATenantIDResourceSuffix": settings.config_fga_tenant_id_resource_suffix,
             },
             "redirectUrl": redirect_url,
             "domains": domains,
@@ -592,6 +647,9 @@ class SSOSettings(HTTPBase):
                 "roleMappings": SSOSettings._role_mapping_to_dict(settings.role_mappings),
                 "defaultSSORoles": settings.default_sso_roles,
                 "groupsPriority": settings.groups_priority,
+                "fgaMappings": SSOSettings._fga_mappings_to_dict(settings.fga_mappings),
+                "configFGATenantIDResourcePrefix": settings.config_fga_tenant_id_resource_prefix,
+                "configFGATenantIDResourceSuffix": settings.config_fga_tenant_id_resource_suffix,
             },
             "redirectUrl": redirect_url,
             "domains": domains,
