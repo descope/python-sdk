@@ -1,6 +1,6 @@
 [project]
 name = "descope"
-version = "2.3.0"
+version = "2.4.0"
 description = "Descope Python SDK"
 authors = [{ name = "Descope", email = "info@descope.com" }]
 requires-python = ">=3.9,<4.0"

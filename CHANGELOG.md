@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.0](https://github.com/descope/python-sdk/compare/descope-2.3.0...descope-2.4.0) (2026-05-16)
+
+
+### Features
+
+* add FGA mappings support to SSO tenant settings ([#1539](https://github.com/descope/python-sdk/issues/1539)) ([95bade5](https://github.com/descope/python-sdk/commit/95bade52a43e2dfd5a1a317392d701440117556f))
+
 ## [2.3.0](https://github.com/descope/python-sdk/compare/descope-2.2.0...descope-2.3.0) (2026-05-15)
 
 
