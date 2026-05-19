@@ -74,6 +74,34 @@ class TestTenant(common.DescopeTest):
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
+        # Test create without an explicit ID preserves the existing null ID payload
+        with patch("httpx.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.is_success = True
+            network_resp.json.return_value = json.loads("""{"id": "t1"}""")
+            mock_post.return_value = network_resp
+            resp = client.mgmt.tenant.create("name")
+            self.assertEqual(resp["id"], "t1")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_create_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "name": "name",
+                    "id": None,
+                    "selfProvisioningDomains": [],
+                    "enforceSSO": False,
+                    "disabled": False,
+                },
+                follow_redirects=False,
+                verify=SSLMatcher(),
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
         # Test success flow with custom attributes, enforce_sso, disabled
         with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
@@ -152,6 +180,57 @@ class TestTenant(common.DescopeTest):
                     "selfProvisioningDomains": ["domain.com"],
                     "enforceSSO": True,
                     "disabled": True,
+                },
+                follow_redirects=False,
+                verify=SSLMatcher(),
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test partial update keeps omitted fields unchanged
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
+            self.assertIsNone(client.mgmt.tenant.update("t1", disabled=True))
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_update_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "id": "t1",
+                    "disabled": True,
+                },
+                follow_redirects=False,
+                verify=SSLMatcher(),
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
+
+        # Test explicit false and empty list values are still sent
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = True
+            self.assertIsNone(
+                client.mgmt.tenant.update(
+                    "t1",
+                    self_provisioning_domains=[],
+                    enforce_sso=False,
+                    disabled=False,
+                )
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_update_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "id": "t1",
+                    "selfProvisioningDomains": [],
+                    "enforceSSO": False,
+                    "disabled": False,
                 },
                 follow_redirects=False,
                 verify=SSLMatcher(),

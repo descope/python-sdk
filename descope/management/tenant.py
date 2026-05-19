@@ -63,21 +63,20 @@ class Tenant(HTTPBase):
     def update(
         self,
         id: str,
-        name: str,
+        name: Optional[str] = None,
         self_provisioning_domains: Optional[List[str]] = None,
         custom_attributes: Optional[dict] = None,
-        enforce_sso: Optional[bool] = False,
+        enforce_sso: Optional[bool] = None,
         enforce_sso_exclusions: Optional[List[str]] = None,
         federated_app_ids: Optional[List[str]] = None,
-        disabled: Optional[bool] = False,
+        disabled: Optional[bool] = None,
     ):
         """
-        Update an existing tenant with the given name and domains. IMPORTANT: All parameters are used as overrides
-        to the existing tenant. Empty fields will override populated fields. Use carefully.
+        Update an existing tenant. Only provided parameters are sent as updates.
 
         Args:
         id (str): The ID of the tenant to update.
-        name (str): Updated tenant name
+        name (str): Optional updated tenant name.
         self_provisioning_domains (List[str]): An optional list of domain that are associated with this tenant.
             Users authenticating from these domains will be associated with this tenant.
         custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
@@ -87,10 +86,8 @@ class Tenant(HTTPBase):
         disabled (bool): Optional, login to the tenant will be disabled
 
         Raise:
-        AuthException: raised if creation operation fails
+        AuthException: raised if update operation fails
         """
-        self_provisioning_domains = [] if self_provisioning_domains is None else self_provisioning_domains
-
         self._http.post(
             MgmtV1.tenant_update_path,
             body=Tenant._compose_create_update_body(
@@ -365,26 +362,29 @@ class Tenant(HTTPBase):
 
     @staticmethod
     def _compose_create_update_body(
-        name: str,
+        name: Optional[str],
         id: Optional[str],
-        self_provisioning_domains: List[str],
+        self_provisioning_domains: Optional[List[str]],
         custom_attributes: Optional[dict] = None,
-        enforce_sso: Optional[bool] = False,
+        enforce_sso: Optional[bool] = None,
         enforce_sso_exclusions: Optional[List[str]] = None,
         federated_app_ids: Optional[List[str]] = None,
-        disabled: Optional[bool] = False,
+        disabled: Optional[bool] = None,
     ) -> dict:
-        body: dict[str, Any] = {
-            "name": name,
-            "id": id,
-            "selfProvisioningDomains": self_provisioning_domains,
-            "enforceSSO": enforce_sso,
-            "disabled": disabled,
-        }
+        body: dict[str, Any] = {}
+        if name is not None:
+            body["name"] = name
+        body["id"] = id
+        if self_provisioning_domains is not None:
+            body["selfProvisioningDomains"] = self_provisioning_domains
         if custom_attributes is not None:
             body["customAttributes"] = custom_attributes
+        if enforce_sso is not None:
+            body["enforceSSO"] = enforce_sso
         if enforce_sso_exclusions is not None:
             body["enforceSSOExclusions"] = enforce_sso_exclusions
         if federated_app_ids is not None:
             body["federatedAppIds"] = federated_app_ids
+        if disabled is not None:
+            body["disabled"] = disabled
         return body
