@@ -210,7 +210,6 @@ def validate_dpop_proof(session_token: str, dpop_proof: str, method: str, reques
             except (ImportError, AttributeError):
                 # Fallback: verify Ed25519 signature directly via cryptography
                 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
-                from cryptography.hazmat.primitives import serialization
                 key_bytes = _base64url_decode(jwk_dict["x"])
                 public_key = Ed25519PublicKey.from_public_bytes(key_bytes)
                 public_key.verify(signature, signing_input)
