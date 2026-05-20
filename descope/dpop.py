@@ -124,12 +124,13 @@ def validate_dpop_proof(session_token: str, dpop_proof: str, method: str, reques
         method (str): HTTP method of the incoming request (e.g. "GET", "POST").
         request_url (str): Full URL of the incoming request.
     """
-    # Decode claims to check for cnf.jkt — no need to validate if not DPoP-bound
+    # Decode claims to check for cnf.jkt — no need to validate if not DPoP-bound.
+    # Use no algorithms restriction so tokens signed with any alg decode correctly.
     try:
         unverified_claims = jwt.decode(
             session_token,
-            options={"verify_signature": False},
-            algorithms=list(_ALLOWED_ALGS) + ["RS256", "ES256"],
+            options={"verify_signature": False, "verify_aud": False},
+            algorithms=jwt.algorithms.get_default_algorithms().keys(),
         )
     except Exception as e:
         raise AuthException(400, ERROR_TYPE_INVALID_TOKEN, f"Unable to decode session token claims: {e}")
