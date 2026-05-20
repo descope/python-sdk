@@ -10,6 +10,7 @@ from descope.common import (
     SignUpOptions,
 )
 from descope.descope_client import DescopeClient
+from descope.dpop import get_dpop_thumbprint, validate_dpop_proof
 from descope.exceptions import (
     API_RATE_LIMIT_RETRY_AFTER_HEADER,
     ERROR_TYPE_API_RATE_LIMIT,
@@ -65,6 +66,8 @@ __all__ = [
     "LoginOptions",
     "SignUpOptions",
     "DescopeClient",
+    "get_dpop_thumbprint",
+    "validate_dpop_proof",
     "API_RATE_LIMIT_RETRY_AFTER_HEADER",
     "ERROR_TYPE_API_RATE_LIMIT",
     "ERROR_TYPE_SERVER_ERROR",

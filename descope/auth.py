@@ -34,6 +34,7 @@ from descope.exceptions import (
     AuthException,
     RateLimitException,
 )
+from descope.dpop import validate_dpop_proof as dpop_validate_proof
 from descope.http_client import HTTPClient
 from descope.jwt_common import adjust_properties as jwt_adjust_properties
 from descope.jwt_common import generate_auth_info as jwt_generate_auth_info
@@ -490,6 +491,22 @@ class Auth:
         resp = response.json()
         refresh_token = response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None) or refresh_token
         return self.generate_jwt_response(resp, refresh_token, audience)
+
+    def validate_dpop_proof(
+        self,
+        session_token: str,
+        dpop_proof: str,
+        method: str,
+        request_url: str,
+    ) -> None:
+        """
+        Validate a DPoP proof for a DPoP-bound session token (RFC 9449 §7.1-7.2).
+
+        Call after validate_session() when the session token has a cnf.jkt claim.
+        Raises AuthException if validation fails.
+        Does nothing if session_token has no cnf.jkt.
+        """
+        dpop_validate_proof(dpop_proof, method, request_url, session_token)
 
     def validate_and_refresh_session(
         self,

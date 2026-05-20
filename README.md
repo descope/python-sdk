@@ -58,11 +58,12 @@ These sections show how to use the SDK to perform various authentication/authori
 6. [TOTP Authentication](#totp-authentication)
 7. [Passwords](#passwords)
 8. [Session Validation](#session-validation)
-9. [Roles & Permission Validation](#roles--permission-validation)
-10. [Tenant selection](#tenant-selection)
-11. [Logging Out](#logging-out)
-12. [History](#history)
-13. [My Tenants](#my-tenants)
+9. [DPoP Sender-Constrained Tokens](#dpop-sender-constrained-tokens)
+10. [Roles & Permission Validation](#roles--permission-validation)
+11. [Tenant selection](#tenant-selection)
+12. [Logging Out](#logging-out)
+13. [History](#history)
+14. [My Tenants](#my-tenants)
 
 ## API Management Function
 
@@ -406,6 +407,44 @@ The implementation can defer according to your framework of choice. See our [sam
 
 If Roles & Permissions are used, validate them immediately after validating the session. See the [next section](#roles--permission-validation)
 for more information.
+
+### DPoP Sender-Constrained Tokens
+
+[DPoP (Demonstrated Proof of Possession, RFC 9449)](https://datatracker.ietf.org/doc/html/rfc9449) allows
+session tokens to be _sender-constrained_ — a client must prove on every request that it holds the private key
+corresponding to the public key thumbprint embedded in the token's `cnf.jkt` claim.
+
+When a session token contains a `cnf.jkt` claim you must call `validate_dpop_proof` after `validate_session`
+to verify the DPoP proof the client sends in the `DPoP` HTTP header.
+
+```python
+from descope import AuthException, get_dpop_thumbprint
+
+# 1. Validate the session as usual
+try:
+    jwt_response = descope_client.validate_session(session_token)
+except AuthException:
+    # Session is invalid
+    raise
+
+# 2. Check whether the token is DPoP-bound
+if get_dpop_thumbprint(jwt_response):
+    # 3. Validate the DPoP proof from the incoming request
+    dpop_header = request.headers.get("DPoP", "")  # framework-specific
+    try:
+        descope_client.validate_dpop_proof(
+            session_token=session_token,
+            dpop_proof=dpop_header,
+            method=request.method,        # e.g. "GET"
+            request_url=request.url,      # full URL including path
+        )
+    except AuthException:
+        # DPoP proof is invalid — reject the request
+        raise
+```
+
+`validate_dpop_proof` raises `AuthException` if the proof is missing, forged, expired, or bound to the
+wrong token. It is a no-op when the token has no `cnf.jkt` claim, so it is safe to call unconditionally.
 
 ### Roles & Permission Validation
 

@@ -431,6 +431,31 @@ class DescopeClient:
         """
         return self._auth.validate_and_refresh_session(session_token, refresh_token, audience)
 
+    def validate_dpop_proof(
+        self,
+        session_token: str,
+        dpop_proof: str,
+        method: str,
+        request_url: str,
+    ) -> None:
+        """
+        Validate a DPoP proof for a DPoP-bound session token (RFC 9449 §7.1-7.2).
+
+        Call this after validate_session() when the session token has a cnf.jkt claim
+        to verify that the client possesses the private key bound to the token.
+        Does nothing if session_token has no cnf.jkt (i.e. not DPoP-bound).
+
+        Args:
+        session_token (str): The raw session JWT string.
+        dpop_proof (str): The value of the DPoP HTTP header from the incoming request.
+        method (str): HTTP method of the incoming request (e.g. "GET", "POST").
+        request_url (str): Full URL of the incoming request.
+
+        Raise:
+        AuthException: Exception is raised if the DPoP proof is invalid.
+        """
+        self._auth.validate_dpop_proof(session_token, dpop_proof, method, request_url)
+
     def logout(self, refresh_token: str) -> httpx.Response:
         """
         Logout user from current session and revoke the refresh_token. After calling this function,
