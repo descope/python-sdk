@@ -506,7 +506,7 @@ class Auth:
         Raises AuthException if validation fails.
         Does nothing if session_token has no cnf.jkt.
         """
-        dpop_validate_proof(dpop_proof, method, request_url, session_token)
+        dpop_validate_proof(session_token, dpop_proof, method, request_url)
 
     def validate_and_refresh_session(
         self,

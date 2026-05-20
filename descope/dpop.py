@@ -58,18 +58,25 @@ def _normalize_url(raw: str) -> str:
     - lowercase scheme and host
     - strip default port
     - drop query string and fragment
+    - preserve IPv6 bracket notation
+    - normalize empty path to "/"
     """
     p = urlparse(raw)
     scheme = p.scheme.lower()
     host = p.hostname or ""
     port = p.port
+    # Rebuild host, preserving IPv6 bracket notation
+    if ":" in host:
+        host = f"[{host}]"
     # Rebuild netloc without default port
     if port is None or port == _DEFAULT_PORTS.get(scheme):
         netloc = host
     else:
         netloc = f"{host}:{port}"
+    # Normalize empty path to "/"
+    path = p.path or "/"
     # Reconstruct without query/fragment
-    return f"{scheme}://{netloc}{p.path}"
+    return f"{scheme}://{netloc}{path}"
 
 
 def _compute_jwk_thumbprint(jwk_dict: dict) -> str:
@@ -95,10 +102,11 @@ def _compute_jwk_thumbprint(jwk_dict: dict) -> str:
 
 def get_dpop_thumbprint(claims: dict) -> str:
     """Extract cnf.jkt from token claims, return empty string if absent."""
-    return claims.get("cnf", {}).get("jkt", "")
+    cnf = claims.get("cnf") or {}
+    return cnf.get("jkt", "")
 
 
-def validate_dpop_proof(dpop_proof: str, method: str, request_url: str, session_token: str) -> None:
+def validate_dpop_proof(session_token: str, dpop_proof: str, method: str, request_url: str) -> None:
     """
     Validate a DPoP proof for a DPoP-bound session token (RFC 9449 §7.1-7.2).
 
@@ -106,11 +114,15 @@ def validate_dpop_proof(dpop_proof: str, method: str, request_url: str, session_
     Raises AuthException if validation fails.
     Does nothing if session_token has no cnf.jkt.
 
+    NOTE: jti replay protection (RFC 9449 §11.1) is intentionally not implemented.
+    A stateless SDK has no shared storage to track seen jti values across requests.
+    Callers that require replay protection must implement their own jti store.
+
     Args:
+        session_token (str): The raw session JWT string.
         dpop_proof (str): The value of the DPoP HTTP header from the incoming request.
         method (str): HTTP method of the incoming request (e.g. "GET", "POST").
         request_url (str): Full URL of the incoming request.
-        session_token (str): The raw session JWT string.
     """
     # Decode claims to check for cnf.jkt — no need to validate if not DPoP-bound
     try:
@@ -151,6 +163,9 @@ def validate_dpop_proof(dpop_proof: str, method: str, request_url: str, session_
     except Exception as e:
         raise AuthException(400, ERROR_TYPE_INVALID_TOKEN, f"Unable to decode DPoP proof header: {e}")
 
+    if not isinstance(header, dict):
+        raise AuthException(400, ERROR_TYPE_INVALID_TOKEN, "DPoP proof header is not a JSON object")
+
     if header.get("typ") != "dpop+jwt":
         raise AuthException(400, ERROR_TYPE_INVALID_TOKEN, "DPoP proof header must have typ=dpop+jwt")
 
@@ -161,6 +176,8 @@ def validate_dpop_proof(dpop_proof: str, method: str, request_url: str, session_
     jwk_dict = header.get("jwk")
     if not jwk_dict:
         raise AuthException(400, ERROR_TYPE_INVALID_TOKEN, "DPoP proof header is missing jwk")
+    if not isinstance(jwk_dict, dict):
+        raise AuthException(400, ERROR_TYPE_INVALID_TOKEN, "DPoP proof header jwk is not a JSON object")
 
     # --- Step 12-13: reject symmetric and private keys ---
     if jwk_dict.get("kty") == "oct":
@@ -169,36 +186,37 @@ def validate_dpop_proof(dpop_proof: str, method: str, request_url: str, session_
         raise AuthException(400, ERROR_TYPE_INVALID_TOKEN, "DPoP proof jwk must not contain private key material")
 
     # --- Step 14-15: load key and verify signature ---
+    signing_input = (parts[0] + "." + parts[1]).encode()
+
+    try:
+        signature = _base64url_decode(parts[2])
+    except Exception as e:
+        raise AuthException(400, ERROR_TYPE_INVALID_TOKEN, f"Unable to decode DPoP proof signature: {e}")
+
     try:
         if alg in _ALG_TO_CLASS:
             alg_class = _ALG_TO_CLASS[alg]
             key = alg_class.from_jwk(json.dumps(jwk_dict))
+            alg_instance = jwt.get_algorithm_by_name(alg)
+            alg_instance.verify(signing_input, key, signature)
         elif alg == "EdDSA":
             # Try PyJWT's OKP support first; fall back to cryptography library
             try:
                 from jwt.algorithms import OKPAlgorithm
                 key = OKPAlgorithm.from_jwk(json.dumps(jwk_dict))
+                alg_instance = jwt.get_algorithm_by_name(alg)
+                alg_instance.verify(signing_input, key, signature)
             except (ImportError, AttributeError):
-                # Fallback: load Ed25519 key via cryptography
-                from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey  # noqa: F401
-                from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
-                import base64 as _b64
-                x_bytes = _b64.urlsafe_b64decode(jwk_dict["x"] + "==")
+                # Fallback: verify Ed25519 signature directly via cryptography
                 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
-                key = Ed25519PublicKey.from_public_bytes(x_bytes)
+                from cryptography.hazmat.primitives import serialization
+                key_bytes = _base64url_decode(jwk_dict["x"])
+                public_key = Ed25519PublicKey.from_public_bytes(key_bytes)
+                public_key.verify(signature, signing_input)
         else:
             raise AuthException(400, ERROR_TYPE_INVALID_TOKEN, f"Unsupported DPoP algorithm: {alg}")
     except AuthException:
         raise
-    except Exception as e:
-        raise AuthException(400, ERROR_TYPE_INVALID_TOKEN, f"Unable to load DPoP proof public key: {e}")
-
-    signing_input = (parts[0] + "." + parts[1]).encode()
-    signature = _base64url_decode(parts[2])
-
-    try:
-        alg_instance = jwt.get_algorithm_by_name(alg)
-        alg_instance.verify(signing_input, key, signature)
     except Exception as e:
         raise AuthException(400, ERROR_TYPE_INVALID_TOKEN, f"DPoP proof signature verification failed: {e}")
 
@@ -207,6 +225,9 @@ def validate_dpop_proof(dpop_proof: str, method: str, request_url: str, session_
         payload = json.loads(_base64url_decode(parts[1]))
     except Exception as e:
         raise AuthException(400, ERROR_TYPE_INVALID_TOKEN, f"Unable to decode DPoP proof payload: {e}")
+
+    if not isinstance(payload, dict):
+        raise AuthException(400, ERROR_TYPE_INVALID_TOKEN, "DPoP proof payload is not a JSON object")
 
     # --- Step 17-19: required claims ---
     jti = payload.get("jti", "")
