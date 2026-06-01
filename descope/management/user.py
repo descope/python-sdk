@@ -244,6 +244,7 @@ class User(HTTPBase):
         sso_app_ids: Optional[List[str]] = None,
         template_id: str = "",
         test: bool = False,
+        locale: Optional[str] = None,  # locale for the invite message
     ) -> dict:
         """
         Create a new user and invite them via an email / text message.
@@ -283,6 +284,7 @@ class User(HTTPBase):
                 additional_login_ids,
                 sso_app_ids,
                 template_id,
+                locale,
             ),
         )
         return response.json()
@@ -293,6 +295,7 @@ class User(HTTPBase):
         invite_url: Optional[str] = None,
         send_mail: Optional[bool] = None,  # send invite via mail, default is according to project settings
         send_sms: Optional[bool] = None,  # send invite via text message, default is according to project settings
+        locale: Optional[str] = None,  # locale for the invite message
     ) -> dict:
         """
         Create users in batch and invite them via an email / text message.
@@ -313,6 +316,7 @@ class User(HTTPBase):
                 invite_url,
                 send_mail,
                 send_sms,
+                locale,
             ),
         )
         return response.json()
@@ -1860,6 +1864,7 @@ class User(HTTPBase):
         additional_login_ids: Optional[List[str]],
         sso_app_ids: Optional[List[str]] = None,
         template_id: str = "",
+        locale: Optional[str] = None,
     ) -> dict:
         body = User._compose_update_body(
             login_id=login_id,
@@ -1890,6 +1895,8 @@ class User(HTTPBase):
             body["sendSMS"] = send_sms
         if template_id != "":
             body["templateId"] = template_id
+        if locale is not None:
+            body["locale"] = locale
         return body
 
     @staticmethod
@@ -1898,6 +1905,7 @@ class User(HTTPBase):
         invite_url: Optional[str],
         send_mail: Optional[bool],
         send_sms: Optional[bool],
+        locale: Optional[str] = None,
     ) -> dict:
         usersBody = []
         for user in users:
@@ -1940,6 +1948,8 @@ class User(HTTPBase):
             body["sendMail"] = send_mail
         if send_sms is not None:
             body["sendSMS"] = send_sms
+        if locale is not None:
+            body["locale"] = locale
         return body
 
     @staticmethod

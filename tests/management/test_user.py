@@ -241,6 +241,7 @@ class TestUser(common.DescopeTest):
                 send_sms=True,
                 sso_app_ids=["app1", "app2"],
                 template_id="tid",
+                locale="en",
             )
             user = resp["user"]
             self.assertEqual(user["id"], "u1")
@@ -271,6 +272,7 @@ class TestUser(common.DescopeTest):
                     "additionalLoginIds": None,
                     "ssoAppIDs": ["app1", "app2"],
                     "templateId": "tid",
+                    "locale": "en",
                 },
                 follow_redirects=False,
                 verify=SSLMatcher(),
@@ -320,6 +322,7 @@ class TestUser(common.DescopeTest):
                 users=[user],
                 invite_url="invite.me",
                 send_sms=True,
+                locale="en",
             )
             users = resp["users"]
             self.assertEqual(users[0]["id"], "u1")
@@ -361,6 +364,7 @@ class TestUser(common.DescopeTest):
                 "invite": True,
                 "inviteUrl": "invite.me",
                 "sendSMS": True,
+                "locale": "en",
             }
             mock_post.assert_called_with(
                 f"{common.DEFAULT_BASE_URL}{MgmtV1.user_create_batch_path}",
@@ -400,6 +404,7 @@ class TestUser(common.DescopeTest):
                 users=[user],
                 invite_url="invite.me",
                 send_sms=True,
+                locale="en",
             )
 
             del expected_users["users"][0]["hashedPassword"]
@@ -423,6 +428,7 @@ class TestUser(common.DescopeTest):
                 users=[user],
                 invite_url="invite.me",
                 send_sms=True,
+                locale="en",
             )
 
             del expected_users["users"][0]["password"]
