@@ -42,7 +42,7 @@ Documentation = "https://docs.descope.com"
 [dependency-groups]
 dev = [
     "pre-commit==3.8.0",
-    "ruff==0.15.12",
+    "ruff==0.15.13",
 ]
 types = [
     # mypy 1.12+ requires Python 3.10+; on 3.9 we stay on the last 1.11.x line.
