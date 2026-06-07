@@ -9,7 +9,6 @@ from descope.exceptions import AuthException, RateLimitException
 from descope.http_client import _RETRY_DELAYS_SECONDS, _RETRY_STATUS_CODES
 from tests.testutils import SSLMatcher
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
