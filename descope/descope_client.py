@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import logging
 import os
-import warnings
 from typing import Iterable
 
 import httpx
 
+from descope._client_base import DescopeClientBase
 from descope.auth import Auth  # noqa: F401
 from descope.authmethod.enchantedlink import EnchantedLink  # noqa: F401
 from descope.authmethod.magiclink import MagicLink  # noqa: F401
@@ -18,17 +18,13 @@ from descope.authmethod.sso import SSO  # noqa: F401
 from descope.authmethod.totp import TOTP  # noqa: F401
 from descope.authmethod.webauthn import WebAuthn  # noqa: F401
 from descope.common import DEFAULT_TIMEOUT_SECONDS, AccessKeyLoginOptions, EndpointsV1
-from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 from descope.http_client import HTTPClient
-from descope.management.common import MgmtV1
 from descope.mgmt import MGMT  # noqa: F401
 
 logger = logging.getLogger(__name__)
 
-LICENSE_HANDSHAKE_TIMEOUT_SECONDS = 5.0
 
-
-class DescopeClient:
+class DescopeClient(DescopeClientBase):
     ALGORITHM_KEY = "alg"
 
     def __init__(
@@ -45,44 +41,18 @@ class DescopeClient:
         base_url: str | None = None,
         verbose: bool = False,
     ):
-        # validate project id
-        project_id = project_id or os.getenv("DESCOPE_PROJECT_ID", "")
-        if not project_id:
-            raise AuthException(
-                400,
-                ERROR_TYPE_INVALID_ARGUMENT,
-                (
-                    "Unable to init DescopeClient because project_id cannot be empty. "
-                    "Set environment variable DESCOPE_PROJECT_ID or pass your Project ID to the init function."
-                ),
-            )
-
-        # Warn about TLS verification bypass
-        if skip_verify:
-            warnings.warn(
-                "⚠️  SECURITY WARNING: TLS certificate verification is DISABLED (skip_verify=True). "
-                "This makes your application vulnerable to man-in-the-middle attacks. "
-                "ONLY use this for local development with self-signed certificates. "
-                "NEVER use skip_verify=True in production environments.",
-                category=UserWarning,
-                stacklevel=2,
-            )
-
-        # Auth Initialization
-        auth_http_client = HTTPClient(
-            project_id=project_id,
-            base_url=base_url,
-            timeout_seconds=timeout_seconds,
-            secure=not skip_verify,
-            management_key=auth_management_key or os.getenv("DESCOPE_AUTH_MANAGEMENT_KEY"),
-            verbose=verbose,
-        )
-        self._auth = Auth(
+        super().__init__(
             project_id,
             public_key,
+            skip_verify,
+            timeout_seconds,
             jwt_validation_leeway,
-            http_client=auth_http_client,
+            auth_management_key,
+            base_url=base_url,
+            verbose=verbose,
         )
+        auth_http_client = self._auth.http_client
+
         self._magiclink = MagicLink(self._auth)
         self._enchantedlink = EnchantedLink(self._auth)
         self._oauth = OAuth(self._auth)
@@ -117,32 +87,7 @@ class DescopeClient:
         # license-header validation for the GetLicense endpoint itself, so the
         # initial request is safe before the tier is cached.
         if mgmt_http_client.management_key:
-            self._fetch_rate_limit_tier()
-
-    def _fetch_rate_limit_tier(self) -> None:
-        try:
-            response = httpx.get(
-                f"{self._mgmt_http_client.base_url}{MgmtV1.license_get_path}",
-                headers={
-                    "Authorization": (
-                        f"Bearer {self._mgmt_http_client.project_id}:{self._mgmt_http_client.management_key}"
-                    )
-                },
-                follow_redirects=True,
-                verify=self._mgmt_http_client.client_verify,
-                timeout=LICENSE_HANDSHAKE_TIMEOUT_SECONDS,
-            )
-            if not response.is_success:
-                logger.warning(
-                    "License handshake returned non-success status %s",
-                    response.status_code,
-                )
-                return
-            tier = response.json().get("rateLimitTier")
-            if tier:
-                self._mgmt_http_client.rate_limit_tier = tier
-        except Exception as e:
-            logger.warning("License handshake failed: %s", e)
+            self._fetch_rate_limit_tier(mgmt_http_client)
 
     @property
     def mgmt(self):
@@ -186,209 +131,6 @@ class DescopeClient:
     @property
     def password(self):
         return self._password
-
-    def validate_permissions(self, jwt_response: dict, permissions: list[str]) -> bool:
-        """
-        Validate that a jwt_response has been granted the specified permissions.
-            For a multi-tenant environment use validate_tenant_permissions function
-
-        Args:
-        jwt_response (dict): The jwt_response object which includes all JWT claims information
-        permissions (List[str]): List of permissions to validate for this jwt_response
-
-        Return value (bool): returns true if all permissions granted; false if at least one permission not granted
-        """
-        return self.validate_tenant_permissions(jwt_response, "", permissions)
-
-    def get_matched_permissions(self, jwt_response: dict, permissions: list[str]) -> list[str]:
-        """
-        Get the list of permissions that a jwt_response has been granted from the provided list of permissions.
-            For a multi-tenant environment use get_matched_tenant_permissions function
-
-        Args:
-        jwt_response (dict): The jwt_response object which includes all JWT claims information
-        permissions (List[str]): List of permissions to validate for this jwt_response
-
-        Return value (List[str]): returns the list of permissions that are granted
-        """
-        return self.get_matched_tenant_permissions(jwt_response, "", permissions)
-
-    def validate_tenant_permissions(self, jwt_response: dict, tenant: str, permissions: list[str]) -> bool:
-        """
-        Validate that a jwt_response has been granted the specified permissions on the specified tenant.
-            For a multi-tenant environment use validate_tenant_permissions function
-
-        Args:
-        jwt_response (dict): The jwt_response object which includes all JWT claims information
-        tenant (str): TenantId
-        permissions (List[str]): List of permissions to validate for this jwt_response
-
-        Return value (bool): returns true if all permissions granted; false if at least one permission not granted
-        """
-        if not jwt_response:
-            return False
-
-        if isinstance(permissions, str):
-            permissions = [permissions]
-
-        granted = []
-        if tenant == "":
-            granted = jwt_response.get("permissions", [])
-        else:
-            # ensure that the tenant is associated with the jwt_response
-            if tenant not in jwt_response.get("tenants", {}):
-                return False
-            granted = jwt_response.get("tenants", {}).get(tenant, {}).get("permissions", [])
-
-        for perm in permissions:
-            if perm not in granted:
-                return False
-        return True
-
-    def get_matched_tenant_permissions(self, jwt_response: dict, tenant: str, permissions: list[str]) -> list[str]:
-        """
-        Get the list of permissions that a jwt_response has been granted from the provided list of permissions on the specified tenant.
-            For a multi-tenant environment use get_matched_tenant_permissions function
-
-        Args:
-        jwt_response (dict): The jwt_response object which includes all JWT claims information
-        tenant (str): TenantId
-        permissions (List[str]): List of permissions to validate for this jwt_response
-
-        Return value (List[str]): returns the list of permissions that are granted
-        """
-        if not jwt_response:
-            return []
-
-        if isinstance(permissions, str):
-            permissions = [permissions]
-
-        granted = []
-        if tenant == "":
-            granted = jwt_response.get("permissions", [])
-        else:
-            # ensure that the tenant is associated with the jwt_response
-            if tenant not in jwt_response.get("tenants", {}):
-                return []
-            granted = jwt_response.get("tenants", {}).get(tenant, {}).get("permissions", [])
-
-        matched = []
-        for perm in permissions:
-            if perm in granted:
-                matched.append(perm)
-        return matched
-
-    def validate_roles(self, jwt_response: dict, roles: list[str]) -> bool:
-        """
-        Validate that a jwt_response has been granted the specified roles.
-            For a multi-tenant environment use validate_tenant_roles function
-
-        Args:
-        jwt_response (dict): The jwt_response object which includes all JWT claims information
-        roles (List[str]): List of roles to validate for this jwt_response
-
-        Return value (bool): returns true if all roles granted; false if at least one role not granted
-        """
-        return self.validate_tenant_roles(jwt_response, "", roles)
-
-    def get_matched_roles(self, jwt_response: dict, roles: list[str]) -> list[str]:
-        """
-        Get the list of roles that a jwt_response has been granted from the provided list of roles.
-            For a multi-tenant environment use get_matched_tenant_roles function
-
-        Args:
-        jwt_response (dict): The jwt_response object which includes all JWT claims information
-        roles (List[str]): List of roles to validate for this jwt_response
-
-        Return value (List[str]): returns the list of roles that are granted
-        """
-        return self.get_matched_tenant_roles(jwt_response, "", roles)
-
-    def validate_tenant_roles(self, jwt_response: dict, tenant: str, roles: list[str]) -> bool:
-        """
-        Validate that a jwt_response has been granted the specified roles on the specified tenant.
-            For a multi-tenant environment use validate_tenant_roles function
-
-        Args:
-        jwt_response (dict): The jwt_response object which includes all JWT claims information
-        tenant (str): TenantId
-        roles (List[str]): List of roles to validate for this jwt_response
-
-        Return value (bool): returns true if all roles granted; false if at least one role not granted
-        """
-        if not jwt_response:
-            return False
-
-        if isinstance(roles, str):
-            roles = [roles]
-
-        granted = []
-        if tenant == "":
-            granted = jwt_response.get("roles", [])
-        else:
-            # ensure that the tenant is associated with the jwt_response
-            if tenant not in jwt_response.get("tenants", {}):
-                return False
-            granted = jwt_response.get("tenants", {}).get(tenant, {}).get("roles", [])
-
-        for role in roles:
-            if role not in granted:
-                return False
-        return True
-
-    def get_matched_tenant_roles(self, jwt_response: dict, tenant: str, roles: list[str]) -> list[str]:
-        """
-        Get the list of roles that a jwt_response has been granted from the provided list of roles on the specified tenant.
-            For a multi-tenant environment use get_matched_tenant_roles function
-
-        Args:
-        jwt_response (dict): The jwt_response object which includes all JWT claims information
-        tenant (str): TenantId
-        roles (List[str]): List of roles to validate for this jwt_response
-
-        Return value (List[str]): returns the list of roles that are granted
-        """
-        if not jwt_response:
-            return []
-
-        if isinstance(roles, str):
-            roles = [roles]
-
-        granted = []
-        if tenant == "":
-            granted = jwt_response.get("roles", [])
-        else:
-            # ensure that the tenant is associated with the jwt_response
-            if tenant not in jwt_response.get("tenants", {}):
-                return []
-            granted = jwt_response.get("tenants", {}).get(tenant, {}).get("roles", [])
-
-        matched = []
-        for role in roles:
-            if role in granted:
-                matched.append(role)
-        return matched
-
-    def validate_session(self, session_token: str, audience: Iterable[str] | str | None = None) -> dict:
-        """
-        Validate a session token. Call this function for every incoming request to your
-        private endpoints. Alternatively, use validate_and_refresh_session in order to
-        automatically refresh expired sessions. If you need to use these specific claims
-        [amr, drn, exp, iss, rexp, sub, jwt] in the top level of the response dict, please use
-        them from the sessionToken key instead, as these claims will soon be deprecated from the top level
-        of the response dict.
-
-        Args:
-        session_token (str): The session token to be validated
-        audience (str|Iterable[str]|None): Optional recipients that the JWT is intended for (must be equal to the 'aud' claim on the provided token)
-
-        Return value (dict):
-        Return dict includes the session token and all JWT claims
-
-        Raise:
-        AuthException: Exception is raised if session is not authorized or any other error occurs
-        """
-        return self._auth.validate_session(session_token, audience)
 
     def refresh_session(self, refresh_token: str, audience: Iterable[str] | str | None = None) -> dict:
         """
@@ -444,13 +186,7 @@ class DescopeClient:
         Raise:
         AuthException: Exception is raised if session is not authorized or another error occurs
         """
-        if refresh_token is None:
-            raise AuthException(
-                400,
-                ERROR_TYPE_INVALID_ARGUMENT,
-                f"signed refresh token {refresh_token} is empty",
-            )
-
+        self._require_refresh_token(refresh_token)
         uri = EndpointsV1.logout_path
         return self._auth.http_client.post(uri, body={}, pswd=refresh_token)
 
@@ -467,13 +203,7 @@ class DescopeClient:
         Raise:
         AuthException: Exception is raised if session is not authorized or another error occurs
         """
-        if refresh_token is None:
-            raise AuthException(
-                400,
-                ERROR_TYPE_INVALID_ARGUMENT,
-                f"signed refresh token {refresh_token} is empty",
-            )
-
+        self._require_refresh_token(refresh_token)
         uri = EndpointsV1.logout_all_path
         return self._auth.http_client.post(uri, body={}, pswd=refresh_token)
 
@@ -491,13 +221,7 @@ class DescopeClient:
         Raise:
         AuthException: Exception is raised if session is not authorized or another error occurs
         """
-        if refresh_token is None:
-            raise AuthException(
-                400,
-                ERROR_TYPE_INVALID_ARGUMENT,
-                f"signed refresh token {refresh_token} is empty",
-            )
-
+        self._require_refresh_token(refresh_token)
         uri = EndpointsV1.me_path
         response = self._auth.http_client.get(uri=uri, allow_redirects=None, pswd=refresh_token)
         return response.json()
@@ -522,24 +246,8 @@ class DescopeClient:
         Raise:
         AuthException: Exception is raised if session is not authorized or another error occurs
         """
-        if refresh_token is None:
-            raise AuthException(
-                400,
-                ERROR_TYPE_INVALID_ARGUMENT,
-                f"signed refresh token {refresh_token} is empty",
-            )
-        if dct is True and ids is not None and len(ids) > 0:
-            raise AuthException(
-                400,
-                ERROR_TYPE_INVALID_ARGUMENT,
-                "Only one of 'dct' or 'ids' should be supplied",
-            )
-        if dct is False and (ids is None or len(ids) == 0):
-            raise AuthException(
-                400,
-                ERROR_TYPE_INVALID_ARGUMENT,
-                "Only one of 'dct' or 'ids' should be supplied",
-            )
+        self._require_refresh_token(refresh_token)
+        self._validate_tenant_selector(dct, ids)
 
         body: dict[str, bool | list[str]] = {"dct": dct}
         if ids is not None:
@@ -571,13 +279,7 @@ class DescopeClient:
         Raise:
         AuthException: Exception is raised if session is not authorized or another error occurs
         """
-        if refresh_token is None:
-            raise AuthException(
-                400,
-                ERROR_TYPE_INVALID_ARGUMENT,
-                f"signed refresh token {refresh_token} is empty",
-            )
-
+        self._require_refresh_token(refresh_token)
         uri = EndpointsV1.history_path
         response = self._auth.http_client.get(uri=uri, allow_redirects=None, pswd=refresh_token)
         return response.json()
@@ -601,9 +303,7 @@ class DescopeClient:
         Raise:
         AuthException: Exception is raised if access key is not valid or another error occurs
         """
-        if not access_key:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Access key cannot be empty")
-
+        self._require_access_key(access_key)
         return self._auth.exchange_access_key(access_key, audience, login_options)
 
     def select_tenant(

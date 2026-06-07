@@ -1,3 +1,4 @@
+from descope.async_descope_client import AsyncDescopeClient
 from descope.common import (
     COOKIE_DATA_NAME,
     REFRESH_SESSION_COOKIE_NAME,
@@ -64,6 +65,7 @@ __all__ = [
     "DeliveryMethod",
     "LoginOptions",
     "SignUpOptions",
+    "AsyncDescopeClient",
     "DescopeClient",
     "API_RATE_LIMIT_RETRY_AFTER_HEADER",
     "ERROR_TYPE_API_RATE_LIMIT",

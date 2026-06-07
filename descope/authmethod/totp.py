@@ -1,16 +1,18 @@
+from __future__ import annotations
+
 from typing import Iterable, Optional, Union
 
 from descope._auth_base import AuthBase
+from descope.authmethod._totp_base import TOTPBase
 from descope.common import (
     REFRESH_SESSION_COOKIE_NAME,
     EndpointsV1,
     LoginOptions,
     validate_refresh_token_provided,
 )
-from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
-class TOTP(AuthBase):
+class TOTP(TOTPBase, AuthBase):
     def sign_up(self, login_id: str, user: Optional[dict] = None) -> dict:
         """
         Sign up (create) a new user using their email or phone number.
@@ -31,14 +33,11 @@ class TOTP(AuthBase):
         Raise:
         AuthException: raised if sign-up operation fails
         """
-
-        if not login_id:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
+        self._validate_login_id(login_id)
 
         uri = EndpointsV1.sign_up_auth_totp_path
-        body = TOTP._compose_signup_body(login_id, user)
+        body = self._compose_signup_body(login_id, user)
         response = self._http.post(uri, body=body)
-
         return response.json()
 
     def sign_in_code(
@@ -66,24 +65,18 @@ class TOTP(AuthBase):
         Raise:
         AuthException: raised if the TOTP code is not valid or if code verification failed
         """
-
-        if not login_id:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
-
-        if not code:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Code cannot be empty")
-
+        self._validate_login_id(login_id)
+        self._validate_code(code)
         validate_refresh_token_provided(login_options, refresh_token)
 
         uri = EndpointsV1.verify_totp_path
-        body = TOTP._compose_signin_body(login_id, code, login_options)
+        body = self._compose_signin_body(login_id, code, login_options)
         response = self._http.post(uri, body=body, pswd=refresh_token)
 
         resp = response.json()
-        jwt_response = self._auth.generate_jwt_response(
+        return self._auth.generate_jwt_response(
             resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
         )
-        return jwt_response
 
     def update_user(self, login_id: str, refresh_token: str) -> None:
         """
@@ -103,34 +96,10 @@ class TOTP(AuthBase):
         Raise:
         AuthException: raised if refresh token is invalid or update operation fails
         """
-
-        if not login_id:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
-
-        if not refresh_token:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Refresh token cannot be empty")
+        self._validate_login_id(login_id)
+        self._validate_refresh_token(refresh_token)
 
         uri = EndpointsV1.update_totp_path
-        body = TOTP._compose_update_user_body(login_id)
+        body = self._compose_update_user_body(login_id)
         response = self._http.post(uri, body=body, pswd=refresh_token)
-
         return response.json()
-
-    @staticmethod
-    def _compose_signup_body(login_id: str, user: Optional[dict]) -> dict:
-        body: dict[str, str | dict] = {"loginId": login_id}
-        if user is not None:
-            body["user"] = user
-        return body
-
-    @staticmethod
-    def _compose_signin_body(login_id: str, code: str, login_options: Optional[LoginOptions] = None) -> dict:
-        return {
-            "loginId": login_id,
-            "code": code,
-            "loginOptions": login_options.__dict__ if login_options else {},
-        }
-
-    @staticmethod
-    def _compose_update_user_body(login_id: str) -> dict:
-        return {"loginId": login_id}
