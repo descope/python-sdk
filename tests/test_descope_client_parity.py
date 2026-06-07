@@ -748,6 +748,7 @@ class TestDescopeClient:
         with pytest.raises(AuthException) as exc_info:
             client.validate_session(VALID_REFRESH_TOKEN)
         assert exc_info.value.status_code == 400
+        assert exc_info.value.error_message is not None
         assert "nbf in future" in exc_info.value.error_message
 
     # ------------------------------------------------------------------

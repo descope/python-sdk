@@ -127,7 +127,7 @@ class ClientFactory:
         self.mode = mode
         self._async_clients: list = []  # tracked so teardown can aclose them
 
-    def make(self, *args, **kwargs) -> "UnifiedClient":
+    def make(self, *args, **kwargs) -> UnifiedClient:
         """Construct a (Async)DescopeClient and wrap it in UnifiedClient."""
         if self.mode == "sync":
             return UnifiedClient("sync", DescopeClient(*args, **kwargs))
