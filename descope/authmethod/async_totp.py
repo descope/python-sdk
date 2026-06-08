@@ -42,9 +42,7 @@ class AsyncTOTP(TOTPBase, AsyncAuthBase):
         response = await self._http.post(uri, body=body, pswd=refresh_token)
 
         resp = response.json()
-        return self._auth.generate_jwt_response(
-            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
-        )
+        return self._auth.generate_jwt_response(resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience)
 
     async def update_user(self, login_id: str, refresh_token: str) -> dict:
         """Add TOTP to an existing user; returns provisioningURL, image, and key."""

@@ -74,9 +74,7 @@ class TOTP(TOTPBase, AuthBase):
         response = self._http.post(uri, body=body, pswd=refresh_token)
 
         resp = response.json()
-        return self._auth.generate_jwt_response(
-            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
-        )
+        return self._auth.generate_jwt_response(resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience)
 
     def update_user(self, login_id: str, refresh_token: str) -> None:
         """
