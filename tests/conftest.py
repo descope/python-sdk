@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from descope.async_descope_client import AsyncDescopeClient
+from descope.descope_client_async import DescopeClientAsync
 from descope.descope_client import DescopeClient
 from tests.common import DEFAULT_BASE_URL
 
@@ -56,7 +56,7 @@ def make_response(json_data=None, *, status=200, cookies=None):
 
 class UnifiedClient:
     """
-    Wraps DescopeClient or AsyncDescopeClient with a uniform interface so test
+    Wraps DescopeClient or DescopeClientAsync with a uniform interface so test
     bodies can run unchanged against both variants.
 
     - ``invoke(maybe_coro)`` — awaits async calls, passes through sync values.
@@ -131,7 +131,7 @@ class ClientFactory:
         """Construct a (Async)DescopeClient and wrap it in UnifiedClient."""
         if self.mode == "sync":
             return UnifiedClient("sync", DescopeClient(*args, **kwargs))
-        client = AsyncDescopeClient(*args, **kwargs)
+        client = DescopeClientAsync(*args, **kwargs)
         self._async_clients.append(client)
         return UnifiedClient("async", client)
 
@@ -145,7 +145,7 @@ class ClientFactory:
 async def descope_client(request):
     """
     Parametrized fixture — yields a UnifiedClient wrapping DescopeClient (sync)
-    or AsyncDescopeClient (async).  Each consuming test runs twice.
+    or DescopeClientAsync (async).  Each consuming test runs twice.
     """
     # Save and restore DESCOPE_BASE_URI so it doesn't leak into other tests.
     _prev = os.environ.get("DESCOPE_BASE_URI")
@@ -154,7 +154,7 @@ async def descope_client(request):
         if request.param == "sync":
             yield UnifiedClient("sync", DescopeClient(PROJECT_ID, PUBLIC_KEY_DICT))
         else:
-            raw = AsyncDescopeClient(PROJECT_ID, PUBLIC_KEY_DICT)
+            raw = DescopeClientAsync(PROJECT_ID, PUBLIC_KEY_DICT)
             yield UnifiedClient("async", raw)
             await raw.aclose()  # release the underlying httpx.AsyncClient cleanly
     finally:

@@ -4,8 +4,8 @@ import os
 from typing import Iterable
 
 from descope._client_base import DescopeClientBase
-from descope.async_http_client import AsyncHTTPClient
-from descope.authmethod.async_totp import AsyncTOTP
+from descope.http_client_async import HTTPClientAsync
+from descope.authmethod.totp_async import TOTPAsync
 from descope.common import (
     DEFAULT_TIMEOUT_SECONDS,
     REFRESH_SESSION_COOKIE_NAME,
@@ -18,7 +18,7 @@ from descope.exceptions import (
 )
 
 
-class AsyncDescopeClient(DescopeClientBase):
+class DescopeClientAsync(DescopeClientBase):
     """
     Async counterpart of DescopeClient.
 
@@ -28,11 +28,11 @@ class AsyncDescopeClient(DescopeClientBase):
     they perform no I/O.
 
     Usage (recommended — context manager):
-        async with AsyncDescopeClient(project_id="P...") as client:
+        async with DescopeClientAsync(project_id="P...") as client:
             jwt = await client.refresh_session(refresh_token)
 
     Usage (explicit close):
-        client = AsyncDescopeClient(project_id="P...")
+        client = DescopeClientAsync(project_id="P...")
         try:
             jwt = await client.refresh_session(refresh_token)
         finally:
@@ -65,7 +65,7 @@ class AsyncDescopeClient(DescopeClientBase):
         )
 
         resolved_base_url = self._auth.http_client.base_url
-        self._auth_http = AsyncHTTPClient(
+        self._auth_http = HTTPClientAsync(
             project_id=self._auth.project_id,
             base_url=resolved_base_url,
             timeout_seconds=timeout_seconds,
@@ -73,7 +73,7 @@ class AsyncDescopeClient(DescopeClientBase):
             management_key=auth_management_key or os.getenv("DESCOPE_AUTH_MANAGEMENT_KEY"),
             verbose=verbose,
         )
-        self._mgmt_http = AsyncHTTPClient(
+        self._mgmt_http = HTTPClientAsync(
             project_id=self._auth.project_id,
             base_url=resolved_base_url,
             timeout_seconds=timeout_seconds,
@@ -83,13 +83,13 @@ class AsyncDescopeClient(DescopeClientBase):
         )
         self._fga_cache_url = fga_cache_url
 
-        self._totp = AsyncTOTP(self._auth, self._auth_http)
+        self._totp = TOTPAsync(self._auth, self._auth_http)
 
         if self._mgmt_http.management_key:
             self._fetch_rate_limit_tier(self._mgmt_http)
 
     @property
-    def totp(self) -> AsyncTOTP:
+    def totp(self) -> TOTPAsync:
         return self._totp
 
     # -------------------------------------------------------------------------
@@ -101,7 +101,7 @@ class AsyncDescopeClient(DescopeClientBase):
         await self._auth_http.aclose()
         await self._mgmt_http.aclose()
 
-    async def __aenter__(self) -> AsyncDescopeClient:
+    async def __aenter__(self) -> DescopeClientAsync:
         return self
 
     async def __aexit__(self, *args) -> None:

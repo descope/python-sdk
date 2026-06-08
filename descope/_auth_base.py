@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from descope.auth import Auth
 
 if TYPE_CHECKING:
-    from descope.async_http_client import AsyncHTTPClient
+    from descope.http_client_async import HTTPClientAsync
 
 
 class AuthBase:
@@ -25,6 +25,6 @@ class AsyncAuthBase:
     and an AsyncHTTPClient for all network calls.
     """
 
-    def __init__(self, auth: Auth, http: AsyncHTTPClient):
+    def __init__(self, auth: Auth, http: HTTPClientAsync):
         self._auth = auth
         self._http = http

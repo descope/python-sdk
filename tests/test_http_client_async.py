@@ -4,9 +4,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from descope.async_http_client import AsyncHTTPClient
 from descope.exceptions import AuthException, RateLimitException
 from descope.http_client import _RETRY_DELAYS_SECONDS, _RETRY_STATUS_CODES
+from descope.http_client_async import HTTPClientAsync
 from tests.testutils import SSLMatcher
 
 # ---------------------------------------------------------------------------
@@ -23,8 +23,8 @@ def make_async_client(*, secure=True, verbose=False, project_id="test123", base_
     base_url is passed explicitly so tests are never affected by the
     DESCOPE_BASE_URI env var that unittest-based tests leave set.
     """
-    with patch("descope.async_http_client.httpx.AsyncClient"):
-        return AsyncHTTPClient(
+    with patch("descope.http_client_async.httpx.AsyncClient"):
+        return HTTPClientAsync(
             project_id=project_id,
             base_url=base_url,
             timeout_seconds=60,
@@ -52,22 +52,22 @@ def make_resp(*, status=200, json_data=None, headers=None, text=""):
 
 class TestAsyncHTTPClientInit:
     def test_secure_passes_ssl_context(self):
-        with patch("descope.async_http_client.httpx.AsyncClient") as mock_cls:
-            AsyncHTTPClient(project_id="test123", timeout_seconds=30, secure=True)
+        with patch("descope.http_client_async.httpx.AsyncClient") as mock_cls:
+            HTTPClientAsync(project_id="test123", timeout_seconds=30, secure=True)
             _, kwargs = mock_cls.call_args
             assert kwargs["verify"] == SSLMatcher()
             assert kwargs["timeout"] == 30
 
     def test_insecure_passes_false(self):
-        with patch("descope.async_http_client.httpx.AsyncClient") as mock_cls:
-            AsyncHTTPClient(project_id="test123", timeout_seconds=10, secure=False)
+        with patch("descope.http_client_async.httpx.AsyncClient") as mock_cls:
+            HTTPClientAsync(project_id="test123", timeout_seconds=10, secure=False)
             _, kwargs = mock_cls.call_args
             assert kwargs["verify"] == SSLMatcher(insecure=True)
 
     def test_empty_project_id_raises(self):
-        with patch("descope.async_http_client.httpx.AsyncClient"):
+        with patch("descope.http_client_async.httpx.AsyncClient"):
             with pytest.raises(AuthException) as exc_info:
-                AsyncHTTPClient(project_id="", timeout_seconds=30, secure=True)
+                HTTPClientAsync(project_id="", timeout_seconds=30, secure=True)
         assert exc_info.value.status_code == 400
 
 
@@ -166,7 +166,7 @@ class TestAsyncRetry:
             err = make_resp(status=status_code)
             ok = make_resp(status=200)
 
-            with patch("descope.async_http_client.asyncio.sleep", AsyncMock()) as mock_sleep:
+            with patch("descope.http_client_async.asyncio.sleep", AsyncMock()) as mock_sleep:
                 client._async_client.get = AsyncMock(side_effect=[err, ok])
                 resp = await client.get("/x")
 
@@ -179,7 +179,7 @@ class TestAsyncRetry:
         client = make_async_client()
         err = make_resp(status=503, text="Unavailable")
 
-        with patch("descope.async_http_client.asyncio.sleep", AsyncMock()) as mock_sleep:
+        with patch("descope.http_client_async.asyncio.sleep", AsyncMock()) as mock_sleep:
             client._async_client.get = AsyncMock(return_value=err)
             with pytest.raises(AuthException):
                 await client.get("/x")
@@ -196,7 +196,7 @@ class TestAsyncRetry:
         async def fake_sleep(delay):
             sleep_calls.append(delay)
 
-        with patch("descope.async_http_client.asyncio.sleep", fake_sleep):
+        with patch("descope.http_client_async.asyncio.sleep", fake_sleep):
             client._async_client.get = AsyncMock(return_value=err)
             with pytest.raises(AuthException):
                 await client.get("/x")
@@ -208,7 +208,7 @@ class TestAsyncRetry:
             client = make_async_client()
             err = make_resp(status=status_code, text=f"Error {status_code}")
 
-            with patch("descope.async_http_client.asyncio.sleep", AsyncMock()) as mock_sleep:
+            with patch("descope.http_client_async.asyncio.sleep", AsyncMock()) as mock_sleep:
                 client._async_client.get = AsyncMock(return_value=err)
                 with pytest.raises(AuthException):
                     await client.get("/x")
@@ -222,7 +222,7 @@ class TestAsyncRetry:
         err2 = make_resp(status=503)
         ok = make_resp(status=200)
 
-        with patch("descope.async_http_client.asyncio.sleep", AsyncMock()):
+        with patch("descope.http_client_async.asyncio.sleep", AsyncMock()):
             client._async_client.get = AsyncMock(side_effect=[err1, err2, ok])
             await client.get("/x")
 
@@ -233,7 +233,7 @@ class TestAsyncRetry:
     async def test_success_on_first_attempt_no_retry(self):
         client = make_async_client()
         ok = make_resp(status=200)
-        with patch("descope.async_http_client.asyncio.sleep", AsyncMock()) as mock_sleep:
+        with patch("descope.http_client_async.asyncio.sleep", AsyncMock()) as mock_sleep:
             client._async_client.get = AsyncMock(return_value=ok)
             await client.get("/x")
         assert client._async_client.get.await_count == 1
@@ -244,7 +244,7 @@ class TestAsyncRetry:
         err1 = make_resp(status=503)
         err2 = make_resp(status=503)
         ok = make_resp(status=200)
-        with patch("descope.async_http_client.asyncio.sleep", AsyncMock()):
+        with patch("descope.http_client_async.asyncio.sleep", AsyncMock()):
             client._async_client.get = AsyncMock(side_effect=[err1, err2, ok])
             resp = await client.get("/x")
         assert resp.status_code == 200
@@ -254,7 +254,7 @@ class TestAsyncRetry:
         client = make_async_client()
         err = make_resp(status=503)
         ok = make_resp(status=200)
-        with patch("descope.async_http_client.asyncio.sleep", AsyncMock()):
+        with patch("descope.http_client_async.asyncio.sleep", AsyncMock()):
             client._async_client.post = AsyncMock(side_effect=[err, ok])
             resp = await client.post("/x", body={})
         assert resp.status_code == 200
@@ -264,7 +264,7 @@ class TestAsyncRetry:
         client = make_async_client()
         err = make_resp(status=503)
         ok = make_resp(status=200)
-        with patch("descope.async_http_client.asyncio.sleep", AsyncMock()):
+        with patch("descope.http_client_async.asyncio.sleep", AsyncMock()):
             client._async_client.put = AsyncMock(side_effect=[err, ok])
             resp = await client.put("/x", body={})
         assert resp.status_code == 200
@@ -274,7 +274,7 @@ class TestAsyncRetry:
         client = make_async_client()
         err = make_resp(status=503)
         ok = make_resp(status=200)
-        with patch("descope.async_http_client.asyncio.sleep", AsyncMock()):
+        with patch("descope.http_client_async.asyncio.sleep", AsyncMock()):
             client._async_client.patch = AsyncMock(side_effect=[err, ok])
             resp = await client.patch("/x", body={})
         assert resp.status_code == 200
@@ -284,7 +284,7 @@ class TestAsyncRetry:
         client = make_async_client()
         err = make_resp(status=503)
         ok = make_resp(status=200)
-        with patch("descope.async_http_client.asyncio.sleep", AsyncMock()):
+        with patch("descope.http_client_async.asyncio.sleep", AsyncMock()):
             client._async_client.delete = AsyncMock(side_effect=[err, ok])
             resp = await client.delete("/x")
         assert resp.status_code == 200
@@ -410,9 +410,9 @@ class TestAsyncLifecycle:
         client._async_client.aclose.assert_awaited_once()
 
     async def test_context_manager_yields_client_and_closes(self):
-        with patch("descope.async_http_client.httpx.AsyncClient"):
-            async with AsyncHTTPClient(project_id="test123", timeout_seconds=60, secure=True) as c:
-                assert isinstance(c, AsyncHTTPClient)
+        with patch("descope.http_client_async.httpx.AsyncClient"):
+            async with HTTPClientAsync(project_id="test123", timeout_seconds=60, secure=True) as c:
+                assert isinstance(c, HTTPClientAsync)
                 c._async_client.aclose = AsyncMock()
 
         c._async_client.aclose.assert_awaited_once()
@@ -426,8 +426,8 @@ class TestAsyncLifecycle:
 class TestAsyncHTTPClientHeaders:
     async def test_management_key_in_authorization_header(self):
         """auth_management_key is baked into the Authorization header on every verb call."""
-        with patch("descope.async_http_client.httpx.AsyncClient"):
-            client = AsyncHTTPClient(
+        with patch("descope.http_client_async.httpx.AsyncClient"):
+            client = HTTPClientAsync(
                 project_id="proj123",
                 timeout_seconds=60,
                 secure=True,

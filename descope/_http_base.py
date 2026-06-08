@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from descope.http_client import HTTPClient
 
 if TYPE_CHECKING:
-    from descope.async_http_client import AsyncHTTPClient
+    from descope.http_client_async import HTTPClientAsync
 
 
 class HTTPBase:
@@ -18,5 +18,5 @@ class HTTPBase:
 class AsyncHTTPBase:
     """Base for async management classes."""
 
-    def __init__(self, http_client: AsyncHTTPClient):
+    def __init__(self, http_client: HTTPClientAsync):
         self._http = http_client

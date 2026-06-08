@@ -6,22 +6,23 @@ from typing import cast
 
 import httpx
 
-from descope.http_client import (
+from descope._http_client_base import (
+    DEFAULT_TIMEOUT_SECONDS,
+    DescopeResponse,
+    HTTPClientBase,
     _RETRY_DELAYS_SECONDS,
     _RETRY_STATUS_CODES,
-    DescopeResponse,
-    HTTPClient,
 )
 
 
-class AsyncHTTPClient(HTTPClient):
+class HTTPClientAsync(HTTPClientBase):
     def __init__(
         self,
         project_id: str,
         base_url: str | None = None,
         *,
-        timeout_seconds: float,
-        secure: bool,
+        timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
+        secure: bool = True,
         management_key: str | None = None,
         verbose: bool = False,
     ) -> None:
@@ -41,7 +42,7 @@ class AsyncHTTPClient(HTTPClient):
             "descope_async_last_response", default=None
         )
 
-    async def get(  # type: ignore[override]
+    async def get(
         self,
         uri: str,
         *,
@@ -62,7 +63,7 @@ class AsyncHTTPClient(HTTPClient):
         self._raise_from_response(response)
         return response
 
-    async def post(  # type: ignore[override]
+    async def post(
         self,
         uri: str,
         *,
@@ -85,7 +86,7 @@ class AsyncHTTPClient(HTTPClient):
         self._raise_from_response(response)
         return response
 
-    async def put(  # type: ignore[override]
+    async def put(
         self,
         uri: str,
         *,
@@ -105,7 +106,7 @@ class AsyncHTTPClient(HTTPClient):
         self._raise_from_response(response)
         return response
 
-    async def patch(  # type: ignore[override]
+    async def patch(
         self,
         uri: str,
         *,
@@ -127,7 +128,7 @@ class AsyncHTTPClient(HTTPClient):
         self._raise_from_response(response)
         return response
 
-    async def delete(  # type: ignore[override]
+    async def delete(
         self,
         uri: str,
         *,
@@ -169,7 +170,7 @@ class AsyncHTTPClient(HTTPClient):
     async def aclose(self) -> None:
         await self._async_client.aclose()
 
-    async def __aenter__(self) -> AsyncHTTPClient:
+    async def __aenter__(self) -> HTTPClientAsync:
         return self
 
     async def __aexit__(self, *args) -> None:

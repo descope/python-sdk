@@ -2,10 +2,10 @@
 Parity port of test_descope_client.py using the unified sync/async fixture infrastructure.
 
 Structure mirrors the original: one class, one test method per feature.  Each method
-runs twice — once for the sync DescopeClient and once for AsyncDescopeClient — via
+runs twice — once for the sync DescopeClient and once for DescopeClientAsync — via
 pytest's parametrised ``descope_client`` / ``client_factory`` fixtures from conftest.
 
-Tests that exercise surfaces not yet ported to AsyncDescopeClient (mgmt, otp, oauth…)
+Tests that exercise surfaces not yet ported to DescopeClientAsync (mgmt, otp, oauth…)
 call ``pytest.skip()`` in async mode so the original assertions are preserved verbatim.
 """
 
@@ -156,7 +156,7 @@ class TestDescopeClient:
 
     async def test_mgmt(self, descope_client):
         if descope_client.mode != "sync":
-            pytest.skip("mgmt not available on AsyncDescopeClient")
+            pytest.skip("mgmt not available on DescopeClientAsync")
 
         # Validate that any invocation of specific mgmt object raises AuthException as mgmt key was not set
         with pytest.raises(AuthException):
@@ -784,7 +784,7 @@ class TestDescopeClient:
 
     async def test_auth_management_key_with_functions(self, client_factory):
         if client_factory.mode != "sync":
-            pytest.skip("otp not available on AsyncDescopeClient")
+            pytest.skip("otp not available on DescopeClientAsync")
 
         auth_mgmt_key = "test-auth-mgmt-key"
 
@@ -883,7 +883,7 @@ class TestDescopeClient:
 
     async def test_auth_management_key_with_refresh_token(self, client_factory):
         if client_factory.mode != "sync":
-            pytest.skip("otp not available on AsyncDescopeClient")
+            pytest.skip("otp not available on DescopeClientAsync")
 
         auth_mgmt_key = "test-auth-mgmt-key"
         client = client_factory.make(PROJECT_ID, DUMMY_PUBLIC_KEY_DICT, auth_management_key=auth_mgmt_key)
@@ -985,7 +985,7 @@ class TestDescopeClient:
 
     async def test_verbose_mode_captures_mgmt_response(self, client_factory):
         if client_factory.mode != "sync":
-            pytest.skip("mgmt not available on AsyncDescopeClient")
+            pytest.skip("mgmt not available on DescopeClientAsync")
 
         mock_response = mock.Mock()
         mock_response.is_success = True

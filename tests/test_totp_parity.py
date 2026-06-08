@@ -2,7 +2,7 @@
 Parity port of test_totp.py using the unified sync/async fixture infrastructure.
 
 Structure mirrors the original: one class, one test method per operation.
-Each method runs twice — once for sync DescopeClient and once for AsyncDescopeClient —
+Each method runs twice — once for sync DescopeClient and once for DescopeClientAsync —
 via pytest's parametrised ``client_factory`` fixture from conftest.
 
 Payload assertions (assert_http_called) are included where the original had them:

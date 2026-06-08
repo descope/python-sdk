@@ -19,7 +19,7 @@ LICENSE_HANDSHAKE_TIMEOUT_SECONDS = 5.0
 
 class DescopeClientBase:
     """
-    Shared base for DescopeClient and AsyncDescopeClient.
+    Shared base for DescopeClient and DescopeClientAsync.
 
     Handles:
     - project_id validation and skip_verify warning
@@ -72,7 +72,7 @@ class DescopeClientBase:
         self._auth = Auth(project_id, public_key, jwt_validation_leeway, http_client=_auth_http)
 
     # -------------------------------------------------------------------------
-    # Argument-validation guards — reused by both DescopeClient and AsyncDescopeClient
+    # Argument-validation guards — reused by both DescopeClient and DescopeClientAsync
     # -------------------------------------------------------------------------
 
     @staticmethod

@@ -802,7 +802,7 @@ class TestSSLConfiguration(unittest.TestCase):
             for key in ("SSL_CERT_FILE", "SSL_CERT_DIR", "REQUESTS_CA_BUNDLE"):
                 os.environ.pop(key, None)
 
-            with patch("descope.http_client.ssl.create_default_context") as mock_ctx_factory:
+            with patch("descope._http_client_base.ssl.create_default_context") as mock_ctx_factory:
                 mock_ssl_ctx = Mock()
                 mock_ctx_factory.return_value = mock_ssl_ctx
 
@@ -819,7 +819,7 @@ class TestSSLConfiguration(unittest.TestCase):
             os.environ.pop("SSL_CERT_DIR", None)
             os.environ.pop("REQUESTS_CA_BUNDLE", None)
 
-            with patch("descope.http_client.ssl.create_default_context") as mock_ctx_factory:
+            with patch("descope._http_client_base.ssl.create_default_context") as mock_ctx_factory:
                 mock_ctx_factory.return_value = Mock()
 
                 HTTPClient(project_id="test123", secure=True)
@@ -837,7 +837,7 @@ class TestSSLConfiguration(unittest.TestCase):
             os.environ.pop("SSL_CERT_FILE", None)
             os.environ.pop("REQUESTS_CA_BUNDLE", None)
 
-            with patch("descope.http_client.ssl.create_default_context") as mock_ctx_factory:
+            with patch("descope._http_client_base.ssl.create_default_context") as mock_ctx_factory:
                 mock_ctx_factory.return_value = Mock()
 
                 HTTPClient(project_id="test123", secure=True)
@@ -853,7 +853,7 @@ class TestSSLConfiguration(unittest.TestCase):
             os.environ.pop("SSL_CERT_FILE", None)
             os.environ.pop("SSL_CERT_DIR", None)
 
-            with patch("descope.http_client.ssl.create_default_context") as mock_ctx_factory:
+            with patch("descope._http_client_base.ssl.create_default_context") as mock_ctx_factory:
                 mock_ssl_ctx = Mock()
                 mock_ctx_factory.return_value = mock_ssl_ctx
 
@@ -866,7 +866,7 @@ class TestSSLConfiguration(unittest.TestCase):
         with patch.dict("os.environ", {}, clear=False):
             os.environ.pop("REQUESTS_CA_BUNDLE", None)
 
-            with patch("descope.http_client.ssl.create_default_context") as mock_ctx_factory:
+            with patch("descope._http_client_base.ssl.create_default_context") as mock_ctx_factory:
                 mock_ssl_ctx = Mock()
                 mock_ctx_factory.return_value = mock_ssl_ctx
 

@@ -12,7 +12,7 @@ from descope.common import (
 )
 
 
-class AsyncTOTP(TOTPBase, AsyncAuthBase):
+class TOTPAsync(TOTPBase, AsyncAuthBase):
     """Async TOTP auth-method. All network calls are coroutines; validation is sync (no I/O)."""
 
     async def sign_up(self, login_id: str, user: Optional[dict] = None) -> dict:
