@@ -7,8 +7,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from descope.descope_client_async import DescopeClientAsync
 from descope.descope_client import DescopeClient
+from descope.descope_client_async import DescopeClientAsync
 from tests.common import DEFAULT_BASE_URL
 
 # ---------------------------------------------------------------------------

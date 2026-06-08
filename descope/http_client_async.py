@@ -7,11 +7,11 @@ from typing import cast
 import httpx
 
 from descope._http_client_base import (
+    _RETRY_DELAYS_SECONDS,
+    _RETRY_STATUS_CODES,
     DEFAULT_TIMEOUT_SECONDS,
     DescopeResponse,
     HTTPClientBase,
-    _RETRY_DELAYS_SECONDS,
-    _RETRY_STATUS_CODES,
 )
 
 

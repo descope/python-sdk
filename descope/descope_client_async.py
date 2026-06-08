@@ -4,7 +4,6 @@ import os
 from typing import Iterable
 
 from descope._client_base import DescopeClientBase
-from descope.http_client_async import HTTPClientAsync
 from descope.authmethod.totp_async import TOTPAsync
 from descope.common import (
     DEFAULT_TIMEOUT_SECONDS,
@@ -16,6 +15,7 @@ from descope.exceptions import (
     ERROR_TYPE_INVALID_TOKEN,
     AuthException,
 )
+from descope.http_client_async import HTTPClientAsync
 
 
 class DescopeClientAsync(DescopeClientBase):
