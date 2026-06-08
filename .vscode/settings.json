@@ -1,6 +1,8 @@
 {
   "python.testing.pytestEnabled": true,
-  "python.testing.pytestArgs": ["tests"],
+  "python.testing.pytestArgs": [
+    "tests"
+  ],
   "ruff.importStrategy": "fromEnvironment",
   "mypy-type-checker.importStrategy": "fromEnvironment",
   "[python]": {
@@ -11,9 +13,5 @@
       "source.organizeImports.ruff": "explicit"
     }
   },
-  "workbench.colorCustomizations": {
-    /* do not change please... */
-  },
-  "python-envs.defaultEnvManager": "ms-python.python:venv",
-  "python-envs.defaultPackageManager": "ms-python.python:pip"
+  "workbench.colorCustomizations": { /* do not change please... */}
 }
