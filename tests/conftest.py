@@ -7,9 +7,32 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.descope_client import DescopeClient
 from descope.descope_client_async import DescopeClientAsync
 from tests.common import DEFAULT_BASE_URL
+from tests.testutils import PUBLIC_KEY_DICT, SSLMatcher
+
+# ---------------------------------------------------------------------------
+# Claude Code sandbox workaround — DO NOT COMMIT uncommented
+#
+# Claude Code's sandbox routes traffic through a local SOCKS5 proxy. httpx
+# picks it up automatically (trust_env=True) but socksio isn't installed, so
+# async fixture construction fails with:
+#   ImportError: Using SOCKS proxy, but the 'socksio' package is not installed.
+#
+# Uncomment the fixture below to suppress proxy pickup during the test session.
+#
+# @pytest.fixture(autouse=True)
+# def _disable_httpx_proxy():
+#     import httpx
+#     _orig = httpx.AsyncClient.__init__
+#     def _patched(self, *args, **kwargs):
+#         kwargs.setdefault("trust_env", False)
+#         _orig(self, *args, **kwargs)
+#     with patch.object(httpx.AsyncClient, "__init__", _patched):
+#         yield
+# ---------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------
 # Shared test constants
@@ -17,22 +40,23 @@ from tests.common import DEFAULT_BASE_URL
 
 PROJECT_ID = "dummy"
 
-# ES384 key — kid=P2CuC9yv2UGtGI1o84gCZEb9qEQW, used by the JWT test tokens throughout
-# test_descope_client.py and test_descope_client_unified.py.
-PUBLIC_KEY_DICT = {
-    "alg": "ES384",
-    "crv": "P-384",
-    "kid": "P2CuC9yv2UGtGI1o84gCZEb9qEQW",
-    "kty": "EC",
-    "use": "sig",
-    "x": "DCjjyS7blnEmenLyJVwmH6yMnp7MlEggfk1kLtOv_Khtpps_Mq4K9brqsCwQhGUP",
-    "y": "xKy4IQ2FaLEzrrl1KE5mKbioLhj1prYFk1itdTOr6Xpy1fgq86kC7v-Y2F2vpcDc",
-}
-
 
 # ---------------------------------------------------------------------------
 # Response factory
 # ---------------------------------------------------------------------------
+
+
+def assert_http_called(mock_http, mode, url, **kwargs):
+    """Assert the patched HTTP mock was called with the given arguments.
+
+    In sync mode, ``verify`` and ``timeout`` are passed per-call; in async mode
+    they are set on the ``httpx.AsyncClient`` constructor and absent from each call.
+    This helper injects them automatically for sync so test bodies stay identical.
+    """
+    if mode == "sync":
+        kwargs.setdefault("verify", SSLMatcher())
+        kwargs.setdefault("timeout", DEFAULT_TIMEOUT_SECONDS)
+    mock_http.assert_called_with(url, **kwargs)
 
 
 def make_response(json_data=None, *, status=200, cookies=None):
