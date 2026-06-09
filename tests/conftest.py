@@ -34,16 +34,8 @@ from tests.testutils import PUBLIC_KEY_DICT, SSLMatcher
 #         yield
 # ---------------------------------------------------------------------------
 
-# ---------------------------------------------------------------------------
-# Shared test constants
-# ---------------------------------------------------------------------------
 
 PROJECT_ID = "dummy"
-
-
-# ---------------------------------------------------------------------------
-# Response factory
-# ---------------------------------------------------------------------------
 
 
 def assert_http_called(mock_http, mode, url, **kwargs):
@@ -73,11 +65,6 @@ def make_response(json_data=None, *, status=200, cookies=None):
     return m
 
 
-# ---------------------------------------------------------------------------
-# UnifiedClient — mode-agnostic wrapper for sync / async clients
-# ---------------------------------------------------------------------------
-
-
 class UnifiedClient:
     """
     Wraps DescopeClient or DescopeClientAsync with a uniform interface so test
@@ -94,15 +81,11 @@ class UnifiedClient:
     def __getattr__(self, name):
         return getattr(self._raw, name)
 
-    # --- Execution ---
-
     async def invoke(self, maybe_coro):
         """Uniformly run a sync return value or an async coroutine."""
         if asyncio.iscoroutine(maybe_coro):
             return await maybe_coro
         return maybe_coro
-
-    # --- Mock helpers ---
 
     @contextmanager
     def mock_get(self, response):
@@ -113,8 +96,6 @@ class UnifiedClient:
     def mock_post(self, response):
         with self._patch_ctx("post", response) as m:
             yield m
-
-    # --- Internals ---
 
     def _patch_ctx(self, method: str, response):
         """
@@ -130,11 +111,6 @@ class UnifiedClient:
             method,
             AsyncMock(return_value=response),
         )
-
-
-# ---------------------------------------------------------------------------
-# ClientFactory — for tests that need custom construction arguments
-# ---------------------------------------------------------------------------
 
 
 class ClientFactory:
@@ -158,11 +134,6 @@ class ClientFactory:
         client = DescopeClientAsync(*args, **kwargs)
         self._async_clients.append(client)
         return UnifiedClient("async", client)
-
-
-# ---------------------------------------------------------------------------
-# Fixtures
-# ---------------------------------------------------------------------------
 
 
 @pytest.fixture(params=["sync", "async"])

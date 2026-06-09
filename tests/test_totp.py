@@ -11,21 +11,8 @@ from tests.testutils import PUBLIC_KEY_DICT, VALID_REFRESH_TOKEN, VALID_SESSION_
 
 from . import common
 
-# ---------------------------------------------------------------------------
-# Module-level constants
-# ---------------------------------------------------------------------------
-
-
-# ---------------------------------------------------------------------------
-# Tests
-# ---------------------------------------------------------------------------
-
 
 class TestTOTP:
-    # ------------------------------------------------------------------
-    # sign_up
-    # ------------------------------------------------------------------
-
     async def test_sign_up(self, client_factory):
         signup_user_details = {
             "username": "jhon",
@@ -51,10 +38,6 @@ class TestTOTP:
         with client.mock_post(make_response(data)):
             result = await client.invoke(client.totp.sign_up("dummy@dummy.com", signup_user_details))
         assert result is not None
-
-    # ------------------------------------------------------------------
-    # sign_in_code
-    # ------------------------------------------------------------------
 
     async def test_sign_in(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
@@ -118,10 +101,6 @@ class TestTOTP:
             },
             follow_redirects=False,
         )
-
-    # ------------------------------------------------------------------
-    # update_user
-    # ------------------------------------------------------------------
 
     async def test_update_user(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)

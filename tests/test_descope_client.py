@@ -33,10 +33,6 @@ from tests.testutils import (
 
 from . import common
 
-# ---------------------------------------------------------------------------
-# Module-level constants
-# ---------------------------------------------------------------------------
-
 PUBLIC_KEY_STR = json.dumps(PUBLIC_KEY_DICT)
 
 # The original setUp public_key_dict (kid=2Bt5…) used by a handful of tests
@@ -70,16 +66,7 @@ _MISSING_KID_TOKEN = (
 _INVALID_PAYLOAD_TOKEN = "eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg4MDc4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEUyIsImNvb2tpZVBhdGgiOiIvIiwiZXhwIjoxNjU3Nzk2Njc4LCJpYXQiOjE2NTc3OTYwNzgsImlzcyI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInN1YiI6IjJCdEVIa2dPdTAybG1NeHpQSWV4ZE10VXcxTSJ9.lTUKMIjkrdsfryREYrgz4jMV7M0-JF-Q-KNlI0xZhamYqnSYtvzdwAoYiyWamx22XrN5SZkcmVZ5bsx-g2C0p5VMbnmmxEaxcnsFJHqVAJUYEv5HGQHumN50DYSlLXXg"
 
 
-# ---------------------------------------------------------------------------
-# Tests
-# ---------------------------------------------------------------------------
-
-
 class TestDescopeClient:
-    # ------------------------------------------------------------------
-    # Construction validation
-    # ------------------------------------------------------------------
-
     async def test_descope_client(self, client_factory):
         with pytest.raises(AuthException):
             client_factory.make(None, "dummy")
@@ -101,10 +88,6 @@ class TestDescopeClient:
         with patch.dict("os.environ", {"DESCOPE_PROJECT_ID": ""}):
             with pytest.raises(AuthException):
                 client_factory.make("")
-
-    # ------------------------------------------------------------------
-    # Management client (sync-only)
-    # ------------------------------------------------------------------
 
     async def test_mgmt(self, descope_client):
         if descope_client.mode != "sync":
@@ -148,10 +131,6 @@ class TestDescopeClient:
         except AuthException:
             pytest.fail("failed to initiate outbound_application_by_token without management key")
 
-    # ------------------------------------------------------------------
-    # logout / logout_all
-    # ------------------------------------------------------------------
-
     async def test_logout(self, descope_client):
         with pytest.raises(AuthException):
             await descope_client.invoke(descope_client.logout(None))
@@ -173,10 +152,6 @@ class TestDescopeClient:
 
         with descope_client.mock_post(make_response(status=200)):
             assert await descope_client.invoke(descope_client.logout_all("")) is not None
-
-    # ------------------------------------------------------------------
-    # me
-    # ------------------------------------------------------------------
 
     async def test_me(self, descope_client):
         with pytest.raises(AuthException):
@@ -203,10 +178,6 @@ class TestDescopeClient:
             follow_redirects=None,
             params=None,
         )
-
-    # ------------------------------------------------------------------
-    # my_tenants
-    # ------------------------------------------------------------------
 
     async def test_my_tenants(self, descope_client):
         with pytest.raises(AuthException):
@@ -240,10 +211,6 @@ class TestDescopeClient:
             follow_redirects=False,
             params=None,
         )
-
-    # ------------------------------------------------------------------
-    # history
-    # ------------------------------------------------------------------
 
     async def test_history(self, descope_client):
         with pytest.raises(AuthException):
@@ -289,10 +256,6 @@ class TestDescopeClient:
             follow_redirects=None,
             params=None,
         )
-
-    # ------------------------------------------------------------------
-    # validate_session — pure-CPU helper (no IO)
-    # ------------------------------------------------------------------
 
     async def test_validate_session(self, client_factory):
         # Client with the 2Bt5 key (matching the kid in _INVALID_PAYLOAD_TOKEN)
@@ -391,10 +354,6 @@ class TestDescopeClient:
                     client3.validate_and_refresh_session(expired_jwt_token, valid_refresh_for_expire_test)
                 )
 
-    # ------------------------------------------------------------------
-    # Exception object shapes (no client needed)
-    # ------------------------------------------------------------------
-
     def test_exception_object(self):
         ex = AuthException(401, "dummy-type", "dummy error message")
         assert str(ex) is not None
@@ -418,10 +377,6 @@ class TestDescopeClient:
         assert ex.error_description == "API rate limit exceeded description"
         assert ex.error_message == "API rate limit exceeded"
         assert ex.rate_limit_parameters.get(API_RATE_LIMIT_RETRY_AFTER_HEADER, "") == "9"
-
-    # ------------------------------------------------------------------
-    # Expired token + refresh flows
-    # ------------------------------------------------------------------
 
     async def test_expired_token(self, client_factory):
         # expired DS token (kid=P2Cu, exp=1657798328 — past)
@@ -491,10 +446,6 @@ class TestDescopeClient:
                     dummy_client.validate_and_refresh_session(expired_jwt_token2, valid_refresh_token2)
                 )
 
-    # ------------------------------------------------------------------
-    # Public key loading errors
-    # ------------------------------------------------------------------
-
     async def test_public_key_load(self, client_factory):
         # Test key without kty property
         invalid_public_key = deepcopy(PUBLIC_KEY_DICT)
@@ -517,10 +468,6 @@ class TestDescopeClient:
             client_factory.make(PROJECT_ID, invalid_public_key)
         assert exc_info.value.status_code == 500
 
-    # ------------------------------------------------------------------
-    # Client property surface
-    # ------------------------------------------------------------------
-
     async def test_client_properties(self, descope_client):
         # totp is available on both sync and async clients
         assert descope_client.totp is not None, "Empty totp object"
@@ -534,10 +481,6 @@ class TestDescopeClient:
         assert descope_client.saml is not None, "Empty saml object"
         assert descope_client.sso is not None, "Empty saml object"
         assert descope_client.webauthn is not None, "Empty webauthN object"
-
-    # ------------------------------------------------------------------
-    # Permission / role helpers — pure-CPU
-    # ------------------------------------------------------------------
 
     async def test_validate_permissions(self, descope_client):
         jwt_response = {}
@@ -653,10 +596,6 @@ class TestDescopeClient:
             "Role 2",
         ]
 
-    # ------------------------------------------------------------------
-    # exchange_access_key
-    # ------------------------------------------------------------------
-
     async def test_exchange_access_key_empty_param(self, descope_client):
         with pytest.raises(AuthException) as exc_info:
             await descope_client.invoke(descope_client.exchange_access_key(""))
@@ -688,10 +627,6 @@ class TestDescopeClient:
             follow_redirects=False,
         )
 
-    # ------------------------------------------------------------------
-    # JWT validation leeway
-    # ------------------------------------------------------------------
-
     async def test_jwt_validation_leeway(self, client_factory):
         # Negative leeway forces even far-future tokens to appear expired
         min_int = -sys.maxsize - 1
@@ -702,10 +637,6 @@ class TestDescopeClient:
         assert exc_info.value.status_code == 400
         assert exc_info.value.error_message is not None
         assert "nbf in future" in exc_info.value.error_message
-
-    # ------------------------------------------------------------------
-    # select_tenant
-    # ------------------------------------------------------------------
 
     async def test_select_tenant(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
@@ -729,10 +660,6 @@ class TestDescopeClient:
             json={"tenant": "t1"},
             follow_redirects=False,
         )
-
-    # ------------------------------------------------------------------
-    # auth_management_key header propagation (sync-only: uses otp)
-    # ------------------------------------------------------------------
 
     async def test_auth_management_key_with_functions(self, client_factory):
         if client_factory.mode != "sync":
@@ -898,10 +825,6 @@ class TestDescopeClient:
                 timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    # ------------------------------------------------------------------
-    # base_url parameter
-    # ------------------------------------------------------------------
-
     async def test_base_url_setting(self, client_factory):
         custom_base_url = "https://api.use1.descope.com"
         client = client_factory.make(PROJECT_ID, base_url=custom_base_url, public_key=PUBLIC_KEY_DICT)
@@ -921,10 +844,6 @@ class TestDescopeClient:
 
         if client_factory.mode == "sync":
             assert client._mgmt._http.base_url == expected_base_url
-
-    # ------------------------------------------------------------------
-    # Verbose mode
-    # ------------------------------------------------------------------
 
     async def test_verbose_mode_disabled_by_default(self, client_factory):
         client = client_factory.make(PROJECT_ID, public_key=PUBLIC_KEY_DICT)

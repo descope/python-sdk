@@ -71,10 +71,6 @@ class DescopeClientBase:
         )
         self._auth = Auth(project_id, public_key, jwt_validation_leeway, http_client=_auth_http)
 
-    # -------------------------------------------------------------------------
-    # Argument-validation guards — reused by both DescopeClient and DescopeClientAsync
-    # -------------------------------------------------------------------------
-
     @staticmethod
     def _ensure_present(value, message: str, error_type: str = ERROR_TYPE_INVALID_ARGUMENT) -> None:
         """Raise AuthException(400, error_type, message) if *value* is falsy."""
@@ -130,10 +126,6 @@ class DescopeClientBase:
                 mgmt_http.rate_limit_tier = tier
         except Exception as e:
             logger.warning("License handshake failed: %s", e)
-
-    # -------------------------------------------------------------------------
-    # Pure sync helpers — no I/O
-    # -------------------------------------------------------------------------
 
     def validate_session(self, session_token: str, audience: Iterable[str] | str | None = None) -> dict:
         """

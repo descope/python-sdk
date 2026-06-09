@@ -17,10 +17,6 @@ class TOTPBase:
     - ``AsyncTOTP(TOTPBase, AsyncAuthBase)`` — async, uses ``self._http`` (``AsyncHTTPClient``)
     """
 
-    # -------------------------------------------------------------------------
-    # Argument-validation guards
-    # -------------------------------------------------------------------------
-
     @staticmethod
     def _validate_login_id(login_id: str) -> None:
         if not login_id:
@@ -35,10 +31,6 @@ class TOTPBase:
     def _validate_refresh_token(refresh_token: str) -> None:
         if not refresh_token:
             raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Refresh token cannot be empty")
-
-    # -------------------------------------------------------------------------
-    # Request body composers
-    # -------------------------------------------------------------------------
 
     @staticmethod
     def _compose_signup_body(login_id: str, user: Optional[dict]) -> dict:

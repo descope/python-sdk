@@ -9,11 +9,6 @@ from descope.http_client import _RETRY_DELAYS_SECONDS, _RETRY_STATUS_CODES
 from descope.http_client_async import HTTPClientAsync
 from tests.testutils import SSLMatcher
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-
 _DEFAULT_BASE_URL = "https://api.descope.com"
 
 
@@ -45,11 +40,6 @@ def make_resp(*, status=200, json_data=None, headers=None, text=""):
     return r
 
 
-# ---------------------------------------------------------------------------
-# 1. Init — AsyncClient is constructed with right verify/timeout
-# ---------------------------------------------------------------------------
-
-
 class TestAsyncHTTPClientInit:
     def test_secure_passes_ssl_context(self):
         with patch("descope.http_client_async.httpx.AsyncClient") as mock_cls:
@@ -69,11 +59,6 @@ class TestAsyncHTTPClientInit:
             with pytest.raises(AuthException) as exc_info:
                 HTTPClientAsync(project_id="", timeout_seconds=30, secure=True)
         assert exc_info.value.status_code == 400
-
-
-# ---------------------------------------------------------------------------
-# 2. Verbs — each verb forwards the right URL, headers, body, params
-# ---------------------------------------------------------------------------
 
 
 class TestAsyncHTTPClientVerbs:
@@ -152,11 +137,6 @@ class TestAsyncHTTPClientVerbs:
         assert call.args[0] == "https://api.descope.com/remove"
         assert call.kwargs["params"] == {"id": "1"}
         assert call.kwargs["follow_redirects"] is False
-
-
-# ---------------------------------------------------------------------------
-# 3. Retry — mirrors TestRetryMechanism from test_http_client.py
-# ---------------------------------------------------------------------------
 
 
 class TestAsyncRetry:
@@ -291,11 +271,6 @@ class TestAsyncRetry:
         assert client._async_client.delete.await_count == 2
 
 
-# ---------------------------------------------------------------------------
-# 4. Verbose mode
-# ---------------------------------------------------------------------------
-
-
 class TestAsyncVerbose:
     async def test_get_captures_response_when_verbose(self):
         client = make_async_client(verbose=True)
@@ -355,11 +330,6 @@ class TestAsyncVerbose:
         assert last.status_code == 200
 
 
-# ---------------------------------------------------------------------------
-# 5. Error raising — inherited _raise_from_response fires after await
-# ---------------------------------------------------------------------------
-
-
 class TestAsyncErrors:
     async def test_raises_auth_exception_on_500(self):
         client = make_async_client()
@@ -395,11 +365,6 @@ class TestAsyncErrors:
             await client.get("/x")
 
 
-# ---------------------------------------------------------------------------
-# 6. Lifecycle — aclose and context manager
-# ---------------------------------------------------------------------------
-
-
 class TestAsyncLifecycle:
     async def test_aclose_delegates_to_async_client(self):
         client = make_async_client()
@@ -416,11 +381,6 @@ class TestAsyncLifecycle:
                 c._async_client.aclose = AsyncMock()
 
         c._async_client.aclose.assert_awaited_once()
-
-
-# ---------------------------------------------------------------------------
-# 7. Headers — management key propagation
-# ---------------------------------------------------------------------------
 
 
 class TestAsyncHTTPClientHeaders:

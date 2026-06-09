@@ -92,10 +92,6 @@ class DescopeClientAsync(DescopeClientBase):
     def totp(self) -> TOTPAsync:
         return self._totp
 
-    # -------------------------------------------------------------------------
-    # Lifecycle
-    # -------------------------------------------------------------------------
-
     async def aclose(self) -> None:
         """Close the underlying async HTTP clients and release connections."""
         await self._auth_http.aclose()
@@ -106,10 +102,6 @@ class DescopeClientAsync(DescopeClientBase):
 
     async def __aexit__(self, *args) -> None:
         await self.aclose()
-
-    # -------------------------------------------------------------------------
-    # Async session methods — network I/O
-    # -------------------------------------------------------------------------
 
     async def refresh_session(self, refresh_token: str, audience: Iterable[str] | str | None = None) -> dict:
         """Refresh a session using the refresh token. Makes an async network call."""
@@ -208,10 +200,6 @@ class DescopeClientAsync(DescopeClientBase):
         return self._auth.generate_jwt_response(
             response.json(), response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), None
         )
-
-    # -------------------------------------------------------------------------
-    # Debugging
-    # -------------------------------------------------------------------------
 
     def get_last_response(self):
         """Get the last HTTP response when verbose mode is enabled."""

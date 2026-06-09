@@ -1,9 +1,6 @@
 from ssl import SSLContext
 
-# ---------------------------------------------------------------------------
-# Canonical test key + JWTs — all signed with PUBLIC_KEY_DICT (kid=P2Cu…)
-# ---------------------------------------------------------------------------
-
+# Test fixtures: ES384 key + JWTs signed with kid=P2CuC9yv2UGtGI1o84gCZEb9qEQW
 PUBLIC_KEY_DICT = {
     "alg": "ES384",
     "crv": "P-384",
