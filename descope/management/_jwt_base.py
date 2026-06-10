@@ -1,10 +1,8 @@
 # This is not part of the public API but a code helper
 from __future__ import annotations
 
-from typing import Optional
-
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
-from descope.management.common import MgmtUserRequest, MgmtSignUpOptions
+from descope.management.common import MgmtSignUpOptions, MgmtUserRequest
 
 
 class JWTBase:

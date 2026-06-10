@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, List, Optional
+from typing import List, Optional
 
 from descope._http_base import AsyncHTTPBase
 from descope.management.common import MgmtV1

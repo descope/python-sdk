@@ -3,9 +3,8 @@ import pytest
 from descope import AuthException
 from descope.management.common import AccessType, MgmtV1, PromptType, URLParam
 from descope.management.outbound_application import OutboundApplication
-
-from tests.conftest import PROJECT_ID, assert_http_called, make_response
 from tests.common import DEFAULT_BASE_URL, default_headers
+from tests.conftest import PROJECT_ID, assert_http_called, make_response
 from tests.testutils import PUBLIC_KEY_DICT
 
 DUMMY_TOKEN = "inbound-app-token"

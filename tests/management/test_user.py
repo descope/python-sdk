@@ -11,9 +11,8 @@ from descope.management.user_pwd import (
     UserPasswordFirebase,
     UserPasswordPbkdf2,
 )
-
-from tests.conftest import PROJECT_ID, assert_http_called, make_response
 from tests.common import DEFAULT_BASE_URL, default_headers
+from tests.conftest import PROJECT_ID, assert_http_called, make_response
 from tests.testutils import PUBLIC_KEY_DICT
 
 

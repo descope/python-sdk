@@ -2,13 +2,10 @@ from __future__ import annotations
 
 from typing import Any, List, Optional
 
-from descope.common import DeliveryMethod, LoginOptions, get_method_string
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 from descope.management.common import (
     AssociatedTenant,
-    Sort,
     associated_tenants_to_dict,
-    sort_to_dict,
 )
 from descope.management.user_pwd import UserPassword
 
@@ -140,7 +137,7 @@ class UserBase:
         send_sms: Optional[bool],
         locale: Optional[str] = None,
     ) -> dict:
-        usersBody = []
+        users_body = []
         for user in users:
             role_names = [] if user.role_names is None else user.role_names
             user_tenants = [] if user.user_tenants is None else user.user_tenants
@@ -149,7 +146,7 @@ class UserBase:
             hashed_password = None
             if (user.password is not None) and (user.password.hashed is not None):
                 hashed_password = user.password.hashed.to_dict()
-            uBody = UserBase._compose_update_body(
+            u_body = UserBase._compose_update_body(
                 login_id=user.login_id,
                 email=user.email,
                 phone=user.phone,
@@ -171,10 +168,10 @@ class UserBase:
                 seed=user.seed,
             )
             if user.status is not None:
-                uBody["status"] = user.status
-            usersBody.append(uBody)
+                u_body["status"] = user.status
+            users_body.append(u_body)
 
-        body = {"users": usersBody, "invite": True}
+        body = {"users": users_body, "invite": True}
         if invite_url is not None:
             body["inviteUrl"] = invite_url
         if send_mail is not None:

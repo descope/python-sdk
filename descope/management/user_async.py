@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, List, Optional, Union
+from typing import List, Optional, Union
 
 from descope._http_base import AsyncHTTPBase
 from descope.common import DeliveryMethod, LoginOptions, get_method_string
@@ -12,7 +12,6 @@ from descope.management.common import (
     Sort,
     sort_to_dict,
 )
-from descope.management.user_pwd import UserPassword
 
 
 class UserAsync(UserBase, AsyncHTTPBase):
@@ -872,8 +871,8 @@ class UserAsync(UserBase, AsyncHTTPBase):
         self,
         login_id: str,
         provider: str,
-        withRefreshToken: Optional[bool] = False,
-        forceRefresh: Optional[bool] = False,
+        with_refresh_token: Optional[bool] = False,
+        force_refresh: Optional[bool] = False,
     ) -> dict:
         """
         Get the provider token for the given login ID.
@@ -883,8 +882,8 @@ class UserAsync(UserBase, AsyncHTTPBase):
         Args:
         login_id (str): The login ID of the user.
         provider (str): The provider name (google, facebook, etc').
-        withRefreshToken (bool): Optional, set to true to get also the refresh token.
-        forceRefresh (bool): Optional, set to true to force refresh the token.
+        with_refresh_token (bool): Optional, set to true to get also the refresh token.
+        force_refresh (bool): Optional, set to true to force refresh the token.
 
         Return value (dict):
         Return dict in the format
@@ -899,8 +898,8 @@ class UserAsync(UserBase, AsyncHTTPBase):
             params={
                 "loginId": login_id,
                 "provider": provider,
-                "withRefreshToken": withRefreshToken,
-                "forceRefresh": forceRefresh,
+                "withRefreshToken": with_refresh_token,
+                "forceRefresh": force_refresh,
             },
         )
         return response.json()

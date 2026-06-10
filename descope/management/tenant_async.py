@@ -126,7 +126,7 @@ class TenantAsync(TenantBase, AsyncHTTPBase):
         enable_inactivity: Optional[bool] = None,
         inactivity_time: Optional[int] = None,
         inactivity_time_unit: Optional[SessionExpirationUnit] = None,
-        JITDisabled: Optional[bool] = None,
+        jit_disabled: Optional[bool] = None,
         sso_setup_suite_settings: Optional[SSOSetupSuiteSettings] = None,
         enforce_sso: Optional[bool] = None,
         enforce_sso_exclusions: Optional[List[str]] = None,
@@ -150,7 +150,7 @@ class TenantAsync(TenantBase, AsyncHTTPBase):
             enable_inactivity (Optional[bool]): Whether inactivity timeout is enabled.
             inactivity_time (Optional[int]): Inactivity timeout duration.
             inactivity_time_unit (Optional[SessionExpirationUnit]): Unit for inactivity timeout.
-            JITDisabled (Optional[bool]): Whether JIT is disabled.
+            jit_disabled (Optional[bool]): Whether JIT is disabled.
             sso_setup_suite_settings (Optional[SSOSetupSuiteSettings]): SSO Setup Suite configuration.
             enforce_sso (Optional[bool]): Whether to enforce SSO for the tenant.
             enforce_sso_exclusions (Optional[List[str]]): List of user IDs excluded from SSO enforcement.
@@ -174,7 +174,7 @@ class TenantAsync(TenantBase, AsyncHTTPBase):
             "enableInactivity": enable_inactivity,
             "inactivityTime": inactivity_time,
             "inactivityTimeUnit": inactivity_time_unit,
-            "JITDisabled": JITDisabled,
+            "JITDisabled": jit_disabled,
             "ssoSetupSuiteSettings": (sso_setup_suite_settings.to_dict() if sso_setup_suite_settings else None),
             "enforceSSO": enforce_sso,
             "enforceSSOExclusions": enforce_sso_exclusions,

@@ -11,7 +11,6 @@ from descope.management.common import (
     MgmtV1,
     PromptType,
     URLParam,
-    url_params_to_dict,
 )
 
 
