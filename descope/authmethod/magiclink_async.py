@@ -27,6 +27,7 @@ class MagicLinkAsync(MagicLinkBase, AsyncAuthBase):
         login_options: LoginOptions | None = None,
         refresh_token: str | None = None,
     ) -> str:
+        """Send a magic link for sign-in; returns the masked delivery address."""
         self._validate_sign_in_login_id(login_id)
 
         validate_refresh_token_provided(login_options, refresh_token)
@@ -44,6 +45,7 @@ class MagicLinkAsync(MagicLinkBase, AsyncAuthBase):
         user: dict | None = None,
         signup_options: SignUpOptions | None = None,
     ) -> str:
+        """Send a magic link for sign-up to a new user; returns the masked delivery address."""
         if not user:
             user = {}
 
@@ -66,6 +68,7 @@ class MagicLinkAsync(MagicLinkBase, AsyncAuthBase):
         uri: str,
         signup_options: SignUpOptions | None = None,
     ) -> str:
+        """Send a magic link for sign-up or sign-in depending on whether the user exists."""
         login_options: LoginOptions | None = None
         if signup_options is not None:
             login_options = LoginOptions(
@@ -79,6 +82,7 @@ class MagicLinkAsync(MagicLinkBase, AsyncAuthBase):
         return Auth.extract_masked_address(response.json(), method)
 
     async def verify(self, token: str, audience: str | None | Iterable[str] = None) -> dict:
+        """Verify a magic link token and return session JWTs."""
         url = EndpointsV1.verify_magiclink_auth_path
         body = self._compose_verify_body(token)
         response = await self._http.post(url, body=body)
@@ -96,6 +100,7 @@ class MagicLinkAsync(MagicLinkBase, AsyncAuthBase):
         template_id: str | None = None,
         provider_id: str | None = None,
     ) -> str:
+        """Send a magic link to a new email to verify the update; returns the masked address."""
         self._validate_login_id(login_id)
 
         Auth.validate_email(email)
@@ -125,6 +130,7 @@ class MagicLinkAsync(MagicLinkBase, AsyncAuthBase):
         template_id: str | None = None,
         provider_id: str | None = None,
     ) -> str:
+        """Send a magic link to a new phone number to verify the update; returns the masked address."""
         self._validate_login_id(login_id)
 
         Auth.validate_phone(method, phone)

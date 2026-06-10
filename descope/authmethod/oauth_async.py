@@ -23,6 +23,7 @@ class OAuthAsync(OAuthBase, AsyncAuthBase):
         login_options: Optional[LoginOptions] = None,
         refresh_token: Optional[str] = None,
     ) -> dict:
+        """Start an OAuth flow; returns the redirect URL to send the user to."""
         if not self._verify_provider(provider):
             raise AuthException(
                 400,
@@ -43,6 +44,7 @@ class OAuthAsync(OAuthBase, AsyncAuthBase):
         return response.json()
 
     async def exchange_token(self, code: str) -> dict:
+        """Exchange an OAuth code for session JWTs."""
         self._validate_exchange_code(code)
         uri = EndpointsV1.oauth_exchange_token_path
         body = self._compose_exchange_body(code)

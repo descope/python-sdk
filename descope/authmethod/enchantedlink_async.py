@@ -24,6 +24,7 @@ class EnchantedLinkAsync(EnchantedLinkBase, AsyncAuthBase):
         login_options: LoginOptions | None = None,
         refresh_token: str | None = None,
     ) -> dict:
+        """Send an enchanted-link email for sign-in; returns the pending-ref and link-id."""
         self._validate_sign_in_login_id(login_id)
 
         validate_refresh_token_provided(login_options, refresh_token)
@@ -40,6 +41,7 @@ class EnchantedLinkAsync(EnchantedLinkBase, AsyncAuthBase):
         user: dict | None,
         signup_options: SignUpOptions | None = None,
     ) -> dict:
+        """Send an enchanted-link email for sign-up; returns the pending-ref and link-id."""
         if not user:
             user = {}
 
@@ -56,6 +58,7 @@ class EnchantedLinkAsync(EnchantedLinkBase, AsyncAuthBase):
         return response.json()
 
     async def sign_up_or_in(self, login_id: str, uri: str, signup_options: SignUpOptions | None = None) -> dict:
+        """Send an enchanted-link for sign-up or sign-in depending on whether the user exists."""
         login_options: LoginOptions | None = None
         if signup_options is not None:
             login_options = LoginOptions(
@@ -70,6 +73,7 @@ class EnchantedLinkAsync(EnchantedLinkBase, AsyncAuthBase):
         return response.json()
 
     async def get_session(self, pending_ref: str) -> dict:
+        """Poll for session JWTs once the user has clicked the enchanted link."""
         uri = EndpointsV1.get_session_enchantedlink_auth_path
         body = self._compose_get_session_body(pending_ref)
         response = await self._http.post(uri, body=body)
@@ -77,6 +81,7 @@ class EnchantedLinkAsync(EnchantedLinkBase, AsyncAuthBase):
         return self._auth.generate_jwt_response(resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), None)
 
     async def verify(self, token: str) -> None:
+        """Mark the enchanted-link token as clicked (called by the link-handler endpoint)."""
         uri = EndpointsV1.verify_enchantedlink_auth_path
         body = self._compose_verify_body(token)
         await self._http.post(uri, body=body)
@@ -92,6 +97,7 @@ class EnchantedLinkAsync(EnchantedLinkBase, AsyncAuthBase):
         template_id: str | None = None,
         provider_id: str | None = None,
     ) -> dict:
+        """Send an enchanted-link to a new email address to verify the update."""
         self._validate_login_id(login_id)
 
         Auth.validate_email(email)

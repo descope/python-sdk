@@ -46,9 +46,9 @@ class WebAuthn(WebAuthnBase, AuthBase):
         self._validate_response(response)
         uri = EndpointsV1.sign_up_auth_webauthn_finish_path
         body = self._compose_sign_up_in_finish_body(transaction_id, response)
-        response = self._http.post(uri, body=body)
-        resp = response.json()
-        return self._auth.generate_jwt_response(resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience)
+        http_response = self._http.post(uri, body=body)
+        resp = http_response.json()
+        return self._auth.generate_jwt_response(resp, http_response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience)
 
     def sign_in_start(
         self,
@@ -84,9 +84,9 @@ class WebAuthn(WebAuthnBase, AuthBase):
 
         uri = EndpointsV1.sign_in_auth_webauthn_finish_path
         body = self._compose_sign_up_in_finish_body(transaction_id, response)
-        response = self._http.post(uri, body=body)
-        resp = response.json()
-        return self._auth.generate_jwt_response(resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience)
+        http_response = self._http.post(uri, body=body)
+        resp = http_response.json()
+        return self._auth.generate_jwt_response(resp, http_response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience)
 
     def sign_up_or_in_start(
         self,

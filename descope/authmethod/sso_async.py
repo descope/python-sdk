@@ -26,6 +26,7 @@ class SSOAsync(SSOBase, AsyncAuthBase):
         login_hint: Optional[str] = None,
         force_authn: Optional[bool] = None,
     ) -> dict:
+        """Start an SSO flow; returns the redirect URL to send the user to."""
         self._validate_tenant(tenant)
 
         validate_refresh_token_provided(login_options, refresh_token)
@@ -48,6 +49,7 @@ class SSOAsync(SSOBase, AsyncAuthBase):
         return response.json()
 
     async def exchange_token(self, code: str) -> dict:
+        """Exchange an SSO code for session JWTs."""
         self._validate_exchange_code(code)
         uri = EndpointsV1.sso_exchange_token_path
         body = self._compose_exchange_body(code)

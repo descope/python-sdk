@@ -90,10 +90,8 @@ class TestDescopeClient:
                 client_factory.make("")
 
     async def test_mgmt(self, descope_client):
-        if descope_client.mode != "sync":
-            pytest.skip("mgmt not available on DescopeClientAsync")
-
         # Validate that any invocation of specific mgmt object raises AuthException as mgmt key was not set
+        # (applies equally to sync DescopeClient and async DescopeClientAsync)
         with pytest.raises(AuthException):
             _ = descope_client.mgmt.tenant
         with pytest.raises(AuthException):

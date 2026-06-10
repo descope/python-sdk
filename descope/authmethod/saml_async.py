@@ -23,6 +23,7 @@ class SAMLAsync(SAMLBase, AsyncAuthBase):
         login_options: Optional[LoginOptions] = None,
         refresh_token: Optional[str] = None,
     ) -> dict:
+        """Start a SAML flow; returns the redirect URL to send the user to."""
         self._validate_tenant(tenant)
         self._validate_return_url(return_url)
 
@@ -39,6 +40,7 @@ class SAMLAsync(SAMLBase, AsyncAuthBase):
         return response.json()
 
     async def exchange_token(self, code: str) -> dict:
+        """Exchange a SAML code for session JWTs."""
         self._validate_exchange_code(code)
         uri = EndpointsV1.saml_exchange_token_path
         body = self._compose_exchange_body(code)

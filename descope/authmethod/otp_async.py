@@ -26,6 +26,7 @@ class OTPAsync(OTPBase, AsyncAuthBase):
         login_options: LoginOptions | None = None,
         refresh_token: str | None = None,
     ) -> str:
+        """Send an OTP to the user's delivery address for sign-in; returns the masked address."""
         self._validate_login_id(login_id)
 
         validate_refresh_token_provided(login_options, refresh_token)
@@ -42,6 +43,7 @@ class OTPAsync(OTPBase, AsyncAuthBase):
         user: dict | None = None,
         signup_options: SignUpOptions | None = None,
     ) -> str:
+        """Send an OTP to a new user's delivery address for sign-up; returns the masked address."""
         if not user:
             user = {}
 
@@ -63,6 +65,7 @@ class OTPAsync(OTPBase, AsyncAuthBase):
         login_id: str,
         signup_options: SignUpOptions | None = None,
     ) -> str:
+        """Send an OTP for sign-up or sign-in depending on whether the user exists."""
         self._validate_login_id(login_id)
 
         uri = self._compose_sign_up_or_in_url(method)
@@ -84,6 +87,7 @@ class OTPAsync(OTPBase, AsyncAuthBase):
         code: str,
         audience: str | None | Iterable[str] = None,
     ) -> dict:
+        """Verify an OTP code and return session JWTs."""
         self._validate_login_id(login_id)
 
         uri = self._compose_verify_code_url(method)
@@ -104,6 +108,7 @@ class OTPAsync(OTPBase, AsyncAuthBase):
         template_id: str | None = None,
         provider_id: str | None = None,
     ) -> str:
+        """Send an OTP to a new email address to verify the update; returns the masked address."""
         self._validate_login_id(login_id)
 
         Auth.validate_email(email)
@@ -133,6 +138,7 @@ class OTPAsync(OTPBase, AsyncAuthBase):
         template_id: str | None = None,
         provider_id: str | None = None,
     ) -> str:
+        """Send an OTP to a new phone number to verify the update; returns the masked address."""
         self._validate_login_id(login_id)
 
         Auth.validate_phone(method, phone)

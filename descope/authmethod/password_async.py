@@ -17,6 +17,7 @@ class PasswordAsync(PasswordBase, AsyncAuthBase):
         user: dict | None = None,
         audience: str | None | Iterable[str] = None,
     ) -> dict:
+        """Create a new user with a password and return session JWTs."""
         self._validate_login_id(login_id)
         self._validate_password(password)
 
@@ -33,6 +34,7 @@ class PasswordAsync(PasswordBase, AsyncAuthBase):
         password: str,
         audience: str | None | Iterable[str] = None,
     ) -> dict:
+        """Verify the user's password and return session JWTs."""
         self._validate_login_id(login_id)
         self._validate_sign_in_password(password)
 
@@ -48,6 +50,7 @@ class PasswordAsync(PasswordBase, AsyncAuthBase):
         redirect_url: str | None = None,
         template_options: dict | None = None,
     ) -> dict:
+        """Send a password reset prompt to the user per the configured reset method."""
         self._validate_login_id(login_id)
 
         uri = EndpointsV1.send_reset_password_path
@@ -62,6 +65,7 @@ class PasswordAsync(PasswordBase, AsyncAuthBase):
         return response.json()
 
     async def update(self, login_id: str, new_password: str, refresh_token: str) -> None:
+        """Update the password for an existing logged-in user."""
         self._validate_login_id(login_id)
         self._validate_new_password(new_password)
         self._validate_refresh_token(refresh_token)
@@ -80,6 +84,7 @@ class PasswordAsync(PasswordBase, AsyncAuthBase):
         new_password: str,
         audience: str | None | Iterable[str] = None,
     ) -> dict:
+        """Authenticate with old_password, then replace it with new_password; returns session JWTs."""
         self._validate_login_id(login_id)
         self._validate_old_password(old_password)
         self._validate_new_password(new_password)
@@ -98,5 +103,6 @@ class PasswordAsync(PasswordBase, AsyncAuthBase):
         return self._auth.generate_jwt_response(resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience)
 
     async def get_policy(self) -> dict:
+        """Return the project's password policy (min length, character requirements, etc.)."""
         response = await self._http.get(uri=EndpointsV1.password_policy_path)
         return response.json()

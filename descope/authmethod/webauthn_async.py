@@ -21,6 +21,7 @@ class WebAuthnAsync(WebAuthnBase, AsyncAuthBase):
         origin: Optional[str],
         user: Optional[dict] = None,
     ) -> dict:
+        """Start a WebAuthn sign-up flow; returns the challenge options for the browser."""
         self._validate_login_id(login_id)
         self._validate_origin(origin)
 
@@ -38,14 +39,15 @@ class WebAuthnAsync(WebAuthnBase, AsyncAuthBase):
         response,
         audience: Union[str, None, Iterable[str]] = None,
     ) -> dict:
+        """Complete a WebAuthn sign-up and return session JWTs."""
         self._validate_transaction_id(transaction_id)
         self._validate_response(response)
 
         uri = EndpointsV1.sign_up_auth_webauthn_finish_path
         body = self._compose_sign_up_in_finish_body(transaction_id, response)
-        response = await self._http.post(uri, body=body)
-        resp = response.json()
-        return self._auth.generate_jwt_response(resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience)
+        http_response = await self._http.post(uri, body=body)
+        resp = http_response.json()
+        return self._auth.generate_jwt_response(resp, http_response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience)
 
     async def sign_in_start(
         self,
@@ -54,6 +56,7 @@ class WebAuthnAsync(WebAuthnBase, AsyncAuthBase):
         login_options: Optional[LoginOptions] = None,
         refresh_token: Optional[str] = None,
     ) -> dict:
+        """Start a WebAuthn sign-in flow; returns the challenge options for the browser."""
         self._validate_login_id(login_id)
         self._validate_origin(origin)
 
@@ -70,20 +73,22 @@ class WebAuthnAsync(WebAuthnBase, AsyncAuthBase):
         response,
         audience: Union[str, None, Iterable[str]] = None,
     ) -> dict:
+        """Complete a WebAuthn sign-in and return session JWTs."""
         self._validate_transaction_id(transaction_id)
         self._validate_response(response)
 
         uri = EndpointsV1.sign_in_auth_webauthn_finish_path
         body = self._compose_sign_up_in_finish_body(transaction_id, response)
-        response = await self._http.post(uri, body=body)
-        resp = response.json()
-        return self._auth.generate_jwt_response(resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience)
+        http_response = await self._http.post(uri, body=body)
+        resp = http_response.json()
+        return self._auth.generate_jwt_response(resp, http_response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience)
 
     async def sign_up_or_in_start(
         self,
         login_id: str,
         origin: str,
     ) -> dict:
+        """Start a WebAuthn sign-up-or-in flow; returns the challenge options for the browser."""
         self._validate_login_id(login_id)
         self._validate_origin(origin)
 
@@ -93,6 +98,7 @@ class WebAuthnAsync(WebAuthnBase, AsyncAuthBase):
         return response.json()
 
     async def update_start(self, login_id: str, refresh_token: str, origin: str) -> dict:
+        """Start adding a new WebAuthn authenticator to an existing user."""
         self._validate_login_id(login_id)
         self._validate_refresh_token(refresh_token)
 
@@ -102,6 +108,7 @@ class WebAuthnAsync(WebAuthnBase, AsyncAuthBase):
         return response.json()
 
     async def update_finish(self, transaction_id: str, response: str) -> None:
+        """Complete adding a new WebAuthn authenticator to an existing user."""
         self._validate_transaction_id(transaction_id)
         self._validate_response(response)
 
