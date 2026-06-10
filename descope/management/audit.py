@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any, List, Optional
 
 from descope._http_base import HTTPBase
+from descope.management._audit_base import AuditBase
 from descope.management.common import MgmtV1
 
 
-class Audit(HTTPBase):
+class Audit(AuditBase, HTTPBase):
     def search(
         self,
         user_ids: Optional[List[str]] = None,
@@ -132,18 +132,3 @@ class Audit(HTTPBase):
 
         self._http.post(MgmtV1.audit_create_event, body=body)
 
-    @staticmethod
-    def _convert_audit_record(a: dict) -> dict:
-        return {
-            "projectId": a.get("projectId", ""),
-            "userId": a.get("userId", ""),
-            "action": a.get("action", ""),
-            "occurred": datetime.utcfromtimestamp(float(a.get("occurred", "0")) / 1000),
-            "device": a.get("device", ""),
-            "method": a.get("method", ""),
-            "geo": a.get("geo", ""),
-            "remoteAddress": a.get("remoteAddress", ""),
-            "loginIds": a.get("externalIds", []),
-            "tenants": a.get("tenants", []),
-            "data": a.get("data", {}),
-        }

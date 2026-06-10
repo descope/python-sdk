@@ -27,8 +27,7 @@ class MagicLinkAsync(MagicLinkBase, AsyncAuthBase):
         login_options: LoginOptions | None = None,
         refresh_token: str | None = None,
     ) -> str:
-        if not login_id:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier is empty")
+        self._validate_sign_in_login_id(login_id)
 
         validate_refresh_token_provided(login_options, refresh_token)
 
@@ -97,8 +96,7 @@ class MagicLinkAsync(MagicLinkBase, AsyncAuthBase):
         template_id: str | None = None,
         provider_id: str | None = None,
     ) -> str:
-        if not login_id:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
+        self._validate_login_id(login_id)
 
         Auth.validate_email(email)
 
@@ -127,8 +125,7 @@ class MagicLinkAsync(MagicLinkBase, AsyncAuthBase):
         template_id: str | None = None,
         provider_id: str | None = None,
     ) -> str:
-        if not login_id:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
+        self._validate_login_id(login_id)
 
         Auth.validate_phone(method, phone)
 

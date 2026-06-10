@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, List, Optional
 
 from descope.common import DeliveryMethod, LoginOptions, get_method_string
+from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 from descope.management.common import (
     AssociatedTenant,
     Sort,
@@ -319,3 +320,10 @@ class UserBase:
             users_body.append(user_body)
 
         return {"users": users_body}
+
+    @staticmethod
+    def _validate_search_pagination(limit: int, page: int) -> None:
+        if limit < 0:
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "limit must be non-negative")
+        if page < 0:
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "page must be non-negative")

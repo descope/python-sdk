@@ -26,8 +26,7 @@ class OTPAsync(OTPBase, AsyncAuthBase):
         login_options: LoginOptions | None = None,
         refresh_token: str | None = None,
     ) -> str:
-        if not login_id:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
+        self._validate_login_id(login_id)
 
         validate_refresh_token_provided(login_options, refresh_token)
 
@@ -64,8 +63,7 @@ class OTPAsync(OTPBase, AsyncAuthBase):
         login_id: str,
         signup_options: SignUpOptions | None = None,
     ) -> str:
-        if not login_id:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
+        self._validate_login_id(login_id)
 
         uri = self._compose_sign_up_or_in_url(method)
         login_options: LoginOptions | None = None
@@ -86,8 +84,7 @@ class OTPAsync(OTPBase, AsyncAuthBase):
         code: str,
         audience: str | None | Iterable[str] = None,
     ) -> dict:
-        if not login_id:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
+        self._validate_login_id(login_id)
 
         uri = self._compose_verify_code_url(method)
         body = self._compose_verify_code_body(login_id, code)
@@ -107,8 +104,7 @@ class OTPAsync(OTPBase, AsyncAuthBase):
         template_id: str | None = None,
         provider_id: str | None = None,
     ) -> str:
-        if not login_id:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
+        self._validate_login_id(login_id)
 
         Auth.validate_email(email)
 
@@ -137,8 +133,7 @@ class OTPAsync(OTPBase, AsyncAuthBase):
         template_id: str | None = None,
         provider_id: str | None = None,
     ) -> str:
-        if not login_id:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
+        self._validate_login_id(login_id)
 
         Auth.validate_phone(method, phone)
 

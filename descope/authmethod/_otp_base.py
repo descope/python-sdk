@@ -9,17 +9,23 @@ from descope.common import (
     SignUpOptions,
     signup_options_to_dict,
 )
+from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
 class OTPBase:
     """Shared, I/O-free base for OTP auth-method classes.
 
-    Holds only static URL composers and body builders — no network I/O, no
-    ``__init__``.  The two concrete subclasses add the network layer:
+    Holds only static validation guards, URL composers and body builders — no
+    network I/O, no ``__init__``.  The two concrete subclasses add the network layer:
 
     - ``OTP(OTPBase, AuthBase)`` — sync, uses ``self._http`` (``HTTPClient``)
     - ``OTPAsync(OTPBase, AsyncAuthBase)`` — async, uses ``self._http`` (``HTTPClientAsync``)
     """
+
+    @staticmethod
+    def _validate_login_id(login_id: str) -> None:
+        if not login_id:
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
 
     @staticmethod
     def _compose_signup_url(method: DeliveryMethod) -> str:

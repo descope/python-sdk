@@ -4,8 +4,8 @@ from typing import Optional
 
 from descope._http_base import AsyncHTTPBase
 from descope.auth import Auth
-from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 from descope.jwt_common import generate_jwt_response
+from descope.management._jwt_base import JWTBase
 from descope.management.common import (
     MgmtLoginOptions,
     MgmtSignUpOptions,
@@ -15,7 +15,7 @@ from descope.management.common import (
 )
 
 
-class JWTAsync(AsyncHTTPBase):
+class JWTAsync(JWTBase, AsyncHTTPBase):
     """Async counterpart of JWT — all HTTP calls are coroutines."""
 
     _auth: Auth
@@ -38,8 +38,7 @@ class JWTAsync(AsyncHTTPBase):
         Raise:
         AuthException: raised if update failed
         """
-        if not jwt:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "jwt cannot be empty")
+        self._validate_jwt(jwt)
         response = await self._http.post(
             MgmtV1.update_jwt_path,
             body={
@@ -78,10 +77,8 @@ class JWTAsync(AsyncHTTPBase):
         Raise:
         AuthException: raised if update failed
         """
-        if not impersonator_id:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "impersonator_id cannot be empty")
-        if not login_id:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "login_id cannot be empty")
+        self._validate_impersonator_id(impersonator_id)
+        self._validate_login_id(login_id)
         response = await self._http.post(
             MgmtV1.impersonate_path,
             body={
@@ -117,9 +114,7 @@ class JWTAsync(AsyncHTTPBase):
         Raise:
         AuthException: raised if update failed
         """
-        if not jwt or jwt == "":
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "jwt cannot be empty")
-
+        self._validate_jwt(jwt)
         response = await self._http.post(
             MgmtV1.stop_impersonation_path,
             body={
@@ -141,14 +136,13 @@ class JWTAsync(AsyncHTTPBase):
         login_options (MgmtLoginOptions): options for the login request.
         """
 
-        if not login_id:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "login_id cannot be empty")
+        self._validate_login_id(login_id)
 
         if login_options is None:
             login_options = MgmtLoginOptions()
 
-        if is_jwt_required(login_options) and not login_options.jwt:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "JWT is required")
+        if is_jwt_required(login_options):
+            self._validate_jwt_required(login_options)
 
         response = await self._http.post(
             MgmtV1.mgmt_sign_in_path,
@@ -210,23 +204,14 @@ class JWTAsync(AsyncHTTPBase):
         if user is None:
             user = MgmtUserRequest()
 
-        if not login_id:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "login_id cannot be empty")
+        self._validate_login_id(login_id)
 
         if signup_options is None:
             signup_options = MgmtSignUpOptions()
 
         response = await self._http.post(
             endpoint,
-            body={
-                "loginId": login_id,
-                "user": user.to_dict(),
-                "emailVerified": user.email_verified,
-                "phoneVerified": user.phone_verified,
-                "ssoAppId": user.sso_app_id,
-                "customClaims": signup_options.custom_claims,
-                "refreshDuration": signup_options.refresh_duration,
-            },
+            body=self._compose_sign_up_body(login_id, user, signup_options),
             params=None,
         )
         resp = response.json()

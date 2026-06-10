@@ -39,8 +39,7 @@ class OTP(OTPBase, AuthBase):
         Raise:
         AuthException: raised if sign-in operation fails
         """
-        if not login_id:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
+        self._validate_login_id(login_id)
 
         validate_refresh_token_provided(login_options, refresh_token)
 
@@ -105,8 +104,7 @@ class OTP(OTPBase, AuthBase):
         Raise:
         AuthException: raised if either the sign_up or sign_in operation fails
         """
-        if not login_id:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
+        self._validate_login_id(login_id)
 
         uri = OTP._compose_sign_up_or_in_url(method)
         login_options: LoginOptions | None = None
@@ -147,8 +145,7 @@ class OTP(OTPBase, AuthBase):
         Raise:
         AuthException: raised if the OTP code is not valid or if token verification failed
         """
-        if not login_id:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
+        self._validate_login_id(login_id)
 
         uri = OTP._compose_verify_code_url(method)
         body = OTP._compose_verify_code_body(login_id, code)
@@ -183,8 +180,7 @@ class OTP(OTPBase, AuthBase):
         AuthException: raised if OTP verification fails or if token verification fails
         """
 
-        if not login_id:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
+        self._validate_login_id(login_id)
 
         Auth.validate_email(email)
 
@@ -229,8 +225,7 @@ class OTP(OTPBase, AuthBase):
         AuthException: raised if OTP verification fails or if token verification fails
         """
 
-        if not login_id:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
+        self._validate_login_id(login_id)
 
         Auth.validate_phone(method, phone)
 

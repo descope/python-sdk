@@ -43,8 +43,7 @@ class OAuthAsync(OAuthBase, AsyncAuthBase):
         return response.json()
 
     async def exchange_token(self, code: str) -> dict:
-        if not code:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "exchange code is empty")
+        self._validate_exchange_code(code)
         uri = EndpointsV1.oauth_exchange_token_path
         body = self._compose_exchange_body(code)
         response = await self._http.post(uri, body=body)

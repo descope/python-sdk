@@ -1,6 +1,8 @@
 # This is not part of the public API but a code helper
 from __future__ import annotations
 
+from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
+
 
 class OAuthBase:
     """Shared, I/O-free base for OAuth auth-method classes.
@@ -11,6 +13,11 @@ class OAuthBase:
     - ``OAuth(OAuthBase, AuthBase)`` — sync, uses ``self._http`` (``HTTPClient``)
     - ``OAuthAsync(OAuthBase, AsyncAuthBase)`` — async, uses ``self._http`` (``HTTPClientAsync``)
     """
+
+    @staticmethod
+    def _validate_exchange_code(code: str) -> None:
+        if not code:
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "exchange code is empty")
 
     @staticmethod
     def _verify_provider(oauth_provider: str) -> bool:

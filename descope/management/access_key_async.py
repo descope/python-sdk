@@ -3,14 +3,14 @@ from __future__ import annotations
 from typing import List, Optional
 
 from descope._http_base import AsyncHTTPBase
+from descope.management._access_key_base import AccessKeyBase
 from descope.management.common import (
     AssociatedTenant,
     MgmtV1,
-    associated_tenants_to_dict,
 )
 
 
-class AccessKeyAsync(AsyncHTTPBase):
+class AccessKeyAsync(AccessKeyBase, AsyncHTTPBase):
     """Async counterpart of AccessKey — all HTTP calls are coroutines."""
 
     async def create(
@@ -230,26 +230,3 @@ class AccessKeyAsync(AsyncHTTPBase):
             body={"id": id},
         )
 
-    @staticmethod
-    def _compose_create_body(
-        name: str,
-        expire_time: int,
-        role_names: List[str],
-        key_tenants: List[AssociatedTenant],
-        user_id: Optional[str] = None,
-        custom_claims: Optional[dict] = None,
-        description: Optional[str] = None,
-        permitted_ips: Optional[List[str]] = None,
-        custom_attributes: Optional[dict] = None,
-    ) -> dict:
-        return {
-            "name": name,
-            "expireTime": expire_time,
-            "roleNames": role_names,
-            "keyTenants": associated_tenants_to_dict(key_tenants),
-            "userId": user_id,
-            "customClaims": custom_claims,
-            "description": description,
-            "permittedIps": permitted_ips,
-            "customAttributes": custom_attributes,
-        }

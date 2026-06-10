@@ -10,7 +10,6 @@ from descope.common import (
     LoginOptions,
     validate_refresh_token_provided,
 )
-from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
 class SSO(SSOBase, AuthBase):
@@ -65,8 +64,7 @@ class SSO(SSOBase, AuthBase):
         return response.json()
 
     def exchange_token(self, code: str) -> dict:
-        if not code:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "exchange code is empty")
+        self._validate_exchange_code(code)
         uri = EndpointsV1.sso_exchange_token_path
         body = self._compose_exchange_body(code)
         response = self._http.post(uri, body=body)

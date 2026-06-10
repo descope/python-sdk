@@ -9,17 +9,28 @@ from descope.common import (
     SignUpOptions,
     signup_options_to_dict,
 )
+from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
 class EnchantedLinkBase:
     """Shared, I/O-free base for EnchantedLink auth-method classes.
 
-    Holds only static URL composers and body builders — no network I/O, no
-    ``__init__``.  The two concrete subclasses add the network layer:
+    Holds only static validation guards, URL composers and body builders — no
+    network I/O, no ``__init__``.  The two concrete subclasses add the network layer:
 
     - ``EnchantedLink(EnchantedLinkBase, AuthBase)`` — sync, uses ``self._http`` (``HTTPClient``)
     - ``EnchantedLinkAsync(EnchantedLinkBase, AsyncAuthBase)`` — async, uses ``self._http``
     """
+
+    @staticmethod
+    def _validate_sign_in_login_id(login_id: str) -> None:
+        if not login_id:
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "login_id is empty")
+
+    @staticmethod
+    def _validate_login_id(login_id: str) -> None:
+        if not login_id:
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
 
     @staticmethod
     def _compose_signin_url() -> str:

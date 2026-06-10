@@ -4,17 +4,43 @@ from __future__ import annotations
 from typing import Optional
 
 from descope.common import LoginOptions
+from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
 class WebAuthnBase:
     """Shared, I/O-free base for WebAuthn auth-method classes.
 
-    Holds only static body composers — no network I/O, no ``__init__``.
-    The two concrete subclasses add the network layer:
+    Holds only static validation guards and body composers — no network I/O, no
+    ``__init__``.  The two concrete subclasses add the network layer:
 
     - ``WebAuthn(WebAuthnBase, AuthBase)`` — sync, uses ``self._http`` (``HTTPClient``)
     - ``WebAuthnAsync(WebAuthnBase, AsyncAuthBase)`` — async, uses ``self._http`` (``HTTPClientAsync``)
     """
+
+    @staticmethod
+    def _validate_login_id(login_id: Optional[str]) -> None:
+        if not login_id:
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
+
+    @staticmethod
+    def _validate_origin(origin: Optional[str]) -> None:
+        if not origin:
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Origin cannot be empty")
+
+    @staticmethod
+    def _validate_transaction_id(transaction_id: str) -> None:
+        if not transaction_id:
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Transaction id cannot be empty")
+
+    @staticmethod
+    def _validate_response(response) -> None:
+        if not response:
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Response cannot be empty")
+
+    @staticmethod
+    def _validate_refresh_token(refresh_token: str) -> None:
+        if not refresh_token:
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Refresh token cannot be empty")
 
     @staticmethod
     def _compose_sign_up_start_body(login_id: str, user: dict, origin: str) -> dict:

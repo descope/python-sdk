@@ -697,11 +697,7 @@ class User(UserBase, HTTPBase):
         tenant_ids = [] if tenant_ids is None else tenant_ids
         role_names = [] if role_names is None else role_names
 
-        if limit < 0:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "limit must be non-negative")
-
-        if page < 0:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "page must be non-negative")
+        self._validate_search_pagination(limit, page)
         body = {
             "tenantIds": tenant_ids,
             "roleNames": role_names,
@@ -814,11 +810,7 @@ class User(UserBase, HTTPBase):
         tenant_ids = [] if tenant_ids is None else tenant_ids
         role_names = [] if role_names is None else role_names
 
-        if limit < 0:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "limit must be non-negative")
-
-        if page < 0:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "page must be non-negative")
+        self._validate_search_pagination(limit, page)
         body = {
             "tenantIds": tenant_ids,
             "roleNames": role_names,
