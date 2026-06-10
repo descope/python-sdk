@@ -1,488 +1,254 @@
-from unittest.mock import patch
+import pytest
 
-from descope import AuthException, DescopeClient
-from descope.common import DEFAULT_TIMEOUT_SECONDS
+from descope import AuthException
 from descope.management.common import MgmtV1
 
-from .. import common
-from ..testutils import SSLMatcher
+from tests.conftest import PROJECT_ID, assert_http_called, make_response
+from tests.common import DEFAULT_BASE_URL, default_headers
+from tests.testutils import PUBLIC_KEY_DICT
+
+MGMT_HEADERS = {
+    **default_headers,
+    "Authorization": f"Bearer {PROJECT_ID}:key",
+    "x-descope-project-id": PROJECT_ID,
+}
+
+TUPLE = {
+    "resource": "r",
+    "resourceType": "rt",
+    "relation": "rel",
+    "target": "u",
+    "targetType": "ty",
+}
 
 
-class TestFGA(common.DescopeTest):
-    def setUp(self) -> None:
-        super().setUp()
-        self.dummy_project_id = "dummy"
-        self.dummy_management_key = "key"
-        self.public_key_dict = {
-            "alg": "ES384",
-            "crv": "P-384",
-            "kid": "P2CtzUhdqpIF2ys9gg7ms06UvtC4",
-            "kty": "EC",
-            "use": "sig",
-            "x": "pX1l7nT2turcK5_Cdzos8SKIhpLh1Wy9jmKAVyMFiOCURoj-WQX1J0OUQqMsQO0s",
-            "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
-        }
-
-    def test_save_schema(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+class TestFGA:
+    async def test_save_schema(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed save_schema
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(AuthException, client.mgmt.fga.save_schema, "")
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.fga.save_schema(""))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNone(client.mgmt.fga.save_schema("model AuthZ 1.0"))
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.fga_save_schema}",
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
+        with client.mock_mgmt_post(make_response()) as mock:
+            assert await client.invoke(client.mgmt.fga.save_schema("model AuthZ 1.0")) is None
+            assert_http_called(
+                mock,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.fga_save_schema}",
+                headers=MGMT_HEADERS,
                 params=None,
                 json={"dsl": "model AuthZ 1.0"},
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_create_relations(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_create_relations(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed create_relations
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(AuthException, client.mgmt.fga.create_relations, [])
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.fga.create_relations([]))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNone(
-                client.mgmt.fga.create_relations(
-                    [
-                        {
-                            "resource": "r",
-                            "resourceType": "rt",
-                            "relation": "rel",
-                            "target": "u",
-                            "targetType": "ty",
-                        }
-                    ]
-                )
-            )
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.fga_create_relations}",
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
+        with client.mock_mgmt_post(make_response()) as mock:
+            assert await client.invoke(client.mgmt.fga.create_relations([TUPLE])) is None
+            assert_http_called(
+                mock,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.fga_create_relations}",
+                headers=MGMT_HEADERS,
                 params=None,
-                json={
-                    "tuples": [
-                        {
-                            "resource": "r",
-                            "resourceType": "rt",
-                            "relation": "rel",
-                            "target": "u",
-                            "targetType": "ty",
-                        }
-                    ]
-                },
+                json={"tuples": [TUPLE]},
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_delete_relations(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_delete_relations(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed delete_relations
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(AuthException, client.mgmt.fga.delete_relations, [])
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.fga.delete_relations([]))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNone(
-                client.mgmt.fga.delete_relations(
-                    [
-                        {
-                            "resource": "r",
-                            "resourceType": "rt",
-                            "relation": "rel",
-                            "target": "u",
-                            "targetType": "ty",
-                        }
-                    ]
-                )
-            )
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.fga_delete_relations}",
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
+        with client.mock_mgmt_post(make_response()) as mock:
+            assert await client.invoke(client.mgmt.fga.delete_relations([TUPLE])) is None
+            assert_http_called(
+                mock,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.fga_delete_relations}",
+                headers=MGMT_HEADERS,
                 params=None,
-                json={
-                    "tuples": [
-                        {
-                            "resource": "r",
-                            "resourceType": "rt",
-                            "relation": "rel",
-                            "target": "u",
-                            "targetType": "ty",
-                        }
-                    ]
-                },
+                json={"tuples": [TUPLE]},
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_check(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_check(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
-        # Test failed has_relations
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(AuthException, client.mgmt.fga.check, [])
+        # Test failed check
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.fga.check([]))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNotNone(
-                client.mgmt.fga.check(
-                    [
-                        {
-                            "resource": "r",
-                            "resourceType": "rt",
-                            "relation": "rel",
-                            "target": "u",
-                            "targetType": "ty",
-                        }
-                    ]
-                )
-            )
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.fga_check}",
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
+        with client.mock_mgmt_post(make_response({"tuples": []})) as mock:
+            result = await client.invoke(client.mgmt.fga.check([TUPLE]))
+            assert result is not None
+            assert_http_called(
+                mock,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.fga_check}",
+                headers=MGMT_HEADERS,
                 params=None,
-                json={
-                    "tuples": [
-                        {
-                            "resource": "r",
-                            "resourceType": "rt",
-                            "relation": "rel",
-                            "target": "u",
-                            "targetType": "ty",
-                        }
-                    ]
-                },
+                json={"tuples": [TUPLE]},
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_load_resources_details_success(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_load_resources_details_success(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
         response_body = {
             "resourcesDetails": [
                 {"resourceId": "r1", "resourceType": "type1", "displayName": "Name1"},
                 {"resourceId": "r2", "resourceType": "type2", "displayName": "Name2"},
             ]
         }
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            mock_post.return_value.json.return_value = response_body
-            ids = [
-                {"resourceId": "r1", "resourceType": "type1"},
-                {"resourceId": "r2", "resourceType": "type2"},
-            ]
-            details = client.mgmt.fga.load_resources_details(ids)
-            self.assertEqual(details, response_body["resourcesDetails"])
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.fga_resources_load}",
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
+        ids = [
+            {"resourceId": "r1", "resourceType": "type1"},
+            {"resourceId": "r2", "resourceType": "type2"},
+        ]
+        with client.mock_mgmt_post(make_response(response_body)) as mock:
+            details = await client.invoke(client.mgmt.fga.load_resources_details(ids))
+            assert details == response_body["resourcesDetails"]
+            assert_http_called(
+                mock,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.fga_resources_load}",
+                headers=MGMT_HEADERS,
                 params=None,
                 json={"resourceIdentifiers": ids},
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_load_resources_details_error(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            ids = [{"resourceId": "r1", "resourceType": "type1"}]
-            self.assertRaises(
-                AuthException,
-                client.mgmt.fga.load_resources_details,
-                ids,
-            )
+    async def test_load_resources_details_error(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+        ids = [{"resourceId": "r1", "resourceType": "type1"}]
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.fga.load_resources_details(ids))
 
-    def test_save_resources_details_success(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_save_resources_details_success(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
         details = [{"resourceId": "r1", "resourceType": "type1", "displayName": "Name1"}]
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            client.mgmt.fga.save_resources_details(details)
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.fga_resources_save}",
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
+        with client.mock_mgmt_post(make_response()) as mock:
+            await client.invoke(client.mgmt.fga.save_resources_details(details))
+            assert_http_called(
+                mock,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.fga_resources_save}",
+                headers=MGMT_HEADERS,
                 params=None,
                 json={"resourcesDetails": details},
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_save_resources_details_error(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_save_resources_details_error(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
         details = [{"resourceId": "r1", "resourceType": "type1", "displayName": "Name1"}]
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.fga.save_resources_details,
-                details,
-            )
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.fga.save_resources_details(details))
 
-    def test_fga_cache_url_save_schema(self):
-        # Test FGA cache URL functionality for save_schema
+    async def test_fga_cache_url_save_schema(self, client_factory):
         fga_cache_url = "https://my-fga-cache.example.com"
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-            fga_cache_url=fga_cache_url,
-        )
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key", fga_cache_url=fga_cache_url)
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            client.mgmt.fga.save_schema("model AuthZ 1.0")
-            mock_post.assert_called_with(
+        with client.mock_mgmt_post(make_response()) as mock:
+            await client.invoke(client.mgmt.fga.save_schema("model AuthZ 1.0"))
+            assert_http_called(
+                mock,
+                client.mode,
                 f"{fga_cache_url}{MgmtV1.fga_save_schema}",
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
+                headers=MGMT_HEADERS,
                 params=None,
                 json={"dsl": "model AuthZ 1.0"},
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_fga_cache_url_create_relations(self):
-        # Test FGA cache URL functionality for create_relations
+    async def test_fga_cache_url_create_relations(self, client_factory):
         fga_cache_url = "https://my-fga-cache.example.com"
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-            fga_cache_url=fga_cache_url,
-        )
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key", fga_cache_url=fga_cache_url)
 
-        relations = [
-            {
-                "resource": "r",
-                "resourceType": "rt",
-                "relation": "rel",
-                "target": "u",
-                "targetType": "ty",
-            }
-        ]
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            client.mgmt.fga.create_relations(relations)
-            mock_post.assert_called_with(
+        with client.mock_mgmt_post(make_response()) as mock:
+            await client.invoke(client.mgmt.fga.create_relations([TUPLE]))
+            assert_http_called(
+                mock,
+                client.mode,
                 f"{fga_cache_url}{MgmtV1.fga_create_relations}",
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
+                headers=MGMT_HEADERS,
                 params=None,
-                json={"tuples": relations},
+                json={"tuples": [TUPLE]},
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_fga_cache_url_delete_relations(self):
-        # Test FGA cache URL functionality for delete_relations
+    async def test_fga_cache_url_delete_relations(self, client_factory):
         fga_cache_url = "https://my-fga-cache.example.com"
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-            fga_cache_url=fga_cache_url,
-        )
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key", fga_cache_url=fga_cache_url)
 
-        relations = [
-            {
-                "resource": "r",
-                "resourceType": "rt",
-                "relation": "rel",
-                "target": "u",
-                "targetType": "ty",
-            }
-        ]
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            client.mgmt.fga.delete_relations(relations)
-            mock_post.assert_called_with(
+        with client.mock_mgmt_post(make_response()) as mock:
+            await client.invoke(client.mgmt.fga.delete_relations([TUPLE]))
+            assert_http_called(
+                mock,
+                client.mode,
                 f"{fga_cache_url}{MgmtV1.fga_delete_relations}",
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
+                headers=MGMT_HEADERS,
                 params=None,
-                json={"tuples": relations},
+                json={"tuples": [TUPLE]},
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_fga_cache_url_check(self):
-        # Test FGA cache URL functionality for check
+    async def test_fga_cache_url_check(self, client_factory):
         fga_cache_url = "https://my-fga-cache.example.com"
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-            fga_cache_url=fga_cache_url,
-        )
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key", fga_cache_url=fga_cache_url)
 
-        relations = [
-            {
-                "resource": "r",
-                "resourceType": "rt",
-                "relation": "rel",
-                "target": "u",
-                "targetType": "ty",
-            }
-        ]
+        response_body = {
+            "tuples": [
+                {
+                    "allowed": True,
+                    "tuple": TUPLE,
+                }
+            ]
+        }
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            mock_post.return_value.json.return_value = {
-                "tuples": [
-                    {
-                        "allowed": True,
-                        "tuple": relations[0],
-                    }
-                ]
-            }
-            result = client.mgmt.fga.check(relations)
-            mock_post.assert_called_with(
+        with client.mock_mgmt_post(make_response(response_body)) as mock:
+            result = await client.invoke(client.mgmt.fga.check([TUPLE]))
+            assert_http_called(
+                mock,
+                client.mode,
                 f"{fga_cache_url}{MgmtV1.fga_check}",
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
+                headers=MGMT_HEADERS,
                 params=None,
-                json={"tuples": relations},
+                json={"tuples": [TUPLE]},
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
-            self.assertEqual(len(result), 1)
-            self.assertTrue(result[0]["allowed"])
-            self.assertEqual(result[0]["relation"], relations[0])
+            assert len(result) == 1
+            assert result[0]["allowed"] is True
+            assert result[0]["relation"] == TUPLE
 
-    def test_fga_without_cache_url_uses_default_base_url(self):
-        # Test that FGA methods use default base URL when cache URL is not provided
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-            # No fga_cache_url provided
-        )
+    async def test_fga_without_cache_url_uses_default_base_url(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            client.mgmt.fga.save_schema("model AuthZ 1.0")
-            # Should use default base URL
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.fga_save_schema}",
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
+        with client.mock_mgmt_post(make_response()) as mock:
+            await client.invoke(client.mgmt.fga.save_schema("model AuthZ 1.0"))
+            assert_http_called(
+                mock,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.fga_save_schema}",
+                headers=MGMT_HEADERS,
                 params=None,
                 json={"dsl": "model AuthZ 1.0"},
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )

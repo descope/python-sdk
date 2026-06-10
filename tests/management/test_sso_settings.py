@@ -1,9 +1,8 @@
 import json
-from unittest import mock
-from unittest.mock import patch
 
-from descope import AttributeMapping, AuthException, DescopeClient, RoleMapping
-from descope.common import DEFAULT_TIMEOUT_SECONDS
+import pytest
+
+from descope import AttributeMapping, AuthException, RoleMapping
 from descope.management.common import MgmtV1
 from descope.management.sso_settings import (
     FGAGroupMapping,
@@ -15,141 +14,91 @@ from descope.management.sso_settings import (
     SSOSettings,
 )
 
-from .. import common
-from ..testutils import SSLMatcher
+from tests.conftest import PROJECT_ID, assert_http_called, make_response
+from tests.common import DEFAULT_BASE_URL, default_headers
+from tests.testutils import PUBLIC_KEY_DICT
 
 
-class TestSSOSettings(common.DescopeTest):
-    def setUp(self) -> None:
-        super().setUp()
-        self.dummy_project_id = "dummy"
-        self.dummy_management_key = "key"
-        self.public_key_dict = {
-            "alg": "ES384",
-            "crv": "P-384",
-            "kid": "P2CtzUhdqpIF2ys9gg7ms06UvtC4",
-            "kty": "EC",
-            "use": "sig",
-            "x": "pX1l7nT2turcK5_Cdzos8SKIhpLh1Wy9jmKAVyMFiOCURoj-WQX1J0OUQqMsQO0s",
-            "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
-        }
-
-    def test_delete_settings(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+class TestSSOSettings:
+    async def test_delete_settings(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flows
-        with patch("httpx.delete") as mock_delete:
-            mock_delete.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.sso.delete_settings,
-                "tenant-id",
-            )
+        with client.mock_mgmt_delete(make_response(status=500)) as mock_delete:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.sso.delete_settings("tenant-id"))
 
         # Test success flow
-        with patch("httpx.delete") as mock_delete:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
+        with client.mock_mgmt_delete(make_response()) as mock_delete:
+            await client.invoke(client.mgmt.sso.delete_settings("tenant-id"))
 
-            mock_delete.return_value = network_resp
-            client.mgmt.sso.delete_settings("tenant-id")
-
-            mock_delete.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_settings_path}",
+            assert_http_called(
+                mock_delete,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_settings_path}",
                 params={"tenantId": "tenant-id"},
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_load_settings(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_load_settings(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flows
-        with patch("httpx.get") as mock_get:
-            mock_get.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.sso.load_settings,
-                "tenant-id",
-            )
+        with client.mock_mgmt_get(make_response(status=500)) as mock_get:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.sso.load_settings("tenant-id"))
 
         # Test success flow
-        with patch("httpx.get") as mock_get:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads(
-                """{"tenant": {"id": "T2AAAA", "name": "myTenantName", "selfProvisioningDomains": [], "customAttributes": {}, "authType": "saml", "domains": ["lulu", "kuku"]}, "saml": {"idpEntityId": "", "idpSSOUrl": "", "idpCertificate": "", "idpAdditionalCertificates": ["cert1", "cert2"], "defaultSSORoles": ["aa", "bb"], "idpMetadataUrl": "https://dummy.com/metadata", "spEntityId": "", "spACSUrl": "", "spCertificate": "", "attributeMapping": {"name": "name", "email": "email", "username": "", "phoneNumber": "phone", "group": "", "givenName": "", "middleName": "", "familyName": "", "picture": "", "customAttributes": {}}, "groupsMapping": [], "redirectUrl": ""}, "oidc": {"name": "", "clientId": "", "clientSecret": "", "redirectUrl": "", "authUrl": "", "tokenUrl": "", "userDataUrl": "", "scope": [], "JWKsUrl": "", "userAttrMapping": {"loginId": "sub", "username": "", "name": "name", "email": "email", "phoneNumber": "phone_number", "verifiedEmail": "email_verified", "verifiedPhone": "phone_number_verified", "picture": "picture", "givenName": "given_name", "middleName": "middle_name", "familyName": "family_name"}, "manageProviderTokens": false, "callbackDomain": "", "prompt": [], "grantType": "authorization_code", "issuer": ""}}"""
-            )
-            mock_get.return_value = network_resp
-            resp = client.mgmt.sso.load_settings("T2AAAA")
+        resp_data = json.loads(
+            """{"tenant": {"id": "T2AAAA", "name": "myTenantName", "selfProvisioningDomains": [], "customAttributes": {}, "authType": "saml", "domains": ["lulu", "kuku"]}, "saml": {"idpEntityId": "", "idpSSOUrl": "", "idpCertificate": "", "idpAdditionalCertificates": ["cert1", "cert2"], "defaultSSORoles": ["aa", "bb"], "idpMetadataUrl": "https://dummy.com/metadata", "spEntityId": "", "spACSUrl": "", "spCertificate": "", "attributeMapping": {"name": "name", "email": "email", "username": "", "phoneNumber": "phone", "group": "", "givenName": "", "middleName": "", "familyName": "", "picture": "", "customAttributes": {}}, "groupsMapping": [], "redirectUrl": ""}, "oidc": {"name": "", "clientId": "", "clientSecret": "", "redirectUrl": "", "authUrl": "", "tokenUrl": "", "userDataUrl": "", "scope": [], "JWKsUrl": "", "userAttrMapping": {"loginId": "sub", "username": "", "name": "name", "email": "email", "phoneNumber": "phone_number", "verifiedEmail": "email_verified", "verifiedPhone": "phone_number_verified", "picture": "picture", "givenName": "given_name", "middleName": "middle_name", "familyName": "family_name"}, "manageProviderTokens": false, "callbackDomain": "", "prompt": [], "grantType": "authorization_code", "issuer": ""}}"""
+        )
+        with client.mock_mgmt_get(make_response(resp_data)) as mock_get:
+            resp = await client.invoke(client.mgmt.sso.load_settings("T2AAAA"))
             tenant = resp.get("tenant", {})
-            self.assertEqual(tenant.get("id", ""), "T2AAAA")
-            self.assertEqual(tenant.get("domains", []), ["lulu", "kuku"])
+            assert tenant.get("id", "") == "T2AAAA"
+            assert tenant.get("domains", []) == ["lulu", "kuku"]
             saml_settings = resp.get("saml", {})
-            self.assertEqual(saml_settings.get("idpMetadataUrl", ""), "https://dummy.com/metadata")
-            self.assertEqual(
-                saml_settings.get("defaultSSORoles", ""),
-                ["aa", "bb"],
-            )
-            self.assertEqual(
-                saml_settings.get("idpAdditionalCertificates", []),
-                ["cert1", "cert2"],
-            )
-            mock_get.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_load_settings_path}",
+            assert saml_settings.get("idpMetadataUrl", "") == "https://dummy.com/metadata"
+            assert saml_settings.get("defaultSSORoles", "") == ["aa", "bb"]
+            assert saml_settings.get("idpAdditionalCertificates", []) == ["cert1", "cert2"]
+            assert_http_called(
+                mock_get,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_load_settings_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params={"tenantId": "T2AAAA"},
                 follow_redirects=True,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_configure_oidc_settings(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_configure_oidc_settings(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.sso.configure_oidc_settings,
-                "tenant-id",
-                SSOOIDCSettings(
-                    name="myName",
-                    client_id="cid",
-                ),
-                ["domain.com"],
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.sso.configure_oidc_settings(
+                        "tenant-id",
+                        SSOOIDCSettings(
+                            name="myName",
+                            client_id="cid",
+                        ),
+                        ["domain.com"],
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNone(
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            result = await client.invoke(
                 client.mgmt.sso.configure_oidc_settings(
                     "tenant-id",
                     SSOOIDCSettings(
@@ -179,12 +128,15 @@ class TestSSOSettings(common.DescopeTest):
                     ["domain.com"],
                 )
             )
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_configure_oidc_settings}",
+            assert result is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_configure_oidc_settings}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -223,41 +175,33 @@ class TestSSOSettings(common.DescopeTest):
                     "domains": ["domain.com"],
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_configure_saml_settings(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_configure_saml_settings(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.sso.configure_saml_settings,
-                "tenant-id",
-                SSOSAMLSettings(
-                    idp_url="http://dummy.com",
-                    idp_entity_id="ent1234",
-                    idp_cert="cert",
-                    sp_acs_url="http://spacsurl.com",
-                    sp_entity_id="spentityid",
-                    default_sso_roles=["aa", "bb"],
-                ),
-                "https://redirect.com",
-                ["domain.com"],
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.sso.configure_saml_settings(
+                        "tenant-id",
+                        SSOSAMLSettings(
+                            idp_url="http://dummy.com",
+                            idp_entity_id="ent1234",
+                            idp_cert="cert",
+                            sp_acs_url="http://spacsurl.com",
+                            sp_entity_id="spentityid",
+                            default_sso_roles=["aa", "bb"],
+                        ),
+                        "https://redirect.com",
+                        ["domain.com"],
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNone(
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            result = await client.invoke(
                 client.mgmt.sso.configure_saml_settings(
                     "tenant-id",
                     SSOSAMLSettings(
@@ -284,12 +228,15 @@ class TestSSOSettings(common.DescopeTest):
                     ["domain.com"],
                 )
             )
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_configure_saml_settings}",
+            assert result is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_configure_saml_settings}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -323,34 +270,26 @@ class TestSSOSettings(common.DescopeTest):
                     "domains": ["domain.com"],
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_configure_saml_settings_by_metadata(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_configure_saml_settings_by_metadata(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.sso.configure_saml_settings_by_metadata,
-                "tenant-id",
-                SSOSAMLSettingsByMetadata(idp_metadata_url="http://dummy.com/metadata"),
-                "https://redirect.com",
-                ["domain.com"],
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.sso.configure_saml_settings_by_metadata(
+                        "tenant-id",
+                        SSOSAMLSettingsByMetadata(idp_metadata_url="http://dummy.com/metadata"),
+                        "https://redirect.com",
+                        ["domain.com"],
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNone(
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            result = await client.invoke(
                 client.mgmt.sso.configure_saml_settings_by_metadata(
                     "tenant-id",
                     SSOSAMLSettingsByMetadata(
@@ -375,12 +314,15 @@ class TestSSOSettings(common.DescopeTest):
                     ["domain.com"],
                 )
             )
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_configure_saml_by_metadata_settings}",
+            assert result is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_configure_saml_by_metadata_settings}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -411,22 +353,14 @@ class TestSSOSettings(common.DescopeTest):
                     "domains": ["domain.com"],
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_configure_saml_settings_with_additional_certs(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_configure_saml_settings_with_additional_certs(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test success flow with additional certs
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNone(
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            result = await client.invoke(
                 client.mgmt.sso.configure_saml_settings(
                     "tenant-id",
                     SSOSAMLSettings(
@@ -446,12 +380,15 @@ class TestSSOSettings(common.DescopeTest):
                     ["domain.com"],
                 )
             )
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_configure_saml_settings}",
+            assert result is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_configure_saml_settings}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -485,19 +422,18 @@ class TestSSOSettings(common.DescopeTest):
                     "domains": ["domain.com"],
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     def test_attribute_mapping_to_dict(self):
-        self.assertRaises(ValueError, SSOSettings._attribute_mapping_to_dict, None)
+        with pytest.raises(ValueError):
+            SSOSettings._attribute_mapping_to_dict(None)
 
     def test_fga_mappings_to_dict(self):
         # None input returns None
-        self.assertIsNone(SSOSettings._fga_mappings_to_dict(None))
+        assert SSOSettings._fga_mappings_to_dict(None) is None
 
         # Empty dict returns empty dict
-        self.assertEqual(SSOSettings._fga_mappings_to_dict({}), {})
+        assert SSOSettings._fga_mappings_to_dict({}) == {}
 
         # Group with relations is serialized into camelCase keys
         mappings = {
@@ -517,38 +453,29 @@ class TestSSOSettings(common.DescopeTest):
             ),
             "viewers": FGAGroupMapping(),
         }
-        self.assertEqual(
-            SSOSettings._fga_mappings_to_dict(mappings),
-            {
-                "admins": {
-                    "relations": [
-                        {
-                            "resource": "tenant:t1",
-                            "relationDefinition": "member",
-                            "namespace": "tenant",
-                        },
-                        {
-                            "resource": "tenant:t1",
-                            "relationDefinition": "owner",
-                            "namespace": "tenant",
-                        },
-                    ],
-                },
-                "viewers": {"relations": []},
+        assert SSOSettings._fga_mappings_to_dict(mappings) == {
+            "admins": {
+                "relations": [
+                    {
+                        "resource": "tenant:t1",
+                        "relationDefinition": "member",
+                        "namespace": "tenant",
+                    },
+                    {
+                        "resource": "tenant:t1",
+                        "relationDefinition": "owner",
+                        "namespace": "tenant",
+                    },
+                ],
             },
-        )
+            "viewers": {"relations": []},
+        }
 
-    def test_configure_saml_settings_with_fga_mappings(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_configure_saml_settings_with_fga_mappings(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNone(
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            result = await client.invoke(
                 client.mgmt.sso.configure_saml_settings(
                     "tenant-id",
                     SSOSAMLSettings(
@@ -573,12 +500,15 @@ class TestSSOSettings(common.DescopeTest):
                     ["domain.com"],
                 )
             )
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_configure_saml_settings}",
+            assert result is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_configure_saml_settings}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -612,21 +542,13 @@ class TestSSOSettings(common.DescopeTest):
                     "domains": ["domain.com"],
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_configure_saml_settings_by_metadata_with_fga_mappings(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_configure_saml_settings_by_metadata_with_fga_mappings(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNone(
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            result = await client.invoke(
                 client.mgmt.sso.configure_saml_settings_by_metadata(
                     "tenant-id",
                     SSOSAMLSettingsByMetadata(
@@ -647,12 +569,15 @@ class TestSSOSettings(common.DescopeTest):
                     ),
                 )
             )
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_configure_saml_by_metadata_settings}",
+            assert result is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_configure_saml_by_metadata_settings}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -683,21 +608,13 @@ class TestSSOSettings(common.DescopeTest):
                     "domains": None,
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_configure_oidc_settings_with_fga_mappings(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_configure_oidc_settings_with_fga_mappings(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNone(
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            result = await client.invoke(
                 client.mgmt.sso.configure_oidc_settings(
                     "tenant-id",
                     SSOOIDCSettings(
@@ -717,12 +634,15 @@ class TestSSOSettings(common.DescopeTest):
                     ),
                 )
             )
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_configure_oidc_settings}",
+            assert result is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_configure_oidc_settings}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -759,76 +679,55 @@ class TestSSOSettings(common.DescopeTest):
                     "domains": None,
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
     # Testing DEPRECATED functions
-    def test_get_settings(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_get_settings(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flows
-        with patch("httpx.get") as mock_get:
-            mock_get.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.sso.get_settings,
-                "tenant-id",
-            )
+        with client.mock_mgmt_get(make_response(status=500)) as mock_get:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.sso.get_settings("tenant-id"))
 
         # Test success flow
-        with patch("httpx.get") as mock_get:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"domains": ["lulu", "kuku"], "tenantId": "tenant-id"}""")
-            mock_get.return_value = network_resp
-            resp = client.mgmt.sso.get_settings("tenant-id")
-            self.assertEqual(resp["tenantId"], "tenant-id")
-            self.assertEqual(resp["domains"], ["lulu", "kuku"])
-            mock_get.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_settings_path}",
+        with client.mock_mgmt_get(make_response({"domains": ["lulu", "kuku"], "tenantId": "tenant-id"})) as mock_get:
+            resp = await client.invoke(client.mgmt.sso.get_settings("tenant-id"))
+            assert resp["tenantId"] == "tenant-id"
+            assert resp["domains"] == ["lulu", "kuku"]
+            assert_http_called(
+                mock_get,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_settings_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params={"tenantId": "tenant-id"},
                 follow_redirects=True,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_configure(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_configure(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.sso.configure,
-                "tenant-id",
-                "https://idp.com",
-                "entity-id",
-                "cert",
-                "https://redirect.com",
-                ["domain.com"],
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.sso.configure(
+                        "tenant-id",
+                        "https://idp.com",
+                        "entity-id",
+                        "cert",
+                        "https://redirect.com",
+                        ["domain.com"],
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNone(
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            result = await client.invoke(
                 client.mgmt.sso.configure(
                     "tenant-id",
                     "https://idp.com",
@@ -838,12 +737,15 @@ class TestSSOSettings(common.DescopeTest):
                     ["domain.com"],
                 )
             )
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_settings_path}",
+            assert result is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_settings_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -855,14 +757,11 @@ class TestSSOSettings(common.DescopeTest):
                     "domains": ["domain.com"],
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Domain is optional
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNone(
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            result = await client.invoke(
                 client.mgmt.sso.configure(
                     "tenant-id",
                     "https://idp.com",
@@ -871,12 +770,15 @@ class TestSSOSettings(common.DescopeTest):
                     "https://redirect.com",
                 )
             )
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_settings_path}",
+            assert result is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_settings_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -888,14 +790,11 @@ class TestSSOSettings(common.DescopeTest):
                     "domains": None,
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Redirect is optional
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNone(
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            result = await client.invoke(
                 client.mgmt.sso.configure(
                     "tenant-id",
                     "https://idp.com",
@@ -905,12 +804,15 @@ class TestSSOSettings(common.DescopeTest):
                     ["domain.com"],
                 )
             )
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_settings_path}",
+            assert result is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_settings_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -922,34 +824,26 @@ class TestSSOSettings(common.DescopeTest):
                     "domains": ["domain.com"],
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_configure_via_metadata(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_configure_via_metadata(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.sso.configure_via_metadata,
-                "tenant-id",
-                "https://idp-meta.com",
-                "https://redirect.com",
-                ["domain.com"],
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.sso.configure_via_metadata(
+                        "tenant-id",
+                        "https://idp-meta.com",
+                        "https://redirect.com",
+                        ["domain.com"],
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNone(
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            result = await client.invoke(
                 client.mgmt.sso.configure_via_metadata(
                     "tenant-id",
                     "https://idp-meta.com",
@@ -957,12 +851,15 @@ class TestSSOSettings(common.DescopeTest):
                     ["domain.com"],
                 )
             )
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_metadata_path}",
+            assert result is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_metadata_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -972,25 +869,25 @@ class TestSSOSettings(common.DescopeTest):
                     "domains": ["domain.com"],
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Test partial arguments
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNone(
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            result = await client.invoke(
                 client.mgmt.sso.configure_via_metadata(
                     "tenant-id",
                     "https://idp-meta.com",
                 )
             )
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_metadata_path}",
+            assert result is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_metadata_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -1000,45 +897,40 @@ class TestSSOSettings(common.DescopeTest):
                     "domains": None,
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_mapping(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_mapping(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.sso.mapping,
-                "tenant-id",
-                [RoleMapping(["a", "b"], "role")],
-                AttributeMapping(name="UName"),
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.sso.mapping(
+                        "tenant-id",
+                        [RoleMapping(["a", "b"], "role")],
+                        AttributeMapping(name="UName"),
+                    )
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNone(
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            result = await client.invoke(
                 client.mgmt.sso.mapping(
                     "tenant-id",
                     [RoleMapping(["a", "b"], "role")],
                     AttributeMapping(name="UName"),
                 )
             )
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_mapping_path}",
+            assert result is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_mapping_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -1057,40 +949,27 @@ class TestSSOSettings(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_recalculate_sso_mappings(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_recalculate_sso_mappings(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.sso.recalculate_sso_mappings,
-                "tenant-id",
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.sso.recalculate_sso_mappings("tenant-id"))
 
         # Test success flow with sso_id
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = {"affectedUserIds": ["user1", "user2", "user3"]}
-            mock_post.return_value = network_resp
-            client.mgmt.sso.recalculate_sso_mappings("tenant-id", "sso-456")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_recalculate_mappings_path}",
+        with client.mock_mgmt_post(make_response({"affectedUserIds": ["user1", "user2", "user3"]})) as mock_post:
+            await client.invoke(client.mgmt.sso.recalculate_sso_mappings("tenant-id", "sso-456"))
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_recalculate_mappings_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -1098,29 +977,23 @@ class TestSSOSettings(common.DescopeTest):
                     "ssoId": "sso-456",
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Test success flow without sso_id
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = {"affectedUserIds": ["user1"]}
-            mock_post.return_value = network_resp
-            client.mgmt.sso.recalculate_sso_mappings("tenant-id")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.sso_recalculate_mappings_path}",
+        with client.mock_mgmt_post(make_response({"affectedUserIds": ["user1"]})) as mock_post:
+            await client.invoke(client.mgmt.sso.recalculate_sso_mappings("tenant-id"))
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_recalculate_mappings_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
                     "tenantId": "tenant-id",
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )

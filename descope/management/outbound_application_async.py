@@ -2,26 +2,25 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from descope._http_base import HTTPBase
+from descope._http_base import AsyncHTTPBase
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException  # noqa: F401
-from descope.http_client import HTTPClient
+from descope.http_client_async import HTTPClientAsync
 from descope.management._outbound_application_base import OutboundApplicationBase
 from descope.management.common import (
     AccessType,
     MgmtV1,
     PromptType,
     URLParam,
-    url_params_to_dict,
 )
 
 
-class _OutboundApplicationTokenFetcher:
-    """Internal helper class for shared token fetching logic."""
+class _OutboundApplicationTokenFetcherAsync:
+    """Internal async helper class for shared token fetching logic."""
 
     @staticmethod
-    def fetch_token_by_scopes(
+    async def fetch_token_by_scopes(
         *,
-        http: HTTPClient,
+        http: HTTPClientAsync,
         token: Optional[str] = None,
         app_id: str,
         user_id: str,
@@ -29,9 +28,9 @@ class _OutboundApplicationTokenFetcher:
         options: Optional[dict] = None,
         tenant_id: Optional[str] = None,
     ) -> dict:
-        """Internal implementation for fetching token by scopes."""
+        """Internal async implementation for fetching token by scopes."""
         uri = MgmtV1.outbound_application_fetch_token_by_scopes_path
-        response = http.post(
+        response = await http.post(
             uri,
             body={
                 "appId": app_id,
@@ -45,18 +44,18 @@ class _OutboundApplicationTokenFetcher:
         return response.json()
 
     @staticmethod
-    def fetch_token(
+    async def fetch_token(
         *,
-        http: HTTPClient,
+        http: HTTPClientAsync,
         token: Optional[str] = None,
         app_id: str,
         user_id: str,
         tenant_id: Optional[str] = None,
         options: Optional[dict] = None,
     ) -> dict:
-        """Internal implementation for fetching token."""
+        """Internal async implementation for fetching token."""
         uri = MgmtV1.outbound_application_fetch_token_path
-        response = http.post(
+        response = await http.post(
             uri,
             body={
                 "appId": app_id,
@@ -69,18 +68,18 @@ class _OutboundApplicationTokenFetcher:
         return response.json()
 
     @staticmethod
-    def fetch_tenant_token_by_scopes(
+    async def fetch_tenant_token_by_scopes(
         *,
-        http: HTTPClient,
+        http: HTTPClientAsync,
         token: Optional[str] = None,
         app_id: str,
         tenant_id: str,
         scopes: List[str],
         options: Optional[dict] = None,
     ) -> dict:
-        """Internal implementation for fetching tenant token by scopes."""
+        """Internal async implementation for fetching tenant token by scopes."""
         uri = MgmtV1.outbound_application_fetch_tenant_token_by_scopes_path
-        response = http.post(
+        response = await http.post(
             uri,
             body={
                 "appId": app_id,
@@ -93,17 +92,17 @@ class _OutboundApplicationTokenFetcher:
         return response.json()
 
     @staticmethod
-    def fetch_tenant_token(
+    async def fetch_tenant_token(
         *,
-        http: HTTPClient,
+        http: HTTPClientAsync,
         token: Optional[str] = None,
         app_id: str,
         tenant_id: str,
         options: Optional[dict] = None,
     ) -> dict:
-        """Internal implementation for fetching tenant token."""
+        """Internal async implementation for fetching tenant token."""
         uri = MgmtV1.outbound_application_fetch_tenant_token_path
-        response = http.post(
+        response = await http.post(
             uri,
             body={
                 "appId": app_id,
@@ -115,8 +114,8 @@ class _OutboundApplicationTokenFetcher:
         return response.json()
 
 
-class OutboundApplication(OutboundApplicationBase, HTTPBase):
-    def create_application(
+class OutboundApplicationAsync(OutboundApplicationBase, AsyncHTTPBase):
+    async def create_application(
         self,
         name: str,
         description: Optional[str] = None,
@@ -169,7 +168,7 @@ class OutboundApplication(OutboundApplicationBase, HTTPBase):
         AuthException: raised if create operation fails
         """
         uri = MgmtV1.outbound_application_create_path
-        response = self._http.post(
+        response = await self._http.post(
             uri,
             body=OutboundApplicationBase._compose_create_update_body(
                 name,
@@ -194,7 +193,7 @@ class OutboundApplication(OutboundApplicationBase, HTTPBase):
         )
         return response.json()
 
-    def update_application(
+    async def update_application(
         self,
         id: str,
         name: str,
@@ -247,7 +246,7 @@ class OutboundApplication(OutboundApplicationBase, HTTPBase):
         AuthException: raised if update operation fails
         """
         uri = MgmtV1.outbound_application_update_path
-        response = self._http.post(
+        response = await self._http.post(
             uri,
             body={
                 "app": OutboundApplicationBase._compose_create_update_body(
@@ -274,7 +273,7 @@ class OutboundApplication(OutboundApplicationBase, HTTPBase):
         )
         return response.json()
 
-    def delete_application(
+    async def delete_application(
         self,
         id: str,
     ):
@@ -288,9 +287,9 @@ class OutboundApplication(OutboundApplicationBase, HTTPBase):
         AuthException: raised if deletion operation fails
         """
         uri = MgmtV1.outbound_application_delete_path
-        self._http.post(uri, body={"id": id})
+        await self._http.post(uri, body={"id": id})
 
-    def load_application(
+    async def load_application(
         self,
         id: str,
     ) -> dict:
@@ -308,10 +307,10 @@ class OutboundApplication(OutboundApplicationBase, HTTPBase):
         Raise:
         AuthException: raised if load operation fails
         """
-        response = self._http.get(f"{MgmtV1.outbound_application_load_path}/{id}")
+        response = await self._http.get(f"{MgmtV1.outbound_application_load_path}/{id}")
         return response.json()
 
-    def load_all_applications(self) -> dict:
+    async def load_all_applications(self) -> dict:
         """
         Load all outbound applications.
 
@@ -323,10 +322,10 @@ class OutboundApplication(OutboundApplicationBase, HTTPBase):
         Raise:
         AuthException: raised if load operation fails
         """
-        response = self._http.get(MgmtV1.outbound_application_load_all_path)
+        response = await self._http.get(MgmtV1.outbound_application_load_all_path)
         return response.json()
 
-    def fetch_token_by_scopes(
+    async def fetch_token_by_scopes(
         self,
         app_id: str,
         user_id: str,
@@ -351,7 +350,7 @@ class OutboundApplication(OutboundApplicationBase, HTTPBase):
         Raise:
         AuthException: raised if fetch operation fails
         """
-        return _OutboundApplicationTokenFetcher.fetch_token_by_scopes(
+        return await _OutboundApplicationTokenFetcherAsync.fetch_token_by_scopes(
             http=self._http,
             app_id=app_id,
             user_id=user_id,
@@ -360,7 +359,7 @@ class OutboundApplication(OutboundApplicationBase, HTTPBase):
             tenant_id=tenant_id,
         )
 
-    def fetch_token(
+    async def fetch_token(
         self,
         app_id: str,
         user_id: str,
@@ -383,7 +382,7 @@ class OutboundApplication(OutboundApplicationBase, HTTPBase):
         Raise:
         AuthException: raised if fetch operation fails
         """
-        return _OutboundApplicationTokenFetcher.fetch_token(
+        return await _OutboundApplicationTokenFetcherAsync.fetch_token(
             http=self._http,
             app_id=app_id,
             user_id=user_id,
@@ -391,7 +390,7 @@ class OutboundApplication(OutboundApplicationBase, HTTPBase):
             options=options,
         )
 
-    def fetch_tenant_token_by_scopes(
+    async def fetch_tenant_token_by_scopes(
         self,
         app_id: str,
         tenant_id: str,
@@ -414,7 +413,7 @@ class OutboundApplication(OutboundApplicationBase, HTTPBase):
         Raise:
         AuthException: raised if fetch operation fails
         """
-        return _OutboundApplicationTokenFetcher.fetch_tenant_token_by_scopes(
+        return await _OutboundApplicationTokenFetcherAsync.fetch_tenant_token_by_scopes(
             http=self._http,
             app_id=app_id,
             tenant_id=tenant_id,
@@ -422,7 +421,7 @@ class OutboundApplication(OutboundApplicationBase, HTTPBase):
             options=options,
         )
 
-    def fetch_tenant_token(
+    async def fetch_tenant_token(
         self,
         app_id: str,
         tenant_id: str,
@@ -443,14 +442,14 @@ class OutboundApplication(OutboundApplicationBase, HTTPBase):
         Raise:
         AuthException: raised if fetch operation fails
         """
-        return _OutboundApplicationTokenFetcher.fetch_tenant_token(
+        return await _OutboundApplicationTokenFetcherAsync.fetch_tenant_token(
             http=self._http,
             app_id=app_id,
             tenant_id=tenant_id,
             options=options,
         )
 
-    def delete_user_tokens(
+    async def delete_user_tokens(
         self,
         app_id: Optional[str] = None,
         user_id: Optional[str] = None,
@@ -472,9 +471,9 @@ class OutboundApplication(OutboundApplicationBase, HTTPBase):
         if user_id:
             params["userId"] = user_id
         uri = MgmtV1.outbound_application_delete_user_tokens_path
-        self._http.delete(uri, params=params)
+        await self._http.delete(uri, params=params)
 
-    def delete_token(
+    async def delete_token(
         self,
         token_id: str,
     ):
@@ -488,13 +487,13 @@ class OutboundApplication(OutboundApplicationBase, HTTPBase):
         AuthException: raised if delete operation fails
         """
         uri = MgmtV1.outbound_application_delete_token_path
-        self._http.delete(uri, params={"id": token_id})
+        await self._http.delete(uri, params={"id": token_id})
 
 
-class OutboundApplicationByToken(HTTPBase):
-    def __init__(self, http_client: HTTPClient):
+class OutboundApplicationByTokenAsync(AsyncHTTPBase):
+    def __init__(self, http_client: HTTPClientAsync):
         # This class expects the token to be passed for each call
-        no_key_client = HTTPClient(
+        no_key_client = HTTPClientAsync(
             project_id=http_client.project_id,
             base_url=http_client.base_url,
             timeout_seconds=http_client.timeout_seconds,
@@ -515,7 +514,7 @@ class OutboundApplicationByToken(HTTPBase):
                 "Inbound app token is required for perform this functionality",
             )
 
-    def fetch_token_by_scopes(
+    async def fetch_token_by_scopes(
         self,
         token: str,
         app_id: str,
@@ -543,7 +542,7 @@ class OutboundApplicationByToken(HTTPBase):
         AuthException: raised if fetch operation fails
         """
         self._check_inbound_app_token(token)
-        return _OutboundApplicationTokenFetcher.fetch_token_by_scopes(
+        return await _OutboundApplicationTokenFetcherAsync.fetch_token_by_scopes(
             http=self._http,
             token=token,
             app_id=app_id,
@@ -553,7 +552,7 @@ class OutboundApplicationByToken(HTTPBase):
             tenant_id=tenant_id,
         )
 
-    def fetch_token(
+    async def fetch_token(
         self,
         token: str,
         app_id: str,
@@ -579,7 +578,7 @@ class OutboundApplicationByToken(HTTPBase):
         AuthException: raised if fetch operation fails
         """
         self._check_inbound_app_token(token)
-        return _OutboundApplicationTokenFetcher.fetch_token(
+        return await _OutboundApplicationTokenFetcherAsync.fetch_token(
             http=self._http,
             token=token,
             app_id=app_id,
@@ -588,7 +587,7 @@ class OutboundApplicationByToken(HTTPBase):
             options=options,
         )
 
-    def fetch_tenant_token_by_scopes(
+    async def fetch_tenant_token_by_scopes(
         self,
         token: str,
         app_id: str,
@@ -614,7 +613,7 @@ class OutboundApplicationByToken(HTTPBase):
         AuthException: raised if fetch operation fails
         """
         self._check_inbound_app_token(token)
-        return _OutboundApplicationTokenFetcher.fetch_tenant_token_by_scopes(
+        return await _OutboundApplicationTokenFetcherAsync.fetch_tenant_token_by_scopes(
             http=self._http,
             token=token,
             app_id=app_id,
@@ -623,7 +622,13 @@ class OutboundApplicationByToken(HTTPBase):
             options=options,
         )
 
-    def fetch_tenant_token(self, token: str, app_id: str, tenant_id: str, options: Optional[dict] = None) -> dict:
+    async def fetch_tenant_token(
+        self,
+        token: str,
+        app_id: str,
+        tenant_id: str,
+        options: Optional[dict] = None,
+    ) -> dict:
         """
         Fetch an outbound application token for a tenant.
 
@@ -641,7 +646,7 @@ class OutboundApplicationByToken(HTTPBase):
         AuthException: raised if fetch operation fails
         """
         self._check_inbound_app_token(token)
-        return _OutboundApplicationTokenFetcher.fetch_tenant_token(
+        return await _OutboundApplicationTokenFetcherAsync.fetch_tenant_token(
             http=self._http,
             token=token,
             app_id=app_id,

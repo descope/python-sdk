@@ -1,85 +1,52 @@
 from unittest import mock
-from unittest.mock import patch
+
+import pytest
 
 from descope import AuthException, DescopeClient
-from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
-from .. import common
-from ..testutils import SSLMatcher
+from tests.conftest import PROJECT_ID, assert_http_called, make_response
+from tests.common import DEFAULT_BASE_URL
+from tests.testutils import PUBLIC_KEY_DICT
 
 
-class TestLicense(common.DescopeTest):
-    def setUp(self) -> None:
-        super().setUp()
-        self.dummy_project_id = "dummy"
-        self.dummy_management_key = "key"
-        self.public_key_dict = {
-            "alg": "ES384",
-            "crv": "P-384",
-            "kid": "P2CtzUhdqpIF2ys9gg7ms06UvtC4",
-            "kty": "EC",
-            "use": "sig",
-            "x": "pX1l7nT2turcK5_Cdzos8SKIhpLh1Wy9jmKAVyMFiOCURoj-WQX1J0OUQqMsQO0s",
-            "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
-        }
-
-    def test_get_failure(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
-        with patch("httpx.get") as mock_get:
-            mock_get.return_value.is_success = False
-            self.assertRaises(AuthException, client.mgmt.license.get)
-
-    def test_get_success(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
-        with patch("httpx.get") as mock_get:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = {"rateLimitTier": "tier4"}
-            mock_get.return_value = network_resp
-
-            resp = client.mgmt.license.get()
-            self.assertEqual(resp, {"rateLimitTier": "tier4"})
-
-            mock_get.assert_called_with(
-                f"{client._mgmt_http_client.base_url}{MgmtV1.license_get_path}",
-                headers=mock.ANY,
-                params=None,
-                follow_redirects=True,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )
-
+# Infrastructure tests — sync only, test HTTP client internals directly
+class TestLicenseInfra:
     def test_header_injected_after_handshake(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+        client = DescopeClient(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
         # Simulate a completed handshake by setting the cached tier directly.
         client._mgmt_http_client.rate_limit_tier = "tier2"
         headers = client._mgmt_http_client._get_default_headers()
-        self.assertEqual(headers.get("x-descope-license"), "tier2")
+        assert headers.get("x-descope-license") == "tier2"
 
     def test_header_absent_when_tier_not_cached(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+        client = DescopeClient(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
         # Default state has no rate limit tier yet.
         client._mgmt_http_client.rate_limit_tier = None
         headers = client._mgmt_http_client._get_default_headers()
-        self.assertNotIn("x-descope-license", headers)
+        assert "x-descope-license" not in headers
+
+
+# Parametrized async-style tests for management API behavior
+@pytest.mark.asyncio
+class TestLicense:
+    async def test_get_failure(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+        with client.mock_mgmt_get(make_response(status=400)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.license.get())
+
+    async def test_get_success(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+        with client.mock_mgmt_get(make_response({"rateLimitTier": "tier4"})) as mock_get:
+            resp = await client.invoke(client.mgmt.license.get())
+            assert resp == {"rateLimitTier": "tier4"}
+
+            assert_http_called(
+                mock_get,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.license_get_path}",
+                headers=mock.ANY,
+                params=None,
+                follow_redirects=True,
+            )

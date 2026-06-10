@@ -1,0 +1,210 @@
+from __future__ import annotations
+
+from typing import List, Optional
+
+from descope._http_base import AsyncHTTPBase
+from descope.management.common import MgmtV1
+
+
+class PermissionAsync(AsyncHTTPBase):
+    """Async counterpart of Permission — all HTTP calls are coroutines."""
+
+    async def create(
+        self,
+        name: str,
+        description: Optional[str] = None,
+    ):
+        """
+        Create a new permission.
+
+        Args:
+        name (str): permission name.
+        description (str): Optional description to briefly explain what this permission allows.
+
+        Raise:
+        AuthException: raised if creation operation fails
+        """
+        await self._http.post(
+            MgmtV1.permission_create_path,
+            body={"name": name, "description": description},
+        )
+
+    async def create_batch(
+        self,
+        permissions: List[dict],
+    ):
+        """
+        Create a batch of permissions in a single atomic transaction.
+
+        Args:
+        permissions (List[dict]): List of permission objects, each with:
+            - name (str): permission name.
+            - description (str): Optional description.
+
+        Raise:
+        AuthException: raised if creation operation fails
+        """
+        await self._http.post(
+            MgmtV1.permission_create_batch_path,
+            body={"permissions": permissions},
+        )
+
+    async def update_batch(
+        self,
+        permissions: List[dict],
+    ):
+        """
+        Update a batch of permissions in a single atomic transaction.
+
+        Args:
+        permissions (List[dict]): List of permission objects, each with:
+            - name (str): current permission name (or id (str): permission ID, e.g. PERM...).
+            - newName (str): new permission name.
+            - description (str): Optional new description.
+
+        Raise:
+        AuthException: raised if update operation fails
+        """
+        await self._http.post(
+            MgmtV1.permission_update_batch_path,
+            body={"permissions": permissions},
+        )
+
+    async def delete_batch(
+        self,
+        names: List[str],
+    ):
+        """
+        Delete a batch of permissions in a single atomic transaction.
+        IMPORTANT: This action is irreversible. Use carefully.
+
+        Args:
+        names (List[str]): List of permission names to delete.
+
+        Raise:
+        AuthException: raised if deletion operation fails
+        """
+        await self._http.post(
+            MgmtV1.permission_delete_batch_path,
+            body={"names": names},
+        )
+
+    async def delete_batch_by_ids(
+        self,
+        ids: List[str],
+    ):
+        """
+        Delete a batch of permissions by their IDs in a single atomic transaction.
+        IMPORTANT: This action is irreversible. Use carefully.
+
+        Args:
+        ids (List[str]): List of permission IDs to delete (e.g. PERM...).
+
+        Raise:
+        AuthException: raised if deletion operation fails
+        """
+        await self._http.post(
+            MgmtV1.permission_delete_batch_path,
+            body={"ids": ids},
+        )
+
+    async def update(
+        self,
+        name: str,
+        new_name: str,
+        description: Optional[str] = None,
+    ):
+        """
+        Update an existing permission with the given various fields. IMPORTANT: All parameters are used as overrides
+        to the existing permission. Empty fields will override populated fields. Use carefully.
+
+        Args:
+        name (str): permission name.
+        new_name (str): permission updated name.
+        description (str): Optional description to briefly explain what this permission allows.
+
+        Raise:
+        AuthException: raised if update operation fails
+        """
+        await self._http.post(
+            MgmtV1.permission_update_path,
+            body={"name": name, "newName": new_name, "description": description},
+        )
+
+    async def update_by_id(
+        self,
+        id: str,
+        new_name: str,
+        description: Optional[str] = None,
+    ):
+        """
+        Update an existing permission identified by its ID. IMPORTANT: All parameters are used as overrides
+        to the existing permission. Empty fields will override populated fields. Use carefully.
+
+        Args:
+        id (str): permission ID (e.g. PERM...).
+        new_name (str): permission updated name.
+        description (str): Optional description to briefly explain what this permission allows.
+
+        Raise:
+        AuthException: raised if update operation fails
+        """
+        await self._http.post(
+            MgmtV1.permission_update_path,
+            body={"id": id, "newName": new_name, "description": description},
+        )
+
+    async def delete(
+        self,
+        name: str,
+    ):
+        """
+        Delete an existing permission. IMPORTANT: This action is irreversible. Use carefully.
+
+        Args:
+        name (str): The name of the permission to be deleted.
+
+        Raise:
+        AuthException: raised if creation operation fails
+        """
+        await self._http.post(
+            MgmtV1.permission_delete_path,
+            body={"name": name},
+        )
+
+    async def delete_by_id(
+        self,
+        id: str,
+    ):
+        """
+        Delete an existing permission by its ID. IMPORTANT: This action is irreversible. Use carefully.
+
+        Args:
+        id (str): The ID of the permission to be deleted (e.g. PERM...).
+
+        Raise:
+        AuthException: raised if deletion operation fails
+        """
+        await self._http.post(
+            MgmtV1.permission_delete_path,
+            body={"id": id},
+        )
+
+    async def load_all(
+        self,
+    ) -> dict:
+        """
+        Load all permissions.
+
+        Return value (dict):
+        Return dict in the format
+             {"permissions": [{"name": <name>, "description": <description>, "systemDefault":<True/False>}]}
+        Containing the loaded permission information.
+
+        Raise:
+        AuthException: raised if load operation fails
+        """
+        response = await self._http.get(
+            MgmtV1.permission_load_all_path,
+        )
+        return response.json()

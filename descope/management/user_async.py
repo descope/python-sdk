@@ -1,6 +1,8 @@
-from typing import List, Optional, Union
+from __future__ import annotations
 
-from descope._http_base import HTTPBase
+from typing import Any, List, Optional, Union
+
+from descope._http_base import AsyncHTTPBase
 from descope.common import DeliveryMethod, LoginOptions, get_method_string
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 from descope.management._user_base import CreateUserObj, UserBase, UserObj
@@ -10,10 +12,13 @@ from descope.management.common import (
     Sort,
     sort_to_dict,
 )
+from descope.management.user_pwd import UserPassword
 
 
-class User(UserBase, HTTPBase):
-    def create(
+class UserAsync(UserBase, AsyncHTTPBase):
+    """Async counterpart of User — all HTTP calls are coroutines."""
+
+    async def create(
         self,
         login_id: str,
         email: Optional[str] = None,
@@ -59,7 +64,7 @@ class User(UserBase, HTTPBase):
         role_names = [] if role_names is None else role_names
         user_tenants = [] if user_tenants is None else user_tenants
 
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.user_create_path,
             body=UserBase._compose_create_body(
                 login_id,
@@ -86,7 +91,7 @@ class User(UserBase, HTTPBase):
         )
         return response.json()
 
-    def create_test_user(
+    async def create_test_user(
         self,
         login_id: str,
         email: Optional[str] = None,
@@ -134,7 +139,7 @@ class User(UserBase, HTTPBase):
         role_names = [] if role_names is None else role_names
         user_tenants = [] if user_tenants is None else user_tenants
 
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.test_user_create_path,
             body=UserBase._compose_create_body(
                 login_id,
@@ -161,7 +166,7 @@ class User(UserBase, HTTPBase):
         )
         return response.json()
 
-    def invite(
+    async def invite(
         self,
         login_id: str,
         email: Optional[str] = None,
@@ -199,7 +204,7 @@ class User(UserBase, HTTPBase):
         role_names = [] if role_names is None else role_names
         user_tenants = [] if user_tenants is None else user_tenants
 
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.user_create_path,
             body=UserBase._compose_create_body(
                 login_id,
@@ -228,7 +233,7 @@ class User(UserBase, HTTPBase):
         )
         return response.json()
 
-    def invite_batch(
+    async def invite_batch(
         self,
         users: List[UserObj],
         invite_url: Optional[str] = None,
@@ -248,7 +253,7 @@ class User(UserBase, HTTPBase):
             calling the method.
         """
 
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.user_create_batch_path,
             body=UserBase._compose_create_batch_body(
                 users,
@@ -260,7 +265,7 @@ class User(UserBase, HTTPBase):
         )
         return response.json()
 
-    def update(
+    async def update(
         self,
         login_id: str,
         email: Optional[str] = None,
@@ -312,7 +317,7 @@ class User(UserBase, HTTPBase):
         role_names = [] if role_names is None else role_names
         user_tenants = [] if user_tenants is None else user_tenants
 
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.user_update_path,
             body=UserBase._compose_update_body(
                 login_id,
@@ -336,7 +341,7 @@ class User(UserBase, HTTPBase):
         )
         return response.json()
 
-    def patch(
+    async def patch(
         self,
         login_id: str,
         email: Optional[str] = None,
@@ -395,7 +400,7 @@ class User(UserBase, HTTPBase):
                 ERROR_TYPE_INVALID_ARGUMENT,
                 f"Invalid status value: {status}. Must be one of: enabled, disabled, invited, expired",
             )
-        response = self._http.patch(
+        response = await self._http.patch(
             MgmtV1.user_patch_path,
             body=UserBase._compose_patch_body(
                 login_id,
@@ -418,7 +423,7 @@ class User(UserBase, HTTPBase):
         )
         return response.json()
 
-    def patch_batch(
+    async def patch_batch(
         self,
         users: List[UserObj],
         test: bool = False,
@@ -454,13 +459,13 @@ class User(UserBase, HTTPBase):
                     f"Invalid status value: {user.status} for user {user.login_id}. Must be one of: enabled, disabled, invited, expired",
                 )
 
-        response = self._http.patch(
+        response = await self._http.patch(
             MgmtV1.user_patch_batch_path,
             body=UserBase._compose_patch_batch_body(users, test),
         )
         return response.json()
 
-    def delete(
+    async def delete(
         self,
         login_id: str,
     ):
@@ -473,12 +478,12 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if delete operation fails
         """
-        self._http.post(
+        await self._http.post(
             MgmtV1.user_delete_path,
             body={"loginId": login_id},
         )
 
-    def delete_by_user_id(
+    async def delete_by_user_id(
         self,
         user_id: str,
     ):
@@ -491,12 +496,12 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if delete operation fails
         """
-        self._http.post(
+        await self._http.post(
             MgmtV1.user_delete_path,
             body={"userId": user_id},
         )
 
-    def delete_all_test_users(
+    async def delete_all_test_users(
         self,
     ):
         """
@@ -505,11 +510,11 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if delete operation fails
         """
-        self._http.delete(
+        await self._http.delete(
             MgmtV1.user_delete_all_test_users_path,
         )
 
-    def load(
+    async def load(
         self,
         login_id: str,
     ) -> dict:
@@ -527,13 +532,13 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if load operation fails
         """
-        response = self._http.get(
+        response = await self._http.get(
             uri=MgmtV1.user_load_path,
             params={"loginId": login_id},
         )
         return response.json()
 
-    def load_by_user_id(
+    async def load_by_user_id(
         self,
         user_id: str,
     ) -> dict:
@@ -552,13 +557,13 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if load operation fails
         """
-        response = self._http.get(
+        response = await self._http.get(
             uri=MgmtV1.user_load_path,
             params={"userId": user_id},
         )
         return response.json()
 
-    def logout_user(
+    async def logout_user(
         self,
         login_id: str,
     ):
@@ -571,12 +576,12 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if logout operation fails
         """
-        self._http.post(
+        await self._http.post(
             MgmtV1.user_logout_path,
             body={"loginId": login_id},
         )
 
-    def logout_user_by_user_id(
+    async def logout_user_by_user_id(
         self,
         user_id: str,
     ):
@@ -589,12 +594,12 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if logout operation fails
         """
-        self._http.post(
+        await self._http.post(
             MgmtV1.user_logout_path,
             body={"userId": user_id},
         )
 
-    def load_users(
+    async def load_users(
         self,
         user_ids: List[str],
         include_invalid_users: Optional[bool] = None,
@@ -628,13 +633,13 @@ class User(UserBase, HTTPBase):
         if include_invalid_users is not None:
             body["includeInvalidUsers"] = include_invalid_users
 
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.users_load_path,
             body=body,
         )
         return response.json()
 
-    def search_all(
+    async def search_all(
         self,
         tenant_ids: Optional[List[str]] = None,
         role_names: Optional[List[str]] = None,
@@ -751,13 +756,13 @@ class User(UserBase, HTTPBase):
         if tenant_role_names is not None:
             body["tenantRoleNames"] = tenant_role_names
 
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.users_search_path,
             body=body,
         )
         return response.json()
 
-    def search_all_test_users(
+    async def search_all_test_users(
         self,
         tenant_ids: Optional[List[str]] = None,
         role_names: Optional[List[str]] = None,
@@ -865,13 +870,13 @@ class User(UserBase, HTTPBase):
         if tenant_role_names is not None:
             body["tenantRoleNames"] = tenant_role_names
 
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.test_users_search_path,
             body=body,
         )
         return response.json()
 
-    def get_provider_token(
+    async def get_provider_token(
         self,
         login_id: str,
         provider: str,
@@ -897,7 +902,7 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if the operation fails
         """
-        response = self._http.get(
+        response = await self._http.get(
             MgmtV1.user_get_provider_token,
             params={
                 "loginId": login_id,
@@ -908,7 +913,7 @@ class User(UserBase, HTTPBase):
         )
         return response.json()
 
-    def activate(
+    async def activate(
         self,
         login_id: str,
     ) -> dict:
@@ -926,13 +931,13 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if activate operation fails
         """
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.user_update_status_path,
             body={"loginId": login_id, "status": "enabled"},
         )
         return response.json()
 
-    def deactivate(
+    async def deactivate(
         self,
         login_id: str,
     ) -> dict:
@@ -950,13 +955,13 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if deactivate operation fails
         """
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.user_update_status_path,
             body={"loginId": login_id, "status": "disabled"},
         )
         return response.json()
 
-    def update_login_id(
+    async def update_login_id(
         self,
         login_id: str,
         new_login_id: Optional[str] = None,
@@ -977,13 +982,13 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if the update operation fails
         """
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.user_update_login_id_path,
             body={"loginId": login_id, "newLoginId": new_login_id},
         )
         return response.json()
 
-    def update_email(
+    async def update_email(
         self,
         login_id: str,
         email: Optional[str] = None,
@@ -1007,7 +1012,7 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if the update operation fails
         """
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.user_update_email_path,
             body={
                 "loginId": login_id,
@@ -1018,7 +1023,7 @@ class User(UserBase, HTTPBase):
         )
         return response.json()
 
-    def update_phone(
+    async def update_phone(
         self,
         login_id: str,
         phone: Optional[str] = None,
@@ -1042,7 +1047,7 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if the update operation fails
         """
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.user_update_phone_path,
             body={
                 "loginId": login_id,
@@ -1053,7 +1058,7 @@ class User(UserBase, HTTPBase):
         )
         return response.json()
 
-    def update_display_name(
+    async def update_display_name(
         self,
         login_id: str,
         display_name: Optional[str] = None,
@@ -1085,13 +1090,13 @@ class User(UserBase, HTTPBase):
             bdy["middleName"] = middle_name
         if family_name is not None:
             bdy["familyName"] = family_name
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.user_update_name_path,
             body=bdy,
         )
         return response.json()
 
-    def update_picture(
+    async def update_picture(
         self,
         login_id: str,
         picture: Optional[str] = None,
@@ -1111,13 +1116,13 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if the update operation fails
         """
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.user_update_picture_path,
             body={"loginId": login_id, "picture": picture},
         )
         return response.json()
 
-    def update_custom_attribute(self, login_id: str, attribute_key: str, attribute_val: Union[str, int, bool]) -> dict:
+    async def update_custom_attribute(self, login_id: str, attribute_key: str, attribute_val: Union[str, int, bool]) -> dict:
         """
         Update a custom attribute of an existing user.
 
@@ -1134,7 +1139,7 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if the update operation fails
         """
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.user_update_custom_attribute_path,
             body={
                 "loginId": login_id,
@@ -1144,7 +1149,7 @@ class User(UserBase, HTTPBase):
         )
         return response.json()
 
-    def set_roles(
+    async def set_roles(
         self,
         login_id: str,
         role_names: List[str],
@@ -1165,13 +1170,13 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if the operation fails
         """
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.user_set_role_path,
             body={"loginId": login_id, "roleNames": role_names},
         )
         return response.json()
 
-    def add_roles(
+    async def add_roles(
         self,
         login_id: str,
         role_names: List[str],
@@ -1192,13 +1197,13 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if the operation fails
         """
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.user_add_role_path,
             body={"loginId": login_id, "roleNames": role_names},
         )
         return response.json()
 
-    def remove_roles(
+    async def remove_roles(
         self,
         login_id: str,
         role_names: List[str],
@@ -1219,13 +1224,13 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if the operation fails
         """
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.user_remove_role_path,
             body={"loginId": login_id, "roleNames": role_names},
         )
         return response.json()
 
-    def set_sso_apps(
+    async def set_sso_apps(
         self,
         login_id: str,
         sso_app_ids: List[str],
@@ -1245,13 +1250,13 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if the operation fails
         """
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.user_set_sso_apps,
             body={"loginId": login_id, "ssoAppIds": sso_app_ids},
         )
         return response.json()
 
-    def add_sso_apps(
+    async def add_sso_apps(
         self,
         login_id: str,
         sso_app_ids: List[str],
@@ -1271,13 +1276,13 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if the operation fails
         """
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.user_add_sso_apps,
             body={"loginId": login_id, "ssoAppIds": sso_app_ids},
         )
         return response.json()
 
-    def remove_sso_apps(
+    async def remove_sso_apps(
         self,
         login_id: str,
         sso_app_ids: List[str],
@@ -1297,13 +1302,13 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if the operation fails
         """
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.user_remove_sso_apps,
             body={"loginId": login_id, "ssoAppIds": sso_app_ids},
         )
         return response.json()
 
-    def add_tenant(
+    async def add_tenant(
         self,
         login_id: str,
         tenant_id: str,
@@ -1323,13 +1328,13 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if the operation fails
         """
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.user_add_tenant_path,
             body={"loginId": login_id, "tenantId": tenant_id},
         )
         return response.json()
 
-    def remove_tenant(
+    async def remove_tenant(
         self,
         login_id: str,
         tenant_id: str,
@@ -1349,13 +1354,13 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if the operation fails
         """
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.user_remove_tenant_path,
             body={"loginId": login_id, "tenantId": tenant_id},
         )
         return response.json()
 
-    def set_tenant_roles(
+    async def set_tenant_roles(
         self,
         login_id: str,
         tenant_id: str,
@@ -1377,13 +1382,13 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if the operation fails
         """
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.user_set_role_path,
             body={"loginId": login_id, "tenantId": tenant_id, "roleNames": role_names},
         )
         return response.json()
 
-    def add_tenant_roles(
+    async def add_tenant_roles(
         self,
         login_id: str,
         tenant_id: str,
@@ -1405,13 +1410,13 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if the operation fails
         """
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.user_add_role_path,
             body={"loginId": login_id, "tenantId": tenant_id, "roleNames": role_names},
         )
         return response.json()
 
-    def remove_tenant_roles(
+    async def remove_tenant_roles(
         self,
         login_id: str,
         tenant_id: str,
@@ -1433,13 +1438,13 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if the operation fails
         """
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.user_remove_role_path,
             body={"loginId": login_id, "tenantId": tenant_id, "roleNames": role_names},
         )
         return response.json()
 
-    def set_temporary_password(
+    async def set_temporary_password(
         self,
         login_id: str,
         password: str,
@@ -1457,7 +1462,7 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if the operation fails
         """
-        self._http.post(
+        await self._http.post(
             MgmtV1.user_set_temporary_password_path,
             body={
                 "loginId": login_id,
@@ -1467,7 +1472,7 @@ class User(UserBase, HTTPBase):
         )
         return
 
-    def set_active_password(
+    async def set_active_password(
         self,
         login_id: str,
         password: str,
@@ -1482,7 +1487,7 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if the operation fails
         """
-        self._http.post(
+        await self._http.post(
             MgmtV1.user_set_active_password_path,
             body={
                 "loginId": login_id,
@@ -1493,7 +1498,7 @@ class User(UserBase, HTTPBase):
         return
 
     # Deprecated (use set_temporary_password instead)
-    def set_password(
+    async def set_password(
         self,
         login_id: str,
         password: str,
@@ -1511,7 +1516,7 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if the operation fails
         """
-        self._http.post(
+        await self._http.post(
             MgmtV1.user_set_password_path,
             body={
                 "loginId": login_id,
@@ -1520,7 +1525,7 @@ class User(UserBase, HTTPBase):
         )
         return
 
-    def expire_password(
+    async def expire_password(
         self,
         login_id: str,
     ) -> None:
@@ -1535,13 +1540,13 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if the operation fails
         """
-        self._http.post(
+        await self._http.post(
             MgmtV1.user_expire_password_path,
             body={"loginId": login_id},
         )
         return
 
-    def remove_all_passkeys(
+    async def remove_all_passkeys(
         self,
         login_id: str,
     ) -> None:
@@ -1556,13 +1561,13 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if the operation fails
         """
-        self._http.post(
+        await self._http.post(
             MgmtV1.user_remove_all_passkeys_path,
             body={"loginId": login_id},
         )
         return
 
-    def remove_totp_seed(
+    async def remove_totp_seed(
         self,
         login_id: str,
     ) -> None:
@@ -1577,13 +1582,13 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if the operation fails
         """
-        self._http.post(
+        await self._http.post(
             MgmtV1.user_remove_totp_seed_path,
             body={"loginId": login_id},
         )
         return
 
-    def generate_otp_for_test_user(
+    async def generate_otp_for_test_user(
         self,
         method: DeliveryMethod,
         login_id: str,
@@ -1607,7 +1612,7 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if the operation fails
         """
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.user_generate_otp_for_test_path,
             body={
                 "loginId": login_id,
@@ -1617,7 +1622,7 @@ class User(UserBase, HTTPBase):
         )
         return response.json()
 
-    def generate_magic_link_for_test_user(
+    async def generate_magic_link_for_test_user(
         self,
         method: DeliveryMethod,
         login_id: str,
@@ -1643,7 +1648,7 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if the operation fails
         """
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.user_generate_magic_link_for_test_path,
             body={
                 "loginId": login_id,
@@ -1654,7 +1659,7 @@ class User(UserBase, HTTPBase):
         )
         return response.json()
 
-    def generate_enchanted_link_for_test_user(
+    async def generate_enchanted_link_for_test_user(
         self,
         login_id: str,
         uri: str,
@@ -1677,7 +1682,7 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if the operation fails
         """
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.user_generate_enchanted_link_for_test_path,
             body={
                 "loginId": login_id,
@@ -1687,7 +1692,7 @@ class User(UserBase, HTTPBase):
         )
         return response.json()
 
-    def generate_embedded_link(self, login_id: str, custom_claims: Optional[dict] = None, timeout: int = 0) -> str:
+    async def generate_embedded_link(self, login_id: str, custom_claims: Optional[dict] = None, timeout: int = 0) -> str:
         """
         Generate Embedded Link for the given user login ID.
         The return value is a token that can be verified via magic link, or using flows
@@ -1702,7 +1707,7 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if the operation fails
         """
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.user_generate_embedded_link_path,
             body={
                 "loginId": login_id,
@@ -1712,7 +1717,7 @@ class User(UserBase, HTTPBase):
         )
         return response.json()["token"]
 
-    def generate_sign_up_embedded_link(
+    async def generate_sign_up_embedded_link(
         self,
         login_id: str,
         user: Optional[CreateUserObj] = None,
@@ -1739,7 +1744,7 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if the operation fails
         """
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.user_generate_sign_up_embedded_link_path,
             body={
                 "loginId": login_id,
@@ -1752,7 +1757,7 @@ class User(UserBase, HTTPBase):
         )
         return response.json()["token"]
 
-    def history(self, user_ids: List[str]) -> List[dict]:
+    async def history(self, user_ids: List[str]) -> List[dict]:
         """
         Retrieve users' authentication history, by the given user's ids.
 
@@ -1774,7 +1779,7 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if the operation fails
         """
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.user_history_path,
             body=user_ids,
         )

@@ -1,57 +1,33 @@
-import json
-from unittest import mock
-from unittest.mock import patch
+import pytest
 
-from descope import AuthException, DescopeClient
-from descope.common import DEFAULT_TIMEOUT_SECONDS
+from descope import AuthException
 from descope.management.common import MgmtV1
 
-from .. import common
-from ..testutils import SSLMatcher
+from tests.conftest import PROJECT_ID, assert_http_called, make_response
+from tests.common import DEFAULT_BASE_URL, default_headers
+from tests.testutils import PUBLIC_KEY_DICT
 
 
-class TestPermission(common.DescopeTest):
-    def setUp(self) -> None:
-        super().setUp()
-        self.dummy_project_id = "dummy"
-        self.dummy_management_key = "key"
-        self.public_key_dict = {
-            "alg": "ES384",
-            "crv": "P-384",
-            "kid": "P2CtzUhdqpIF2ys9gg7ms06UvtC4",
-            "kty": "EC",
-            "use": "sig",
-            "x": "pX1l7nT2turcK5_Cdzos8SKIhpLh1Wy9jmKAVyMFiOCURoj-WQX1J0OUQqMsQO0s",
-            "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
-        }
-
-    def test_create(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+class TestPermission:
+    async def test_create(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.permission.create,
-                "name",
-            )
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.permission.create("name"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNone(client.mgmt.permission.create("P1", "Something"))
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.permission_create_path}",
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            assert await client.invoke(client.mgmt.permission.create("P1", "Something")) is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.permission_create_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -59,44 +35,31 @@ class TestPermission(common.DescopeTest):
                     "description": "Something",
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_update(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_update(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.permission.update,
-                "name",
-                "new-name",
-            )
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.permission.update("name", "new-name"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNone(
-                client.mgmt.permission.update(
-                    "name",
-                    "new-name",
-                    "new-description",
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            assert (
+                await client.invoke(
+                    client.mgmt.permission.update("name", "new-name", "new-description")
                 )
-            )
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.permission_update_path}",
+            ) is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.permission_update_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -105,38 +68,31 @@ class TestPermission(common.DescopeTest):
                     "description": "new-description",
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_update_by_id(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_update_by_id(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.permission.update_by_id,
-                "PERM123",
-                "new-name",
-            )
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.permission.update_by_id("PERM123", "new-name"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNone(client.mgmt.permission.update_by_id("PERM123", "new-name", "new-description"))
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.permission_update_path}",
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            assert (
+                await client.invoke(
+                    client.mgmt.permission.update_by_id("PERM123", "new-name", "new-description")
+                )
+            ) is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.permission_update_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -145,116 +101,88 @@ class TestPermission(common.DescopeTest):
                     "description": "new-description",
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_delete(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_delete(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.permission.delete,
-                "name",
-            )
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.permission.delete("name"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNone(client.mgmt.permission.delete("name"))
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.permission_delete_path}",
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            assert await client.invoke(client.mgmt.permission.delete("name")) is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.permission_delete_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
                     "name": "name",
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_delete_by_id(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_delete_by_id(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.permission.delete_by_id,
-                "PERM123",
-            )
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.permission.delete_by_id("PERM123"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNone(client.mgmt.permission.delete_by_id("PERM123"))
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.permission_delete_path}",
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            assert await client.invoke(client.mgmt.permission.delete_by_id("PERM123")) is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.permission_delete_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={"id": "PERM123"},
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_create_batch(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_create_batch(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.permission.create_batch,
-                [{"name": "P1"}],
-            )
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.permission.create_batch([{"name": "P1"}]))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNone(
-                client.mgmt.permission.create_batch(
-                    [
-                        {"name": "P1", "description": "desc1"},
-                        {"name": "P2"},
-                    ]
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            assert (
+                await client.invoke(
+                    client.mgmt.permission.create_batch(
+                        [
+                            {"name": "P1", "description": "desc1"},
+                            {"name": "P2"},
+                        ]
+                    )
                 )
-            )
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.permission_create_batch_path}",
+            ) is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.permission_create_batch_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -264,44 +192,40 @@ class TestPermission(common.DescopeTest):
                     ]
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_update_batch(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_update_batch(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.permission.update_batch,
-                [{"name": "P1", "newName": "P1-new"}],
-            )
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.permission.update_batch(
+                        [{"name": "P1", "newName": "P1-new"}]
+                    )
+                )
 
         # Test success flow — by name
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNone(
-                client.mgmt.permission.update_batch(
-                    [
-                        {"name": "P1", "newName": "P1-new", "description": "d1"},
-                        {"name": "P2", "newName": "P2-new"},
-                    ]
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            assert (
+                await client.invoke(
+                    client.mgmt.permission.update_batch(
+                        [
+                            {"name": "P1", "newName": "P1-new", "description": "d1"},
+                            {"name": "P2", "newName": "P2-new"},
+                        ]
+                    )
                 )
-            )
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.permission_update_batch_path}",
+            ) is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.permission_update_batch_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -311,27 +235,28 @@ class TestPermission(common.DescopeTest):
                     ]
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Test success flow — by id
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNone(
-                client.mgmt.permission.update_batch(
-                    [
-                        {"id": "PERM1", "newName": "P1-new", "description": "d1"},
-                        {"id": "PERM2", "newName": "P2-new"},
-                    ]
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            assert (
+                await client.invoke(
+                    client.mgmt.permission.update_batch(
+                        [
+                            {"id": "PERM1", "newName": "P1-new", "description": "d1"},
+                            {"id": "PERM2", "newName": "P2-new"},
+                        ]
+                    )
                 )
-            )
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.permission_update_batch_path}",
+            ) is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.permission_update_batch_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -341,113 +266,86 @@ class TestPermission(common.DescopeTest):
                     ]
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_delete_batch(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_delete_batch(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.permission.delete_batch,
-                ["P1"],
-            )
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.permission.delete_batch(["P1"]))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNone(client.mgmt.permission.delete_batch(["P1", "P2"]))
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.permission_delete_batch_path}",
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            assert await client.invoke(client.mgmt.permission.delete_batch(["P1", "P2"])) is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.permission_delete_batch_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={"names": ["P1", "P2"]},
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_delete_batch_by_ids(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_delete_batch_by_ids(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.permission.delete_batch_by_ids,
-                ["PERM1"],
-            )
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.permission.delete_batch_by_ids(["PERM1"]))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNone(client.mgmt.permission.delete_batch_by_ids(["PERM1", "PERM2"]))
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.permission_delete_batch_path}",
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            assert (
+                await client.invoke(client.mgmt.permission.delete_batch_by_ids(["PERM1", "PERM2"]))
+            ) is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.permission_delete_batch_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={"ids": ["PERM1", "PERM2"]},
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_load_all(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_load_all(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flows
-        with patch("httpx.get") as mock_get:
-            mock_get.return_value.is_success = False
-            self.assertRaises(AuthException, client.mgmt.permission.load_all)
+        with client.mock_mgmt_get(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.permission.load_all())
 
         # Test success flow
-        with patch("httpx.get") as mock_get:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"permissions": [{"name": "p1"}, {"name": "p2"}]}""")
-            mock_get.return_value = network_resp
-            resp = client.mgmt.permission.load_all()
+        with client.mock_mgmt_get(
+            make_response({"permissions": [{"name": "p1"}, {"name": "p2"}]})
+        ) as mock_get:
+            resp = await client.invoke(client.mgmt.permission.load_all())
             permissions = resp["permissions"]
-            self.assertEqual(len(permissions), 2)
-            self.assertEqual(permissions[0]["name"], "p1")
-            self.assertEqual(permissions[1]["name"], "p2")
-            mock_get.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.permission_load_all_path}",
+            assert len(permissions) == 2
+            assert permissions[0]["name"] == "p1"
+            assert permissions[1]["name"] == "p2"
+            assert_http_called(
+                mock_get,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.permission_load_all_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 follow_redirects=True,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )

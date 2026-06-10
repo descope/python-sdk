@@ -1,10 +1,7 @@
-import json
-from unittest import mock
-from unittest.mock import patch
+import pytest
 
 from descope import (
     AuthException,
-    DescopeClient,
     DescoperAttributes,
     DescoperCreate,
     DescoperProjectRole,
@@ -12,104 +9,98 @@ from descope import (
     DescoperRole,
     DescoperTagRole,
 )
-from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
-from .. import common
-from ..testutils import SSLMatcher
+from tests.conftest import PROJECT_ID, assert_http_called, make_response
+from tests.common import DEFAULT_BASE_URL, default_headers
+from tests.testutils import PUBLIC_KEY_DICT
 
 
-class TestDescoper(common.DescopeTest):
-    def setUp(self) -> None:
-        super().setUp()
-        self.dummy_project_id = "dummy"
-        self.dummy_management_key = "key"
-
-    def test_create(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            None,
-            False,
-            self.dummy_management_key,
-        )
+@pytest.mark.asyncio
+class TestDescoper:
+    async def test_create(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flows
-        with patch("httpx.put") as mock_put:
-            mock_put.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.descoper.create,
-                [
-                    DescoperCreate(
-                        login_id="user1@example.com",
+        with client.mock_mgmt_put(make_response(status=400)):
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.descoper.create(
+                        [
+                            DescoperCreate(
+                                login_id="user1@example.com",
+                            )
+                        ]
                     )
-                ],
-            )
+                )
 
         # Test empty descopers
-        self.assertRaises(
-            ValueError,
-            client.mgmt.descoper.create,
-            [],
-        )
+        with pytest.raises(ValueError):
+            await client.invoke(client.mgmt.descoper.create([]))
 
         # Test success flow
-        with patch("httpx.put") as mock_put:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads(
-                """{
-                    "descopers": [{
-                        "id": "U2111111111111111111111111",
-                        "attributes": {
-                            "displayName": "Test User 2",
-                            "email": "user2@example.com",
-                            "phone": "+123456"
-                        },
-                        "rbac": {
-                            "isCompanyAdmin": false,
-                            "tags": [],
-                            "projects": [{
-                                "projectIds": ["P2111111111111111111111111"],
-                                "role": "admin"
-                            }]
-                        },
-                        "status": "invited"
-                    }],
-                    "total": 1
-                }"""
+        with client.mock_mgmt_put(
+            make_response(
+                {
+                    "descopers": [
+                        {
+                            "id": "U2111111111111111111111111",
+                            "attributes": {
+                                "displayName": "Test User 2",
+                                "email": "user2@example.com",
+                                "phone": "+123456",
+                            },
+                            "rbac": {
+                                "isCompanyAdmin": False,
+                                "tags": [],
+                                "projects": [
+                                    {
+                                        "projectIds": ["P2111111111111111111111111"],
+                                        "role": "admin",
+                                    }
+                                ],
+                            },
+                            "status": "invited",
+                        }
+                    ],
+                    "total": 1,
+                }
             )
-            mock_put.return_value = network_resp
-            resp = client.mgmt.descoper.create(
-                descopers=[
-                    DescoperCreate(
-                        login_id="user1@example.com",
-                        attributes=DescoperAttributes(
-                            display_name="Test User 2",
-                            phone="+123456",
-                            email="user2@example.com",
-                        ),
-                        rbac=DescoperRBAC(
-                            projects=[
-                                DescoperProjectRole(
-                                    project_ids=["P2111111111111111111111111"],
-                                    role=DescoperRole.ADMIN,
-                                )
-                            ],
-                        ),
-                    )
-                ],
+        ) as mock_put:
+            resp = await client.invoke(
+                client.mgmt.descoper.create(
+                    descopers=[
+                        DescoperCreate(
+                            login_id="user1@example.com",
+                            attributes=DescoperAttributes(
+                                display_name="Test User 2",
+                                phone="+123456",
+                                email="user2@example.com",
+                            ),
+                            rbac=DescoperRBAC(
+                                projects=[
+                                    DescoperProjectRole(
+                                        project_ids=["P2111111111111111111111111"],
+                                        role=DescoperRole.ADMIN,
+                                    )
+                                ],
+                            ),
+                        )
+                    ],
+                )
             )
             descopers = resp["descopers"]
-            self.assertEqual(len(descopers), 1)
-            self.assertEqual(descopers[0]["id"], "U2111111111111111111111111")
-            self.assertEqual(resp["total"], 1)
-            mock_put.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.descoper_create_path}",
+            assert len(descopers) == 1
+            assert descopers[0]["id"] == "U2111111111111111111111111"
+            assert resp["total"] == 1
+            assert_http_called(
+                mock_put,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.descoper_create_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -136,67 +127,64 @@ class TestDescoper(common.DescopeTest):
                     ]
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_create_with_tag_roles(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            None,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_create_with_tag_roles(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test success flow with tag roles
-        with patch("httpx.put") as mock_put:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = {
-                "descopers": [
-                    {
-                        "id": "U2111111111111111111111111",
-                        "attributes": {
-                            "displayName": "Test User",
-                            "email": "user@example.com",
-                            "phone": "",
-                        },
-                        "rbac": {
-                            "isCompanyAdmin": False,
-                            "tags": [{"tags": ["tag1", "tag2"], "role": "auditor"}],
-                            "projects": [],
-                        },
-                        "status": "invited",
-                    }
-                ],
-                "total": 1,
-            }
-            mock_put.return_value = network_resp
-            resp = client.mgmt.descoper.create(
-                descopers=[
-                    DescoperCreate(
-                        login_id="user@example.com",
-                        rbac=DescoperRBAC(
-                            tags=[
-                                DescoperTagRole(
-                                    tags=["tag1", "tag2"],
-                                    role=DescoperRole.AUDITOR,
-                                )
-                            ],
-                        ),
-                    )
-                ],
+        with client.mock_mgmt_put(
+            make_response(
+                {
+                    "descopers": [
+                        {
+                            "id": "U2111111111111111111111111",
+                            "attributes": {
+                                "displayName": "Test User",
+                                "email": "user@example.com",
+                                "phone": "",
+                            },
+                            "rbac": {
+                                "isCompanyAdmin": False,
+                                "tags": [{"tags": ["tag1", "tag2"], "role": "auditor"}],
+                                "projects": [],
+                            },
+                            "status": "invited",
+                        }
+                    ],
+                    "total": 1,
+                }
+            )
+        ) as mock_put:
+            resp = await client.invoke(
+                client.mgmt.descoper.create(
+                    descopers=[
+                        DescoperCreate(
+                            login_id="user@example.com",
+                            rbac=DescoperRBAC(
+                                tags=[
+                                    DescoperTagRole(
+                                        tags=["tag1", "tag2"],
+                                        role=DescoperRole.AUDITOR,
+                                    )
+                                ],
+                            ),
+                        )
+                    ],
+                )
             )
             descopers = resp["descopers"]
-            self.assertEqual(len(descopers), 1)
-            self.assertEqual(len(descopers[0]["rbac"]["tags"]), 1)
-            self.assertEqual(descopers[0]["rbac"]["tags"][0]["tags"], ["tag1", "tag2"])
-            mock_put.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.descoper_create_path}",
+            assert len(descopers) == 1
+            assert len(descopers[0]["rbac"]["tags"]) == 1
+            assert descopers[0]["rbac"]["tags"][0]["tags"] == ["tag1", "tag2"]
+            assert_http_called(
+                mock_put,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.descoper_create_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -214,139 +202,119 @@ class TestDescoper(common.DescopeTest):
                     ]
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_load(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            None,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_load(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flows
-        with patch("httpx.get") as mock_get:
-            mock_get.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.descoper.load,
-                "descoper-id",
-            )
+        with client.mock_mgmt_get(make_response(status=400)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.descoper.load("descoper-id"))
 
         # Test empty id
-        self.assertRaises(
-            ValueError,
-            client.mgmt.descoper.load,
-            "",
-        )
+        with pytest.raises(ValueError):
+            await client.invoke(client.mgmt.descoper.load(""))
 
         # Test success flow
-        with patch("httpx.get") as mock_get:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads(
-                """{
+        with client.mock_mgmt_get(
+            make_response(
+                {
                     "descoper": {
                         "id": "U2222222222222222222222222",
                         "attributes": {
                             "displayName": "Test User 2",
                             "email": "user2@example.com",
-                            "phone": "+123456"
+                            "phone": "+123456",
                         },
                         "rbac": {
-                            "isCompanyAdmin": false,
+                            "isCompanyAdmin": False,
                             "tags": [],
-                            "projects": [{
-                                "projectIds": ["P2111111111111111111111111"],
-                                "role": "admin"
-                            }]
+                            "projects": [
+                                {
+                                    "projectIds": ["P2111111111111111111111111"],
+                                    "role": "admin",
+                                }
+                            ],
                         },
-                        "status": "invited"
+                        "status": "invited",
                     }
-                }"""
+                }
             )
-            mock_get.return_value = network_resp
-            resp = client.mgmt.descoper.load("U2222222222222222222222222")
+        ) as mock_get:
+            resp = await client.invoke(client.mgmt.descoper.load("U2222222222222222222222222"))
             descoper = resp["descoper"]
-            self.assertEqual(descoper["id"], "U2222222222222222222222222")
-            mock_get.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.descoper_load_path}",
+            assert descoper["id"] == "U2222222222222222222222222"
+            assert_http_called(
+                mock_get,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.descoper_load_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params={"id": "U2222222222222222222222222"},
                 follow_redirects=True,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_update(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            None,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_update(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flows
-        with patch("httpx.patch") as mock_patch:
-            mock_patch.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.descoper.update,
-                "descoper-id",
-                None,
-                DescoperRBAC(is_company_admin=True),
-            )
+        with client.mock_mgmt_patch(make_response(status=400)):
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.descoper.update(
+                        "descoper-id",
+                        None,
+                        DescoperRBAC(is_company_admin=True),
+                    )
+                )
 
         # Test empty id
-        self.assertRaises(
-            ValueError,
-            client.mgmt.descoper.update,
-            "",
-        )
+        with pytest.raises(ValueError):
+            await client.invoke(client.mgmt.descoper.update(""))
 
         # Test success flow
-        with patch("httpx.patch") as mock_patch:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads(
-                """{
+        with client.mock_mgmt_patch(
+            make_response(
+                {
                     "descoper": {
                         "id": "U2333333333333333333333333",
                         "attributes": {
                             "displayName": "Updated User",
                             "email": "user4@example.com",
-                            "phone": "+1234358730"
+                            "phone": "+1234358730",
                         },
                         "rbac": {
-                            "isCompanyAdmin": true,
+                            "isCompanyAdmin": True,
                             "tags": [],
-                            "projects": []
+                            "projects": [],
                         },
-                        "status": "invited"
+                        "status": "invited",
                     }
-                }"""
+                }
             )
-            mock_patch.return_value = network_resp
-            resp = client.mgmt.descoper.update(
-                "U2333333333333333333333333",
-                DescoperAttributes("Updated User", "user4@example.com", "+1234358730"),
-                DescoperRBAC(is_company_admin=True),
+        ) as mock_patch:
+            resp = await client.invoke(
+                client.mgmt.descoper.update(
+                    "U2333333333333333333333333",
+                    DescoperAttributes("Updated User", "user4@example.com", "+1234358730"),
+                    DescoperRBAC(is_company_admin=True),
+                )
             )
             descoper = resp["descoper"]
-            self.assertEqual(descoper["id"], "U2333333333333333333333333")
-            self.assertTrue(descoper["rbac"]["isCompanyAdmin"])
-            mock_patch.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.descoper_update_path}",
+            assert descoper["id"] == "U2333333333333333333333333"
+            assert descoper["rbac"]["isCompanyAdmin"] is True
+            assert_http_called(
+                mock_patch,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.descoper_update_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -363,153 +331,130 @@ class TestDescoper(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_delete(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            None,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_delete(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flows
-        with patch("httpx.delete") as mock_delete:
-            mock_delete.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.descoper.delete,
-                "descoper-id",
-            )
+        with client.mock_mgmt_delete(make_response(status=400)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.descoper.delete("descoper-id"))
 
         # Test empty id
-        self.assertRaises(
-            ValueError,
-            client.mgmt.descoper.delete,
-            "",
-        )
+        with pytest.raises(ValueError):
+            await client.invoke(client.mgmt.descoper.delete(""))
 
         # Test success flow
-        with patch("httpx.delete") as mock_delete:
-            mock_delete.return_value.is_success = True
-            self.assertIsNone(client.mgmt.descoper.delete("U2111111111111111111111111"))
-            mock_delete.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.descoper_delete_path}",
+        with client.mock_mgmt_delete(make_response()) as mock_delete:
+            assert await client.invoke(client.mgmt.descoper.delete("U2111111111111111111111111")) is None
+            assert_http_called(
+                mock_delete,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.descoper_delete_path}",
                 params={"id": "U2111111111111111111111111"},
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_list(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            None,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_list(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.descoper.list,
-            )
+        with client.mock_mgmt_post(make_response(status=400)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.descoper.list())
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads(
-                """{
+        with client.mock_mgmt_post(
+            make_response(
+                {
                     "descopers": [
                         {
                             "id": "U2444444444444444444444444",
                             "attributes": {
                                 "displayName": "Admin User",
                                 "email": "admin@example.com",
-                                "phone": ""
+                                "phone": "",
                             },
                             "rbac": {
-                                "isCompanyAdmin": true,
+                                "isCompanyAdmin": True,
                                 "tags": [],
-                                "projects": []
+                                "projects": [],
                             },
-                            "status": "enabled"
+                            "status": "enabled",
                         },
                         {
                             "id": "U2555555555555555555555555",
                             "attributes": {
                                 "displayName": "Another User",
                                 "email": "user3@example.com",
-                                "phone": "+123456"
+                                "phone": "+123456",
                             },
                             "rbac": {
-                                "isCompanyAdmin": false,
+                                "isCompanyAdmin": False,
                                 "tags": [],
-                                "projects": []
+                                "projects": [],
                             },
-                            "status": "invited"
+                            "status": "invited",
                         },
                         {
                             "id": "U2666666666666666666666666",
                             "attributes": {
                                 "displayName": "Test User 1",
                                 "email": "user2@example.com",
-                                "phone": "+123456"
+                                "phone": "+123456",
                             },
                             "rbac": {
-                                "isCompanyAdmin": false,
+                                "isCompanyAdmin": False,
                                 "tags": [],
-                                "projects": [{
-                                    "projectIds": ["P2222222222222222222222222"],
-                                    "role": "admin"
-                                }]
+                                "projects": [
+                                    {
+                                        "projectIds": ["P2222222222222222222222222"],
+                                        "role": "admin",
+                                    }
+                                ],
                             },
-                            "status": "invited"
-                        }
+                            "status": "invited",
+                        },
                     ],
-                    "total": 3
-                }"""
+                    "total": 3,
+                }
             )
-            mock_post.return_value = network_resp
-            resp = client.mgmt.descoper.list()
+        ) as mock_post:
+            resp = await client.invoke(client.mgmt.descoper.list())
             descopers = resp["descopers"]
-            self.assertEqual(len(descopers), 3)
-            self.assertEqual(resp["total"], 3)
+            assert len(descopers) == 3
+            assert resp["total"] == 3
 
             # First descoper - company admin
-            self.assertEqual(descopers[0]["id"], "U2444444444444444444444444")
-            self.assertEqual(descopers[0]["attributes"]["displayName"], "Admin User")
-            self.assertTrue(descopers[0]["rbac"]["isCompanyAdmin"])
-            self.assertEqual(descopers[0]["status"], "enabled")
+            assert descopers[0]["id"] == "U2444444444444444444444444"
+            assert descopers[0]["attributes"]["displayName"] == "Admin User"
+            assert descopers[0]["rbac"]["isCompanyAdmin"] is True
+            assert descopers[0]["status"] == "enabled"
 
             # Second descoper
-            self.assertEqual(descopers[1]["id"], "U2555555555555555555555555")
-            self.assertFalse(descopers[1]["rbac"]["isCompanyAdmin"])
+            assert descopers[1]["id"] == "U2555555555555555555555555"
+            assert descopers[1]["rbac"]["isCompanyAdmin"] is False
 
             # Third descoper - with project role
-            self.assertEqual(descopers[2]["id"], "U2666666666666666666666666")
-            self.assertEqual(len(descopers[2]["rbac"]["projects"]), 1)
+            assert descopers[2]["id"] == "U2666666666666666666666666"
+            assert len(descopers[2]["rbac"]["projects"]) == 1
 
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.descoper_list_path}",
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.descoper_list_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={},
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )

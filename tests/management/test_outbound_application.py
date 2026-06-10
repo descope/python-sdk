@@ -1,68 +1,55 @@
-from unittest import mock
-from unittest.mock import patch
+import pytest
 
-from descope import AuthException, DescopeClient
-from descope.management.common import AccessType, PromptType, URLParam
+from descope import AuthException
+from descope.management.common import AccessType, MgmtV1, PromptType, URLParam
 from descope.management.outbound_application import OutboundApplication
 
-from .. import common
+from tests.conftest import PROJECT_ID, assert_http_called, make_response
+from tests.common import DEFAULT_BASE_URL, default_headers
+from tests.testutils import PUBLIC_KEY_DICT
+
+DUMMY_TOKEN = "inbound-app-token"
+
+APP_RESPONSE = {
+    "app": {
+        "id": "app123",
+        "name": "Test App",
+        "description": "Test Description",
+    }
+}
+
+TOKEN_RESPONSE = {
+    "token": {
+        "token": "access-token",
+        "refreshToken": "refresh-token",
+        "expiresIn": 3600,
+        "tokenType": "Bearer",
+        "scopes": ["read", "write"],
+    }
+}
+
+MGMT_HEADERS = {
+    **default_headers,
+    "Authorization": f"Bearer {PROJECT_ID}:key",
+    "x-descope-project-id": PROJECT_ID,
+}
 
 
-class TestOutboundApplication(common.DescopeTest):
-    def setUp(self) -> None:
-        super().setUp()
-        self.dummy_project_id = "dummy"
-        self.dummy_management_key = "key"
-        self.public_key_dict = {
-            "alg": "ES384",
-            "crv": "P-384",
-            "kid": "P2CtzUhdqpIF2ys9gg7ms06UvtC4",
-            "kty": "EC",
-            "use": "sig",
-            "x": "pX1l7nT2turcK5_Cdzos8SKIhpLh1Wy9jmKAVyMFiOCURoj-WQX1J0OUQqMsQO0s",
-            "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
-        }
+class TestOutboundApplication:
+    async def test_create_application_success(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
-    def test_create_application_success(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
-
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = {
-                "app": {
-                    "id": "app123",
-                    "name": "Test App",
-                    "description": "Test Description",
-                }
-            }
-            mock_post.return_value = network_resp
-            response = client.mgmt.outbound_application.create_application(
-                "Test App", description="Test Description", client_secret="secret"
+        with client.mock_mgmt_post(make_response(APP_RESPONSE)) as mock_post:
+            response = await client.invoke(
+                client.mgmt.outbound_application.create_application(
+                    "Test App", description="Test Description", client_secret="secret"
+                )
             )
+            assert response == APP_RESPONSE
 
-            assert response == {
-                "app": {
-                    "id": "app123",
-                    "name": "Test App",
-                    "description": "Test Description",
-                }
-            }
+    async def test_create_application_with_all_parameters_success(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
-    def test_create_application_with_all_parameters_success(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
-
-        # Create test data for all new parameters
         auth_params = [
             URLParam("response_type", "code"),
             URLParam("client_id", "test-client"),
@@ -70,38 +57,39 @@ class TestOutboundApplication(common.DescopeTest):
         token_params = [URLParam("grant_type", "authorization_code")]
         prompts = [PromptType.LOGIN, PromptType.CONSENT]
 
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = {
-                "app": {
-                    "id": "app123",
-                    "name": "Test OAuth App",
-                    "description": "Test Description",
+        with client.mock_mgmt_post(
+            make_response(
+                {
+                    "app": {
+                        "id": "app123",
+                        "name": "Test OAuth App",
+                        "description": "Test Description",
+                    }
                 }
-            }
-            mock_post.return_value = network_resp
-            response = client.mgmt.outbound_application.create_application(
-                name="Test OAuth App",
-                description="Test Description",
-                logo="https://example.com/logo.png",
-                id="app123",
-                client_secret="secret",
-                client_id="test-client-id",
-                discovery_url="https://accounts.google.com/.well-known/openid_configuration",
-                authorization_url="https://accounts.google.com/o/oauth2/v2/auth",
-                authorization_url_params=auth_params,
-                token_url="https://oauth2.googleapis.com/token",
-                token_url_params=token_params,
-                revocation_url="https://oauth2.googleapis.com/revoke",
-                default_scopes=["https://www.googleapis.com/auth/userinfo.profile"],
-                default_redirect_url="https://myapp.com/callback",
-                callback_domain="myapp.com",
-                pkce=True,
-                access_type=AccessType.OFFLINE,
-                prompt=prompts,
             )
-
+        ) as mock_post:
+            response = await client.invoke(
+                client.mgmt.outbound_application.create_application(
+                    name="Test OAuth App",
+                    description="Test Description",
+                    logo="https://example.com/logo.png",
+                    id="app123",
+                    client_secret="secret",
+                    client_id="test-client-id",
+                    discovery_url="https://accounts.google.com/.well-known/openid_configuration",
+                    authorization_url="https://accounts.google.com/o/oauth2/v2/auth",
+                    authorization_url_params=auth_params,
+                    token_url="https://oauth2.googleapis.com/token",
+                    token_url_params=token_params,
+                    revocation_url="https://oauth2.googleapis.com/revoke",
+                    default_scopes=["https://www.googleapis.com/auth/userinfo.profile"],
+                    default_redirect_url="https://myapp.com/callback",
+                    callback_domain="myapp.com",
+                    pkce=True,
+                    access_type=AccessType.OFFLINE,
+                    prompt=prompts,
+                )
+            )
             assert response == {
                 "app": {
                     "id": "app123",
@@ -110,48 +98,37 @@ class TestOutboundApplication(common.DescopeTest):
                 }
             }
 
-    def test_create_application_failure(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_create_application_failure(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application.create_application,
-                "Test App",
-            )
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.outbound_application.create_application("Test App")
+                )
 
-    def test_update_application_success(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_update_application_success(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = {
-                "app": {
-                    "id": "app123",
-                    "name": "Updated App",
-                    "description": "Updated Description",
+        with client.mock_mgmt_post(
+            make_response(
+                {
+                    "app": {
+                        "id": "app123",
+                        "name": "Updated App",
+                        "description": "Updated Description",
+                    }
                 }
-            }
-            mock_post.return_value = network_resp
-            response = client.mgmt.outbound_application.update_application(
-                "app123",
-                "Updated App",
-                description="Updated Description",
-                client_secret="new-secret",
             )
-
+        ) as mock_post:
+            response = await client.invoke(
+                client.mgmt.outbound_application.update_application(
+                    "app123",
+                    "Updated App",
+                    description="Updated Description",
+                    client_secret="new-secret",
+                )
+            )
             assert response == {
                 "app": {
                     "id": "app123",
@@ -160,15 +137,9 @@ class TestOutboundApplication(common.DescopeTest):
                 }
             }
 
-    def test_update_application_with_all_parameters_success(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_update_application_with_all_parameters_success(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
-        # Create test data for all new parameters
         auth_params = [
             URLParam("response_type", "code"),
             URLParam("client_id", "test-client"),
@@ -176,41 +147,42 @@ class TestOutboundApplication(common.DescopeTest):
         token_params = [URLParam("grant_type", "authorization_code")]
         prompts = [PromptType.LOGIN, PromptType.CONSENT, PromptType.SELECT_ACCOUNT]
 
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = {
-                "app": {
-                    "id": "app123",
-                    "name": "Updated OAuth App",
-                    "description": "Updated Description",
+        with client.mock_mgmt_post(
+            make_response(
+                {
+                    "app": {
+                        "id": "app123",
+                        "name": "Updated OAuth App",
+                        "description": "Updated Description",
+                    }
                 }
-            }
-            mock_post.return_value = network_resp
-            response = client.mgmt.outbound_application.update_application(
-                id="app123",
-                name="Updated OAuth App",
-                description="Updated Description",
-                logo="https://example.com/new-logo.png",
-                client_secret="new-secret",
-                client_id="new-client-id",
-                discovery_url="https://accounts.google.com/.well-known/openid_configuration",
-                authorization_url="https://accounts.google.com/o/oauth2/v2/auth",
-                authorization_url_params=auth_params,
-                token_url="https://oauth2.googleapis.com/token",
-                token_url_params=token_params,
-                revocation_url="https://oauth2.googleapis.com/revoke",
-                default_scopes=[
-                    "https://www.googleapis.com/auth/userinfo.profile",
-                    "https://www.googleapis.com/auth/userinfo.email",
-                ],
-                default_redirect_url="https://myapp.com/updated-callback",
-                callback_domain="myapp.com",
-                pkce=True,
-                access_type=AccessType.OFFLINE,
-                prompt=prompts,
             )
-
+        ) as mock_post:
+            response = await client.invoke(
+                client.mgmt.outbound_application.update_application(
+                    id="app123",
+                    name="Updated OAuth App",
+                    description="Updated Description",
+                    logo="https://example.com/new-logo.png",
+                    client_secret="new-secret",
+                    client_id="new-client-id",
+                    discovery_url="https://accounts.google.com/.well-known/openid_configuration",
+                    authorization_url="https://accounts.google.com/o/oauth2/v2/auth",
+                    authorization_url_params=auth_params,
+                    token_url="https://oauth2.googleapis.com/token",
+                    token_url_params=token_params,
+                    revocation_url="https://oauth2.googleapis.com/revoke",
+                    default_scopes=[
+                        "https://www.googleapis.com/auth/userinfo.profile",
+                        "https://www.googleapis.com/auth/userinfo.email",
+                    ],
+                    default_redirect_url="https://myapp.com/updated-callback",
+                    callback_domain="myapp.com",
+                    pkce=True,
+                    access_type=AccessType.OFFLINE,
+                    prompt=prompts,
+                )
+            )
             assert response == {
                 "app": {
                     "id": "app123",
@@ -219,353 +191,181 @@ class TestOutboundApplication(common.DescopeTest):
                 }
             }
 
-    def test_update_application_failure(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_update_application_failure(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application.update_application,
-                "app123",
-                "Updated App",
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.outbound_application.update_application(
+                        "app123", "Updated App"
+                    )
+                )
+
+    async def test_delete_application_success(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_post(make_response(status=200)):
+            await client.invoke(
+                client.mgmt.outbound_application.delete_application("app123")
             )
 
-    def test_delete_application_success(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_delete_application_failure(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            mock_post.return_value = network_resp
-            client.mgmt.outbound_application.delete_application("app123")
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.outbound_application.delete_application("app123")
+                )
 
-    def test_delete_application_failure(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_load_application_success(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application.delete_application,
-                "app123",
+        with client.mock_mgmt_get(make_response(APP_RESPONSE)) as mock_get:
+            response = await client.invoke(
+                client.mgmt.outbound_application.load_application("app123")
+            )
+            assert response == APP_RESPONSE
+            assert_http_called(
+                mock_get,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.outbound_application_load_path}/app123",
+                headers=MGMT_HEADERS,
+                params=None,
+                follow_redirects=True,
             )
 
-    def test_load_application_success(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_load_application_failure(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
-        with patch("httpx.get") as mock_get:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = {
-                "app": {
-                    "id": "app123",
-                    "name": "Test App",
-                    "description": "Test Description",
-                }
-            }
-            mock_get.return_value = network_resp
-            response = client.mgmt.outbound_application.load_application("app123")
+        with client.mock_mgmt_get(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.outbound_application.load_application("app123")
+                )
 
-            assert response == {
-                "app": {
-                    "id": "app123",
-                    "name": "Test App",
-                    "description": "Test Description",
-                }
-            }
+    async def test_load_all_applications_success(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
-    def test_load_application_failure(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
-
-        with patch("httpx.get") as mock_get:
-            mock_get.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application.load_application,
-                "app123",
+        apps_response = {
+            "apps": [
+                {"id": "app1", "name": "App 1", "description": "Description 1"},
+                {"id": "app2", "name": "App 2", "description": "Description 2"},
+            ]
+        }
+        with client.mock_mgmt_get(make_response(apps_response)) as mock_get:
+            response = await client.invoke(
+                client.mgmt.outbound_application.load_all_applications()
+            )
+            assert response == apps_response
+            assert_http_called(
+                mock_get,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.outbound_application_load_all_path}",
+                headers=MGMT_HEADERS,
+                params=None,
+                follow_redirects=True,
             )
 
-    def test_load_all_applications_success(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_load_all_applications_failure(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
-        with patch("httpx.get") as mock_get:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = {
-                "apps": [
-                    {"id": "app1", "name": "App 1", "description": "Description 1"},
-                    {"id": "app2", "name": "App 2", "description": "Description 2"},
-                ]
-            }
-            mock_get.return_value = network_resp
-            response = client.mgmt.outbound_application.load_all_applications()
+        with client.mock_mgmt_get(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.outbound_application.load_all_applications()
+                )
 
-            assert response == {
-                "apps": [
-                    {"id": "app1", "name": "App 1", "description": "Description 1"},
-                    {"id": "app2", "name": "App 2", "description": "Description 2"},
-                ]
-            }
+    async def test_fetch_token_by_scopes_success(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
-    def test_load_all_applications_failure(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
-
-        with patch("httpx.get") as mock_get:
-            mock_get.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application.load_all_applications,
+        with client.mock_mgmt_post(make_response(TOKEN_RESPONSE)) as mock_post:
+            response = await client.invoke(
+                client.mgmt.outbound_application.fetch_token_by_scopes(
+                    "app123",
+                    "user456",
+                    ["read", "write"],
+                    {"refreshToken": True},
+                    "tenant789",
+                )
             )
+            assert response == TOKEN_RESPONSE
 
-    def test_fetch_token_by_scopes_success(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_fetch_token_by_scopes_failure(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = {
-                "token": {
-                    "token": "access-token",
-                    "refreshToken": "refresh-token",
-                    "expiresIn": 3600,
-                    "tokenType": "Bearer",
-                    "scopes": ["read", "write"],
-                }
-            }
-            mock_post.return_value = network_resp
-            response = client.mgmt.outbound_application.fetch_token_by_scopes(
-                "app123",
-                "user456",
-                ["read", "write"],
-                {"refreshToken": True},
-                "tenant789",
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.outbound_application.fetch_token_by_scopes(
+                        "app123", "user456", ["read"]
+                    )
+                )
+
+    async def test_fetch_token_success(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_post(make_response(TOKEN_RESPONSE)) as mock_post:
+            response = await client.invoke(
+                client.mgmt.outbound_application.fetch_token(
+                    "app123", "user456", "tenant789", {"forceRefresh": True}
+                )
             )
+            assert response == TOKEN_RESPONSE
 
-            assert response == {
-                "token": {
-                    "token": "access-token",
-                    "refreshToken": "refresh-token",
-                    "expiresIn": 3600,
-                    "tokenType": "Bearer",
-                    "scopes": ["read", "write"],
-                }
-            }
+    async def test_fetch_token_failure(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
-    def test_fetch_token_by_scopes_failure(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.outbound_application.fetch_token("app123", "user456")
+                )
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application.fetch_token_by_scopes,
-                "app123",
-                "user456",
-                ["read"],
+    async def test_fetch_tenant_token_by_scopes_success(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_post(make_response(TOKEN_RESPONSE)) as mock_post:
+            response = await client.invoke(
+                client.mgmt.outbound_application.fetch_tenant_token_by_scopes(
+                    "app123", "tenant789", ["read", "write"], {"refreshToken": True}
+                )
             )
+            assert response == TOKEN_RESPONSE
 
-    def test_fetch_token_success(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_fetch_tenant_token_by_scopes_failure(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = {
-                "token": {
-                    "token": "access-token",
-                    "refreshToken": "refresh-token",
-                    "expiresIn": 3600,
-                    "tokenType": "Bearer",
-                    "scopes": ["read", "write"],
-                }
-            }
-            mock_post.return_value = network_resp
-            response = client.mgmt.outbound_application.fetch_token(
-                "app123", "user456", "tenant789", {"forceRefresh": True}
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.outbound_application.fetch_tenant_token_by_scopes(
+                        "app123", "tenant789", ["read"]
+                    )
+                )
+
+    async def test_fetch_tenant_token_success(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_post(make_response(TOKEN_RESPONSE)) as mock_post:
+            response = await client.invoke(
+                client.mgmt.outbound_application.fetch_tenant_token(
+                    "app123", "tenant789", {"forceRefresh": True}
+                )
             )
+            assert response == TOKEN_RESPONSE
 
-            assert response == {
-                "token": {
-                    "token": "access-token",
-                    "refreshToken": "refresh-token",
-                    "expiresIn": 3600,
-                    "tokenType": "Bearer",
-                    "scopes": ["read", "write"],
-                }
-            }
+    async def test_fetch_tenant_token_failure(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
-    def test_fetch_token_failure(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application.fetch_token,
-                "app123",
-                "user456",
-            )
-
-    def test_fetch_tenant_token_by_scopes_success(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
-
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = {
-                "token": {
-                    "token": "access-token",
-                    "refreshToken": "refresh-token",
-                    "expiresIn": 3600,
-                    "tokenType": "Bearer",
-                    "scopes": ["read", "write"],
-                }
-            }
-            mock_post.return_value = network_resp
-            response = client.mgmt.outbound_application.fetch_tenant_token_by_scopes(
-                "app123", "tenant789", ["read", "write"], {"refreshToken": True}
-            )
-
-            assert response == {
-                "token": {
-                    "token": "access-token",
-                    "refreshToken": "refresh-token",
-                    "expiresIn": 3600,
-                    "tokenType": "Bearer",
-                    "scopes": ["read", "write"],
-                }
-            }
-
-    def test_fetch_tenant_token_by_scopes_failure(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application.fetch_tenant_token_by_scopes,
-                "app123",
-                "tenant789",
-                ["read"],
-            )
-
-    def test_fetch_tenant_token_success(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
-
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = {
-                "token": {
-                    "token": "access-token",
-                    "refreshToken": "refresh-token",
-                    "expiresIn": 3600,
-                    "tokenType": "Bearer",
-                    "scopes": ["read", "write"],
-                }
-            }
-            mock_post.return_value = network_resp
-            response = client.mgmt.outbound_application.fetch_tenant_token(
-                "app123", "tenant789", {"forceRefresh": True}
-            )
-
-            assert response == {
-                "token": {
-                    "token": "access-token",
-                    "refreshToken": "refresh-token",
-                    "expiresIn": 3600,
-                    "tokenType": "Bearer",
-                    "scopes": ["read", "write"],
-                }
-            }
-
-    def test_fetch_tenant_token_failure(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application.fetch_tenant_token,
-                "app123",
-                "tenant789",
-            )
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.outbound_application.fetch_tenant_token(
+                        "app123", "tenant789"
+                    )
+                )
 
     def test_compose_create_update_body(self):
         body = OutboundApplication._compose_create_update_body(
@@ -601,7 +401,6 @@ class TestOutboundApplication(common.DescopeTest):
         assert body == expected_body
 
     def test_compose_create_update_body_with_all_new_parameters(self):
-        # Create test data for all new parameters
         auth_params = [
             URLParam("response_type", "code"),
             URLParam("client_id", "test-client"),
@@ -657,7 +456,6 @@ class TestOutboundApplication(common.DescopeTest):
         assert body == expected_body
 
     def test_compose_create_update_body_with_partial_new_parameters(self):
-        # Test with only some of the new parameters
         body = OutboundApplication._compose_create_update_body(
             name="Test App",
             description="Test Description",
@@ -685,7 +483,6 @@ class TestOutboundApplication(common.DescopeTest):
         assert body == expected_body
 
     def test_compose_create_update_body_with_url_params_only(self):
-        # Test with only URL parameters
         auth_params = [URLParam("response_type", "code")]
         token_params = [URLParam("grant_type", "authorization_code")]
 
@@ -708,7 +505,6 @@ class TestOutboundApplication(common.DescopeTest):
         assert body == expected_body
 
     def test_compose_create_update_body_with_prompt_types(self):
-        # Test with different prompt type combinations
         prompts = [PromptType.LOGIN, PromptType.CONSENT, PromptType.SELECT_ACCOUNT]
 
         body = OutboundApplication._compose_create_update_body(
@@ -726,13 +522,12 @@ class TestOutboundApplication(common.DescopeTest):
         assert body == expected_body
 
     def test_compose_create_update_body_with_none_values(self):
-        # Test that None values are handled correctly
         body = OutboundApplication._compose_create_update_body(
             name="Test App",
             description="Test Description",
-            pkce=None,  # Should not be included in body
-            access_type=None,  # Should not be included in body
-            prompt=None,  # Should not be included in body
+            pkce=None,
+            access_type=None,
+            prompt=None,
         )
 
         expected_body = {
@@ -745,7 +540,6 @@ class TestOutboundApplication(common.DescopeTest):
         assert body == expected_body
 
     def test_compose_create_update_body_with_empty_lists(self):
-        # Test with empty lists for URL parameters and prompts
         body = OutboundApplication._compose_create_update_body(
             name="Test App",
             description="Test Description",
@@ -768,116 +562,93 @@ class TestOutboundApplication(common.DescopeTest):
 
         assert body == expected_body
 
-    def test_delete_user_tokens_success(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_delete_user_tokens_success(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
-        with patch("httpx.delete") as mock_delete:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            mock_delete.return_value = network_resp
-            client.mgmt.outbound_application.delete_user_tokens(app_id="app123", user_id="user456")
-
-            mock_delete.assert_called_once()
-            call_args = mock_delete.call_args
-            assert call_args[1]["params"]["appId"] == "app123"
-            assert call_args[1]["params"]["userId"] == "user456"
-
-    def test_delete_user_tokens_with_app_id_only(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
-
-        with patch("httpx.delete") as mock_delete:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            mock_delete.return_value = network_resp
-            client.mgmt.outbound_application.delete_user_tokens(app_id="app123")
-
-            mock_delete.assert_called_once()
-            call_args = mock_delete.call_args
-            assert call_args[1]["params"]["appId"] == "app123"
-            assert "userId" not in call_args[1]["params"]
-
-    def test_delete_user_tokens_with_user_id_only(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
-
-        with patch("httpx.delete") as mock_delete:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            mock_delete.return_value = network_resp
-            client.mgmt.outbound_application.delete_user_tokens(user_id="user456")
-
-            mock_delete.assert_called_once()
-            call_args = mock_delete.call_args
-            assert call_args[1]["params"]["userId"] == "user456"
-            assert "appId" not in call_args[1]["params"]
-
-    def test_delete_user_tokens_failure(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
-
-        with patch("httpx.delete") as mock_delete:
-            mock_delete.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application.delete_user_tokens,
-                "app123",
-                "user456",
+        with client.mock_mgmt_delete(make_response(status=200)) as mock_delete:
+            await client.invoke(
+                client.mgmt.outbound_application.delete_user_tokens(
+                    app_id="app123", user_id="user456"
+                )
+            )
+            assert_http_called(
+                mock_delete,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.outbound_application_delete_user_tokens_path}",
+                headers=MGMT_HEADERS,
+                params={"appId": "app123", "userId": "user456"},
+                follow_redirects=False,
             )
 
-    def test_delete_token_success(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_delete_user_tokens_with_app_id_only(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
-        with patch("httpx.delete") as mock_delete:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            mock_delete.return_value = network_resp
-            client.mgmt.outbound_application.delete_token("token123")
-
-            mock_delete.assert_called_once()
-            call_args = mock_delete.call_args
-            assert call_args[1]["params"]["id"] == "token123"
-
-    def test_delete_token_failure(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
-
-        with patch("httpx.delete") as mock_delete:
-            mock_delete.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application.delete_token,
-                "token123",
+        with client.mock_mgmt_delete(make_response(status=200)) as mock_delete:
+            await client.invoke(
+                client.mgmt.outbound_application.delete_user_tokens(app_id="app123")
             )
+            assert_http_called(
+                mock_delete,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.outbound_application_delete_user_tokens_path}",
+                headers=MGMT_HEADERS,
+                params={"appId": "app123"},
+                follow_redirects=False,
+            )
+
+    async def test_delete_user_tokens_with_user_id_only(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_delete(make_response(status=200)) as mock_delete:
+            await client.invoke(
+                client.mgmt.outbound_application.delete_user_tokens(user_id="user456")
+            )
+            assert_http_called(
+                mock_delete,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.outbound_application_delete_user_tokens_path}",
+                headers=MGMT_HEADERS,
+                params={"userId": "user456"},
+                follow_redirects=False,
+            )
+
+    async def test_delete_user_tokens_failure(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_delete(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.outbound_application.delete_user_tokens(
+                        app_id="app123", user_id="user456"
+                    )
+                )
+
+    async def test_delete_token_success(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_delete(make_response(status=200)) as mock_delete:
+            await client.invoke(
+                client.mgmt.outbound_application.delete_token("token123")
+            )
+            assert_http_called(
+                mock_delete,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.outbound_application_delete_token_path}",
+                headers=MGMT_HEADERS,
+                params={"id": "token123"},
+                follow_redirects=False,
+            )
+
+    async def test_delete_token_failure(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_delete(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.outbound_application.delete_token("token123")
+                )
 
     def test_url_param_to_dict(self):
-        # Test URLParam to_dict method
         param = URLParam("test_name", "test_value")
         param_dict = param.to_dict()
 
@@ -885,266 +656,170 @@ class TestOutboundApplication(common.DescopeTest):
         assert param_dict == expected_dict
 
     def test_access_type_enum_values(self):
-        # Test AccessType enum values
         assert AccessType.OFFLINE.value == "offline"
         assert AccessType.ONLINE.value == "online"
 
     def test_prompt_type_enum_values(self):
-        # Test PromptType enum values
         assert PromptType.NONE.value == "none"
         assert PromptType.LOGIN.value == "login"
         assert PromptType.CONSENT.value == "consent"
         assert PromptType.SELECT_ACCOUNT.value == "select_account"
 
 
-class TestOutboundApplicationByToken(common.DescopeTest):
-    def setUp(self) -> None:
-        super().setUp()
-        self.dummy_project_id = "dummy"
-        self.dummy_token = "inbound-app-token"
-        self.public_key_dict = {
-            "alg": "ES384",
-            "crv": "P-384",
-            "kid": "P2CtzUhdqpIF2ys9gg7ms06UvtC4",
-            "kty": "EC",
-            "use": "sig",
-            "x": "pX1l7nT2turcK5_Cdzos8SKIhpLh1Wy9jmKAVyMFiOCURoj-WQX1J0OUQqMsQO0s",
-            "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
-        }
+class TestOutboundApplicationByToken:
+    async def test_fetch_token_by_scopes_success(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False)
 
-    def test_fetch_token_by_scopes_success(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
+        with client.mock_mgmt_by_token_post(make_response(TOKEN_RESPONSE)) as mock_post:
+            response = await client.invoke(
+                client.mgmt.outbound_application_by_token.fetch_token_by_scopes(
+                    DUMMY_TOKEN,
+                    "app123",
+                    "user456",
+                    ["read", "write"],
+                    {"refreshToken": True},
+                    "tenant789",
+                )
+            )
+            assert response == TOKEN_RESPONSE
 
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = {
-                "token": {
-                    "token": "access-token",
-                    "refreshToken": "refresh-token",
-                    "expiresIn": 3600,
-                    "tokenType": "Bearer",
-                    "scopes": ["read", "write"],
-                }
-            }
-            mock_post.return_value = network_resp
-            response = client.mgmt.outbound_application_by_token.fetch_token_by_scopes(
-                self.dummy_token,
-                "app123",
-                "user456",
-                ["read", "write"],
-                {"refreshToken": True},
-                "tenant789",
+    async def test_fetch_token_by_scopes_failure(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False)
+
+        # Empty token should raise AuthException immediately (no HTTP call needed)
+        with pytest.raises(AuthException):
+            await client.invoke(
+                client.mgmt.outbound_application_by_token.fetch_token_by_scopes(
+                    "",
+                    "app123",
+                    "user456",
+                    ["read"],
+                )
             )
 
-            assert response == {
-                "token": {
-                    "token": "access-token",
-                    "refreshToken": "refresh-token",
-                    "expiresIn": 3600,
-                    "tokenType": "Bearer",
-                    "scopes": ["read", "write"],
-                }
-            }
+        # Invalid response failure
+        with client.mock_mgmt_by_token_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.outbound_application_by_token.fetch_token_by_scopes(
+                        DUMMY_TOKEN,
+                        "app123",
+                        "user456",
+                        ["read"],
+                    )
+                )
 
-    def test_fetch_token_by_scopes_failure(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
+    async def test_fetch_token_success(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False)
 
-        # Test failure of empty token
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application_by_token.fetch_token_by_scopes,
-                "",  # empty token
-                "app123",
-                "user456",
-                ["read"],
+        with client.mock_mgmt_by_token_post(make_response(TOKEN_RESPONSE)) as mock_post:
+            response = await client.invoke(
+                client.mgmt.outbound_application_by_token.fetch_token(
+                    DUMMY_TOKEN,
+                    "app123",
+                    "user456",
+                    "tenant789",
+                    {"forceRefresh": True},
+                )
+            )
+            assert response == TOKEN_RESPONSE
+
+    async def test_fetch_token_failure(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False)
+
+        # Empty token should raise AuthException immediately
+        with pytest.raises(AuthException):
+            await client.invoke(
+                client.mgmt.outbound_application_by_token.fetch_token(
+                    "",
+                    "app123",
+                    "user456",
+                )
             )
 
-        # Test invalid response failure
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application_by_token.fetch_token_by_scopes,
-                self.dummy_token,
-                "app123",
-                "user456",
-                ["read"],
+        # Invalid response failure
+        with client.mock_mgmt_by_token_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.outbound_application_by_token.fetch_token(
+                        DUMMY_TOKEN,
+                        "app123",
+                        "user456",
+                    )
+                )
+
+    async def test_fetch_tenant_token_by_scopes_success(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False)
+
+        with client.mock_mgmt_by_token_post(make_response(TOKEN_RESPONSE)) as mock_post:
+            response = await client.invoke(
+                client.mgmt.outbound_application_by_token.fetch_tenant_token_by_scopes(
+                    DUMMY_TOKEN,
+                    "app123",
+                    "tenant789",
+                    ["read", "write"],
+                    {"refreshToken": True},
+                )
+            )
+            assert response == TOKEN_RESPONSE
+
+    async def test_fetch_tenant_token_by_scopes_failure(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False)
+
+        # Empty token should raise AuthException immediately
+        with pytest.raises(AuthException):
+            await client.invoke(
+                client.mgmt.outbound_application_by_token.fetch_tenant_token_by_scopes(
+                    "",
+                    "app123",
+                    "tenant789",
+                    ["read"],
+                )
             )
 
-    def test_fetch_token_success(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
+        # Invalid response failure
+        with client.mock_mgmt_by_token_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.outbound_application_by_token.fetch_tenant_token_by_scopes(
+                        DUMMY_TOKEN,
+                        "app123",
+                        "tenant789",
+                        ["read"],
+                    )
+                )
 
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = {
-                "token": {
-                    "token": "access-token",
-                    "refreshToken": "refresh-token",
-                    "expiresIn": 3600,
-                    "tokenType": "Bearer",
-                    "scopes": ["read", "write"],
-                }
-            }
-            mock_post.return_value = network_resp
-            response = client.mgmt.outbound_application_by_token.fetch_token(
-                self.dummy_token,
-                "app123",
-                "user456",
-                "tenant789",
-                {"forceRefresh": True},
+    async def test_fetch_tenant_token_success(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False)
+
+        with client.mock_mgmt_by_token_post(make_response(TOKEN_RESPONSE)) as mock_post:
+            response = await client.invoke(
+                client.mgmt.outbound_application_by_token.fetch_tenant_token(
+                    DUMMY_TOKEN, "app123", "tenant789", {"forceRefresh": True}
+                )
+            )
+            assert response == TOKEN_RESPONSE
+
+    async def test_fetch_tenant_token_failure(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False)
+
+        # Empty token should raise AuthException immediately
+        with pytest.raises(AuthException):
+            await client.invoke(
+                client.mgmt.outbound_application_by_token.fetch_tenant_token(
+                    "",
+                    "app123",
+                    "tenant789",
+                )
             )
 
-            assert response == {
-                "token": {
-                    "token": "access-token",
-                    "refreshToken": "refresh-token",
-                    "expiresIn": 3600,
-                    "tokenType": "Bearer",
-                    "scopes": ["read", "write"],
-                }
-            }
-
-    def test_fetch_token_failure(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
-
-        # Test failure of empty token
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application_by_token.fetch_token,
-                "",  # empty token
-                "app123",
-                "user456",
-            )
-
-        # Test invalid response failure
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application_by_token.fetch_token,
-                self.dummy_token,
-                "app123",
-                "user456",
-            )
-
-    def test_fetch_tenant_token_by_scopes_success(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
-
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = {
-                "token": {
-                    "token": "access-token",
-                    "refreshToken": "refresh-token",
-                    "expiresIn": 3600,
-                    "tokenType": "Bearer",
-                    "scopes": ["read", "write"],
-                }
-            }
-            mock_post.return_value = network_resp
-            response = client.mgmt.outbound_application_by_token.fetch_tenant_token_by_scopes(
-                self.dummy_token,
-                "app123",
-                "tenant789",
-                ["read", "write"],
-                {"refreshToken": True},
-            )
-
-            assert response == {
-                "token": {
-                    "token": "access-token",
-                    "refreshToken": "refresh-token",
-                    "expiresIn": 3600,
-                    "tokenType": "Bearer",
-                    "scopes": ["read", "write"],
-                }
-            }
-
-    def test_fetch_tenant_token_by_scopes_failure(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
-
-        # Test failure of empty token
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application_by_token.fetch_tenant_token_by_scopes,
-                "",  # empty token
-                "app123",
-                "tenant789",
-                ["read"],
-            )
-
-        # Test invalid response failure
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application_by_token.fetch_tenant_token_by_scopes,
-                self.dummy_token,
-                "app123",
-                "tenant789",
-                ["read"],
-            )
-
-    def test_fetch_tenant_token_success(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
-
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = {
-                "token": {
-                    "token": "access-token",
-                    "refreshToken": "refresh-token",
-                    "expiresIn": 3600,
-                    "tokenType": "Bearer",
-                    "scopes": ["read", "write"],
-                }
-            }
-            mock_post.return_value = network_resp
-            response = client.mgmt.outbound_application_by_token.fetch_tenant_token(
-                self.dummy_token, "app123", "tenant789", {"forceRefresh": True}
-            )
-
-            assert response == {
-                "token": {
-                    "token": "access-token",
-                    "refreshToken": "refresh-token",
-                    "expiresIn": 3600,
-                    "tokenType": "Bearer",
-                    "scopes": ["read", "write"],
-                }
-            }
-
-    def test_fetch_tenant_token_failure(self):
-        client = DescopeClient(self.dummy_project_id, self.public_key_dict, False)
-
-        # Test failure of empty token
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application_by_token.fetch_tenant_token,
-                "",  # empty token
-                "app123",
-                "tenant789",
-            )
-
-        # Test invalid response failure
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.outbound_application_by_token.fetch_tenant_token,
-                self.dummy_token,
-                "app123",
-                "tenant789",
-            )
+        # Invalid response failure
+        with client.mock_mgmt_by_token_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.outbound_application_by_token.fetch_tenant_token(
+                        DUMMY_TOKEN,
+                        "app123",
+                        "tenant789",
+                    )
+                )

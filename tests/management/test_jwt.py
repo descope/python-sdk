@@ -1,60 +1,37 @@
-import json
-from unittest import mock
-from unittest.mock import patch
+import pytest
 
-from descope import AuthException, DescopeClient
-from descope.common import DEFAULT_TIMEOUT_SECONDS
+from descope import AuthException
 from descope.management.common import MgmtLoginOptions, MgmtV1
 
-from .. import common
-from ..testutils import SSLMatcher
+from tests.conftest import PROJECT_ID, assert_http_called, make_response
+from tests.common import DEFAULT_BASE_URL, default_headers
+from tests.testutils import PUBLIC_KEY_DICT
 
 
-class TestJWT(common.DescopeTest):
-    def setUp(self) -> None:
-        super().setUp()
-        self.dummy_project_id = "dummy"
-        self.dummy_management_key = "key"
-        self.public_key_dict = {
-            "alg": "ES384",
-            "crv": "P-384",
-            "kid": "P2CtzUhdqpIF2ys9gg7ms06UvtC4",
-            "kty": "EC",
-            "use": "sig",
-            "x": "pX1l7nT2turcK5_Cdzos8SKIhpLh1Wy9jmKAVyMFiOCURoj-WQX1J0OUQqMsQO0s",
-            "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
-        }
-
-    def test_update_jwt(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+class TestJWT:
+    async def test_update_jwt(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(AuthException, client.mgmt.jwt.update_jwt, "jwt", {"k1": "v1"}, 0)
+        with client.mock_mgmt_post(make_response({}, status=500)) as mock:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.jwt.update_jwt("jwt", {"k1": "v1"}, 0))
 
-            self.assertRaises(AuthException, client.mgmt.jwt.update_jwt, "", {"k1": "v1"}, 0)
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.jwt.update_jwt("", {"k1": "v1"}, 0))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
-            mock_post.return_value = network_resp
-            resp = client.mgmt.jwt.update_jwt("test", {"k1": "v1"}, 40)
-            self.assertEqual(resp, "response")
-            expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.update_jwt_path}"
-            mock_post.assert_called_with(
-                expected_uri,
+        with client.mock_mgmt_post(make_response({"jwt": "response"})) as mock:
+            resp = await client.invoke(client.mgmt.jwt.update_jwt("test", {"k1": "v1"}, 40))
+            assert resp == "response"
+            assert_http_called(
+                mock,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.update_jwt_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 json={
                     "jwt": "test",
@@ -63,19 +40,19 @@ class TestJWT(common.DescopeTest):
                 },
                 follow_redirects=False,
                 params=None,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-            resp = client.mgmt.jwt.update_jwt("test", {"k1": "v1"})
-            self.assertEqual(resp, "response")
-            expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.update_jwt_path}"
-            mock_post.assert_called_with(
-                expected_uri,
+        with client.mock_mgmt_post(make_response({"jwt": "response"})) as mock:
+            resp = await client.invoke(client.mgmt.jwt.update_jwt("test", {"k1": "v1"}))
+            assert resp == "response"
+            assert_http_called(
+                mock,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.update_jwt_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 json={
                     "jwt": "test",
@@ -84,42 +61,35 @@ class TestJWT(common.DescopeTest):
                 },
                 follow_redirects=False,
                 params=None,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_impersonate(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_impersonate(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(AuthException, client.mgmt.jwt.impersonate, "imp1", "imp2", False)
+        with client.mock_mgmt_post(make_response({}, status=500)) as mock:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.jwt.impersonate("imp1", "imp2", False))
 
-            self.assertRaises(AuthException, client.mgmt.jwt.impersonate, "", "imp2", False)
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.jwt.impersonate("", "imp2", False))
 
-            self.assertRaises(AuthException, client.mgmt.jwt.impersonate, "imp1", "", False)
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.jwt.impersonate("imp1", "", False))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
-            mock_post.return_value = network_resp
-            resp = client.mgmt.jwt.impersonate("imp1", "imp2", True)
-            self.assertEqual(resp, "response")
-            expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.impersonate_path}"
-            mock_post.assert_called_with(
+        with client.mock_mgmt_post(make_response({"jwt": "response"})) as mock:
+            resp = await client.invoke(client.mgmt.jwt.impersonate("imp1", "imp2", True))
+            assert resp == "response"
+            expected_uri = f"{DEFAULT_BASE_URL}{MgmtV1.impersonate_path}"
+            assert_http_called(
+                mock,
+                client.mode,
                 expected_uri,
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 json={
                     "loginId": "imp2",
@@ -132,24 +102,20 @@ class TestJWT(common.DescopeTest):
                 },
                 follow_redirects=False,
                 params=None,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Test stepup flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"jwt": "stepup_response"}""")
-            mock_post.return_value = network_resp
-            resp = client.mgmt.jwt.impersonate("imp1", "imp2", True, stepup=True)
-            self.assertEqual(resp, "stepup_response")
-            mock_post.assert_called_with(
+        with client.mock_mgmt_post(make_response({"jwt": "stepup_response"})) as mock:
+            resp = await client.invoke(client.mgmt.jwt.impersonate("imp1", "imp2", True, stepup=True))
+            assert resp == "stepup_response"
+            assert_http_called(
+                mock,
+                client.mode,
                 expected_uri,
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 json={
                     "loginId": "imp2",
@@ -162,42 +128,28 @@ class TestJWT(common.DescopeTest):
                 },
                 follow_redirects=False,
                 params=None,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_stop_impersonation(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_stop_impersonation(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                client.mgmt.jwt.stop_impersonation,
-                "",
-            )
+        with client.mock_mgmt_post(make_response({}, status=500)) as mock:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.jwt.stop_impersonation(""))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
-            mock_post.return_value = network_resp
-            resp = client.mgmt.jwt.stop_impersonation("jwtstr")
-            self.assertEqual(resp, "response")
-            expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.stop_impersonation_path}"
-            mock_post.assert_called_with(
-                expected_uri,
+        with client.mock_mgmt_post(make_response({"jwt": "response"})) as mock:
+            resp = await client.invoke(client.mgmt.jwt.stop_impersonation("jwtstr"))
+            assert resp == "response"
+            assert_http_called(
+                mock,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.stop_impersonation_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 json={
                     "jwt": "jwtstr",
@@ -207,42 +159,29 @@ class TestJWT(common.DescopeTest):
                 },
                 follow_redirects=False,
                 params=None,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_sign_in(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_sign_in(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flows
-        self.assertRaises(AuthException, client.mgmt.jwt.sign_in, "")
+        with pytest.raises(AuthException):
+            await client.invoke(client.mgmt.jwt.sign_in(""))
 
-        self.assertRaises(
-            AuthException,
-            client.mgmt.jwt.sign_in,
-            "loginId",
-            MgmtLoginOptions(mfa=True),
-        )
+        with pytest.raises(AuthException):
+            await client.invoke(client.mgmt.jwt.sign_in("loginId", MgmtLoginOptions(mfa=True)))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
-            mock_post.return_value = network_resp
-            client.mgmt.jwt.sign_in("loginId")
-            expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.mgmt_sign_in_path}"
-            mock_post.assert_called_with(
-                expected_uri,
+        with client.mock_mgmt_post(make_response({"jwt": "response"})) as mock:
+            await client.invoke(client.mgmt.jwt.sign_in("loginId"))
+            assert_http_called(
+                mock,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.mgmt_sign_in_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 json={
                     "loginId": "loginId",
@@ -255,35 +194,26 @@ class TestJWT(common.DescopeTest):
                 },
                 follow_redirects=False,
                 params=None,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_sign_up(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_sign_up(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flows
-        self.assertRaises(AuthException, client.mgmt.jwt.sign_up, "")
+        with pytest.raises(AuthException):
+            await client.invoke(client.mgmt.jwt.sign_up(""))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
-            mock_post.return_value = network_resp
-            client.mgmt.jwt.sign_up("loginId")
-            expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.mgmt_sign_up_path}"
-            mock_post.assert_called_with(
-                expected_uri,
+        with client.mock_mgmt_post(make_response({"jwt": "response"})) as mock:
+            await client.invoke(client.mgmt.jwt.sign_up("loginId"))
+            assert_http_called(
+                mock,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.mgmt_sign_up_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 json={
                     "loginId": "loginId",
@@ -306,35 +236,26 @@ class TestJWT(common.DescopeTest):
                 },
                 follow_redirects=False,
                 params=None,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_sign_up_or_in(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_sign_up_or_in(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flows
-        self.assertRaises(AuthException, client.mgmt.jwt.sign_up_or_in, "")
+        with pytest.raises(AuthException):
+            await client.invoke(client.mgmt.jwt.sign_up_or_in(""))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
-            mock_post.return_value = network_resp
-            client.mgmt.jwt.sign_up_or_in("loginId")
-            expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.mgmt_sign_up_or_in_path}"
-            mock_post.assert_called_with(
-                expected_uri,
+        with client.mock_mgmt_post(make_response({"jwt": "response"})) as mock:
+            await client.invoke(client.mgmt.jwt.sign_up_or_in("loginId"))
+            assert_http_called(
+                mock,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.mgmt_sign_up_or_in_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 json={
                     "loginId": "loginId",
@@ -357,32 +278,22 @@ class TestJWT(common.DescopeTest):
                 },
                 follow_redirects=False,
                 params=None,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_anonymous(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_anonymous(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"jwt": "response"}""")
-            mock_post.return_value = network_resp
-            client.mgmt.jwt.anonymous({"k1": "v1"}, "id")
-            expected_uri = f"{common.DEFAULT_BASE_URL}{MgmtV1.anonymous_path}"
-            mock_post.assert_called_with(
-                expected_uri,
+        with client.mock_mgmt_post(make_response({"jwt": "response"})) as mock:
+            await client.invoke(client.mgmt.jwt.anonymous({"k1": "v1"}, "id"))
+            assert_http_called(
+                mock,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.anonymous_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 json={
                     "customClaims": {"k1": "v1"},
@@ -391,6 +302,4 @@ class TestJWT(common.DescopeTest):
                 },
                 follow_redirects=False,
                 params=None,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )

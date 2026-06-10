@@ -1,0 +1,323 @@
+from __future__ import annotations
+
+from typing import List, Optional
+
+from descope._http_base import AsyncHTTPBase
+from descope.management.common import MgmtV1
+
+
+class RoleAsync(AsyncHTTPBase):
+    """Async counterpart of Role — all HTTP calls are coroutines."""
+
+    async def create(
+        self,
+        name: str,
+        description: Optional[str] = None,
+        permission_names: Optional[List[str]] = None,
+        tenant_id: Optional[str] = None,
+        default: Optional[bool] = None,
+        private: Optional[bool] = None,
+    ):
+        """
+        Create a new role.
+
+        Args:
+        name (str): role name.
+        description (str): Optional description to briefly explain what this role allows.
+        permission_names (List[str]): Optional list of names of permissions this role grants.
+        tenant_id (str): Optional tenant ID to create the role in.
+        default (bool): Optional marks this role as default role.
+        private (bool): Optional marks this role as private role.
+
+        Raise:
+        AuthException: raised if creation operation fails
+        """
+        permission_names = [] if permission_names is None else permission_names
+
+        await self._http.post(
+            MgmtV1.role_create_path,
+            body={
+                "name": name,
+                "description": description,
+                "permissionNames": permission_names,
+                "tenantId": tenant_id,
+                "default": default,
+                "private": private,
+            },
+        )
+
+    async def create_batch(
+        self,
+        roles: List[dict],
+    ):
+        """
+        Create a batch of roles in a single atomic transaction.
+
+        Args:
+        roles (List[dict]): List of role objects, each with:
+            - name (str): role name.
+            - description (str): Optional description.
+            - permissionNames (List[str]): Optional list of permission names.
+            - tenantId (str): Optional tenant ID.
+            - default (bool): Optional default flag.
+            - private (bool): Optional private flag.
+
+        Raise:
+        AuthException: raised if creation operation fails
+        """
+        await self._http.post(
+            MgmtV1.role_create_batch_path,
+            body={"roles": roles},
+        )
+
+    async def update_batch(
+        self,
+        roles: List[dict],
+    ):
+        """
+        Update a batch of roles in a single atomic transaction.
+
+        Args:
+        roles (List[dict]): List of role objects, each with:
+            - name (str): current role name (or id (str): role ID, e.g. ROL...).
+            - newName (str): new role name.
+            - description (str): Optional new description.
+            - permissionNames (List[str]): Optional list of permission names.
+            - tenantId (str): Optional tenant ID.
+            - default (bool): Optional default flag.
+            - private (bool): Optional private flag.
+
+        Raise:
+        AuthException: raised if update operation fails
+        """
+        await self._http.post(
+            MgmtV1.role_update_batch_path,
+            body={"roles": roles},
+        )
+
+    async def delete_batch(
+        self,
+        roles: List[dict],
+    ):
+        """
+        Delete a batch of roles in a single atomic transaction.
+        IMPORTANT: This action is irreversible. Use carefully.
+
+        Args:
+        roles (List[dict]): List of role objects to delete, each with:
+            - name (str): role name.
+            - tenantId (str): Optional tenant ID.
+
+        Raise:
+        AuthException: raised if deletion operation fails
+        """
+        await self._http.post(
+            MgmtV1.role_delete_batch_path,
+            body={"roles": roles},
+        )
+
+    async def delete_batch_by_ids(
+        self,
+        role_ids: List[str],
+        tenant_id: Optional[str] = None,
+    ):
+        """
+        Delete a batch of roles by their IDs in a single atomic transaction.
+        IMPORTANT: This action is irreversible. Use carefully.
+
+        Args:
+        role_ids (List[str]): List of role IDs to delete (e.g. ROL...).
+        tenant_id (str): Optional tenant ID the roles belong to.
+
+        Raise:
+        AuthException: raised if deletion operation fails
+        """
+        await self._http.post(
+            MgmtV1.role_delete_batch_path,
+            body={"roleIds": role_ids, "tenantId": tenant_id},
+        )
+
+    async def update(
+        self,
+        name: str,
+        new_name: str,
+        description: Optional[str] = None,
+        permission_names: Optional[List[str]] = None,
+        tenant_id: Optional[str] = None,
+        default: Optional[bool] = None,
+        private: Optional[bool] = None,
+    ):
+        """
+        Update an existing role with the given various fields. IMPORTANT: All parameters are used as overrides
+        to the existing role. Empty fields will override populated fields. Use carefully.
+
+        Args:
+        name (str): role name.
+        new_name (str): role updated name.
+        description (str): Optional description to briefly explain what this role allows.
+        permission_names (List[str]): Optional list of names of permissions this role grants.
+        tenant_id (str): Optional tenant ID to update the role in.
+        default (bool): Optional marks this role as default role.
+        private (bool): Optional marks this role as private role.
+
+        Raise:
+        AuthException: raised if update operation fails
+        """
+        permission_names = [] if permission_names is None else permission_names
+        await self._http.post(
+            MgmtV1.role_update_path,
+            body={
+                "name": name,
+                "newName": new_name,
+                "description": description,
+                "permissionNames": permission_names,
+                "tenantId": tenant_id,
+                "default": default,
+                "private": private,
+            },
+        )
+
+    async def update_by_id(
+        self,
+        id: str,
+        new_name: str,
+        description: Optional[str] = None,
+        permission_names: Optional[List[str]] = None,
+        tenant_id: Optional[str] = None,
+        default: Optional[bool] = None,
+        private: Optional[bool] = None,
+    ):
+        """
+        Update an existing role identified by its ID. IMPORTANT: All parameters are used as overrides
+        to the existing role. Empty fields will override populated fields. Use carefully.
+
+        Args:
+        id (str): role ID (e.g. ROL...).
+        new_name (str): role updated name.
+        description (str): Optional description to briefly explain what this role allows.
+        permission_names (List[str]): Optional list of names of permissions this role grants.
+        tenant_id (str): Optional tenant ID to update the role in.
+        default (bool): Optional marks this role as default role.
+        private (bool): Optional marks this role as private role.
+
+        Raise:
+        AuthException: raised if update operation fails
+        """
+        permission_names = [] if permission_names is None else permission_names
+        await self._http.post(
+            MgmtV1.role_update_path,
+            body={
+                "id": id,
+                "newName": new_name,
+                "description": description,
+                "permissionNames": permission_names,
+                "tenantId": tenant_id,
+                "default": default,
+                "private": private,
+            },
+        )
+
+    async def delete(
+        self,
+        name: str,
+        tenant_id: Optional[str] = None,
+    ):
+        """
+        Delete an existing role. IMPORTANT: This action is irreversible. Use carefully.
+
+        Args:
+        name (str): The name of the role to be deleted.
+
+        Raise:
+        AuthException: raised if creation operation fails
+        """
+        await self._http.post(
+            MgmtV1.role_delete_path,
+            body={"name": name, "tenantId": tenant_id},
+        )
+
+    async def delete_by_id(
+        self,
+        id: str,
+        tenant_id: Optional[str] = None,
+    ):
+        """
+        Delete an existing role by its ID. IMPORTANT: This action is irreversible. Use carefully.
+
+        Args:
+        id (str): The ID of the role to be deleted (e.g. ROL...).
+        tenant_id (str): Optional tenant ID the role belongs to.
+
+        Raise:
+        AuthException: raised if deletion operation fails
+        """
+        await self._http.post(
+            MgmtV1.role_delete_path,
+            body={"id": id, "tenantId": tenant_id},
+        )
+
+    async def load_all(
+        self,
+    ) -> dict:
+        """
+        Load all roles.
+
+        Return value (dict):
+        Return dict in the format
+             {"roles": [{"name": <name>, "description": <description>, "permissionNames":[]}] }
+        Containing the loaded role information.
+
+        Raise:
+        AuthException: raised if load operation fails
+        """
+        response = await self._http.get(
+            MgmtV1.role_load_all_path,
+        )
+        return response.json()
+
+    async def search(
+        self,
+        tenant_ids: Optional[List[str]] = None,
+        role_names: Optional[List[str]] = None,
+        role_name_like: Optional[str] = None,
+        permission_names: Optional[List[str]] = None,
+        include_project_roles: Optional[bool] = None,
+        role_ids: Optional[List[str]] = None,
+    ) -> dict:
+        """
+        Search roles based on the given filters.
+
+        Args:
+        tenant_ids (List[str]): List of tenant ids to filter by
+        role_names (List[str]): Only return matching roles to the given names
+        role_name_like (str): Return roles that contain the given string ignoring case
+        permission_names (List[str]): Only return roles that have the given permissions
+        role_ids (List[str]): Only return roles matching the given IDs (e.g. ROL...)
+
+        Return value (dict):
+        Return dict in the format
+             {"roles": [{"id": <id>, "name": <name>, "description": <description>, "permissionNames":[]}] }
+        Containing the loaded role information.
+
+        Raise:
+        AuthException: raised if load operation fails
+        """
+        body: dict[str, str | bool | List[str]] = {}
+        if tenant_ids is not None:
+            body["tenantIds"] = tenant_ids
+        if role_names is not None:
+            body["roleNames"] = role_names
+        if role_name_like is not None:
+            body["roleNameLike"] = role_name_like
+        if permission_names is not None:
+            body["permissionNames"] = permission_names
+        if include_project_roles is not None:
+            body["includeProjectRoles"] = include_project_roles
+        if role_ids is not None:
+            body["roleIds"] = role_ids
+
+        response = await self._http.post(
+            MgmtV1.role_search_path,
+            body=body,
+        )
+        return response.json()

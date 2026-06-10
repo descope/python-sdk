@@ -97,7 +97,37 @@ class UnifiedClient:
         with self._patch_ctx("post", response) as m:
             yield m
 
-    def _patch_ctx(self, method: str, response):
+    @contextmanager
+    def mock_mgmt_post(self, response):
+        with self._patch_ctx("post", response, mgmt=True) as m:
+            yield m
+
+    @contextmanager
+    def mock_mgmt_get(self, response):
+        with self._patch_ctx("get", response, mgmt=True) as m:
+            yield m
+
+    @contextmanager
+    def mock_mgmt_put(self, response):
+        with self._patch_ctx("put", response, mgmt=True) as m:
+            yield m
+
+    @contextmanager
+    def mock_mgmt_delete(self, response):
+        with self._patch_ctx("delete", response, mgmt=True) as m:
+            yield m
+
+    @contextmanager
+    def mock_mgmt_patch(self, response):
+        with self._patch_ctx("patch", response, mgmt=True) as m:
+            yield m
+
+    @contextmanager
+    def mock_mgmt_by_token_post(self, response):
+        with self._patch_ctx("post", response, mgmt_by_token=True) as m:
+            yield m
+
+    def _patch_ctx(self, method: str, response, *, mgmt: bool = False, mgmt_by_token: bool = False):
         """
         Patch the right layer per mode:
 
@@ -106,11 +136,13 @@ class UnifiedClient:
         """
         if self.mode == "sync":
             return patch(f"httpx.{method}", return_value=response)
-        return patch.object(
-            self._raw._auth_http._async_client,
-            method,
-            AsyncMock(return_value=response),
-        )
+        if mgmt_by_token:
+            target = self._raw._mgmt._outbound_application_by_token._http
+        elif mgmt:
+            target = self._raw._mgmt._http
+        else:
+            target = self._raw._auth_http
+        return patch.object(target._async_client, method, AsyncMock(return_value=response))
 
 
 class ClientFactory:

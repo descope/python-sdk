@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 from typing import Any, List, Optional
 
-from descope._http_base import HTTPBase
+from descope._http_base import AsyncHTTPBase
 from descope.management._tenant_base import TenantBase
 from descope.management.common import (
     MgmtV1,
@@ -10,8 +12,10 @@ from descope.management.common import (
 )
 
 
-class Tenant(TenantBase, HTTPBase):
-    def create(
+class TenantAsync(TenantBase, AsyncHTTPBase):
+    """Async counterpart of Tenant — all HTTP calls are coroutines."""
+
+    async def create(
         self,
         name: str,
         id: Optional[str] = None,
@@ -46,7 +50,7 @@ class Tenant(TenantBase, HTTPBase):
         """
         self_provisioning_domains = [] if self_provisioning_domains is None else self_provisioning_domains
 
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.tenant_create_path,
             body=TenantBase._compose_create_update_body(
                 name,
@@ -61,7 +65,7 @@ class Tenant(TenantBase, HTTPBase):
         )
         return response.json()
 
-    def update(
+    async def update(
         self,
         id: str,
         name: str,
@@ -92,7 +96,7 @@ class Tenant(TenantBase, HTTPBase):
         """
         self_provisioning_domains = [] if self_provisioning_domains is None else self_provisioning_domains
 
-        self._http.post(
+        await self._http.post(
             MgmtV1.tenant_update_path,
             body=TenantBase._compose_create_update_body(
                 name,
@@ -106,7 +110,7 @@ class Tenant(TenantBase, HTTPBase):
             ),
         )
 
-    def update_settings(
+    async def update_settings(
         self,
         id: str,
         self_provisioning_domains: List[str],
@@ -179,9 +183,9 @@ class Tenant(TenantBase, HTTPBase):
 
         body = {k: v for k, v in body.items() if v is not None}
 
-        self._http.post(MgmtV1.tenant_settings_path, body=body, params=None)
+        await self._http.post(MgmtV1.tenant_settings_path, body=body, params=None)
 
-    def update_default_roles(
+    async def update_default_roles(
         self,
         tenant_id: str,
         role_names: List[str],
@@ -196,12 +200,12 @@ class Tenant(TenantBase, HTTPBase):
         Raise:
         AuthException: raised if update operation fails
         """
-        self._http.post(
+        await self._http.post(
             MgmtV1.tenant_update_default_roles_path,
             body={"id": tenant_id, "defaultRoles": role_names},
         )
 
-    def delete(
+    async def delete(
         self,
         id: str,
         cascade: bool = False,
@@ -215,12 +219,12 @@ class Tenant(TenantBase, HTTPBase):
         Raise:
         AuthException: raised if creation operation fails
         """
-        self._http.post(
+        await self._http.post(
             MgmtV1.tenant_delete_path,
             body={"id": id, "cascade": cascade},
         )
 
-    def load(
+    async def load(
         self,
         id: str,
     ) -> dict:
@@ -238,13 +242,13 @@ class Tenant(TenantBase, HTTPBase):
         Raise:
         AuthException: raised if load operation fails
         """
-        response = self._http.get(
+        response = await self._http.get(
             MgmtV1.tenant_load_path,
             params={"id": id},
         )
         return response.json()
 
-    def load_settings(
+    async def load_settings(
         self,
         id: str,
     ) -> dict:
@@ -267,13 +271,13 @@ class Tenant(TenantBase, HTTPBase):
         Raise:
         AuthException: raised if load operation fails
         """
-        response = self._http.get(
+        response = await self._http.get(
             MgmtV1.tenant_settings_path,
             params={"id": id},
         )
         return response.json()
 
-    def load_all(
+    async def load_all(
         self,
     ) -> dict:
         """
@@ -287,12 +291,12 @@ class Tenant(TenantBase, HTTPBase):
         Raise:
         AuthException: raised if load operation fails
         """
-        response = self._http.get(
+        response = await self._http.get(
             MgmtV1.tenant_load_all_path,
         )
         return response.json()
 
-    def search_all(
+    async def search_all(
         self,
         ids: Optional[List[str]] = None,
         names: Optional[List[str]] = None,
@@ -316,7 +320,7 @@ class Tenant(TenantBase, HTTPBase):
         Raise:
         AuthException: raised if load operation fails
         """
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.tenant_search_all_path,
             body={
                 "tenantIds": ids,
@@ -327,7 +331,7 @@ class Tenant(TenantBase, HTTPBase):
         )
         return response.json()
 
-    def generate_sso_configuration_link(
+    async def generate_sso_configuration_link(
         self,
         tenant_id: str,
         expire_time: Optional[int] = None,
@@ -357,7 +361,7 @@ class Tenant(TenantBase, HTTPBase):
         if sso_id is not None:
             body["ssoId"] = sso_id
 
-        response = self._http.post(
+        response = await self._http.post(
             MgmtV1.tenant_generate_sso_configuration_link_path,
             body=body,
         )

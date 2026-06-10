@@ -1,109 +1,96 @@
-from unittest import mock
-from unittest.mock import patch
+import pytest
 
 from descope import (
-    DescopeClient,
+    AuthException,
     MgmtKeyProjectRole,
     MgmtKeyReBac,
     MgmtKeyStatus,
     MgmtKeyTagRole,
 )
-from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.management.common import MgmtV1
 
-from .. import common
-from ..testutils import SSLMatcher
+from tests.conftest import PROJECT_ID, assert_http_called, make_response
+from tests.common import DEFAULT_BASE_URL, default_headers
+from tests.testutils import PUBLIC_KEY_DICT
 
 
-class TestManagementKey(common.DescopeTest):
-    def setUp(self) -> None:
-        super().setUp()
-        self.dummy_project_id = "dummy"
-        self.dummy_management_key = "key"
-
-    def test_create_empty_name(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            None,
-            False,
-            self.dummy_management_key,
-        )
-        with self.assertRaises(ValueError) as context:
-            client.mgmt.management_key.create(
-                name="",
-                rebac=MgmtKeyReBac(company_roles=["role1"]),
+class TestManagementKey:
+    async def test_create_empty_name(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+        with pytest.raises(ValueError) as exc_info:
+            await client.invoke(
+                client.mgmt.management_key.create(
+                    name="",
+                    rebac=MgmtKeyReBac(company_roles=["role1"]),
+                )
             )
-        self.assertEqual(str(context.exception), "name cannot be empty")
+        assert str(exc_info.value) == "name cannot be empty"
 
-    def test_create_none_rebac(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            None,
-            False,
-            self.dummy_management_key,
-        )
-        with self.assertRaises(ValueError) as context:
-            client.mgmt.management_key.create(
-                name="test-key",
-                rebac=None,
+    async def test_create_none_rebac(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+        with pytest.raises(ValueError) as exc_info:
+            await client.invoke(
+                client.mgmt.management_key.create(
+                    name="test-key",
+                    rebac=None,
+                )
             )
-        self.assertEqual(str(context.exception), "rebac cannot be empty")
+        assert str(exc_info.value) == "rebac cannot be empty"
 
-    def test_create(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            None,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_create(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test success flow
-        with patch("httpx.put") as mock_put:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = {
-                "cleartext": "cleartext-secret",
-                "key": {
-                    "id": "mk1",
-                    "name": "test-key",
-                    "description": "test key",
-                    "permittedIps": ["10.0.0.1"],
-                    "status": "active",
-                    "createdTime": 1764849768,
-                    "expireTime": 3600,
-                    "reBac": {
-                        "companyRoles": ["role1"],
-                        "projectRoles": [],
-                        "tagRoles": [],
+        with client.mock_mgmt_put(
+            make_response(
+                {
+                    "cleartext": "cleartext-secret",
+                    "key": {
+                        "id": "mk1",
+                        "name": "test-key",
+                        "description": "test key",
+                        "permittedIps": ["10.0.0.1"],
+                        "status": "active",
+                        "createdTime": 1764849768,
+                        "expireTime": 3600,
+                        "reBac": {
+                            "companyRoles": ["role1"],
+                            "projectRoles": [],
+                            "tagRoles": [],
+                        },
+                        "version": 1,
+                        "authzVersion": 1,
                     },
-                    "version": 1,
-                    "authzVersion": 1,
-                },
-            }
-            mock_put.return_value = network_resp
-            resp = client.mgmt.management_key.create(
-                name="test-key",
-                rebac=MgmtKeyReBac(company_roles=["role1"]),
-                description="test key",
-                expires_in=3600,
-                permitted_ips=["10.0.0.1"],
+                }
             )
-            self.assertEqual(resp["cleartext"], "cleartext-secret")
+        ) as mock_put:
+            resp = await client.invoke(
+                client.mgmt.management_key.create(
+                    name="test-key",
+                    rebac=MgmtKeyReBac(company_roles=["role1"]),
+                    description="test key",
+                    expires_in=3600,
+                    permitted_ips=["10.0.0.1"],
+                )
+            )
+            assert resp["cleartext"] == "cleartext-secret"
             key = resp["key"]
-            self.assertEqual(key["name"], "test-key")
-            self.assertEqual(key["description"], "test key")
-            self.assertEqual(len(key["permittedIps"]), 1)
-            self.assertEqual(key["permittedIps"][0], "10.0.0.1")
-            self.assertEqual(key["expireTime"], 3600)
-            self.assertIsNotNone(key["reBac"])
-            self.assertEqual(len(key["reBac"]["companyRoles"]), 1)
-            self.assertEqual(key["reBac"]["companyRoles"][0], "role1")
-            mock_put.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.mgmt_key_create_path}",
+            assert key["name"] == "test-key"
+            assert key["description"] == "test key"
+            assert len(key["permittedIps"]) == 1
+            assert key["permittedIps"][0] == "10.0.0.1"
+            assert key["expireTime"] == 3600
+            assert key["reBac"] is not None
+            assert len(key["reBac"]["companyRoles"]) == 1
+            assert key["reBac"]["companyRoles"][0] == "role1"
+            assert_http_called(
+                mock_put,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.mgmt_key_create_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -116,62 +103,59 @@ class TestManagementKey(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_create_with_project_and_tag_roles(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            None,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_create_with_project_and_tag_roles(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test success flow with project_roles and tag_roles
-        with patch("httpx.put") as mock_put:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = {
-                "cleartext": "cleartext-secret",
-                "key": {
-                    "id": "mk1",
-                    "name": "test-key",
-                    "description": "test key",
-                    "permittedIps": [],
-                    "status": "active",
-                    "createdTime": 1764849768,
-                    "expireTime": 0,
-                    "reBac": {
-                        "companyRoles": [],
-                        "projectRoles": [{"projectIds": ["proj1"], "roles": ["admin"]}],
-                        "tagRoles": [{"tags": ["tag1"], "roles": ["viewer"]}],
+        with client.mock_mgmt_put(
+            make_response(
+                {
+                    "cleartext": "cleartext-secret",
+                    "key": {
+                        "id": "mk1",
+                        "name": "test-key",
+                        "description": "test key",
+                        "permittedIps": [],
+                        "status": "active",
+                        "createdTime": 1764849768,
+                        "expireTime": 0,
+                        "reBac": {
+                            "companyRoles": [],
+                            "projectRoles": [{"projectIds": ["proj1"], "roles": ["admin"]}],
+                            "tagRoles": [{"tags": ["tag1"], "roles": ["viewer"]}],
+                        },
+                        "version": 1,
+                        "authzVersion": 1,
                     },
-                    "version": 1,
-                    "authzVersion": 1,
-                },
-            }
-            mock_put.return_value = network_resp
-            resp = client.mgmt.management_key.create(
-                name="test-key",
-                rebac=MgmtKeyReBac(
-                    project_roles=[MgmtKeyProjectRole(project_ids=["proj1"], roles=["admin"])],
-                    tag_roles=[MgmtKeyTagRole(tags=["tag1"], roles=["viewer"])],
-                ),
+                }
             )
-            self.assertEqual(resp["cleartext"], "cleartext-secret")
+        ) as mock_put:
+            resp = await client.invoke(
+                client.mgmt.management_key.create(
+                    name="test-key",
+                    rebac=MgmtKeyReBac(
+                        project_roles=[MgmtKeyProjectRole(project_ids=["proj1"], roles=["admin"])],
+                        tag_roles=[MgmtKeyTagRole(tags=["tag1"], roles=["viewer"])],
+                    ),
+                )
+            )
+            assert resp["cleartext"] == "cleartext-secret"
             key = resp["key"]
-            self.assertEqual(key["name"], "test-key")
-            self.assertEqual(len(key["reBac"]["projectRoles"]), 1)
-            self.assertEqual(key["reBac"]["projectRoles"][0]["projectIds"], ["proj1"])
-            self.assertEqual(len(key["reBac"]["tagRoles"]), 1)
-            self.assertEqual(key["reBac"]["tagRoles"][0]["tags"], ["tag1"])
-            mock_put.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.mgmt_key_create_path}",
+            assert key["name"] == "test-key"
+            assert len(key["reBac"]["projectRoles"]) == 1
+            assert key["reBac"]["projectRoles"][0]["projectIds"] == ["proj1"]
+            assert len(key["reBac"]["tagRoles"]) == 1
+            assert key["reBac"]["tagRoles"][0]["tags"] == ["tag1"]
+            assert_http_called(
+                mock_put,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.mgmt_key_create_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -185,112 +169,100 @@ class TestManagementKey(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_update_empty_id(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            None,
-            False,
-            self.dummy_management_key,
-        )
-        with self.assertRaises(ValueError) as context:
-            client.mgmt.management_key.update(
-                id="",
-                name="updated-key",
-                description="updated key",
-                permitted_ips=["1.2.3.4"],
-                status=MgmtKeyStatus.INACTIVE,
+    async def test_update_empty_id(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+        with pytest.raises(ValueError) as exc_info:
+            await client.invoke(
+                client.mgmt.management_key.update(
+                    id="",
+                    name="updated-key",
+                    description="updated key",
+                    permitted_ips=["1.2.3.4"],
+                    status=MgmtKeyStatus.INACTIVE,
+                )
             )
-        self.assertEqual(str(context.exception), "id cannot be empty")
+        assert str(exc_info.value) == "id cannot be empty"
 
-    def test_update_empty_name(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            None,
-            False,
-            self.dummy_management_key,
-        )
-        with self.assertRaises(ValueError) as context:
-            client.mgmt.management_key.update(
-                id="mk1",
-                name="",
-                description="updated key",
-                permitted_ips=["1.2.3.4"],
-                status=MgmtKeyStatus.INACTIVE,
+    async def test_update_empty_name(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+        with pytest.raises(ValueError) as exc_info:
+            await client.invoke(
+                client.mgmt.management_key.update(
+                    id="mk1",
+                    name="",
+                    description="updated key",
+                    permitted_ips=["1.2.3.4"],
+                    status=MgmtKeyStatus.INACTIVE,
+                )
             )
-        self.assertEqual(str(context.exception), "name cannot be empty")
+        assert str(exc_info.value) == "name cannot be empty"
 
-    def test_update_none_status(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            None,
-            False,
-            self.dummy_management_key,
-        )
-        with self.assertRaises(ValueError) as context:
-            client.mgmt.management_key.update(
-                id="mk1",
-                name="updated-key",
-                description="updated key",
-                permitted_ips=["1.2.3.4"],
-                status=None,
+    async def test_update_none_status(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+        with pytest.raises(ValueError) as exc_info:
+            await client.invoke(
+                client.mgmt.management_key.update(
+                    id="mk1",
+                    name="updated-key",
+                    description="updated key",
+                    permitted_ips=["1.2.3.4"],
+                    status=None,
+                )
             )
-        self.assertEqual(str(context.exception), "status cannot be empty")
+        assert str(exc_info.value) == "status cannot be empty"
 
-    def test_update(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            None,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_update(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test success flow
-        with patch("httpx.patch") as mock_patch:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = {
-                "key": {
-                    "id": "mk1",
-                    "name": "updated-key",
-                    "description": "updated key",
-                    "permittedIps": ["1.2.3.4"],
-                    "status": "inactive",
-                    "createdTime": 1764673442,
-                    "expireTime": 0,
-                    "reBac": {
-                        "companyRoles": [],
-                        "projectRoles": [],
-                        "tagRoles": [],
+        with client.mock_mgmt_patch(
+            make_response(
+                {
+                    "key": {
+                        "id": "mk1",
+                        "name": "updated-key",
+                        "description": "updated key",
+                        "permittedIps": ["1.2.3.4"],
+                        "status": "inactive",
+                        "createdTime": 1764673442,
+                        "expireTime": 0,
+                        "reBac": {
+                            "companyRoles": [],
+                            "projectRoles": [],
+                            "tagRoles": [],
+                        },
+                        "version": 22,
+                        "authzVersion": 1,
                     },
-                    "version": 22,
-                    "authzVersion": 1,
-                },
-            }
-            mock_patch.return_value = network_resp
-            resp = client.mgmt.management_key.update(
-                id="mk1",
-                name="updated-key",
-                description="updated key",
-                permitted_ips=["1.2.3.4"],
-                status=MgmtKeyStatus.INACTIVE,
+                }
+            )
+        ) as mock_patch:
+            resp = await client.invoke(
+                client.mgmt.management_key.update(
+                    id="mk1",
+                    name="updated-key",
+                    description="updated key",
+                    permitted_ips=["1.2.3.4"],
+                    status=MgmtKeyStatus.INACTIVE,
+                )
             )
             key = resp["key"]
-            self.assertEqual(key["id"], "mk1")
-            self.assertEqual(key["name"], "updated-key")
-            self.assertEqual(key["description"], "updated key")
-            self.assertEqual(len(key["permittedIps"]), 1)
-            self.assertEqual(key["permittedIps"][0], "1.2.3.4")
-            self.assertEqual(key["status"], "inactive")
-            mock_patch.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.mgmt_key_update_path}",
+            assert key["id"] == "mk1"
+            assert key["name"] == "updated-key"
+            assert key["description"] == "updated key"
+            assert len(key["permittedIps"]) == 1
+            assert key["permittedIps"][0] == "1.2.3.4"
+            assert key["status"] == "inactive"
+            assert_http_called(
+                mock_patch,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.mgmt_key_update_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -301,130 +273,25 @@ class TestManagementKey(common.DescopeTest):
                     "status": "inactive",
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_load_empty_id(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            None,
-            False,
-            self.dummy_management_key,
-        )
-        with self.assertRaises(ValueError) as context:
-            client.mgmt.management_key.load("")
-        self.assertEqual(str(context.exception), "id cannot be empty")
+    async def test_load_empty_id(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+        with pytest.raises(ValueError) as exc_info:
+            await client.invoke(client.mgmt.management_key.load(""))
+        assert str(exc_info.value) == "id cannot be empty"
 
-    def test_load(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            None,
-            False,
-            self.dummy_management_key,
-        )
+    async def test_load(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test success flow
-        with patch("httpx.get") as mock_get:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = {
-                "key": {
-                    "id": "mk1",
-                    "name": "test-key",
-                    "description": "a key description",
-                    "status": "active",
-                    "createdTime": 1764677065,
-                    "expireTime": 0,
-                    "permittedIps": [],
-                    "reBac": {
-                        "companyRoles": [],
-                        "projectRoles": [],
-                        "tagRoles": [],
-                    },
-                    "version": 1,
-                    "authzVersion": 1,
-                },
-            }
-            mock_get.return_value = network_resp
-            resp = client.mgmt.management_key.load("mk1")
-            key = resp["key"]
-            self.assertIsNotNone(key)
-            self.assertEqual(key["name"], "test-key")
-            self.assertEqual(key["description"], "a key description")
-            self.assertEqual(key["status"], "active")
-            mock_get.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.mgmt_key_load_path}",
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
-                params={"id": "mk1"},
-                follow_redirects=True,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )
-
-    def test_delete_empty_ids(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            None,
-            False,
-            self.dummy_management_key,
-        )
-        with self.assertRaises(ValueError) as context:
-            client.mgmt.management_key.delete([])
-        self.assertEqual(str(context.exception), "ids list cannot be empty")
-
-    def test_delete(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            None,
-            False,
-            self.dummy_management_key,
-        )
-
-        # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = {"total": 2}
-            mock_post.return_value = network_resp
-            resp = client.mgmt.management_key.delete(["mk1", "mk2"])
-            self.assertEqual(resp["total"], 2)
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.mgmt_key_delete_path}",
-                params=None,
-                json={"ids": ["mk1", "mk2"]},
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
-                follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )
-
-    def test_search(self):
-        client = DescopeClient(
-            self.dummy_project_id,
-            None,
-            False,
-            self.dummy_management_key,
-        )
-
-        # Test success flow
-        with patch("httpx.get") as mock_get:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = {
-                "keys": [
-                    {
+        with client.mock_mgmt_get(
+            make_response(
+                {
+                    "key": {
                         "id": "mk1",
-                        "name": "key1",
-                        "description": "",
+                        "name": "test-key",
+                        "description": "a key description",
                         "status": "active",
                         "createdTime": 1764677065,
                         "expireTime": 0,
@@ -437,44 +304,118 @@ class TestManagementKey(common.DescopeTest):
                         "version": 1,
                         "authzVersion": 1,
                     },
-                    {
-                        "id": "mk2",
-                        "name": "key2",
-                        "description": "",
-                        "status": "inactive",
-                        "createdTime": 1764773205,
-                        "expireTime": 1234,
-                        "permittedIps": [],
-                        "reBac": {
-                            "companyRoles": [],
-                            "projectRoles": [],
-                            "tagRoles": [],
-                        },
-                        "version": 1,
-                        "authzVersion": 1,
-                    },
-                ],
-            }
-            mock_get.return_value = network_resp
-            resp = client.mgmt.management_key.search()
-            keys = resp["keys"]
-            self.assertIsNotNone(keys)
-            self.assertEqual(len(keys), 2)
-            self.assertEqual(keys[0]["id"], "mk1")
-            self.assertEqual(keys[0]["name"], "key1")
-            self.assertEqual(keys[0]["status"], "active")
-            self.assertEqual(keys[1]["id"], "mk2")
-            self.assertEqual(keys[1]["name"], "key2")
-            self.assertEqual(keys[1]["status"], "inactive")
-            mock_get.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.mgmt_key_search_path}",
+                }
+            )
+        ) as mock_get:
+            resp = await client.invoke(client.mgmt.management_key.load("mk1"))
+            key = resp["key"]
+            assert key is not None
+            assert key["name"] == "test-key"
+            assert key["description"] == "a key description"
+            assert key["status"] == "active"
+            assert_http_called(
+                mock_get,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.mgmt_key_load_path}",
                 headers={
-                    **common.default_headers,
-                    "x-descope-project-id": self.dummy_project_id,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params={"id": "mk1"},
+                follow_redirects=True,
+            )
+
+    async def test_delete_empty_ids(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+        with pytest.raises(ValueError) as exc_info:
+            await client.invoke(client.mgmt.management_key.delete([]))
+        assert str(exc_info.value) == "ids list cannot be empty"
+
+    async def test_delete(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test success flow
+        with client.mock_mgmt_post(make_response({"total": 2})) as mock_post:
+            resp = await client.invoke(client.mgmt.management_key.delete(["mk1", "mk2"]))
+            assert resp["total"] == 2
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.mgmt_key_delete_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={"ids": ["mk1", "mk2"]},
+                follow_redirects=False,
+            )
+
+    async def test_search(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test success flow
+        with client.mock_mgmt_get(
+            make_response(
+                {
+                    "keys": [
+                        {
+                            "id": "mk1",
+                            "name": "key1",
+                            "description": "",
+                            "status": "active",
+                            "createdTime": 1764677065,
+                            "expireTime": 0,
+                            "permittedIps": [],
+                            "reBac": {
+                                "companyRoles": [],
+                                "projectRoles": [],
+                                "tagRoles": [],
+                            },
+                            "version": 1,
+                            "authzVersion": 1,
+                        },
+                        {
+                            "id": "mk2",
+                            "name": "key2",
+                            "description": "",
+                            "status": "inactive",
+                            "createdTime": 1764773205,
+                            "expireTime": 1234,
+                            "permittedIps": [],
+                            "reBac": {
+                                "companyRoles": [],
+                                "projectRoles": [],
+                                "tagRoles": [],
+                            },
+                            "version": 1,
+                            "authzVersion": 1,
+                        },
+                    ],
+                }
+            )
+        ) as mock_get:
+            resp = await client.invoke(client.mgmt.management_key.search())
+            keys = resp["keys"]
+            assert keys is not None
+            assert len(keys) == 2
+            assert keys[0]["id"] == "mk1"
+            assert keys[0]["name"] == "key1"
+            assert keys[0]["status"] == "active"
+            assert keys[1]["id"] == "mk2"
+            assert keys[1]["name"] == "key2"
+            assert keys[1]["status"] == "inactive"
+            assert_http_called(
+                mock_get,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.mgmt_key_search_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 follow_redirects=True,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )

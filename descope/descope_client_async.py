@@ -24,6 +24,7 @@ from descope.exceptions import (
     AuthException,
 )
 from descope.http_client_async import HTTPClientAsync
+from descope.mgmt_async import MGMTAsync
 
 
 class DescopeClientAsync(DescopeClientBase):
@@ -90,6 +91,11 @@ class DescopeClientAsync(DescopeClientBase):
             verbose=verbose,
         )
         self._fga_cache_url = fga_cache_url
+        self._mgmt = MGMTAsync(
+            http_client=self._mgmt_http,
+            auth=self._auth,
+            fga_cache_url=fga_cache_url,
+        )
 
         self._magiclink = MagicLinkAsync(self._auth, self._auth_http)
         self._enchantedlink = EnchantedLinkAsync(self._auth, self._auth_http)
@@ -140,6 +146,10 @@ class DescopeClientAsync(DescopeClientBase):
     @property
     def password(self) -> PasswordAsync:
         return self._password
+
+    @property
+    def mgmt(self) -> MGMTAsync:
+        return self._mgmt
 
     async def aclose(self) -> None:
         """Close the underlying async HTTP clients and release connections."""

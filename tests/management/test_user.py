@@ -1,9 +1,7 @@
-import json
-from unittest import mock
-from unittest.mock import patch
+import pytest
 
-from descope import AssociatedTenant, AuthException, DescopeClient
-from descope.common import DEFAULT_TIMEOUT_SECONDS, DeliveryMethod, LoginOptions
+from descope import AssociatedTenant, AuthException
+from descope.common import DeliveryMethod, LoginOptions
 from descope.management.common import MgmtV1, Sort
 from descope.management.user import UserObj
 from descope.management.user_pwd import (
@@ -14,68 +12,46 @@ from descope.management.user_pwd import (
     UserPasswordPbkdf2,
 )
 
-from .. import common
-from ..testutils import SSLMatcher
+from tests.conftest import PROJECT_ID, assert_http_called, make_response
+from tests.common import DEFAULT_BASE_URL, default_headers
+from tests.testutils import PUBLIC_KEY_DICT
 
 
-class TestUser(common.DescopeTest):
-    def setUp(self) -> None:
-        super().setUp()
-        self.dummy_project_id = "dummy"
-        self.dummy_management_key = "key"
-        self.public_key_dict = {
-            "alg": "ES384",
-            "crv": "P-384",
-            "kid": "P2CtzUhdqpIF2ys9gg7ms06UvtC4",
-            "kty": "EC",
-            "use": "sig",
-            "x": "pX1l7nT2turcK5_Cdzos8SKIhpLh1Wy9jmKAVyMFiOCURoj-WQX1J0OUQqMsQO0s",
-            "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
-        }
-        self.client = DescopeClient(
-            self.dummy_project_id,
-            self.public_key_dict,
-            False,
-            self.dummy_management_key,
-        )
+class TestUser:
+    async def test_create(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
-    def test_create(self):
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.create,
-                "valid-id",
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.create("valid-id"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.create(
-                login_id="name@mail.com",
-                email="name@mail.com",
-                display_name="Name",
-                user_tenants=[
-                    AssociatedTenant("tenant1"),
-                    AssociatedTenant("tenant2", ["role1", "role2"]),
-                ],
-                picture="https://test.com",
-                custom_attributes={"ak": "av"},
-                additional_login_ids=["id-1", "id-2"],
-                sso_app_ids=["app1", "app2"],
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            resp = await client.invoke(
+                client.mgmt.user.create(
+                    login_id="name@mail.com",
+                    email="name@mail.com",
+                    display_name="Name",
+                    user_tenants=[
+                        AssociatedTenant("tenant1"),
+                        AssociatedTenant("tenant2", ["role1", "role2"]),
+                    ],
+                    picture="https://test.com",
+                    custom_attributes={"ak": "av"},
+                    additional_login_ids=["id-1", "id-2"],
+                    sso_app_ids=["app1", "app2"],
+                )
             )
             user = resp["user"]
-            self.assertEqual(user["id"], "u1")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_create_path}",
+            assert user["id"] == "u1"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_create_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -96,38 +72,37 @@ class TestUser(common.DescopeTest):
                     "ssoAppIDs": ["app1", "app2"],
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_create_with_verified_parameters(self):
+    async def test_create_with_verified_parameters(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test success flow with verified email and phone
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.create(
-                login_id="name@mail.com",
-                email="name@mail.com",
-                display_name="Name",
-                user_tenants=[
-                    AssociatedTenant("tenant1"),
-                    AssociatedTenant("tenant2", ["role1", "role2"]),
-                ],
-                picture="https://test.com",
-                custom_attributes={"ak": "av"},
-                verified_email=True,
-                verified_phone=False,
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            resp = await client.invoke(
+                client.mgmt.user.create(
+                    login_id="name@mail.com",
+                    email="name@mail.com",
+                    display_name="Name",
+                    user_tenants=[
+                        AssociatedTenant("tenant1"),
+                        AssociatedTenant("tenant2", ["role1", "role2"]),
+                    ],
+                    picture="https://test.com",
+                    custom_attributes={"ak": "av"},
+                    verified_email=True,
+                    verified_phone=False,
+                )
             )
             user = resp["user"]
-            self.assertEqual(user["id"], "u1")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_create_path}",
+            assert user["id"] == "u1"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_create_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -150,44 +125,39 @@ class TestUser(common.DescopeTest):
                     "ssoAppIDs": None,
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_create_test_user(self):
+    async def test_create_test_user(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.create,
-                "valid-id",
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.create("valid-id"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.create_test_user(
-                login_id="name@mail.com",
-                email="name@mail.com",
-                display_name="Name",
-                user_tenants=[
-                    AssociatedTenant("tenant1"),
-                    AssociatedTenant("tenant2", ["role1", "role2"]),
-                ],
-                custom_attributes={"ak": "av"},
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            resp = await client.invoke(
+                client.mgmt.user.create_test_user(
+                    login_id="name@mail.com",
+                    email="name@mail.com",
+                    display_name="Name",
+                    user_tenants=[
+                        AssociatedTenant("tenant1"),
+                        AssociatedTenant("tenant2", ["role1", "role2"]),
+                    ],
+                    custom_attributes={"ak": "av"},
+                )
             )
             user = resp["user"]
-            self.assertEqual(user["id"], "u1")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.test_user_create_path}",
+            assert user["id"] == "u1"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.test_user_create_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -208,49 +178,44 @@ class TestUser(common.DescopeTest):
                     "ssoAppIDs": None,
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_invite(self):
+    async def test_invite(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.invite,
-                "valid-id",
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.invite("valid-id"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.invite(
-                login_id="name@mail.com",
-                email="name@mail.com",
-                display_name="Name",
-                user_tenants=[
-                    AssociatedTenant("tenant1"),
-                    AssociatedTenant("tenant2", ["role1", "role2"]),
-                ],
-                custom_attributes={"ak": "av"},
-                invite_url="invite.me",
-                send_sms=True,
-                sso_app_ids=["app1", "app2"],
-                template_id="tid",
-                locale="en",
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            resp = await client.invoke(
+                client.mgmt.user.invite(
+                    login_id="name@mail.com",
+                    email="name@mail.com",
+                    display_name="Name",
+                    user_tenants=[
+                        AssociatedTenant("tenant1"),
+                        AssociatedTenant("tenant2", ["role1", "role2"]),
+                    ],
+                    custom_attributes={"ak": "av"},
+                    invite_url="invite.me",
+                    send_sms=True,
+                    sso_app_ids=["app1", "app2"],
+                    template_id="tid",
+                    locale="en",
+                )
             )
             user = resp["user"]
-            self.assertEqual(user["id"], "u1")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_create_path}",
+            assert user["id"] == "u1"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_create_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -275,26 +240,18 @@ class TestUser(common.DescopeTest):
                     "locale": "en",
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_invite_batch(self):
+    async def test_invite_batch(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.invite_batch,
-                [],
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.invite_batch([]))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"users": [{"id": "u1"}]}""")
-            mock_post.return_value = network_resp
+        with client.mock_mgmt_post(make_response({"users": [{"id": "u1"}]})) as mock_post:
             user = UserObj(
                 login_id="name@mail.com",
                 email="name@mail.com",
@@ -318,14 +275,16 @@ class TestUser(common.DescopeTest):
                 seed="aaa",
                 status="invited",
             )
-            resp = self.client.mgmt.user.invite_batch(
-                users=[user],
-                invite_url="invite.me",
-                send_sms=True,
-                locale="en",
+            resp = await client.invoke(
+                client.mgmt.user.invite_batch(
+                    users=[user],
+                    invite_url="invite.me",
+                    send_sms=True,
+                    locale="en",
+                )
             )
             users = resp["users"]
-            self.assertEqual(users[0]["id"], "u1")
+            assert users[0]["id"] == "u1"
 
             expected_users = {
                 "users": [
@@ -366,119 +325,113 @@ class TestUser(common.DescopeTest):
                 "sendSMS": True,
                 "locale": "en",
             }
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_create_batch_path}",
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_create_batch_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json=expected_users,
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
             bcrypt = UserPasswordBcrypt(hash="h")
-            self.assertEqual(bcrypt.to_dict(), {"bcrypt": {"hash": "h"}})
+            assert bcrypt.to_dict() == {"bcrypt": {"hash": "h"}}
 
             pbkdf2 = UserPasswordPbkdf2(hash="h", salt="s", iterations=14, variant="sha256")
-            self.assertEqual(
-                pbkdf2.to_dict(),
-                {
-                    "pbkdf2": {
-                        "hash": "h",
-                        "salt": "s",
-                        "iterations": 14,
-                        "type": "sha256",
-                    }
-                },
-            )
+            assert pbkdf2.to_dict() == {
+                "pbkdf2": {
+                    "hash": "h",
+                    "salt": "s",
+                    "iterations": 14,
+                    "type": "sha256",
+                }
+            }
 
             django = UserPasswordDjango(hash="h")
-            self.assertEqual(django.to_dict(), {"django": {"hash": "h"}})
+            assert django.to_dict() == {"django": {"hash": "h"}}
 
             user.password = UserPassword(cleartext="clear")
-            resp = self.client.mgmt.user.invite_batch(
-                users=[user],
-                invite_url="invite.me",
-                send_sms=True,
-                locale="en",
+            resp = await client.invoke(
+                client.mgmt.user.invite_batch(
+                    users=[user],
+                    invite_url="invite.me",
+                    send_sms=True,
+                    locale="en",
+                )
             )
 
             del expected_users["users"][0]["hashedPassword"]
             expected_users["users"][0]["password"] = "clear"
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_create_batch_path}",
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_create_batch_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json=expected_users,
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
             user.password = None
-            resp = self.client.mgmt.user.invite_batch(
-                users=[user],
-                invite_url="invite.me",
-                send_sms=True,
-                locale="en",
+            resp = await client.invoke(
+                client.mgmt.user.invite_batch(
+                    users=[user],
+                    invite_url="invite.me",
+                    send_sms=True,
+                    locale="en",
+                )
             )
 
             del expected_users["users"][0]["password"]
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_create_batch_path}",
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_create_batch_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json=expected_users,
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_update(self):
+    async def test_update(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.update,
-                "valid-id",
-                "email@something.com",
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.update("valid-id", "email@something.com"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.update(
-                "id",
-                display_name="new-name",
-                role_names=["domain.com"],
-                picture="https://test.com",
-                custom_attributes={"ak": "av"},
-                sso_app_ids=["app1", "app2"],
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            resp = await client.invoke(
+                client.mgmt.user.update(
+                    "id",
+                    display_name="new-name",
+                    role_names=["domain.com"],
+                    picture="https://test.com",
+                    custom_attributes={"ak": "av"},
+                    sso_app_ids=["app1", "app2"],
+                )
             )
             user = resp["user"]
-            self.assertEqual(user["id"], "u1")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_path}",
+            assert user["id"] == "u1"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_update_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -495,24 +448,22 @@ class TestUser(common.DescopeTest):
                     "ssoAppIDs": ["app1", "app2"],
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
+
         # Test success flow with verified flags
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.update("id", verified_email=True, verified_phone=False)
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            resp = await client.invoke(
+                client.mgmt.user.update("id", verified_email=True, verified_phone=False)
+            )
             user = resp["user"]
-            self.assertEqual(user["id"], "u1")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_path}",
+            assert user["id"] == "u1"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_update_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -531,47 +482,41 @@ class TestUser(common.DescopeTest):
                     "ssoAppIDs": None,
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_patch(self):
+    async def test_patch(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.patch") as mock_patch:
-            mock_patch.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.patch,
-                "valid-id",
-                "email@something.com",
-            )
+        with client.mock_mgmt_patch(make_response(status=500)) as mock_patch:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.patch("valid-id", "email@something.com"))
 
         # Test success flow with some params set
-        with patch("httpx.patch") as mock_patch:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
-            mock_patch.return_value = network_resp
-            resp = self.client.mgmt.user.patch(
-                "id",
-                display_name="new-name",
-                email=None,
-                phone=None,
-                given_name=None,
-                role_names=["domain.com"],
-                user_tenants=None,
-                picture="https://test.com",
-                custom_attributes={"ak": "av"},
-                sso_app_ids=["app1", "app2"],
+        with client.mock_mgmt_patch(make_response({"user": {"id": "u1"}})) as mock_patch:
+            resp = await client.invoke(
+                client.mgmt.user.patch(
+                    "id",
+                    display_name="new-name",
+                    email=None,
+                    phone=None,
+                    given_name=None,
+                    role_names=["domain.com"],
+                    user_tenants=None,
+                    picture="https://test.com",
+                    custom_attributes={"ak": "av"},
+                    sso_app_ids=["app1", "app2"],
+                )
             )
             user = resp["user"]
-            self.assertEqual(user["id"], "u1")
-            mock_patch.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_patch_path}",
+            assert user["id"] == "u1"
+            assert_http_called(
+                mock_patch, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_patch_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -583,39 +528,37 @@ class TestUser(common.DescopeTest):
                     "ssoAppIds": ["app1", "app2"],
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
+
         # Test success flow with other params
-        with patch("httpx.patch") as mock_patch:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
-            mock_patch.return_value = network_resp
-            resp = self.client.mgmt.user.patch(
-                "id",
-                email="a@test.com",
-                phone="+123456789",
-                given_name="given",
-                middle_name="middle",
-                family_name="family",
-                role_names=None,
-                user_tenants=[
-                    AssociatedTenant("tenant1"),
-                    AssociatedTenant("tenant2", ["role1", "role2"]),
-                ],
-                custom_attributes=None,
-                verified_email=True,
-                verified_phone=False,
+        with client.mock_mgmt_patch(make_response({"user": {"id": "u1"}})) as mock_patch:
+            resp = await client.invoke(
+                client.mgmt.user.patch(
+                    "id",
+                    email="a@test.com",
+                    phone="+123456789",
+                    given_name="given",
+                    middle_name="middle",
+                    family_name="family",
+                    role_names=None,
+                    user_tenants=[
+                        AssociatedTenant("tenant1"),
+                        AssociatedTenant("tenant2", ["role1", "role2"]),
+                    ],
+                    custom_attributes=None,
+                    verified_email=True,
+                    verified_phone=False,
+                )
             )
             user = resp["user"]
-            self.assertEqual(user["id"], "u1")
-            mock_patch.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_patch_path}",
+            assert user["id"] == "u1"
+            assert_http_called(
+                mock_patch, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_patch_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -633,38 +576,34 @@ class TestUser(common.DescopeTest):
                     ],
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_patch_with_status(self):
-        # Test invalid status value
-        with self.assertRaises(AuthException) as context:
-            self.client.mgmt.user.patch("valid-id", status="invalid_status")
+    async def test_patch_with_status(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
-        self.assertEqual(context.exception.status_code, 400)
-        self.assertIn("Invalid status value: invalid_status", str(context.exception))
+        # Test invalid status value
+        with pytest.raises(AuthException) as exc_info:
+            await client.invoke(client.mgmt.user.patch("valid-id", status="invalid_status"))
+
+        assert exc_info.value.status_code == 400
+        assert "Invalid status value: invalid_status" in str(exc_info.value)
 
         # Test valid status values
         valid_statuses = ["enabled", "disabled", "invited"]
 
         for status in valid_statuses:
-            with patch("httpx.patch") as mock_patch:
-                network_resp = mock.Mock()
-                network_resp.is_success = True
-                network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
-                mock_patch.return_value = network_resp
-
-                resp = self.client.mgmt.user.patch("id", status=status)
+            with client.mock_mgmt_patch(make_response({"user": {"id": "u1"}})) as mock_patch:
+                resp = await client.invoke(client.mgmt.user.patch("id", status=status))
                 user = resp["user"]
-                self.assertEqual(user["id"], "u1")
+                assert user["id"] == "u1"
 
-                mock_patch.assert_called_with(
-                    f"{common.DEFAULT_BASE_URL}{MgmtV1.user_patch_path}",
+                assert_http_called(
+                    mock_patch, client.mode,
+                    f"{DEFAULT_BASE_URL}{MgmtV1.user_patch_path}",
                     headers={
-                        **common.default_headers,
-                        "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                        "x-descope-project-id": self.dummy_project_id,
+                        **default_headers,
+                        "Authorization": f"Bearer {PROJECT_ID}:key",
+                        "x-descope-project-id": PROJECT_ID,
                     },
                     params=None,
                     json={
@@ -672,42 +611,34 @@ class TestUser(common.DescopeTest):
                         "status": status,
                     },
                     follow_redirects=False,
-                    verify=SSLMatcher(),
-                    timeout=DEFAULT_TIMEOUT_SECONDS,
                 )
 
         # Test that status is not included when None
-        with patch("httpx.patch") as mock_patch:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
-            mock_patch.return_value = network_resp
-
-            resp = self.client.mgmt.user.patch("id", display_name="test", status=None)
+        with client.mock_mgmt_patch(make_response({"user": {"id": "u1"}})) as mock_patch:
+            resp = await client.invoke(client.mgmt.user.patch("id", display_name="test", status=None))
             user = resp["user"]
-            self.assertEqual(user["id"], "u1")
+            assert user["id"] == "u1"
 
             # Verify that status is not in the JSON payload
             call_args = mock_patch.call_args
             json_payload = call_args[1]["json"]
-            self.assertNotIn("status", json_payload)
-            self.assertEqual(json_payload["displayName"], "test")
+            assert "status" not in json_payload
+            assert json_payload["displayName"] == "test"
 
-    def test_patch_batch(self):
+    async def test_patch_batch(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test invalid status value in batch
         users_with_invalid_status = [
             UserObj(login_id="user1", status="invalid_status"),
             UserObj(login_id="user2", status="enabled"),
         ]
 
-        with self.assertRaises(AuthException) as context:
-            self.client.mgmt.user.patch_batch(users_with_invalid_status)
+        with pytest.raises(AuthException) as exc_info:
+            await client.invoke(client.mgmt.user.patch_batch(users_with_invalid_status))
 
-        self.assertEqual(context.exception.status_code, 400)
-        self.assertIn(
-            "Invalid status value: invalid_status for user user1",
-            str(context.exception),
-        )
+        assert exc_info.value.status_code == 400
+        assert "Invalid status value: invalid_status for user user1" in str(exc_info.value)
 
         # Test successful batch patch
         users = [
@@ -716,25 +647,21 @@ class TestUser(common.DescopeTest):
             UserObj(login_id="user3", phone="+123456789", status="invited"),
         ]
 
-        with patch("httpx.patch") as mock_patch:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads(
-                """{"patchedUsers": [{"id": "u1"}, {"id": "u2"}, {"id": "u3"}], "failedUsers": []}"""
-            )
-            mock_patch.return_value = network_resp
+        with client.mock_mgmt_patch(
+            make_response({"patchedUsers": [{"id": "u1"}, {"id": "u2"}, {"id": "u3"}], "failedUsers": []})
+        ) as mock_patch:
+            resp = await client.invoke(client.mgmt.user.patch_batch(users))
 
-            resp = self.client.mgmt.user.patch_batch(users)
+            assert len(resp["patchedUsers"]) == 3
+            assert len(resp["failedUsers"]) == 0
 
-            self.assertEqual(len(resp["patchedUsers"]), 3)
-            self.assertEqual(len(resp["failedUsers"]), 0)
-
-            mock_patch.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_patch_batch_path}",
+            assert_http_called(
+                mock_patch, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_patch_batch_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -757,291 +684,247 @@ class TestUser(common.DescopeTest):
                     ]
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Test batch with mixed success/failure response
-        with patch("httpx.patch") as mock_patch:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads(
-                """{"patchedUsers": [{"id": "u1"}], "failedUsers": [{"failure": "User not found", "user": {"loginId": "user2"}}]}"""
+        with client.mock_mgmt_patch(
+            make_response({"patchedUsers": [{"id": "u1"}], "failedUsers": [{"failure": "User not found", "user": {"loginId": "user2"}}]})
+        ) as mock_patch:
+            resp = await client.invoke(
+                client.mgmt.user.patch_batch([UserObj(login_id="user1"), UserObj(login_id="user2")])
             )
-            mock_patch.return_value = network_resp
 
-            resp = self.client.mgmt.user.patch_batch([UserObj(login_id="user1"), UserObj(login_id="user2")])
-
-            self.assertEqual(len(resp["patchedUsers"]), 1)
-            self.assertEqual(len(resp["failedUsers"]), 1)
-            self.assertEqual(resp["failedUsers"][0]["failure"], "User not found")
+            assert len(resp["patchedUsers"]) == 1
+            assert len(resp["failedUsers"]) == 1
+            assert resp["failedUsers"][0]["failure"] == "User not found"
 
         # Test failed batch operation
-        with patch("httpx.patch") as mock_patch:
-            mock_patch.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.patch_batch,
-                [UserObj(login_id="user1")],
-            )
+        with client.mock_mgmt_patch(make_response(status=500)) as mock_patch:
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.user.patch_batch([UserObj(login_id="user1")])
+                )
 
         # Test with test users flag
-        with patch("httpx.patch") as mock_patch:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"patchedUsers": [{"id": "u1"}], "failedUsers": []}""")
-            mock_patch.return_value = network_resp
-
-            self.client.mgmt.user.patch_batch([UserObj(login_id="test_user1")], test=True)
+        with client.mock_mgmt_patch(
+            make_response({"patchedUsers": [{"id": "u1"}], "failedUsers": []})
+        ) as mock_patch:
+            await client.invoke(
+                client.mgmt.user.patch_batch([UserObj(login_id="test_user1")], test=True)
+            )
 
             call_args = mock_patch.call_args
             json_payload = call_args[1]["json"]
-            self.assertTrue(json_payload["users"][0]["test"])
+            assert json_payload["users"][0]["test"]
 
-    def test_delete(self):
+    async def test_delete(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.delete,
-                "valid-id",
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.delete("valid-id"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNone(self.client.mgmt.user.delete("u1"))
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_delete_path}",
+        with client.mock_mgmt_post(make_response({})) as mock_post:
+            assert await client.invoke(client.mgmt.user.delete("u1")) is None
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_delete_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
                     "loginId": "u1",
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_delete_by_user_id(self):
+    async def test_delete_by_user_id(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.delete_by_user_id,
-                "valid-id",
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.delete_by_user_id("valid-id"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNone(self.client.mgmt.user.delete_by_user_id("u1"))
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_delete_path}",
+        with client.mock_mgmt_post(make_response({})) as mock_post:
+            assert await client.invoke(client.mgmt.user.delete_by_user_id("u1")) is None
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_delete_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
                     "userId": "u1",
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_logout(self):
+    async def test_logout(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.logout_user,
-                "valid-id",
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.logout_user("valid-id"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNone(self.client.mgmt.user.logout_user("u1"))
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_logout_path}",
+        with client.mock_mgmt_post(make_response({})) as mock_post:
+            assert await client.invoke(client.mgmt.user.logout_user("u1")) is None
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_logout_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
                     "loginId": "u1",
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_logout_by_user_id(self):
+    async def test_logout_by_user_id(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.logout_user_by_user_id,
-                "valid-id",
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.logout_user_by_user_id("valid-id"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNone(self.client.mgmt.user.logout_user_by_user_id("u1"))
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_logout_path}",
+        with client.mock_mgmt_post(make_response({})) as mock_post:
+            assert await client.invoke(client.mgmt.user.logout_user_by_user_id("u1")) is None
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_logout_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
                     "userId": "u1",
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_delete_all_test_users(self):
+    async def test_delete_all_test_users(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.delete") as mock_delete:
-            mock_delete.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.delete_all_test_users,
-            )
+        with client.mock_mgmt_delete(make_response(status=500)) as mock_delete:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.delete_all_test_users())
 
         # Test success flow
-        with patch("httpx.delete") as mock_delete:
-            mock_delete.return_value.is_success = True
-            self.assertIsNone(self.client.mgmt.user.delete_all_test_users())
-            mock_delete.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_delete_all_test_users_path}",
+        with client.mock_mgmt_delete(make_response({})) as mock_delete:
+            assert await client.invoke(client.mgmt.user.delete_all_test_users()) is None
+            assert_http_called(
+                mock_delete, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_delete_all_test_users_path}",
                 params=None,
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_load(self):
+    async def test_load(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.get") as mock_get:
-            mock_get.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.load,
-                "valid-id",
-            )
+        with client.mock_mgmt_get(make_response(status=500)) as mock_get:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.load("valid-id"))
 
         # Test success flow
-        with patch("httpx.get") as mock_get:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
-            mock_get.return_value = network_resp
-            resp = self.client.mgmt.user.load("valid-id")
+        with client.mock_mgmt_get(make_response({"user": {"id": "u1"}})) as mock_get:
+            resp = await client.invoke(client.mgmt.user.load("valid-id"))
             user = resp["user"]
-            self.assertEqual(user["id"], "u1")
-            mock_get.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_load_path}",
+            assert user["id"] == "u1"
+            assert_http_called(
+                mock_get, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_load_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params={"loginId": "valid-id"},
                 follow_redirects=True,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_load_by_user_id(self):
+    async def test_load_by_user_id(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.get") as mock_get:
-            mock_get.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.load_by_user_id,
-                "user-id",
-            )
+        with client.mock_mgmt_get(make_response(status=500)) as mock_get:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.load_by_user_id("user-id"))
 
         # Test success flow
-        with patch("httpx.get") as mock_get:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
-            mock_get.return_value = network_resp
-            resp = self.client.mgmt.user.load_by_user_id("user-id")
+        with client.mock_mgmt_get(make_response({"user": {"id": "u1"}})) as mock_get:
+            resp = await client.invoke(client.mgmt.user.load_by_user_id("user-id"))
             user = resp["user"]
-            self.assertEqual(user["id"], "u1")
-            mock_get.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_load_path}",
+            assert user["id"] == "u1"
+            assert_http_called(
+                mock_get, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_load_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params={"userId": "user-id"},
                 follow_redirects=True,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_load_users(self):
+    async def test_load_users(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.load_users,
-                [""],
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.load_users([""]))
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertRaises(AuthException, self.client.mgmt.user.load_users, None, False)
+        with client.mock_mgmt_post(make_response({})) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.load_users(None, False))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"users": [{"id": "u1"}, {"id": "u2"}]}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.load_users(
-                ["uid"],
-                include_invalid_users=True,
+        with client.mock_mgmt_post(make_response({"users": [{"id": "u1"}, {"id": "u2"}]})) as mock_post:
+            resp = await client.invoke(
+                client.mgmt.user.load_users(
+                    ["uid"],
+                    include_invalid_users=True,
+                )
             )
             users = resp["users"]
-            self.assertEqual(len(users), 2)
-            self.assertEqual(users[0]["id"], "u1")
-            self.assertEqual(users[1]["id"], "u2")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.users_load_path}",
+            assert len(users) == 2
+            assert users[0]["id"] == "u1"
+            assert users[1]["id"] == "u2"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.users_load_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -1049,50 +932,45 @@ class TestUser(common.DescopeTest):
                     "includeInvalidUsers": True,
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_search_all(self):
+    async def test_search_all(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.search_all,
-                ["t1, t2"],
-                ["r1", "r2"],
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.search_all(["t1, t2"], ["r1", "r2"]))
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertRaises(AuthException, self.client.mgmt.user.search_all, [], [], -1, 0)
+        with client.mock_mgmt_post(make_response({})) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.search_all([], [], -1, 0))
 
-            self.assertRaises(AuthException, self.client.mgmt.user.search_all, [], [], 0, -1)
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.search_all([], [], 0, -1))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"users": [{"id": "u1"}, {"id": "u2"}]}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.search_all(
-                ["t1, t2"],
-                ["r1", "r2"],
-                with_test_user=True,
-                sso_app_ids=["app1"],
-                login_ids=["l1"],
+        with client.mock_mgmt_post(make_response({"users": [{"id": "u1"}, {"id": "u2"}]})) as mock_post:
+            resp = await client.invoke(
+                client.mgmt.user.search_all(
+                    ["t1, t2"],
+                    ["r1", "r2"],
+                    with_test_user=True,
+                    sso_app_ids=["app1"],
+                    login_ids=["l1"],
+                )
             )
             users = resp["users"]
-            self.assertEqual(len(users), 2)
-            self.assertEqual(users[0]["id"], "u1")
-            self.assertEqual(users[1]["id"], "u2")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.users_search_path}",
+            assert len(users) == 2
+            assert users[0]["id"] == "u1"
+            assert users[1]["id"] == "u2"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.users_search_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -1106,35 +984,32 @@ class TestUser(common.DescopeTest):
                     "loginIds": ["l1"],
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Test success flow with text and sort
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"users": [{"id": "u1"}, {"id": "u2"}]}""")
-            mock_post.return_value = network_resp
+        with client.mock_mgmt_post(make_response({"users": [{"id": "u1"}, {"id": "u2"}]})) as mock_post:
             sort = [Sort(field="kuku", desc=True), Sort(field="bubu")]
-            resp = self.client.mgmt.user.search_all(
-                ["t1, t2"],
-                ["r1", "r2"],
-                with_test_user=True,
-                sso_app_ids=["app1"],
-                text="blue",
-                sort=sort,
+            resp = await client.invoke(
+                client.mgmt.user.search_all(
+                    ["t1, t2"],
+                    ["r1", "r2"],
+                    with_test_user=True,
+                    sso_app_ids=["app1"],
+                    text="blue",
+                    sort=sort,
+                )
             )
             users = resp["users"]
-            self.assertEqual(len(users), 2)
-            self.assertEqual(users[0]["id"], "u1")
-            self.assertEqual(users[1]["id"], "u2")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.users_search_path}",
+            assert len(users) == 2
+            assert users[0]["id"] == "u1"
+            assert users[1]["id"] == "u2"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.users_search_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -1152,35 +1027,32 @@ class TestUser(common.DescopeTest):
                     ],
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Test success flow with custom attributes
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"users": [{"id": "u1"}, {"id": "u2"}]}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.search_all(
-                ["t1, t2"],
-                ["r1", "r2"],
-                with_test_user=True,
-                custom_attributes={"ak": "av"},
-                statuses=["invited"],
-                phones=["+111111"],
-                emails=["a@b.com"],
+        with client.mock_mgmt_post(make_response({"users": [{"id": "u1"}, {"id": "u2"}]})) as mock_post:
+            resp = await client.invoke(
+                client.mgmt.user.search_all(
+                    ["t1, t2"],
+                    ["r1", "r2"],
+                    with_test_user=True,
+                    custom_attributes={"ak": "av"},
+                    statuses=["invited"],
+                    phones=["+111111"],
+                    emails=["a@b.com"],
+                )
             )
             users = resp["users"]
-            self.assertEqual(len(users), 2)
-            self.assertEqual(users[0]["id"], "u1")
-            self.assertEqual(users[1]["id"], "u2")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.users_search_path}",
+            assert len(users) == 2
+            assert users[0]["id"] == "u1"
+            assert users[1]["id"] == "u2"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.users_search_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -1196,35 +1068,31 @@ class TestUser(common.DescopeTest):
                     "phones": ["+111111"],
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Test success flow with time parameters
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"users": [{"id": "u1"}, {"id": "u2"}]}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.search_all(
-                from_created_time=100,
-                to_created_time=200,
-                from_modified_time=300,
-                to_modified_time=400,
-                limit=10,
-                page=0,
+        with client.mock_mgmt_post(make_response({"users": [{"id": "u1"}, {"id": "u2"}]})) as mock_post:
+            resp = await client.invoke(
+                client.mgmt.user.search_all(
+                    from_created_time=100,
+                    to_created_time=200,
+                    from_modified_time=300,
+                    to_modified_time=400,
+                    limit=10,
+                    page=0,
+                )
             )
             users = resp["users"]
-            self.assertEqual(len(users), 2)
-            self.assertEqual(users[0]["id"], "u1")
-            self.assertEqual(users[1]["id"], "u2")
-            # Verify the request body includes our time parameters
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.users_search_path}",
+            assert len(users) == 2
+            assert users[0]["id"] == "u1"
+            assert users[1]["id"] == "u2"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.users_search_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -1240,30 +1108,27 @@ class TestUser(common.DescopeTest):
                     "toModifiedTime": 400,
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Test success flow with tenant_role_ids and tenant_role_names
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"users": [{"id": "u1"}, {"id": "u2"}]}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.search_all(
-                tenant_role_ids={"tenant1": {"values": ["roleA", "roleB"], "and": True}},
-                tenant_role_names={"tenant2": {"values": ["admin", "user"], "and": False}},
+        with client.mock_mgmt_post(make_response({"users": [{"id": "u1"}, {"id": "u2"}]})) as mock_post:
+            resp = await client.invoke(
+                client.mgmt.user.search_all(
+                    tenant_role_ids={"tenant1": {"values": ["roleA", "roleB"], "and": True}},
+                    tenant_role_names={"tenant2": {"values": ["admin", "user"], "and": False}},
+                )
             )
             users = resp["users"]
-            self.assertEqual(len(users), 2)
-            self.assertEqual(users[0]["id"], "u1")
-            self.assertEqual(users[1]["id"], "u2")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.users_search_path}",
+            assert len(users) == 2
+            assert users[0]["id"] == "u1"
+            assert users[1]["id"] == "u2"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.users_search_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -1277,63 +1142,48 @@ class TestUser(common.DescopeTest):
                     "tenantRoleNames": {"tenant2": {"values": ["admin", "user"], "and": False}},
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_search_all_test_users(self):
+    async def test_search_all_test_users(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.search_all_test_users,
-                ["t1, t2"],
-                ["r1", "r2"],
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.search_all_test_users(["t1, t2"], ["r1", "r2"]))
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.search_all_test_users,
-                [],
-                [],
-                -1,
-                0,
-            )
+        with client.mock_mgmt_post(make_response({})) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.user.search_all_test_users([], [], -1, 0)
+                )
 
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.search_all_test_users,
-                [],
-                [],
-                0,
-                -1,
-            )
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.user.search_all_test_users([], [], 0, -1)
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"users": [{"id": "u1"}, {"id": "u2"}]}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.search_all_test_users(
-                ["t1, t2"],
-                ["r1", "r2"],
-                sso_app_ids=["app1"],
-                login_ids=["l1"],
+        with client.mock_mgmt_post(make_response({"users": [{"id": "u1"}, {"id": "u2"}]})) as mock_post:
+            resp = await client.invoke(
+                client.mgmt.user.search_all_test_users(
+                    ["t1, t2"],
+                    ["r1", "r2"],
+                    sso_app_ids=["app1"],
+                    login_ids=["l1"],
+                )
             )
             users = resp["users"]
-            self.assertEqual(len(users), 2)
-            self.assertEqual(users[0]["id"], "u1")
-            self.assertEqual(users[1]["id"], "u2")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.test_users_search_path}",
+            assert len(users) == 2
+            assert users[0]["id"] == "u1"
+            assert users[1]["id"] == "u2"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.test_users_search_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -1347,34 +1197,31 @@ class TestUser(common.DescopeTest):
                     "loginIds": ["l1"],
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Test success flow with text and sort
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"users": [{"id": "u1"}, {"id": "u2"}]}""")
-            mock_post.return_value = network_resp
+        with client.mock_mgmt_post(make_response({"users": [{"id": "u1"}, {"id": "u2"}]})) as mock_post:
             sort = [Sort(field="kuku", desc=True), Sort(field="bubu")]
-            resp = self.client.mgmt.user.search_all_test_users(
-                ["t1, t2"],
-                ["r1", "r2"],
-                sso_app_ids=["app1"],
-                text="blue",
-                sort=sort,
+            resp = await client.invoke(
+                client.mgmt.user.search_all_test_users(
+                    ["t1, t2"],
+                    ["r1", "r2"],
+                    sso_app_ids=["app1"],
+                    text="blue",
+                    sort=sort,
+                )
             )
             users = resp["users"]
-            self.assertEqual(len(users), 2)
-            self.assertEqual(users[0]["id"], "u1")
-            self.assertEqual(users[1]["id"], "u2")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.test_users_search_path}",
+            assert len(users) == 2
+            assert users[0]["id"] == "u1"
+            assert users[1]["id"] == "u2"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.test_users_search_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -1392,34 +1239,31 @@ class TestUser(common.DescopeTest):
                     ],
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Test success flow with custom attributes
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"users": [{"id": "u1"}, {"id": "u2"}]}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.search_all_test_users(
-                ["t1, t2"],
-                ["r1", "r2"],
-                custom_attributes={"ak": "av"},
-                statuses=["invited"],
-                phones=["+111111"],
-                emails=["a@b.com"],
+        with client.mock_mgmt_post(make_response({"users": [{"id": "u1"}, {"id": "u2"}]})) as mock_post:
+            resp = await client.invoke(
+                client.mgmt.user.search_all_test_users(
+                    ["t1, t2"],
+                    ["r1", "r2"],
+                    custom_attributes={"ak": "av"},
+                    statuses=["invited"],
+                    phones=["+111111"],
+                    emails=["a@b.com"],
+                )
             )
             users = resp["users"]
-            self.assertEqual(len(users), 2)
-            self.assertEqual(users[0]["id"], "u1")
-            self.assertEqual(users[1]["id"], "u2")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.test_users_search_path}",
+            assert len(users) == 2
+            assert users[0]["id"] == "u1"
+            assert users[1]["id"] == "u2"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.test_users_search_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -1435,34 +1279,30 @@ class TestUser(common.DescopeTest):
                     "phones": ["+111111"],
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Test success flow with time parameters
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"users": [{"id": "u1"}]}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.search_all_test_users(
-                from_created_time=100,
-                to_created_time=200,
-                from_modified_time=300,
-                to_modified_time=400,
-                limit=10,
-                page=0,
+        with client.mock_mgmt_post(make_response({"users": [{"id": "u1"}]})) as mock_post:
+            resp = await client.invoke(
+                client.mgmt.user.search_all_test_users(
+                    from_created_time=100,
+                    to_created_time=200,
+                    from_modified_time=300,
+                    to_modified_time=400,
+                    limit=10,
+                    page=0,
+                )
             )
             users = resp["users"]
-            self.assertEqual(len(users), 1)
-            self.assertEqual(users[0]["id"], "u1")
-            # Verify the request body includes our time parameters
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.test_users_search_path}",
+            assert len(users) == 1
+            assert users[0]["id"] == "u1"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.test_users_search_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -1478,30 +1318,27 @@ class TestUser(common.DescopeTest):
                     "toModifiedTime": 400,
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
         # Test success flow with tenant_role_ids and tenant_role_names
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"users": [{"id": "u1"}, {"id": "u2"}]}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.search_all_test_users(
-                tenant_role_ids={"tenant1": {"values": ["roleA", "roleB"], "and": True}},
-                tenant_role_names={"tenant2": {"values": ["admin", "user"], "and": False}},
+        with client.mock_mgmt_post(make_response({"users": [{"id": "u1"}, {"id": "u2"}]})) as mock_post:
+            resp = await client.invoke(
+                client.mgmt.user.search_all_test_users(
+                    tenant_role_ids={"tenant1": {"values": ["roleA", "roleB"], "and": True}},
+                    tenant_role_names={"tenant2": {"values": ["admin", "user"], "and": False}},
+                )
             )
             users = resp["users"]
-            self.assertEqual(len(users), 2)
-            self.assertEqual(users[0]["id"], "u1")
-            self.assertEqual(users[1]["id"], "u2")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.test_users_search_path}",
+            assert len(users) == 2
+            assert users[0]["id"] == "u1"
+            assert users[1]["id"] == "u2"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.test_users_search_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -1515,41 +1352,43 @@ class TestUser(common.DescopeTest):
                     "tenantRoleNames": {"tenant2": {"values": ["admin", "user"], "and": False}},
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_get_provider_token(self):
+    async def test_get_provider_token(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.get") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.get_provider_token,
-                "valid-id",
-                "p1",
+        with client.mock_mgmt_get(make_response(status=500)) as mock_get:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.get_provider_token("valid-id", "p1"))
+
+        # Test success flow
+        with client.mock_mgmt_get(
+            make_response({
+                "provider": "p1",
+                "providerUserId": "puid",
+                "accessToken": "access123",
+                "refreshToken": "refresh456",
+                "expiration": "123123123",
+                "scopes": ["s1", "s2"],
+            })
+        ) as mock_get:
+            resp = await client.invoke(
+                client.mgmt.user.get_provider_token("valid-id", "p1", True, True)
             )
-            # Test success flow
-        with patch("httpx.get") as mock_get:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads(
-                """{"provider": "p1", "providerUserId": "puid", "accessToken": "access123", "refreshToken": "refresh456", "expiration": "123123123", "scopes": ["s1", "s2"]}"""
-            )
-            mock_get.return_value = network_resp
-            resp = self.client.mgmt.user.get_provider_token("valid-id", "p1", True, True)
-            self.assertEqual(resp["provider"], "p1")
-            self.assertEqual(resp["providerUserId"], "puid")
-            self.assertEqual(resp["accessToken"], "access123")
-            self.assertEqual(resp["refreshToken"], "refresh456")
-            self.assertEqual(resp["expiration"], "123123123")
-            self.assertEqual(resp["scopes"], ["s1", "s2"])
-            mock_get.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_get_provider_token}",
+            assert resp["provider"] == "p1"
+            assert resp["providerUserId"] == "puid"
+            assert resp["accessToken"] == "access123"
+            assert resp["refreshToken"] == "refresh456"
+            assert resp["expiration"] == "123123123"
+            assert resp["scopes"] == ["s1", "s2"]
+            assert_http_called(
+                mock_get, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_get_provider_token}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params={
                     "loginId": "valid-id",
@@ -1558,35 +1397,28 @@ class TestUser(common.DescopeTest):
                     "forceRefresh": True,
                 },
                 follow_redirects=True,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_activate(self):
+    async def test_activate(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.activate,
-                "valid-id",
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.activate("valid-id"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.activate("valid-id")
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            resp = await client.invoke(client.mgmt.user.activate("valid-id"))
             user = resp["user"]
-            self.assertEqual(user["id"], "u1")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_status_path}",
+            assert user["id"] == "u1"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_update_status_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -1594,35 +1426,28 @@ class TestUser(common.DescopeTest):
                     "status": "enabled",
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_deactivate(self):
+    async def test_deactivate(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.deactivate,
-                "valid-id",
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.deactivate("valid-id"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.deactivate("valid-id")
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            resp = await client.invoke(client.mgmt.user.deactivate("valid-id"))
             user = resp["user"]
-            self.assertEqual(user["id"], "u1")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_status_path}",
+            assert user["id"] == "u1"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_update_status_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -1630,36 +1455,28 @@ class TestUser(common.DescopeTest):
                     "status": "disabled",
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_update_login_id(self):
+    async def test_update_login_id(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.update_login_id,
-                "valid-id",
-                "a@b.c",
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.update_login_id("valid-id", "a@b.c"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "a@b.c"}}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.update_login_id("valid-id", "a@b.c")
+        with client.mock_mgmt_post(make_response({"user": {"id": "a@b.c"}})) as mock_post:
+            resp = await client.invoke(client.mgmt.user.update_login_id("valid-id", "a@b.c"))
             user = resp["user"]
-            self.assertEqual(user["id"], "a@b.c")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_login_id_path}",
+            assert user["id"] == "a@b.c"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_update_login_id_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -1667,36 +1484,28 @@ class TestUser(common.DescopeTest):
                     "newLoginId": "a@b.c",
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_update_email(self):
+    async def test_update_email(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.update_email,
-                "valid-id",
-                "a@b.c",
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.update_email("valid-id", "a@b.c"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.update_email("valid-id", "a@b.c")
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            resp = await client.invoke(client.mgmt.user.update_email("valid-id", "a@b.c"))
             user = resp["user"]
-            self.assertEqual(user["id"], "u1")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_email_path}",
+            assert user["id"] == "u1"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_update_email_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -1706,36 +1515,28 @@ class TestUser(common.DescopeTest):
                     "failOnConflict": None,
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_update_phone(self):
+    async def test_update_phone(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.update_phone,
-                "valid-id",
-                "+18005551234",
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.update_phone("valid-id", "+18005551234"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.update_phone("valid-id", "+18005551234", True)
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            resp = await client.invoke(client.mgmt.user.update_phone("valid-id", "+18005551234", True))
             user = resp["user"]
-            self.assertEqual(user["id"], "u1")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_phone_path}",
+            assert user["id"] == "u1"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_update_phone_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -1745,36 +1546,28 @@ class TestUser(common.DescopeTest):
                     "failOnConflict": None,
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_update_display_name(self):
+    async def test_update_display_name(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.update_display_name,
-                "valid-id",
-                "foo",
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.update_display_name("valid-id", "foo"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.update_display_name("valid-id", "foo")
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            resp = await client.invoke(client.mgmt.user.update_display_name("valid-id", "foo"))
             user = resp["user"]
-            self.assertEqual(user["id"], "u1")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_name_path}",
+            assert user["id"] == "u1"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_update_name_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -1782,36 +1575,28 @@ class TestUser(common.DescopeTest):
                     "displayName": "foo",
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_update_picture(self):
+    async def test_update_picture(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.update_picture,
-                "valid-id",
-                "foo",
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.update_picture("valid-id", "foo"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.update_picture("valid-id", "foo")
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            resp = await client.invoke(client.mgmt.user.update_picture("valid-id", "foo"))
             user = resp["user"]
-            self.assertEqual(user["id"], "u1")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_picture_path}",
+            assert user["id"] == "u1"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_update_picture_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -1819,37 +1604,32 @@ class TestUser(common.DescopeTest):
                     "picture": "foo",
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_update_custom_attribute(self):
+    async def test_update_custom_attribute(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.update_custom_attribute,
-                "valid-id",
-                "foo",
-                "bar",
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.user.update_custom_attribute("valid-id", "foo", "bar")
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.update_custom_attribute("valid-id", "foo", "bar")
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            resp = await client.invoke(
+                client.mgmt.user.update_custom_attribute("valid-id", "foo", "bar")
+            )
             user = resp["user"]
-            self.assertEqual(user["id"], "u1")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_custom_attribute_path}",
+            assert user["id"] == "u1"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_update_custom_attribute_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 json={
                     "loginId": "valid-id",
@@ -1858,36 +1638,28 @@ class TestUser(common.DescopeTest):
                 },
                 follow_redirects=False,
                 params=None,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_set_roles(self):
+    async def test_set_roles(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.set_roles,
-                "valid-id",
-                ["foo", "bar"],
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.set_roles("valid-id", ["foo", "bar"]))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.set_roles("valid-id", ["foo", "bar"])
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            resp = await client.invoke(client.mgmt.user.set_roles("valid-id", ["foo", "bar"]))
             user = resp["user"]
-            self.assertEqual(user["id"], "u1")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_set_role_path}",
+            assert user["id"] == "u1"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_set_role_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -1895,36 +1667,28 @@ class TestUser(common.DescopeTest):
                     "roleNames": ["foo", "bar"],
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_add_roles(self):
+    async def test_add_roles(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.add_roles,
-                "valid-id",
-                ["foo", "bar"],
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.add_roles("valid-id", ["foo", "bar"]))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.add_roles("valid-id", ["foo", "bar"])
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            resp = await client.invoke(client.mgmt.user.add_roles("valid-id", ["foo", "bar"]))
             user = resp["user"]
-            self.assertEqual(user["id"], "u1")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_add_role_path}",
+            assert user["id"] == "u1"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_add_role_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -1932,36 +1696,28 @@ class TestUser(common.DescopeTest):
                     "roleNames": ["foo", "bar"],
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_remove_roles(self):
+    async def test_remove_roles(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.remove_roles,
-                "valid-id",
-                ["foo", "bar"],
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.remove_roles("valid-id", ["foo", "bar"]))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.remove_roles("valid-id", ["foo", "bar"])
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            resp = await client.invoke(client.mgmt.user.remove_roles("valid-id", ["foo", "bar"]))
             user = resp["user"]
-            self.assertEqual(user["id"], "u1")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_remove_role_path}",
+            assert user["id"] == "u1"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_remove_role_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -1969,36 +1725,28 @@ class TestUser(common.DescopeTest):
                     "roleNames": ["foo", "bar"],
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_add_sso_apps(self):
+    async def test_add_sso_apps(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.add_sso_apps,
-                "valid-id",
-                ["foo", "bar"],
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.add_sso_apps("valid-id", ["foo", "bar"]))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.add_sso_apps("valid-id", ["foo", "bar"])
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            resp = await client.invoke(client.mgmt.user.add_sso_apps("valid-id", ["foo", "bar"]))
             user = resp["user"]
-            self.assertEqual(user["id"], "u1")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_add_sso_apps}",
+            assert user["id"] == "u1"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_add_sso_apps}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -2006,36 +1754,28 @@ class TestUser(common.DescopeTest):
                     "ssoAppIds": ["foo", "bar"],
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_set_sso_apps(self):
+    async def test_set_sso_apps(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.set_sso_apps,
-                "valid-id",
-                ["foo", "bar"],
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.set_sso_apps("valid-id", ["foo", "bar"]))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.set_sso_apps("valid-id", ["foo", "bar"])
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            resp = await client.invoke(client.mgmt.user.set_sso_apps("valid-id", ["foo", "bar"]))
             user = resp["user"]
-            self.assertEqual(user["id"], "u1")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_set_sso_apps}",
+            assert user["id"] == "u1"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_set_sso_apps}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -2043,36 +1783,28 @@ class TestUser(common.DescopeTest):
                     "ssoAppIds": ["foo", "bar"],
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_remove_sso_apps(self):
+    async def test_remove_sso_apps(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.remove_sso_apps,
-                "valid-id",
-                ["foo", "bar"],
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.remove_sso_apps("valid-id", ["foo", "bar"]))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.remove_sso_apps("valid-id", ["foo", "bar"])
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            resp = await client.invoke(client.mgmt.user.remove_sso_apps("valid-id", ["foo", "bar"]))
             user = resp["user"]
-            self.assertEqual(user["id"], "u1")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_remove_sso_apps}",
+            assert user["id"] == "u1"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_remove_sso_apps}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -2080,36 +1812,28 @@ class TestUser(common.DescopeTest):
                     "ssoAppIds": ["foo", "bar"],
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_add_tenant(self):
+    async def test_add_tenant(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.add_tenant,
-                "valid-id",
-                "tid",
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.add_tenant("valid-id", "tid"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.add_tenant("valid-id", "tid")
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            resp = await client.invoke(client.mgmt.user.add_tenant("valid-id", "tid"))
             user = resp["user"]
-            self.assertEqual(user["id"], "u1")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_add_tenant_path}",
+            assert user["id"] == "u1"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_add_tenant_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -2117,36 +1841,28 @@ class TestUser(common.DescopeTest):
                     "tenantId": "tid",
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_remove_tenant(self):
+    async def test_remove_tenant(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.remove_tenant,
-                "valid-id",
-                "tid",
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.remove_tenant("valid-id", "tid"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.remove_tenant("valid-id", "tid")
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            resp = await client.invoke(client.mgmt.user.remove_tenant("valid-id", "tid"))
             user = resp["user"]
-            self.assertEqual(user["id"], "u1")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_remove_tenant_path}",
+            assert user["id"] == "u1"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_remove_tenant_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -2154,37 +1870,32 @@ class TestUser(common.DescopeTest):
                     "tenantId": "tid",
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_set_tenant_roles(self):
+    async def test_set_tenant_roles(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.set_tenant_roles,
-                "valid-id",
-                "tid",
-                ["foo", "bar"],
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.user.set_tenant_roles("valid-id", "tid", ["foo", "bar"])
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.set_tenant_roles("valid-id", "tid", ["foo", "bar"])
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            resp = await client.invoke(
+                client.mgmt.user.set_tenant_roles("valid-id", "tid", ["foo", "bar"])
+            )
             user = resp["user"]
-            self.assertEqual(user["id"], "u1")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_set_role_path}",
+            assert user["id"] == "u1"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_set_role_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -2193,37 +1904,32 @@ class TestUser(common.DescopeTest):
                     "roleNames": ["foo", "bar"],
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_add_tenant_roles(self):
+    async def test_add_tenant_roles(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.add_tenant_roles,
-                "valid-id",
-                "tid",
-                ["foo", "bar"],
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.user.add_tenant_roles("valid-id", "tid", ["foo", "bar"])
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.add_tenant_roles("valid-id", "tid", ["foo", "bar"])
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            resp = await client.invoke(
+                client.mgmt.user.add_tenant_roles("valid-id", "tid", ["foo", "bar"])
+            )
             user = resp["user"]
-            self.assertEqual(user["id"], "u1")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_add_role_path}",
+            assert user["id"] == "u1"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_add_role_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -2232,37 +1938,32 @@ class TestUser(common.DescopeTest):
                     "roleNames": ["foo", "bar"],
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_remove_tenant_roles(self):
+    async def test_remove_tenant_roles(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.remove_tenant_roles,
-                "valid-id",
-                "tid",
-                ["foo", "bar"],
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.user.remove_tenant_roles("valid-id", "tid", ["foo", "bar"])
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"user": {"id": "u1"}}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.remove_tenant_roles("valid-id", "tid", ["foo", "bar"])
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            resp = await client.invoke(
+                client.mgmt.user.remove_tenant_roles("valid-id", "tid", ["foo", "bar"])
+            )
             user = resp["user"]
-            self.assertEqual(user["id"], "u1")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_remove_role_path}",
+            assert user["id"] == "u1"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_remove_role_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -2271,37 +1972,35 @@ class TestUser(common.DescopeTest):
                     "roleNames": ["foo", "bar"],
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_generate_otp_for_test_user(self):
+    async def test_generate_otp_for_test_user(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.generate_otp_for_test_user,
-                "login-id",
-                "email",
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.user.generate_otp_for_test_user("login-id", "email")
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"code": "123456", "loginId": "login-id"}""")
-            mock_post.return_value = network_resp
+        with client.mock_mgmt_post(
+            make_response({"code": "123456", "loginId": "login-id"})
+        ) as mock_post:
             login_options = LoginOptions(stepup=True)
-            resp = self.client.mgmt.user.generate_otp_for_test_user(DeliveryMethod.EMAIL, "login-id", login_options)
-            self.assertEqual(resp["code"], "123456")
-            self.assertEqual(resp["loginId"], "login-id")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_generate_otp_for_test_path}",
+            resp = await client.invoke(
+                client.mgmt.user.generate_otp_for_test_user(DeliveryMethod.EMAIL, "login-id", login_options)
+            )
+            assert resp["code"] == "123456"
+            assert resp["loginId"] == "login-id"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_generate_otp_for_test_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -2314,36 +2013,33 @@ class TestUser(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_user_set_temporary_password(self):
+    async def test_user_set_temporary_password(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.set_temporary_password,
-                "login-id",
-                "some-password",
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.user.set_temporary_password("login-id", "some-password")
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            mock_post.return_value = network_resp
-            self.client.mgmt.user.set_temporary_password(
-                "login-id",
-                "some-password",
+        with client.mock_mgmt_post(make_response({})) as mock_post:
+            await client.invoke(
+                client.mgmt.user.set_temporary_password(
+                    "login-id",
+                    "some-password",
+                )
             )
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_set_temporary_password_path}",
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_set_temporary_password_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -2352,36 +2048,33 @@ class TestUser(common.DescopeTest):
                     "setActive": False,
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_user_set_active_password(self):
+    async def test_user_set_active_password(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.set_active_password,
-                "login-id",
-                "some-password",
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.user.set_active_password("login-id", "some-password")
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            mock_post.return_value = network_resp
-            self.client.mgmt.user.set_active_password(
-                "login-id",
-                "some-password",
+        with client.mock_mgmt_post(make_response({})) as mock_post:
+            await client.invoke(
+                client.mgmt.user.set_active_password(
+                    "login-id",
+                    "some-password",
+                )
             )
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_set_active_password_path}",
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_set_active_password_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -2390,36 +2083,33 @@ class TestUser(common.DescopeTest):
                     "setActive": True,
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_user_set_password(self):
+    async def test_user_set_password(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.set_password,
-                "login-id",
-                "some-password",
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.user.set_password("login-id", "some-password")
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            mock_post.return_value = network_resp
-            self.client.mgmt.user.set_password(
-                "login-id",
-                "some-password",
+        with client.mock_mgmt_post(make_response({})) as mock_post:
+            await client.invoke(
+                client.mgmt.user.set_password(
+                    "login-id",
+                    "some-password",
+                )
             )
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_set_password_path}",
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_set_password_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -2427,142 +2117,127 @@ class TestUser(common.DescopeTest):
                     "password": "some-password",
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_user_expire_password(self):
+    async def test_user_expire_password(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.expire_password,
-                "login-id",
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.expire_password("login-id"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            mock_post.return_value = network_resp
-            self.client.mgmt.user.expire_password(
-                "login-id",
+        with client.mock_mgmt_post(make_response({})) as mock_post:
+            await client.invoke(
+                client.mgmt.user.expire_password(
+                    "login-id",
+                )
             )
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_expire_password_path}",
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_expire_password_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
                     "loginId": "login-id",
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_user_remove_all_passkeys(self):
+    async def test_user_remove_all_passkeys(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.remove_all_passkeys,
-                "login-id",
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.remove_all_passkeys("login-id"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            mock_post.return_value = network_resp
-            self.client.mgmt.user.remove_all_passkeys(
-                "login-id",
+        with client.mock_mgmt_post(make_response({})) as mock_post:
+            await client.invoke(
+                client.mgmt.user.remove_all_passkeys(
+                    "login-id",
+                )
             )
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_remove_all_passkeys_path}",
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_remove_all_passkeys_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
                     "loginId": "login-id",
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_user_remove_totp_seed(self):
+    async def test_user_remove_totp_seed(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.remove_totp_seed,
-                "login-id",
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.remove_totp_seed("login-id"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            mock_post.return_value = network_resp
-            self.client.mgmt.user.remove_totp_seed(
-                "login-id",
+        with client.mock_mgmt_post(make_response({})) as mock_post:
+            await client.invoke(
+                client.mgmt.user.remove_totp_seed(
+                    "login-id",
+                )
             )
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_remove_totp_seed_path}",
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_remove_totp_seed_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
                     "loginId": "login-id",
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_generate_magic_link_for_test_user(self):
+    async def test_generate_magic_link_for_test_user(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.generate_magic_link_for_test_user,
-                "login-id",
-                "email",
-                "bla",
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.user.generate_magic_link_for_test_user("login-id", "email", "bla")
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"link": "some-link", "loginId": "login-id"}""")
-            mock_post.return_value = network_resp
+        with client.mock_mgmt_post(
+            make_response({"link": "some-link", "loginId": "login-id"})
+        ) as mock_post:
             login_options = LoginOptions(stepup=True)
-            resp = self.client.mgmt.user.generate_magic_link_for_test_user(
-                DeliveryMethod.EMAIL, "login-id", "bla", login_options
+            resp = await client.invoke(
+                client.mgmt.user.generate_magic_link_for_test_user(
+                    DeliveryMethod.EMAIL, "login-id", "bla", login_options
+                )
             )
-            self.assertEqual(resp["link"], "some-link")
-            self.assertEqual(resp["loginId"], "login-id")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_generate_magic_link_for_test_path}",
+            assert resp["link"] == "some-link"
+            assert resp["loginId"] == "login-id"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_generate_magic_link_for_test_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -2576,40 +2251,36 @@ class TestUser(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_generate_enchanted_link_for_test_user(self):
+    async def test_generate_enchanted_link_for_test_user(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.generate_enchanted_link_for_test_user,
-                "login-id",
-                "bla",
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.user.generate_enchanted_link_for_test_user("login-id", "bla")
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads(
-                """{"link": "some-link", "loginId": "login-id", "pendingRef": "some-ref"}"""
-            )
-            mock_post.return_value = network_resp
+        with client.mock_mgmt_post(
+            make_response({"link": "some-link", "loginId": "login-id", "pendingRef": "some-ref"})
+        ) as mock_post:
             login_options = LoginOptions(stepup=True)
-            resp = self.client.mgmt.user.generate_enchanted_link_for_test_user("login-id", "bla", login_options)
-            self.assertEqual(resp["link"], "some-link")
-            self.assertEqual(resp["loginId"], "login-id")
-            self.assertEqual(resp["pendingRef"], "some-ref")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_generate_enchanted_link_for_test_path}",
+            resp = await client.invoke(
+                client.mgmt.user.generate_enchanted_link_for_test_user("login-id", "bla", login_options)
+            )
+            assert resp["link"] == "some-link"
+            assert resp["loginId"] == "login-id"
+            assert resp["pendingRef"] == "some-ref"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_generate_enchanted_link_for_test_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -2622,30 +2293,29 @@ class TestUser(common.DescopeTest):
                     },
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_generate_embedded_link(self):
+    async def test_generate_embedded_link(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(AuthException, self.client.mgmt.user.generate_embedded_link, "login-id")
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.generate_embedded_link("login-id"))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"token": "some-token"}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.generate_embedded_link("login-id", {"k1": "v1"})
-            self.assertEqual(resp, "some-token")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_generate_embedded_link_path}",
+        with client.mock_mgmt_post(make_response({"token": "some-token"})) as mock_post:
+            resp = await client.invoke(
+                client.mgmt.user.generate_embedded_link("login-id", {"k1": "v1"})
+            )
+            assert resp == "some-token"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_generate_embedded_link_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 json={
                     "loginId": "login-id",
@@ -2654,36 +2324,33 @@ class TestUser(common.DescopeTest):
                 },
                 follow_redirects=False,
                 params=None,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_generate_sign_up_embedded_link(self):
+    async def test_generate_sign_up_embedded_link(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                self.client.mgmt.user.generate_sign_up_embedded_link,
-                "login-id",
-            )
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.user.generate_sign_up_embedded_link("login-id")
+                )
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads("""{"token": "some-token"}""")
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.generate_sign_up_embedded_link(
-                "login-id", email_verified=True, phone_verified=True
+        with client.mock_mgmt_post(make_response({"token": "some-token"})) as mock_post:
+            resp = await client.invoke(
+                client.mgmt.user.generate_sign_up_embedded_link(
+                    "login-id", email_verified=True, phone_verified=True
+                )
             )
-            self.assertEqual(resp, "some-token")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_generate_sign_up_embedded_link_path}",
+            assert resp == "some-token"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_generate_sign_up_embedded_link_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 json={
                     "loginId": "login-id",
@@ -2695,94 +2362,85 @@ class TestUser(common.DescopeTest):
                 },
                 follow_redirects=False,
                 params=None,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_history(self):
+    async def test_history(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
         # Test failed flows
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(AuthException, self.client.mgmt.user.history, ["user-id-1", "user-id-2"])
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.history(["user-id-1", "user-id-2"]))
 
         # Test success flow
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads(
-                """
-                [
-                    {
-                        "userId":    "kuku",
-                        "city":      "kefar saba",
-                        "country":   "Israel",
-                        "ip":        "1.1.1.1",
-                        "loginTime": 32
-                    },
-                    {
-                        "userId":    "nunu",
-                        "city":      "eilat",
-                        "country":   "Israele",
-                        "ip":        "1.1.1.2",
-                        "loginTime": 23
-                    }
-                ]
-                """
-            )
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.history(["user-id-1", "user-id-2"])
-            self.assertEqual(
-                resp,
-                [
-                    {
-                        "userId": "kuku",
-                        "city": "kefar saba",
-                        "country": "Israel",
-                        "ip": "1.1.1.1",
-                        "loginTime": 32,
-                    },
-                    {
-                        "userId": "nunu",
-                        "city": "eilat",
-                        "country": "Israele",
-                        "ip": "1.1.1.2",
-                        "loginTime": 23,
-                    },
-                ],
-            )
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_history_path}",
+        with client.mock_mgmt_post(
+            make_response([
+                {
+                    "userId": "kuku",
+                    "city": "kefar saba",
+                    "country": "Israel",
+                    "ip": "1.1.1.1",
+                    "loginTime": 32,
+                },
+                {
+                    "userId": "nunu",
+                    "city": "eilat",
+                    "country": "Israele",
+                    "ip": "1.1.1.2",
+                    "loginTime": 23,
+                },
+            ])
+        ) as mock_post:
+            resp = await client.invoke(client.mgmt.user.history(["user-id-1", "user-id-2"]))
+            assert resp == [
+                {
+                    "userId": "kuku",
+                    "city": "kefar saba",
+                    "country": "Israel",
+                    "ip": "1.1.1.1",
+                    "loginTime": 32,
+                },
+                {
+                    "userId": "nunu",
+                    "city": "eilat",
+                    "country": "Israele",
+                    "ip": "1.1.1.2",
+                    "loginTime": 23,
+                },
+            ]
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_history_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 json=["user-id-1", "user-id-2"],
                 follow_redirects=False,
                 params=None,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_update_test_user(self):
-        with patch("httpx.post") as mock_post:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads('{"user": {"id": "u1"}}')
-            mock_post.return_value = network_resp
-            resp = self.client.mgmt.user.update(
-                "id",
-                display_name="test-user",
-                test=True,
+    async def test_update_test_user(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            resp = await client.invoke(
+                client.mgmt.user.update(
+                    "id",
+                    display_name="test-user",
+                    test=True,
+                )
             )
             user = resp["user"]
-            self.assertEqual(user["id"], "u1")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_update_path}",
+            assert user["id"] == "u1"
+            assert_http_called(
+                mock_post, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_update_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -2799,29 +2457,28 @@ class TestUser(common.DescopeTest):
                     "ssoAppIDs": None,
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
 
-    def test_patch_test_user(self):
-        with patch("httpx.patch") as mock_patch:
-            network_resp = mock.Mock()
-            network_resp.is_success = True
-            network_resp.json.return_value = json.loads('{"user": {"id": "u1"}}')
-            mock_patch.return_value = network_resp
-            resp = self.client.mgmt.user.patch(
-                "id",
-                display_name="test-user",
-                test=True,
+    async def test_patch_test_user(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_patch(make_response({"user": {"id": "u1"}})) as mock_patch:
+            resp = await client.invoke(
+                client.mgmt.user.patch(
+                    "id",
+                    display_name="test-user",
+                    test=True,
+                )
             )
             user = resp["user"]
-            self.assertEqual(user["id"], "u1")
-            mock_patch.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{MgmtV1.user_patch_path}",
+            assert user["id"] == "u1"
+            assert_http_called(
+                mock_patch, client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_patch_path}",
                 headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
-                    "x-descope-project-id": self.dummy_project_id,
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
                 json={
@@ -2830,6 +2487,4 @@ class TestUser(common.DescopeTest):
                     "test": True,
                 },
                 follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
