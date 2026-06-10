@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from descope._auth_base import AuthBase
+from descope._auth_base import AsyncAuthBase
 from descope.auth import Auth
 from descope.authmethod._enchantedlink_base import EnchantedLinkBase
 from descope.common import (
@@ -14,8 +14,10 @@ from descope.common import (
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
-class EnchantedLink(EnchantedLinkBase, AuthBase):
-    def sign_in(
+class EnchantedLinkAsync(EnchantedLinkBase, AsyncAuthBase):
+    """Async EnchantedLink auth-method. All network calls are coroutines; validation is sync (no I/O)."""
+
+    async def sign_in(
         self,
         login_id: str,
         uri: str,
@@ -29,10 +31,10 @@ class EnchantedLink(EnchantedLinkBase, AuthBase):
 
         body = self._compose_signin_body(login_id, uri, login_options)
         url = self._compose_signin_url()
-        response = self._http.post(url, body=body, pswd=refresh_token)
+        response = await self._http.post(url, body=body, pswd=refresh_token)
         return response.json()
 
-    def sign_up(
+    async def sign_up(
         self,
         login_id: str,
         uri: str,
@@ -51,10 +53,10 @@ class EnchantedLink(EnchantedLinkBase, AuthBase):
 
         body = self._compose_signup_body(login_id, uri, user, signup_options)
         url = self._compose_signup_url()
-        response = self._http.post(url, body=body)
+        response = await self._http.post(url, body=body)
         return response.json()
 
-    def sign_up_or_in(self, login_id: str, uri: str, signup_options: SignUpOptions | None = None) -> dict:
+    async def sign_up_or_in(self, login_id: str, uri: str, signup_options: SignUpOptions | None = None) -> dict:
         login_options: LoginOptions | None = None
         if signup_options is not None:
             login_options = LoginOptions(
@@ -65,22 +67,22 @@ class EnchantedLink(EnchantedLinkBase, AuthBase):
 
         body = self._compose_signin_body(login_id, uri, login_options)
         url = self._compose_sign_up_or_in_url()
-        response = self._http.post(url, body=body)
+        response = await self._http.post(url, body=body)
         return response.json()
 
-    def get_session(self, pending_ref: str) -> dict:
+    async def get_session(self, pending_ref: str) -> dict:
         uri = EndpointsV1.get_session_enchantedlink_auth_path
         body = self._compose_get_session_body(pending_ref)
-        response = self._http.post(uri, body=body)
+        response = await self._http.post(uri, body=body)
         resp = response.json()
         return self._auth.generate_jwt_response(resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), None)
 
-    def verify(self, token: str) -> None:
+    async def verify(self, token: str) -> None:
         uri = EndpointsV1.verify_enchantedlink_auth_path
         body = self._compose_verify_body(token)
-        self._http.post(uri, body=body)
+        await self._http.post(uri, body=body)
 
-    def update_user_email(
+    async def update_user_email(
         self,
         login_id: str,
         email: str,
@@ -106,5 +108,5 @@ class EnchantedLink(EnchantedLinkBase, AuthBase):
             provider_id,
         )
         uri = EndpointsV1.update_user_email_enchantedlink_path
-        response = self._http.post(uri, body=body, pswd=refresh_token)
+        response = await self._http.post(uri, body=body, pswd=refresh_token)
         return response.json()

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import Iterable
 
-from descope._auth_base import AuthBase
+from descope._auth_base import AsyncAuthBase
 from descope.auth import Auth
-from descope.authmethod._magiclink_base import MagicLinkBase
+from descope.authmethod._otp_base import OTPBase
 from descope.common import (
     REFRESH_SESSION_COOKIE_NAME,
     DeliveryMethod,
@@ -16,34 +16,30 @@ from descope.common import (
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
-class MagicLink(MagicLinkBase, AuthBase):
-    def sign_in(
+class OTPAsync(OTPBase, AsyncAuthBase):
+    """Async OTP auth-method. All network calls are coroutines; validation is sync (no I/O)."""
+
+    async def sign_in(
         self,
         method: DeliveryMethod,
         login_id: str,
-        uri: str,
         login_options: LoginOptions | None = None,
         refresh_token: str | None = None,
     ) -> str:
         if not login_id:
-            raise AuthException(
-                400,
-                ERROR_TYPE_INVALID_ARGUMENT,
-                "Identifier is empty",
-            )
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
 
         validate_refresh_token_provided(login_options, refresh_token)
 
-        body = MagicLink._compose_signin_body(login_id, uri, login_options)
-        url = MagicLink._compose_signin_url(method)
-        response = self._http.post(url, body=body, pswd=refresh_token)
+        uri = self._compose_signin_url(method)
+        body = self._compose_signin_body(login_id, login_options)
+        response = await self._http.post(uri, body=body, pswd=refresh_token)
         return Auth.extract_masked_address(response.json(), method)
 
-    def sign_up(
+    async def sign_up(
         self,
         method: DeliveryMethod,
         login_id: str,
-        uri: str,
         user: dict | None = None,
         signup_options: SignUpOptions | None = None,
     ) -> str:
@@ -57,18 +53,21 @@ class MagicLink(MagicLinkBase, AuthBase):
                 f"Login ID {login_id} is not valid by delivery method {method}",
             )
 
-        body = MagicLink._compose_signup_body(method, login_id, uri, user, signup_options)
-        url = MagicLink._compose_signup_url(method)
-        response = self._http.post(url, body=body)
+        uri = self._compose_signup_url(method)
+        body = self._compose_signup_body(method, login_id, user, signup_options)
+        response = await self._http.post(uri, body=body)
         return Auth.extract_masked_address(response.json(), method)
 
-    def sign_up_or_in(
+    async def sign_up_or_in(
         self,
         method: DeliveryMethod,
         login_id: str,
-        uri: str,
         signup_options: SignUpOptions | None = None,
     ) -> str:
+        if not login_id:
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
+
+        uri = self._compose_sign_up_or_in_url(method)
         login_options: LoginOptions | None = None
         if signup_options is not None:
             login_options = LoginOptions(
@@ -76,26 +75,28 @@ class MagicLink(MagicLinkBase, AuthBase):
                 template_options=signup_options.templateOptions,
                 template_id=signup_options.templateId,
             )
-        body = MagicLink._compose_signin_body(
-            login_id,
-            uri,
-            login_options,
-        )
-        url = MagicLink._compose_sign_up_or_in_url(method)
-        response = self._http.post(url, body=body)
+        body = self._compose_signin_body(login_id, login_options)
+        response = await self._http.post(uri, body=body)
         return Auth.extract_masked_address(response.json(), method)
 
-    def verify(self, token: str, audience: str | None | Iterable[str] = None) -> dict:
-        url = EndpointsV1.verify_magiclink_auth_path
-        body = MagicLink._compose_verify_body(token)
-        response = self._http.post(url, body=body)
-        resp = response.json()
-        jwt_response = self._auth.generate_jwt_response(
-            resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
-        )
-        return jwt_response
+    async def verify_code(
+        self,
+        method: DeliveryMethod,
+        login_id: str,
+        code: str,
+        audience: str | None | Iterable[str] = None,
+    ) -> dict:
+        if not login_id:
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
 
-    def update_user_email(
+        uri = self._compose_verify_code_url(method)
+        body = self._compose_verify_code_body(login_id, code)
+        response = await self._http.post(uri, body=body)
+
+        resp = response.json()
+        return self._auth.generate_jwt_response(resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience)
+
+    async def update_user_email(
         self,
         login_id: str,
         email: str,
@@ -111,7 +112,8 @@ class MagicLink(MagicLinkBase, AuthBase):
 
         Auth.validate_email(email)
 
-        body = MagicLink._compose_update_user_email_body(
+        uri = EndpointsV1.update_user_email_otp_path
+        body = self._compose_update_user_email_body(
             login_id,
             email,
             add_to_login_ids,
@@ -120,11 +122,10 @@ class MagicLink(MagicLinkBase, AuthBase):
             template_id,
             provider_id,
         )
-        url = EndpointsV1.update_user_email_magiclink_path
-        response = self._http.post(url, body=body, pswd=refresh_token)
+        response = await self._http.post(uri, body=body, pswd=refresh_token)
         return Auth.extract_masked_address(response.json(), DeliveryMethod.EMAIL)
 
-    def update_user_phone(
+    async def update_user_phone(
         self,
         method: DeliveryMethod,
         login_id: str,
@@ -141,7 +142,8 @@ class MagicLink(MagicLinkBase, AuthBase):
 
         Auth.validate_phone(method, phone)
 
-        body = MagicLink._compose_update_user_phone_body(
+        uri = self._compose_update_phone_url(method)
+        body = self._compose_update_user_phone_body(
             login_id,
             phone,
             add_to_login_ids,
@@ -150,6 +152,5 @@ class MagicLink(MagicLinkBase, AuthBase):
             template_id,
             provider_id,
         )
-        url = EndpointsV1.update_user_phone_magiclink_path
-        response = self._http.post(url, body=body, pswd=refresh_token)
-        return Auth.extract_masked_address(response.json(), DeliveryMethod.SMS)
+        response = await self._http.post(uri, body=body, pswd=refresh_token)
+        return Auth.extract_masked_address(response.json(), method)

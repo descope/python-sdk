@@ -1,180 +1,125 @@
-import json
-import unittest
-from unittest import mock
-from unittest.mock import patch
+import pytest
 
 from descope import AuthException
-from descope.auth import Auth
-from descope.authmethod.oauth import OAuth
-from descope.common import DEFAULT_TIMEOUT_SECONDS, EndpointsV1, LoginOptions
-from tests.testutils import SSLMatcher
+from descope.common import (
+    REFRESH_SESSION_COOKIE_NAME,
+    EndpointsV1,
+    LoginOptions,
+)
+from tests.conftest import PROJECT_ID, assert_http_called, make_response
+from tests.testutils import PUBLIC_KEY_DICT, VALID_REFRESH_TOKEN, VALID_SESSION_TOKEN
 
 from . import common
 
 
-class TestOAuth(common.DescopeTest):
-    def setUp(self) -> None:
-        super().setUp()
-        self.dummy_project_id = "dummy"
-        self.public_key_dict = {
-            "alg": "ES384",
-            "crv": "P-384",
-            "kid": "2Bt5WLccLUey1Dp7utptZb3Fx9K",
-            "kty": "EC",
-            "use": "sig",
-            "x": "8SMbQQpCQAGAxCdoIz8y9gDw-wXoyoN5ILWpAlBKOcEM1Y7WmRKc1O2cnHggyEVi",
-            "y": "N5n5jKZA5Wu7_b4B36KKjJf-VRfJ-XqczfCSYy9GeQLqF-b63idfE0SYaYk9cFqg",
-        }
-
+class TestOAuth:
     def test_compose_start_params(self):
-        self.assertEqual(
-            OAuth._compose_start_params("google", "http://example.com"),
-            {"provider": "google", "redirectURL": "http://example.com"},
+        from descope.authmethod.oauth import OAuth
+
+        assert OAuth._compose_start_params("google", "http://example.com") == {
+            "provider": "google",
+            "redirectURL": "http://example.com",
+        }
+        assert OAuth._compose_start_params("google") == {"provider": "google"}
+
+    def test_verify_provider(self):
+        from descope.authmethod.oauth import OAuth
+
+        assert OAuth._verify_provider("") is False
+        assert OAuth._verify_provider(None) is False
+        assert OAuth._verify_provider("google") is True
+
+    async def test_start(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
+
+        # Validation errors — no HTTP call made
+        with pytest.raises(AuthException):
+            await client.invoke(client.oauth.start(""))
+        with pytest.raises(AuthException):
+            await client.invoke(client.oauth.start(None))
+        with pytest.raises(AuthException):
+            await client.invoke(client.oauth.start("facebook", login_options=LoginOptions(mfa=True)))
+
+        # HTTP error
+        with client.mock_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.oauth.start("google"))
+
+        # Success
+        with client.mock_post(make_response({"url": "http://auth.example.com"})):
+            result = await client.invoke(client.oauth.start("google"))
+        assert result is not None
+
+        # Verify payload with params
+        with client.mock_post(make_response({"url": "http://auth.example.com"})) as mock_post:
+            await client.invoke(client.oauth.start("facebook"))
+        assert_http_called(
+            mock_post,
+            client.mode,
+            f"{common.DEFAULT_BASE_URL}{EndpointsV1.oauth_start_path}",
+            headers={
+                **common.default_headers,
+                "Authorization": f"Bearer {PROJECT_ID}",
+                "x-descope-project-id": PROJECT_ID,
+            },
+            params={"provider": "facebook"},
+            json={},
+            follow_redirects=False,
         )
 
-    def test_verify_oauth_providers(self):
-        self.assertEqual(
-            OAuth._verify_provider(""),
-            False,
+    async def test_start_with_login_options(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
+        refresh_token = "dummy-refresh"
+
+        lo = LoginOptions(stepup=True, custom_claims={"k1": "v1"})
+        with client.mock_post(make_response({})) as mock_post:
+            await client.invoke(client.oauth.start("facebook", login_options=lo, refresh_token=refresh_token))
+        assert_http_called(
+            mock_post,
+            client.mode,
+            f"{common.DEFAULT_BASE_URL}{EndpointsV1.oauth_start_path}",
+            headers={
+                **common.default_headers,
+                "Authorization": f"Bearer {PROJECT_ID}:{refresh_token}",
+                "x-descope-project-id": PROJECT_ID,
+            },
+            params={"provider": "facebook"},
+            json={"stepup": True, "customClaims": {"k1": "v1"}, "mfa": False},
+            follow_redirects=False,
         )
 
-        self.assertEqual(
-            OAuth._verify_provider(None),
-            False,
+    async def test_exchange_token(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
+
+        # Validation errors
+        with pytest.raises(AuthException):
+            await client.invoke(client.oauth.exchange_token(""))
+        with pytest.raises(AuthException):
+            await client.invoke(client.oauth.exchange_token(None))
+
+        # HTTP error
+        with client.mock_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.oauth.exchange_token("c1"))
+
+        # Success
+        success_resp = make_response(
+            {"sessionJwt": VALID_SESSION_TOKEN},
+            cookies={REFRESH_SESSION_COOKIE_NAME: VALID_REFRESH_TOKEN},
         )
-
-    def test_oauth_start(self):
-        oauth = OAuth(
-            Auth(
-                self.dummy_project_id,
-                self.public_key_dict,
-                http_client=self.make_http_client(),
-            )
+        with client.mock_post(success_resp) as mock_post:
+            result = await client.invoke(client.oauth.exchange_token("c1"))
+        assert result is not None
+        assert_http_called(
+            mock_post,
+            client.mode,
+            f"{common.DEFAULT_BASE_URL}{EndpointsV1.oauth_exchange_token_path}",
+            headers={
+                **common.default_headers,
+                "Authorization": f"Bearer {PROJECT_ID}",
+                "x-descope-project-id": PROJECT_ID,
+            },
+            params=None,
+            json={"code": "c1"},
+            follow_redirects=False,
         )
-
-        # Test failed flows
-        self.assertRaises(AuthException, oauth.start, "")
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(AuthException, oauth.start, "google")
-
-        # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNotNone(oauth.start("google"))
-
-            self.assertRaises(
-                AuthException,
-                oauth.start,
-                "facebook",
-                "http://test.me",
-                LoginOptions(mfa=True),
-            )
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            oauth.start("facebook")
-            expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.oauth_start_path}"
-            mock_post.assert_called_with(
-                expected_uri,
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
-                params={"provider": "facebook"},
-                json={},
-                follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )
-
-    def test_oauth_start_with_login_options(self):
-        oauth = OAuth(
-            Auth(
-                self.dummy_project_id,
-                self.public_key_dict,
-                http_client=self.make_http_client(),
-            )
-        )
-
-        # Test failed flows
-        self.assertRaises(AuthException, oauth.start, "")
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(AuthException, oauth.start, "google")
-
-        # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNotNone(oauth.start("google"))
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            lo = LoginOptions(stepup=True, custom_claims={"k1": "v1"})
-            oauth.start("facebook", login_options=lo, refresh_token="refresh")
-            expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.oauth_start_path}"
-            mock_post.assert_called_with(
-                expected_uri,
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:refresh",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
-                params={"provider": "facebook"},
-                json={"stepup": True, "customClaims": {"k1": "v1"}, "mfa": False},
-                follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )
-
-    def test_compose_exchange_params(self):
-        self.assertEqual(Auth._compose_exchange_body("c1"), {"code": "c1"})
-
-    def test_exchange_token(self):
-        oauth = OAuth(
-            Auth(
-                self.dummy_project_id,
-                self.public_key_dict,
-                http_client=self.make_http_client(),
-            )
-        )
-
-        # Test failed flows
-        self.assertRaises(AuthException, oauth.exchange_token, "")
-        self.assertRaises(AuthException, oauth.exchange_token, None)
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(AuthException, oauth.exchange_token, "c1")
-
-        # Test success flow
-        with patch("httpx.post") as mock_post:
-            my_mock_response = mock.Mock()
-            my_mock_response.is_success = True
-            my_mock_response.cookies = {}
-            data = json.loads(
-                """{"jwts": ["eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg4MDc4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MTY2MDIxNTI3OCwiaWF0IjoxNjU3Nzk2MDc4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQnRFSGtnT3UwMmxtTXh6UElleGRNdFV3MU0ifQ.oAnvJ7MJvCyL_33oM7YCF12JlQ0m6HWRuteUVAdaswfnD4rHEBmPeuVHGljN6UvOP4_Cf0559o39UHVgm3Fwb-q7zlBbsu_nP1-PRl-F8NJjvBgC5RsAYabtJq7LlQmh"], "user": {"loginIds": ["guyp@descope.com"], "name": "", "email": "guyp@descope.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false}, "firstSeen": false}"""
-            )
-            my_mock_response.json.return_value = data
-            mock_post.return_value = my_mock_response
-            oauth.exchange_token("c1")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{EndpointsV1.oauth_exchange_token_path}",
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
-                params=None,
-                json={"code": "c1"},
-                follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )
-
-
-if __name__ == "__main__":
-    unittest.main()

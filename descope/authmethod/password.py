@@ -3,11 +3,12 @@ from __future__ import annotations
 from typing import Iterable
 
 from descope._auth_base import AuthBase
+from descope.authmethod._password_base import PasswordBase
 from descope.common import REFRESH_SESSION_COOKIE_NAME, EndpointsV1
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
-class Password(AuthBase):
+class Password(PasswordBase, AuthBase):
     def sign_up(
         self,
         login_id: str,
@@ -229,10 +230,3 @@ class Password(AuthBase):
 
         response = self._http.get(uri=EndpointsV1.password_policy_path)
         return response.json()
-
-    @staticmethod
-    def _compose_signup_body(login_id: str, password: str, user: dict | None) -> dict:
-        body: dict[str, str | bool | dict] = {"loginId": login_id, "password": password}
-        if user is not None:
-            body["user"] = user
-        return body

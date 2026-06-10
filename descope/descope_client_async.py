@@ -4,7 +4,15 @@ import os
 from typing import Iterable
 
 from descope._client_base import DescopeClientBase
+from descope.authmethod.enchantedlink_async import EnchantedLinkAsync
+from descope.authmethod.magiclink_async import MagicLinkAsync
+from descope.authmethod.oauth_async import OAuthAsync
+from descope.authmethod.otp_async import OTPAsync
+from descope.authmethod.password_async import PasswordAsync
+from descope.authmethod.saml_async import SAMLAsync
+from descope.authmethod.sso_async import SSOAsync
 from descope.authmethod.totp_async import TOTPAsync
+from descope.authmethod.webauthn_async import WebAuthnAsync
 from descope.common import (
     DEFAULT_TIMEOUT_SECONDS,
     REFRESH_SESSION_COOKIE_NAME,
@@ -83,14 +91,55 @@ class DescopeClientAsync(DescopeClientBase):
         )
         self._fga_cache_url = fga_cache_url
 
+        self._magiclink = MagicLinkAsync(self._auth, self._auth_http)
+        self._enchantedlink = EnchantedLinkAsync(self._auth, self._auth_http)
+        self._oauth = OAuthAsync(self._auth, self._auth_http)
+        self._saml = SAMLAsync(self._auth, self._auth_http)  # deprecated
+        self._sso = SSOAsync(self._auth, self._auth_http)
+        self._otp = OTPAsync(self._auth, self._auth_http)
         self._totp = TOTPAsync(self._auth, self._auth_http)
+        self._webauthn = WebAuthnAsync(self._auth, self._auth_http)
+        self._password = PasswordAsync(self._auth, self._auth_http)
 
         if self._mgmt_http.management_key:
             self._fetch_rate_limit_tier(self._mgmt_http)
 
     @property
+    def magiclink(self) -> MagicLinkAsync:
+        return self._magiclink
+
+    @property
+    def enchantedlink(self) -> EnchantedLinkAsync:
+        return self._enchantedlink
+
+    @property
+    def otp(self) -> OTPAsync:
+        return self._otp
+
+    @property
     def totp(self) -> TOTPAsync:
         return self._totp
+
+    @property
+    def oauth(self) -> OAuthAsync:
+        return self._oauth
+
+    # deprecated (use sso instead)
+    @property
+    def saml(self) -> SAMLAsync:
+        return self._saml
+
+    @property
+    def sso(self) -> SSOAsync:
+        return self._sso
+
+    @property
+    def webauthn(self) -> WebAuthnAsync:
+        return self._webauthn
+
+    @property
+    def password(self) -> PasswordAsync:
+        return self._password
 
     async def aclose(self) -> None:
         """Close the underlying async HTTP clients and release connections."""

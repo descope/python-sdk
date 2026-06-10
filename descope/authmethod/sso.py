@@ -1,11 +1,19 @@
-from typing import Any, Dict, Optional
+from __future__ import annotations
+
+from typing import Optional
 
 from descope._auth_base import AuthBase
-from descope.common import EndpointsV1, LoginOptions, validate_refresh_token_provided
+from descope.authmethod._sso_base import SSOBase
+from descope.common import (
+    REFRESH_SESSION_COOKIE_NAME,
+    EndpointsV1,
+    LoginOptions,
+    validate_refresh_token_provided,
+)
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
-class SSO(AuthBase):
+class SSO(SSOBase, AuthBase):
     def start(
         self,
         tenant: str,
@@ -34,13 +42,12 @@ class SSO(AuthBase):
         Return dict in the format
              {'url': 'http://dummy.com/login..'}
         """
-        if not tenant:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Tenant cannot be empty")
+        self._validate_tenant(tenant)
 
         validate_refresh_token_provided(login_options, refresh_token)
 
         uri = EndpointsV1.auth_sso_start_path
-        params = SSO._compose_start_params(
+        params = self._compose_start_params(
             tenant,
             return_url if return_url else "",
             prompt if prompt else "",
@@ -58,27 +65,11 @@ class SSO(AuthBase):
         return response.json()
 
     def exchange_token(self, code: str) -> dict:
+        if not code:
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "exchange code is empty")
         uri = EndpointsV1.sso_exchange_token_path
-        return self._auth.exchange_token(uri, code)
-
-    @staticmethod
-    def _compose_start_params(
-        tenant: str,
-        return_url: str,
-        prompt: str,
-        sso_id: str,
-        login_hint: str,
-        force_authn: Optional[bool],
-    ) -> dict:
-        res: Dict[str, Any] = {"tenant": tenant}
-        if return_url is not None and return_url != "":
-            res["redirectURL"] = return_url
-        if prompt is not None and prompt != "":
-            res["prompt"] = prompt
-        if sso_id is not None and sso_id != "":
-            res["ssoId"] = sso_id
-        if login_hint is not None and login_hint != "":
-            res["loginHint"] = login_hint
-        if force_authn is not None:
-            res["forceAuthn"] = force_authn
-        return res
+        body = self._compose_exchange_body(code)
+        response = self._http.post(uri, body=body)
+        return self._auth.generate_jwt_response(
+            response.json(), response.cookies.get(REFRESH_SESSION_COOKIE_NAME), None
+        )
