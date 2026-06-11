@@ -355,6 +355,7 @@ class TestSSOSettings(common.DescopeTest):
                     "tenant-id",
                     SSOSAMLSettingsByMetadata(
                         idp_metadata_url="http://dummy.com/metadata",
+                        idp_entity_id="https://idp.example.com/entity",
                         attribute_mapping=AttributeMapping(
                             name="name",
                             given_name="givenName",
@@ -387,6 +388,7 @@ class TestSSOSettings(common.DescopeTest):
                     "tenantId": "tenant-id",
                     "settings": {
                         "idpMetadataUrl": "http://dummy.com/metadata",
+                        "entityId": "https://idp.example.com/entity",
                         "attributeMapping": {
                             "name": "name",
                             "givenName": "givenName",
@@ -659,6 +661,7 @@ class TestSSOSettings(common.DescopeTest):
                     "tenantId": "tenant-id",
                     "settings": {
                         "idpMetadataUrl": "http://dummy.com/metadata",
+                        "entityId": None,
                         "attributeMapping": None,
                         "roleMappings": [],
                         "spACSUrl": None,

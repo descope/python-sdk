@@ -182,11 +182,14 @@ class SSOSAMLSettingsByMetadata:
         fga_mappings: Optional[Dict[str, FGAGroupMapping]] = None,  # map of IDP group name -> FGA relations
         config_fga_tenant_id_resource_prefix: Optional[str] = None,
         config_fga_tenant_id_resource_suffix: Optional[str] = None,
+        # IdP entity ID - set so IdP-initiated login can resolve the tenant by the SAML response issuer
+        idp_entity_id: Optional[str] = None,
         # NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
         sp_acs_url: Optional[str] = None,
         sp_entity_id: Optional[str] = None,
     ):
         self.idp_metadata_url = idp_metadata_url
+        self.idp_entity_id = idp_entity_id
         self.attribute_mapping = attribute_mapping
         self.role_mappings = role_mappings
         self.default_sso_roles = default_sso_roles
@@ -641,6 +644,7 @@ class SSOSettings(HTTPBase):
             "tenantId": tenant_id,
             "settings": {
                 "idpMetadataUrl": settings.idp_metadata_url,
+                "entityId": settings.idp_entity_id,
                 "spACSUrl": settings.sp_acs_url,
                 "spEntityId": settings.sp_entity_id,
                 "attributeMapping": attr_mapping,
