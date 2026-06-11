@@ -43,7 +43,7 @@ class WebAuthnBase:
             raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Refresh token cannot be empty")
 
     @staticmethod
-    def _compose_sign_up_start_body(login_id: str, user: dict, origin: str) -> dict:
+    def _compose_sign_up_start_body(login_id: Optional[str], user: dict, origin: Optional[str]) -> dict:
         user.update({"loginId": login_id})
         return {"user": user, "origin": origin}
 

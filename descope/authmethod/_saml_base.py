@@ -1,6 +1,8 @@
 # This is not part of the public API but a code helper
 from __future__ import annotations
 
+from typing import Optional
+
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
@@ -20,7 +22,7 @@ class SAMLBase:
             raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Tenant cannot be empty")
 
     @staticmethod
-    def _validate_return_url(return_url: str) -> None:
+    def _validate_return_url(return_url: Optional[str]) -> None:
         if not return_url:
             raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Return url cannot be empty")
 
@@ -30,7 +32,7 @@ class SAMLBase:
             raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "exchange code is empty")
 
     @staticmethod
-    def _compose_start_params(tenant: str, return_url: str) -> dict:
+    def _compose_start_params(tenant: str, return_url: Optional[str]) -> dict:
         res: dict = {"tenant": tenant}
         if return_url is not None and return_url != "":
             res["redirectURL"] = return_url
