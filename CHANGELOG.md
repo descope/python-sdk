@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.5.0](https://github.com/descope/python-sdk/compare/descope-2.4.0...descope-2.5.0) (2026-06-12)
+
+
+### Features
+
+* add locale to invite and invite_batch ([#1557](https://github.com/descope/python-sdk/issues/1557)) ([536c4e3](https://github.com/descope/python-sdk/commit/536c4e30a79a5deda1c3d0c546a9c061353a2e90))
+* **sso:** add idp_entity_id to SSOSAMLSettingsByMetadata ([#1567](https://github.com/descope/python-sdk/issues/1567)) ([970de0a](https://github.com/descope/python-sdk/commit/970de0a12830d986f44ef4adc6b8f519c6922715))
+
+
+### Reverts
+
+* "chore(deps): update dependency mypy to v2.0.0" ([#1552](https://github.com/descope/python-sdk/issues/1552)) ([03c195a](https://github.com/descope/python-sdk/commit/03c195a7cc58f8596171cfb996b3fa5e880fba7a))
+
 ## [2.4.0](https://github.com/descope/python-sdk/compare/descope-2.3.0...descope-2.4.0) (2026-05-16)
 
 
