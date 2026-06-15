@@ -38,7 +38,7 @@ class TestOutboundApplication:
     async def test_create_application_success(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
-        with client.mock_mgmt_post(make_response(APP_RESPONSE)) as mock_post:
+        with client.mock_mgmt_post(make_response(APP_RESPONSE)) as _:
             response = await client.invoke(
                 client.mgmt.outbound_application.create_application(
                     "Test App", description="Test Description", client_secret="secret"
@@ -66,7 +66,7 @@ class TestOutboundApplication:
                     }
                 }
             )
-        ) as mock_post:
+        ) as _:
             response = await client.invoke(
                 client.mgmt.outbound_application.create_application(
                     name="Test OAuth App",
@@ -119,7 +119,7 @@ class TestOutboundApplication:
                     }
                 }
             )
-        ) as mock_post:
+        ) as _:
             response = await client.invoke(
                 client.mgmt.outbound_application.update_application(
                     "app123",
@@ -156,7 +156,7 @@ class TestOutboundApplication:
                     }
                 }
             )
-        ) as mock_post:
+        ) as _:
             response = await client.invoke(
                 client.mgmt.outbound_application.update_application(
                     id="app123",
@@ -279,7 +279,7 @@ class TestOutboundApplication:
     async def test_fetch_token_by_scopes_success(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
-        with client.mock_mgmt_post(make_response(TOKEN_RESPONSE)) as mock_post:
+        with client.mock_mgmt_post(make_response(TOKEN_RESPONSE)) as _:
             response = await client.invoke(
                 client.mgmt.outbound_application.fetch_token_by_scopes(
                     "app123",
@@ -305,7 +305,7 @@ class TestOutboundApplication:
     async def test_fetch_token_success(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
-        with client.mock_mgmt_post(make_response(TOKEN_RESPONSE)) as mock_post:
+        with client.mock_mgmt_post(make_response(TOKEN_RESPONSE)) as _:
             response = await client.invoke(
                 client.mgmt.outbound_application.fetch_token(
                     "app123", "user456", "tenant789", {"forceRefresh": True}
@@ -325,7 +325,7 @@ class TestOutboundApplication:
     async def test_fetch_tenant_token_by_scopes_success(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
-        with client.mock_mgmt_post(make_response(TOKEN_RESPONSE)) as mock_post:
+        with client.mock_mgmt_post(make_response(TOKEN_RESPONSE)) as _:
             response = await client.invoke(
                 client.mgmt.outbound_application.fetch_tenant_token_by_scopes(
                     "app123", "tenant789", ["read", "write"], {"refreshToken": True}
@@ -347,7 +347,7 @@ class TestOutboundApplication:
     async def test_fetch_tenant_token_success(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
-        with client.mock_mgmt_post(make_response(TOKEN_RESPONSE)) as mock_post:
+        with client.mock_mgmt_post(make_response(TOKEN_RESPONSE)) as _:
             response = await client.invoke(
                 client.mgmt.outbound_application.fetch_tenant_token(
                     "app123", "tenant789", {"forceRefresh": True}
@@ -669,7 +669,7 @@ class TestOutboundApplicationByToken:
     async def test_fetch_token_by_scopes_success(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False)
 
-        with client.mock_mgmt_by_token_post(make_response(TOKEN_RESPONSE)) as mock_post:
+        with client.mock_mgmt_by_token_post(make_response(TOKEN_RESPONSE)) as _:
             response = await client.invoke(
                 client.mgmt.outbound_application_by_token.fetch_token_by_scopes(
                     DUMMY_TOKEN,
@@ -711,7 +711,7 @@ class TestOutboundApplicationByToken:
     async def test_fetch_token_success(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False)
 
-        with client.mock_mgmt_by_token_post(make_response(TOKEN_RESPONSE)) as mock_post:
+        with client.mock_mgmt_by_token_post(make_response(TOKEN_RESPONSE)) as _:
             response = await client.invoke(
                 client.mgmt.outbound_application_by_token.fetch_token(
                     DUMMY_TOKEN,
@@ -750,7 +750,7 @@ class TestOutboundApplicationByToken:
     async def test_fetch_tenant_token_by_scopes_success(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False)
 
-        with client.mock_mgmt_by_token_post(make_response(TOKEN_RESPONSE)) as mock_post:
+        with client.mock_mgmt_by_token_post(make_response(TOKEN_RESPONSE)) as _:
             response = await client.invoke(
                 client.mgmt.outbound_application_by_token.fetch_tenant_token_by_scopes(
                     DUMMY_TOKEN,
@@ -791,7 +791,7 @@ class TestOutboundApplicationByToken:
     async def test_fetch_tenant_token_success(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False)
 
-        with client.mock_mgmt_by_token_post(make_response(TOKEN_RESPONSE)) as mock_post:
+        with client.mock_mgmt_by_token_post(make_response(TOKEN_RESPONSE)) as _:
             response = await client.invoke(
                 client.mgmt.outbound_application_by_token.fetch_tenant_token(
                     DUMMY_TOKEN, "app123", "tenant789", {"forceRefresh": True}

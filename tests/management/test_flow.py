@@ -258,7 +258,7 @@ class TestFlow:
         options = FlowRunOptions.from_dict({"input": {"key": "value"}, "preview": True, "tenant": "tenant-id"})
         assert options is not None
         assert options.flow_input == {"key": "value"}
-        assert options.preview == True
+        assert options.preview
         assert options.tenant == "tenant-id"
 
     async def test_run_flow_async(self, client_factory):
