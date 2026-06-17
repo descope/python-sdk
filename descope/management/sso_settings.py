@@ -451,4 +451,3 @@ class SSOSettings(SSOSettingsBase, HTTPBase):
             MgmtV1.sso_mapping_path,
             body=SSOSettings._compose_mapping_body(tenant_id, role_mappings, attribute_mapping),
         )
-

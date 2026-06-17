@@ -80,8 +80,7 @@ class TestGroup:
         # Test success flow
         with client.mock_mgmt_post(make_response({})) as mock_post:
             assert (
-                await client.invoke(client.mgmt.group.load_all_group_members("someTenantId", "someGroupId"))
-                is not None
+                await client.invoke(client.mgmt.group.load_all_group_members("someTenantId", "someGroupId")) is not None
             )
             assert_http_called(
                 mock_post,

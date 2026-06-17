@@ -47,7 +47,9 @@ class WebAuthnAsync(WebAuthnBase, AsyncAuthBase):
         body = self._compose_sign_up_in_finish_body(transaction_id, response)
         http_response = await self._http.post(uri, body=body)
         resp = http_response.json()
-        return self._auth.generate_jwt_response(resp, http_response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience)
+        return self._auth.generate_jwt_response(
+            resp, http_response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
+        )
 
     async def sign_in_start(
         self,
@@ -81,7 +83,9 @@ class WebAuthnAsync(WebAuthnBase, AsyncAuthBase):
         body = self._compose_sign_up_in_finish_body(transaction_id, response)
         http_response = await self._http.post(uri, body=body)
         resp = http_response.json()
-        return self._auth.generate_jwt_response(resp, http_response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience)
+        return self._auth.generate_jwt_response(
+            resp, http_response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
+        )
 
     async def sign_up_or_in_start(
         self,

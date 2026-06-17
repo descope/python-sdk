@@ -480,9 +480,7 @@ class TestRole:
     async def test_search_by_role_ids(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
-        with client.mock_mgmt_post(
-            make_response({"roles": [{"id": "ROL123", "name": "R1"}]})
-        ) as mock:
+        with client.mock_mgmt_post(make_response({"roles": [{"id": "ROL123", "name": "R1"}]})) as mock:
             resp = await client.invoke(client.mgmt.role.search(role_ids=["ROL123"]))
             roles = resp["roles"]
             assert len(roles) == 1
@@ -507,7 +505,10 @@ class TestRole:
 
         # Test private=True
         with client.mock_mgmt_post(make_response()) as mock:
-            assert await client.invoke(client.mgmt.role.create("PrivateRole", "Private role", ["P1"], "t1", False, True)) is None
+            assert (
+                await client.invoke(client.mgmt.role.create("PrivateRole", "Private role", ["P1"], "t1", False, True))
+                is None
+            )
             assert_http_called(
                 mock,
                 client.mode,

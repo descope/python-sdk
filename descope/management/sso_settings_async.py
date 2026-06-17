@@ -214,7 +214,9 @@ class SSOSettingsAsync(SSOSettingsBase, AsyncHTTPBase):
         """
         await self._http.post(
             MgmtV1.sso_settings_path,
-            body=SSOSettingsAsync._compose_configure_body(tenant_id, idp_url, entity_id, idp_cert, redirect_url, domains),
+            body=SSOSettingsAsync._compose_configure_body(
+                tenant_id, idp_url, entity_id, idp_cert, redirect_url, domains
+            ),
         )
 
     # DEPRECATED
@@ -268,4 +270,3 @@ class SSOSettingsAsync(SSOSettingsBase, AsyncHTTPBase):
             MgmtV1.sso_mapping_path,
             body=SSOSettingsAsync._compose_mapping_body(tenant_id, role_mappings, attribute_mapping),
         )
-

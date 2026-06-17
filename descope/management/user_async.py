@@ -1113,7 +1113,9 @@ class UserAsync(UserBase, AsyncHTTPBase):
         )
         return response.json()
 
-    async def update_custom_attribute(self, login_id: str, attribute_key: str, attribute_val: Union[str, int, bool]) -> dict:
+    async def update_custom_attribute(
+        self, login_id: str, attribute_key: str, attribute_val: Union[str, int, bool]
+    ) -> dict:
         """
         Update a custom attribute of an existing user.
 
@@ -1683,7 +1685,9 @@ class UserAsync(UserBase, AsyncHTTPBase):
         )
         return response.json()
 
-    async def generate_embedded_link(self, login_id: str, custom_claims: Optional[dict] = None, timeout: int = 0) -> str:
+    async def generate_embedded_link(
+        self, login_id: str, custom_claims: Optional[dict] = None, timeout: int = 0
+    ) -> str:
         """
         Generate Embedded Link for the given user login ID.
         The return value is a token that can be verified via magic link, or using flows

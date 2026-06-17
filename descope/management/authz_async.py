@@ -344,7 +344,9 @@ class AuthzAsync(AsyncHTTPBase):
         )
         return response.json()["relations"]
 
-    async def what_can_target_access_with_relation(self, target: str, relation_definition: str, namespace: str) -> List[dict]:
+    async def what_can_target_access_with_relation(
+        self, target: str, relation_definition: str, namespace: str
+    ) -> List[dict]:
         """
         Returns the list of all resources that the target has the given relation to including all derived relations
         Args:

@@ -321,9 +321,7 @@ class TestSSOApplication:
         # Test failed flows
         with client.mock_mgmt_post(make_response(status=400)) as mock_post:
             with pytest.raises(AuthException):
-                await client.invoke(
-                    client.mgmt.sso_application.delete("valid-id")
-                )
+                await client.invoke(client.mgmt.sso_application.delete("valid-id"))
 
         # Test success flow
         with client.mock_mgmt_post(make_response()) as mock_post:
@@ -395,9 +393,7 @@ class TestSSOApplication:
             assert resp["samlSettings"]["loginPageUrl"] == "http://dummy.com/login"
             assert resp["samlSettings"]["useMetadataInfo"] is True
             assert resp["samlSettings"]["metadataUrl"] == "http://dummy.com/md"
-            assert resp["samlSettings"]["attributeMapping"] == [
-                {"name": "email", "type": "", "value": "attrVal1"}
-            ]
+            assert resp["samlSettings"]["attributeMapping"] == [{"name": "email", "type": "", "value": "attrVal1"}]
             assert resp["samlSettings"]["groupsMapping"] == [
                 {
                     "name": "grp1",
@@ -506,9 +502,7 @@ class TestSSOApplication:
             assert apps[0]["samlSettings"]["loginPageUrl"] == "http://dummy.com/login"
             assert apps[0]["samlSettings"]["useMetadataInfo"] is True
             assert apps[0]["samlSettings"]["metadataUrl"] == "http://dummy.com/md"
-            assert apps[0]["samlSettings"]["attributeMapping"] == [
-                {"name": "email", "type": "", "value": "attrVal1"}
-            ]
+            assert apps[0]["samlSettings"]["attributeMapping"] == [{"name": "email", "type": "", "value": "attrVal1"}]
             assert apps[0]["samlSettings"]["groupsMapping"] == [
                 {
                     "name": "grp1",

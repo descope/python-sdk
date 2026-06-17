@@ -225,4 +225,3 @@ class AccessKey(AccessKeyBase, HTTPBase):
             MgmtV1.access_key_delete_path,
             body={"id": id},
         )
-

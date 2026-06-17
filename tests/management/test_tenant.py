@@ -27,7 +27,7 @@ class TestTenant:
                 await client.invoke(client.mgmt.tenant.create("valid-name"))
 
         # Test success flow
-        with client.mock_mgmt_post(make_response({"id": "t1"})) as _:
+        with client.mock_mgmt_post(make_response({"id": "t1"})) as mock_post:
             resp = await client.invoke(client.mgmt.tenant.create("name", "t1", ["domain.com"]))
             assert resp["id"] == "t1"
             assert_http_called(
@@ -47,7 +47,7 @@ class TestTenant:
             )
 
         # Test success flow with custom attributes, enforce_sso, disabled
-        with client.mock_mgmt_post(make_response({"id": "t1"})) as _:
+        with client.mock_mgmt_post(make_response({"id": "t1"})) as mock_post:
             resp = await client.invoke(
                 client.mgmt.tenant.create(
                     "name",
@@ -89,7 +89,7 @@ class TestTenant:
                 await client.invoke(client.mgmt.tenant.update("valid-id", "valid-name"))
 
         # Test success flow
-        with client.mock_mgmt_post(make_response()) as _:
+        with client.mock_mgmt_post(make_response()) as mock_post:
             result = await client.invoke(
                 client.mgmt.tenant.update("t1", "new-name", ["domain.com"], enforce_sso=True, disabled=True)
             )
@@ -111,7 +111,7 @@ class TestTenant:
             )
 
         # Test success flow with custom attributes, enforce_sso, disabled
-        with client.mock_mgmt_post(make_response()) as _:
+        with client.mock_mgmt_post(make_response()) as mock_post:
             result = await client.invoke(
                 client.mgmt.tenant.update(
                     "t1",
@@ -153,7 +153,7 @@ class TestTenant:
                 await client.invoke(client.mgmt.tenant.delete("valid-id"))
 
         # Test success flow
-        with client.mock_mgmt_post(make_response()) as _:
+        with client.mock_mgmt_post(make_response()) as mock_post:
             result = await client.invoke(client.mgmt.tenant.delete("t1", True))
             assert result is None
             assert_http_called(
@@ -176,7 +176,9 @@ class TestTenant:
 
         # Test success flow
         with client.mock_mgmt_get(
-            make_response({"id": "t1", "name": "tenant1", "selfProvisioningDomains": ["domain1.com"], "createdTime": 172606520})
+            make_response(
+                {"id": "t1", "name": "tenant1", "selfProvisioningDomains": ["domain1.com"], "createdTime": 172606520}
+            )
         ) as mock_get:
             resp = await client.invoke(client.mgmt.tenant.load("t1"))
             assert resp["name"] == "tenant1"
@@ -200,12 +202,24 @@ class TestTenant:
 
         # Test success flow
         with client.mock_mgmt_get(
-            make_response({
-                "tenants": [
-                    {"id": "t1", "name": "tenant1", "selfProvisioningDomains": ["domain1.com"], "createdTime": 172606520},
-                    {"id": "t2", "name": "tenant2", "selfProvisioningDomains": ["domain1.com"], "createdTime": 172606520},
-                ]
-            })
+            make_response(
+                {
+                    "tenants": [
+                        {
+                            "id": "t1",
+                            "name": "tenant1",
+                            "selfProvisioningDomains": ["domain1.com"],
+                            "createdTime": 172606520,
+                        },
+                        {
+                            "id": "t2",
+                            "name": "tenant2",
+                            "selfProvisioningDomains": ["domain1.com"],
+                            "createdTime": 172606520,
+                        },
+                    ]
+                }
+            )
         ) as mock_get:
             resp = await client.invoke(client.mgmt.tenant.load_all())
             tenants = resp["tenants"]
@@ -232,13 +246,15 @@ class TestTenant:
 
         # Test success flow
         with client.mock_mgmt_post(
-            make_response({
-                "tenants": [
-                    {"id": "t1", "name": "tenant1", "selfProvisioningDomains": ["domain1.com"]},
-                    {"id": "t2", "name": "tenant2", "selfProvisioningDomains": ["domain1.com"]},
-                ]
-            })
-        ) as _:
+            make_response(
+                {
+                    "tenants": [
+                        {"id": "t1", "name": "tenant1", "selfProvisioningDomains": ["domain1.com"]},
+                        {"id": "t2", "name": "tenant2", "selfProvisioningDomains": ["domain1.com"]},
+                    ]
+                }
+            )
+        ) as mock_post:
             resp = await client.invoke(
                 client.mgmt.tenant.search_all(
                     ids=["id1"],
@@ -275,7 +291,7 @@ class TestTenant:
                 await client.invoke(client.mgmt.tenant.update_settings("valid-id", {}))
 
         # Test success flow
-        with client.mock_mgmt_post(make_response()) as _:
+        with client.mock_mgmt_post(make_response()) as mock_post:
             result = await client.invoke(
                 client.mgmt.tenant.update_settings(
                     "t1",
@@ -303,7 +319,7 @@ class TestTenant:
             )
 
         # Test success flow with SSO Setup Suite settings
-        with client.mock_mgmt_post(make_response()) as _:
+        with client.mock_mgmt_post(make_response()) as mock_post:
             sso_disabled_features = SSOSetupSuiteSettingsDisabledFeatures(
                 saml=True, oidc=False, scim=True, sso_domains=False, group_mapping=True
             )
@@ -360,7 +376,9 @@ class TestTenant:
 
         # Test success flow
         with client.mock_mgmt_get(
-            make_response({"domains": ["domain1.com", "domain2.com"], "authType": "oidc", "sessionSettingsEnabled": True})
+            make_response(
+                {"domains": ["domain1.com", "domain2.com"], "authType": "oidc", "sessionSettingsEnabled": True}
+            )
         ) as mock_get:
             resp = await client.invoke(client.mgmt.tenant.load_settings("t1"))
             assert resp["domains"] == ["domain1.com", "domain2.com"]
@@ -384,7 +402,7 @@ class TestTenant:
                 await client.invoke(client.mgmt.tenant.update_default_roles("valid-id", ["role1"]))
 
         # Test success flow
-        with client.mock_mgmt_post(make_response()) as _:
+        with client.mock_mgmt_post(make_response()) as mock_post:
             result = await client.invoke(client.mgmt.tenant.update_default_roles("t1", ["role1", "role2"]))
             assert result is None
             assert_http_called(
@@ -399,22 +417,24 @@ class TestTenant:
 
         # Test load_settings with SSO Setup Suite settings response
         with client.mock_mgmt_get(
-            make_response({
-                "domains": ["domain1.com", "domain2.com"],
-                "authType": "oidc",
-                "sessionSettingsEnabled": True,
-                "ssoSetupSuiteSettings": {
-                    "enabled": True,
-                    "styleId": "style123",
-                    "disabledFeatures": {
-                        "saml": True,
-                        "oidc": False,
-                        "scim": True,
-                        "ssoDomains": False,
-                        "groupMapping": True,
+            make_response(
+                {
+                    "domains": ["domain1.com", "domain2.com"],
+                    "authType": "oidc",
+                    "sessionSettingsEnabled": True,
+                    "ssoSetupSuiteSettings": {
+                        "enabled": True,
+                        "styleId": "style123",
+                        "disabledFeatures": {
+                            "saml": True,
+                            "oidc": False,
+                            "scim": True,
+                            "ssoDomains": False,
+                            "groupMapping": True,
+                        },
                     },
-                },
-            })
+                }
+            )
         ) as mock_get:
             resp = await client.invoke(client.mgmt.tenant.load_settings("t1"))
             assert resp["domains"] == ["domain1.com", "domain2.com"]
@@ -443,7 +463,7 @@ class TestTenant:
 
         with client.mock_mgmt_post(
             make_response({"adminSSOConfigurationLink": "https://example.com/sso-config-link"})
-        ) as _:
+        ) as mock_post:
             link = await client.invoke(client.mgmt.tenant.generate_sso_configuration_link("t1", 21600))
             assert link == "https://example.com/sso-config-link"
             assert_http_called(
@@ -464,16 +484,14 @@ class TestTenant:
 
         with client.mock_mgmt_post(make_response(status=500)) as _:
             with pytest.raises(AuthException):
-                await client.invoke(
-                    client.mgmt.tenant.generate_sso_configuration_link("t1", 21600)
-                )
+                await client.invoke(client.mgmt.tenant.generate_sso_configuration_link("t1", 21600))
 
     async def test_generate_sso_configuration_link_with_all_params(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         with client.mock_mgmt_post(
             make_response({"adminSSOConfigurationLink": "https://example.com/sso-config-link"})
-        ) as _:
+        ) as mock_post:
             link = await client.invoke(
                 client.mgmt.tenant.generate_sso_configuration_link(
                     tenant_id="t1",
@@ -503,7 +521,7 @@ class TestTenant:
 
         with client.mock_mgmt_post(
             make_response({"adminSSOConfigurationLink": "https://example.com/sso-config-link"})
-        ) as _:
+        ) as mock_post:
             link = await client.invoke(client.mgmt.tenant.generate_sso_configuration_link("t1"))
             assert link == "https://example.com/sso-config-link"
             assert_http_called(

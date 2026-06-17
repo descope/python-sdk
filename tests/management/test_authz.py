@@ -410,15 +410,11 @@ class TestAuthz:
         # Test failed what_can_target_access_with_relation
         with client.mock_mgmt_post(make_response(status=500)):
             with pytest.raises(AuthException):
-                await client.invoke(
-                    client.mgmt.authz.what_can_target_access_with_relation("a", "b", "c")
-                )
+                await client.invoke(client.mgmt.authz.what_can_target_access_with_relation("a", "b", "c"))
 
         # Test success flow
         with client.mock_mgmt_post(make_response({"relations": []})) as mock:
-            result = await client.invoke(
-                client.mgmt.authz.what_can_target_access_with_relation("a", "b", "c")
-            )
+            result = await client.invoke(client.mgmt.authz.what_can_target_access_with_relation("a", "b", "c"))
             assert result is not None
             assert_http_called(
                 mock,

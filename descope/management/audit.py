@@ -132,4 +132,3 @@ class Audit(AuditBase, HTTPBase):
             body["data"] = data
 
         self._http.post(MgmtV1.audit_create_event, body=body)
-

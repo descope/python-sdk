@@ -350,4 +350,3 @@ class SSOApplicationAsync(SSOApplicationBase, AsyncHTTPBase):
         """
         response = await self._http.get(MgmtV1.sso_application_load_all_path)
         return response.json()
-

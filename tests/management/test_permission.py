@@ -46,11 +46,7 @@ class TestPermission:
 
         # Test success flow
         with client.mock_mgmt_post(make_response()) as mock_post:
-            assert (
-                await client.invoke(
-                    client.mgmt.permission.update("name", "new-name", "new-description")
-                )
-            ) is None
+            assert (await client.invoke(client.mgmt.permission.update("name", "new-name", "new-description"))) is None
             assert_http_called(
                 mock_post,
                 client.mode,
@@ -80,9 +76,7 @@ class TestPermission:
         # Test success flow
         with client.mock_mgmt_post(make_response()) as mock_post:
             assert (
-                await client.invoke(
-                    client.mgmt.permission.update_by_id("PERM123", "new-name", "new-description")
-                )
+                await client.invoke(client.mgmt.permission.update_by_id("PERM123", "new-name", "new-description"))
             ) is None
             assert_http_called(
                 mock_post,
@@ -199,11 +193,7 @@ class TestPermission:
         # Test failed flow
         with client.mock_mgmt_post(make_response(status=500)):
             with pytest.raises(AuthException):
-                await client.invoke(
-                    client.mgmt.permission.update_batch(
-                        [{"name": "P1", "newName": "P1-new"}]
-                    )
-                )
+                await client.invoke(client.mgmt.permission.update_batch([{"name": "P1", "newName": "P1-new"}]))
 
         # Test success flow — by name
         with client.mock_mgmt_post(make_response()) as mock_post:
@@ -302,9 +292,7 @@ class TestPermission:
 
         # Test success flow
         with client.mock_mgmt_post(make_response()) as mock_post:
-            assert (
-                await client.invoke(client.mgmt.permission.delete_batch_by_ids(["PERM1", "PERM2"]))
-            ) is None
+            assert (await client.invoke(client.mgmt.permission.delete_batch_by_ids(["PERM1", "PERM2"]))) is None
             assert_http_called(
                 mock_post,
                 client.mode,
@@ -328,9 +316,7 @@ class TestPermission:
                 await client.invoke(client.mgmt.permission.load_all())
 
         # Test success flow
-        with client.mock_mgmt_get(
-            make_response({"permissions": [{"name": "p1"}, {"name": "p2"}]})
-        ) as mock_get:
+        with client.mock_mgmt_get(make_response({"permissions": [{"name": "p1"}, {"name": "p2"}]})) as mock_get:
             resp = await client.invoke(client.mgmt.permission.load_all())
             permissions = resp["permissions"]
             assert len(permissions) == 2

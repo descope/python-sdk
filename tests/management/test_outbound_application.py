@@ -102,9 +102,7 @@ class TestOutboundApplication:
 
         with client.mock_mgmt_post(make_response(status=500)):
             with pytest.raises(AuthException):
-                await client.invoke(
-                    client.mgmt.outbound_application.create_application("Test App")
-                )
+                await client.invoke(client.mgmt.outbound_application.create_application("Test App"))
 
     async def test_update_application_success(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
@@ -195,36 +193,26 @@ class TestOutboundApplication:
 
         with client.mock_mgmt_post(make_response(status=500)):
             with pytest.raises(AuthException):
-                await client.invoke(
-                    client.mgmt.outbound_application.update_application(
-                        "app123", "Updated App"
-                    )
-                )
+                await client.invoke(client.mgmt.outbound_application.update_application("app123", "Updated App"))
 
     async def test_delete_application_success(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         with client.mock_mgmt_post(make_response(status=200)):
-            await client.invoke(
-                client.mgmt.outbound_application.delete_application("app123")
-            )
+            await client.invoke(client.mgmt.outbound_application.delete_application("app123"))
 
     async def test_delete_application_failure(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         with client.mock_mgmt_post(make_response(status=500)):
             with pytest.raises(AuthException):
-                await client.invoke(
-                    client.mgmt.outbound_application.delete_application("app123")
-                )
+                await client.invoke(client.mgmt.outbound_application.delete_application("app123"))
 
     async def test_load_application_success(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         with client.mock_mgmt_get(make_response(APP_RESPONSE)) as mock_get:
-            response = await client.invoke(
-                client.mgmt.outbound_application.load_application("app123")
-            )
+            response = await client.invoke(client.mgmt.outbound_application.load_application("app123"))
             assert response == APP_RESPONSE
             assert_http_called(
                 mock_get,
@@ -240,9 +228,7 @@ class TestOutboundApplication:
 
         with client.mock_mgmt_get(make_response(status=500)):
             with pytest.raises(AuthException):
-                await client.invoke(
-                    client.mgmt.outbound_application.load_application("app123")
-                )
+                await client.invoke(client.mgmt.outbound_application.load_application("app123"))
 
     async def test_load_all_applications_success(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
@@ -254,9 +240,7 @@ class TestOutboundApplication:
             ]
         }
         with client.mock_mgmt_get(make_response(apps_response)) as mock_get:
-            response = await client.invoke(
-                client.mgmt.outbound_application.load_all_applications()
-            )
+            response = await client.invoke(client.mgmt.outbound_application.load_all_applications())
             assert response == apps_response
             assert_http_called(
                 mock_get,
@@ -272,9 +256,7 @@ class TestOutboundApplication:
 
         with client.mock_mgmt_get(make_response(status=500)):
             with pytest.raises(AuthException):
-                await client.invoke(
-                    client.mgmt.outbound_application.load_all_applications()
-                )
+                await client.invoke(client.mgmt.outbound_application.load_all_applications())
 
     async def test_fetch_token_by_scopes_success(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
@@ -297,9 +279,7 @@ class TestOutboundApplication:
         with client.mock_mgmt_post(make_response(status=500)):
             with pytest.raises(AuthException):
                 await client.invoke(
-                    client.mgmt.outbound_application.fetch_token_by_scopes(
-                        "app123", "user456", ["read"]
-                    )
+                    client.mgmt.outbound_application.fetch_token_by_scopes("app123", "user456", ["read"])
                 )
 
     async def test_fetch_token_success(self, client_factory):
@@ -307,9 +287,7 @@ class TestOutboundApplication:
 
         with client.mock_mgmt_post(make_response(TOKEN_RESPONSE)) as _:
             response = await client.invoke(
-                client.mgmt.outbound_application.fetch_token(
-                    "app123", "user456", "tenant789", {"forceRefresh": True}
-                )
+                client.mgmt.outbound_application.fetch_token("app123", "user456", "tenant789", {"forceRefresh": True})
             )
             assert response == TOKEN_RESPONSE
 
@@ -318,9 +296,7 @@ class TestOutboundApplication:
 
         with client.mock_mgmt_post(make_response(status=500)):
             with pytest.raises(AuthException):
-                await client.invoke(
-                    client.mgmt.outbound_application.fetch_token("app123", "user456")
-                )
+                await client.invoke(client.mgmt.outbound_application.fetch_token("app123", "user456"))
 
     async def test_fetch_tenant_token_by_scopes_success(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
@@ -339,9 +315,7 @@ class TestOutboundApplication:
         with client.mock_mgmt_post(make_response(status=500)):
             with pytest.raises(AuthException):
                 await client.invoke(
-                    client.mgmt.outbound_application.fetch_tenant_token_by_scopes(
-                        "app123", "tenant789", ["read"]
-                    )
+                    client.mgmt.outbound_application.fetch_tenant_token_by_scopes("app123", "tenant789", ["read"])
                 )
 
     async def test_fetch_tenant_token_success(self, client_factory):
@@ -349,9 +323,7 @@ class TestOutboundApplication:
 
         with client.mock_mgmt_post(make_response(TOKEN_RESPONSE)) as _:
             response = await client.invoke(
-                client.mgmt.outbound_application.fetch_tenant_token(
-                    "app123", "tenant789", {"forceRefresh": True}
-                )
+                client.mgmt.outbound_application.fetch_tenant_token("app123", "tenant789", {"forceRefresh": True})
             )
             assert response == TOKEN_RESPONSE
 
@@ -360,11 +332,7 @@ class TestOutboundApplication:
 
         with client.mock_mgmt_post(make_response(status=500)):
             with pytest.raises(AuthException):
-                await client.invoke(
-                    client.mgmt.outbound_application.fetch_tenant_token(
-                        "app123", "tenant789"
-                    )
-                )
+                await client.invoke(client.mgmt.outbound_application.fetch_tenant_token("app123", "tenant789"))
 
     def test_compose_create_update_body(self):
         body = OutboundApplication._compose_create_update_body(
@@ -565,11 +533,7 @@ class TestOutboundApplication:
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         with client.mock_mgmt_delete(make_response(status=200)) as mock_delete:
-            await client.invoke(
-                client.mgmt.outbound_application.delete_user_tokens(
-                    app_id="app123", user_id="user456"
-                )
-            )
+            await client.invoke(client.mgmt.outbound_application.delete_user_tokens(app_id="app123", user_id="user456"))
             assert_http_called(
                 mock_delete,
                 client.mode,
@@ -583,9 +547,7 @@ class TestOutboundApplication:
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         with client.mock_mgmt_delete(make_response(status=200)) as mock_delete:
-            await client.invoke(
-                client.mgmt.outbound_application.delete_user_tokens(app_id="app123")
-            )
+            await client.invoke(client.mgmt.outbound_application.delete_user_tokens(app_id="app123"))
             assert_http_called(
                 mock_delete,
                 client.mode,
@@ -599,9 +561,7 @@ class TestOutboundApplication:
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         with client.mock_mgmt_delete(make_response(status=200)) as mock_delete:
-            await client.invoke(
-                client.mgmt.outbound_application.delete_user_tokens(user_id="user456")
-            )
+            await client.invoke(client.mgmt.outbound_application.delete_user_tokens(user_id="user456"))
             assert_http_called(
                 mock_delete,
                 client.mode,
@@ -617,18 +577,14 @@ class TestOutboundApplication:
         with client.mock_mgmt_delete(make_response(status=500)):
             with pytest.raises(AuthException):
                 await client.invoke(
-                    client.mgmt.outbound_application.delete_user_tokens(
-                        app_id="app123", user_id="user456"
-                    )
+                    client.mgmt.outbound_application.delete_user_tokens(app_id="app123", user_id="user456")
                 )
 
     async def test_delete_token_success(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         with client.mock_mgmt_delete(make_response(status=200)) as mock_delete:
-            await client.invoke(
-                client.mgmt.outbound_application.delete_token("token123")
-            )
+            await client.invoke(client.mgmt.outbound_application.delete_token("token123"))
             assert_http_called(
                 mock_delete,
                 client.mode,
@@ -643,9 +599,7 @@ class TestOutboundApplication:
 
         with client.mock_mgmt_delete(make_response(status=500)):
             with pytest.raises(AuthException):
-                await client.invoke(
-                    client.mgmt.outbound_application.delete_token("token123")
-                )
+                await client.invoke(client.mgmt.outbound_application.delete_token("token123"))
 
     def test_url_param_to_dict(self):
         param = URLParam("test_name", "test_value")

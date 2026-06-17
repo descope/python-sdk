@@ -45,7 +45,8 @@ class TestUser:
             user = resp["user"]
             assert user["id"] == "u1"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_create_path}",
                 headers={
                     **default_headers,
@@ -96,7 +97,8 @@ class TestUser:
             user = resp["user"]
             assert user["id"] == "u1"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_create_path}",
                 headers={
                     **default_headers,
@@ -151,7 +153,8 @@ class TestUser:
             user = resp["user"]
             assert user["id"] == "u1"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.test_user_create_path}",
                 headers={
                     **default_headers,
@@ -209,7 +212,8 @@ class TestUser:
             user = resp["user"]
             assert user["id"] == "u1"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_create_path}",
                 headers={
                     **default_headers,
@@ -325,7 +329,8 @@ class TestUser:
                 "locale": "en",
             }
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_create_batch_path}",
                 headers={
                     **default_headers,
@@ -366,7 +371,8 @@ class TestUser:
             del expected_users["users"][0]["hashedPassword"]
             expected_users["users"][0]["password"] = "clear"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_create_batch_path}",
                 headers={
                     **default_headers,
@@ -390,7 +396,8 @@ class TestUser:
 
             del expected_users["users"][0]["password"]
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_create_batch_path}",
                 headers={
                     **default_headers,
@@ -425,7 +432,8 @@ class TestUser:
             user = resp["user"]
             assert user["id"] == "u1"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_update_path}",
                 headers={
                     **default_headers,
@@ -451,13 +459,12 @@ class TestUser:
 
         # Test success flow with verified flags
         with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
-            resp = await client.invoke(
-                client.mgmt.user.update("id", verified_email=True, verified_phone=False)
-            )
+            resp = await client.invoke(client.mgmt.user.update("id", verified_email=True, verified_phone=False))
             user = resp["user"]
             assert user["id"] == "u1"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_update_path}",
                 headers={
                     **default_headers,
@@ -510,7 +517,8 @@ class TestUser:
             user = resp["user"]
             assert user["id"] == "u1"
             assert_http_called(
-                mock_patch, client.mode,
+                mock_patch,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_patch_path}",
                 headers={
                     **default_headers,
@@ -552,7 +560,8 @@ class TestUser:
             user = resp["user"]
             assert user["id"] == "u1"
             assert_http_called(
-                mock_patch, client.mode,
+                mock_patch,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_patch_path}",
                 headers={
                     **default_headers,
@@ -597,7 +606,8 @@ class TestUser:
                 assert user["id"] == "u1"
 
                 assert_http_called(
-                    mock_patch, client.mode,
+                    mock_patch,
+                    client.mode,
                     f"{DEFAULT_BASE_URL}{MgmtV1.user_patch_path}",
                     headers={
                         **default_headers,
@@ -655,7 +665,8 @@ class TestUser:
             assert len(resp["failedUsers"]) == 0
 
             assert_http_called(
-                mock_patch, client.mode,
+                mock_patch,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_patch_batch_path}",
                 headers={
                     **default_headers,
@@ -687,7 +698,12 @@ class TestUser:
 
         # Test batch with mixed success/failure response
         with client.mock_mgmt_patch(
-            make_response({"patchedUsers": [{"id": "u1"}], "failedUsers": [{"failure": "User not found", "user": {"loginId": "user2"}}]})
+            make_response(
+                {
+                    "patchedUsers": [{"id": "u1"}],
+                    "failedUsers": [{"failure": "User not found", "user": {"loginId": "user2"}}],
+                }
+            )
         ) as mock_patch:
             resp = await client.invoke(
                 client.mgmt.user.patch_batch([UserObj(login_id="user1"), UserObj(login_id="user2")])
@@ -700,17 +716,11 @@ class TestUser:
         # Test failed batch operation
         with client.mock_mgmt_patch(make_response(status=500)) as mock_patch:
             with pytest.raises(AuthException):
-                await client.invoke(
-                    client.mgmt.user.patch_batch([UserObj(login_id="user1")])
-                )
+                await client.invoke(client.mgmt.user.patch_batch([UserObj(login_id="user1")]))
 
         # Test with test users flag
-        with client.mock_mgmt_patch(
-            make_response({"patchedUsers": [{"id": "u1"}], "failedUsers": []})
-        ) as mock_patch:
-            await client.invoke(
-                client.mgmt.user.patch_batch([UserObj(login_id="test_user1")], test=True)
-            )
+        with client.mock_mgmt_patch(make_response({"patchedUsers": [{"id": "u1"}], "failedUsers": []})) as mock_patch:
+            await client.invoke(client.mgmt.user.patch_batch([UserObj(login_id="test_user1")], test=True))
 
             call_args = mock_patch.call_args
             json_payload = call_args[1]["json"]
@@ -728,7 +738,8 @@ class TestUser:
         with client.mock_mgmt_post(make_response({})) as mock_post:
             assert await client.invoke(client.mgmt.user.delete("u1")) is None
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_delete_path}",
                 headers={
                     **default_headers,
@@ -754,7 +765,8 @@ class TestUser:
         with client.mock_mgmt_post(make_response({})) as mock_post:
             assert await client.invoke(client.mgmt.user.delete_by_user_id("u1")) is None
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_delete_path}",
                 headers={
                     **default_headers,
@@ -780,7 +792,8 @@ class TestUser:
         with client.mock_mgmt_post(make_response({})) as mock_post:
             assert await client.invoke(client.mgmt.user.logout_user("u1")) is None
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_logout_path}",
                 headers={
                     **default_headers,
@@ -806,7 +819,8 @@ class TestUser:
         with client.mock_mgmt_post(make_response({})) as mock_post:
             assert await client.invoke(client.mgmt.user.logout_user_by_user_id("u1")) is None
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_logout_path}",
                 headers={
                     **default_headers,
@@ -832,7 +846,8 @@ class TestUser:
         with client.mock_mgmt_delete(make_response({})) as mock_delete:
             assert await client.invoke(client.mgmt.user.delete_all_test_users()) is None
             assert_http_called(
-                mock_delete, client.mode,
+                mock_delete,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_delete_all_test_users_path}",
                 params=None,
                 headers={
@@ -857,7 +872,8 @@ class TestUser:
             user = resp["user"]
             assert user["id"] == "u1"
             assert_http_called(
-                mock_get, client.mode,
+                mock_get,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_load_path}",
                 headers={
                     **default_headers,
@@ -882,7 +898,8 @@ class TestUser:
             user = resp["user"]
             assert user["id"] == "u1"
             assert_http_called(
-                mock_get, client.mode,
+                mock_get,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_load_path}",
                 headers={
                     **default_headers,
@@ -918,7 +935,8 @@ class TestUser:
             assert users[0]["id"] == "u1"
             assert users[1]["id"] == "u2"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.users_load_path}",
                 headers={
                     **default_headers,
@@ -964,7 +982,8 @@ class TestUser:
             assert users[0]["id"] == "u1"
             assert users[1]["id"] == "u2"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.users_search_path}",
                 headers={
                     **default_headers,
@@ -1003,7 +1022,8 @@ class TestUser:
             assert users[0]["id"] == "u1"
             assert users[1]["id"] == "u2"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.users_search_path}",
                 headers={
                     **default_headers,
@@ -1046,7 +1066,8 @@ class TestUser:
             assert users[0]["id"] == "u1"
             assert users[1]["id"] == "u2"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.users_search_path}",
                 headers={
                     **default_headers,
@@ -1086,7 +1107,8 @@ class TestUser:
             assert users[0]["id"] == "u1"
             assert users[1]["id"] == "u2"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.users_search_path}",
                 headers={
                     **default_headers,
@@ -1122,7 +1144,8 @@ class TestUser:
             assert users[0]["id"] == "u1"
             assert users[1]["id"] == "u2"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.users_search_path}",
                 headers={
                     **default_headers,
@@ -1153,14 +1176,10 @@ class TestUser:
 
         with client.mock_mgmt_post(make_response({})) as mock_post:
             with pytest.raises(AuthException):
-                await client.invoke(
-                    client.mgmt.user.search_all_test_users([], [], -1, 0)
-                )
+                await client.invoke(client.mgmt.user.search_all_test_users([], [], -1, 0))
 
             with pytest.raises(AuthException):
-                await client.invoke(
-                    client.mgmt.user.search_all_test_users([], [], 0, -1)
-                )
+                await client.invoke(client.mgmt.user.search_all_test_users([], [], 0, -1))
 
         # Test success flow
         with client.mock_mgmt_post(make_response({"users": [{"id": "u1"}, {"id": "u2"}]})) as mock_post:
@@ -1177,7 +1196,8 @@ class TestUser:
             assert users[0]["id"] == "u1"
             assert users[1]["id"] == "u2"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.test_users_search_path}",
                 headers={
                     **default_headers,
@@ -1215,7 +1235,8 @@ class TestUser:
             assert users[0]["id"] == "u1"
             assert users[1]["id"] == "u2"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.test_users_search_path}",
                 headers={
                     **default_headers,
@@ -1257,7 +1278,8 @@ class TestUser:
             assert users[0]["id"] == "u1"
             assert users[1]["id"] == "u2"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.test_users_search_path}",
                 headers={
                     **default_headers,
@@ -1296,7 +1318,8 @@ class TestUser:
             assert len(users) == 1
             assert users[0]["id"] == "u1"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.test_users_search_path}",
                 headers={
                     **default_headers,
@@ -1332,7 +1355,8 @@ class TestUser:
             assert users[0]["id"] == "u1"
             assert users[1]["id"] == "u2"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.test_users_search_path}",
                 headers={
                     **default_headers,
@@ -1363,18 +1387,18 @@ class TestUser:
 
         # Test success flow
         with client.mock_mgmt_get(
-            make_response({
-                "provider": "p1",
-                "providerUserId": "puid",
-                "accessToken": "access123",
-                "refreshToken": "refresh456",
-                "expiration": "123123123",
-                "scopes": ["s1", "s2"],
-            })
-        ) as mock_get:
-            resp = await client.invoke(
-                client.mgmt.user.get_provider_token("valid-id", "p1", True, True)
+            make_response(
+                {
+                    "provider": "p1",
+                    "providerUserId": "puid",
+                    "accessToken": "access123",
+                    "refreshToken": "refresh456",
+                    "expiration": "123123123",
+                    "scopes": ["s1", "s2"],
+                }
             )
+        ) as mock_get:
+            resp = await client.invoke(client.mgmt.user.get_provider_token("valid-id", "p1", True, True))
             assert resp["provider"] == "p1"
             assert resp["providerUserId"] == "puid"
             assert resp["accessToken"] == "access123"
@@ -1382,7 +1406,8 @@ class TestUser:
             assert resp["expiration"] == "123123123"
             assert resp["scopes"] == ["s1", "s2"]
             assert_http_called(
-                mock_get, client.mode,
+                mock_get,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_get_provider_token}",
                 headers={
                     **default_headers,
@@ -1412,7 +1437,8 @@ class TestUser:
             user = resp["user"]
             assert user["id"] == "u1"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_update_status_path}",
                 headers={
                     **default_headers,
@@ -1441,7 +1467,8 @@ class TestUser:
             user = resp["user"]
             assert user["id"] == "u1"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_update_status_path}",
                 headers={
                     **default_headers,
@@ -1470,7 +1497,8 @@ class TestUser:
             user = resp["user"]
             assert user["id"] == "a@b.c"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_update_login_id_path}",
                 headers={
                     **default_headers,
@@ -1499,7 +1527,8 @@ class TestUser:
             user = resp["user"]
             assert user["id"] == "u1"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_update_email_path}",
                 headers={
                     **default_headers,
@@ -1530,7 +1559,8 @@ class TestUser:
             user = resp["user"]
             assert user["id"] == "u1"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_update_phone_path}",
                 headers={
                     **default_headers,
@@ -1561,7 +1591,8 @@ class TestUser:
             user = resp["user"]
             assert user["id"] == "u1"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_update_name_path}",
                 headers={
                     **default_headers,
@@ -1590,7 +1621,8 @@ class TestUser:
             user = resp["user"]
             assert user["id"] == "u1"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_update_picture_path}",
                 headers={
                     **default_headers,
@@ -1611,19 +1643,16 @@ class TestUser:
         # Test failed flows
         with client.mock_mgmt_post(make_response(status=500)) as mock_post:
             with pytest.raises(AuthException):
-                await client.invoke(
-                    client.mgmt.user.update_custom_attribute("valid-id", "foo", "bar")
-                )
+                await client.invoke(client.mgmt.user.update_custom_attribute("valid-id", "foo", "bar"))
 
         # Test success flow
         with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
-            resp = await client.invoke(
-                client.mgmt.user.update_custom_attribute("valid-id", "foo", "bar")
-            )
+            resp = await client.invoke(client.mgmt.user.update_custom_attribute("valid-id", "foo", "bar"))
             user = resp["user"]
             assert user["id"] == "u1"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_update_custom_attribute_path}",
                 headers={
                     **default_headers,
@@ -1653,7 +1682,8 @@ class TestUser:
             user = resp["user"]
             assert user["id"] == "u1"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_set_role_path}",
                 headers={
                     **default_headers,
@@ -1682,7 +1712,8 @@ class TestUser:
             user = resp["user"]
             assert user["id"] == "u1"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_add_role_path}",
                 headers={
                     **default_headers,
@@ -1711,7 +1742,8 @@ class TestUser:
             user = resp["user"]
             assert user["id"] == "u1"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_remove_role_path}",
                 headers={
                     **default_headers,
@@ -1740,7 +1772,8 @@ class TestUser:
             user = resp["user"]
             assert user["id"] == "u1"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_add_sso_apps}",
                 headers={
                     **default_headers,
@@ -1769,7 +1802,8 @@ class TestUser:
             user = resp["user"]
             assert user["id"] == "u1"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_set_sso_apps}",
                 headers={
                     **default_headers,
@@ -1798,7 +1832,8 @@ class TestUser:
             user = resp["user"]
             assert user["id"] == "u1"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_remove_sso_apps}",
                 headers={
                     **default_headers,
@@ -1827,7 +1862,8 @@ class TestUser:
             user = resp["user"]
             assert user["id"] == "u1"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_add_tenant_path}",
                 headers={
                     **default_headers,
@@ -1856,7 +1892,8 @@ class TestUser:
             user = resp["user"]
             assert user["id"] == "u1"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_remove_tenant_path}",
                 headers={
                     **default_headers,
@@ -1877,19 +1914,16 @@ class TestUser:
         # Test failed flows
         with client.mock_mgmt_post(make_response(status=500)) as mock_post:
             with pytest.raises(AuthException):
-                await client.invoke(
-                    client.mgmt.user.set_tenant_roles("valid-id", "tid", ["foo", "bar"])
-                )
+                await client.invoke(client.mgmt.user.set_tenant_roles("valid-id", "tid", ["foo", "bar"]))
 
         # Test success flow
         with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
-            resp = await client.invoke(
-                client.mgmt.user.set_tenant_roles("valid-id", "tid", ["foo", "bar"])
-            )
+            resp = await client.invoke(client.mgmt.user.set_tenant_roles("valid-id", "tid", ["foo", "bar"]))
             user = resp["user"]
             assert user["id"] == "u1"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_set_role_path}",
                 headers={
                     **default_headers,
@@ -1911,19 +1945,16 @@ class TestUser:
         # Test failed flows
         with client.mock_mgmt_post(make_response(status=500)) as mock_post:
             with pytest.raises(AuthException):
-                await client.invoke(
-                    client.mgmt.user.add_tenant_roles("valid-id", "tid", ["foo", "bar"])
-                )
+                await client.invoke(client.mgmt.user.add_tenant_roles("valid-id", "tid", ["foo", "bar"]))
 
         # Test success flow
         with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
-            resp = await client.invoke(
-                client.mgmt.user.add_tenant_roles("valid-id", "tid", ["foo", "bar"])
-            )
+            resp = await client.invoke(client.mgmt.user.add_tenant_roles("valid-id", "tid", ["foo", "bar"]))
             user = resp["user"]
             assert user["id"] == "u1"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_add_role_path}",
                 headers={
                     **default_headers,
@@ -1945,19 +1976,16 @@ class TestUser:
         # Test failed flows
         with client.mock_mgmt_post(make_response(status=500)) as mock_post:
             with pytest.raises(AuthException):
-                await client.invoke(
-                    client.mgmt.user.remove_tenant_roles("valid-id", "tid", ["foo", "bar"])
-                )
+                await client.invoke(client.mgmt.user.remove_tenant_roles("valid-id", "tid", ["foo", "bar"]))
 
         # Test success flow
         with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
-            resp = await client.invoke(
-                client.mgmt.user.remove_tenant_roles("valid-id", "tid", ["foo", "bar"])
-            )
+            resp = await client.invoke(client.mgmt.user.remove_tenant_roles("valid-id", "tid", ["foo", "bar"]))
             user = resp["user"]
             assert user["id"] == "u1"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_remove_role_path}",
                 headers={
                     **default_headers,
@@ -1979,14 +2007,10 @@ class TestUser:
         # Test failed flows
         with client.mock_mgmt_post(make_response(status=500)) as mock_post:
             with pytest.raises(AuthException):
-                await client.invoke(
-                    client.mgmt.user.generate_otp_for_test_user("login-id", "email")
-                )
+                await client.invoke(client.mgmt.user.generate_otp_for_test_user("login-id", "email"))
 
         # Test success flow
-        with client.mock_mgmt_post(
-            make_response({"code": "123456", "loginId": "login-id"})
-        ) as mock_post:
+        with client.mock_mgmt_post(make_response({"code": "123456", "loginId": "login-id"})) as mock_post:
             login_options = LoginOptions(stepup=True)
             resp = await client.invoke(
                 client.mgmt.user.generate_otp_for_test_user(DeliveryMethod.EMAIL, "login-id", login_options)
@@ -1994,7 +2018,8 @@ class TestUser:
             assert resp["code"] == "123456"
             assert resp["loginId"] == "login-id"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_generate_otp_for_test_path}",
                 headers={
                     **default_headers,
@@ -2020,9 +2045,7 @@ class TestUser:
         # Test failed flows
         with client.mock_mgmt_post(make_response(status=500)) as mock_post:
             with pytest.raises(AuthException):
-                await client.invoke(
-                    client.mgmt.user.set_temporary_password("login-id", "some-password")
-                )
+                await client.invoke(client.mgmt.user.set_temporary_password("login-id", "some-password"))
 
         # Test success flow
         with client.mock_mgmt_post(make_response({})) as mock_post:
@@ -2033,7 +2056,8 @@ class TestUser:
                 )
             )
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_set_temporary_password_path}",
                 headers={
                     **default_headers,
@@ -2055,9 +2079,7 @@ class TestUser:
         # Test failed flows
         with client.mock_mgmt_post(make_response(status=500)) as mock_post:
             with pytest.raises(AuthException):
-                await client.invoke(
-                    client.mgmt.user.set_active_password("login-id", "some-password")
-                )
+                await client.invoke(client.mgmt.user.set_active_password("login-id", "some-password"))
 
         # Test success flow
         with client.mock_mgmt_post(make_response({})) as mock_post:
@@ -2068,7 +2090,8 @@ class TestUser:
                 )
             )
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_set_active_password_path}",
                 headers={
                     **default_headers,
@@ -2090,9 +2113,7 @@ class TestUser:
         # Test failed flows
         with client.mock_mgmt_post(make_response(status=500)) as mock_post:
             with pytest.raises(AuthException):
-                await client.invoke(
-                    client.mgmt.user.set_password("login-id", "some-password")
-                )
+                await client.invoke(client.mgmt.user.set_password("login-id", "some-password"))
 
         # Test success flow
         with client.mock_mgmt_post(make_response({})) as mock_post:
@@ -2103,7 +2124,8 @@ class TestUser:
                 )
             )
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_set_password_path}",
                 headers={
                     **default_headers,
@@ -2134,7 +2156,8 @@ class TestUser:
                 )
             )
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_expire_password_path}",
                 headers={
                     **default_headers,
@@ -2164,7 +2187,8 @@ class TestUser:
                 )
             )
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_remove_all_passkeys_path}",
                 headers={
                     **default_headers,
@@ -2194,7 +2218,8 @@ class TestUser:
                 )
             )
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_remove_totp_seed_path}",
                 headers={
                     **default_headers,
@@ -2214,14 +2239,10 @@ class TestUser:
         # Test failed flows
         with client.mock_mgmt_post(make_response(status=500)) as mock_post:
             with pytest.raises(AuthException):
-                await client.invoke(
-                    client.mgmt.user.generate_magic_link_for_test_user("login-id", "email", "bla")
-                )
+                await client.invoke(client.mgmt.user.generate_magic_link_for_test_user("login-id", "email", "bla"))
 
         # Test success flow
-        with client.mock_mgmt_post(
-            make_response({"link": "some-link", "loginId": "login-id"})
-        ) as mock_post:
+        with client.mock_mgmt_post(make_response({"link": "some-link", "loginId": "login-id"})) as mock_post:
             login_options = LoginOptions(stepup=True)
             resp = await client.invoke(
                 client.mgmt.user.generate_magic_link_for_test_user(
@@ -2231,7 +2252,8 @@ class TestUser:
             assert resp["link"] == "some-link"
             assert resp["loginId"] == "login-id"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_generate_magic_link_for_test_path}",
                 headers={
                     **default_headers,
@@ -2258,9 +2280,7 @@ class TestUser:
         # Test failed flows
         with client.mock_mgmt_post(make_response(status=500)) as mock_post:
             with pytest.raises(AuthException):
-                await client.invoke(
-                    client.mgmt.user.generate_enchanted_link_for_test_user("login-id", "bla")
-                )
+                await client.invoke(client.mgmt.user.generate_enchanted_link_for_test_user("login-id", "bla"))
 
         # Test success flow
         with client.mock_mgmt_post(
@@ -2274,7 +2294,8 @@ class TestUser:
             assert resp["loginId"] == "login-id"
             assert resp["pendingRef"] == "some-ref"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_generate_enchanted_link_for_test_path}",
                 headers={
                     **default_headers,
@@ -2304,12 +2325,11 @@ class TestUser:
 
         # Test success flow
         with client.mock_mgmt_post(make_response({"token": "some-token"})) as mock_post:
-            resp = await client.invoke(
-                client.mgmt.user.generate_embedded_link("login-id", {"k1": "v1"})
-            )
+            resp = await client.invoke(client.mgmt.user.generate_embedded_link("login-id", {"k1": "v1"}))
             assert resp == "some-token"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_generate_embedded_link_path}",
                 headers={
                     **default_headers,
@@ -2331,20 +2351,17 @@ class TestUser:
         # Test failed flows
         with client.mock_mgmt_post(make_response(status=500)) as mock_post:
             with pytest.raises(AuthException):
-                await client.invoke(
-                    client.mgmt.user.generate_sign_up_embedded_link("login-id")
-                )
+                await client.invoke(client.mgmt.user.generate_sign_up_embedded_link("login-id"))
 
         # Test success flow
         with client.mock_mgmt_post(make_response({"token": "some-token"})) as mock_post:
             resp = await client.invoke(
-                client.mgmt.user.generate_sign_up_embedded_link(
-                    "login-id", email_verified=True, phone_verified=True
-                )
+                client.mgmt.user.generate_sign_up_embedded_link("login-id", email_verified=True, phone_verified=True)
             )
             assert resp == "some-token"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_generate_sign_up_embedded_link_path}",
                 headers={
                     **default_headers,
@@ -2373,22 +2390,24 @@ class TestUser:
 
         # Test success flow
         with client.mock_mgmt_post(
-            make_response([
-                {
-                    "userId": "kuku",
-                    "city": "kefar saba",
-                    "country": "Israel",
-                    "ip": "1.1.1.1",
-                    "loginTime": 32,
-                },
-                {
-                    "userId": "nunu",
-                    "city": "eilat",
-                    "country": "Israele",
-                    "ip": "1.1.1.2",
-                    "loginTime": 23,
-                },
-            ])
+            make_response(
+                [
+                    {
+                        "userId": "kuku",
+                        "city": "kefar saba",
+                        "country": "Israel",
+                        "ip": "1.1.1.1",
+                        "loginTime": 32,
+                    },
+                    {
+                        "userId": "nunu",
+                        "city": "eilat",
+                        "country": "Israele",
+                        "ip": "1.1.1.2",
+                        "loginTime": 23,
+                    },
+                ]
+            )
         ) as mock_post:
             resp = await client.invoke(client.mgmt.user.history(["user-id-1", "user-id-2"]))
             assert resp == [
@@ -2408,7 +2427,8 @@ class TestUser:
                 },
             ]
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_history_path}",
                 headers={
                     **default_headers,
@@ -2434,7 +2454,8 @@ class TestUser:
             user = resp["user"]
             assert user["id"] == "u1"
             assert_http_called(
-                mock_post, client.mode,
+                mock_post,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_update_path}",
                 headers={
                     **default_headers,
@@ -2472,7 +2493,8 @@ class TestUser:
             user = resp["user"]
             assert user["id"] == "u1"
             assert_http_called(
-                mock_patch, client.mode,
+                mock_patch,
+                client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.user_patch_path}",
                 headers={
                     **default_headers,

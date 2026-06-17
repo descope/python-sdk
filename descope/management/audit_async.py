@@ -134,4 +134,3 @@ class AuditAsync(AuditBase, AsyncHTTPBase):
             body["data"] = data
 
         await self._http.post(MgmtV1.audit_create_event, body=body)
-
