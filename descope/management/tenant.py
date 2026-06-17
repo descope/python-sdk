@@ -332,6 +332,8 @@ class Tenant(HTTPBase):
         expire_time: Optional[int] = None,
         email: Optional[str] = None,
         sso_id: Optional[str] = None,
+        user_id: Optional[str] = None,
+        login_id: Optional[str] = None,
     ) -> str:
         """
         Generate a tenant admin self-service link for SSO configuration.
@@ -341,6 +343,10 @@ class Tenant(HTTPBase):
         expire_time (int): Optional expiration duration in seconds. For a link valid for 6 hours, use 21600.
         email (str): Optional email address associated with the admin.
         sso_id (str): Optional SSO identifier for the tenant.
+        user_id (str): Optional Descope user ID. When provided, the SSO Setup Suite session is
+            attributed to that real user so actions are audited against them instead of a temporary
+            user. The user must exist and belong to the tenant. Takes precedence over login_id.
+        login_id (str): Optional login identifier for the same purpose as user_id.
 
         Return value (str):
         Returns the admin SSO configuration link as a string.
@@ -355,6 +361,10 @@ class Tenant(HTTPBase):
             body["email"] = email
         if sso_id is not None:
             body["ssoId"] = sso_id
+        if user_id is not None:
+            body["userId"] = user_id
+        if login_id is not None:
+            body["loginId"] = login_id
 
         response = self._http.post(
             MgmtV1.tenant_generate_sso_configuration_link_path,
