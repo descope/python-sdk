@@ -575,12 +575,14 @@ except AuthException as e:
 ```
 
 **Important Notes:**
+
 - Verbose mode is **disabled by default** (no performance impact when not needed)
 - When enabled, only the **most recent** HTTP response is stored
 - `get_last_response()` returns `None` when verbose mode is disabled
 - The response object provides dict-like access to JSON data while also exposing HTTP metadata
 
 **Available metadata on response objects:**
+
 - `response.headers` - HTTP response headers (dict-like object)
 - `response.status_code` - HTTP status code (int)
 - `response.text` - Raw response body as text (str)
@@ -1912,6 +1914,33 @@ Running all tests with coverage:
 
 ```bash
 uv run pytest --junitxml=/tmp/pytest.xml --cov-report=term-missing:skip-covered --cov=descope tests/ --cov-report=xml:/tmp/cov.xml
+```
+
+### Running e2e tests
+
+The `tests/e2e/` suite exercises the SDK against a real Descope backend. Set the
+following environment variables before running:
+
+| Variable                 | Required | Description                       |
+| ------------------------ | -------- | --------------------------------- |
+| `DESCOPE_PROJECT_ID`     | ✅       | The project to run tests against  |
+| `DESCOPE_MANAGEMENT_KEY` | ✅       | A management key for that project |
+| `DESCOPE_BASE_URI`       | Optional | Override the API base URL         |
+
+**Project prerequisites:** the e2e project must be configured with:
+
+- **Password authentication enabled** with policy: minLength ≥ 9, uppercase required, non-alphanumeric character required (needed by `test_password.py`).
+- **Magic-link / email authentication enabled** (needed by `test_magiclink.py`).
+- **Default flows present** (needed by `test_flow.py`).
+
+```bash
+uv run pytest tests/e2e -v
+```
+
+To run the full test suite while skipping e2e tests (default CI behaviour):
+
+```bash
+uv run pytest tests -m "not e2e"
 ```
 
 ### Lint and format

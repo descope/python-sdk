@@ -42,6 +42,7 @@ Documentation = "https://docs.descope.com"
 [dependency-groups]
 dev = [
     "pre-commit==3.8.0",
+    "python-dotenv>=1.2.1",
     "ruff==0.15.13",
 ]
 types = [
@@ -77,6 +78,9 @@ build-backend = "uv_build"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+markers = [
+    "e2e: end-to-end tests against a real Descope backend (require DESCOPE_PROJECT_ID and DESCOPE_MANAGEMENT_KEY)",
+]
 
 [tool.coverage.run]
 relative_files = true
@@ -113,7 +117,8 @@ ignore = [
 "descope/management/tenant.py" = ["N803"]
 "descope/management/user.py" = ["N803", "N806"]
 # Tests intentionally use blind exception checks and raw attribute access
-"tests/**" = ["B017", "B018"]
+# F841: context manager vars like `as mock_post` are unused by design (side-effect only)
+"tests/**" = ["B017", "B018", "B028", "N801", "F841"]
 
 [tool.pylic]
 # License names match the long-form `License` metadata field that pylic reads
