@@ -186,8 +186,12 @@ class SSOSAMLSettingsByMetadata:
         # NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
         sp_acs_url: Optional[str] = None,
         sp_entity_id: Optional[str] = None,
+        # IdP entity ID - set so IdP-initiated login can resolve the tenant by the SAML response issuer.
+        # Appended last to preserve positional compatibility for existing callers.
+        idp_entity_id: Optional[str] = None,
     ):
         self.idp_metadata_url = idp_metadata_url
+        self.idp_entity_id = idp_entity_id
         self.attribute_mapping = attribute_mapping
         self.role_mappings = role_mappings
         self.default_sso_roles = default_sso_roles
