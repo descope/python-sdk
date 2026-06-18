@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from descope._auth_base import AuthBase
+from descope._authmethod_base import AuthMethodBase
 from descope.authmethod._sso_base import SSOBase
 from descope.common import (
     REFRESH_SESSION_COOKIE_NAME,
@@ -12,7 +12,7 @@ from descope.common import (
 )
 
 
-class SSO(SSOBase, AuthBase):
+class SSO(SSOBase, AuthMethodBase):
     def start(
         self,
         tenant: str,

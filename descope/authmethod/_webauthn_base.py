@@ -13,8 +13,8 @@ class WebAuthnBase:
     Holds only static validation guards and body composers — no network I/O, no
     ``__init__``.  The two concrete subclasses add the network layer:
 
-    - ``WebAuthn(WebAuthnBase, AuthBase)`` — sync, uses ``self._http`` (``HTTPClient``)
-    - ``WebAuthnAsync(WebAuthnBase, AsyncAuthBase)`` — async, uses ``self._http`` (``HTTPClientAsync``)
+    - ``WebAuthn(WebAuthnBase, AuthMethodBase)`` — sync, uses ``self._http`` (``HTTPClient``)
+    - ``WebAuthnAsync(WebAuthnBase, AsyncAuthMethodBase)`` — async, uses ``self._http`` (``HTTPClientAsync``)
     """
 
     @staticmethod

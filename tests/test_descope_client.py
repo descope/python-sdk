@@ -260,19 +260,19 @@ class TestDescopeClient:
         client = client_factory.make(PROJECT_ID, DUMMY_PUBLIC_KEY_DICT)
 
         with pytest.raises(AuthException):
-            client.validate_session(_MISSING_KID_TOKEN)
+            await client.invoke(client.validate_session(_MISSING_KID_TOKEN))
         with pytest.raises(AuthException):
-            client.validate_session(_INVALID_HEADER_TOKEN)
+            await client.invoke(client.validate_session(_INVALID_HEADER_TOKEN))
         with pytest.raises(AuthException):
-            client.validate_session(_INVALID_PAYLOAD_TOKEN)
+            await client.invoke(client.validate_session(_INVALID_PAYLOAD_TOKEN))
 
         # None key client + None token
         client4 = client_factory.make(PROJECT_ID, None)
         with pytest.raises(AuthException):
-            client4.validate_session(None)
+            await client4.invoke(client4.validate_session(None))
 
     async def test_validate_session_response_structure(self, descope_client):
-        result = descope_client.validate_session(VALID_SESSION_TOKEN)
+        result = await descope_client.invoke(descope_client.validate_session(VALID_SESSION_TOKEN))
         assert result == {
             "drn": "DS",
             "exp": 2493061415,
@@ -302,7 +302,7 @@ class TestDescopeClient:
         valid_jwt_token = VALID_REFRESH_TOKEN  # far-future DSR token, P2Cu kid
 
         # Valid token validates locally — no network needed
-        client.validate_session(valid_jwt_token)
+        await client.invoke(client.validate_session(valid_jwt_token))
 
         assert (
             await client.invoke(client.validate_and_refresh_session(valid_jwt_token, dummy_refresh_token)) is not None
@@ -310,19 +310,19 @@ class TestDescopeClient:
 
         # Key id cannot be found — key fetch returns wrong kid
         client2 = client_factory.make(PROJECT_ID, None)
-        with patch("httpx.get") as mock_request:
-            fake_key = deepcopy(DUMMY_PUBLIC_KEY_DICT)
-            fake_key["kid"] = "dummy_kid"
-            mock_request.return_value.text = json.dumps([fake_key])
-            mock_request.return_value.is_success = True
+        fake_key = deepcopy(DUMMY_PUBLIC_KEY_DICT)
+        fake_key["kid"] = "dummy_kid"
+        bad_jwks = make_response()
+        bad_jwks.text = json.dumps([fake_key])  # malformed: missing "keys" wrapper
+        with client2.mock_get(bad_jwks):
             with pytest.raises(AuthException):
                 await client2.invoke(client2.validate_and_refresh_session(valid_jwt_token, dummy_refresh_token))
 
         # Key fetch returns unparsable key
         client3 = client_factory.make(PROJECT_ID, None)
-        with patch("httpx.get") as mock_request:
-            mock_request.return_value.text = """[{"kid": "dummy_kid"}]"""
-            mock_request.return_value.is_success = True
+        bad_jwks2 = make_response()
+        bad_jwks2.text = """[{"kid": "dummy_kid"}]"""
+        with client3.mock_get(bad_jwks2):
             with pytest.raises(AuthException):
                 await client3.invoke(client3.validate_and_refresh_session(valid_jwt_token, dummy_refresh_token))
 
@@ -330,9 +330,9 @@ class TestDescopeClient:
         bad_alg_key = deepcopy(DUMMY_PUBLIC_KEY_DICT)
         bad_alg_key["alg"] = "ES521"
         client4 = client_factory.make(PROJECT_ID, bad_alg_key)
-        with patch("httpx.get") as mock_request:
-            mock_request.return_value.text = """[{"kid": "dummy_kid"}]"""
-            mock_request.return_value.is_success = True
+        bad_jwks3 = make_response()
+        bad_jwks3.text = """[{"kid": "dummy_kid"}]"""
+        with client4.mock_get(bad_jwks3):
             with pytest.raises(AuthException):
                 await client4.invoke(client4.validate_and_refresh_session(valid_jwt_token, dummy_refresh_token))
 
@@ -344,9 +344,8 @@ class TestDescopeClient:
         # Expired session triggers refresh; refreshed token is also expired → fails
         expired_jwt_token = EXPIRED_SESSION_TOKEN
         valid_refresh_for_expire_test = valid_jwt_token
-        with patch("httpx.get") as mock_request:
-            mock_request.return_value.cookies = {SESSION_COOKIE_NAME: expired_jwt_token}
-            mock_request.return_value.is_success = True
+        expired_jwks = make_response(cookies={SESSION_COOKIE_NAME: expired_jwt_token})
+        with client3.mock_get(expired_jwks):
             with pytest.raises(AuthException):
                 await client3.invoke(
                     client3.validate_and_refresh_session(expired_jwt_token, valid_refresh_for_expire_test)
@@ -388,17 +387,21 @@ class TestDescopeClient:
         # Client with P2Cu key (same kid the validate tokens use in refresh path)
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
 
-        # Fail flow: key is preloaded so validate_session raises due to expiration
-        with patch("httpx.get") as mock_request:
-            mock_request.return_value.is_success = False
+        # Fail flow: JWKS fetch returns non-success → AuthException. Status 500 raises
+        # in ``_raise_from_response`` BEFORE the parse step, so the in-memory cache
+        # is preserved for the next assertions.
+        failed_jwks = make_response(status=500)
+        with client.mock_get(failed_jwks):
             with pytest.raises(AuthException):
-                client.validate_session(expired_jwt_token)
+                await client.invoke(client.validate_session(expired_jwt_token))
 
-        with patch("httpx.get") as mock_request:
-            mock_request.return_value.cookies = {"aaa": "aaa"}
-            mock_request.return_value.is_success = True
+        # Fail flow: JWKS fetch succeeds but the response body has no ``keys`` field →
+        # ``_fetch_public_keys`` raises before touching ``self.public_keys``.
+        bad_jwks_body = make_response()
+        bad_jwks_body.text = "not a jwks"
+        with client.mock_get(bad_jwks_body):
             with pytest.raises(AuthException):
-                client.validate_session(expired_jwt_token)
+                await client.invoke(client.validate_session(expired_jwt_token))
 
         # Fail flow: jwt.get_unverified_header returns {} (no kid)
         dummy_session_token = "dummy session token"
@@ -428,17 +431,13 @@ class TestDescopeClient:
             assert new_session_token_from_request == new_session_token, "Failed to refresh token"
 
         # Fail flow: refreshed token is also expired → AuthException
-        # dummy_client has P2Cu key; expired_jwt_token (kid=2Bt5) is NOT preloaded → triggers
-        # JWKS fetch via httpx.get; mock returns garbage JSON → AuthException
+        # dummy_client has 2Bt5 key; EXPIRED_SESSION_TOKEN (kid=P2Cu) is NOT preloaded →
+        # triggers JWKS fetch; mock returns garbage body → AuthException from JWKS parse.
         expired_jwt_token2 = EXPIRED_SESSION_TOKEN
         valid_refresh_token2 = VALID_REFRESH_TOKEN
-        new_refreshed_token = expired_jwt_token2
-        with patch("httpx.get") as mock_request:
-            my_mock_response = mock.Mock()
-            my_mock_response.is_success = True
-            my_mock_response.json.return_value = {"sessionJwt": new_refreshed_token}
-            mock_request.return_value = my_mock_response
-            mock_request.return_value.cookies = {}
+        garbage_jwks = make_response()
+        garbage_jwks.text = "not a jwks"
+        with dummy_client.mock_get(garbage_jwks):
             with pytest.raises(AuthException):
                 await dummy_client.invoke(
                     dummy_client.validate_and_refresh_session(expired_jwt_token2, valid_refresh_token2)
@@ -631,7 +630,7 @@ class TestDescopeClient:
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, jwt_validation_leeway=min_int)
 
         with pytest.raises(AuthException) as exc_info:
-            client.validate_session(VALID_REFRESH_TOKEN)
+            await client.invoke(client.validate_session(VALID_REFRESH_TOKEN))
         assert exc_info.value.status_code == 400
         assert exc_info.value.error_message is not None
         assert "nbf in future" in exc_info.value.error_message

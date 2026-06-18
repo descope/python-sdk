@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from descope._auth_base import AsyncAuthBase
+from descope._authmethod_base import AsyncAuthMethodBase
 from descope.authmethod._oauth_base import OAuthBase
 from descope.common import (
     REFRESH_SESSION_COOKIE_NAME,
@@ -13,7 +13,7 @@ from descope.common import (
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
-class OAuthAsync(OAuthBase, AsyncAuthBase):
+class OAuthAsync(OAuthBase, AsyncAuthMethodBase):
     """Async OAuth auth-method. All network calls are coroutines; validation is sync (no I/O)."""
 
     async def start(
@@ -49,6 +49,6 @@ class OAuthAsync(OAuthBase, AsyncAuthBase):
         uri = EndpointsV1.oauth_exchange_token_path
         body = self._compose_exchange_body(code)
         response = await self._http.post(uri, body=body)
-        return self._auth.generate_jwt_response(
+        return await self._auth.prepare_jwt_response(
             response.json(), response.cookies.get(REFRESH_SESSION_COOKIE_NAME), None
         )

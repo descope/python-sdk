@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from descope._auth_base import AsyncAuthBase
+from descope._authmethod_base import AsyncAuthMethodBase
 from descope.auth import Auth
 from descope.authmethod._enchantedlink_base import EnchantedLinkBase
 from descope.common import (
@@ -14,7 +14,7 @@ from descope.common import (
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
-class EnchantedLinkAsync(EnchantedLinkBase, AsyncAuthBase):
+class EnchantedLinkAsync(EnchantedLinkBase, AsyncAuthMethodBase):
     """Async EnchantedLink auth-method. All network calls are coroutines; validation is sync (no I/O)."""
 
     async def sign_in(
@@ -77,8 +77,9 @@ class EnchantedLinkAsync(EnchantedLinkBase, AsyncAuthBase):
         uri = EndpointsV1.get_session_enchantedlink_auth_path
         body = self._compose_get_session_body(pending_ref)
         response = await self._http.post(uri, body=body)
-        resp = response.json()
-        return self._auth.generate_jwt_response(resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), None)
+        return await self._auth.prepare_jwt_response(
+            response.json(), response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), None
+        )
 
     async def verify(self, token: str) -> None:
         """Mark the enchanted-link token as clicked (called by the link-handler endpoint)."""

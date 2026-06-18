@@ -12,8 +12,8 @@ class SSOBase:
     Holds only static validation guards and body/params composers — no network I/O, no
     ``__init__``.  The two concrete subclasses add the network layer:
 
-    - ``SSO(SSOBase, AuthBase)`` — sync, uses ``self._http`` (``HTTPClient``)
-    - ``SSOAsync(SSOBase, AsyncAuthBase)`` — async, uses ``self._http`` (``HTTPClientAsync``)
+    - ``SSO(SSOBase, AuthMethodBase)`` — sync, uses ``self._http`` (``HTTPClient``)
+    - ``SSOAsync(SSOBase, AsyncAuthMethodBase)`` — async, uses ``self._http`` (``HTTPClientAsync``)
     """
 
     @staticmethod

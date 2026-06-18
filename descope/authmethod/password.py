@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from typing import Iterable
 
-from descope._auth_base import AuthBase
+from descope._authmethod_base import AuthMethodBase
 from descope.authmethod._password_base import PasswordBase
 from descope.common import REFRESH_SESSION_COOKIE_NAME, EndpointsV1
 
 
-class Password(PasswordBase, AuthBase):
+class Password(PasswordBase, AuthMethodBase):
     def sign_up(
         self,
         login_id: str,

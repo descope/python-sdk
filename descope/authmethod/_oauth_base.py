@@ -10,8 +10,8 @@ class OAuthBase:
     Holds only static validation guards and body/params composers — no network I/O, no
     ``__init__``.  The two concrete subclasses add the network layer:
 
-    - ``OAuth(OAuthBase, AuthBase)`` — sync, uses ``self._http`` (``HTTPClient``)
-    - ``OAuthAsync(OAuthBase, AsyncAuthBase)`` — async, uses ``self._http`` (``HTTPClientAsync``)
+    - ``OAuth(OAuthBase, AuthMethodBase)`` — sync, uses ``self._http`` (``HTTPClient``)
+    - ``OAuthAsync(OAuthBase, AsyncAuthMethodBase)`` — async, uses ``self._http`` (``HTTPClientAsync``)
     """
 
     @staticmethod

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Iterable, Optional, Union
 
-from descope._auth_base import AuthBase
+from descope._authmethod_base import AuthMethodBase
 from descope.authmethod._webauthn_base import WebAuthnBase
 from descope.common import (
     REFRESH_SESSION_COOKIE_NAME,
@@ -12,7 +12,7 @@ from descope.common import (
 )
 
 
-class WebAuthn(WebAuthnBase, AuthBase):
+class WebAuthn(WebAuthnBase, AuthMethodBase):
     def sign_up_start(
         self,
         login_id: Optional[str],

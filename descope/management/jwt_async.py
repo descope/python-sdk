@@ -3,8 +3,7 @@ from __future__ import annotations
 from typing import Optional
 
 from descope._http_base import AsyncHTTPBase
-from descope.auth import Auth
-from descope.jwt_common import generate_jwt_response
+from descope.auth_async import AuthAsync
 from descope.management._jwt_base import JWTBase
 from descope.management.common import (
     MgmtLoginOptions,
@@ -18,9 +17,9 @@ from descope.management.common import (
 class JWTAsync(JWTBase, AsyncHTTPBase):
     """Async counterpart of JWT — all HTTP calls are coroutines."""
 
-    _auth: Auth
+    _auth: AuthAsync
 
-    def __init__(self, http_client, auth: Auth):
+    def __init__(self, http_client, auth: AuthAsync):
         super().__init__(http_client)
         self._auth = auth
 
@@ -157,9 +156,7 @@ class JWTAsync(JWTBase, AsyncHTTPBase):
             },
             params=None,
         )
-        resp = response.json()
-        jwt_response = generate_jwt_response(resp, None, None, self._auth.validate_token)
-        return jwt_response
+        return await self._auth.prepare_jwt_response(response.json(), None, None)
 
     async def sign_up(
         self,
@@ -214,9 +211,7 @@ class JWTAsync(JWTBase, AsyncHTTPBase):
             body=self._compose_sign_up_body(login_id, user, signup_options),
             params=None,
         )
-        resp = response.json()
-        jwt_response = generate_jwt_response(resp, None, None, self._auth.validate_token)
-        return jwt_response
+        return await self._auth.prepare_jwt_response(response.json(), None, None)
 
     async def anonymous(
         self,
@@ -241,8 +236,7 @@ class JWTAsync(JWTBase, AsyncHTTPBase):
             },
             params=None,
         )
-        resp = response.json()
-        jwt_response = generate_jwt_response(resp, None, None, self._auth.validate_token)
+        jwt_response = await self._auth.prepare_jwt_response(response.json(), None, None)
         del jwt_response["firstSeen"]
         del jwt_response["user"]
         return jwt_response

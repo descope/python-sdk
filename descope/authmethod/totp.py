@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Iterable, Optional, Union
 
-from descope._auth_base import AuthBase
+from descope._authmethod_base import AuthMethodBase
 from descope.authmethod._totp_base import TOTPBase
 from descope.common import (
     REFRESH_SESSION_COOKIE_NAME,
@@ -12,7 +12,7 @@ from descope.common import (
 )
 
 
-class TOTP(TOTPBase, AuthBase):
+class TOTP(TOTPBase, AuthMethodBase):
     def sign_up(self, login_id: str, user: Optional[dict] = None) -> dict:
         """
         Sign up (create) a new user using their email or phone number.

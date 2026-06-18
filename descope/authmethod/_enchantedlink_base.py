@@ -18,8 +18,8 @@ class EnchantedLinkBase:
     Holds only static validation guards, URL composers and body builders — no
     network I/O, no ``__init__``.  The two concrete subclasses add the network layer:
 
-    - ``EnchantedLink(EnchantedLinkBase, AuthBase)`` — sync, uses ``self._http`` (``HTTPClient``)
-    - ``EnchantedLinkAsync(EnchantedLinkBase, AsyncAuthBase)`` — async, uses ``self._http``
+    - ``EnchantedLink(EnchantedLinkBase, AuthMethodBase)`` — sync, uses ``self._http`` (``HTTPClient``)
+    - ``EnchantedLinkAsync(EnchantedLinkBase, AsyncAuthMethodBase)`` — async, uses ``self._http``
     """
 
     @staticmethod

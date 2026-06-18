@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Iterable
 
-from descope._auth_base import AuthBase
+from descope._authmethod_base import AuthMethodBase
 from descope.auth import Auth
 from descope.authmethod._magiclink_base import MagicLinkBase
 from descope.common import (
@@ -16,7 +16,7 @@ from descope.common import (
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
-class MagicLink(MagicLinkBase, AuthBase):
+class MagicLink(MagicLinkBase, AuthMethodBase):
     def sign_in(
         self,
         method: DeliveryMethod,

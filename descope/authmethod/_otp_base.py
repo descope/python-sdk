@@ -18,8 +18,8 @@ class OTPBase:
     Holds only static validation guards, URL composers and body builders — no
     network I/O, no ``__init__``.  The two concrete subclasses add the network layer:
 
-    - ``OTP(OTPBase, AuthBase)`` — sync, uses ``self._http`` (``HTTPClient``)
-    - ``OTPAsync(OTPBase, AsyncAuthBase)`` — async, uses ``self._http`` (``HTTPClientAsync``)
+    - ``OTP(OTPBase, AuthMethodBase)`` — sync, uses ``self._http`` (``HTTPClient``)
+    - ``OTPAsync(OTPBase, AsyncAuthMethodBase)`` — async, uses ``self._http`` (``HTTPClientAsync``)
     """
 
     @staticmethod

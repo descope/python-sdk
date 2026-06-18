@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import contextvars
-from typing import cast
+from typing import Awaitable, Callable, cast
 
 import httpx
 
@@ -41,6 +41,12 @@ class HTTPClientAsync(HTTPClientBase):
         self._last_response_var: contextvars.ContextVar[DescopeResponse | None] = contextvars.ContextVar(
             "descope_async_last_response", default=None
         )
+        # Optional one-shot async hook invoked before the first request goes
+        # out. Used by ``DescopeClientAsync`` to lazily run the license
+        # handshake on ``_mgmt_http`` without blocking the event loop in
+        # ``__init__``. The hook is expected to be idempotent — it will be
+        # awaited on every request, but should fast-path after the first run.
+        self._pre_request_hook: Callable[[], Awaitable[None]] | None = None
 
     async def get(
         self,
@@ -158,6 +164,8 @@ class HTTPClientAsync(HTTPClientBase):
         return self._last_response_var.get()
 
     async def _async_execute_with_retry(self, request_fn) -> httpx.Response:
+        if self._pre_request_hook is not None:
+            await self._pre_request_hook()
         response = await request_fn()
         for delay in _RETRY_DELAYS_SECONDS:
             if response.status_code not in _RETRY_STATUS_CODES:

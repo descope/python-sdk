@@ -10,8 +10,8 @@ class PasswordBase:
     Holds only static validation guards and body composers — no network I/O, no
     ``__init__``.  The two concrete subclasses add the network layer:
 
-    - ``Password(PasswordBase, AuthBase)`` — sync, uses ``self._http`` (``HTTPClient``)
-    - ``PasswordAsync(PasswordBase, AsyncAuthBase)`` — async, uses ``self._http`` (``HTTPClientAsync``)
+    - ``Password(PasswordBase, AuthMethodBase)`` — sync, uses ``self._http`` (``HTTPClient``)
+    - ``PasswordAsync(PasswordBase, AsyncAuthMethodBase)`` — async, uses ``self._http`` (``HTTPClientAsync``)
     """
 
     @staticmethod

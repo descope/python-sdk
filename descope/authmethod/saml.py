@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from descope._auth_base import AuthBase
+from descope._authmethod_base import AuthMethodBase
 from descope.authmethod._saml_base import SAMLBase
 from descope.common import (
     REFRESH_SESSION_COOKIE_NAME,
@@ -13,7 +13,7 @@ from descope.common import (
 
 
 # This class is DEPRECATED please use SSO instead
-class SAML(SAMLBase, AuthBase):
+class SAML(SAMLBase, AuthMethodBase):
     def start(
         self,
         tenant: str,
