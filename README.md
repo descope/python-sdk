@@ -646,13 +646,12 @@ sso_link = descope_client.mgmt.tenant.generate_sso_configuration_link(
     expire_time=21600  # 6 hours in seconds
 )
 
-# Optionally bind the link to a real user (by user_id or login_id) so actions taken inside the
-# SSO Suite are audited against that user instead of a temporary one. The user must exist and
-# belong to the tenant; user_id takes precedence over login_id.
+# Optionally set an actor id, recorded as the audit actor for actions taken inside the SSO
+# Suite (instead of the temporary user). It is used as-is for audit attribution and is not validated.
 sso_link = descope_client.mgmt.tenant.generate_sso_configuration_link(
     tenant_id="my-custom-id",
     expire_time=21600,
-    login_id="admin@my-tenant.com",
+    actor_id="my-admin-actor-id",
 )
 ```
 

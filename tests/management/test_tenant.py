@@ -746,7 +746,7 @@ class TestTenant(common.DescopeTest):
             self.dummy_management_key,
         )
 
-        # Test that user_id and login_id are sent to attribute the suite session to a real user
+        # Test that actor_id is sent and recorded as the audit actor for in-suite actions
         with patch("httpx.post") as mock_post:
             network_resp = mock.Mock()
             network_resp.is_success = True
@@ -756,8 +756,7 @@ class TestTenant(common.DescopeTest):
             mock_post.return_value = network_resp
             link = client.mgmt.tenant.generate_sso_configuration_link(
                 tenant_id="t1",
-                user_id="user-1",
-                login_id="admin@example.com",
+                actor_id="admin-actor-1",
             )
             self.assertEqual(link, "https://example.com/sso-config-link")
             mock_post.assert_called_with(
@@ -770,8 +769,7 @@ class TestTenant(common.DescopeTest):
                 params=None,
                 json={
                     "tenantId": "t1",
-                    "userId": "user-1",
-                    "loginId": "admin@example.com",
+                    "actorId": "admin-actor-1",
                 },
                 follow_redirects=False,
                 verify=SSLMatcher(),
