@@ -332,6 +332,7 @@ class Tenant(HTTPBase):
         expire_time: Optional[int] = None,
         email: Optional[str] = None,
         sso_id: Optional[str] = None,
+        actor_id: Optional[str] = None,
     ) -> str:
         """
         Generate a tenant admin self-service link for SSO configuration.
@@ -341,6 +342,9 @@ class Tenant(HTTPBase):
         expire_time (int): Optional expiration duration in seconds. For a link valid for 6 hours, use 21600.
         email (str): Optional email address associated with the admin.
         sso_id (str): Optional SSO identifier for the tenant.
+        actor_id (str): Optional id recorded as the audit actor for actions performed inside the
+            SSO Setup Suite (instead of the temporary user). It is used as-is for audit attribution
+            and is not validated.
 
         Return value (str):
         Returns the admin SSO configuration link as a string.
@@ -355,6 +359,8 @@ class Tenant(HTTPBase):
             body["email"] = email
         if sso_id is not None:
             body["ssoId"] = sso_id
+        if actor_id is not None:
+            body["actorId"] = actor_id
 
         response = self._http.post(
             MgmtV1.tenant_generate_sso_configuration_link_path,
