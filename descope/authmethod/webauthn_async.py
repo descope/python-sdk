@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Iterable, Optional, Union
 
-from descope._auth_base import AsyncAuthBase
+from descope._authmethod_base import AsyncAuthMethodBase
 from descope.authmethod._webauthn_base import WebAuthnBase
 from descope.common import (
     REFRESH_SESSION_COOKIE_NAME,
@@ -12,7 +12,7 @@ from descope.common import (
 )
 
 
-class WebAuthnAsync(WebAuthnBase, AsyncAuthBase):
+class WebAuthnAsync(WebAuthnBase, AsyncAuthMethodBase):
     """Async WebAuthn auth-method. All network calls are coroutines; validation is sync (no I/O)."""
 
     async def sign_up_start(
@@ -46,9 +46,10 @@ class WebAuthnAsync(WebAuthnBase, AsyncAuthBase):
         uri = EndpointsV1.sign_up_auth_webauthn_finish_path
         body = self._compose_sign_up_in_finish_body(transaction_id, response)
         http_response = await self._http.post(uri, body=body)
-        resp = http_response.json()
-        return self._auth.generate_jwt_response(
-            resp, http_response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
+        return await self._auth.prepare_jwt_response(
+            http_response.json(),
+            http_response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None),
+            audience,
         )
 
     async def sign_in_start(
@@ -82,9 +83,10 @@ class WebAuthnAsync(WebAuthnBase, AsyncAuthBase):
         uri = EndpointsV1.sign_in_auth_webauthn_finish_path
         body = self._compose_sign_up_in_finish_body(transaction_id, response)
         http_response = await self._http.post(uri, body=body)
-        resp = http_response.json()
-        return self._auth.generate_jwt_response(
-            resp, http_response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
+        return await self._auth.prepare_jwt_response(
+            http_response.json(),
+            http_response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None),
+            audience,
         )
 
     async def sign_up_or_in_start(

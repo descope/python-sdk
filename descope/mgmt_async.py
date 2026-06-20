@@ -1,6 +1,6 @@
 from typing import Optional
 
-from descope.auth import Auth
+from descope.auth_async import AuthAsync
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 from descope.http_client_async import HTTPClientAsync
 from descope.management.access_key_async import AccessKeyAsync
@@ -31,7 +31,7 @@ from descope.management.user_async import UserAsync
 class MGMTAsync:
     _http: HTTPClientAsync
 
-    def __init__(self, http_client: HTTPClientAsync, auth: Auth, fga_cache_url: Optional[str] = None):
+    def __init__(self, http_client: HTTPClientAsync, auth: AuthAsync, fga_cache_url: Optional[str] = None):
         """Create an async management API facade.
 
         Args:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from descope._auth_base import AuthBase
+from descope._authmethod_base import AuthMethodBase
 from descope.auth import Auth
 from descope.authmethod._enchantedlink_base import EnchantedLinkBase
 from descope.common import (
@@ -14,7 +14,7 @@ from descope.common import (
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
-class EnchantedLink(EnchantedLinkBase, AuthBase):
+class EnchantedLink(EnchantedLinkBase, AuthMethodBase):
     def sign_in(
         self,
         login_id: str,

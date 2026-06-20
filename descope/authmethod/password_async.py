@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from typing import Iterable
 
-from descope._auth_base import AsyncAuthBase
+from descope._authmethod_base import AsyncAuthMethodBase
 from descope.authmethod._password_base import PasswordBase
 from descope.common import REFRESH_SESSION_COOKIE_NAME, EndpointsV1
 
 
-class PasswordAsync(PasswordBase, AsyncAuthBase):
+class PasswordAsync(PasswordBase, AsyncAuthMethodBase):
     """Async Password auth-method. All network calls are coroutines; validation is sync (no I/O)."""
 
     async def sign_up(
@@ -24,9 +24,9 @@ class PasswordAsync(PasswordBase, AsyncAuthBase):
         uri = EndpointsV1.sign_up_password_path
         body = self._compose_signup_body(login_id, password, user)
         response = await self._http.post(uri, body=body)
-
-        resp = response.json()
-        return self._auth.generate_jwt_response(resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience)
+        return await self._auth.prepare_jwt_response(
+            response.json(), response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
+        )
 
     async def sign_in(
         self,
@@ -40,9 +40,9 @@ class PasswordAsync(PasswordBase, AsyncAuthBase):
 
         uri = EndpointsV1.sign_in_password_path
         response = await self._http.post(uri, body={"loginId": login_id, "password": password})
-
-        resp = response.json()
-        return self._auth.generate_jwt_response(resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience)
+        return await self._auth.prepare_jwt_response(
+            response.json(), response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
+        )
 
     async def send_reset(
         self,
@@ -98,9 +98,9 @@ class PasswordAsync(PasswordBase, AsyncAuthBase):
                 "newPassword": new_password,
             },
         )
-
-        resp = response.json()
-        return self._auth.generate_jwt_response(resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience)
+        return await self._auth.prepare_jwt_response(
+            response.json(), response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
+        )
 
     async def get_policy(self) -> dict:
         """Return the project's password policy (min length, character requirements, etc.)."""

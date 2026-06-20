@@ -7,7 +7,7 @@ from typing import Iterable
 import httpx
 
 from descope._client_base import DescopeClientBase
-from descope.auth import Auth  # noqa: F401
+from descope.auth import Auth
 from descope.authmethod.enchantedlink import EnchantedLink  # noqa: F401
 from descope.authmethod.magiclink import MagicLink  # noqa: F401
 from descope.authmethod.oauth import OAuth  # noqa: F401
@@ -19,9 +19,12 @@ from descope.authmethod.totp import TOTP  # noqa: F401
 from descope.authmethod.webauthn import WebAuthn  # noqa: F401
 from descope.common import DEFAULT_TIMEOUT_SECONDS, AccessKeyLoginOptions, EndpointsV1
 from descope.http_client import HTTPClient
+from descope.management.common import MgmtV1
 from descope.mgmt import MGMT  # noqa: F401
 
 logger = logging.getLogger(__name__)
+
+LICENSE_HANDSHAKE_TIMEOUT_SECONDS = 5.0
 
 
 class DescopeClient(DescopeClientBase):
@@ -51,7 +54,20 @@ class DescopeClient(DescopeClientBase):
             base_url=base_url,
             verbose=verbose,
         )
-        auth_http_client = self._auth.http_client
+        auth_http_client = HTTPClient(
+            project_id=self._project_id,
+            base_url=base_url,
+            timeout_seconds=timeout_seconds,
+            secure=not skip_verify,
+            management_key=auth_management_key or os.getenv("DESCOPE_AUTH_MANAGEMENT_KEY"),
+            verbose=verbose,
+        )
+        self._auth = Auth(
+            self._project_id,
+            public_key,
+            jwt_validation_leeway,
+            http_client=auth_http_client,
+        )
 
         self._magiclink = MagicLink(self._auth)
         self._enchantedlink = EnchantedLink(self._auth)
@@ -88,6 +104,32 @@ class DescopeClient(DescopeClientBase):
         # initial request is safe before the tier is cached.
         if mgmt_http_client.management_key:
             self._fetch_rate_limit_tier(mgmt_http_client)
+
+    def _fetch_rate_limit_tier(self, mgmt_http) -> None:
+        """Sync license handshake so the x-descope-license header is ready for the first mgmt call."""
+        try:
+            response = httpx.get(
+                f"{mgmt_http.base_url}{MgmtV1.license_get_path}",
+                headers={"Authorization": f"Bearer {mgmt_http.project_id}:{mgmt_http.management_key}"},
+                follow_redirects=True,
+                verify=mgmt_http.client_verify,
+                timeout=LICENSE_HANDSHAKE_TIMEOUT_SECONDS,
+            )
+            if not response.is_success:
+                logger.warning(
+                    "License handshake returned non-success status %s",
+                    response.status_code,
+                )
+                return
+            tier = response.json().get("rateLimitTier")
+            if tier:
+                mgmt_http.rate_limit_tier = tier
+        except Exception as e:
+            logger.warning("License handshake failed: %s", e)
+
+    def validate_session(self, session_token: str, audience: Iterable[str] | str | None = None) -> dict:
+        """Validate a session token. Pure CPU once JWKS is cached — no I/O on the hot path."""
+        return self._auth.validate_session(session_token, audience)
 
     @property
     def mgmt(self):

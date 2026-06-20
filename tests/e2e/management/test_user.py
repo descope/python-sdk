@@ -1,5 +1,4 @@
-"""E2E test: user management CRUD + test-user flow + invite.
-"""
+"""E2E test: user management CRUD + test-user flow + invite."""
 
 import uuid
 

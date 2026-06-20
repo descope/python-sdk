@@ -13,8 +13,8 @@ class TOTPBase:
     Holds only static validation guards and body composers — no network I/O, no
     ``__init__``.  The two concrete subclasses add the network layer:
 
-    - ``TOTP(TOTPBase, AuthBase)`` — sync, uses ``self._http`` (``HTTPClient``)
-    - ``AsyncTOTP(TOTPBase, AsyncAuthBase)`` — async, uses ``self._http`` (``AsyncHTTPClient``)
+    - ``TOTP(TOTPBase, AuthMethodBase)`` — sync, uses ``self._http`` (``HTTPClient``)
+    - ``AsyncTOTP(TOTPBase, AsyncAuthMethodBase)`` — async, uses ``self._http`` (``AsyncHTTPClient``)
     """
 
     @staticmethod

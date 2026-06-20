@@ -533,3 +533,26 @@ class TestTenant:
                 json={"tenantId": "t1"},
                 follow_redirects=False,
             )
+
+    async def test_generate_sso_configuration_link_with_actor(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_post(
+            make_response({"adminSSOConfigurationLink": "https://example.com/sso-config-link"})
+        ) as mock_post:
+            link = await client.invoke(
+                client.mgmt.tenant.generate_sso_configuration_link(
+                    tenant_id="t1",
+                    actor_id="admin-actor-1",
+                )
+            )
+            assert link == "https://example.com/sso-config-link"
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.tenant_generate_sso_configuration_link_path}",
+                headers=MGMT_HEADERS,
+                params=None,
+                json={"tenantId": "t1", "actorId": "admin-actor-1"},
+                follow_redirects=False,
+            )

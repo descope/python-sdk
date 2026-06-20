@@ -1,30 +1,379 @@
-# This is not part of the public API but a code helper
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import json
+import os
+import re
+from http import HTTPStatus
+from typing import Iterable, Optional
 
-from descope.auth import Auth
+import jwt
+from email_validator import EmailNotValidError, validate_email
+from jwt import ExpiredSignatureError, ImmatureSignatureError
 
-if TYPE_CHECKING:
-    from descope.http_client_async import HTTPClientAsync
+from descope.common import (
+    DEFAULT_BASE_URL,
+    DEFAULT_DOMAIN,
+    DEFAULT_URL_PREFIX,
+    PHONE_REGEX,
+    DeliveryMethod,
+)
+from descope.exceptions import (
+    API_RATE_LIMIT_RETRY_AFTER_HEADER,
+    ERROR_TYPE_API_RATE_LIMIT,
+    ERROR_TYPE_INVALID_ARGUMENT,
+    ERROR_TYPE_INVALID_PUBLIC_KEY,
+    ERROR_TYPE_INVALID_TOKEN,
+    ERROR_TYPE_SERVER_ERROR,
+    AuthException,
+    RateLimitException,
+)
+from descope.jwt_common import adjust_properties as jwt_adjust_properties
+from descope.jwt_common import generate_auth_info as jwt_generate_auth_info
+from descope.jwt_common import generate_jwt_response as jwt_generate_jwt_response
 
 
 class AuthBase:
-    """Base class for classes having auth"""
+    """Pure-CPU base shared by ``Auth`` and ``AuthAsync``.
 
-    def __init__(self, auth: Auth):
-        self._auth = auth
-        self._http = auth.http_client
-
-
-class AsyncAuthBase:
-    """Base for async auth-method classes.
-
-    Holds a sync Auth instance (used only for pure-computation helpers —
-    generate_jwt_response, validate_email, extract_masked_address, etc. — no I/O)
-    and an AsyncHTTPClient for all network calls.
+    Holds project identity, the JWKS cache, and JWT helpers. Subclasses add
+    the HTTP client, lock primitive, and I/O methods.
     """
 
-    def __init__(self, auth: Auth, http: HTTPClientAsync):
-        self._auth = auth
-        self._http = http
+    ALGORITHM_KEY = "alg"
+
+    def __init__(
+        self,
+        project_id: Optional[str] = None,
+        public_key: Optional[dict | str] = None,
+        jwt_validation_leeway: int = 5,
+    ):
+        if not project_id:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                (
+                    "Unable to init Auth object because project_id cannot be empty. "
+                    "Set environment variable DESCOPE_PROJECT_ID or pass your Project ID to the init function."
+                ),
+            )
+        self.project_id = project_id
+        self.jwt_validation_leeway = jwt_validation_leeway
+
+        public_key = public_key or os.getenv("DESCOPE_PUBLIC_KEY")
+        if not public_key:
+            self.public_keys: dict = {}
+        else:
+            kid, pub_key, alg = self._validate_and_load_public_key(public_key)
+            self.public_keys = {kid: (pub_key, alg)}
+
+    def _raise_rate_limit_exception(self, response):
+        try:
+            resp = response.json()
+            raise RateLimitException(
+                resp.get("errorCode", HTTPStatus.TOO_MANY_REQUESTS),
+                ERROR_TYPE_API_RATE_LIMIT,
+                resp.get("errorDescription", ""),
+                resp.get("errorMessage", ""),
+                rate_limit_parameters={API_RATE_LIMIT_RETRY_AFTER_HEADER: self._parse_retry_after(response.headers)},
+            )
+        except RateLimitException:
+            raise
+        except Exception:
+            raise RateLimitException(
+                status_code=HTTPStatus.TOO_MANY_REQUESTS,
+                error_type=ERROR_TYPE_API_RATE_LIMIT,
+                error_message=ERROR_TYPE_API_RATE_LIMIT,
+                error_description=ERROR_TYPE_API_RATE_LIMIT,
+            )
+
+    def _parse_retry_after(self, headers):
+        try:
+            return int(headers.get(API_RATE_LIMIT_RETRY_AFTER_HEADER, 0))
+        except (ValueError, TypeError):
+            return 0
+
+    def _raise_from_response(self, response):
+        """Raise appropriate exception from response, does nothing if response.ok is True."""
+        if response.ok:
+            return
+
+        if response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
+            self._raise_rate_limit_exception(response)  # Raise RateLimitException
+
+        raise AuthException(
+            response.status_code,
+            ERROR_TYPE_SERVER_ERROR,
+            response.text,
+        )
+
+    @staticmethod
+    def base_url_for_project_id(project_id):
+        if len(project_id) >= 32:
+            region = project_id[1:5]
+            return ".".join([DEFAULT_URL_PREFIX, region, DEFAULT_DOMAIN])
+        return DEFAULT_BASE_URL
+
+    @staticmethod
+    def adjust_and_verify_delivery_method(method: DeliveryMethod, login_id: str, user: dict) -> bool:
+        if not login_id:
+            return False
+
+        if not isinstance(user, dict):
+            return False
+
+        if method == DeliveryMethod.EMAIL:
+            if not user.get("email", None):
+                user["email"] = login_id
+            try:
+                validate_email(user["email"], check_deliverability=False)
+                return True
+            except EmailNotValidError:
+                return False
+        elif method == DeliveryMethod.SMS:
+            if not user.get("phone", None):
+                user["phone"] = login_id
+            if not re.match(PHONE_REGEX, user["phone"]):
+                return False
+        elif method == DeliveryMethod.VOICE:
+            if not user.get("phone", None):
+                user["phone"] = login_id
+            if not re.match(PHONE_REGEX, user["phone"]):
+                return False
+        elif method == DeliveryMethod.WHATSAPP:
+            if not user.get("phone", None):
+                user["phone"] = login_id
+            if not re.match(PHONE_REGEX, user["phone"]):
+                return False
+        else:
+            return False
+
+        return True
+
+    @staticmethod
+    def compose_url(base: str, method: DeliveryMethod) -> str:
+        suffix = {
+            DeliveryMethod.EMAIL: "email",
+            DeliveryMethod.SMS: "sms",
+            DeliveryMethod.VOICE: "voice",
+            DeliveryMethod.WHATSAPP: "whatsapp",
+        }.get(method)
+
+        if not suffix:
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, f"Unknown delivery method: {method}")
+
+        return f"{base}/{suffix}"
+
+    @staticmethod
+    def get_login_id_by_method(method: DeliveryMethod, user: dict) -> tuple[str, str]:
+        login_id = {
+            DeliveryMethod.EMAIL: ("email", user.get("email", "")),
+            DeliveryMethod.SMS: ("phone", user.get("phone", "")),
+            DeliveryMethod.VOICE: ("voice", user.get("phone", "")),
+            DeliveryMethod.WHATSAPP: ("whatsapp", user.get("phone", "")),
+        }.get(method)
+
+        if not login_id:
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, f"Unknown delivery method: {method}")
+
+        return login_id
+
+    @staticmethod
+    def validate_email(email: str):
+        if email == "":
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                "email address argument cannot be empty",
+            )
+
+        try:
+            validate_email(email, check_deliverability=False)
+        except EmailNotValidError as ex:
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, f"Invalid email address: {ex}")
+
+    @staticmethod
+    def validate_phone(method: DeliveryMethod, phone: str):
+        if phone == "":
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                "Phone number argument cannot be empty",
+            )
+
+        if not re.match(PHONE_REGEX, phone):
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Invalid phone number")
+
+        if method != DeliveryMethod.SMS and method != DeliveryMethod.VOICE and method != DeliveryMethod.WHATSAPP:
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Invalid delivery method")
+
+    @staticmethod
+    def _compose_exchange_body(code: str) -> dict:
+        return {"code": code}
+
+    @staticmethod
+    def _validate_and_load_public_key(public_key) -> tuple[str, jwt.PyJWK, str]:
+        if not isinstance(public_key, (str, dict)):
+            raise AuthException(
+                500,
+                ERROR_TYPE_INVALID_PUBLIC_KEY,
+                "Unable to load public key. Invalid public key error: (unknown type)",
+            )
+
+        if isinstance(public_key, str):
+            try:
+                public_key = json.loads(public_key)
+            except (ValueError, TypeError) as e:
+                raise AuthException(
+                    500,
+                    ERROR_TYPE_INVALID_PUBLIC_KEY,
+                    f"Unable to load public key. error: {e}",
+                )
+
+        alg = public_key.get(AuthBase.ALGORITHM_KEY, None)
+        if alg is None:
+            raise AuthException(
+                500,
+                ERROR_TYPE_INVALID_PUBLIC_KEY,
+                "Unable to load public key. Missing property: alg",
+            )
+
+        kid = public_key.get("kid", None)
+        if kid is None:
+            raise AuthException(
+                500,
+                ERROR_TYPE_INVALID_PUBLIC_KEY,
+                "Unable to load public key. Missing property: kid",
+            )
+        try:
+            # Load and validate public key
+            return (kid, jwt.PyJWK(public_key), alg)
+        except (jwt.PyJWKError, jwt.InvalidKeyError) as e:
+            raise AuthException(
+                500,
+                ERROR_TYPE_INVALID_PUBLIC_KEY,
+                f"Unable to load public key {e}",
+            )
+
+    def adjust_properties(self, jwt_response: dict, user_jwt: bool):
+        # Delegate to shared JWT utilities for normalization
+        return jwt_adjust_properties(jwt_response, user_jwt)
+
+    def _generate_auth_info(
+        self,
+        response_body: dict,
+        refresh_token: str | None,
+        user_jwt: bool,
+        audience: str | None | Iterable[str] = None,
+    ) -> dict:
+        return jwt_generate_auth_info(
+            response_body,
+            refresh_token,
+            user_jwt,
+            audience,
+            token_validator=self._validate_token,  # type: ignore[attr-defined]
+        )
+
+    def generate_jwt_response(
+        self,
+        response_body: dict,
+        refresh_cookie: str | None,
+        audience: str | None | Iterable[str] = None,
+    ) -> dict:
+        return jwt_generate_jwt_response(
+            response_body,
+            refresh_cookie,
+            audience,
+            token_validator=self._validate_token,  # type: ignore[attr-defined]
+        )
+
+    @staticmethod
+    def extract_masked_address(response: dict, method: DeliveryMethod) -> str:
+        if method == DeliveryMethod.SMS or method == DeliveryMethod.VOICE or method == DeliveryMethod.WHATSAPP:
+            return response["maskedPhone"]
+        elif method == DeliveryMethod.EMAIL:
+            return response["maskedEmail"]
+        return ""
+
+    @staticmethod
+    def _kid_alg_from_token(token: str) -> tuple[str, str]:
+        """Return ``(kid, alg)`` from the unverified JWT header; raises on missing/invalid fields."""
+        if not token:
+            raise AuthException(500, ERROR_TYPE_INVALID_TOKEN, "Token validation received empty token")
+
+        try:
+            unverified_header = jwt.get_unverified_header(token)
+        except jwt.exceptions.PyJWTError as e:
+            raise AuthException(500, ERROR_TYPE_INVALID_TOKEN, f"Unable to parse token header. Error: {e}") from e
+
+        alg_header = unverified_header.get(AuthBase.ALGORITHM_KEY, None)
+        if alg_header is None or alg_header == "none":
+            raise AuthException(500, ERROR_TYPE_INVALID_TOKEN, "Token header is missing property: alg")
+
+        kid = unverified_header.get("kid", None)
+        if kid is None:
+            raise AuthException(500, ERROR_TYPE_INVALID_TOKEN, "Token header is missing property: kid")
+
+        return kid, alg_header
+
+    def _decode_and_verify_token(
+        self,
+        token: str,
+        audience: str | None | Iterable[str],
+        copy_key,
+        alg_header: str,
+    ) -> dict:
+        """Pure-CPU JWT verification. Assumes ``copy_key`` was already retrieved from the JWKS cache."""
+        alg_from_key = copy_key[1]
+        if alg_header != alg_from_key:
+            raise AuthException(
+                500,
+                ERROR_TYPE_INVALID_PUBLIC_KEY,
+                "Algorithm signature in JWT header does not match the algorithm signature in the public key",
+            )
+
+        validation_audience = audience
+        if audience is None:
+            try:
+                unverified_claims = jwt.decode(
+                    jwt=token,
+                    key=copy_key[0].key,
+                    algorithms=[alg_header],
+                    options={"verify_aud": False},
+                    leeway=self.jwt_validation_leeway,
+                )
+                token_audience = unverified_claims.get("aud")
+                if token_audience and self.project_id:
+                    if isinstance(token_audience, list):
+                        if self.project_id in token_audience:
+                            validation_audience = self.project_id
+                    else:
+                        if token_audience == self.project_id:
+                            validation_audience = self.project_id
+            except Exception:
+                # Best-effort audience sniff. Any failure falls through to the
+                # verified decode below, which raises the proper error message.
+                pass
+
+        try:
+            claims = jwt.decode(
+                jwt=token,
+                key=copy_key[0].key,
+                algorithms=[alg_header],
+                audience=validation_audience,
+                leeway=self.jwt_validation_leeway,
+            )
+        except ImmatureSignatureError:
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_TOKEN,
+                "Received Invalid token (nbf in future) during jwt validation. Error can be due to time glitch (between machines), try to set the jwt_validation_leeway parameter (in DescopeClient) to higher value than 5sec which is the default",
+            )
+        except ExpiredSignatureError:
+            raise AuthException(
+                401,
+                ERROR_TYPE_INVALID_TOKEN,
+                "Received expired token (exp in past) during jwt validation. (sometimes can be due to time glitch (between machines), try to set the jwt_validation_leeway parameter (in DescopeClient) to higher value than 5sec which is the default)",
+            )
+
+        claims["jwt"] = token
+        return claims

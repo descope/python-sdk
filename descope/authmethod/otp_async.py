@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Iterable
 
-from descope._auth_base import AsyncAuthBase
+from descope._authmethod_base import AsyncAuthMethodBase
 from descope.auth import Auth
 from descope.authmethod._otp_base import OTPBase
 from descope.common import (
@@ -16,7 +16,7 @@ from descope.common import (
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
-class OTPAsync(OTPBase, AsyncAuthBase):
+class OTPAsync(OTPBase, AsyncAuthMethodBase):
     """Async OTP auth-method. All network calls are coroutines; validation is sync (no I/O)."""
 
     async def sign_in(
@@ -93,9 +93,9 @@ class OTPAsync(OTPBase, AsyncAuthBase):
         uri = self._compose_verify_code_url(method)
         body = self._compose_verify_code_body(login_id, code)
         response = await self._http.post(uri, body=body)
-
-        resp = response.json()
-        return self._auth.generate_jwt_response(resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience)
+        return await self._auth.prepare_jwt_response(
+            response.json(), response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
+        )
 
     async def update_user_email(
         self,

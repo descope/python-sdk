@@ -1,5 +1,4 @@
-"""E2E test: SSO settings (OIDC and SAML).
-"""
+"""E2E test: SSO settings (OIDC and SAML)."""
 
 import os
 import uuid

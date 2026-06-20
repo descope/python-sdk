@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from descope._auth_base import AuthBase
+from descope._authmethod_base import AuthMethodBase
 from descope.authmethod._oauth_base import OAuthBase
 from descope.common import (
     REFRESH_SESSION_COOKIE_NAME,
@@ -13,7 +13,7 @@ from descope.common import (
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
-class OAuth(OAuthBase, AuthBase):
+class OAuth(OAuthBase, AuthMethodBase):
     def start(
         self,
         provider: str,

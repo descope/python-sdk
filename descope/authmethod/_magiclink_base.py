@@ -18,8 +18,8 @@ class MagicLinkBase:
     Holds only static validation guards, URL composers and body builders — no
     network I/O, no ``__init__``.  The two concrete subclasses add the network layer:
 
-    - ``MagicLink(MagicLinkBase, AuthBase)`` — sync, uses ``self._http`` (``HTTPClient``)
-    - ``MagicLinkAsync(MagicLinkBase, AsyncAuthBase)`` — async, uses ``self._http`` (``HTTPClientAsync``)
+    - ``MagicLink(MagicLinkBase, AuthMethodBase)`` — sync, uses ``self._http`` (``HTTPClient``)
+    - ``MagicLinkAsync(MagicLinkBase, AsyncAuthMethodBase)`` — async, uses ``self._http`` (``HTTPClientAsync``)
     """
 
     @staticmethod

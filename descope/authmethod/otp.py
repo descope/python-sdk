@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Iterable
 
-from descope._auth_base import AuthBase
+from descope._authmethod_base import AuthMethodBase
 from descope.auth import Auth
 from descope.authmethod._otp_base import OTPBase
 from descope.common import (
@@ -16,7 +16,7 @@ from descope.common import (
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
-class OTP(OTPBase, AuthBase):
+class OTP(OTPBase, AuthMethodBase):
     def sign_in(
         self,
         method: DeliveryMethod,

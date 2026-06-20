@@ -3,28 +3,23 @@ from __future__ import annotations
 import logging
 import os
 import warnings
-from typing import Iterable
 
-import httpx
-
-from descope.auth import Auth
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
-from descope.http_client import HTTPClient
-from descope.management.common import MgmtV1
 
 logger = logging.getLogger(__name__)
 
-LICENSE_HANDSHAKE_TIMEOUT_SECONDS = 5.0
-
 
 class DescopeClientBase:
-    """
-    Shared base for DescopeClient and DescopeClientAsync.
+    """Shared base for ``DescopeClient`` and ``DescopeClientAsync``.
 
-    Handles:
-    - project_id validation and skip_verify warning
-    - Auth construction (via a sync HTTPClient for the one-time key fetch)
-    - All pure-computation validation helpers (no I/O)
+    Holds:
+    - project_id resolution + validation, ``skip_verify`` warning
+    - The pure-computation permission / role helpers that work on a
+      decoded JWT dict and need no I/O.
+
+    ``Auth`` / ``AuthAsync`` construction and any operation that touches the
+    network (``validate_session``, ``refresh_session``, ``logout``, etc.)
+    lives on each concrete subclass.
     """
 
     def __init__(
@@ -61,15 +56,14 @@ class DescopeClientBase:
                 stacklevel=3,
             )
 
-        _auth_http = HTTPClient(
-            project_id=project_id,
-            base_url=base_url,
-            timeout_seconds=timeout_seconds,
-            secure=not skip_verify,
-            management_key=auth_management_key or os.getenv("DESCOPE_AUTH_MANAGEMENT_KEY"),
-            verbose=verbose,
-        )
-        self._auth = Auth(project_id, public_key, jwt_validation_leeway, http_client=_auth_http)
+        self._project_id = project_id
+        self._public_key = public_key
+        self._skip_verify = skip_verify
+        self._timeout_seconds = timeout_seconds
+        self._jwt_validation_leeway = jwt_validation_leeway
+        self._auth_management_key_arg = auth_management_key
+        self._base_url_arg = base_url
+        self._verbose = verbose
 
     @staticmethod
     def _ensure_present(value, message: str, error_type: str = ERROR_TYPE_INVALID_ARGUMENT) -> None:
@@ -104,35 +98,6 @@ class DescopeClientBase:
             raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Only one of 'dct' or 'ids' should be supplied")
         if dct is False and (ids is None or len(ids) == 0):
             raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Only one of 'dct' or 'ids' should be supplied")
-
-    def _fetch_rate_limit_tier(self, mgmt_http) -> None:
-        """Sync license handshake so the x-descope-license header is ready for the first mgmt call."""
-        try:
-            response = httpx.get(
-                f"{mgmt_http.base_url}{MgmtV1.license_get_path}",
-                headers={"Authorization": f"Bearer {mgmt_http.project_id}:{mgmt_http.management_key}"},
-                follow_redirects=True,
-                verify=mgmt_http.client_verify,
-                timeout=LICENSE_HANDSHAKE_TIMEOUT_SECONDS,
-            )
-            if not response.is_success:
-                logger.warning(
-                    "License handshake returned non-success status %s",
-                    response.status_code,
-                )
-                return
-            tier = response.json().get("rateLimitTier")
-            if tier:
-                mgmt_http.rate_limit_tier = tier
-        except Exception as e:
-            logger.warning("License handshake failed: %s", e)
-
-    def validate_session(self, session_token: str, audience: Iterable[str] | str | None = None) -> dict:
-        """
-        Validate a session token. Pure CPU — no network I/O.
-        Call this for every incoming request to private endpoints.
-        """
-        return self._auth.validate_session(session_token, audience)
 
     def validate_permissions(self, jwt_response: dict, permissions: list[str]) -> bool:
         """

@@ -214,6 +214,7 @@ class SSOSettingsBase:
             "tenantId": tenant_id,
             "settings": {
                 "idpMetadataUrl": settings.idp_metadata_url,
+                "entityId": settings.idp_entity_id,
                 "spACSUrl": settings.sp_acs_url,
                 "spEntityId": settings.sp_entity_id,
                 "attributeMapping": attr_mapping,

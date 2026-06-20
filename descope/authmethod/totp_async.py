@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Iterable, Optional, Union
 
-from descope._auth_base import AsyncAuthBase
+from descope._authmethod_base import AsyncAuthMethodBase
 from descope.authmethod._totp_base import TOTPBase
 from descope.common import (
     REFRESH_SESSION_COOKIE_NAME,
@@ -12,7 +12,7 @@ from descope.common import (
 )
 
 
-class TOTPAsync(TOTPBase, AsyncAuthBase):
+class TOTPAsync(TOTPBase, AsyncAuthMethodBase):
     """Async TOTP auth-method. All network calls are coroutines; validation is sync (no I/O)."""
 
     async def sign_up(self, login_id: str, user: Optional[dict] = None) -> dict:
@@ -40,9 +40,9 @@ class TOTPAsync(TOTPBase, AsyncAuthBase):
         uri = EndpointsV1.verify_totp_path
         body = self._compose_signin_body(login_id, code, login_options)
         response = await self._http.post(uri, body=body, pswd=refresh_token)
-
-        resp = response.json()
-        return self._auth.generate_jwt_response(resp, response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience)
+        return await self._auth.prepare_jwt_response(
+            response.json(), response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
+        )
 
     async def update_user(self, login_id: str, refresh_token: str) -> dict:
         """Add TOTP to an existing user; returns provisioningURL, image, and key."""

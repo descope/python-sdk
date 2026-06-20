@@ -12,8 +12,8 @@ class SAMLBase:
     Holds only static validation guards and body/params composers — no network I/O, no
     ``__init__``.  The two concrete subclasses add the network layer:
 
-    - ``SAML(SAMLBase, AuthBase)`` — sync, uses ``self._http`` (``HTTPClient``)
-    - ``SAMLAsync(SAMLBase, AsyncAuthBase)`` — async, uses ``self._http`` (``HTTPClientAsync``)
+    - ``SAML(SAMLBase, AuthMethodBase)`` — sync, uses ``self._http`` (``HTTPClient``)
+    - ``SAMLAsync(SAMLBase, AsyncAuthMethodBase)`` — async, uses ``self._http`` (``HTTPClientAsync``)
     """
 
     @staticmethod
