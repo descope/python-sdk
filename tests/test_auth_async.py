@@ -219,6 +219,139 @@ class TestAuthAsyncSessionFlows:
         finally:
             await http.aclose()
 
+    @pytest.mark.asyncio
+    async def test_refresh_session_requires_token(self):
+        http = _make_http_client()
+        auth = AuthAsync(PROJECT_ID, public_key=PUBLIC_KEY_DICT, http_client=http)
+        try:
+            with pytest.raises(AuthException):
+                await auth.refresh_session("")
+        finally:
+            await http.aclose()
+
+    @pytest.mark.asyncio
+    async def test_validate_and_refresh_session_returns_when_session_valid(self):
+        http = _make_http_client()
+        auth = AuthAsync(PROJECT_ID, public_key=PUBLIC_KEY_DICT, http_client=http)
+        try:
+            result = await auth.validate_and_refresh_session(VALID_SESSION_TOKEN, VALID_REFRESH_TOKEN)
+            assert result["projectId"] == PROJECT_ID
+        finally:
+            await http.aclose()
+
+    @pytest.mark.asyncio
+    async def test_validate_and_refresh_session_falls_back_to_refresh(self):
+        http = _make_http_client()
+        auth = AuthAsync(PROJECT_ID, public_key=PUBLIC_KEY_DICT, http_client=http)
+        try:
+            refresh_response = MagicMock()
+            refresh_response.json.return_value = {
+                "sessionJwt": VALID_SESSION_TOKEN,
+                "refreshJwt": VALID_REFRESH_TOKEN,
+            }
+            refresh_response.cookies = MagicMock()
+            refresh_response.cookies.get = MagicMock(return_value=None)
+            refresh_response.status_code = 200
+            refresh_response.is_success = True
+            refresh_response.headers = {}
+
+            with patch.object(http._async_client, "post", AsyncMock(return_value=refresh_response)):
+                # Use an obviously-invalid session token to force the refresh path.
+                result = await auth.validate_and_refresh_session("not.a.jwt", VALID_REFRESH_TOKEN)
+                assert result["projectId"] == PROJECT_ID
+        finally:
+            await http.aclose()
+
+    @pytest.mark.asyncio
+    async def test_validate_and_refresh_session_requires_session(self):
+        http = _make_http_client()
+        auth = AuthAsync(PROJECT_ID, public_key=PUBLIC_KEY_DICT, http_client=http)
+        try:
+            with pytest.raises(AuthException):
+                await auth.validate_and_refresh_session("", VALID_REFRESH_TOKEN)
+        finally:
+            await http.aclose()
+
+    @pytest.mark.asyncio
+    async def test_validate_and_refresh_session_requires_refresh_when_session_invalid(self):
+        http = _make_http_client()
+        auth = AuthAsync(PROJECT_ID, public_key=PUBLIC_KEY_DICT, http_client=http)
+        try:
+            with pytest.raises(AuthException):
+                await auth.validate_and_refresh_session("not.a.jwt", "")
+        finally:
+            await http.aclose()
+
+    @pytest.mark.asyncio
+    async def test_exchange_token_requires_code(self):
+        http = _make_http_client()
+        auth = AuthAsync(PROJECT_ID, public_key=PUBLIC_KEY_DICT, http_client=http)
+        try:
+            with pytest.raises(AuthException):
+                await auth.exchange_token(EndpointsV1.refresh_token_path, "")
+        finally:
+            await http.aclose()
+
+    @pytest.mark.asyncio
+    async def test_exchange_token_posts_and_returns_jwt_response(self):
+        http = _make_http_client()
+        auth = AuthAsync(PROJECT_ID, public_key=PUBLIC_KEY_DICT, http_client=http)
+        try:
+            exchange_response = MagicMock()
+            exchange_response.json.return_value = {
+                "sessionJwt": VALID_SESSION_TOKEN,
+                "refreshJwt": VALID_REFRESH_TOKEN,
+            }
+            exchange_response.cookies = MagicMock()
+            exchange_response.cookies.get = MagicMock(return_value=None)
+            exchange_response.status_code = 200
+            exchange_response.is_success = True
+            exchange_response.headers = {}
+
+            with patch.object(http._async_client, "post", AsyncMock(return_value=exchange_response)) as mock_post:
+                result = await auth.exchange_token("/v1/oauth/exchange", "code-xyz")
+                assert result["projectId"] == PROJECT_ID
+                args, _ = mock_post.call_args
+                assert args[0].endswith("/v1/oauth/exchange")
+        finally:
+            await http.aclose()
+
+    @pytest.mark.asyncio
+    async def test_ensure_keys_for_jwt_response_skips_unparseable_tokens(self):
+        """Unparseable sessionJwt / refreshJwt / refresh_token must not crash key-prewarming."""
+        http = _make_http_client()
+        auth = AuthAsync(PROJECT_ID, public_key=PUBLIC_KEY_DICT, http_client=http)
+        try:
+            # All tokens malformed → both try blocks must hit their except paths.
+            body = {"sessionJwt": "not-a-jwt", "refreshJwt": "still-not-a-jwt"}
+            await auth._ensure_keys_for_jwt_response(body, refresh_token="also-bad")
+
+            # refreshJwt absent + refresh_token malformed → return-on-except path.
+            await auth._ensure_keys_for_jwt_response({"sessionJwt": "x.y.z"}, refresh_token="bad")
+        finally:
+            await http.aclose()
+
+
+class TestAuthAsyncJWKSLoading:
+    @pytest.mark.asyncio
+    async def test_fetch_public_keys_skips_invalid_entries(self):
+        """JWKS entries that fail to load must be skipped; valid ones still cached."""
+        http = _make_http_client()
+        auth = AuthAsync(PROJECT_ID, http_client=http)
+        try:
+            jwks_with_invalid = json.dumps({"keys": [{"kid": "broken"}, PUBLIC_KEY_DICT]})
+            resp = MagicMock()
+            resp.text = jwks_with_invalid
+            resp.status_code = 200
+            resp.is_success = True
+            resp.headers = {}
+            with patch.object(http._async_client, "get", AsyncMock(return_value=resp)):
+                await auth._fetch_public_keys()
+            assert PUBLIC_KEY_DICT["kid"] in auth.public_keys
+            assert "broken" not in auth.public_keys
+        finally:
+            await http.aclose()
+
 
 class TestAuthAsyncConstruction:
     def test_constructor_requires_project_id(self):
