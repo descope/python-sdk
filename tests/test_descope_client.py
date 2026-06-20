@@ -659,70 +659,62 @@ class TestDescopeClient:
         )
 
     async def test_auth_management_key_with_functions(self, client_factory):
-        if client_factory.mode != "sync":
-            pytest.skip("otp not available on DescopeClientAsync")
+        expected_url = f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_otp_path}/email"
+        expected_json = {
+            "loginId": "test@example.com",
+            "user": {"email": "test@example.com"},
+            "email": "test@example.com",
+        }
 
-        auth_mgmt_key = "test-auth-mgmt-key"
+        def expected_headers(key: str) -> dict:
+            return {
+                **common.default_headers,
+                "x-descope-project-id": PROJECT_ID,
+                "Authorization": f"Bearer {PROJECT_ID}:{key}",
+            }
+
+        def assert_called(mock_post, key: str) -> None:
+            if client_factory.mode == "sync":
+                mock_post.assert_called_with(
+                    expected_url,
+                    headers=expected_headers(key),
+                    json=expected_json,
+                    params=None,
+                    follow_redirects=False,
+                    verify=SSLMatcher(),
+                    timeout=DEFAULT_TIMEOUT_SECONDS,
+                )
+            else:
+                # HTTPClientAsync sets verify/timeout on the AsyncClient instance,
+                # not per-call, so they're absent from individual .post() args.
+                mock_post.assert_called_with(
+                    expected_url,
+                    headers=expected_headers(key),
+                    json=expected_json,
+                    follow_redirects=False,
+                    params=None,
+                )
+
+        my_mock_response = mock.Mock()
+        my_mock_response.is_success = True
+        my_mock_response.status_code = 200
+        my_mock_response.headers = {}
+        my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
 
         # Test 1: Direct auth_management_key setting (without refresh token)
+        auth_mgmt_key = "test-auth-mgmt-key"
         client = client_factory.make(PROJECT_ID, DUMMY_PUBLIC_KEY_DICT, auth_management_key=auth_mgmt_key)
-
-        with patch("httpx.post") as mock_post:
-            my_mock_response = mock.Mock()
-            my_mock_response.is_success = True
-            my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
-            mock_post.return_value = my_mock_response
-
-            client.otp.sign_up(DeliveryMethod.EMAIL, "test@example.com")
-
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_otp_path}/email",
-                headers={
-                    **common.default_headers,
-                    "x-descope-project-id": PROJECT_ID,
-                    "Authorization": f"Bearer {PROJECT_ID}:{auth_mgmt_key}",
-                },
-                json={
-                    "loginId": "test@example.com",
-                    "user": {"email": "test@example.com"},
-                    "email": "test@example.com",
-                },
-                params=None,
-                follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )
+        with client.mock_post(my_mock_response) as mock_post:
+            await client.invoke(client.otp.sign_up(DeliveryMethod.EMAIL, "test@example.com"))
+            assert_called(mock_post, auth_mgmt_key)
 
         # Test 2: Environment variable auth_management_key setting
         env_auth_mgmt_key = "env-auth-mgmt-key"
         with patch.dict("os.environ", {"DESCOPE_AUTH_MANAGEMENT_KEY": env_auth_mgmt_key}):
             client_env = client_factory.make(PROJECT_ID, DUMMY_PUBLIC_KEY_DICT)
-
-            with patch("httpx.post") as mock_post:
-                my_mock_response = mock.Mock()
-                my_mock_response.is_success = True
-                my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
-                mock_post.return_value = my_mock_response
-
-                client_env.otp.sign_up(DeliveryMethod.EMAIL, "test@example.com")
-
-                mock_post.assert_called_with(
-                    f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_otp_path}/email",
-                    headers={
-                        **common.default_headers,
-                        "x-descope-project-id": PROJECT_ID,
-                        "Authorization": f"Bearer {PROJECT_ID}:{env_auth_mgmt_key}",
-                    },
-                    json={
-                        "loginId": "test@example.com",
-                        "user": {"email": "test@example.com"},
-                        "email": "test@example.com",
-                    },
-                    follow_redirects=False,
-                    params=None,
-                    verify=SSLMatcher(),
-                    timeout=DEFAULT_TIMEOUT_SECONDS,
-                )
+            with client_env.mock_post(my_mock_response) as mock_post:
+                await client_env.invoke(client_env.otp.sign_up(DeliveryMethod.EMAIL, "test@example.com"))
+                assert_called(mock_post, env_auth_mgmt_key)
 
         # Test 3: Direct parameter takes priority over environment variable
         direct_auth_mgmt_key = "direct-auth-mgmt-key"
@@ -730,97 +722,67 @@ class TestDescopeClient:
             client_priority = client_factory.make(
                 PROJECT_ID, DUMMY_PUBLIC_KEY_DICT, auth_management_key=direct_auth_mgmt_key
             )
+            with client_priority.mock_post(my_mock_response) as mock_post:
+                await client_priority.invoke(client_priority.otp.sign_up(DeliveryMethod.EMAIL, "test@example.com"))
+                assert_called(mock_post, direct_auth_mgmt_key)
 
-            with patch("httpx.post") as mock_post:
-                my_mock_response = mock.Mock()
-                my_mock_response.is_success = True
-                my_mock_response.json.return_value = {"maskedEmail": "t***@example.com"}
-                mock_post.return_value = my_mock_response
+    async def test_auth_management_key_with_refresh_token(self, client_factory):
+        refresh_token = "test_refresh_token"
+        expected_url = f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_user_email_otp_path}"
+        expected_json = {
+            "loginId": "old@example.com",
+            "email": "new@example.com",
+            "addToLoginIDs": False,
+            "onMergeUseExisting": False,
+        }
 
-                client_priority.otp.sign_up(DeliveryMethod.EMAIL, "test@example.com")
+        def expected_headers(authorization: str) -> dict:
+            return {
+                **common.default_headers,
+                "Authorization": authorization,
+                "x-descope-project-id": PROJECT_ID,
+            }
 
+        def assert_called(mock_post, authorization: str) -> None:
+            if client_factory.mode == "sync":
                 mock_post.assert_called_with(
-                    f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_otp_path}/email",
-                    headers={
-                        **common.default_headers,
-                        "x-descope-project-id": PROJECT_ID,
-                        "Authorization": f"Bearer {PROJECT_ID}:{direct_auth_mgmt_key}",
-                    },
-                    json={
-                        "loginId": "test@example.com",
-                        "user": {"email": "test@example.com"},
-                        "email": "test@example.com",
-                    },
-                    params=None,
+                    expected_url,
+                    headers=expected_headers(authorization),
+                    json=expected_json,
                     follow_redirects=False,
+                    params=None,
                     verify=SSLMatcher(),
                     timeout=DEFAULT_TIMEOUT_SECONDS,
                 )
+            else:
+                mock_post.assert_called_with(
+                    expected_url,
+                    headers=expected_headers(authorization),
+                    json=expected_json,
+                    follow_redirects=False,
+                    params=None,
+                )
 
-    async def test_auth_management_key_with_refresh_token(self, client_factory):
-        if client_factory.mode != "sync":
-            pytest.skip("otp not available on DescopeClientAsync")
+        my_mock_response = mock.Mock()
+        my_mock_response.is_success = True
+        my_mock_response.status_code = 200
+        my_mock_response.headers = {}
+        my_mock_response.json.return_value = {"maskedEmail": "n***@example.com"}
 
+        # With auth_management_key — Authorization combines refresh_token + auth_mgmt_key
         auth_mgmt_key = "test-auth-mgmt-key"
         client = client_factory.make(PROJECT_ID, DUMMY_PUBLIC_KEY_DICT, auth_management_key=auth_mgmt_key)
-
-        # Test with refresh token function
-        refresh_token = "test_refresh_token"
-        with patch("httpx.post") as mock_post:
-            my_mock_response = mock.Mock()
-            my_mock_response.is_success = True
-            my_mock_response.json.return_value = {"maskedEmail": "n***@example.com"}
-            mock_post.return_value = my_mock_response
-
-            client.otp.update_user_email("old@example.com", "new@example.com", refresh_token)
-
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_user_email_otp_path}",
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {PROJECT_ID}:{refresh_token}:{auth_mgmt_key}",
-                    "x-descope-project-id": PROJECT_ID,
-                },
-                json={
-                    "loginId": "old@example.com",
-                    "email": "new@example.com",
-                    "addToLoginIDs": False,
-                    "onMergeUseExisting": False,
-                },
-                follow_redirects=False,
-                params=None,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )
+        with client.mock_post(my_mock_response) as mock_post:
+            await client.invoke(client.otp.update_user_email("old@example.com", "new@example.com", refresh_token))
+            assert_called(mock_post, f"Bearer {PROJECT_ID}:{refresh_token}:{auth_mgmt_key}")
 
         # Without auth_management_key — refresh token only in Authorization
         client_no_auth = client_factory.make(PROJECT_ID, DUMMY_PUBLIC_KEY_DICT)
-        with patch("httpx.post") as mock_post:
-            my_mock_response = mock.Mock()
-            my_mock_response.is_success = True
-            my_mock_response.json.return_value = {"maskedEmail": "n***@example.com"}
-            mock_post.return_value = my_mock_response
-
-            client_no_auth.otp.update_user_email("old@example.com", "new@example.com", refresh_token)
-
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_user_email_otp_path}",
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {PROJECT_ID}:{refresh_token}",
-                    "x-descope-project-id": PROJECT_ID,
-                },
-                json={
-                    "loginId": "old@example.com",
-                    "email": "new@example.com",
-                    "addToLoginIDs": False,
-                    "onMergeUseExisting": False,
-                },
-                follow_redirects=False,
-                params=None,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
+        with client_no_auth.mock_post(my_mock_response) as mock_post:
+            await client_no_auth.invoke(
+                client_no_auth.otp.update_user_email("old@example.com", "new@example.com", refresh_token)
             )
+            assert_called(mock_post, f"Bearer {PROJECT_ID}:{refresh_token}")
 
     async def test_base_url_setting(self, client_factory):
         custom_base_url = "https://api.use1.descope.com"
@@ -852,23 +814,25 @@ class TestDescopeClient:
         assert client.get_last_response() is None  # No requests made yet
 
     async def test_verbose_mode_captures_mgmt_response(self, client_factory):
-        if client_factory.mode != "sync":
-            pytest.skip("mgmt not available on DescopeClientAsync")
-
         mock_response = mock.Mock()
         mock_response.is_success = True
         mock_response.json.return_value = {"user": {"id": "u1", "loginIds": ["test@example.com"]}}
         mock_response.headers = {"cf-ray": "mgmt-ray-123", "x-request-id": "req-456"}
         mock_response.status_code = 200
 
-        with patch("httpx.post", return_value=mock_response):
-            client = client_factory.make(
-                PROJECT_ID,
-                public_key=PUBLIC_KEY_DICT,
-                management_key="test-mgmt-key",
-                verbose=True,
-            )
-            client.mgmt.user.create(login_id="test@example.com")
+        client = client_factory.make(
+            PROJECT_ID,
+            public_key=PUBLIC_KEY_DICT,
+            management_key="test-mgmt-key",
+            verbose=True,
+        )
+        if client_factory.mode == "async":
+            # Bypass the lazy license handshake so the test doesn't make a real
+            # network call before the (mocked) user.create request runs.
+            client._raw._license_attempted = True
+
+        with client.mock_mgmt_post(mock_response):
+            await client.invoke(client.mgmt.user.create(login_id="test@example.com"))
 
         last_resp = client.get_last_response()
         assert last_resp is not None

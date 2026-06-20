@@ -350,6 +350,8 @@ class AuthBase:
                         if token_audience == self.project_id:
                             validation_audience = self.project_id
             except Exception:
+                # Best-effort audience sniff. Any failure falls through to the
+                # verified decode below, which raises the proper error message.
                 pass
 
         try:

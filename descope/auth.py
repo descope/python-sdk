@@ -5,8 +5,6 @@ import json
 from threading import Lock
 from typing import Iterable, Optional
 
-import jwt  # noqa: F401  # preserved as descope.auth.jwt for test patches
-
 from descope._auth_base import AuthBase
 from descope.common import (
     REFRESH_SESSION_COOKIE_NAME,

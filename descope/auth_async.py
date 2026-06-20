@@ -69,7 +69,8 @@ class AuthAsync(AuthBase):
                 loaded_kid, pub_key, alg = AuthAsync._validate_and_load_public_key(key)
                 new_keys[loaded_kid] = (pub_key, alg)
             except AuthException:
-                pass
+                # Skip invalid JWKS entries and continue loading the rest of the keys.
+                continue
         self.public_keys = new_keys
 
     async def ensure_keys(self, kid: str | None = None) -> None:
