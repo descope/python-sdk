@@ -533,3 +533,41 @@ class TestTenant:
                 json={"tenantId": "t1"},
                 follow_redirects=False,
             )
+
+    def test_generate_sso_configuration_link_with_actor(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        # Test that actor_id is sent and recorded as the audit actor for in-suite actions
+        with patch("httpx.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.is_success = True
+            network_resp.json.return_value = json.loads(
+                """{"adminSSOConfigurationLink": "https://example.com/sso-config-link"}"""
+            )
+            mock_post.return_value = network_resp
+            link = client.mgmt.tenant.generate_sso_configuration_link(
+                tenant_id="t1",
+                actor_id="admin-actor-1",
+            )
+            self.assertEqual(link, "https://example.com/sso-config-link")
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{MgmtV1.tenant_generate_sso_configuration_link_path}",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:{self.dummy_management_key}",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                params=None,
+                json={
+                    "tenantId": "t1",
+                    "actorId": "admin-actor-1",
+                },
+                follow_redirects=False,
+                verify=SSLMatcher(),
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+            )
