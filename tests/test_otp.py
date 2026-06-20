@@ -112,6 +112,17 @@ class TestOTP(common.DescopeTest):
                 "onMergeUseExisting": True,
             },
         )
+        # mfa flag is included only when set
+        self.assertEqual(
+            OTP._compose_update_user_phone_body("dummy@dummy.com", "+11111111", False, False, mfa=True),
+            {
+                "loginId": "dummy@dummy.com",
+                "phone": "+11111111",
+                "addToLoginIDs": False,
+                "onMergeUseExisting": False,
+                "mfa": True,
+            },
+        )
 
     def test_compose_update_user_email_body(self):
         self.assertEqual(
@@ -121,6 +132,17 @@ class TestOTP(common.DescopeTest):
                 "email": "dummy@dummy.com",
                 "addToLoginIDs": False,
                 "onMergeUseExisting": True,
+            },
+        )
+        # mfa flag is included only when set
+        self.assertEqual(
+            OTP._compose_update_user_email_body("dummy@dummy.com", "dummy@dummy.com", False, False, mfa=True),
+            {
+                "loginId": "dummy@dummy.com",
+                "email": "dummy@dummy.com",
+                "addToLoginIDs": False,
+                "onMergeUseExisting": False,
+                "mfa": True,
             },
         )
 
@@ -785,6 +807,42 @@ class TestOTP(common.DescopeTest):
                     "addToLoginIDs": False,
                     "onMergeUseExisting": False,
                     "templateOptions": {"bla": "blue"},
+                },
+                follow_redirects=False,
+                verify=SSLMatcher(),
+                timeout=DEFAULT_TIMEOUT_SECONDS,
+                params=None,
+            )
+
+        # Test success flow with mfa
+        with patch("httpx.post") as mock_post:
+            my_mock_response = mock.Mock()
+            my_mock_response.is_success = True
+            my_mock_response.json.return_value = {"maskedPhone": "*****111"}
+            mock_post.return_value = my_mock_response
+            self.assertEqual(
+                "*****111",
+                client.otp.update_user_phone(
+                    DeliveryMethod.SMS,
+                    "id1",
+                    "+1111111",
+                    "refresh_token1",
+                    mfa=True,
+                ),
+            )
+            mock_post.assert_called_with(
+                f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_user_phone_otp_path}/sms",
+                headers={
+                    **common.default_headers,
+                    "Authorization": f"Bearer {self.dummy_project_id}:refresh_token1",
+                    "x-descope-project-id": self.dummy_project_id,
+                },
+                json={
+                    "loginId": "id1",
+                    "phone": "+1111111",
+                    "addToLoginIDs": False,
+                    "onMergeUseExisting": False,
+                    "mfa": True,
                 },
                 follow_redirects=False,
                 verify=SSLMatcher(),
