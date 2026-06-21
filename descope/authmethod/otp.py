@@ -167,6 +167,7 @@ class OTP(OTPBase, AuthMethodBase):
         template_options: dict | None = None,
         template_id: str | None = None,
         provider_id: str | None = None,
+        mfa: bool = False,
     ) -> str:
         """
         Update the email address of an end user, after verifying the authenticity of the end user using OTP.
@@ -175,6 +176,9 @@ class OTP(OTPBase, AuthMethodBase):
         login_id (str): The login ID of the user whose information is being updated
         email (str): The new email address. If an email address already exists for this end user, it will be overwritten
         refresh_token (str): The session's refresh token (used for verification)
+        mfa (bool): Defaults to false. When true, the auth methods already on the refresh token are preserved and
+            the updated factor is added to them (so the resulting amr keeps the previously-passed factors) instead
+            of replacing it with a single factor. Requires a valid refresh token.
 
         Raise:
         AuthException: raised if OTP verification fails or if token verification fails
@@ -193,6 +197,7 @@ class OTP(OTPBase, AuthMethodBase):
             template_options,
             template_id,
             provider_id,
+            mfa,
         )
         response = self._http.post(uri, body=body, pswd=refresh_token)
         return Auth.extract_masked_address(response.json(), DeliveryMethod.EMAIL)
@@ -208,6 +213,7 @@ class OTP(OTPBase, AuthMethodBase):
         template_options: dict | None = None,
         template_id: str | None = None,
         provider_id: str | None = None,
+        mfa: bool = False,
     ) -> str:
         """
         Update the phone number of an existing end user, after verifying the authenticity of the end user using OTP.
@@ -220,6 +226,9 @@ class OTP(OTPBase, AuthMethodBase):
         add_to_login_ids (bool): Defaults to false, determine whether to add this email to the login ids of hte user or not
         on_merge_use_existing (bool): Defaults to false, In case add_to_login_ids and there is such a user already
             determine whether keep the existing user, or this new one
+        mfa (bool): Defaults to false. When true, the auth methods already on the refresh token are preserved and
+            the updated factor is added to them (so the resulting amr keeps the previously-passed factors) instead
+            of replacing it with a single factor. Requires a valid refresh token.
 
         Raise:
         AuthException: raised if OTP verification fails or if token verification fails
@@ -238,6 +247,7 @@ class OTP(OTPBase, AuthMethodBase):
             template_options,
             template_id,
             provider_id,
+            mfa,
         )
         response = self._http.post(uri, body=body, pswd=refresh_token)
         return Auth.extract_masked_address(response.json(), method)

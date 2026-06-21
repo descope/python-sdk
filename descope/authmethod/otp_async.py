@@ -107,6 +107,7 @@ class OTPAsync(OTPBase, AsyncAuthMethodBase):
         template_options: dict | None = None,
         template_id: str | None = None,
         provider_id: str | None = None,
+        mfa: bool = False,
     ) -> str:
         """Send an OTP to a new email address to verify the update; returns the masked address."""
         self._validate_login_id(login_id)
@@ -122,6 +123,7 @@ class OTPAsync(OTPBase, AsyncAuthMethodBase):
             template_options,
             template_id,
             provider_id,
+            mfa,
         )
         response = await self._http.post(uri, body=body, pswd=refresh_token)
         return Auth.extract_masked_address(response.json(), DeliveryMethod.EMAIL)
@@ -137,6 +139,7 @@ class OTPAsync(OTPBase, AsyncAuthMethodBase):
         template_options: dict | None = None,
         template_id: str | None = None,
         provider_id: str | None = None,
+        mfa: bool = False,
     ) -> str:
         """Send an OTP to a new phone number to verify the update; returns the masked address."""
         self._validate_login_id(login_id)
@@ -152,6 +155,7 @@ class OTPAsync(OTPBase, AsyncAuthMethodBase):
             template_options,
             template_id,
             provider_id,
+            mfa,
         )
         response = await self._http.post(uri, body=body, pswd=refresh_token)
         return Auth.extract_masked_address(response.json(), method)
