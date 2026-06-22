@@ -22,11 +22,6 @@ class SSOBase:
             raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Tenant cannot be empty")
 
     @staticmethod
-    def _validate_exchange_code(code: str) -> None:
-        if not code:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "exchange code is empty")
-
-    @staticmethod
     def _compose_start_params(
         tenant: str,
         return_url: str,
@@ -47,7 +42,3 @@ class SSOBase:
         if force_authn is not None:
             res["forceAuthn"] = force_authn
         return res
-
-    @staticmethod
-    def _compose_exchange_body(code: str) -> dict:
-        return {"code": code}
