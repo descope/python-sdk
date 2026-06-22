@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.6.0](https://github.com/descope/python-sdk/compare/descope-2.5.0...descope-2.6.0) (2026-06-22)
+
+
+### Features
+
+* **http:** also retry on transient status code 520 ([#1581](https://github.com/descope/python-sdk/issues/1581)) ([2de7f59](https://github.com/descope/python-sdk/commit/2de7f5933b421edbb841da05ad4f73c1c2af0892))
+* **otp:** add mfa option to OTP update phone/email ([#1578](https://github.com/descope/python-sdk/issues/1578)) ([2fbbd8a](https://github.com/descope/python-sdk/commit/2fbbd8ae93e6dd6c062e2af48bfdf3c28bfb6779))
+* **tenant:** add optional user_id/login_id actor to generate_sso_configuration_link ([#1573](https://github.com/descope/python-sdk/issues/1573)) ([b3c5649](https://github.com/descope/python-sdk/commit/b3c564929589e964d0c5814b77b7d15f2551162d))
+
 ## [2.5.0](https://github.com/descope/python-sdk/compare/descope-2.4.0...descope-2.5.0) (2026-06-12)
 
 
