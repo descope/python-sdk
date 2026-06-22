@@ -85,6 +85,7 @@ class OTPBase:
         template_options: dict | None = None,
         template_id: str | None = None,
         provider_id: str | None = None,
+        mfa: bool = False,
     ) -> dict:
         body: dict[str, str | bool | dict] = {
             "loginId": login_id,
@@ -98,6 +99,8 @@ class OTPBase:
             body["templateId"] = template_id
         if provider_id is not None:
             body["providerId"] = provider_id
+        if mfa:
+            body["mfa"] = mfa
         return body
 
     @staticmethod
@@ -109,6 +112,7 @@ class OTPBase:
         template_options: dict | None = None,
         template_id: str | None = None,
         provider_id: str | None = None,
+        mfa: bool = False,
     ) -> dict:
         body: dict[str, str | bool | dict] = {
             "loginId": login_id,
@@ -122,4 +126,6 @@ class OTPBase:
             body["templateId"] = template_id
         if provider_id is not None:
             body["providerId"] = provider_id
+        if mfa:
+            body["mfa"] = mfa
         return body

@@ -27,17 +27,8 @@ class SAMLBase:
             raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Return url cannot be empty")
 
     @staticmethod
-    def _validate_exchange_code(code: str) -> None:
-        if not code:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "exchange code is empty")
-
-    @staticmethod
     def _compose_start_params(tenant: str, return_url: Optional[str]) -> dict:
         res: dict = {"tenant": tenant}
         if return_url is not None and return_url != "":
             res["redirectURL"] = return_url
         return res
-
-    @staticmethod
-    def _compose_exchange_body(code: str) -> dict:
-        return {"code": code}

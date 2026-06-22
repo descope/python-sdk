@@ -5,7 +5,6 @@ from typing import Optional
 from descope._authmethod_base import AsyncAuthMethodBase
 from descope.authmethod._saml_base import SAMLBase
 from descope.common import (
-    REFRESH_SESSION_COOKIE_NAME,
     EndpointsV1,
     LoginOptions,
     validate_refresh_token_provided,
@@ -41,10 +40,4 @@ class SAMLAsync(SAMLBase, AsyncAuthMethodBase):
 
     async def exchange_token(self, code: str) -> dict:
         """Exchange a SAML code for session JWTs."""
-        self._validate_exchange_code(code)
-        uri = EndpointsV1.saml_exchange_token_path
-        body = self._compose_exchange_body(code)
-        response = await self._http.post(uri, body=body)
-        return await self._auth.prepare_jwt_response(
-            response.json(), response.cookies.get(REFRESH_SESSION_COOKIE_NAME), None
-        )
+        return await self._auth.exchange_token(EndpointsV1.saml_exchange_token_path, code)

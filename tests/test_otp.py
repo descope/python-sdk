@@ -244,3 +244,46 @@ class TestOTP:
             },
             follow_redirects=False,
         )
+
+        # mfa flag is forwarded to the request body when set
+        with client.mock_post(make_response({"maskedPhone": "+1***890"})) as mock_post:
+            await client.invoke(
+                client.otp.update_user_phone(DeliveryMethod.SMS, "dummy", "+11234567890", refresh_token, mfa=True)
+            )
+        assert_http_called(
+            mock_post,
+            client.mode,
+            f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_user_phone_otp_path}/sms",
+            headers={
+                **common.default_headers,
+                "Authorization": f"Bearer {PROJECT_ID}:{refresh_token}",
+                "x-descope-project-id": PROJECT_ID,
+            },
+            params=None,
+            json={
+                "loginId": "dummy",
+                "phone": "+11234567890",
+                "addToLoginIDs": False,
+                "onMergeUseExisting": False,
+                "mfa": True,
+            },
+            follow_redirects=False,
+        )
+
+    def test_compose_update_user_phone_body_mfa(self):
+        assert OTP._compose_update_user_phone_body("dummy", "+11111111", False, False, mfa=True) == {
+            "loginId": "dummy",
+            "phone": "+11111111",
+            "addToLoginIDs": False,
+            "onMergeUseExisting": False,
+            "mfa": True,
+        }
+
+    def test_compose_update_user_email_body_mfa(self):
+        assert OTP._compose_update_user_email_body("dummy", "dummy@dummy.com", False, False, mfa=True) == {
+            "loginId": "dummy",
+            "email": "dummy@dummy.com",
+            "addToLoginIDs": False,
+            "onMergeUseExisting": False,
+            "mfa": True,
+        }

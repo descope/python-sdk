@@ -5,7 +5,6 @@ from typing import Optional
 from descope._authmethod_base import AsyncAuthMethodBase
 from descope.authmethod._sso_base import SSOBase
 from descope.common import (
-    REFRESH_SESSION_COOKIE_NAME,
     EndpointsV1,
     LoginOptions,
     validate_refresh_token_provided,
@@ -50,10 +49,4 @@ class SSOAsync(SSOBase, AsyncAuthMethodBase):
 
     async def exchange_token(self, code: str) -> dict:
         """Exchange an SSO code for session JWTs."""
-        self._validate_exchange_code(code)
-        uri = EndpointsV1.sso_exchange_token_path
-        body = self._compose_exchange_body(code)
-        response = await self._http.post(uri, body=body)
-        return await self._auth.prepare_jwt_response(
-            response.json(), response.cookies.get(REFRESH_SESSION_COOKIE_NAME), None
-        )
+        return await self._auth.exchange_token(EndpointsV1.sso_exchange_token_path, code)
