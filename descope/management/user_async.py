@@ -871,8 +871,8 @@ class UserAsync(UserBase, AsyncHTTPBase):
         self,
         login_id: str,
         provider: str,
-        with_refresh_token: Optional[bool] = False,
-        force_refresh: Optional[bool] = False,
+        withRefreshToken: Optional[bool] = False,
+        forceRefresh: Optional[bool] = False,
     ) -> dict:
         """
         Get the provider token for the given login ID.
@@ -882,8 +882,8 @@ class UserAsync(UserBase, AsyncHTTPBase):
         Args:
         login_id (str): The login ID of the user.
         provider (str): The provider name (google, facebook, etc').
-        with_refresh_token (bool): Optional, set to true to get also the refresh token.
-        force_refresh (bool): Optional, set to true to force refresh the token.
+        withRefreshToken (bool): Optional, set to true to get also the refresh token.
+        forceRefresh (bool): Optional, set to true to force refresh the token.
 
         Return value (dict):
         Return dict in the format
@@ -898,8 +898,8 @@ class UserAsync(UserBase, AsyncHTTPBase):
             params={
                 "loginId": login_id,
                 "provider": provider,
-                "withRefreshToken": with_refresh_token,
-                "forceRefresh": force_refresh,
+                "withRefreshToken": withRefreshToken,
+                "forceRefresh": forceRefresh,
             },
         )
         return response.json()

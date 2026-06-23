@@ -502,6 +502,10 @@ class OutboundApplicationByTokenAsync(AsyncHTTPBase):
         )
         super().__init__(no_key_client)
 
+    async def aclose(self) -> None:
+        """Close the dedicated no-management-key HTTP client this instance owns."""
+        await self._http.aclose()
+
     # Methods for fetching outbound application tokens using an inbound application token
     # that includes the "outbound.token.fetch" scope (no management key required)
 

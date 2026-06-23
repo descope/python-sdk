@@ -232,6 +232,8 @@ class DescopeClientAsync(DescopeClientBase):
         """Close the underlying async HTTP clients and release connections."""
         await self._auth_http.aclose()
         await self._mgmt_http.aclose()
+        # OutboundApplicationByTokenAsync owns a separate no-management-key client.
+        await self._mgmt._outbound_application_by_token.aclose()
 
     async def __aenter__(self) -> DescopeClientAsync:
         await self.aopen()

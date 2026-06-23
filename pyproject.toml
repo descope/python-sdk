@@ -111,7 +111,9 @@ ignore = [
 "__init__.py" = ["F401"]
 # Public management APIs intentionally mirror the backend JSON schema (camelCase)
 "descope/management/tenant.py" = ["N803"]
+"descope/management/tenant_async.py" = ["N803"]
 "descope/management/user.py" = ["N803", "N806"]
+"descope/management/user_async.py" = ["N803", "N806"]
 # Tests intentionally use blind exception checks and raw attribute access
 "tests/**" = ["B017", "B018"]
 
