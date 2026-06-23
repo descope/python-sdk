@@ -525,21 +525,21 @@ class TestAuth(common.DescopeTest):
             auth._validate_token("not-a-jwt")
 
         # Missing alg -> mock header dict without alg
-        with patch("descope.auth.jwt.get_unverified_header") as mock_hdr:
+        with patch("descope._auth_base.jwt.get_unverified_header") as mock_hdr:
             mock_hdr.return_value = {"kid": "kid1"}
             with self.assertRaises(AuthException) as cm:
                 auth._validate_token("any.token.value")
             self.assertIn("missing property: alg", str(cm.exception).lower())
 
         # Missing kid -> mock header dict without kid
-        with patch("descope.auth.jwt.get_unverified_header") as mock_hdr:
+        with patch("descope._auth_base.jwt.get_unverified_header") as mock_hdr:
             mock_hdr.return_value = {"alg": "ES384"}
             with self.assertRaises(AuthException) as cm2:
                 auth._validate_token("any.token.value")
             self.assertIn("missing property: kid", str(cm2.exception).lower())
 
         # Algorithm mismatch after fetching keys (kid found but alg different)
-        with patch("descope.auth.jwt.get_unverified_header") as mock_hdr:
+        with patch("descope._auth_base.jwt.get_unverified_header") as mock_hdr:
             mock_hdr.return_value = {
                 "alg": "RS256",
                 "kid": self.public_key_dict["kid"],
@@ -1224,7 +1224,7 @@ class TestAuth(common.DescopeTest):
             "_fetch_public_keys",
             side_effect=lambda self=auth: setattr(auth, "public_keys", {}),
         ):
-            with patch("descope.auth.jwt.get_unverified_header") as mock_hdr:
+            with patch("descope._auth_base.jwt.get_unverified_header") as mock_hdr:
                 mock_hdr.return_value = {"alg": "ES384", "kid": "unknown"}
                 with self.assertRaises(AuthException) as cm:
                     auth._validate_token("any")
@@ -1238,7 +1238,10 @@ class TestAuth(common.DescopeTest):
         )
         # Prepare a fake key entry and matching header
         auth.public_keys = {"kid": (SimpleNamespace(key="k"), "ES384")}
-        with patch("descope.auth.jwt.get_unverified_header") as mock_hdr, patch("descope.auth.jwt.decode") as mock_dec:
+        with (
+            patch("descope._auth_base.jwt.get_unverified_header") as mock_hdr,
+            patch("descope._auth_base.jwt.decode") as mock_dec,
+        ):
             mock_hdr.return_value = {"alg": "ES384", "kid": "kid"}
             from jwt import ImmatureSignatureError
 
@@ -1254,7 +1257,10 @@ class TestAuth(common.DescopeTest):
             http_client=self.make_http_client(),
         )
         auth.public_keys = {"kid": (SimpleNamespace(key="k"), "ES384")}
-        with patch("descope.auth.jwt.get_unverified_header") as mock_hdr, patch("descope.auth.jwt.decode") as mock_dec:
+        with (
+            patch("descope._auth_base.jwt.get_unverified_header") as mock_hdr,
+            patch("descope._auth_base.jwt.decode") as mock_dec,
+        ):
             mock_hdr.return_value = {"alg": "ES384", "kid": "kid"}
             mock_dec.return_value = {"sub": "u"}
             out = auth._validate_token("tok")

@@ -1,311 +1,140 @@
-import json
-import unittest
-from unittest import mock
-from unittest.mock import patch
+import pytest
 
 from descope import AuthException
-from descope.auth import Auth
-from descope.authmethod.sso import SSO
-from descope.common import DEFAULT_TIMEOUT_SECONDS, EndpointsV1, LoginOptions
-from tests.testutils import SSLMatcher
+from descope.common import (
+    REFRESH_SESSION_COOKIE_NAME,
+    EndpointsV1,
+    LoginOptions,
+)
+from tests.conftest import PROJECT_ID, assert_http_called, make_response
+from tests.testutils import PUBLIC_KEY_DICT, VALID_REFRESH_TOKEN, VALID_SESSION_TOKEN
 
 from . import common
 
 
-class TestSSO(common.DescopeTest):
-    def setUp(self) -> None:
-        super().setUp()
-        self.dummy_project_id = "dummy"
-        self.public_key_dict = {
-            "alg": "ES384",
-            "crv": "P-384",
-            "kid": "2Bt5WLccLUey1Dp7utptZb3Fx9K",
-            "kty": "EC",
-            "use": "sig",
-            "x": "8SMbQQpCQAGAxCdoIz8y9gDw-wXoyoN5ILWpAlBKOcEM1Y7WmRKc1O2cnHggyEVi",
-            "y": "N5n5jKZA5Wu7_b4B36KKjJf-VRfJ-XqczfCSYy9GeQLqF-b63idfE0SYaYk9cFqg",
+class TestSSO:
+    def test_compose_start_params(self):
+        from descope.authmethod.sso import SSO
+
+        assert SSO._compose_start_params("tenant1", "http://dummy.com", "", "", "", None) == {
+            "tenant": "tenant1",
+            "redirectURL": "http://dummy.com",
+        }
+        assert SSO._compose_start_params("tenant1", "http://dummy.com", "bla", "blue", "", None) == {
+            "tenant": "tenant1",
+            "redirectURL": "http://dummy.com",
+            "prompt": "bla",
+            "ssoId": "blue",
+        }
+        assert SSO._compose_start_params("t1", "http://x.com", "consent", "sid", "user@d.com", True) == {
+            "tenant": "t1",
+            "redirectURL": "http://x.com",
+            "prompt": "consent",
+            "ssoId": "sid",
+            "loginHint": "user@d.com",
+            "forceAuthn": True,
+        }
+        # forceAuthn=False must be included (not skipped as falsy)
+        assert SSO._compose_start_params("t1", "http://x.com", "", "", "", False) == {
+            "tenant": "t1",
+            "redirectURL": "http://x.com",
+            "forceAuthn": False,
         }
 
-    def test_compose_start_params(self):
-        self.assertEqual(
-            SSO._compose_start_params("tenant1", "http://dummy.com", "", "", "", None),
-            {"tenant": "tenant1", "redirectURL": "http://dummy.com"},
-        )
+    async def test_start(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
 
-        self.assertEqual(
-            SSO._compose_start_params("tenant1", "http://dummy.com", "bla", "blue", "", None),
-            {
+        # Validation errors
+        with pytest.raises(AuthException):
+            await client.invoke(client.sso.start("", "http://dummy.com"))
+        with pytest.raises(AuthException):
+            await client.invoke(client.sso.start(None, "http://dummy.com"))
+        with pytest.raises(AuthException):
+            await client.invoke(client.sso.start("tenant", "http://dummy.com", LoginOptions(mfa=True)))
+
+        # HTTP error
+        with client.mock_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.sso.start("tenant1", "http://dummy.com"))
+
+        # Success
+        with client.mock_post(make_response({"url": "http://auth.example.com"})):
+            result = await client.invoke(client.sso.start("tenant1", "http://dummy.com"))
+        assert result is not None
+
+        # Verify payload
+        with client.mock_post(make_response({})) as mock_post:
+            await client.invoke(client.sso.start("tenant1", "http://dummy.com", sso_id="some-sso-id"))
+        assert_http_called(
+            mock_post,
+            client.mode,
+            f"{common.DEFAULT_BASE_URL}{EndpointsV1.auth_sso_start_path}",
+            headers={
+                **common.default_headers,
+                "Authorization": f"Bearer {PROJECT_ID}",
+                "x-descope-project-id": PROJECT_ID,
+            },
+            params={
                 "tenant": "tenant1",
                 "redirectURL": "http://dummy.com",
-                "prompt": "bla",
-                "ssoId": "blue",
+                "ssoId": "some-sso-id",
             },
+            json={},
+            follow_redirects=False,
         )
 
-        # Test new parameters
-        self.assertEqual(
-            SSO._compose_start_params(
-                "tenant1",
-                "http://dummy.com",
-                "consent",
-                "sso-id-123",
-                "user@domain.com",
-                True,
-            ),
-            {
-                "tenant": "tenant1",
-                "redirectURL": "http://dummy.com",
-                "prompt": "consent",
-                "ssoId": "sso-id-123",
-                "loginHint": "user@domain.com",
-                "forceAuthn": True,
+    async def test_start_with_login_options(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
+        lo = LoginOptions(stepup=True, custom_claims={"k1": "v1"})
+
+        with client.mock_post(make_response({})) as mock_post:
+            await client.invoke(client.sso.start("tenant1", "http://dummy.com", lo, "refresh"))
+        assert_http_called(
+            mock_post,
+            client.mode,
+            f"{common.DEFAULT_BASE_URL}{EndpointsV1.auth_sso_start_path}",
+            headers={
+                **common.default_headers,
+                "Authorization": f"Bearer {PROJECT_ID}:refresh",
+                "x-descope-project-id": PROJECT_ID,
             },
+            params={"tenant": "tenant1", "redirectURL": "http://dummy.com"},
+            json={"stepup": True, "customClaims": {"k1": "v1"}, "mfa": False},
+            follow_redirects=False,
         )
 
-        # Test boolean parameters set to False
-        self.assertEqual(
-            SSO._compose_start_params("tenant1", "http://dummy.com", "", "", "", False),
-            {
-                "tenant": "tenant1",
-                "redirectURL": "http://dummy.com",
-                "forceAuthn": False,
+    async def test_exchange_token(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
+
+        # Validation errors
+        with pytest.raises(AuthException):
+            await client.invoke(client.sso.exchange_token(""))
+        with pytest.raises(AuthException):
+            await client.invoke(client.sso.exchange_token(None))
+
+        # HTTP error
+        with client.mock_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.sso.exchange_token("c1"))
+
+        # Success
+        success_resp = make_response(
+            {"sessionJwt": VALID_SESSION_TOKEN},
+            cookies={REFRESH_SESSION_COOKIE_NAME: VALID_REFRESH_TOKEN},
+        )
+        with client.mock_post(success_resp) as mock_post:
+            result = await client.invoke(client.sso.exchange_token("c1"))
+        assert result is not None
+        assert_http_called(
+            mock_post,
+            client.mode,
+            f"{common.DEFAULT_BASE_URL}{EndpointsV1.sso_exchange_token_path}",
+            headers={
+                **common.default_headers,
+                "Authorization": f"Bearer {PROJECT_ID}",
+                "x-descope-project-id": PROJECT_ID,
             },
+            params=None,
+            json={"code": "c1"},
+            follow_redirects=False,
         )
-
-    def test_sso_start(self):
-        sso = SSO(
-            Auth(
-                self.dummy_project_id,
-                self.public_key_dict,
-                http_client=self.make_http_client(),
-            )
-        )
-
-        # Test failed flows
-        self.assertRaises(AuthException, sso.start, "", "http://dummy.com")
-        self.assertRaises(AuthException, sso.start, None, "http://dummy.com")
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(AuthException, sso.start, "tenant1", "http://dummy.com")
-
-        # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNotNone(sso.start("tenant1", "http://dummy.com"))
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            sso.start("tenant1", "http://dummy.com", sso_id="some-sso-id")
-            expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.auth_sso_start_path}"
-            mock_post.assert_called_with(
-                expected_uri,
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
-                params={
-                    "tenant": "tenant1",
-                    "redirectURL": "http://dummy.com",
-                    "ssoId": "some-sso-id",
-                },
-                json={},
-                follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )
-            self.assertRaises(
-                AuthException,
-                sso.start,
-                "tenant",
-                "http://dummy.com",
-                LoginOptions(mfa=True),
-            )
-
-    def test_sso_start_with_login_options(self):
-        sso = SSO(
-            Auth(
-                self.dummy_project_id,
-                self.public_key_dict,
-                http_client=self.make_http_client(),
-            )
-        )
-
-        # Test failed flows
-        self.assertRaises(AuthException, sso.start, "", "http://dummy.com")
-        self.assertRaises(AuthException, sso.start, None, "http://dummy.com")
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(AuthException, sso.start, "tenant1", "http://dummy.com")
-
-        # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNotNone(sso.start("tenant1", "http://dummy.com"))
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            lo = LoginOptions(stepup=True, custom_claims={"k1": "v1"})
-            sso.start("tenant1", "http://dummy.com", lo, "refresh")
-            expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.auth_sso_start_path}"
-            mock_post.assert_called_with(
-                expected_uri,
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:refresh",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
-                params={"tenant": "tenant1", "redirectURL": "http://dummy.com"},
-                json={"stepup": True, "customClaims": {"k1": "v1"}, "mfa": False},
-                follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )
-
-    def test_sso_start_login_hint(self):
-        sso = SSO(
-            Auth(
-                self.dummy_project_id,
-                self.public_key_dict,
-                http_client=self.make_http_client(),
-            )
-        )
-
-        # Test with new parameters
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            sso.start(
-                "tenant1",
-                "http://dummy.com",
-                login_hint="user@company.com",
-                force_authn=True,
-            )
-            expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.auth_sso_start_path}"
-            mock_post.assert_called_with(
-                expected_uri,
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
-                params={
-                    "tenant": "tenant1",
-                    "redirectURL": "http://dummy.com",
-                    "loginHint": "user@company.com",
-                    "forceAuthn": True,
-                },
-                json={},
-                follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )
-
-        # Test with boolean parameters set to False
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            sso.start("tenant1", "http://dummy.com", force_authn=False)
-            expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.auth_sso_start_path}"
-            mock_post.assert_called_with(
-                expected_uri,
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
-                params={
-                    "tenant": "tenant1",
-                    "redirectURL": "http://dummy.com",
-                    "forceAuthn": False,
-                },
-                json={},
-                follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )
-
-        # Test with mixed parameters
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            lo = LoginOptions(stepup=True, custom_claims={"role": "admin"})
-            sso.start(
-                "tenant1",
-                "http://dummy.com",
-                lo,
-                "refresh-token",
-                "consent",
-                "sso-config-456",
-                "user@example.com",
-                True,
-            )
-            expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.auth_sso_start_path}"
-            mock_post.assert_called_with(
-                expected_uri,
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:refresh-token",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
-                params={
-                    "tenant": "tenant1",
-                    "redirectURL": "http://dummy.com",
-                    "prompt": "consent",
-                    "ssoId": "sso-config-456",
-                    "loginHint": "user@example.com",
-                    "forceAuthn": True,
-                },
-                json={"stepup": True, "customClaims": {"role": "admin"}, "mfa": False},
-                follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )
-
-    def test_compose_exchange_params(self):
-        self.assertEqual(Auth._compose_exchange_body("c1"), {"code": "c1"})
-
-    def test_exchange_token(self):
-        sso = SSO(
-            Auth(
-                self.dummy_project_id,
-                self.public_key_dict,
-                http_client=self.make_http_client(),
-            )
-        )
-
-        # Test failed flows
-        self.assertRaises(AuthException, sso.exchange_token, "")
-        self.assertRaises(AuthException, sso.exchange_token, None)
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(AuthException, sso.exchange_token, "c1")
-
-        # Test success flow
-        with patch("httpx.post") as mock_post:
-            my_mock_response = mock.Mock()
-            my_mock_response.is_success = True
-            my_mock_response.cookies = {}
-            data = json.loads(
-                """{"jwts": ["eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg4MDc4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MTY2MDIxNTI3OCwiaWF0IjoxNjU3Nzk2MDc4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQnRFSGtnT3UwMmxtTXh6UElleGRNdFV3MU0ifQ.oAnvJ7MJvCyL_33oM7YCF12JlQ0m6HWRuteUVAdaswfnD4rHEBmPeuVHGljN6UvOP4_Cf0559o39UHVgm3Fwb-q7zlBbsu_nP1-PRl-F8NJjvBgC5RsAYabtJq7LlQmh"], "user": {"loginIds": ["guyp@descope.com"], "name": "", "email": "guyp@descope.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false}, "firstSeen": false}"""
-            )
-            my_mock_response.json.return_value = data
-            mock_post.return_value = my_mock_response
-            sso.exchange_token("c1")
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{EndpointsV1.sso_exchange_token_path}",
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
-                params=None,
-                json={"code": "c1"},
-                follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )
-
-
-if __name__ == "__main__":
-    unittest.main()

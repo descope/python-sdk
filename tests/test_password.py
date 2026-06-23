@@ -1,526 +1,253 @@
-import json
-from unittest import mock
-from unittest.mock import patch
+import pytest
 
 from descope import AuthException
-from descope.auth import Auth
-from descope.authmethod.password import Password  # noqa: F401
-from descope.common import DEFAULT_TIMEOUT_SECONDS, EndpointsV1
-from tests.testutils import SSLMatcher
+from descope.authmethod.password import Password
+from descope.common import (
+    REFRESH_SESSION_COOKIE_NAME,
+    EndpointsV1,
+)
+from tests.conftest import PROJECT_ID, assert_http_called, make_response
+from tests.testutils import PUBLIC_KEY_DICT, VALID_REFRESH_TOKEN, VALID_SESSION_TOKEN
 
 from . import common
 
 
-class TestPassword(common.DescopeTest):
-    def setUp(self) -> None:
-        super().setUp()
-        self.dummy_project_id = "dummy"
-        self.public_key_dict = {
-            "alg": "ES384",
-            "crv": "P-384",
-            "kid": "2Bt5WLccLUey1Dp7utptZb3Fx9K",
-            "kty": "EC",
-            "use": "sig",
-            "x": "8SMbQQpCQAGAxCdoIz8y9gDw-wXoyoN5ILWpAlBKOcEM1Y7WmRKc1O2cnHggyEVi",
-            "y": "N5n5jKZA5Wu7_b4B36KKjJf-VRfJ-XqczfCSYy9GeQLqF-b63idfE0SYaYk9cFqg",
+class TestPassword:
+    def test_compose_signup_body(self):
+        assert Password._compose_signup_body("id1", "pw1", {"name": "John"}) == {
+            "loginId": "id1",
+            "password": "pw1",
+            "user": {"name": "John"},
+        }
+        assert Password._compose_signup_body("id1", "pw1", None) == {
+            "loginId": "id1",
+            "password": "pw1",
         }
 
-    def test_sign_up(self):
-        signup_user_details = {
-            "username": "jhon",
-            "name": "john",
-            "phone": "972525555555",
-            "email": "dummy@dummy.com",
-        }
+    async def test_sign_up(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
 
-        password = Password(
-            Auth(
-                self.dummy_project_id,
-                self.public_key_dict,
-                http_client=self.make_http_client(),
-            )
+        # Validation errors
+        with pytest.raises(AuthException):
+            await client.invoke(client.password.sign_up("", "pw1"))
+        with pytest.raises(AuthException):
+            await client.invoke(client.password.sign_up(None, "pw1"))
+        with pytest.raises(AuthException):
+            await client.invoke(client.password.sign_up("id", ""))
+        with pytest.raises(AuthException):
+            await client.invoke(client.password.sign_up("id", None))
+
+        # HTTP error
+        with client.mock_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.password.sign_up("dummy@dummy.com", "pw123"))
+
+        # Success + payload
+        success_resp = make_response(
+            {"sessionJwt": VALID_SESSION_TOKEN},
+            cookies={REFRESH_SESSION_COOKIE_NAME: VALID_REFRESH_TOKEN},
+        )
+        with client.mock_post(success_resp) as mock_post:
+            result = await client.invoke(client.password.sign_up("dummy@dummy.com", "pw123"))
+        assert result is not None
+        assert_http_called(
+            mock_post,
+            client.mode,
+            f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_password_path}",
+            headers={
+                **common.default_headers,
+                "Authorization": f"Bearer {PROJECT_ID}",
+                "x-descope-project-id": PROJECT_ID,
+            },
+            params=None,
+            json={"loginId": "dummy@dummy.com", "password": "pw123"},
+            follow_redirects=False,
         )
 
-        # Test failed flows
-        self.assertRaises(
-            AuthException,
-            password.sign_up,
-            "",
-            None,
-            signup_user_details,
+    async def test_sign_in(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
+
+        # Validation errors
+        with pytest.raises(AuthException):
+            await client.invoke(client.password.sign_in("", "pw1"))
+        with pytest.raises(AuthException):
+            await client.invoke(client.password.sign_in(None, "pw1"))
+        with pytest.raises(AuthException):
+            await client.invoke(client.password.sign_in("id", ""))
+        with pytest.raises(AuthException):
+            await client.invoke(client.password.sign_in("id", None))
+
+        # HTTP error
+        with client.mock_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.password.sign_in("dummy@dummy.com", "pw123"))
+
+        # Success + payload
+        success_resp = make_response(
+            {"sessionJwt": VALID_SESSION_TOKEN},
+            cookies={REFRESH_SESSION_COOKIE_NAME: VALID_REFRESH_TOKEN},
+        )
+        with client.mock_post(success_resp) as mock_post:
+            result = await client.invoke(client.password.sign_in("dummy@dummy.com", "pw123"))
+        assert result is not None
+        assert_http_called(
+            mock_post,
+            client.mode,
+            f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_in_password_path}",
+            headers={
+                **common.default_headers,
+                "Authorization": f"Bearer {PROJECT_ID}",
+                "x-descope-project-id": PROJECT_ID,
+            },
+            params=None,
+            json={"loginId": "dummy@dummy.com", "password": "pw123"},
+            follow_redirects=False,
         )
 
-        self.assertRaises(
-            AuthException,
-            password.sign_up,
-            None,
-            None,
-            signup_user_details,
+    async def test_send_reset(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
+
+        # Validation errors
+        with pytest.raises(AuthException):
+            await client.invoke(client.password.send_reset(""))
+        with pytest.raises(AuthException):
+            await client.invoke(client.password.send_reset(None))
+
+        # HTTP error
+        with client.mock_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.password.send_reset("dummy@dummy.com"))
+
+        # Success + payload
+        with client.mock_post(
+            make_response({"resetMethod": "magiclink", "maskedEmail": "du***@***my.com"})
+        ) as mock_post:
+            result = await client.invoke(client.password.send_reset("dummy@dummy.com", "https://redirect.here.com"))
+        assert result is not None
+        assert_http_called(
+            mock_post,
+            client.mode,
+            f"{common.DEFAULT_BASE_URL}{EndpointsV1.send_reset_password_path}",
+            headers={
+                **common.default_headers,
+                "Authorization": f"Bearer {PROJECT_ID}",
+                "x-descope-project-id": PROJECT_ID,
+            },
+            params=None,
+            json={"loginId": "dummy@dummy.com", "redirectUrl": "https://redirect.here.com"},
+            follow_redirects=False,
         )
 
-        self.assertRaises(
-            AuthException,
-            password.sign_up,
-            "login_id",
-            "",
-            signup_user_details,
+    async def test_update(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
+        refresh_token = VALID_REFRESH_TOKEN
+
+        # Validation errors
+        with pytest.raises(AuthException):
+            await client.invoke(client.password.update("", "newpw", refresh_token))
+        with pytest.raises(AuthException):
+            await client.invoke(client.password.update(None, "newpw", refresh_token))
+        with pytest.raises(AuthException):
+            await client.invoke(client.password.update("id", "", refresh_token))
+        with pytest.raises(AuthException):
+            await client.invoke(client.password.update("id", None, refresh_token))
+        with pytest.raises(AuthException):
+            await client.invoke(client.password.update("id", "newpw", ""))
+        with pytest.raises(AuthException):
+            await client.invoke(client.password.update("id", "newpw", None))
+
+        # HTTP error
+        with client.mock_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.password.update("dummy@dummy.com", "newpw", refresh_token))
+
+        # Success (returns None)
+        with client.mock_post(make_response({})) as mock_post:
+            result = await client.invoke(client.password.update("dummy@dummy.com", "newpw", refresh_token))
+        assert result is None
+        assert_http_called(
+            mock_post,
+            client.mode,
+            f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_password_path}",
+            headers={
+                **common.default_headers,
+                "Authorization": f"Bearer {PROJECT_ID}:{refresh_token}",
+                "x-descope-project-id": PROJECT_ID,
+            },
+            params=None,
+            json={"loginId": "dummy@dummy.com", "newPassword": "newpw"},
+            follow_redirects=False,
         )
 
-        self.assertRaises(
-            AuthException,
-            password.sign_up,
-            "login_id",
-            None,
-            signup_user_details,
+    async def test_replace(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
+
+        # Validation errors
+        with pytest.raises(AuthException):
+            await client.invoke(client.password.replace("", "oldpw", "newpw"))
+        with pytest.raises(AuthException):
+            await client.invoke(client.password.replace(None, "oldpw", "newpw"))
+        with pytest.raises(AuthException):
+            await client.invoke(client.password.replace("id", "", "newpw"))
+        with pytest.raises(AuthException):
+            await client.invoke(client.password.replace("id", None, "newpw"))
+        with pytest.raises(AuthException):
+            await client.invoke(client.password.replace("id", "oldpw", ""))
+        with pytest.raises(AuthException):
+            await client.invoke(client.password.replace("id", "oldpw", None))
+
+        # HTTP error
+        with client.mock_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.password.replace("dummy@dummy.com", "oldpw", "newpw"))
+
+        # Success + payload
+        success_resp = make_response(
+            {"sessionJwt": VALID_SESSION_TOKEN},
+            cookies={REFRESH_SESSION_COOKIE_NAME: VALID_REFRESH_TOKEN},
+        )
+        with client.mock_post(success_resp) as mock_post:
+            result = await client.invoke(client.password.replace("dummy@dummy.com", "oldpw", "newpw"))
+        assert result is not None
+        assert_http_called(
+            mock_post,
+            client.mode,
+            f"{common.DEFAULT_BASE_URL}{EndpointsV1.replace_password_path}",
+            headers={
+                **common.default_headers,
+                "Authorization": f"Bearer {PROJECT_ID}",
+                "x-descope-project-id": PROJECT_ID,
+            },
+            params=None,
+            json={
+                "loginId": "dummy@dummy.com",
+                "oldPassword": "oldpw",
+                "newPassword": "newpw",
+            },
+            follow_redirects=False,
         )
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                password.sign_up,
-                "dummy@dummy.com",
-                "123456",
-                signup_user_details,
-            )
+    async def test_get_policy(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
 
-        # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            my_mock_response = mock.Mock()
-            my_mock_response.is_success = True
-            my_mock_response.cookies = {}
-            data = json.loads(
-                """{"jwts": ["eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg4MDc4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MTY2MDIxNTI3OCwiaWF0IjoxNjU3Nzk2MDc4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQnRFSGtnT3UwMmxtTXh6UElleGRNdFV3MU0ifQ.oAnvJ7MJvCyL_33oM7YCF12JlQ0m6HWRuteUVAdaswfnD4rHEBmPeuVHGljN6UvOP4_Cf0559o39UHVgm3Fwb-q7zlBbsu_nP1-PRl-F8NJjvBgC5RsAYabtJq7LlQmh"], "user": {"loginIds": ["guyp@descope.com"], "name": "", "email": "guyp@descope.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false}, "firstSeen": false}"""
-            )
-            my_mock_response.json.return_value = data
-            mock_post.return_value = my_mock_response
+        # HTTP error
+        with client.mock_get(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.password.get_policy())
 
-            self.assertIsNotNone(password.sign_up("dummy@dummy.com", "123456", signup_user_details))
-
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_password_path}",
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
-                params=None,
-                json={
-                    "loginId": "dummy@dummy.com",
-                    "password": "123456",
-                    "user": {
-                        "username": "jhon",
-                        "name": "john",
-                        "phone": "972525555555",
-                        "email": "dummy@dummy.com",
-                    },
-                },
-                follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )
-
-    def test_sign_in(self):
-        password = Password(
-            Auth(
-                self.dummy_project_id,
-                self.public_key_dict,
-                http_client=self.make_http_client(),
-            )
+        # Success + payload
+        with client.mock_get(make_response({"minLength": 8, "lowercase": True})) as mock_get:
+            result = await client.invoke(client.password.get_policy())
+        assert result is not None
+        assert_http_called(
+            mock_get,
+            client.mode,
+            f"{common.DEFAULT_BASE_URL}{EndpointsV1.password_policy_path}",
+            headers={
+                **common.default_headers,
+                "Authorization": f"Bearer {PROJECT_ID}",
+                "x-descope-project-id": PROJECT_ID,
+            },
+            params=None,
+            follow_redirects=True,
         )
-
-        # Test failed flows
-        self.assertRaises(
-            AuthException,
-            password.sign_in,
-            "",
-            None,
-        )
-
-        self.assertRaises(
-            AuthException,
-            password.sign_in,
-            None,
-            None,
-        )
-
-        self.assertRaises(
-            AuthException,
-            password.sign_in,
-            "login_id",
-            "",
-        )
-
-        self.assertRaises(
-            AuthException,
-            password.sign_in,
-            "login_id",
-            None,
-        )
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                password.sign_in,
-                "dummy@dummy.com",
-                "123456",
-            )
-
-        # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            my_mock_response = mock.Mock()
-            my_mock_response.is_success = True
-            my_mock_response.cookies = {}
-            data = json.loads(
-                """{"jwts": ["eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg4MDc4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MTY2MDIxNTI3OCwiaWF0IjoxNjU3Nzk2MDc4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQnRFSGtnT3UwMmxtTXh6UElleGRNdFV3MU0ifQ.oAnvJ7MJvCyL_33oM7YCF12JlQ0m6HWRuteUVAdaswfnD4rHEBmPeuVHGljN6UvOP4_Cf0559o39UHVgm3Fwb-q7zlBbsu_nP1-PRl-F8NJjvBgC5RsAYabtJq7LlQmh"], "user": {"loginIds": ["guyp@descope.com"], "name": "", "email": "guyp@descope.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false}, "firstSeen": false}"""
-            )
-            my_mock_response.json.return_value = data
-            mock_post.return_value = my_mock_response
-
-            self.assertIsNotNone(password.sign_in("dummy@dummy.com", "123456"))
-
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_in_password_path}",
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
-                params=None,
-                json={
-                    "loginId": "dummy@dummy.com",
-                    "password": "123456",
-                },
-                follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )
-
-    def test_send_reset(self):
-        password = Password(
-            Auth(
-                self.dummy_project_id,
-                self.public_key_dict,
-                http_client=self.make_http_client(),
-            )
-        )
-
-        # Test failed flows
-        self.assertRaises(
-            AuthException,
-            password.send_reset,
-            "",
-        )
-
-        self.assertRaises(
-            AuthException,
-            password.send_reset,
-            None,
-        )
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                password.send_reset,
-                "dummy@dummy.com",
-            )
-
-        # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            my_mock_response = mock.Mock()
-            my_mock_response.is_success = True
-            my_mock_response.cookies = {}
-            data = json.loads("""{"resetMethod": "magiclink", "maskedEmail": "du***@***my.com"}""")
-            my_mock_response.json.return_value = data
-            mock_post.return_value = my_mock_response
-
-            self.assertIsNotNone(password.send_reset("dummy@dummy.com", "https://redirect.here.com"))
-
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{EndpointsV1.send_reset_password_path}",
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
-                params=None,
-                json={
-                    "loginId": "dummy@dummy.com",
-                    "redirectUrl": "https://redirect.here.com",
-                },
-                follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )
-
-        # Test success flow with template options
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            my_mock_response = mock.Mock()
-            my_mock_response.is_success = True
-            my_mock_response.cookies = {}
-            data = json.loads("""{"resetMethod": "magiclink", "maskedEmail": "du***@***my.com"}""")
-            my_mock_response.json.return_value = data
-            mock_post.return_value = my_mock_response
-
-            self.assertIsNotNone(
-                password.send_reset(
-                    "dummy@dummy.com",
-                    "https://redirect.here.com",
-                    {"bla": "blue"},
-                )
-            )
-
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{EndpointsV1.send_reset_password_path}",
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
-                params=None,
-                json={
-                    "loginId": "dummy@dummy.com",
-                    "redirectUrl": "https://redirect.here.com",
-                    "templateOptions": {"bla": "blue"},
-                },
-                follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )
-
-    def test_update(self):
-        password = Password(
-            Auth(
-                self.dummy_project_id,
-                self.public_key_dict,
-                http_client=self.make_http_client(),
-            )
-        )
-
-        # Test failed flows
-        self.assertRaises(
-            AuthException,
-            password.update,
-            "",
-            None,
-            None,
-        )
-
-        self.assertRaises(
-            AuthException,
-            password.update,
-            None,
-            None,
-            None,
-        )
-
-        self.assertRaises(
-            AuthException,
-            password.update,
-            "login_id",
-            "",
-            None,
-        )
-
-        self.assertRaises(
-            AuthException,
-            password.update,
-            "login_id",
-            None,
-            None,
-        )
-
-        self.assertRaises(
-            AuthException,
-            password.update,
-            "login_id",
-            "123456",
-            "",
-        )
-
-        self.assertRaises(
-            AuthException,
-            password.update,
-            "login_id",
-            "123456",
-            None,
-        )
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                password.update,
-                "dummy@dummy.com",
-                "1234567",
-                "refresh_token",
-            )
-
-        # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkVGVuYW50cyI6eyIiOm51bGx9LCJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwNjc5MjA4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MjA5MDA4NzIwOCwiaWF0IjoxNjU4MDg3MjA4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQzU1dnl4dzBzUkw2RmRNNjhxUnNDRGRST1YifQ.cWP5up4R5xeIl2qoG2NtfLH3Q5nRJVKdz-FDoAXctOQW9g3ceZQi6rZQ-TPBaXMKw68bijN3bLJTqxWW5WHzqRUeopfuzTcMYmC0wP2XGJkrdF6A8D5QW6acSGqglFgu"
-            self.assertIsNone(password.update("dummy@dummy.com", "123456", valid_jwt_token))
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_password_path}",
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:{valid_jwt_token}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
-                params=None,
-                json={
-                    "loginId": "dummy@dummy.com",
-                    "newPassword": "123456",
-                },
-                follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )
-
-    def test_replace(self):
-        password = Password(
-            Auth(
-                self.dummy_project_id,
-                self.public_key_dict,
-                http_client=self.make_http_client(),
-            )
-        )
-
-        # Test failed flows
-        self.assertRaises(
-            AuthException,
-            password.replace,
-            "",
-            None,
-            None,
-        )
-
-        self.assertRaises(
-            AuthException,
-            password.replace,
-            None,
-            None,
-            None,
-        )
-
-        self.assertRaises(
-            AuthException,
-            password.replace,
-            "login_id",
-            "",
-            None,
-        )
-
-        self.assertRaises(
-            AuthException,
-            password.replace,
-            "login_id",
-            None,
-            None,
-        )
-
-        self.assertRaises(
-            AuthException,
-            password.replace,
-            "login_id",
-            "123456",
-            "",
-        )
-
-        self.assertRaises(
-            AuthException,
-            password.replace,
-            "login_id",
-            "123456",
-            None,
-        )
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                password.replace,
-                "dummy@dummy.com",
-                "123456",
-                "1234567",
-            )
-
-        # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            my_mock_response = mock.Mock()
-            my_mock_response.is_success = True
-            my_mock_response.cookies = {}
-            data = json.loads(
-                """{"jwts": ["eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwMzg4MDc4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MTY2MDIxNTI3OCwiaWF0IjoxNjU3Nzk2MDc4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQnRFSGtnT3UwMmxtTXh6UElleGRNdFV3MU0ifQ.oAnvJ7MJvCyL_33oM7YCF12JlQ0m6HWRuteUVAdaswfnD4rHEBmPeuVHGljN6UvOP4_Cf0559o39UHVgm3Fwb-q7zlBbsu_nP1-PRl-F8NJjvBgC5RsAYabtJq7LlQmh"], "user": {"loginIds": ["test@company.com"], "name": "", "email": "test@company.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false}, "firstSeen": false}"""
-            )
-            my_mock_response.json.return_value = data
-            mock_post.return_value = my_mock_response
-
-            jwt_response = password.replace("dummy@dummy.com", "123456", "1234567")
-            self.assertIsNotNone(jwt_response)
-            self.assertIsNotNone(jwt_response["user"])
-            self.assertEqual(jwt_response["user"]["loginIds"], ["test@company.com"])
-            mock_post.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{EndpointsV1.replace_password_path}",
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
-                params=None,
-                json={
-                    "loginId": "dummy@dummy.com",
-                    "oldPassword": "123456",
-                    "newPassword": "1234567",
-                },
-                follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )
-
-    def test_policy(self):
-        password = Password(
-            Auth(
-                self.dummy_project_id,
-                self.public_key_dict,
-                http_client=self.make_http_client(),
-            )
-        )
-
-        with patch("httpx.get") as mock_get:
-            mock_get.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                password.get_policy,
-            )
-
-        # Test success flow
-        with patch("httpx.get") as mock_get:
-            mock_get.return_value.is_success = True
-            my_mock_response = mock.Mock()
-            my_mock_response.is_success = True
-            my_mock_response.cookies = {}
-            data = json.loads("""{"minLength": 8, "lowercase": true}""")
-            my_mock_response.json.return_value = data
-            mock_get.return_value = my_mock_response
-            self.assertIsNotNone(password.get_policy())
-            mock_get.assert_called_with(
-                f"{common.DEFAULT_BASE_URL}{EndpointsV1.password_policy_path}",
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
-                params=None,
-                follow_redirects=True,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )

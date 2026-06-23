@@ -1,0 +1,16 @@
+title = "python-sdk gitleaks config"
+
+[allowlist]
+description = "False positives: test fixture JWTs, coverage artifacts, README examples"
+regexes = [
+    # Fake JWTs used as test fixtures (kid: 2Bt5WLccLUey1Dp7utptZb3Fx9K)
+    '''eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpX''',
+    # Fake JWTs used as test fixtures (kid: P2CtzUhdqpIF2ys9gg7ms06UvtC4)
+    '''eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3R6VWhkcXBJRjJ5czlnZzdtczA2VXZ0QzQiLCJ0eXAiOiJK''',
+    # Example password in README docs
+    '''qYlvi65KaX''',
+]
+paths = [
+    # Coverage report artifacts
+    '''htmlcov/''',
+]
