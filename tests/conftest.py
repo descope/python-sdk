@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import os
 from contextlib import contextmanager
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -10,6 +9,7 @@ import pytest
 from descope.common import DEFAULT_TIMEOUT_SECONDS
 from descope.descope_client import DescopeClient
 from descope.descope_client_async import DescopeClientAsync
+from tests._unified import UnifiedClientBase
 from tests.common import DEFAULT_BASE_URL
 from tests.testutils import PUBLIC_KEY_DICT, SSLMatcher
 
@@ -65,27 +65,15 @@ def make_response(json_data=None, *, status=200, cookies=None):
     return m
 
 
-class UnifiedClient:
+class UnifiedClient(UnifiedClientBase):
     """
     Wraps DescopeClient or DescopeClientAsync with a uniform interface so test
     bodies can run unchanged against both variants.
 
-    - ``invoke(maybe_coro)`` — awaits async calls, passes through sync values.
+    - ``invoke(maybe_coro)`` — awaits async calls, passes through sync values
+      (inherited from UnifiedClientBase).
     - ``mock_get/mock_post(response)`` — patches the right HTTP layer per mode.
     """
-
-    def __init__(self, mode: str, raw):
-        self.mode = mode  # "sync" | "async"
-        self._raw = raw
-
-    def __getattr__(self, name):
-        return getattr(self._raw, name)
-
-    async def invoke(self, maybe_coro):
-        """Uniformly run a sync return value or an async coroutine."""
-        if asyncio.iscoroutine(maybe_coro):
-            return await maybe_coro
-        return maybe_coro
 
     @contextmanager
     def mock_get(self, response):

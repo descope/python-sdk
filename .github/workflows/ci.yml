@@ -7,6 +7,12 @@ on:
   pull_request:
   schedule:
     - cron: "0 8 * * *"
+  workflow_dispatch:
+    inputs:
+      skip_debounce:
+        description: Skip the 5-minute e2e debounce (for urgent re-runs)
+        type: boolean
+        default: false
 
 concurrency:
   group: check-${{ github.ref }}
@@ -98,7 +104,7 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-extras --locked
       - name: Run test suite
-        run: uv run coverage run -m pytest tests
+        run: uv run coverage run -m pytest tests --ignore=tests/e2e
         env:
           COVERAGE_FILE: "coverage.${{ matrix.os }}.${{ matrix.py }}"
       - name: Store coverage file
@@ -143,6 +149,48 @@ jobs:
           name: python-coverage-comment-action
           path: python-coverage-comment-action.txt
 
+  e2e-sandbox:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      pull-requests: write
+    if: >
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.draft != true
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          enable-cache: true
+          python-version: "3.13"
+      - name: Install dependencies
+        run: uv sync --all-extras --locked
+      - name: Debounce
+        # Waits 1 min before running so rapid pushes to the same PR cancel the stale run
+        # (via the global cancel-in-progress) before any e2e work starts.
+        # Skip via the 'quick-e2e' PR label or the skip_debounce workflow_dispatch input.
+        if: >
+          github.event_name == 'pull_request' &&
+          github.actor != 'renovate[bot]' &&
+          !contains(github.event.pull_request.labels.*.name, 'quick-e2e') &&
+          inputs.skip_debounce != 'true'
+        run: sleep 60
+      - name: Run e2e tests
+        if: github.actor != 'renovate[bot]'
+        run: uv run pytest tests/e2e -v -m e2e --junitxml=e2e-report.xml
+        env:
+          DESCOPE_PROJECT_ID: ${{ secrets.DESCOPE_SANDBOX_PROJECT_ID }}
+          DESCOPE_MANAGEMENT_KEY: ${{ secrets.DESCOPE_SANDBOX_MANAGEMENT_KEY }}
+          DESCOPE_BASE_URI: ${{ secrets.DESCOPE_SANDBOX_BASE_URI }}
+      - name: Publish e2e test report
+        if: always() && github.actor != 'renovate[bot]'
+        uses: mikepenz/action-junit-report@3a81627bfac62268172037048872e8ebd4207e6d # v6.4.1
+        with:
+          report_paths: e2e-report.xml
+          check_name: E2E Test Report
+
   gitleaks:
     name: gitleaks
     runs-on: ubuntu-latest
@@ -159,7 +207,7 @@ jobs:
     name: All Checks Passed
     runs-on: ubuntu-latest
     permissions: {}
-    needs: [validate-pr-title, lint, build, coverage, gitleaks]
+    needs: [validate-pr-title, lint, build, coverage, gitleaks, e2e-sandbox]
     if: always() && !cancelled() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
     steps:
       - name: Yey, all checks passed!
