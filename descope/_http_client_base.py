@@ -31,7 +31,7 @@ def sdk_version():
 
 
 # HTTP status codes that should trigger automatic retries
-_RETRY_STATUS_CODES = {503, 521, 522, 524, 530}
+_RETRY_STATUS_CODES = {503, 520, 521, 522, 524, 530}
 # Delays in seconds between retries: first retry after 100ms, subsequent retries after 5s
 _RETRY_DELAYS_SECONDS = [0.1, 5.0, 5.0]
 

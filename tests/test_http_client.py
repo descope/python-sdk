@@ -512,8 +512,8 @@ class TestRetryMechanism(unittest.TestCase):
     @patch("time.sleep")
     @patch("httpx.get")
     def test_retries_on_retryable_codes(self, mock_get, mock_sleep):
-        """Test that all retryable status codes (503, 521, 522, 524, 530) trigger a retry."""
-        for status_code in [503, 521, 522, 524, 530]:
+        """Test that all retryable status codes (503, 520, 521, 522, 524, 530) trigger a retry."""
+        for status_code in [503, 520, 521, 522, 524, 530]:
             mock_get.reset_mock()
             mock_sleep.reset_mock()
 
