@@ -876,6 +876,238 @@ class TestOutboundApplication(common.DescopeTest):
                 "token123",
             )
 
+    def test_list_apps_with_user_token_success(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        with patch("httpx.get") as mock_get:
+            network_resp = mock.Mock()
+            network_resp.is_success = True
+            network_resp.json.return_value = {"appIds": ["app1", "app2"]}
+            mock_get.return_value = network_resp
+            response = client.mgmt.outbound_application.list_apps_with_user_token("user456", tenant_id="tenant789")
+
+            assert response == {"appIds": ["app1", "app2"]}
+            mock_get.assert_called_once()
+            call_args = mock_get.call_args
+            assert call_args[1]["params"]["userId"] == "user456"
+            assert call_args[1]["params"]["tenantId"] == "tenant789"
+
+    def test_list_apps_with_user_token_no_tenant(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        with patch("httpx.get") as mock_get:
+            network_resp = mock.Mock()
+            network_resp.is_success = True
+            network_resp.json.return_value = {"appIds": ["app1"]}
+            mock_get.return_value = network_resp
+            client.mgmt.outbound_application.list_apps_with_user_token("user456")
+
+            call_args = mock_get.call_args
+            assert call_args[1]["params"]["userId"] == "user456"
+            assert "tenantId" not in call_args[1]["params"]
+
+    def test_list_apps_with_user_token_failure(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        with patch("httpx.get") as mock_get:
+            mock_get.return_value.is_success = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.outbound_application.list_apps_with_user_token,
+                "user456",
+            )
+
+    def test_upload_user_api_key_success(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        with patch("httpx.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.is_success = True
+            network_resp.json.return_value = {}
+            mock_post.return_value = network_resp
+            client.mgmt.outbound_application.upload_user_api_key(
+                "app123", "user456", "secret-key", tenant_id="tenant789"
+            )
+
+            mock_post.assert_called_once()
+            call_args = mock_post.call_args
+            assert call_args[1]["json"] == {
+                "appId": "app123",
+                "userId": "user456",
+                "apiKey": "secret-key",
+                "tenantId": "tenant789",
+            }
+
+    def test_upload_user_api_key_failure(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        with patch("httpx.post") as mock_post:
+            mock_post.return_value.is_success = False
+            self.assertRaises(
+                AuthException,
+                client.mgmt.outbound_application.upload_user_api_key,
+                "app123",
+                "user456",
+                "secret-key",
+            )
+
+    def test_upload_tenant_api_key_success(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        with patch("httpx.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.is_success = True
+            network_resp.json.return_value = {}
+            mock_post.return_value = network_resp
+            client.mgmt.outbound_application.upload_tenant_api_key("app123", "tenant789", "secret-key")
+
+            call_args = mock_post.call_args
+            assert call_args[1]["json"] == {
+                "appId": "app123",
+                "tenantId": "tenant789",
+                "apiKey": "secret-key",
+            }
+
+    def test_upload_user_token_success(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        with patch("httpx.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.is_success = True
+            network_resp.json.return_value = {}
+            mock_post.return_value = network_resp
+            client.mgmt.outbound_application.upload_user_token(
+                "app123",
+                "user456",
+                refresh_token="refresh",
+                scopes=["read"],
+                verify_refresh=True,
+            )
+
+            call_args = mock_post.call_args
+            assert call_args[1]["json"] == {
+                "appId": "app123",
+                "userId": "user456",
+                "refreshToken": "refresh",
+                "scopes": ["read"],
+                "verifyRefresh": True,
+            }
+
+    def test_upload_tenant_token_success(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        with patch("httpx.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.is_success = True
+            network_resp.json.return_value = {}
+            mock_post.return_value = network_resp
+            client.mgmt.outbound_application.upload_tenant_token(
+                "app123",
+                "tenant789",
+                access_token="access",
+                access_token_expiry=3600,
+            )
+
+            call_args = mock_post.call_args
+            assert call_args[1]["json"] == {
+                "appId": "app123",
+                "tenantId": "tenant789",
+                "accessToken": "access",
+                "accessTokenExpiry": 3600,
+            }
+
+    def test_batch_upload_user_tokens_success(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        tokens = [
+            {"appId": "app123", "userId": "user1", "accessToken": "a1"},
+            {"appId": "app123", "userId": "user2", "accessToken": "a2"},
+        ]
+        with patch("httpx.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.is_success = True
+            network_resp.json.return_value = {
+                "failures": [
+                    {
+                        "appId": "app123",
+                        "userId": "user2",
+                        "errorCode": "E152110",
+                        "reason": "bad token",
+                    }
+                ]
+            }
+            mock_post.return_value = network_resp
+            response = client.mgmt.outbound_application.batch_upload_user_tokens(tokens)
+
+            call_args = mock_post.call_args
+            assert call_args[1]["json"] == {"tokens": tokens}
+            assert response["failures"][0]["errorCode"] == "E152110"
+
+    def test_batch_upload_tenant_tokens_success(self):
+        client = DescopeClient(
+            self.dummy_project_id,
+            self.public_key_dict,
+            False,
+            self.dummy_management_key,
+        )
+
+        tokens = [{"appId": "app123", "tenantId": "tenant1", "accessToken": "a1"}]
+        with patch("httpx.post") as mock_post:
+            network_resp = mock.Mock()
+            network_resp.is_success = True
+            network_resp.json.return_value = {"failures": []}
+            mock_post.return_value = network_resp
+            response = client.mgmt.outbound_application.batch_upload_tenant_tokens(tokens)
+
+            call_args = mock_post.call_args
+            assert call_args[1]["json"] == {"tokens": tokens}
+            assert response == {"failures": []}
+
     def test_url_param_to_dict(self):
         # Test URLParam to_dict method
         param = URLParam("test_name", "test_value")
