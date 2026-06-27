@@ -512,8 +512,8 @@ class TestRetryMechanism(unittest.TestCase):
     @patch("time.sleep")
     @patch("httpx.get")
     def test_retries_on_retryable_codes(self, mock_get, mock_sleep):
-        """Test that all retryable status codes (503, 521, 522, 524, 530) trigger a retry."""
-        for status_code in [503, 521, 522, 524, 530]:
+        """Test that all retryable status codes (503, 520, 521, 522, 524, 530) trigger a retry."""
+        for status_code in [503, 520, 521, 522, 524, 530]:
             mock_get.reset_mock()
             mock_sleep.reset_mock()
 
@@ -802,7 +802,7 @@ class TestSSLConfiguration(unittest.TestCase):
             for key in ("SSL_CERT_FILE", "SSL_CERT_DIR", "REQUESTS_CA_BUNDLE"):
                 os.environ.pop(key, None)
 
-            with patch("descope.http_client.ssl.create_default_context") as mock_ctx_factory:
+            with patch("descope._http_client_base.ssl.create_default_context") as mock_ctx_factory:
                 mock_ssl_ctx = Mock()
                 mock_ctx_factory.return_value = mock_ssl_ctx
 
@@ -819,7 +819,7 @@ class TestSSLConfiguration(unittest.TestCase):
             os.environ.pop("SSL_CERT_DIR", None)
             os.environ.pop("REQUESTS_CA_BUNDLE", None)
 
-            with patch("descope.http_client.ssl.create_default_context") as mock_ctx_factory:
+            with patch("descope._http_client_base.ssl.create_default_context") as mock_ctx_factory:
                 mock_ctx_factory.return_value = Mock()
 
                 HTTPClient(project_id="test123", secure=True)
@@ -837,7 +837,7 @@ class TestSSLConfiguration(unittest.TestCase):
             os.environ.pop("SSL_CERT_FILE", None)
             os.environ.pop("REQUESTS_CA_BUNDLE", None)
 
-            with patch("descope.http_client.ssl.create_default_context") as mock_ctx_factory:
+            with patch("descope._http_client_base.ssl.create_default_context") as mock_ctx_factory:
                 mock_ctx_factory.return_value = Mock()
 
                 HTTPClient(project_id="test123", secure=True)
@@ -853,7 +853,7 @@ class TestSSLConfiguration(unittest.TestCase):
             os.environ.pop("SSL_CERT_FILE", None)
             os.environ.pop("SSL_CERT_DIR", None)
 
-            with patch("descope.http_client.ssl.create_default_context") as mock_ctx_factory:
+            with patch("descope._http_client_base.ssl.create_default_context") as mock_ctx_factory:
                 mock_ssl_ctx = Mock()
                 mock_ctx_factory.return_value = mock_ssl_ctx
 
@@ -866,7 +866,7 @@ class TestSSLConfiguration(unittest.TestCase):
         with patch.dict("os.environ", {}, clear=False):
             os.environ.pop("REQUESTS_CA_BUNDLE", None)
 
-            with patch("descope.http_client.ssl.create_default_context") as mock_ctx_factory:
+            with patch("descope._http_client_base.ssl.create_default_context") as mock_ctx_factory:
                 mock_ssl_ctx = Mock()
                 mock_ctx_factory.return_value = mock_ssl_ctx
 

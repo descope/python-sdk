@@ -10,6 +10,7 @@ from descope.common import (
     SignUpOptions,
 )
 from descope.descope_client import DescopeClient
+from descope.descope_client_async import DescopeClientAsync
 from descope.exceptions import (
     API_RATE_LIMIT_RETRY_AFTER_HEADER,
     ERROR_TYPE_API_RATE_LIMIT,
@@ -64,6 +65,7 @@ __all__ = [
     "DeliveryMethod",
     "LoginOptions",
     "SignUpOptions",
+    "DescopeClientAsync",
     "DescopeClient",
     "API_RATE_LIMIT_RETRY_AFTER_HEADER",
     "ERROR_TYPE_API_RATE_LIMIT",

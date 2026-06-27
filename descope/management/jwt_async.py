@@ -1,0 +1,242 @@
+from __future__ import annotations
+
+from typing import Optional
+
+from descope._http_base import AsyncHTTPBase
+from descope.auth_async import AuthAsync
+from descope.management._jwt_base import JWTBase
+from descope.management.common import (
+    MgmtLoginOptions,
+    MgmtSignUpOptions,
+    MgmtUserRequest,
+    MgmtV1,
+    is_jwt_required,
+)
+
+
+class JWTAsync(JWTBase, AsyncHTTPBase):
+    """Async counterpart of JWT — all HTTP calls are coroutines."""
+
+    _auth: AuthAsync
+
+    def __init__(self, http_client, auth: AuthAsync):
+        super().__init__(http_client)
+        self._auth = auth
+
+    async def update_jwt(self, jwt: str, custom_claims: dict, refresh_duration: int = 0) -> str:
+        """
+        Given a valid JWT, update it with custom claims, and update its authz claims as well
+
+        Args:
+        token (str): valid jwt.
+        custom_claims (dict): Custom claims to add to JWT, system claims will be filtered out
+        refresh_duration (int): duration in seconds for which the new JWT will be valid
+
+        Return value (str): the newly updated JWT
+
+        Raise:
+        AuthException: raised if update failed
+        """
+        self._validate_jwt(jwt)
+        response = await self._http.post(
+            MgmtV1.update_jwt_path,
+            body={
+                "jwt": jwt,
+                "customClaims": custom_claims,
+                "refreshDuration": refresh_duration,
+            },
+            params=None,
+        )
+        return response.json().get("jwt", "")
+
+    async def impersonate(
+        self,
+        impersonator_id: str,
+        login_id: str,
+        validate_consent: bool,
+        custom_claims: Optional[dict] = None,
+        tenant_id: Optional[str] = None,
+        refresh_duration: Optional[int] = None,
+        stepup: Optional[bool] = None,
+    ) -> str:
+        """
+        Impersonate to another user
+
+        Args:
+        impersonator_id (str): login id / user id of impersonator, must have "impersonation" permission.
+        login_id (str): login id of the user whom to which to impersonate to.
+        validate_consent (bool): Indicate whether to allow impersonation in any case or only if a consent to this operation was granted.
+        customClaims dict: Custom claims to add to JWT
+        tenant_id (str): tenant id to set on DCT claim.
+        refresh_duration (int): duration in seconds for which the new JWT will be valid
+        stepup (bool): Whether to generate a stepup token for the impersonated user.
+
+        Return value (str): A JWT of the impersonated user
+
+        Raise:
+        AuthException: raised if update failed
+        """
+        self._validate_impersonator_id(impersonator_id)
+        self._validate_login_id(login_id)
+        response = await self._http.post(
+            MgmtV1.impersonate_path,
+            body={
+                "loginId": login_id,
+                "impersonatorId": impersonator_id,
+                "validateConsent": validate_consent,
+                "customClaims": custom_claims,
+                "selectedTenant": tenant_id,
+                "refreshDuration": refresh_duration,
+                "stepup": stepup,
+            },
+            params=None,
+        )
+        return response.json().get("jwt", "")
+
+    async def stop_impersonation(
+        self,
+        jwt: str,
+        custom_claims: Optional[dict] = None,
+        tenant_id: Optional[str] = None,
+        refresh_duration: Optional[int] = None,
+    ) -> str:
+        """
+        Stop impersonation and return to the original user
+        Args:
+        jwt (str): The impersonation jwt to stop.
+        customClaims dict: Custom claims to add to JWT
+        tenant_id (str): tenant id to set on DCT claim.
+        refresh_duration (int): duration in seconds for which the new JWT will be valid
+
+        Return value (str): A JWT of the actor
+
+        Raise:
+        AuthException: raised if update failed
+        """
+        self._validate_jwt(jwt)
+        response = await self._http.post(
+            MgmtV1.stop_impersonation_path,
+            body={
+                "jwt": jwt,
+                "customClaims": custom_claims,
+                "selectedTenant": tenant_id,
+                "refreshDuration": refresh_duration,
+            },
+            params=None,
+        )
+        return response.json().get("jwt", "")
+
+    async def sign_in(self, login_id: str, login_options: Optional[MgmtLoginOptions] = None) -> dict:
+        """
+        Generate a JWT for a user, simulating a signin request.
+
+        Args:
+        login_id (str): login id of the user.
+        login_options (MgmtLoginOptions): options for the login request.
+        """
+
+        self._validate_login_id(login_id)
+
+        if login_options is None:
+            login_options = MgmtLoginOptions()
+
+        if is_jwt_required(login_options):
+            self._validate_jwt_required(login_options)
+
+        response = await self._http.post(
+            MgmtV1.mgmt_sign_in_path,
+            body={
+                "loginId": login_id,
+                "stepup": login_options.stepup,
+                "mfa": login_options.mfa,
+                "revokeOtherSessions": login_options.revoke_other_sessions,
+                "customClaims": login_options.custom_claims,
+                "jwt": login_options.jwt,
+                "refreshDuration": login_options.refresh_duration,
+            },
+            params=None,
+        )
+        return await self._auth.prepare_jwt_response(response.json(), None, None)
+
+    async def sign_up(
+        self,
+        login_id: str,
+        user: Optional[MgmtUserRequest] = None,
+        signup_options: Optional[MgmtSignUpOptions] = None,
+    ) -> dict:
+        """
+        Generate a JWT for a user, simulating a signup request.
+
+        Args:
+        login_id (str): login id of the user.
+        user (MgmtUserRequest): user details.
+        signup_options (MgmtSignUpOptions): signup options.
+        """
+
+        return await self._sign_up_internal(login_id, MgmtV1.mgmt_sign_up_path, user, signup_options)
+
+    async def sign_up_or_in(
+        self,
+        login_id: str,
+        user: Optional[MgmtUserRequest] = None,
+        signup_options: Optional[MgmtSignUpOptions] = None,
+    ) -> dict:
+        """
+        Generate a JWT for a user, simulating a signup or in request.
+
+        Args:
+        login_id (str): login id of the user.
+        user (MgmtUserRequest): user details.
+        signup_options (MgmtSignUpOptions): signup options.
+        """
+        return await self._sign_up_internal(login_id, MgmtV1.mgmt_sign_up_or_in_path, user, signup_options)
+
+    async def _sign_up_internal(
+        self,
+        login_id: str,
+        endpoint: str,
+        user: Optional[MgmtUserRequest] = None,
+        signup_options: Optional[MgmtSignUpOptions] = None,
+    ) -> dict:
+        if user is None:
+            user = MgmtUserRequest()
+
+        self._validate_login_id(login_id)
+
+        if signup_options is None:
+            signup_options = MgmtSignUpOptions()
+
+        response = await self._http.post(
+            endpoint,
+            body=self._compose_sign_up_body(login_id, user, signup_options),
+            params=None,
+        )
+        return await self._auth.prepare_jwt_response(response.json(), None, None)
+
+    async def anonymous(
+        self,
+        custom_claims: Optional[dict] = None,
+        tenant_id: Optional[str] = None,
+        refresh_duration: Optional[int] = None,
+    ) -> dict:
+        """
+        Generate a JWT for an anonymous user.
+
+        Args:
+        custom_claims dict: Custom claims to add to JWT
+        tenant_id (str): tenant id to set on DCT claim.
+        """
+
+        response = await self._http.post(
+            MgmtV1.anonymous_path,
+            body={
+                "customClaims": custom_claims,
+                "selectedTenant": tenant_id,
+                "refreshDuration": refresh_duration,
+            },
+            params=None,
+        )
+        jwt_response = await self._auth.prepare_jwt_response(response.json(), None, None)
+        del jwt_response["firstSeen"]
+        del jwt_response["user"]
+        return jwt_response

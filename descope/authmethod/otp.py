@@ -2,21 +2,21 @@ from __future__ import annotations
 
 from typing import Iterable
 
-from descope._auth_base import AuthBase
+from descope._authmethod_base import AuthMethodBase
 from descope.auth import Auth
+from descope.authmethod._otp_base import OTPBase
 from descope.common import (
     REFRESH_SESSION_COOKIE_NAME,
     DeliveryMethod,
     EndpointsV1,
     LoginOptions,
     SignUpOptions,
-    signup_options_to_dict,
     validate_refresh_token_provided,
 )
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
-class OTP(AuthBase):
+class OTP(OTPBase, AuthMethodBase):
     def sign_in(
         self,
         method: DeliveryMethod,
@@ -39,8 +39,7 @@ class OTP(AuthBase):
         Raise:
         AuthException: raised if sign-in operation fails
         """
-        if not login_id:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
+        self._validate_login_id(login_id)
 
         validate_refresh_token_provided(login_options, refresh_token)
 
@@ -105,8 +104,7 @@ class OTP(AuthBase):
         Raise:
         AuthException: raised if either the sign_up or sign_in operation fails
         """
-        if not login_id:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
+        self._validate_login_id(login_id)
 
         uri = OTP._compose_sign_up_or_in_url(method)
         login_options: LoginOptions | None = None
@@ -147,8 +145,7 @@ class OTP(AuthBase):
         Raise:
         AuthException: raised if the OTP code is not valid or if token verification failed
         """
-        if not login_id:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
+        self._validate_login_id(login_id)
 
         uri = OTP._compose_verify_code_url(method)
         body = OTP._compose_verify_code_body(login_id, code)
@@ -187,8 +184,7 @@ class OTP(AuthBase):
         AuthException: raised if OTP verification fails or if token verification fails
         """
 
-        if not login_id:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
+        self._validate_login_id(login_id)
 
         Auth.validate_email(email)
 
@@ -238,8 +234,7 @@ class OTP(AuthBase):
         AuthException: raised if OTP verification fails or if token verification fails
         """
 
-        if not login_id:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
+        self._validate_login_id(login_id)
 
         Auth.validate_phone(method, phone)
 
@@ -256,108 +251,3 @@ class OTP(AuthBase):
         )
         response = self._http.post(uri, body=body, pswd=refresh_token)
         return Auth.extract_masked_address(response.json(), method)
-
-    @staticmethod
-    def _compose_signup_url(method: DeliveryMethod) -> str:
-        return Auth.compose_url(EndpointsV1.sign_up_auth_otp_path, method)
-
-    @staticmethod
-    def _compose_signin_url(method: DeliveryMethod) -> str:
-        return Auth.compose_url(EndpointsV1.sign_in_auth_otp_path, method)
-
-    @staticmethod
-    def _compose_sign_up_or_in_url(method: DeliveryMethod) -> str:
-        return Auth.compose_url(EndpointsV1.sign_up_or_in_auth_otp_path, method)
-
-    @staticmethod
-    def _compose_verify_code_url(method: DeliveryMethod) -> str:
-        return Auth.compose_url(EndpointsV1.verify_code_auth_path, method)
-
-    @staticmethod
-    def _compose_update_phone_url(method: DeliveryMethod) -> str:
-        return Auth.compose_url(EndpointsV1.update_user_phone_otp_path, method)
-
-    @staticmethod
-    def _compose_signup_body(
-        method: DeliveryMethod,
-        login_id: str,
-        user: dict,
-        signup_options: SignUpOptions | None = None,
-    ) -> dict:
-        body: dict[str, str | bool | dict] = {"loginId": login_id}
-
-        if signup_options is not None:
-            body["loginOptions"] = signup_options_to_dict(signup_options)
-
-        if user is not None:
-            body["user"] = user
-            method_str, val = Auth.get_login_id_by_method(method, user)
-            body[method_str] = val
-        return body
-
-    @staticmethod
-    def _compose_signin_body(login_id: str, login_options: LoginOptions | None = None) -> dict:
-        return {
-            "loginId": login_id,
-            "loginOptions": login_options.__dict__ if login_options else {},
-        }
-
-    @staticmethod
-    def _compose_verify_code_body(login_id: str, code: str) -> dict:
-        return {"loginId": login_id, "code": code}
-
-    @staticmethod
-    def _compose_update_user_email_body(
-        login_id: str,
-        email: str,
-        add_to_login_ids: bool,
-        on_merge_use_existing: bool,
-        template_options: dict | None = None,
-        template_id: str | None = None,
-        provider_id: str | None = None,
-        mfa: bool = False,
-    ) -> dict:
-        body: dict[str, str | bool | dict] = {
-            "loginId": login_id,
-            "email": email,
-            "addToLoginIDs": add_to_login_ids,
-            "onMergeUseExisting": on_merge_use_existing,
-        }
-        if template_options is not None:
-            body["templateOptions"] = template_options
-        if template_id is not None:
-            body["templateId"] = template_id
-        if provider_id is not None:
-            body["providerId"] = provider_id
-        if mfa:
-            body["mfa"] = mfa
-
-        return body
-
-    @staticmethod
-    def _compose_update_user_phone_body(
-        login_id: str,
-        phone: str,
-        add_to_login_ids: bool,
-        on_merge_use_existing: bool,
-        template_options: dict | None = None,
-        template_id: str | None = None,
-        provider_id: str | None = None,
-        mfa: bool = False,
-    ) -> dict:
-        body: dict[str, str | bool | dict] = {
-            "loginId": login_id,
-            "phone": phone,
-            "addToLoginIDs": add_to_login_ids,
-            "onMergeUseExisting": on_merge_use_existing,
-        }
-        if template_options is not None:
-            body["templateOptions"] = template_options
-        if template_id is not None:
-            body["templateId"] = template_id
-        if provider_id is not None:
-            body["providerId"] = provider_id
-        if mfa:
-            body["mfa"] = mfa
-
-        return body

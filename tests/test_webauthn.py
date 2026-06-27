@@ -1,518 +1,325 @@
-import json
-import unittest
-from unittest import mock
-from unittest.mock import patch
+import pytest
 
 from descope import AuthException
-from descope.auth import Auth
 from descope.authmethod.webauthn import WebAuthn
-from descope.common import DEFAULT_TIMEOUT_SECONDS, EndpointsV1, LoginOptions
-from tests.testutils import SSLMatcher
+from descope.common import (
+    REFRESH_SESSION_COOKIE_NAME,
+    EndpointsV1,
+    LoginOptions,
+)
+from tests.conftest import PROJECT_ID, assert_http_called, make_response
+from tests.testutils import PUBLIC_KEY_DICT, VALID_REFRESH_TOKEN, VALID_SESSION_TOKEN
 
 from . import common
 
 
-class TestWebauthN(common.DescopeTest):
-    def setUp(self) -> None:
-        super().setUp()
-        self.dummy_project_id = "dummy"
-        self.public_key_dict = {
-            "alg": "ES384",
-            "crv": "P-384",
-            "kid": "P2CtzUhdqpIF2ys9gg7ms06UvtC4",
-            "kty": "EC",
-            "use": "sig",
-            "x": "pX1l7nT2turcK5_Cdzos8SKIhpLh1Wy9jmKAVyMFiOCURoj-WQX1J0OUQqMsQO0s",
-            "y": "B0_nWAv2pmG_PzoH3-bSYZZzLNKUA0RoE2SH7DaS0KV4rtfWZhYd0MEr0xfdGKx0",
+class TestWebAuthn:
+    def test_compose_sign_up_start_body(self):
+        assert WebAuthn._compose_sign_up_start_body("dummy@dummy.com", {"name": "dummy"}, "https://example.com") == {
+            "user": {"loginId": "dummy@dummy.com", "name": "dummy"},
+            "origin": "https://example.com",
         }
 
-    def test_compose_signup_body(self):
-        self.assertEqual(
-            WebAuthn._compose_sign_up_start_body("dummy@dummy.com", {"name": "dummy"}, "https://example.com"),
-            {
-                "user": {"loginId": "dummy@dummy.com", "name": "dummy"},
-                "origin": "https://example.com",
-            },
-        )
+    def test_compose_sign_in_start_body(self):
+        assert WebAuthn._compose_sign_in_start_body("dummy@dummy.com", "https://example.com") == {
+            "loginId": "dummy@dummy.com",
+            "origin": "https://example.com",
+            "loginOptions": {},
+        }
 
-    def test_compose_sign_up_in_finish_body(self):
-        self.assertEqual(
-            WebAuthn._compose_sign_up_in_finish_body("t01", "response01"),
-            {"transactionId": "t01", "response": "response01"},
-        )
+    def test_compose_sign_up_or_in_start_body(self):
+        assert WebAuthn._compose_sign_up_or_in_start_body("dummy@dummy.com", "https://example.com") == {
+            "loginId": "dummy@dummy.com",
+            "origin": "https://example.com",
+        }
 
-    def test_compose_signin_body(self):
-        self.assertEqual(
-            WebAuthn._compose_sign_in_start_body("dummy@dummy.com", "https://example.com"),
-            {
-                "loginId": "dummy@dummy.com",
-                "origin": "https://example.com",
-                "loginOptions": {},
-            },
-        )
-
-    def test_compose_signup_or_in_body(self):
-        self.assertEqual(
-            WebAuthn._compose_sign_up_or_in_start_body("dummy@dummy.com", "https://example.com"),
-            {
-                "loginId": "dummy@dummy.com",
-                "origin": "https://example.com",
-            },
-        )
+    def test_compose_finish_bodies(self):
+        assert WebAuthn._compose_sign_up_in_finish_body("t01", "resp01") == {
+            "transactionId": "t01",
+            "response": "resp01",
+        }
+        assert WebAuthn._compose_update_finish_body("t01", "resp01") == {
+            "transactionId": "t01",
+            "response": "resp01",
+        }
 
     def test_compose_update_start_body(self):
-        self.assertEqual(
-            WebAuthn._compose_update_start_body("dummy@dummy.com", "https://example.com"),
-            {"loginId": "dummy@dummy.com", "origin": "https://example.com"},
+        assert WebAuthn._compose_update_start_body("dummy@dummy.com", "https://example.com") == {
+            "loginId": "dummy@dummy.com",
+            "origin": "https://example.com",
+        }
+
+    async def test_sign_up_start(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
+
+        # Validation errors
+        with pytest.raises(AuthException):
+            await client.invoke(client.webauthn.sign_up_start("", "https://example.com"))
+        with pytest.raises(AuthException):
+            await client.invoke(client.webauthn.sign_up_start("id1", ""))
+
+        # HTTP error
+        with client.mock_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.webauthn.sign_up_start("id1", "https://example.com"))
+
+        # Success + payload
+        with client.mock_post(make_response({"transactionId": "txn1", "options": "{}"})) as mock_post:
+            result = await client.invoke(client.webauthn.sign_up_start("id1", "https://example.com"))
+        assert result is not None
+        assert_http_called(
+            mock_post,
+            client.mode,
+            f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_webauthn_start_path}",
+            headers={
+                **common.default_headers,
+                "Authorization": f"Bearer {PROJECT_ID}",
+                "x-descope-project-id": PROJECT_ID,
+            },
+            params=None,
+            json={"user": {"loginId": "id1"}, "origin": "https://example.com"},
+            follow_redirects=False,
         )
 
-    def test_compose_update_finish_body(self):
-        self.assertEqual(
-            WebAuthn._compose_update_finish_body("t01", "response01"),
-            {"transactionId": "t01", "response": "response01"},
+    async def test_sign_up_finish(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
+
+        # Validation errors
+        with pytest.raises(AuthException):
+            await client.invoke(client.webauthn.sign_up_finish("", "resp"))
+        with pytest.raises(AuthException):
+            await client.invoke(client.webauthn.sign_up_finish(None, "resp"))
+        with pytest.raises(AuthException):
+            await client.invoke(client.webauthn.sign_up_finish("t01", ""))
+        with pytest.raises(AuthException):
+            await client.invoke(client.webauthn.sign_up_finish("t01", None))
+
+        # HTTP error
+        with client.mock_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.webauthn.sign_up_finish("t01", "resp"))
+
+        # Success
+        success_resp = make_response(
+            {"sessionJwt": VALID_SESSION_TOKEN},
+            cookies={REFRESH_SESSION_COOKIE_NAME: VALID_REFRESH_TOKEN},
+        )
+        with client.mock_post(success_resp) as mock_post:
+            result = await client.invoke(client.webauthn.sign_up_finish("t01", "resp01"))
+        assert result is not None
+        assert_http_called(
+            mock_post,
+            client.mode,
+            f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_webauthn_finish_path}",
+            headers={
+                **common.default_headers,
+                "Authorization": f"Bearer {PROJECT_ID}",
+                "x-descope-project-id": PROJECT_ID,
+            },
+            params=None,
+            json={"transactionId": "t01", "response": "resp01"},
+            follow_redirects=False,
         )
 
-    def test_sign_up_start(self):
-        webauthn = WebAuthn(
-            Auth(
-                self.dummy_project_id,
-                self.public_key_dict,
-                http_client=self.make_http_client(),
-            )
+    async def test_sign_in_start(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
+
+        # Validation errors
+        with pytest.raises(AuthException):
+            await client.invoke(client.webauthn.sign_in_start("", "https://example.com"))
+        with pytest.raises(AuthException):
+            await client.invoke(client.webauthn.sign_in_start("id", ""))
+        with pytest.raises(AuthException):
+            await client.invoke(client.webauthn.sign_in_start("id", "https://example.com", LoginOptions(mfa=True)))
+
+        # HTTP error
+        with client.mock_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.webauthn.sign_in_start("id1", "https://example.com"))
+
+        # Success + payload
+        with client.mock_post(make_response({"transactionId": "txn1"})) as mock_post:
+            result = await client.invoke(client.webauthn.sign_in_start("id1", "https://example.com"))
+        assert result is not None
+        assert_http_called(
+            mock_post,
+            client.mode,
+            f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_webauthn_start_path}",
+            headers={
+                **common.default_headers,
+                "Authorization": f"Bearer {PROJECT_ID}",
+                "x-descope-project-id": PROJECT_ID,
+            },
+            params=None,
+            json={"loginId": "id1", "origin": "https://example.com", "loginOptions": {}},
+            follow_redirects=False,
         )
 
-        # Test failed flows
-        self.assertRaises(AuthException, webauthn.sign_up_start, "", "https://example.com")
-        self.assertRaises(AuthException, webauthn.sign_up_start, "id1", "")
+    async def test_sign_in_start_with_login_options(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
+        lo = LoginOptions(stepup=True, custom_claims={"k1": "v1"})
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(AuthException, webauthn.sign_up_start, "id1", "https://example.com")
-
-        # Test success flow
-        valid_response = json.loads(
-            """{"transactionId": "2COHI3LIixYhf6Q7EECYt20zyMi", "options": "{'publicKey':{'challenge':'5GOywA7BHL1QceQOfxHKDrasuN8SkbbgXmB5ImVZ+QU=','rp':{'name':'comp6','id':'localhost'},'user':{'name”:”dummy@dummy.com','displayName”:”dummy”,”id':'VTJDT0hJNWlWOHJaZ3VURkpKMzV3bjEydHRkTw=='},'pubKeyCredParams':[{'type':'public-key','alg':-7},{'type':'public-key','alg':-35},{'type':'public-key','alg':-36},{'type':'public-key','alg':-257},{'type':'public-key','alg':-258},{'type':'public-key','alg':-259},{'type':'public-key','alg':-37},{'type':'public-key','alg':-38},{'type':'public-key','alg':-39},{'type':'public-key','alg':-8}],'authenticatorSelection':{'userVerification':'preferred'},'timeout':60000,'attestation':'none'}}"}"""
-        )
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNotNone(webauthn.sign_up_start("id1", "https://example.com"))
-
-        with patch("httpx.post") as mock_post:
-            my_mock_response = mock.Mock()
-            my_mock_response.is_success = True
-            my_mock_response.json.return_value = valid_response
-            mock_post.return_value = my_mock_response
-            res = webauthn.sign_up_start("id1", "https://example.com")
-
-            expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_webauthn_start_path}"
-            mock_post.assert_called_with(
-                expected_uri,
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
-                params=None,
-                json={"user": {"loginId": "id1"}, "origin": "https://example.com"},
-                follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )
-            self.assertEqual(res, valid_response)
-
-    def test_sign_up_finish(self):
-        webauthn = WebAuthn(
-            Auth(
-                self.dummy_project_id,
-                self.public_key_dict,
-                http_client=self.make_http_client(),
-            )
+        with client.mock_post(make_response({"transactionId": "txn1"})) as mock_post:
+            await client.invoke(client.webauthn.sign_in_start("id1", "https://example.com", lo, "refresh"))
+        assert_http_called(
+            mock_post,
+            client.mode,
+            f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_webauthn_start_path}",
+            headers={
+                **common.default_headers,
+                "Authorization": f"Bearer {PROJECT_ID}:refresh",
+                "x-descope-project-id": PROJECT_ID,
+            },
+            params=None,
+            json={
+                "loginId": "id1",
+                "origin": "https://example.com",
+                "loginOptions": {"stepup": True, "customClaims": {"k1": "v1"}, "mfa": False},
+            },
+            follow_redirects=False,
         )
 
-        # Test failed flows
-        self.assertRaises(AuthException, webauthn.sign_up_finish, "", "response01")
-        self.assertRaises(AuthException, webauthn.sign_up_finish, None, "response01")
-        self.assertRaises(AuthException, webauthn.sign_up_finish, "t01", "")
-        self.assertRaises(AuthException, webauthn.sign_up_finish, "t01", None)
+    async def test_sign_in_finish(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(AuthException, webauthn.sign_up_finish, "t01", "response01")
+        # Validation errors
+        with pytest.raises(AuthException):
+            await client.invoke(client.webauthn.sign_in_finish("", "resp"))
+        with pytest.raises(AuthException):
+            await client.invoke(client.webauthn.sign_in_finish(None, "resp"))
+        with pytest.raises(AuthException):
+            await client.invoke(client.webauthn.sign_in_finish("t01", ""))
+        with pytest.raises(AuthException):
+            await client.invoke(client.webauthn.sign_in_finish("t01", None))
 
-        # Test success flow
-        with patch("httpx.post") as mock_post:
-            my_mock_response = mock.Mock()
-            my_mock_response.is_success = True
-            my_mock_response.cookies = {}
-            data = json.loads(
-                """{"refreshJwt": "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3R6VWhkcXBJRjJ5czlnZzdtczA2VXZ0QzQiLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0Mzc1OTYsImlhdCI6MTY1OTYzNzU5NiwiaXNzIjoiUDJDdHpVaGRxcElGMnlzOWdnN21zMDZVdnRDNCIsInN1YiI6IlUyQ3UwajBXUHczWU9pUElTSmI1Mkwwd1VWTWcifQ.WLnlHugvzZtrV9OzBB7SjpCLNRvKF3ImFpVyIN5orkrjO2iyAKg_Rb4XHk9sXGC1aW8puYzLbhE1Jv3kk2hDcKggfE8OaRNRm8byhGFZHnvPJwcP_Ya-aRmfAvCLcKOL",
-                 "user": {"loginIds": ["guyp@descope.com"], "name": "", "email": "guyp@descope.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false},
-                  "firstSeen": false,
-                  "cookieDomain": "test",
-                  "cookiePath": "/",
-                  "cookieMaxAge": 30,
-                  "cookieExpiration": 100
-                  }
-                  """
-            )
-            my_mock_response.json.return_value = data
-            mock_post.return_value = my_mock_response
-            expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_webauthn_finish_path}"
-            webauthn.sign_up_finish("t01", "response01")
-            mock_post.assert_called_with(
-                expected_uri,
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
-                params=None,
-                json={"transactionId": "t01", "response": "response01"},
-                follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )
-            self.assertIsNotNone(webauthn.sign_up_finish("t01", "response01"))
+        # HTTP error
+        with client.mock_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.webauthn.sign_in_finish("t01", "resp"))
 
-    def test_sign_in_start(self):
-        webauthn = WebAuthn(
-            Auth(
-                self.dummy_project_id,
-                self.public_key_dict,
-                http_client=self.make_http_client(),
-            )
+        # Success
+        success_resp = make_response(
+            {"sessionJwt": VALID_SESSION_TOKEN},
+            cookies={REFRESH_SESSION_COOKIE_NAME: VALID_REFRESH_TOKEN},
+        )
+        with client.mock_post(success_resp) as mock_post:
+            result = await client.invoke(client.webauthn.sign_in_finish("t01", "resp01"))
+        assert result is not None
+        assert_http_called(
+            mock_post,
+            client.mode,
+            f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_webauthn_finish_path}",
+            headers={
+                **common.default_headers,
+                "Authorization": f"Bearer {PROJECT_ID}",
+                "x-descope-project-id": PROJECT_ID,
+            },
+            params=None,
+            json={"transactionId": "t01", "response": "resp01"},
+            follow_redirects=False,
         )
 
-        # Test failed flows
-        self.assertRaises(AuthException, webauthn.sign_in_start, "", "https://example.com")
-        self.assertRaises(AuthException, webauthn.sign_in_start, "id", "")
+    async def test_sign_up_or_in_start(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                webauthn.sign_in_start,
-                "id1",
-                "https://example.com",
-            )
+        # Validation errors
+        with pytest.raises(AuthException):
+            await client.invoke(client.webauthn.sign_up_or_in_start("", "https://example.com"))
+        with pytest.raises(AuthException):
+            await client.invoke(client.webauthn.sign_up_or_in_start("id", ""))
 
-        # Test success flow
-        valid_response = json.loads(
-            """{"transactionId": "2COHI3LIixYhf6Q7EECYt20zyMi", "options": "{'publicKey':{'challenge':'5GOywA7BHL1QceQOfxHKDrasuN8SkbbgXmB5ImVZ+QU=','rp':{'name':'comp6','id':'localhost'},'user':{'name”:”dummy@dummy.com','displayName”:”dummy”,”id':'VTJDT0hJNWlWOHJaZ3VURkpKMzV3bjEydHRkTw=='},'pubKeyCredParams':[{'type':'public-key','alg':-7},{'type':'public-key','alg':-35},{'type':'public-key','alg':-36},{'type':'public-key','alg':-257},{'type':'public-key','alg':-258},{'type':'public-key','alg':-259},{'type':'public-key','alg':-37},{'type':'public-key','alg':-38},{'type':'public-key','alg':-39},{'type':'public-key','alg':-8}],'authenticatorSelection':{'userVerification':'preferred'},'timeout':60000,'attestation':'none'}}"}"""
-        )
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNotNone(webauthn.sign_in_start("dummy@dummy.com", "https://example.com"))
-            self.assertRaises(
-                AuthException,
-                webauthn.sign_in_start,
-                "id",
-                "origin",
-                LoginOptions(mfa=True),
-            )
+        # HTTP error
+        with client.mock_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.webauthn.sign_up_or_in_start("id1", "https://example.com"))
 
-        with patch("httpx.post") as mock_post:
-            my_mock_response = mock.Mock()
-            my_mock_response.is_success = True
-            my_mock_response.json.return_value = valid_response
-            mock_post.return_value = my_mock_response
-            res = webauthn.sign_in_start("id1", "https://example.com")
-            expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_webauthn_start_path}"
-            mock_post.assert_called_with(
-                expected_uri,
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
-                params=None,
-                json={
-                    "loginId": "id1",
-                    "origin": "https://example.com",
-                    "loginOptions": {},
-                },
-                follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )
-            self.assertEqual(res, valid_response)
-
-    def test_sign_in_start_with_login_options(self):
-        webauthn = WebAuthn(
-            Auth(
-                self.dummy_project_id,
-                self.public_key_dict,
-                http_client=self.make_http_client(),
-            )
+        # Success + payload
+        with client.mock_post(make_response({"transactionId": "txn1", "create": True})) as mock_post:
+            result = await client.invoke(client.webauthn.sign_up_or_in_start("id1", "https://example.com"))
+        assert result is not None
+        assert_http_called(
+            mock_post,
+            client.mode,
+            f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_or_in_auth_webauthn_start_path}",
+            headers={
+                **common.default_headers,
+                "Authorization": f"Bearer {PROJECT_ID}",
+                "x-descope-project-id": PROJECT_ID,
+            },
+            params=None,
+            json={"loginId": "id1", "origin": "https://example.com"},
+            follow_redirects=False,
         )
 
-        # Test failed flows
-        self.assertRaises(AuthException, webauthn.sign_in_start, "", "https://example.com")
-        self.assertRaises(AuthException, webauthn.sign_in_start, "id", "")
+    async def test_update_start(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
+        refresh_token = VALID_REFRESH_TOKEN
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                webauthn.sign_in_start,
-                "id1",
-                "https://example.com",
-            )
+        # Validation errors
+        with pytest.raises(AuthException):
+            await client.invoke(client.webauthn.update_start("", refresh_token, "https://example.com"))
+        with pytest.raises(AuthException):
+            await client.invoke(client.webauthn.update_start(None, refresh_token, "https://example.com"))
+        with pytest.raises(AuthException):
+            await client.invoke(client.webauthn.update_start("id", "", "https://example.com"))
+        with pytest.raises(AuthException):
+            await client.invoke(client.webauthn.update_start("id", None, "https://example.com"))
 
-        # Test success flow
-        valid_response = json.loads(
-            """{"transactionId": "2COHI3LIixYhf6Q7EECYt20zyMi", "options": "{'publicKey':{'challenge':'5GOywA7BHL1QceQOfxHKDrasuN8SkbbgXmB5ImVZ+QU=','rp':{'name':'comp6','id':'localhost'},'user':{'name”:”dummy@dummy.com','displayName”:”dummy”,”id':'VTJDT0hJNWlWOHJaZ3VURkpKMzV3bjEydHRkTw=='},'pubKeyCredParams':[{'type':'public-key','alg':-7},{'type':'public-key','alg':-35},{'type':'public-key','alg':-36},{'type':'public-key','alg':-257},{'type':'public-key','alg':-258},{'type':'public-key','alg':-259},{'type':'public-key','alg':-37},{'type':'public-key','alg':-38},{'type':'public-key','alg':-39},{'type':'public-key','alg':-8}],'authenticatorSelection':{'userVerification':'preferred'},'timeout':60000,'attestation':'none'}}"}"""
-        )
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNotNone(webauthn.sign_in_start("dummy@dummy.com", "https://example.com"))
+        # HTTP error
+        with client.mock_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.webauthn.update_start("id1", refresh_token, "https://example.com"))
 
-        with patch("httpx.post") as mock_post:
-            my_mock_response = mock.Mock()
-            my_mock_response.is_success = True
-            my_mock_response.json.return_value = valid_response
-            mock_post.return_value = my_mock_response
-            lo = LoginOptions(stepup=True, custom_claims={"k1": "v1"})
-            res = webauthn.sign_in_start("id1", "https://example.com", lo, "refresh")
-            expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_webauthn_start_path}"
-            mock_post.assert_called_with(
-                expected_uri,
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:refresh",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
-                params=None,
-                json={
-                    "loginId": "id1",
-                    "origin": "https://example.com",
-                    "loginOptions": {
-                        "stepup": True,
-                        "customClaims": {"k1": "v1"},
-                        "mfa": False,
-                    },
-                },
-                follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )
-            self.assertEqual(res, valid_response)
-
-    def test_sign_in_finish(self):
-        webauthn = WebAuthn(
-            Auth(
-                self.dummy_project_id,
-                self.public_key_dict,
-                http_client=self.make_http_client(),
-            )
+        # Success + payload
+        with client.mock_post(make_response({"transactionId": "txn1"})) as mock_post:
+            result = await client.invoke(client.webauthn.update_start("id1", refresh_token, "https://example.com"))
+        assert result is not None
+        assert_http_called(
+            mock_post,
+            client.mode,
+            f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_auth_webauthn_start_path}",
+            headers={
+                **common.default_headers,
+                "Authorization": f"Bearer {PROJECT_ID}:{refresh_token}",
+                "x-descope-project-id": PROJECT_ID,
+            },
+            params=None,
+            json={"loginId": "id1", "origin": "https://example.com"},
+            follow_redirects=False,
         )
 
-        # Test failed flows
-        self.assertRaises(AuthException, webauthn.sign_in_finish, "", "response01")
-        self.assertRaises(AuthException, webauthn.sign_in_finish, None, "response01")
-        self.assertRaises(AuthException, webauthn.sign_in_finish, "t01", "")
-        self.assertRaises(AuthException, webauthn.sign_in_finish, "t01", None)
+    async def test_update_finish(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
 
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(AuthException, webauthn.sign_in_finish, "t01", "response01")
+        # Validation errors
+        with pytest.raises(AuthException):
+            await client.invoke(client.webauthn.update_finish("", "resp"))
+        with pytest.raises(AuthException):
+            await client.invoke(client.webauthn.update_finish(None, "resp"))
+        with pytest.raises(AuthException):
+            await client.invoke(client.webauthn.update_finish("t01", ""))
+        with pytest.raises(AuthException):
+            await client.invoke(client.webauthn.update_finish("t01", None))
 
-        # Test success flow
-        with patch("httpx.post") as mock_post:
-            my_mock_response = mock.Mock()
-            my_mock_response.is_success = True
-            my_mock_response.cookies = {}
+        # HTTP error
+        with client.mock_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.webauthn.update_finish("t01", "resp"))
 
-            data = json.loads(
-                """{"refreshJwt": "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3R6VWhkcXBJRjJ5czlnZzdtczA2VXZ0QzQiLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0Mzc1OTYsImlhdCI6MTY1OTYzNzU5NiwiaXNzIjoiUDJDdHpVaGRxcElGMnlzOWdnN21zMDZVdnRDNCIsInN1YiI6IlUyQ3UwajBXUHczWU9pUElTSmI1Mkwwd1VWTWcifQ.WLnlHugvzZtrV9OzBB7SjpCLNRvKF3ImFpVyIN5orkrjO2iyAKg_Rb4XHk9sXGC1aW8puYzLbhE1Jv3kk2hDcKggfE8OaRNRm8byhGFZHnvPJwcP_Ya-aRmfAvCLcKOL", "user": {"loginIds": ["guyp@descope.com"], "name": "", "email": "guyp@descope.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false}, "firstSeen": false}"""
-            )
-            my_mock_response.json.return_value = data
-            mock_post.return_value = my_mock_response
-            expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_webauthn_finish_path}"
-            webauthn.sign_in_finish("t01", "response01")
-
-            mock_post.assert_called_with(
-                expected_uri,
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
-                params=None,
-                json={"transactionId": "t01", "response": "response01"},
-                follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )
-            self.assertIsNotNone(webauthn.sign_up_finish("t01", "response01"))
-
-    def test_sign_up_or_in_start(self):
-        webauthn = WebAuthn(
-            Auth(
-                self.dummy_project_id,
-                self.public_key_dict,
-                http_client=self.make_http_client(),
-            )
+        # Success (returns None)
+        with client.mock_post(make_response({})) as mock_post:
+            result = await client.invoke(client.webauthn.update_finish("t01", "resp01"))
+        assert result is None
+        assert_http_called(
+            mock_post,
+            client.mode,
+            f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_auth_webauthn_finish_path}",
+            headers={
+                **common.default_headers,
+                "Authorization": f"Bearer {PROJECT_ID}",
+                "x-descope-project-id": PROJECT_ID,
+            },
+            params=None,
+            json={"transactionId": "t01", "response": "resp01"},
+            follow_redirects=False,
         )
-
-        # Test failed flows
-        self.assertRaises(AuthException, webauthn.sign_up_or_in_start, "", "https://example.com")
-        self.assertRaises(AuthException, webauthn.sign_up_or_in_start, "id", "")
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                webauthn.sign_up_or_in_start,
-                "id1",
-                "https://example.com",
-            )
-
-        # Test success flow
-        valid_response = json.loads(
-            """{"create": true, "transactionId": "2COHI3LIixYhf6Q7EECYt20zyMi", "options": "{'publicKey':{'challenge':'5GOywA7BHL1QceQOfxHKDrasuN8SkbbgXmB5ImVZ+QU=','rp':{'name':'comp6','id':'localhost'},'user':{'name”:”dummy@dummy.com','displayName”:”dummy”,”id':'VTJDT0hJNWlWOHJaZ3VURkpKMzV3bjEydHRkTw=='},'pubKeyCredParams':[{'type':'public-key','alg':-7},{'type':'public-key','alg':-35},{'type':'public-key','alg':-36},{'type':'public-key','alg':-257},{'type':'public-key','alg':-258},{'type':'public-key','alg':-259},{'type':'public-key','alg':-37},{'type':'public-key','alg':-38},{'type':'public-key','alg':-39},{'type':'public-key','alg':-8}],'authenticatorSelection':{'userVerification':'preferred'},'timeout':60000,'attestation':'none'}}"}"""
-        )
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNotNone(webauthn.sign_up_or_in_start("dummy@dummy.com", "https://example.com"))
-
-        with patch("httpx.post") as mock_post:
-            my_mock_response = mock.Mock()
-            my_mock_response.is_success = True
-            my_mock_response.json.return_value = valid_response
-            mock_post.return_value = my_mock_response
-            res = webauthn.sign_up_or_in_start("id1", "https://example.com")
-            expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_or_in_auth_webauthn_start_path}"
-            mock_post.assert_called_with(
-                expected_uri,
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
-                params=None,
-                json={
-                    "loginId": "id1",
-                    "origin": "https://example.com",
-                },
-                follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )
-            self.assertEqual(res, valid_response)
-
-    def test_update_start(self):
-        valid_jwt_token = "eyJhbGciOiJFUzM4NCIsImtpZCI6IjJCdDVXTGNjTFVleTFEcDd1dHB0WmIzRng5SyIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkVGVuYW50cyI6eyIiOm51bGx9LCJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxNjYwNjc5MjA4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEU1IiLCJjb29raWVQYXRoIjoiLyIsImV4cCI6MjA5MDA4NzIwOCwiaWF0IjoxNjU4MDg3MjA4LCJpc3MiOiIyQnQ1V0xjY0xVZXkxRHA3dXRwdFpiM0Z4OUsiLCJzdWIiOiIyQzU1dnl4dzBzUkw2RmRNNjhxUnNDRGRST1YifQ.cWP5up4R5xeIl2qoG2NtfLH3Q5nRJVKdz-FDoAXctOQW9g3ceZQi6rZQ-TPBaXMKw68bijN3bLJTqxWW5WHzqRUeopfuzTcMYmC0wP2XGJkrdF6A8D5QW6acSGqglFgu"
-        webauthn = WebAuthn(
-            Auth(
-                self.dummy_project_id,
-                self.public_key_dict,
-                http_client=self.make_http_client(),
-            )
-        )
-
-        # Test failed flows
-        self.assertRaises(AuthException, webauthn.update_start, "", "", "https://example.com")
-        self.assertRaises(AuthException, webauthn.update_start, None, "", "https://example.com")
-        self.assertRaises(
-            AuthException,
-            webauthn.update_start,
-            "dummy@dummy.com",
-            "",
-            "https://example.com",
-        )
-        self.assertRaises(
-            AuthException,
-            webauthn.update_start,
-            "dummy@dummy.com",
-            None,
-            "https://example.com",
-        )
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(
-                AuthException,
-                webauthn.update_start,
-                "dummy@dummy.com",
-                valid_jwt_token,
-                "https://example.com",
-            )
-
-        # Test success flow
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = True
-            self.assertIsNotNone(webauthn.update_start("dummy@dummy.com", valid_jwt_token, "https://example.com"))
-
-        with patch("httpx.post") as mock_post:
-            valid_response = json.loads("{}")
-            my_mock_response = mock.Mock()
-            my_mock_response.is_success = True
-            my_mock_response.json.return_value = valid_response
-            mock_post.return_value = my_mock_response
-            res = webauthn.update_start("dummy@dummy.com", "asdasd", "https://example.com")
-            expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_auth_webauthn_start_path}"
-            mock_post.assert_called_with(
-                expected_uri,
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}:asdasd",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
-                params=None,
-                json={"loginId": "dummy@dummy.com", "origin": "https://example.com"},
-                follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )
-            self.assertEqual(res, valid_response)
-
-    def test_update_finish(self):
-        webauthn = WebAuthn(
-            Auth(
-                self.dummy_project_id,
-                self.public_key_dict,
-                http_client=self.make_http_client(),
-            )
-        )
-
-        # Test failed flows
-        self.assertRaises(AuthException, webauthn.update_finish, "", "response01")
-        self.assertRaises(AuthException, webauthn.update_finish, None, "response01")
-        self.assertRaises(AuthException, webauthn.update_finish, "t01", "")
-        self.assertRaises(AuthException, webauthn.update_finish, "t01", None)
-
-        with patch("httpx.post") as mock_post:
-            mock_post.return_value.is_success = False
-            self.assertRaises(AuthException, webauthn.update_finish, "t01", "response01")
-
-        # Test success flow
-        with patch("httpx.post") as mock_post:
-            my_mock_response = mock.Mock()
-            my_mock_response.is_success = True
-            my_mock_response.cookies = {}
-            data = json.loads(
-                """{"refreshJwt": "eyJhbGciOiJFUzM4NCIsImtpZCI6IlAyQ3R6VWhkcXBJRjJ5czlnZzdtczA2VXZ0QzQiLCJ0eXAiOiJKV1QifQ.eyJkcm4iOiJEU1IiLCJleHAiOjIyNjQ0Mzc1OTYsImlhdCI6MTY1OTYzNzU5NiwiaXNzIjoiUDJDdHpVaGRxcElGMnlzOWdnN21zMDZVdnRDNCIsInN1YiI6IlUyQ3UwajBXUHczWU9pUElTSmI1Mkwwd1VWTWcifQ.WLnlHugvzZtrV9OzBB7SjpCLNRvKF3ImFpVyIN5orkrjO2iyAKg_Rb4XHk9sXGC1aW8puYzLbhE1Jv3kk2hDcKggfE8OaRNRm8byhGFZHnvPJwcP_Ya-aRmfAvCLcKOL", "user": {"loginIds": ["guyp@descope.com"], "name": "", "email": "guyp@descope.com", "phone": "", "verifiedEmail": true, "verifiedPhone": false}, "firstSeen": false}"""
-            )
-            my_mock_response.json.return_value = data
-            mock_post.return_value = my_mock_response
-            expected_uri = f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_auth_webauthn_finish_path}"
-            webauthn.update_finish("t01", "response01")
-            mock_post.assert_called_with(
-                expected_uri,
-                headers={
-                    **common.default_headers,
-                    "Authorization": f"Bearer {self.dummy_project_id}",
-                    "x-descope-project-id": self.dummy_project_id,
-                },
-                params=None,
-                json={"transactionId": "t01", "response": "response01"},
-                follow_redirects=False,
-                verify=SSLMatcher(),
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-            )
-            self.assertIsNotNone(webauthn.sign_up_finish("t01", "response01"))
-
-
-if __name__ == "__main__":
-    unittest.main()

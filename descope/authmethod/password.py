@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from typing import Iterable
 
-from descope._auth_base import AuthBase
+from descope._authmethod_base import AuthMethodBase
+from descope.authmethod._password_base import PasswordBase
 from descope.common import REFRESH_SESSION_COOKIE_NAME, EndpointsV1
-from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
-class Password(AuthBase):
+class Password(PasswordBase, AuthMethodBase):
     def sign_up(
         self,
         login_id: str,
@@ -34,11 +34,8 @@ class Password(AuthBase):
         AuthException: raised if sign-up operation fails
         """
 
-        if not login_id:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "login_id cannot be empty")
-
-        if not password:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "password cannot be empty")
+        self._validate_login_id(login_id)
+        self._validate_password(password)
 
         uri = EndpointsV1.sign_up_password_path
         body = Password._compose_signup_body(login_id, password, user)
@@ -72,11 +69,8 @@ class Password(AuthBase):
         AuthException: raised if sign in operation fails
         """
 
-        if not login_id:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "login_id cannot be empty")
-
-        if not password:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Password cannot be empty")
+        self._validate_login_id(login_id)
+        self._validate_sign_in_password(password)
 
         uri = EndpointsV1.sign_in_password_path
         response = self._http.post(uri, body={"loginId": login_id, "password": password})
@@ -114,8 +108,7 @@ class Password(AuthBase):
         AuthException: raised if send reset operation fails
         """
 
-        if not login_id:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "login_id cannot be empty")
+        self._validate_login_id(login_id)
 
         uri = EndpointsV1.send_reset_password_path
         body: dict[str, str | bool | dict | None] = {
@@ -142,14 +135,9 @@ class Password(AuthBase):
         AuthException: raised if refresh token is invalid or update operation fails
         """
 
-        if not login_id:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "login_id cannot be empty")
-
-        if not new_password:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "new_password cannot be empty")
-
-        if not refresh_token:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Refresh token cannot be empty")
+        self._validate_login_id(login_id)
+        self._validate_new_password(new_password)
+        self._validate_refresh_token(refresh_token)
 
         uri = EndpointsV1.update_password_path
         self._http.post(
@@ -184,14 +172,9 @@ class Password(AuthBase):
         AuthException: raised if replace operation fails
         """
 
-        if not login_id:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "login_id cannot be empty")
-
-        if not old_password:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "old_password cannot be empty")
-
-        if not new_password:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "new_password cannot be empty")
+        self._validate_login_id(login_id)
+        self._validate_old_password(old_password)
+        self._validate_new_password(new_password)
 
         uri = EndpointsV1.replace_password_path
         response = self._http.post(
@@ -229,10 +212,3 @@ class Password(AuthBase):
 
         response = self._http.get(uri=EndpointsV1.password_policy_path)
         return response.json()
-
-    @staticmethod
-    def _compose_signup_body(login_id: str, password: str, user: dict | None) -> dict:
-        body: dict[str, str | bool | dict] = {"loginId": login_id, "password": password}
-        if user is not None:
-            body["user"] = user
-        return body
