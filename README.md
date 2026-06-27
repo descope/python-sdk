@@ -2,22 +2,43 @@
 
 [Full report](https://htmlpreview.github.io/?https://github.com/descope/python-sdk/blob/python-coverage-comment-action-data/htmlcov/index.html)
 
-| Name                                |    Stmts |     Miss |   Cover |   Missing |
-|------------------------------------ | -------: | -------: | ------: | --------: |
-| descope/auth.py                     |      261 |        6 |     98% |294, 324-326, 364, 479, 512 |
-| descope/authmethod/enchantedlink.py |       92 |        2 |     98% |  190, 192 |
-| descope/authmethod/magiclink.py     |      103 |        4 |     96% |227, 229, 252, 254 |
-| descope/authmethod/otp.py           |      114 |        4 |     96% |329, 331, 357, 359 |
-| descope/common.py                   |      116 |        1 |     99% |       183 |
-| descope/descope\_client.py          |      210 |        8 |     96% |62, 141-143, 157, 188, 264, 355 |
-| descope/jwt\_common.py              |       51 |        1 |     98% |        96 |
-| descope/management/audit.py         |       44 |       11 |     75% |74, 76, 78, 80, 82, 84, 86, 88, 90, 92, 94 |
-| descope/management/common.py        |      380 |        1 |     99% |        86 |
-| descope/management/role.py          |       45 |        1 |     98% |       313 |
-| descope/management/user.py          |      381 |       15 |     96% |68-73, 793, 1144, 1146, 1148, 1893, 1948, 1993, 1995, 1997 |
-|                           **TOTAL** | **3214** |   **54** | **98%** |           |
+| Name                                                |    Stmts |     Miss |   Cover |   Missing |
+|---------------------------------------------------- | -------: | -------: | ------: | --------: |
+| descope/\_auth\_base.py                             |      185 |        1 |     99% |        98 |
+| descope/\_authmethod\_base.py                       |       13 |        1 |     92% |        15 |
+| descope/\_client\_base.py                           |       89 |        3 |     97% |49, 140, 190 |
+| descope/\_http\_base.py                             |       11 |        1 |     91% |         8 |
+| descope/auth.py                                     |       90 |        5 |     94% |96-98, 102, 141, 174 |
+| descope/auth\_async.py                              |      127 |        1 |     99% |       169 |
+| descope/authmethod/\_enchantedlink\_base.py         |       51 |        4 |     92% |69, 98, 100, 102 |
+| descope/authmethod/\_magiclink\_base.py             |       61 |        7 |     89% |74, 103, 105, 107, 127, 129, 131 |
+| descope/authmethod/\_otp\_base.py                   |       64 |        7 |     89% |60, 97, 99, 101, 124, 126, 128 |
+| descope/authmethod/enchantedlink.py                 |       48 |        2 |     96% |    42, 59 |
+| descope/authmethod/enchantedlink\_async.py          |       47 |        2 |     96% |    46, 64 |
+| descope/authmethod/magiclink.py                     |       53 |        2 |     96% |    46, 69 |
+| descope/authmethod/magiclink\_async.py              |       51 |        2 |     96% |    50, 74 |
+| descope/authmethod/otp.py                           |       55 |        1 |     98% |       112 |
+| descope/authmethod/otp\_async.py                    |       53 |        1 |     98% |        74 |
+| descope/authmethod/password.py                      |       49 |        1 |     98% |       119 |
+| descope/authmethod/password\_async.py               |       43 |        1 |     98% |        62 |
+| descope/descope\_client.py                          |      126 |        3 |     98% |   124-126 |
+| descope/descope\_client\_async.py                   |      154 |        1 |     99% |       203 |
+| descope/jwt\_common.py                              |       51 |        4 |     92% | 27-29, 96 |
+| descope/management/\_outbound\_application\_base.py |       58 |        4 |     93% |92, 96, 98, 100 |
+| descope/management/\_sso\_settings\_base.py         |       57 |        1 |     98% |         7 |
+| descope/management/\_user\_base.py                  |      145 |       11 |     92% |65-70, 123, 178, 223, 225, 227 |
+| descope/management/audit.py                         |       42 |       11 |     74% |75, 77, 79, 81, 83, 85, 87, 89, 91, 93, 95 |
+| descope/management/audit\_async.py                  |       42 |       11 |     74% |77, 79, 81, 83, 85, 87, 89, 91, 93, 95, 97 |
+| descope/management/common.py                        |      387 |        1 |     99% |        86 |
+| descope/management/outbound\_application.py         |      117 |        1 |     99% |       613 |
+| descope/management/outbound\_application\_async.py  |      119 |        1 |     99% |       613 |
+| descope/management/role.py                          |       45 |        1 |     98% |       313 |
+| descope/management/role\_async.py                   |       45 |        1 |     98% |       315 |
+| descope/management/user.py                          |      242 |        4 |     98% |728, 1075, 1077, 1079 |
+| descope/management/user\_async.py                   |      243 |        4 |     98% |732, 1079, 1081, 1083 |
+|                                           **TOTAL** | **5170** |  **101** | **98%** |           |
 
-29 files skipped due to complete coverage.
+59 files skipped due to complete coverage.
 
 
 ## Setup coverage badge
