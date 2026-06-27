@@ -1644,6 +1644,48 @@ latest_tenant_token = descope_client.mgmt.outbound_application.fetch_tenant_toke
     "tenant-id",
     {"forceRefresh": True}  # Optional
 )
+
+# List the IDs of the outbound apps a user currently holds a valid token for.
+# Use this for connection-status views instead of calling fetch_token once per app.
+connected = descope_client.mgmt.outbound_application.list_apps_with_user_token(
+    "user-id",
+    tenant_id="tenant-id",  # Optional
+)
+# connected => {"appIds": ["app-1", "app-2"]}
+
+# Store a static API key for a user / tenant on an apikey-type outbound app
+descope_client.mgmt.outbound_application.upload_user_api_key(
+    "my-app-id",
+    "user-id",
+    "the-users-api-key",
+    tenant_id="tenant-id",  # Optional
+)
+descope_client.mgmt.outbound_application.upload_tenant_api_key(
+    "my-app-id",
+    "tenant-id",
+    "the-tenants-api-key",
+)
+
+# Upload (migrate) an existing OAuth token for a user / tenant on an oauth-type outbound app,
+# without requiring the user to re-run the OAuth flow.
+descope_client.mgmt.outbound_application.upload_user_token(
+    "my-app-id",
+    "user-id",
+    refresh_token="the-refresh-token",
+    scopes=["read", "write"],
+)
+descope_client.mgmt.outbound_application.upload_tenant_token(
+    "my-app-id",
+    "tenant-id",
+    access_token="the-access-token",
+)
+
+# Batch upload OAuth tokens (all-or-nothing): inspect "failures" to see rejected items
+batch_resp = descope_client.mgmt.outbound_application.batch_upload_user_tokens([
+    {"appId": "my-app-id", "userId": "user-1", "accessToken": "token-1"},
+    {"appId": "my-app-id", "userId": "user-2", "accessToken": "token-2"},
+])
+# batch_resp => {"failures": [{"appId": ..., "userId": ..., "errorCode": ..., "reason": ...}, ...]}
 ```
 
 Fetch outbound application tokens using an inbound application token that includes the "outbound.token.fetch" scope (no management key required)

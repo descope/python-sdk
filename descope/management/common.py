@@ -120,6 +120,13 @@ class MgmtV1:
     outbound_application_fetch_tenant_token_path = "/v1/mgmt/outbound/app/tenant/token/latest"
     outbound_application_delete_user_tokens_path = "/v1/mgmt/outbound/user/tokens"
     outbound_application_delete_token_path = "/v1/mgmt/outbound/token"
+    outbound_application_list_apps_with_user_token_path = "/v1/mgmt/outbound/apps-with-user-token"
+    outbound_application_upload_user_api_key_path = "/v1/mgmt/outbound/app/user/apikey/upload"
+    outbound_application_upload_tenant_api_key_path = "/v1/mgmt/outbound/app/tenant/apikey/upload"
+    outbound_application_upload_user_token_path = "/v1/mgmt/outbound/app/user/oauthtoken/upload"
+    outbound_application_upload_tenant_token_path = "/v1/mgmt/outbound/app/tenant/oauthtoken/upload"
+    outbound_application_batch_upload_user_tokens_path = "/v1/mgmt/outbound/app/user/oauthtoken/batch/upload"
+    outbound_application_batch_upload_tenant_tokens_path = "/v1/mgmt/outbound/app/tenant/oauthtoken/batch/upload"
 
     # user
     user_create_path = "/v1/mgmt/user/create"

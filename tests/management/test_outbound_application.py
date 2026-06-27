@@ -601,6 +601,188 @@ class TestOutboundApplication:
             with pytest.raises(AuthException):
                 await client.invoke(client.mgmt.outbound_application.delete_token("token123"))
 
+    async def test_list_apps_with_user_token_success(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_get(make_response({"appIds": ["app1", "app2"]})) as mock_get:
+            response = await client.invoke(
+                client.mgmt.outbound_application.list_apps_with_user_token("user456", tenant_id="tenant789")
+            )
+            assert response == {"appIds": ["app1", "app2"]}
+            assert_http_called(
+                mock_get,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.outbound_application_list_apps_with_user_token_path}",
+                headers=MGMT_HEADERS,
+                params={"userId": "user456", "tenantId": "tenant789"},
+                follow_redirects=True,
+            )
+
+    async def test_list_apps_with_user_token_no_tenant(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_get(make_response({"appIds": ["app1"]})) as mock_get:
+            await client.invoke(client.mgmt.outbound_application.list_apps_with_user_token("user456"))
+            assert_http_called(
+                mock_get,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.outbound_application_list_apps_with_user_token_path}",
+                headers=MGMT_HEADERS,
+                params={"userId": "user456"},
+                follow_redirects=True,
+            )
+
+    async def test_list_apps_with_user_token_failure(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_get(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.outbound_application.list_apps_with_user_token("user456"))
+
+    async def test_upload_user_api_key_success(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            await client.invoke(
+                client.mgmt.outbound_application.upload_user_api_key(
+                    "app123", "user456", "secret-key", tenant_id="tenant789"
+                )
+            )
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.outbound_application_upload_user_api_key_path}",
+                headers=MGMT_HEADERS,
+                params=None,
+                json={
+                    "appId": "app123",
+                    "userId": "user456",
+                    "apiKey": "secret-key",
+                    "tenantId": "tenant789",
+                },
+                follow_redirects=False,
+            )
+
+    async def test_upload_user_api_key_failure(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.outbound_application.upload_user_api_key("app123", "user456", "secret-key")
+                )
+
+    async def test_upload_tenant_api_key_success(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            await client.invoke(
+                client.mgmt.outbound_application.upload_tenant_api_key("app123", "tenant789", "secret-key")
+            )
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.outbound_application_upload_tenant_api_key_path}",
+                headers=MGMT_HEADERS,
+                params=None,
+                json={"appId": "app123", "tenantId": "tenant789", "apiKey": "secret-key"},
+                follow_redirects=False,
+            )
+
+    async def test_upload_user_token_success(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            await client.invoke(
+                client.mgmt.outbound_application.upload_user_token(
+                    "app123",
+                    "user456",
+                    refresh_token="refresh",
+                    scopes=["read"],
+                    verify_refresh=True,
+                )
+            )
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.outbound_application_upload_user_token_path}",
+                headers=MGMT_HEADERS,
+                params=None,
+                json={
+                    "appId": "app123",
+                    "userId": "user456",
+                    "refreshToken": "refresh",
+                    "scopes": ["read"],
+                    "verifyRefresh": True,
+                },
+                follow_redirects=False,
+            )
+
+    async def test_upload_tenant_token_success(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            await client.invoke(
+                client.mgmt.outbound_application.upload_tenant_token(
+                    "app123",
+                    "tenant789",
+                    access_token="access",
+                    access_token_expiry=3600,
+                )
+            )
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.outbound_application_upload_tenant_token_path}",
+                headers=MGMT_HEADERS,
+                params=None,
+                json={
+                    "appId": "app123",
+                    "tenantId": "tenant789",
+                    "accessToken": "access",
+                    "accessTokenExpiry": 3600,
+                },
+                follow_redirects=False,
+            )
+
+    async def test_batch_upload_user_tokens_success(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        tokens = [
+            {"appId": "app123", "userId": "user1", "accessToken": "a1"},
+            {"appId": "app123", "userId": "user2", "accessToken": "a2"},
+        ]
+        failures = {"failures": [{"appId": "app123", "userId": "user2", "errorCode": "E152110", "reason": "bad token"}]}
+        with client.mock_mgmt_post(make_response(failures)) as mock_post:
+            response = await client.invoke(client.mgmt.outbound_application.batch_upload_user_tokens(tokens))
+            assert response == failures
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.outbound_application_batch_upload_user_tokens_path}",
+                headers=MGMT_HEADERS,
+                params=None,
+                json={"tokens": tokens},
+                follow_redirects=False,
+            )
+
+    async def test_batch_upload_tenant_tokens_success(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        tokens = [{"appId": "app123", "tenantId": "tenant1", "accessToken": "a1"}]
+        with client.mock_mgmt_post(make_response({"failures": []})) as mock_post:
+            response = await client.invoke(client.mgmt.outbound_application.batch_upload_tenant_tokens(tokens))
+            assert response == {"failures": []}
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.outbound_application_batch_upload_tenant_tokens_path}",
+                headers=MGMT_HEADERS,
+                params=None,
+                json={"tokens": tokens},
+                follow_redirects=False,
+            )
+
     def test_url_param_to_dict(self):
         param = URLParam("test_name", "test_value")
         param_dict = param.to_dict()

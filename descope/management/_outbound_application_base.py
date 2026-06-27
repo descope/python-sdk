@@ -67,3 +67,37 @@ class OutboundApplicationBase:
         if prompt is not None:
             body["prompt"] = [p.value for p in prompt]
         return body
+
+    @staticmethod
+    def _compose_oauth_upload_body(
+        base: dict,
+        refresh_token: Optional[str] = None,
+        access_token: Optional[str] = None,
+        access_token_expiry: Optional[int] = None,
+        access_token_type: Optional[str] = None,
+        scopes: Optional[List[str]] = None,
+        external_identifier: Optional[str] = None,
+        id_token: Optional[str] = None,
+        granted_by: Optional[str] = None,
+        verify_refresh: Optional[bool] = None,
+    ) -> dict:
+        body = dict(base)
+        if refresh_token is not None:
+            body["refreshToken"] = refresh_token
+        if access_token is not None:
+            body["accessToken"] = access_token
+        if access_token_expiry is not None:
+            body["accessTokenExpiry"] = access_token_expiry
+        if access_token_type is not None:
+            body["accessTokenType"] = access_token_type
+        if scopes is not None:
+            body["scopes"] = scopes
+        if external_identifier is not None:
+            body["externalIdentifier"] = external_identifier
+        if id_token is not None:
+            body["idToken"] = id_token
+        if granted_by is not None:
+            body["grantedBy"] = granted_by
+        if verify_refresh is not None:
+            body["verifyRefresh"] = verify_refresh
+        return body
