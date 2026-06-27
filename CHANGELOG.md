@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.7.0](https://github.com/descope/python-sdk/compare/descope-2.6.0...descope-2.7.0) (2026-06-27)
+
+
+### Features
+
+* **outbound:** add token/api-key upload and connection-status list methods ([#1591](https://github.com/descope/python-sdk/issues/1591)) ([2a2a090](https://github.com/descope/python-sdk/commit/2a2a090709691bc53d81e0320966fa091b9d1241))
+* **sdk:** add async client (DescopeClientAsync) ([#1572](https://github.com/descope/python-sdk/issues/1572)) ([e0f053f](https://github.com/descope/python-sdk/commit/e0f053fb348afaf3163a081c33f540b8af713a6a))
+
 ## [2.6.0](https://github.com/descope/python-sdk/compare/descope-2.5.0...descope-2.6.0) (2026-06-22)
 
 
