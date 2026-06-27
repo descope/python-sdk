@@ -160,7 +160,13 @@ jobs:
     runs-on: ubuntu-latest
     permissions: {}
     needs: [validate-pr-title, lint, build, coverage, gitleaks]
-    if: always() && !cancelled() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
+    # Must run unconditionally so this required status check always reports a
+    # real conclusion. If it were skipped (e.g. via an `if` that drops out when
+    # a dependency fails), branch protection would treat the skip as a pass.
+    if: always()
     steps:
+      - name: Fail if any dependency failed or was cancelled
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1
       - name: Yey, all checks passed!
         run: echo "All checks passed! :tada:"
