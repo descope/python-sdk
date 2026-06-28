@@ -7,6 +7,7 @@ from descope.management.access_key_async import AccessKeyAsync
 from descope.management.audit_async import AuditAsync
 from descope.management.authz_async import AuthzAsync
 from descope.management.descoper_async import DescoperAsync
+from descope.management.engine_async import EngineAsync
 from descope.management.fga_async import FGAAsync
 from descope.management.flow_async import FlowAsync
 from descope.management.group_async import GroupAsync
@@ -42,6 +43,7 @@ class MGMTAsync:
         self._audit = AuditAsync(http_client)
         self._authz = AuthzAsync(http_client, fga_cache_url=fga_cache_url)
         self._descoper = DescoperAsync(http_client)
+        self._engine = EngineAsync(http_client)
         self._fga = FGAAsync(http_client, fga_cache_url=fga_cache_url)
         self._flow = FlowAsync(http_client)
         self._group = GroupAsync(http_client)
@@ -155,6 +157,11 @@ class MGMTAsync:
     def descoper(self) -> DescoperAsync:
         self._ensure_management_key("descoper")
         return self._descoper
+
+    @property
+    def engine(self) -> EngineAsync:
+        self._ensure_management_key("engine")
+        return self._engine
 
     @property
     def management_key(self) -> ManagementKeyAsync:

@@ -128,6 +128,14 @@ class MgmtV1:
     outbound_application_batch_upload_user_tokens_path = "/v1/mgmt/outbound/app/user/oauthtoken/batch/upload"
     outbound_application_batch_upload_tenant_tokens_path = "/v1/mgmt/outbound/app/tenant/oauthtoken/batch/upload"
 
+    # engine
+    engine_create_path = "/v1/mgmt/engine/create"
+    engine_update_path = "/v1/mgmt/engine/update"
+    engine_delete_path = "/v1/mgmt/engine/delete"
+    engine_load_path = "/v1/mgmt/engine/load"
+    engine_load_all_path = "/v1/mgmt/engines/load"
+    engine_rotate_secret_path = "/v1/mgmt/engine/rotate"
+
     # user
     user_create_path = "/v1/mgmt/user/create"
     test_user_create_path = "/v1/mgmt/user/create/test"

@@ -7,6 +7,7 @@ from descope.management.access_key import AccessKey
 from descope.management.audit import Audit
 from descope.management.authz import Authz
 from descope.management.descoper import Descoper
+from descope.management.engine import Engine
 from descope.management.fga import FGA
 from descope.management.flow import Flow
 from descope.management.group import Group
@@ -42,6 +43,7 @@ class MGMT:
         self._audit = Audit(http_client)
         self._authz = Authz(http_client, fga_cache_url=fga_cache_url)
         self._descoper = Descoper(http_client)
+        self._engine = Engine(http_client)
         self._fga = FGA(http_client, fga_cache_url=fga_cache_url)
         self._flow = Flow(http_client)
         self._group = Group(http_client)
@@ -155,6 +157,11 @@ class MGMT:
     def descoper(self):
         self._ensure_management_key("descoper")
         return self._descoper
+
+    @property
+    def engine(self):
+        self._ensure_management_key("engine")
+        return self._engine
 
     @property
     def management_key(self):
