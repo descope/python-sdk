@@ -29,16 +29,16 @@
 | descope/management/\_user\_base.py                  |      145 |       11 |     92% |65-70, 123, 178, 223, 225, 227 |
 | descope/management/audit.py                         |       42 |       11 |     74% |75, 77, 79, 81, 83, 85, 87, 89, 91, 93, 95 |
 | descope/management/audit\_async.py                  |       42 |       11 |     74% |77, 79, 81, 83, 85, 87, 89, 91, 93, 95, 97 |
-| descope/management/common.py                        |      387 |        1 |     99% |        86 |
+| descope/management/common.py                        |      393 |        1 |     99% |        86 |
 | descope/management/outbound\_application.py         |      117 |        1 |     99% |       613 |
 | descope/management/outbound\_application\_async.py  |      119 |        1 |     99% |       613 |
 | descope/management/role.py                          |       45 |        1 |     98% |       313 |
 | descope/management/role\_async.py                   |       45 |        1 |     98% |       315 |
 | descope/management/user.py                          |      242 |        4 |     98% |728, 1075, 1077, 1079 |
 | descope/management/user\_async.py                   |      243 |        4 |     98% |732, 1079, 1081, 1083 |
-|                                           **TOTAL** | **5182** |  **101** | **98%** |           |
+|                                           **TOTAL** | **5252** |  **101** | **98%** |           |
 
-59 files skipped due to complete coverage.
+62 files skipped due to complete coverage.
 
 
 ## Setup coverage badge
