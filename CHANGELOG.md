@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.9.0](https://github.com/descope/python-sdk/compare/descope-2.8.0...descope-2.9.0) (2026-06-28)
+
+
+### Features
+
+* **mgmt:** add engine management API ([#1596](https://github.com/descope/python-sdk/issues/1596)) ([d55b3ec](https://github.com/descope/python-sdk/commit/d55b3ec2a5fcb8bb6f81623c114aeec36671063d))
+
 ## [2.8.0](https://github.com/descope/python-sdk/compare/descope-2.7.0...descope-2.8.0) (2026-06-28)
 
 
