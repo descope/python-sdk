@@ -86,6 +86,7 @@ These sections show how to use the SDK to perform permission and user management
 16. [Manage Outbound Applications](#manage-outbound-applications)
 17. [Manage Descopers](#manage-descopers)
 18. [Manage Management Keys](#manage-management-keys)
+19. [Manage Engines](#manage-engines)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -1861,6 +1862,36 @@ updated_key = update_resp["key"]
 # IMPORTANT: This action is irreversible. Use carefully.
 delete_resp = descope_client.mgmt.management_key.delete(["key-id-1", "key-id-2"])
 total_deleted = delete_resp["total"]
+```
+
+### Manage Engines
+
+You can create, update, delete, load engines, and rotate their secrets. The engine secret
+is returned only on create and rotate — store it securely, as it cannot be retrieved again.
+
+```python
+# Create a new engine. The response includes the generated id and secret.
+create_resp = descope_client.mgmt.engine.create(name="my-engine")
+engine_id = create_resp["engine"]["id"]
+engine_secret = create_resp["engine"]["secret"]  # Save this securely!
+
+# Update an engine's name (the response does not include the secret).
+descope_client.mgmt.engine.update(id=engine_id, name="renamed-engine")
+
+# Load a specific engine by id (the secret is always empty).
+engine = descope_client.mgmt.engine.load(engine_id)["engine"]
+
+# Load all engines (secrets are always empty).
+engines = descope_client.mgmt.engine.load_all()["engines"]
+for engine in engines:
+    # Do something
+    pass
+
+# Rotate an engine's secret. The previous secret is invalidated and the new one returned.
+new_secret = descope_client.mgmt.engine.rotate_secret(engine_id)["secret"]
+
+# Delete an engine. IMPORTANT: This action is irreversible. Use carefully.
+descope_client.mgmt.engine.delete(engine_id)
 ```
 
 ### Utils for your end to end (e2e) tests and integration tests
