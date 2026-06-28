@@ -64,10 +64,12 @@ class WebAuthnBase:
         return {"transactionId": transaction_id, "response": response}
 
     @staticmethod
-    def _compose_update_start_body(login_id: str, origin: str) -> dict:
+    def _compose_update_start_body(login_id: str, origin: str, mfa: bool = False) -> dict:
         body: dict = {"loginId": login_id}
         if origin:
             body["origin"] = origin
+        if mfa:
+            body["mfa"] = mfa
         return body
 
     @staticmethod

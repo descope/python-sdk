@@ -48,6 +48,12 @@ class TestWebAuthn:
             "loginId": "dummy@dummy.com",
             "origin": "https://example.com",
         }
+        # mfa is included only when set
+        assert WebAuthn._compose_update_start_body("dummy@dummy.com", "https://example.com", mfa=True) == {
+            "loginId": "dummy@dummy.com",
+            "origin": "https://example.com",
+            "mfa": True,
+        }
 
     async def test_sign_up_start(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
@@ -323,3 +329,37 @@ class TestWebAuthn:
             json={"transactionId": "t01", "response": "resp01"},
             follow_redirects=False,
         )
+
+    async def test_update_start_with_mfa(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
+        refresh_token = VALID_REFRESH_TOKEN
+        with client.mock_post(make_response({"transactionId": "txn1"})) as mock_post:
+            await client.invoke(client.webauthn.update_start("id1", refresh_token, "https://example.com", mfa=True))
+        assert_http_called(
+            mock_post,
+            client.mode,
+            f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_auth_webauthn_start_path}",
+            headers={
+                **common.default_headers,
+                "Authorization": f"Bearer {PROJECT_ID}:{refresh_token}",
+                "x-descope-project-id": PROJECT_ID,
+            },
+            params=None,
+            json={
+                "loginId": "id1",
+                "origin": "https://example.com",
+                "mfa": True,
+            },
+            follow_redirects=False,
+        )
+
+    async def test_update_finish_with_mfa(self, client_factory):
+        # mfa enrollment: finish returns the merged-amr session nested under "jwt"
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
+        success_resp = make_response(
+            {"jwt": {"sessionJwt": VALID_SESSION_TOKEN}},
+            cookies={REFRESH_SESSION_COOKIE_NAME: VALID_REFRESH_TOKEN},
+        )
+        with client.mock_post(success_resp):
+            result = await client.invoke(client.webauthn.update_finish("t01", "resp01"))
+        assert result is not None
