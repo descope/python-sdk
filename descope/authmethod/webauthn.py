@@ -108,25 +108,51 @@ class WebAuthn(WebAuthnBase, AuthMethodBase):
         response = self._http.post(uri, body=body)
         return response.json()
 
-    def update_start(self, login_id: str, refresh_token: str, origin: str) -> dict:
+    def update_start(
+        self,
+        login_id: str,
+        refresh_token: str,
+        origin: str,
+        login_options: Optional[LoginOptions] = None,
+    ) -> dict:
         """
-        Docs
+        Start adding a new WebAuthn authenticator (passkey) to an existing user.
+
+        Pass a login_options with mfa (or stepup) set so that update_finish returns a single
+        session whose amr merges the user's previously-passed factors with the new passkey,
+        instead of having to run a separate sign-in afterwards.
         """
         self._validate_login_id(login_id)
         self._validate_refresh_token(refresh_token)
 
         uri = EndpointsV1.update_auth_webauthn_start_path
-        body = self._compose_update_start_body(login_id, origin)
+        body = self._compose_update_start_body(login_id, origin, login_options)
         response = self._http.post(uri, body=body, pswd=refresh_token)
         return response.json()
 
-    def update_finish(self, transaction_id: str, response: str) -> None:
+    def update_finish(
+        self,
+        transaction_id: str,
+        response: str,
+        audience: Union[str, None, Iterable[str]] = None,
+    ) -> Optional[dict]:
         """
-        Docs
+        Complete adding a new WebAuthn authenticator (passkey) to an existing user.
+
+        When the matching update_start opted into mfa/stepup, returns a JWT response whose amr
+        merges the prior factors with the new passkey; otherwise returns None (the credential is
+        enrolled but no new session is minted).
         """
         self._validate_transaction_id(transaction_id)
         self._validate_response(response)
 
         uri = EndpointsV1.update_auth_webauthn_finish_path
         body = self._compose_update_finish_body(transaction_id, response)
-        self._http.post(uri, body=body)
+        http_response = self._http.post(uri, body=body)
+        resp = http_response.json()
+        jwt = resp.get("jwt") if isinstance(resp, dict) else None
+        if not jwt:
+            return None
+        return self._auth.generate_jwt_response(
+            jwt, http_response.cookies.get(REFRESH_SESSION_COOKIE_NAME, None), audience
+        )
