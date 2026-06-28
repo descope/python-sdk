@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.8.0](https://github.com/descope/python-sdk/compare/descope-2.7.0...descope-2.8.0) (2026-06-28)
+
+
+### Features
+
+* **webauthn:** add mfa option to passkey enrollment (update) ([#1594](https://github.com/descope/python-sdk/issues/1594)) ([dc94421](https://github.com/descope/python-sdk/commit/dc94421625948a657ff5debca1c03d337fb07545))
+
 ## [2.7.0](https://github.com/descope/python-sdk/compare/descope-2.6.0...descope-2.7.0) (2026-06-27)
 
 
