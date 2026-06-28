@@ -12,16 +12,14 @@ MGMT_HEADERS = {
     "x-descope-project-id": PROJECT_ID,
 }
 
-# createdTime/version are int64 in the proto, so the management gateway returns them as
-# JSON strings — they are preserved verbatim in the returned dict.
+# The management Engine exposes only id/name/secret/createdTime; createdTime is an int32
+# epoch-seconds JSON number.
 ENGINE_RESPONSE = {
     "engine": {
         "id": "eng1",
         "name": "my-engine",
         "secret": "s3cret",
-        "projectId": "proj1",
-        "version": "1",
-        "createdTime": "1719571200",
+        "createdTime": 1719571200,
     }
 }
 
