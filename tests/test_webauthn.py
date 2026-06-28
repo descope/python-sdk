@@ -337,9 +337,7 @@ class TestWebAuthn:
         refresh_token = VALID_REFRESH_TOKEN
         with client.mock_post(make_response({"transactionId": "txn1"})) as mock_post:
             await client.invoke(
-                client.webauthn.update_start(
-                    "id1", refresh_token, "https://example.com", LoginOptions(mfa=True)
-                )
+                client.webauthn.update_start("id1", refresh_token, "https://example.com", LoginOptions(mfa=True))
             )
         assert_http_called(
             mock_post,
