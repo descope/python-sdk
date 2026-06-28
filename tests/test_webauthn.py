@@ -48,13 +48,11 @@ class TestWebAuthn:
             "loginId": "dummy@dummy.com",
             "origin": "https://example.com",
         }
-        # login options (mfa) are included only when provided
-        assert WebAuthn._compose_update_start_body(
-            "dummy@dummy.com", "https://example.com", LoginOptions(mfa=True)
-        ) == {
+        # mfa is included only when set
+        assert WebAuthn._compose_update_start_body("dummy@dummy.com", "https://example.com", mfa=True) == {
             "loginId": "dummy@dummy.com",
             "origin": "https://example.com",
-            "loginOptions": LoginOptions(mfa=True).__dict__,
+            "mfa": True,
         }
 
     async def test_sign_up_start(self, client_factory):
@@ -336,9 +334,7 @@ class TestWebAuthn:
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
         refresh_token = VALID_REFRESH_TOKEN
         with client.mock_post(make_response({"transactionId": "txn1"})) as mock_post:
-            await client.invoke(
-                client.webauthn.update_start("id1", refresh_token, "https://example.com", LoginOptions(mfa=True))
-            )
+            await client.invoke(client.webauthn.update_start("id1", refresh_token, "https://example.com", mfa=True))
         assert_http_called(
             mock_post,
             client.mode,
@@ -352,7 +348,7 @@ class TestWebAuthn:
             json={
                 "loginId": "id1",
                 "origin": "https://example.com",
-                "loginOptions": LoginOptions(mfa=True).__dict__,
+                "mfa": True,
             },
             follow_redirects=False,
         )

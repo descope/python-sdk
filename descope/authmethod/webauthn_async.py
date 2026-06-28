@@ -108,18 +108,18 @@ class WebAuthnAsync(WebAuthnBase, AsyncAuthMethodBase):
         login_id: str,
         refresh_token: str,
         origin: str,
-        login_options: Optional[LoginOptions] = None,
+        mfa: bool = False,
     ) -> dict:
         """Start adding a new WebAuthn authenticator (passkey) to an existing user.
 
-        Pass a login_options with mfa (or stepup) set so that update_finish returns a single
-        session whose amr merges the user's previously-passed factors with the new passkey.
+        Pass mfa=True so that update_finish returns a single session whose amr merges the user's
+        previously-passed factors with the new passkey.
         """
         self._validate_login_id(login_id)
         self._validate_refresh_token(refresh_token)
 
         uri = EndpointsV1.update_auth_webauthn_start_path
-        body = self._compose_update_start_body(login_id, origin, login_options)
+        body = self._compose_update_start_body(login_id, origin, mfa)
         response = await self._http.post(uri, body=body, pswd=refresh_token)
         return response.json()
 
