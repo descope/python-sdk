@@ -300,6 +300,96 @@ class MgmtV1:
     # license
     license_get_path = "/v1/mgmt/license"
 
+    # access key (batch + rotate)
+    access_key_activate_batch_path = "/v1/mgmt/accesskey/activate/batch"
+    access_key_deactivate_batch_path = "/v1/mgmt/accesskey/deactivate/batch"
+    access_key_delete_batch_path = "/v1/mgmt/accesskey/delete/batch"
+    access_key_rotate_path = "/v1/mgmt/accesskey/rotate"
+
+    # analytics
+    analytics_search_path = "/v1/mgmt/analytics/search"
+
+    # connector / audit webhook
+    audit_webhook_set_path = "/v2/mgmt/connector/audit/web/set"
+
+    # fga (mappable + dryrun)
+    fga_mappable_resources_path = "/v1/mgmt/fga/mappable/resources"
+    fga_mappable_schema_path = "/v1/mgmt/fga/mappable/schema"
+    fga_schema_dryrun_path = "/v1/mgmt/fga/schema/dryrun"
+
+    # jwt impersonate step-up
+    impersonate_stepup_path = "/v1/mgmt/impersonate/stepup"
+
+    # list (deny / allow lists)
+    list_path = "/v1/mgmt/list"
+    list_all_path = "/v1/mgmt/list/all"
+    list_clear_path = "/v1/mgmt/list/clear"
+    list_delete_path = "/v1/mgmt/list/delete"
+    list_import_path = "/v1/mgmt/list/import"
+    list_ip_add_path = "/v1/mgmt/list/ip/add"
+    list_ip_check_path = "/v1/mgmt/list/ip/check"
+    list_ip_remove_path = "/v1/mgmt/list/ip/remove"
+    list_name_path = "/v1/mgmt/list/name"
+    list_text_add_path = "/v1/mgmt/list/text/add"
+    list_text_check_path = "/v1/mgmt/list/text/check"
+    list_text_remove_path = "/v1/mgmt/list/text/remove"
+    list_update_path = "/v1/mgmt/list/update"
+
+    # password settings
+    password_settings_path = "/v1/mgmt/password/settings"
+
+    # project (delete + snapshot)
+    project_delete_path = "/v1/mgmt/project/delete"
+    project_snapshot_export_path = "/v1/mgmt/project/snapshot/export"
+    project_snapshot_import_path = "/v1/mgmt/project/snapshot/import"
+    project_snapshot_validate_path = "/v1/mgmt/project/snapshot/validate"
+
+    # scope claim mapping
+    scope_claim_mapping_get_path = "/v1/mgmt/scopeClaimMapping/get"
+    scope_claim_mapping_set_path = "/v1/mgmt/scopeClaimMapping/set"
+    scope_claim_mapping_delete_path = "/v1/mgmt/scopeClaimMapping/delete"
+
+    # sso application (rotate / secret / wsfed)
+    sso_application_rotate_path = "/v1/mgmt/sso/idp/app/rotate"
+    sso_application_secret_path = "/v1/mgmt/sso/idp/app/secret"
+    sso_application_wsfed_create_path = "/v1/mgmt/sso/idp/app/wsfed/create"
+    sso_application_wsfed_update_path = "/v1/mgmt/sso/idp/app/wsfed/update"
+
+    # sso settings (redirect / all / new)
+    sso_redirect_path = "/v1/mgmt/sso/redirect"
+    sso_load_all_settings_path = "/v2/mgmt/sso/settings/all"
+    sso_new_settings_path = "/v1/mgmt/sso/settings/new"
+
+    # tenant revoke sso config link
+    tenant_revoke_sso_configuration_link_path = "/v1/mgmt/tenant/adminlinks/sso/revoke"
+
+    # third party application
+    thirdparty_application_create_path = "/v1/mgmt/thirdparty/app/create"
+    thirdparty_application_update_path = "/v1/mgmt/thirdparty/app/update"
+    thirdparty_application_patch_path = "/v1/mgmt/thirdparty/app/patch"
+    thirdparty_application_delete_path = "/v1/mgmt/thirdparty/app/delete"
+    thirdparty_application_delete_batch_path = "/v1/mgmt/thirdparty/app/delete/batch"
+    thirdparty_application_load_path = "/v1/mgmt/thirdparty/app/load"
+    thirdparty_application_load_all_path = "/v1/mgmt/thirdparty/apps/load"
+    thirdparty_application_rotate_path = "/v1/mgmt/thirdparty/app/rotate"
+    thirdparty_application_secret_path = "/v1/mgmt/thirdparty/app/secret"
+    thirdparty_consents_delete_path = "/v1/mgmt/thirdparty/consents/delete"
+    thirdparty_consents_delete_tenant_path = "/v1/mgmt/thirdparty/consents/delete/tenant"
+    thirdparty_consents_search_path = "/v1/mgmt/thirdparty/consents/search"
+
+    # user (gaps)
+    user_create_custom_attribute_path = "/v1/mgmt/user/customattribute/create"
+    user_delete_custom_attribute_path = "/v1/mgmt/user/customattribute/delete"
+    user_load_custom_attributes_path = "/v1/mgmt/user/customattributes"
+    user_delete_batch_path = "/v1/mgmt/user/delete/batch"
+    user_import_path = "/v1/mgmt/user/import"
+    user_delete_passkey_path = "/v1/mgmt/user/passkey/delete"
+    user_list_passkeys_path = "/v1/mgmt/user/passkeys/list"
+    user_list_trusted_devices_path = "/v1/mgmt/user/trusteddevices/list"
+    user_remove_trusted_device_path = "/v1/mgmt/user/trusteddevices/remove"
+    user_update_recovery_email_path = "/v1/mgmt/user/update/recovery/email"
+    user_update_recovery_phone_path = "/v1/mgmt/user/update/recovery/phone"
+
 
 class MgmtSignUpOptions:
     def __init__(

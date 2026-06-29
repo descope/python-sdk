@@ -198,3 +198,118 @@ class TestProject:
                 },
                 follow_redirects=False,
             )
+
+    async def test_delete(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.project.delete())
+
+        # Test success flow
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            assert await client.invoke(client.mgmt.project.delete()) is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.project_delete_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={},
+                follow_redirects=False,
+            )
+
+    async def test_export_snapshot(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.project.export_snapshot())
+
+        # Test success flow
+        json_data = {"files": {"flow.json": "{}"}, "format": "v1"}
+        with client.mock_mgmt_post(make_response(json_data)) as mock_post:
+            resp = await client.invoke(client.mgmt.project.export_snapshot("v1"))
+            assert resp is not None
+            assert "files" in resp
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.project_snapshot_export_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={"format": "v1"},
+                follow_redirects=False,
+            )
+
+    async def test_import_snapshot(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.project.import_snapshot({"flow.json": "{}"}))
+
+        # Test success flow
+        files = {"flow.json": "{}"}
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            await client.invoke(client.mgmt.project.import_snapshot(files, {"secret": "value"}, ["lists"]))
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.project_snapshot_import_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "files": {"flow.json": "{}"},
+                    "inputSecrets": {"secret": "value"},
+                    "excludes": ["lists"],
+                },
+                follow_redirects=False,
+            )
+
+    async def test_validate_snapshot(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.project.validate_snapshot({"flow.json": "{}"}))
+
+        # Test success flow
+        files = {"flow.json": "{}"}
+        json_data = {"ok": True, "failures": [], "missingSecrets": []}
+        with client.mock_mgmt_post(make_response(json_data)) as mock_post:
+            resp = await client.invoke(client.mgmt.project.validate_snapshot(files, {"secret": "value"}))
+            assert resp is not None
+            assert resp["ok"] is True
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.project_snapshot_validate_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "files": {"flow.json": "{}"},
+                    "inputSecrets": {"secret": "value"},
+                },
+                follow_redirects=False,
+            )

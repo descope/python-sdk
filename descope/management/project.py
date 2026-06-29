@@ -152,6 +152,104 @@ class Project(HTTPBase):
         )
         return
 
+    def delete(self):
+        """
+        Delete the current project.
+        IMPORTANT: This action is irreversible. Use carefully.
+
+        Raise:
+        AuthException: raised if delete operation fails
+        """
+        self._http.post(
+            MgmtV1.project_delete_path,
+            body={},
+        )
+
+    def export_snapshot(
+        self,
+        format: Optional[str] = None,
+    ) -> dict:
+        """
+        Exports a snapshot of all the settings and configurations for a project and returns
+        the raw JSON files response as a dictionary.
+
+        Args:
+        format (str): Optional format for the snapshot export.
+
+        Return value (dict):
+        Return dict containing the exported snapshot data.
+
+        Raise:
+        AuthException: raised if export operation fails
+        """
+        body = {}
+        if format:
+            body["format"] = format
+        response = self._http.post(
+            MgmtV1.project_snapshot_export_path,
+            body=body,
+        )
+        return response.json()
+
+    def import_snapshot(
+        self,
+        files: dict,
+        input_secrets: Optional[dict] = None,
+        excludes: Optional[List[str]] = None,
+    ):
+        """
+        Imports a snapshot of all settings and configurations into a project, overriding any
+        current configuration.
+
+        Args:
+        files (dict): The raw JSON dictionary of files, in the same format as the one
+                      returned by calls to export_snapshot.
+        input_secrets (dict): Optional secrets that need to be provided for the import.
+        excludes (List[str]): Optional list of items to exclude from the import.
+
+        Raise:
+        AuthException: raised if import operation fails
+        """
+        body: dict = {"files": files}
+        if input_secrets is not None:
+            body["inputSecrets"] = input_secrets
+        if excludes is not None:
+            body["excludes"] = excludes
+        self._http.post(
+            MgmtV1.project_snapshot_import_path,
+            body=body,
+        )
+
+    def validate_snapshot(
+        self,
+        files: dict,
+        input_secrets: Optional[dict] = None,
+    ) -> dict:
+        """
+        Validates a snapshot by performing an import dry run and reporting any validation
+        failures or missing data. This should be called right before import_snapshot to
+        minimize the risk of the import failing.
+
+        Args:
+        files (dict): The raw JSON dictionary of files to validate.
+        input_secrets (dict): Optional secrets to provide for validation.
+
+        Return value (dict):
+        Return dict containing validation results, including 'ok' boolean and any 'failures'
+        or 'missingSecrets' if validation fails.
+
+        Raise:
+        AuthException: raised if validation operation fails
+        """
+        body: dict = {"files": files}
+        if input_secrets is not None:
+            body["inputSecrets"] = input_secrets
+        response = self._http.post(
+            MgmtV1.project_snapshot_validate_path,
+            body=body,
+        )
+        return response.json()
+
     # Function to remove 'tag' field from each project
     def remove_tag_field(self, projects):
         return [{k: v for k, v in project.items() if k != "tag"} for project in projects]

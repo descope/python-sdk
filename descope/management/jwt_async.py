@@ -93,6 +93,47 @@ class JWTAsync(JWTBase, AsyncHTTPBase):
         )
         return response.json().get("jwt", "")
 
+    async def impersonate_stepup(
+        self,
+        impersonator_id: str,
+        login_id: str,
+        validate_consent: bool,
+        custom_claims: Optional[dict] = None,
+        tenant_id: Optional[str] = None,
+        refresh_duration: Optional[int] = None,
+    ) -> str:
+        """
+        Impersonate to another user with step-up authentication
+
+        Args:
+        impersonator_id (str): login id / user id of impersonator, must have "impersonation" permission.
+        login_id (str): login id of the user whom to which to impersonate to.
+        validate_consent (bool): Indicate whether to allow impersonation in any case or only if a consent to this operation was granted.
+        customClaims dict: Custom claims to add to JWT
+        tenant_id (str): tenant id to set on DCT claim.
+        refresh_duration (int): duration in seconds for which the new JWT will be valid
+
+        Return value (str): A JWT of the impersonated user with step-up
+
+        Raise:
+        AuthException: raised if update failed
+        """
+        self._validate_impersonator_id(impersonator_id)
+        self._validate_login_id(login_id)
+        response = await self._http.post(
+            MgmtV1.impersonate_stepup_path,
+            body={
+                "loginId": login_id,
+                "impersonatorId": impersonator_id,
+                "validateConsent": validate_consent,
+                "customClaims": custom_claims,
+                "selectedTenant": tenant_id,
+                "refreshDuration": refresh_duration,
+            },
+            params=None,
+        )
+        return response.json().get("jwt", "")
+
     async def stop_impersonation(
         self,
         jwt: str,

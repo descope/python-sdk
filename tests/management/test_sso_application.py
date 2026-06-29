@@ -529,3 +529,167 @@ class TestSSOApplication:
                 params=None,
                 follow_redirects=True,
             )
+
+    async def test_create_wsfed_application(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response(status=400)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.sso_application.create_wsfed_application(
+                        "valid-name",
+                        "http://dummy.com",
+                        "urn:realm",
+                        "http://reply.com",
+                    )
+                )
+
+        # Test success flow
+        with client.mock_mgmt_post(make_response({"id": "app1"})) as mock_post:
+            resp = await client.invoke(
+                client.mgmt.sso_application.create_wsfed_application(
+                    name="name",
+                    login_page_url="http://dummy.com",
+                    realm="urn:realm",
+                    reply_url="http://reply.com",
+                    force_authentication=True,
+                )
+            )
+            assert resp["id"] == "app1"
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_application_wsfed_create_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "name": "name",
+                    "loginPageUrl": "http://dummy.com",
+                    "realm": "urn:realm",
+                    "replyUrl": "http://reply.com",
+                    "enabled": True,
+                    "id": None,
+                    "description": None,
+                    "logo": None,
+                    "replyAllowedCallbacks": [],
+                    "attributeMapping": [],
+                    "groupsMapping": [],
+                    "forceAuthentication": True,
+                    "logoutRedirectUrl": None,
+                    "errorRedirectUrl": None,
+                },
+                follow_redirects=False,
+            )
+
+    async def test_update_wsfed_application(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response(status=400)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.sso_application.update_wsfed_application(
+                        "app1",
+                        "valid-name",
+                        "http://dummy.com",
+                        "urn:realm",
+                        "http://reply.com",
+                    )
+                )
+
+        # Test success flow
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            await client.invoke(
+                client.mgmt.sso_application.update_wsfed_application(
+                    id="app1",
+                    name="name",
+                    login_page_url="http://dummy.com",
+                    realm="urn:realm",
+                    reply_url="http://reply.com",
+                    force_authentication=True,
+                )
+            )
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_application_wsfed_update_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "name": "name",
+                    "loginPageUrl": "http://dummy.com",
+                    "realm": "urn:realm",
+                    "replyUrl": "http://reply.com",
+                    "enabled": True,
+                    "id": "app1",
+                    "description": None,
+                    "logo": None,
+                    "replyAllowedCallbacks": [],
+                    "attributeMapping": [],
+                    "groupsMapping": [],
+                    "forceAuthentication": True,
+                    "logoutRedirectUrl": None,
+                    "errorRedirectUrl": None,
+                },
+                follow_redirects=False,
+            )
+
+    async def test_get_application_secret(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_get(make_response(status=400)) as mock_get:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.sso_application.get_application_secret("app1"))
+
+        # Test success flow
+        with client.mock_mgmt_get(make_response({"cleartext": "secret123"})) as mock_get:
+            secret = await client.invoke(client.mgmt.sso_application.get_application_secret("app1"))
+            assert secret == "secret123"
+            assert_http_called(
+                mock_get,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_application_secret_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params={"id": "app1"},
+                follow_redirects=True,
+            )
+
+    async def test_rotate_application_secret(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response(status=400)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.sso_application.rotate_application_secret("app1"))
+
+        # Test success flow
+        with client.mock_mgmt_post(make_response({"cleartext": "newsecret456"})) as mock_post:
+            secret = await client.invoke(client.mgmt.sso_application.rotate_application_secret("app1"))
+            assert secret == "newsecret456"
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_application_rotate_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={"id": "app1"},
+                follow_redirects=False,
+            )

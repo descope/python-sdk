@@ -348,3 +348,184 @@ class SSOApplication(SSOApplicationBase, HTTPBase):
         """
         response = self._http.get(MgmtV1.sso_application_load_all_path)
         return response.json()
+
+    def create_wsfed_application(
+        self,
+        name: str,
+        login_page_url: str,
+        realm: str,
+        reply_url: str,
+        id: Optional[str] = None,
+        description: Optional[str] = None,
+        logo: Optional[str] = None,
+        enabled: Optional[bool] = True,
+        reply_allowed_callbacks: Optional[List[str]] = None,
+        attribute_mapping: Optional[List[SAMLIDPAttributeMappingInfo]] = None,
+        groups_mapping: Optional[List[SAMLIDPGroupsMappingInfo]] = None,
+        force_authentication: Optional[bool] = False,
+        logout_redirect_url: Optional[str] = None,
+        error_redirect_url: Optional[str] = None,
+    ) -> dict:
+        """
+        Create a new WS-Federation sso application with the given name. SSO application IDs are provisioned automatically, but can be provided
+        explicitly if needed. Both the name and ID must be unique per project.
+
+        Args:
+        name (str): The sso application's name.
+        login_page_url (str): The URL where login page is hosted.
+        realm (str): WS-Federation realm identifier.
+        reply_url (str): WS-Federation reply URL.
+        id (str): Optional sso application ID.
+        description (str): Optional sso application description.
+        logo (str): Optional sso application logo.
+        enabled (bool): Optional set the sso application as enabled or disabled.
+        reply_allowed_callbacks (List[str]): Optional list of allowed callback URLs.
+        attribute_mapping (List[SAMLIDPAttributeMappingInfo]): Optional list of Descope (IdP) attributes to SP mapping.
+        groups_mapping (List[SAMLIDPGroupsMappingInfo]): Optional list of Descope (IdP) roles that will be mapped to SP groups.
+        force_authentication (bool): Optional determine if the IdP should force the user to re-authenticate.
+        logout_redirect_url (str): Optional Target URL to which the user will be redirected upon logout completion.
+        error_redirect_url (str): Optional Target URL to which the user will be redirected upon error.
+
+        Return value (dict):
+        Return dict in the format
+             {"id": <id>}
+
+        Raise:
+        AuthException: raised if create operation fails
+        """
+
+        reply_allowed_callbacks = [] if reply_allowed_callbacks is None else reply_allowed_callbacks
+        attribute_mapping = [] if attribute_mapping is None else attribute_mapping
+        groups_mapping = [] if groups_mapping is None else groups_mapping
+
+        uri = MgmtV1.sso_application_wsfed_create_path
+        response = self._http.post(
+            uri,
+            body=SSOApplication._compose_create_update_wsfed_body(
+                name,
+                login_page_url,
+                realm,
+                reply_url,
+                id,
+                description,
+                logo,
+                enabled,
+                reply_allowed_callbacks,
+                attribute_mapping,
+                groups_mapping,
+                force_authentication,
+                logout_redirect_url,
+                error_redirect_url,
+            ),
+        )
+        return response.json()
+
+    def update_wsfed_application(
+        self,
+        id: str,
+        name: str,
+        login_page_url: str,
+        realm: str,
+        reply_url: str,
+        description: Optional[str] = None,
+        logo: Optional[str] = None,
+        enabled: Optional[bool] = True,
+        reply_allowed_callbacks: Optional[List[str]] = None,
+        attribute_mapping: Optional[List[SAMLIDPAttributeMappingInfo]] = None,
+        groups_mapping: Optional[List[SAMLIDPGroupsMappingInfo]] = None,
+        force_authentication: Optional[bool] = False,
+        logout_redirect_url: Optional[str] = None,
+        error_redirect_url: Optional[str] = None,
+    ):
+        """
+        Update an existing WS-Federation sso application with the given parameters. IMPORTANT: All parameters are used as overrides
+        to the existing sso application. Empty fields will override populated fields. Use carefully.
+
+        Args:
+        id (str): The ID of the sso application to update.
+        name (str): Updated sso application name
+        login_page_url (str): The URL where login page is hosted.
+        realm (str): WS-Federation realm identifier.
+        reply_url (str): WS-Federation reply URL.
+        description (str): Optional sso application description.
+        logo (str): Optional sso application logo.
+        enabled (bool): Optional set the sso application as enabled or disabled.
+        reply_allowed_callbacks (List[str]): Optional list of allowed callback URLs.
+        attribute_mapping (List[SAMLIDPAttributeMappingInfo]): Optional list of Descope (IdP) attributes to SP mapping.
+        groups_mapping (List[SAMLIDPGroupsMappingInfo]): Optional list of Descope (IdP) roles that will be mapped to SP groups.
+        force_authentication (bool): Optional determine if the IdP should force the user to re-authenticate.
+        logout_redirect_url (str): Optional Target URL to which the user will be redirected upon logout completion.
+        error_redirect_url (str): Optional Target URL to which the user will be redirected upon error.
+
+        Raise:
+        AuthException: raised if update operation fails
+        """
+
+        reply_allowed_callbacks = [] if reply_allowed_callbacks is None else reply_allowed_callbacks
+        attribute_mapping = [] if attribute_mapping is None else attribute_mapping
+        groups_mapping = [] if groups_mapping is None else groups_mapping
+
+        uri = MgmtV1.sso_application_wsfed_update_path
+        self._http.post(
+            uri,
+            body=SSOApplication._compose_create_update_wsfed_body(
+                name,
+                login_page_url,
+                realm,
+                reply_url,
+                id,
+                description,
+                logo,
+                enabled,
+                reply_allowed_callbacks,
+                attribute_mapping,
+                groups_mapping,
+                force_authentication,
+                logout_redirect_url,
+                error_redirect_url,
+            ),
+        )
+
+    def get_application_secret(
+        self,
+        id: str,
+    ) -> str:
+        """
+        Get the cleartext secret for an SSO application.
+
+        Args:
+        id (str): The ID of the sso application.
+
+        Return value (str):
+        Returns the cleartext secret as a string.
+
+        Raise:
+        AuthException: raised if get operation fails
+        """
+        response = self._http.get(
+            MgmtV1.sso_application_secret_path,
+            params={"id": id},
+        )
+        return response.json().get("cleartext", "")
+
+    def rotate_application_secret(
+        self,
+        id: str,
+    ) -> str:
+        """
+        Rotate the secret for an SSO application.
+
+        Args:
+        id (str): The ID of the sso application.
+
+        Return value (str):
+        Returns the new cleartext secret as a string.
+
+        Raise:
+        AuthException: raised if rotate operation fails
+        """
+        response = self._http.post(
+            MgmtV1.sso_application_rotate_path,
+            body={"id": id},
+        )
+        return response.json().get("cleartext", "")

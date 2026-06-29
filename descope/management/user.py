@@ -1771,3 +1771,288 @@ class User(UserBase, HTTPBase):
             body=user_ids,
         )
         return response.json()
+
+    def create_custom_attribute(
+        self,
+        name: str,
+        display_name: str,
+        type: str,
+        required: Optional[bool] = None,
+        options: Optional[List[str]] = None,
+    ) -> dict:
+        """
+        Create a new custom attribute for users.
+
+        Args:
+        name (str): The name of the custom attribute.
+        display_name (str): The display name of the custom attribute.
+        type (str): The type of the custom attribute (e.g., "string", "number", "boolean").
+        required (bool): Optional, whether the custom attribute is required.
+        options (List[str]): Optional, list of options for the custom attribute.
+
+        Return value (dict):
+        Return dict containing the custom attributes list.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        body: dict = {
+            "attributes": [
+                {
+                    "name": name,
+                    "displayName": display_name,
+                    "type": type,
+                }
+            ]
+        }
+        if required is not None:
+            body["attributes"][0]["required"] = required
+        if options is not None:
+            body["attributes"][0]["options"] = options
+
+        response = self._http.post(
+            MgmtV1.user_create_custom_attribute_path,
+            body=body,
+        )
+        return response.json()
+
+    def delete_custom_attribute(
+        self,
+        name: str,
+    ) -> dict:
+        """
+        Delete a custom attribute for users.
+
+        Args:
+        name (str): The name of the custom attribute to delete.
+
+        Return value (dict):
+        Return dict containing the remaining custom attributes list.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._http.post(
+            MgmtV1.user_delete_custom_attribute_path,
+            body={"names": [name]},
+        )
+        return response.json()
+
+    def load_custom_attributes(self) -> dict:
+        """
+        Load all custom attributes for users.
+
+        Return value (dict):
+        Return dict containing the custom attributes list.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._http.get(
+            MgmtV1.user_load_custom_attributes_path,
+            params={},
+        )
+        return response.json()
+
+    def delete_batch(
+        self,
+        user_ids: List[str],
+    ):
+        """
+        Delete multiple users by their user IDs. IMPORTANT: This action is irreversible. Use carefully.
+
+        Args:
+        user_ids (List[str]): List of user IDs to delete.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        self._http.post(
+            MgmtV1.user_delete_batch_path,
+            body={"userIds": user_ids},
+        )
+
+    def import_users(
+        self,
+        source: str,
+        users: Optional[bytes] = None,
+        hashes: Optional[bytes] = None,
+        dryrun: bool = False,
+    ) -> dict:
+        """
+        Import users from an external source.
+
+        Args:
+        source (str): The source of the users (e.g., "auth0", "firebase").
+        users (bytes): Optional, JSON bytes containing the users to import.
+        hashes (bytes): Optional, JSON bytes containing password hashes.
+        dryrun (bool): Optional, if True, perform a dry run without actually importing.
+
+        Return value (dict):
+        Return dict containing the import results.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        body = {
+            "source": source,
+            "dryrun": dryrun,
+        }
+        if users is not None:
+            body["users"] = users
+        if hashes is not None:
+            body["hashes"] = hashes
+
+        response = self._http.post(
+            MgmtV1.user_import_path,
+            body=body,
+        )
+        return response.json()
+
+    def delete_passkey(
+        self,
+        login_id: str,
+        credential_id: str,
+    ):
+        """
+        Delete a specific passkey (WebAuthn device) for a user.
+
+        Args:
+        login_id (str): The login ID of the user.
+        credential_id (str): The credential ID of the passkey to delete.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        self._http.post(
+            MgmtV1.user_delete_passkey_path,
+            body={"loginId": login_id, "credentialId": credential_id},
+        )
+
+    def list_passkeys(
+        self,
+        login_id: str,
+    ) -> dict:
+        """
+        List all passkeys (WebAuthn devices) registered for a user.
+
+        Args:
+        login_id (str): The login ID of the user.
+
+        Return value (dict):
+        Return dict containing the list of passkeys.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._http.post(
+            MgmtV1.user_list_passkeys_path,
+            body={"loginId": login_id},
+        )
+        return response.json()
+
+    def list_trusted_devices(
+        self,
+        identifiers: List[str],
+    ) -> dict:
+        """
+        List all trusted devices for the specified users.
+
+        Args:
+        identifiers (List[str]): List of login IDs or user IDs.
+
+        Return value (dict):
+        Return dict containing the list of trusted devices.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._http.post(
+            MgmtV1.user_list_trusted_devices_path,
+            body={"identifiers": identifiers},
+        )
+        return response.json()
+
+    def remove_trusted_device(
+        self,
+        identifier: str,
+        device_ids: List[str],
+    ):
+        """
+        Remove trusted devices for a user.
+
+        Args:
+        identifier (str): The login ID or user ID.
+        device_ids (List[str]): List of device IDs to remove.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        self._http.post(
+            MgmtV1.user_remove_trusted_device_path,
+            body={"identifier": identifier, "deviceIds": device_ids},
+        )
+
+    def update_recovery_email(
+        self,
+        login_id: str,
+        recovery_email: str,
+        verified: bool = False,
+    ) -> dict:
+        """
+        Update the recovery email for a user.
+
+        Args:
+        login_id (str): The login ID of the user.
+        recovery_email (str): The recovery email address.
+        verified (bool): Whether the recovery email is verified.
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the updated user information.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._http.post(
+            MgmtV1.user_update_recovery_email_path,
+            body={
+                "loginId": login_id,
+                "recoveryEmail": recovery_email,
+                "verified": verified,
+            },
+        )
+        return response.json()
+
+    def update_recovery_phone(
+        self,
+        login_id: str,
+        recovery_phone: str,
+        verified: bool = False,
+    ) -> dict:
+        """
+        Update the recovery phone number for a user.
+
+        Args:
+        login_id (str): The login ID of the user.
+        recovery_phone (str): The recovery phone number.
+        verified (bool): Whether the recovery phone is verified.
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the updated user information.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = self._http.post(
+            MgmtV1.user_update_recovery_phone_path,
+            body={
+                "loginId": login_id,
+                "recoveryPhone": recovery_phone,
+                "verified": verified,
+            },
+        )
+        return response.json()

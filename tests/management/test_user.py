@@ -2509,3 +2509,315 @@ class TestUser:
                 },
                 follow_redirects=False,
             )
+
+    async def test_create_custom_attribute(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.create_custom_attribute("attr1", "Attribute 1", "string"))
+
+        # Test success flow
+        with client.mock_mgmt_post(make_response({"attributes": [{"name": "attr1"}]})) as mock_post:
+            resp = await client.invoke(
+                client.mgmt.user.create_custom_attribute(
+                    "attr1", "Attribute 1", "string", required=True, options=["a", "b"]
+                )
+            )
+            assert resp["attributes"][0]["name"] == "attr1"
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_create_custom_attribute_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "attributes": [
+                        {
+                            "name": "attr1",
+                            "displayName": "Attribute 1",
+                            "type": "string",
+                            "required": True,
+                            "options": ["a", "b"],
+                        }
+                    ]
+                },
+                follow_redirects=False,
+            )
+
+    async def test_delete_custom_attribute(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.delete_custom_attribute("attr1"))
+
+        # Test success flow
+        with client.mock_mgmt_post(make_response({"attributes": []})) as mock_post:
+            resp = await client.invoke(client.mgmt.user.delete_custom_attribute("attr1"))
+            assert resp["attributes"] == []
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_delete_custom_attribute_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={"names": ["attr1"]},
+                follow_redirects=False,
+            )
+
+    async def test_load_custom_attributes(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_get(make_response(status=500)) as mock_get:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.load_custom_attributes())
+
+        # Test success flow
+        with client.mock_mgmt_get(make_response({"attributes": [{"name": "attr1"}]})) as mock_get:
+            resp = await client.invoke(client.mgmt.user.load_custom_attributes())
+            assert resp["attributes"][0]["name"] == "attr1"
+            assert_http_called(
+                mock_get,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_load_custom_attributes_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params={},
+                follow_redirects=True,
+            )
+
+    async def test_delete_batch(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.delete_batch(["u1", "u2"]))
+
+        # Test success flow
+        with client.mock_mgmt_post(make_response({})) as mock_post:
+            assert await client.invoke(client.mgmt.user.delete_batch(["u1", "u2"])) is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_delete_batch_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={"userIds": ["u1", "u2"]},
+                follow_redirects=False,
+            )
+
+    async def test_import_users(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.import_users("auth0", b'{"users":[]}'))
+
+        # Test success flow
+        with client.mock_mgmt_post(make_response({"imported": 2, "failed": 0})) as mock_post:
+            resp = await client.invoke(
+                client.mgmt.user.import_users("auth0", b'{"users":[]}', b'{"hashes":[]}', dryrun=True)
+            )
+            assert resp["imported"] == 2
+            assert resp["failed"] == 0
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_import_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "source": "auth0",
+                    "users": b'{"users":[]}',
+                    "hashes": b'{"hashes":[]}',
+                    "dryrun": True,
+                },
+                follow_redirects=False,
+            )
+
+    async def test_delete_passkey(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.delete_passkey("user1", "cred123"))
+
+        # Test success flow
+        with client.mock_mgmt_post(make_response({})) as mock_post:
+            assert await client.invoke(client.mgmt.user.delete_passkey("user1", "cred123")) is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_delete_passkey_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={"loginId": "user1", "credentialId": "cred123"},
+                follow_redirects=False,
+            )
+
+    async def test_list_passkeys(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.list_passkeys("user1"))
+
+        # Test success flow
+        with client.mock_mgmt_post(make_response({"passkeys": [{"id": "pk1"}]})) as mock_post:
+            resp = await client.invoke(client.mgmt.user.list_passkeys("user1"))
+            assert resp["passkeys"][0]["id"] == "pk1"
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_list_passkeys_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={"loginId": "user1"},
+                follow_redirects=False,
+            )
+
+    async def test_list_trusted_devices(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.list_trusted_devices(["user1", "user2"]))
+
+        # Test success flow
+        with client.mock_mgmt_post(make_response({"devices": [{"id": "dev1"}]})) as mock_post:
+            resp = await client.invoke(client.mgmt.user.list_trusted_devices(["user1", "user2"]))
+            assert resp["devices"][0]["id"] == "dev1"
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_list_trusted_devices_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={"identifiers": ["user1", "user2"]},
+                follow_redirects=False,
+            )
+
+    async def test_remove_trusted_device(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.remove_trusted_device("user1", ["dev1", "dev2"]))
+
+        # Test success flow
+        with client.mock_mgmt_post(make_response({})) as mock_post:
+            assert await client.invoke(client.mgmt.user.remove_trusted_device("user1", ["dev1", "dev2"])) is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_remove_trusted_device_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={"identifier": "user1", "deviceIds": ["dev1", "dev2"]},
+                follow_redirects=False,
+            )
+
+    async def test_update_recovery_email(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.update_recovery_email("user1", "recovery@example.com", True))
+
+        # Test success flow
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            resp = await client.invoke(client.mgmt.user.update_recovery_email("user1", "recovery@example.com", True))
+            assert resp["user"]["id"] == "u1"
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_update_recovery_email_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "loginId": "user1",
+                    "recoveryEmail": "recovery@example.com",
+                    "verified": True,
+                },
+                follow_redirects=False,
+            )
+
+    async def test_update_recovery_phone(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.update_recovery_phone("user1", "+1234567890", True))
+
+        # Test success flow
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            resp = await client.invoke(client.mgmt.user.update_recovery_phone("user1", "+1234567890", True))
+            assert resp["user"]["id"] == "u1"
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_update_recovery_phone_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "loginId": "user1",
+                    "recoveryPhone": "+1234567890",
+                    "verified": True,
+                },
+                follow_redirects=False,
+            )

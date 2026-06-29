@@ -279,6 +279,46 @@ class TestJWT:
                 params=None,
             )
 
+    async def test_impersonate_stepup(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response({}, status=500)) as mock:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.jwt.impersonate_stepup("imp1", "imp2", False))
+
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.jwt.impersonate_stepup("", "imp2", False))
+
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.jwt.impersonate_stepup("imp1", "", False))
+
+        # Test success flow
+        with client.mock_mgmt_post(make_response({"jwt": "response"})) as mock:
+            resp = await client.invoke(client.mgmt.jwt.impersonate_stepup("imp1", "imp2", True))
+            assert resp == "response"
+            expected_uri = f"{DEFAULT_BASE_URL}{MgmtV1.impersonate_stepup_path}"
+            assert_http_called(
+                mock,
+                client.mode,
+                expected_uri,
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                json={
+                    "loginId": "imp2",
+                    "impersonatorId": "imp1",
+                    "validateConsent": True,
+                    "customClaims": None,
+                    "selectedTenant": None,
+                    "refreshDuration": None,
+                },
+                follow_redirects=False,
+                params=None,
+            )
+
     async def test_anonymous(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 

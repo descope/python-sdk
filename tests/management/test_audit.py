@@ -97,3 +97,38 @@ class TestAudit:
                 },
                 follow_redirects=False,
             )
+
+    async def test_create_audit_webhook(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed create_audit_webhook
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.audit.create_audit_webhook("webhook-name"))
+
+        # Test success create_audit_webhook
+        with client.mock_mgmt_post(make_response({})) as mock_post:
+            await client.invoke(
+                client.mgmt.audit.create_audit_webhook(
+                    name="webhook-name",
+                    url="https://example.com/webhook",
+                    headers={"Authorization": "Bearer token"},
+                )
+            )
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.audit_webhook_set_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "name": "webhook-name",
+                    "url": "https://example.com/webhook",
+                    "headers": {"Authorization": "Bearer token"},
+                },
+                follow_redirects=False,
+            )

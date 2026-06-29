@@ -373,3 +373,27 @@ class TenantAsync(TenantBase, AsyncHTTPBase):
         )
         result = response.json()
         return result.get("adminSSOConfigurationLink", "")
+
+    async def revoke_sso_configuration_link(
+        self,
+        tenant_id: str,
+        sso_id: Optional[str] = None,
+    ):
+        """
+        Revoke a tenant admin self-service link for SSO configuration.
+
+        Args:
+        tenant_id (str): Tenant ID to revoke the link for.
+        sso_id (str): Optional SSO identifier for the tenant.
+
+        Raise:
+        AuthException: raised if revoke operation fails
+        """
+        body: dict[str, Any] = {"tenantId": tenant_id}
+        if sso_id is not None:
+            body["ssoId"] = sso_id
+
+        await self._http.post(
+            MgmtV1.tenant_revoke_sso_configuration_link_path,
+            body=body,
+        )
