@@ -198,7 +198,7 @@ class FGAAsync(AsyncHTTPBase):
         """
         body = {"tenantId": tenant_id, "resourcesQueries": resources_queries}
         if resources_limit is not None:
-            body["resourcesLimit"] = str(resources_limit)
+            body["resourcesLimit"] = resources_limit
         response = await self._http.post(MgmtV1.fga_mappable_resources_path, body=body)
         return response.json().get("mappableResources", [])
 

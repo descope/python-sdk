@@ -209,7 +209,8 @@ class TestProject:
 
         # Test success flow
         with client.mock_mgmt_post(make_response()) as mock_post:
-            assert await client.invoke(client.mgmt.project.delete()) is None
+            resp = await client.invoke(client.mgmt.project.delete())
+            assert resp is None
             assert_http_called(
                 mock_post,
                 client.mode,

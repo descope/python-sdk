@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 from typing import List, Optional, Union
 
 from descope._http_base import AsyncHTTPBase
@@ -1907,9 +1908,9 @@ class UserAsync(UserBase, AsyncHTTPBase):
             "dryrun": dryrun,
         }
         if users is not None:
-            body["users"] = users
+            body["users"] = base64.b64encode(users).decode("utf-8")
         if hashes is not None:
-            body["hashes"] = hashes
+            body["hashes"] = base64.b64encode(hashes).decode("utf-8")
 
         response = await self._http.post(
             MgmtV1.user_import_path,

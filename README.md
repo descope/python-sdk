@@ -654,6 +654,9 @@ sso_link = descope_client.mgmt.tenant.generate_sso_configuration_link(
     expire_time=21600,
     actor_id="my-admin-actor-id",
 )
+
+# Revoke a previously generated SSO configuration link
+descope_client.mgmt.tenant.revoke_sso_configuration_link(tenant_id="my-custom-id")
 ```
 
 ### Manage Users
@@ -794,6 +797,29 @@ users = users_resp["users"]
 users_history_resp = descope_client.mgmt.user.history(["user-id-1", "user-id-2"])
     for user_history in users_history_resp:
         # Do something
+
+# Delete multiple users at once. IMPORTANT: This action is irreversible. Use carefully.
+descope_client.mgmt.user.delete_batch(["<user-id-1>", "<user-id-2>"])
+
+# Import users from an external source (users/hashes are JSON-encoded bytes)
+descope_client.mgmt.user.import_users(source="auth0", users=b'{"users":[]}', dryrun=True)
+
+# Manage custom user attributes
+descope_client.mgmt.user.create_custom_attribute(name="favorite_color", display_name="Favorite Color", type="text")
+descope_client.mgmt.user.load_custom_attributes()
+descope_client.mgmt.user.delete_custom_attribute("favorite_color")
+
+# Manage a user's passkeys (WebAuthn devices)
+passkeys = descope_client.mgmt.user.list_passkeys("<login-id>")
+descope_client.mgmt.user.delete_passkey("<login-id>", "<credential-id>")
+
+# Manage trusted devices
+devices = descope_client.mgmt.user.list_trusted_devices(["<login-id>"])
+descope_client.mgmt.user.remove_trusted_device("<login-id>", ["<device-id>"])
+
+# Update a user's recovery email / phone
+descope_client.mgmt.user.update_recovery_email("<login-id>", "recovery@example.com", verified=True)
+descope_client.mgmt.user.update_recovery_phone("<login-id>", "+15555555555", verified=True)
 ```
 
 #### Set or Expire User Password
@@ -812,6 +838,20 @@ descope_client.mgmt.user.set_active_password('<login-id>', '<some-password>');
 
 # Or alternatively, expire a user password
 descope_client.mgmt.user.expirePassword('<login-id>');
+```
+
+You can also read and configure the password policy settings, at the project level or per tenant:
+
+```python
+# Get password settings (project-level when tenant_id is omitted)
+settings = descope_client.mgmt.password.get_settings()
+tenant_settings = descope_client.mgmt.password.get_settings(tenant_id="my-tenant-id")
+
+# Configure password settings for a tenant
+descope_client.mgmt.password.configure_settings(
+    tenant_id="my-tenant-id",
+    settings={"minLength": 8, "lowercase": True, "uppercase": True, "number": True},
+)
 ```
 
 ### Manage Access Keys
@@ -866,6 +906,14 @@ descope_client.mgmt.access_key.activate("key-id")
 
 # Access key deletion cannot be undone. Use carefully.
 descope_client.mgmt.access_key.delete("key-id")
+
+# Rotate an access key - the previous cleartext is invalidated and a new one returned.
+rotate_resp = descope_client.mgmt.access_key.rotate("key-id")
+
+# Activate, deactivate or delete multiple access keys at once.
+descope_client.mgmt.access_key.activate_batch(["key-id-1", "key-id-2"])
+descope_client.mgmt.access_key.deactivate_batch(["key-id-1", "key-id-2"])
+descope_client.mgmt.access_key.delete_batch(["key-id-1", "key-id-2"])
 ```
 
 Exchange the access key and provide optional access key login options:
@@ -1302,6 +1350,15 @@ refresh_jwt = descope_client.mgmt.jwt.impersonate(
     custom_claims={"key1":"value1"},
     tenant_id="<One of the tenants the impersonated user belongs to>"
 )
+
+# Impersonate with step-up, returning a fresh session and refresh JWT pair
+jwt_resp = descope_client.mgmt.jwt.impersonate_stepup(
+    impersonator_id="<Login ID impersonator>",
+    login_id="<Login ID of impersonated person>",
+    validate_consent=True,
+    custom_claims={"key1": "value1"},
+    tenant_id="<One of the tenants the impersonated user belongs to>",
+)
 ```
 
 # Note 1: The generate code/link functions, work only for test users, will not work for regular users.
@@ -1342,6 +1399,16 @@ await descopeClient.management.audit.create_event(
     actor_id="UXXX",
     tenant_id="tenant-id"
     data={"some": "data"}
+)
+```
+
+You can create an audit webhook to stream audit events to an external endpoint:
+
+```python
+descope_client.mgmt.audit.create_audit_webhook(
+    name="my-webhook",
+    url="https://example.com/audit",
+    headers={"Authorization": "Bearer <token>"},
 )
 ```
 
@@ -1437,6 +1504,17 @@ When the `fga_cache_url` is configured, the following FGA methods will automatic
 
 Other FGA operations like `load_schema` will continue to use the standard Descope API endpoints.
 
+You can also validate a schema with a dry run, and load the mappable schema and resources for a tenant:
+
+```python
+# Validate a schema without applying it
+descope_client.mgmt.fga.save_schema_dryrun(schema)
+
+# Load the mappable schema / resources for a tenant
+descope_client.mgmt.fga.load_mappable_schema("tenant-id", resources_limit=100)
+descope_client.mgmt.fga.load_mappable_resources("tenant-id", [{"query": "doc"}], resources_limit=50)
+```
+
 ### Manage Project
 
 You can change the project name, as well as clone the current project to
@@ -1465,6 +1543,22 @@ export = descope_client.mgmt.project.export_project()
 
 # Import the previously exported data into the current project
 descope_client.mgmt.project.import_project(export)
+```
+
+You can also work with project snapshots and delete a project.
+
+```python
+# Export a snapshot of the project (optionally for a specific environment)
+snapshot = descope_client.mgmt.project.export_snapshot()
+
+# Validate a snapshot before importing it
+validation = descope_client.mgmt.project.validate_snapshot(snapshot["files"])
+
+# Import a previously exported snapshot
+descope_client.mgmt.project.import_snapshot(snapshot["files"])
+
+# Delete the current project. IMPORTANT: This action is irreversible. Use carefully.
+descope_client.mgmt.project.delete()
 ```
 
 ### Manage SSO Applications
@@ -1522,6 +1616,25 @@ apps_resp = descope_client.mgmt.sso_application.load_all()
 apps = apps_resp["apps"]
     for app in apps:
         # Do something
+
+# Create / update a WS-Fed SSO application
+descope_client.mgmt.sso_application.create_wsfed_application(
+    name="My WS-Fed app",
+    login_page_url="http://dummy.com",
+    realm="urn:my-realm",
+    reply_url="http://dummy.com/reply",
+)
+descope_client.mgmt.sso_application.update_wsfed_application(
+    id="my-custom-id",
+    name="My WS-Fed app",
+    login_page_url="http://dummy.com",
+    realm="urn:my-realm",
+    reply_url="http://dummy.com/reply",
+)
+
+# Get or rotate the SSO application secret
+secret = descope_client.mgmt.sso_application.get_application_secret("my-custom-id")
+new_secret = descope_client.mgmt.sso_application.rotate_application_secret("my-custom-id")
 ```
 
 ### Manage Outbound Applications
@@ -1892,6 +2005,94 @@ new_secret = descope_client.mgmt.engine.rotate_secret(engine_id)["secret"]
 
 # Delete an engine. IMPORTANT: This action is irreversible. Use carefully.
 descope_client.mgmt.engine.delete(engine_id)
+```
+
+### Manage Lists
+
+Lists let you maintain reusable allow/deny collections of IPs, text values or arbitrary JSON.
+The lists client is available as `descope_client.mgmt.list`.
+
+```python
+# Create a list (list_type is one of "ips", "texts" or "json")
+my_list = descope_client.mgmt.list.create(
+    name="blocked-ips",
+    list_type="ips",
+    description="IPs to block",
+    data=["1.2.3.4"],
+)
+list_id = my_list["id"]
+
+# Update / load / delete
+descope_client.mgmt.list.update(list_id, name="blocked-ips", description="updated")
+descope_client.mgmt.list.load(list_id)
+descope_client.mgmt.list.load_by_name("blocked-ips")
+descope_client.mgmt.list.load_all()
+descope_client.mgmt.list.delete(list_id)
+
+# Bulk import lists
+descope_client.mgmt.list.import_lists([{"name": "blocked-ips", "type": "ips", "data": ["1.2.3.4"]}])
+
+# IP list operations
+descope_client.mgmt.list.add_ips(list_id, ["5.6.7.8"])
+descope_client.mgmt.list.remove_ips(list_id, ["1.2.3.4"])
+is_blocked = descope_client.mgmt.list.check_ip(list_id, "5.6.7.8")
+
+# Text list operations
+descope_client.mgmt.list.add_texts(list_id, ["foo"])
+descope_client.mgmt.list.remove_texts(list_id, ["foo"])
+has_text = descope_client.mgmt.list.check_text(list_id, "foo")
+
+# Remove all entries from a list
+descope_client.mgmt.list.clear(list_id)
+```
+
+### Manage Scope and Claim Mappings
+
+Scope/claim mappings control which claims are emitted for a given OAuth scope.
+
+```python
+# Get the current mappings
+mappings = descope_client.mgmt.scope_claim_mapping.get()
+
+# Replace all mappings
+descope_client.mgmt.scope_claim_mapping.set(
+    [{"scope": "profile", "claims": {"name": "name"}, "description": "profile scope"}]
+)
+
+# Delete all mappings
+descope_client.mgmt.scope_claim_mapping.delete()
+```
+
+### Manage Third Party Applications
+
+You can create, update, delete or load third party (OIDC) applications, manage their
+secrets and the consents granted to them.
+
+```python
+# Create a third party application
+app = descope_client.mgmt.third_party_application.create(
+    name="My App",
+    login_page_url="http://dummy.com",
+    approved_callback_urls=["http://dummy.com/callback"],
+)
+app_id = app["id"]
+
+# Update / patch / load / delete
+descope_client.mgmt.third_party_application.update(app_id, name="My App", login_page_url="http://dummy.com")
+descope_client.mgmt.third_party_application.patch(app_id, name="Renamed App")
+descope_client.mgmt.third_party_application.load(app_id)
+descope_client.mgmt.third_party_application.load_all()
+descope_client.mgmt.third_party_application.delete(app_id)
+descope_client.mgmt.third_party_application.delete_batch([app_id])
+
+# Manage the application secret
+descope_client.mgmt.third_party_application.get_secret(app_id)
+descope_client.mgmt.third_party_application.rotate_secret(app_id)
+
+# Manage consents
+descope_client.mgmt.third_party_application.search_consents(app_id=app_id)
+descope_client.mgmt.third_party_application.delete_consents(app_id=app_id)
+descope_client.mgmt.third_party_application.delete_tenant_consents("tenant-id")
 ```
 
 ### Utils for your end to end (e2e) tests and integration tests

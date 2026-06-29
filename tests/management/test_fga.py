@@ -204,7 +204,7 @@ class TestFGA:
                 f"{DEFAULT_BASE_URL}{MgmtV1.fga_mappable_resources_path}",
                 headers=MGMT_HEADERS,
                 params=None,
-                json={"tenantId": "tenant1", "resourcesQueries": [{"query": "test"}], "resourcesLimit": "5"},
+                json={"tenantId": "tenant1", "resourcesQueries": [{"query": "test"}], "resourcesLimit": 5},
                 follow_redirects=False,
             )
 
