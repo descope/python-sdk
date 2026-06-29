@@ -255,6 +255,94 @@ class SSOSettings(SSOSettingsBase, HTTPBase):
             body=body,
         )
 
+    def configure_sso_redirect_url(
+        self,
+        tenant_id: str,
+        saml_redirect_url: Optional[str] = None,
+        oauth_redirect_url: Optional[str] = None,
+        sso_id: Optional[str] = None,
+    ):
+        """
+        Configure SSO redirect URLs for a tenant.
+        This will override the existing redirect URLs for the tenant and will not affect any other SSO setting.
+
+        Args:
+        tenant_id (str): The tenant ID to be configured
+        saml_redirect_url (str): Optional SAML redirect URL
+        oauth_redirect_url (str): Optional OAuth redirect URL
+        sso_id (str): Optional SSO identifier for multi-SSO configurations
+
+        Raise:
+        AuthException: raised if configuration operation fails
+        """
+        body = {"tenantId": tenant_id}
+        if saml_redirect_url is not None:
+            body["samlRedirectUrl"] = saml_redirect_url
+        if oauth_redirect_url is not None:
+            body["oauthRedirectUrl"] = oauth_redirect_url
+        if sso_id:
+            body["ssoId"] = sso_id
+
+        self._http.post(
+            uri=MgmtV1.sso_redirect_path,
+            body=body,
+        )
+
+    def load_all_settings(
+        self,
+        tenant_id: str,
+    ) -> dict:
+        """
+        Load all SSO settings for the provided tenant_id (for multi-SSO usage).
+
+        Args:
+        tenant_id (str): The tenant ID of the desired SSO Settings
+
+        Return value (dict):
+        Containing all loaded SSO settings information.
+
+        Raise:
+        AuthException: raised if load configuration operation fails
+        """
+        response = self._http.get(
+            uri=MgmtV1.sso_load_all_settings_path,
+            params={"tenantId": tenant_id},
+        )
+        return response.json()
+
+    def new_settings(
+        self,
+        tenant_id: str,
+        display_name: str,
+        sso_id: Optional[str] = None,
+    ) -> dict:
+        """
+        Create new SSO settings for a tenant.
+
+        Args:
+        tenant_id (str): The tenant ID to create settings for
+        display_name (str): Display name for the SSO settings
+        sso_id (str): Optional SSO identifier
+
+        Return value (dict):
+        Containing the created SSO settings information.
+
+        Raise:
+        AuthException: raised if creation operation fails
+        """
+        body = {
+            "tenantId": tenant_id,
+            "displayName": display_name,
+        }
+        if sso_id:
+            body["ssoId"] = sso_id
+
+        response = self._http.post(
+            uri=MgmtV1.sso_new_settings_path,
+            body=body,
+        )
+        return response.json()
+
     def delete_settings(
         self,
         tenant_id: str,

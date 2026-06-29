@@ -160,3 +160,53 @@ class FGA(HTTPBase):
             MgmtV1.fga_resources_save,
             body={"resourcesDetails": resources_details},
         )
+
+    def load_mappable_schema(self, tenant_id: str, resources_limit: Optional[int] = None) -> dict:
+        """
+        Load the mappable schema for the given tenant.
+        Args:
+            tenant_id (str): The tenant ID for which to load the mappable schema.
+            resources_limit (int): Optional limit on the number of resources to include.
+        Returns:
+            dict: The mappable schema as returned by the server.
+        Raise:
+            AuthException: raised if loading the mappable schema fails.
+        """
+        params = {"tenantId": tenant_id}
+        if resources_limit is not None:
+            params["resourcesLimit"] = str(resources_limit)
+        response = self._http.get(MgmtV1.fga_mappable_schema_path, params=params)
+        return response.json()
+
+    def load_mappable_resources(
+        self, tenant_id: str, resources_queries: List[dict], resources_limit: Optional[int] = None
+    ) -> List[dict]:
+        """
+        Search for mappable resources matching the given queries.
+        Args:
+            tenant_id (str): The tenant ID for which to search resources.
+            resources_queries (List[dict]): List of resource queries to search for.
+            resources_limit (int): Optional limit on the number of resources to return.
+        Returns:
+            List[dict]: List of mappable resources matching the queries.
+        Raise:
+            AuthException: raised if the search fails.
+        """
+        body = {"tenantId": tenant_id, "resourcesQueries": resources_queries}
+        if resources_limit is not None:
+            body["resourcesLimit"] = str(resources_limit)
+        response = self._http.post(MgmtV1.fga_mappable_resources_path, body=body)
+        return response.json().get("mappableResources", [])
+
+    def save_schema_dryrun(self, schema: str) -> dict:
+        """
+        Perform a dry run of saving the schema to validate it without applying changes.
+        Args:
+            schema (str): the schema in the AuthZ 1.0 DSL.
+        Returns:
+            dict: The dry run response containing validation results.
+        Raise:
+            AuthException: raised if the dry run fails or schema is invalid.
+        """
+        response = self._http.post(MgmtV1.fga_schema_dryrun_path, body={"dsl": schema})
+        return response.json()

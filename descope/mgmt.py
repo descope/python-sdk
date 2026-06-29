@@ -4,6 +4,7 @@ from descope.auth import Auth
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 from descope.http_client import HTTPClient
 from descope.management.access_key import AccessKey
+from descope.management.analytics import Analytics
 from descope.management.audit import Audit
 from descope.management.authz import Authz
 from descope.management.descoper import Descoper
@@ -13,19 +14,23 @@ from descope.management.flow import Flow
 from descope.management.group import Group
 from descope.management.jwt import JWT
 from descope.management.license import License
+from descope.management.lists import Lists
 from descope.management.management_key import ManagementKey
 from descope.management.outbound_application import (
     OutboundApplication,
     OutboundApplicationByToken,
 )
+from descope.management.password import Password
 from descope.management.permission import Permission
 from descope.management.project import Project
 from descope.management.role import Role
+from descope.management.scope_claim_mapping import ScopeClaimMapping
 from descope.management.sso_application import SSOApplication
 from descope.management.sso_settings import SSOSettings
 
 # Import management modules after adapter to avoid circularities
 from descope.management.tenant import Tenant
+from descope.management.third_party_application import ThirdPartyApplication
 from descope.management.user import User
 
 
@@ -40,6 +45,7 @@ class MGMT:
         """
         self._http = http_client
         self._access_key = AccessKey(http_client)
+        self._analytics = Analytics(http_client)
         self._audit = Audit(http_client)
         self._authz = Authz(http_client, fga_cache_url=fga_cache_url)
         self._descoper = Descoper(http_client)
@@ -49,14 +55,18 @@ class MGMT:
         self._group = Group(http_client)
         self._jwt = JWT(http_client, auth=auth)
         self._license = License(http_client)
+        self._lists = Lists(http_client)
         self._management_key = ManagementKey(http_client)
         self._outbound_application = OutboundApplication(http_client)
         self._outbound_application_by_token = OutboundApplicationByToken(http_client)
+        self._password = Password(http_client)
         self._permission = Permission(http_client)
         self._project = Project(http_client)
         self._role = Role(http_client)
+        self._scope_claim_mapping = ScopeClaimMapping(http_client)
         self._sso = SSOSettings(http_client)
         self._sso_application = SSOApplication(http_client)
+        self._third_party_application = ThirdPartyApplication(http_client)
         self._tenant = Tenant(http_client)
         self._user = User(http_client)
 
@@ -167,3 +177,28 @@ class MGMT:
     def management_key(self):
         self._ensure_management_key("management_key")
         return self._management_key
+
+    @property
+    def analytics(self):
+        self._ensure_management_key("analytics")
+        return self._analytics
+
+    @property
+    def scope_claim_mapping(self):
+        self._ensure_management_key("scope_claim_mapping")
+        return self._scope_claim_mapping
+
+    @property
+    def list(self):
+        self._ensure_management_key("list")
+        return self._lists
+
+    @property
+    def password(self):
+        self._ensure_management_key("password")
+        return self._password
+
+    @property
+    def third_party_application(self):
+        self._ensure_management_key("third_party_application")
+        return self._third_party_application

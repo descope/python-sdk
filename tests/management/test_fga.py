@@ -161,6 +161,76 @@ class TestFGA:
             with pytest.raises(AuthException):
                 await client.invoke(client.mgmt.fga.save_resources_details(details))
 
+    async def test_load_mappable_schema(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed load_mappable_schema
+        with client.mock_mgmt_get(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.fga.load_mappable_schema("tenant1"))
+
+        # Test success flow
+        response_body = {"schema": "test"}
+        with client.mock_mgmt_get(make_response(response_body)) as mock:
+            result = await client.invoke(client.mgmt.fga.load_mappable_schema("tenant1", resources_limit=10))
+            assert result == response_body
+            assert_http_called(
+                mock,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.fga_mappable_schema_path}",
+                headers=MGMT_HEADERS,
+                params={"tenantId": "tenant1", "resourcesLimit": "10"},
+                follow_redirects=True,
+            )
+
+    async def test_load_mappable_resources(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed load_mappable_resources
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.fga.load_mappable_resources("tenant1", []))
+
+        # Test success flow
+        response_body = {"mappableResources": [{"id": "r1"}]}
+        with client.mock_mgmt_post(make_response(response_body)) as mock:
+            result = await client.invoke(
+                client.mgmt.fga.load_mappable_resources("tenant1", [{"query": "test"}], resources_limit=5)
+            )
+            assert result == response_body["mappableResources"]
+            assert_http_called(
+                mock,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.fga_mappable_resources_path}",
+                headers=MGMT_HEADERS,
+                params=None,
+                json={"tenantId": "tenant1", "resourcesQueries": [{"query": "test"}], "resourcesLimit": "5"},
+                follow_redirects=False,
+            )
+
+    async def test_save_schema_dryrun(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed save_schema_dryrun
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.fga.save_schema_dryrun(""))
+
+        # Test success flow
+        response_body = {"valid": True}
+        with client.mock_mgmt_post(make_response(response_body)) as mock:
+            result = await client.invoke(client.mgmt.fga.save_schema_dryrun("model AuthZ 1.0"))
+            assert result == response_body
+            assert_http_called(
+                mock,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.fga_schema_dryrun_path}",
+                headers=MGMT_HEADERS,
+                params=None,
+                json={"dsl": "model AuthZ 1.0"},
+                follow_redirects=False,
+            )
+
     async def test_fga_cache_url_save_schema(self, client_factory):
         fga_cache_url = "https://my-fga-cache.example.com"
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key", fga_cache_url=fga_cache_url)

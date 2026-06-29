@@ -229,3 +229,86 @@ class AccessKeyAsync(AccessKeyBase, AsyncHTTPBase):
             MgmtV1.access_key_delete_path,
             body={"id": id},
         )
+
+    async def rotate(
+        self,
+        id: str,
+    ) -> dict:
+        """
+        Rotate an existing access key. Regenerates the secret while preserving the same access key ID,
+        name, roles, tenants, expiry, and metadata.
+
+        Args:
+        id (str): The id of the access key to be rotated.
+
+        Return value (dict):
+        Return dict in the format
+            {
+                "key": {},
+                "cleartext": {}
+            }
+        The cleartext is the new secret and is only visible once. Save it immediately.
+        The previous secret stops working as soon as this call returns.
+
+        Raise:
+        AuthException: raised if rotation operation fails
+        """
+        response = await self._http.post(
+            MgmtV1.access_key_rotate_path,
+            body={"id": id},
+        )
+        return response.json()
+
+    async def activate_batch(
+        self,
+        ids: List[str],
+    ):
+        """
+        Activate multiple existing access keys in a single request.
+
+        Args:
+        ids (List[str]): The list of access key IDs to be activated.
+
+        Raise:
+        AuthException: raised if batch activation operation fails
+        """
+        await self._http.post(
+            MgmtV1.access_key_activate_batch_path,
+            body={"ids": ids},
+        )
+
+    async def deactivate_batch(
+        self,
+        ids: List[str],
+    ):
+        """
+        Deactivate multiple existing access keys in a single request.
+
+        Args:
+        ids (List[str]): The list of access key IDs to be deactivated.
+
+        Raise:
+        AuthException: raised if batch deactivation operation fails
+        """
+        await self._http.post(
+            MgmtV1.access_key_deactivate_batch_path,
+            body={"ids": ids},
+        )
+
+    async def delete_batch(
+        self,
+        ids: List[str],
+    ):
+        """
+        Delete multiple existing access keys in a single request. IMPORTANT: This action is irreversible. Use carefully.
+
+        Args:
+        ids (List[str]): The list of access key IDs to be deleted.
+
+        Raise:
+        AuthException: raised if batch deletion operation fails
+        """
+        await self._http.post(
+            MgmtV1.access_key_delete_batch_path,
+            body={"ids": ids},
+        )

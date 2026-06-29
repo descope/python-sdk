@@ -251,3 +251,116 @@ class TestAccessKey:
                 },
                 follow_redirects=False,
             )
+
+    async def test_rotate(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.access_key.rotate("key-id"))
+
+        # Test success flow
+        with client.mock_mgmt_post(make_response({"key": {"id": "ak1"}, "cleartext": "new-secret"})) as mock_post:
+            resp = await client.invoke(client.mgmt.access_key.rotate("ak1"))
+            assert resp["key"]["id"] == "ak1"
+            assert resp["cleartext"] == "new-secret"
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.access_key_rotate_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "id": "ak1",
+                },
+                follow_redirects=False,
+            )
+
+    async def test_activate_batch(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.access_key.activate_batch(["ak1", "ak2"]))
+
+        # Test success flow
+        with client.mock_mgmt_post(make_response({})) as mock_post:
+            result = await client.invoke(client.mgmt.access_key.activate_batch(["ak1", "ak2", "ak3"]))
+            assert result is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.access_key_activate_batch_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "ids": ["ak1", "ak2", "ak3"],
+                },
+                follow_redirects=False,
+            )
+
+    async def test_deactivate_batch(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.access_key.deactivate_batch(["ak1", "ak2"]))
+
+        # Test success flow
+        with client.mock_mgmt_post(make_response({})) as mock_post:
+            result = await client.invoke(client.mgmt.access_key.deactivate_batch(["ak1", "ak2", "ak3"]))
+            assert result is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.access_key_deactivate_batch_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "ids": ["ak1", "ak2", "ak3"],
+                },
+                follow_redirects=False,
+            )
+
+    async def test_delete_batch(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.access_key.delete_batch(["ak1", "ak2"]))
+
+        # Test success flow
+        with client.mock_mgmt_post(make_response({})) as mock_post:
+            result = await client.invoke(client.mgmt.access_key.delete_batch(["ak1", "ak2", "ak3"]))
+            assert result is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.access_key_delete_batch_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "ids": ["ak1", "ak2", "ak3"],
+                },
+                follow_redirects=False,
+            )

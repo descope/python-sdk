@@ -999,3 +999,104 @@ class TestSSOSettings:
                 },
                 follow_redirects=False,
             )
+
+    async def test_configure_sso_redirect_url(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.sso.configure_sso_redirect_url(
+                        "tenant-id", saml_redirect_url="https://example.com/saml"
+                    )
+                )
+
+        # Test success flow
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            await client.invoke(
+                client.mgmt.sso.configure_sso_redirect_url(
+                    "tenant-id",
+                    saml_redirect_url="https://example.com/saml",
+                    oauth_redirect_url="https://example.com/oauth",
+                    sso_id="sso123",
+                )
+            )
+
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_redirect_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "tenantId": "tenant-id",
+                    "samlRedirectUrl": "https://example.com/saml",
+                    "oauthRedirectUrl": "https://example.com/oauth",
+                    "ssoId": "sso123",
+                },
+                follow_redirects=False,
+            )
+
+    async def test_load_all_settings(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_get(make_response(status=500)) as mock_get:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.sso.load_all_settings("tenant-id"))
+
+        # Test success flow
+        resp_data = json.loads("""[{"tenant": {"id": "T2AAAA"}, "saml": {}}]""")
+        with client.mock_mgmt_get(make_response(resp_data)) as mock_get:
+            resp = await client.invoke(client.mgmt.sso.load_all_settings("T2AAAA"))
+            assert isinstance(resp, list)
+
+            assert_http_called(
+                mock_get,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_load_all_settings_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params={"tenantId": "T2AAAA"},
+                follow_redirects=True,
+            )
+
+    async def test_new_settings(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.sso.new_settings("tenant-id", "My SSO"))
+
+        # Test success flow
+        resp_data = json.loads("""{"tenant": {"id": "T2AAAA"}, "saml": {}}""")
+        with client.mock_mgmt_post(make_response(resp_data)) as mock_post:
+            resp = await client.invoke(client.mgmt.sso.new_settings("T2AAAA", "My SSO", sso_id="sso123"))
+            assert resp.get("tenant", {}).get("id") == "T2AAAA"
+
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_new_settings_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "tenantId": "T2AAAA",
+                    "displayName": "My SSO",
+                    "ssoId": "sso123",
+                },
+                follow_redirects=False,
+            )

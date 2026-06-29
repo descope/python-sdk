@@ -4,6 +4,7 @@ from descope.auth_async import AuthAsync
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 from descope.http_client_async import HTTPClientAsync
 from descope.management.access_key_async import AccessKeyAsync
+from descope.management.analytics_async import AnalyticsAsync
 from descope.management.audit_async import AuditAsync
 from descope.management.authz_async import AuthzAsync
 from descope.management.descoper_async import DescoperAsync
@@ -13,19 +14,25 @@ from descope.management.flow_async import FlowAsync
 from descope.management.group_async import GroupAsync
 from descope.management.jwt_async import JWTAsync
 from descope.management.license_async import LicenseAsync
+from descope.management.lists_async import ListsAsync
 from descope.management.management_key_async import ManagementKeyAsync
 from descope.management.outbound_application_async import (
     OutboundApplicationAsync,
     OutboundApplicationByTokenAsync,
 )
+from descope.management.password_async import PasswordAsync
 from descope.management.permission_async import PermissionAsync
 from descope.management.project_async import ProjectAsync
 from descope.management.role_async import RoleAsync
+from descope.management.scope_claim_mapping_async import ScopeClaimMappingAsync
 from descope.management.sso_application_async import SSOApplicationAsync
 from descope.management.sso_settings_async import SSOSettingsAsync
 
 # Import management modules after adapter to avoid circularities
 from descope.management.tenant_async import TenantAsync
+from descope.management.third_party_application_async import (
+    ThirdPartyApplicationAsync,
+)
 from descope.management.user_async import UserAsync
 
 
@@ -40,6 +47,7 @@ class MGMTAsync:
         """
         self._http = http_client
         self._access_key = AccessKeyAsync(http_client)
+        self._analytics = AnalyticsAsync(http_client)
         self._audit = AuditAsync(http_client)
         self._authz = AuthzAsync(http_client, fga_cache_url=fga_cache_url)
         self._descoper = DescoperAsync(http_client)
@@ -49,14 +57,18 @@ class MGMTAsync:
         self._group = GroupAsync(http_client)
         self._jwt = JWTAsync(http_client, auth=auth)
         self._license = LicenseAsync(http_client)
+        self._lists = ListsAsync(http_client)
         self._management_key = ManagementKeyAsync(http_client)
         self._outbound_application = OutboundApplicationAsync(http_client)
         self._outbound_application_by_token = OutboundApplicationByTokenAsync(http_client)
+        self._password = PasswordAsync(http_client)
         self._permission = PermissionAsync(http_client)
         self._project = ProjectAsync(http_client)
         self._role = RoleAsync(http_client)
+        self._scope_claim_mapping = ScopeClaimMappingAsync(http_client)
         self._sso = SSOSettingsAsync(http_client)
         self._sso_application = SSOApplicationAsync(http_client)
+        self._third_party_application = ThirdPartyApplicationAsync(http_client)
         self._tenant = TenantAsync(http_client)
         self._user = UserAsync(http_client)
 
@@ -167,3 +179,28 @@ class MGMTAsync:
     def management_key(self) -> ManagementKeyAsync:
         self._ensure_management_key("management_key")
         return self._management_key
+
+    @property
+    def analytics(self) -> AnalyticsAsync:
+        self._ensure_management_key("analytics")
+        return self._analytics
+
+    @property
+    def scope_claim_mapping(self) -> ScopeClaimMappingAsync:
+        self._ensure_management_key("scope_claim_mapping")
+        return self._scope_claim_mapping
+
+    @property
+    def list(self) -> ListsAsync:
+        self._ensure_management_key("list")
+        return self._lists
+
+    @property
+    def password(self) -> PasswordAsync:
+        self._ensure_management_key("password")
+        return self._password
+
+    @property
+    def third_party_application(self) -> ThirdPartyApplicationAsync:
+        self._ensure_management_key("third_party_application")
+        return self._third_party_application

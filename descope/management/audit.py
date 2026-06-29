@@ -132,3 +132,23 @@ class Audit(AuditBase, HTTPBase):
             body["data"] = data
 
         self._http.post(MgmtV1.audit_create_event, body=body)
+
+    def create_audit_webhook(self, name: str, url: Optional[str] = None, headers: Optional[dict] = None):
+        """
+        Create an audit webhook to receive audit events.
+
+        Args:
+        name (str): The webhook name.
+        url (str): Optional webhook URL.
+        headers (dict): Optional headers to include in webhook requests.
+
+        Raise:
+        AuthException: raised if create operation fails
+        """
+        body: dict[str, Any] = {"name": name}
+        if url is not None:
+            body["url"] = url
+        if headers is not None:
+            body["headers"] = headers
+
+        self._http.post(MgmtV1.audit_webhook_set_path, body=body)
