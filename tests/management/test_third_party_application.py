@@ -120,7 +120,16 @@ class TestThirdPartyApplication:
                 client.mgmt.third_party_application.patch(
                     id="app1",
                     name="patched-app",
+                    login_page_url="https://login.example.com",
+                    description="patched description",
+                    logo="logo-data",
+                    approved_callback_urls=["https://cb.example.com"],
+                    permissions_scopes=[{"name": "read", "description": "Read", "values": ["roleA"]}],
+                    attributes_scopes=[{"name": "email", "description": "Email", "values": ["email"]}],
+                    jwt_bearer_settings={"audience": "aud"},
+                    custom_attributes={"team": "blue"},
                     force_pkce=False,
+                    default_audience="my-audience",
                 )
             )
             assert_http_called(
@@ -136,7 +145,16 @@ class TestThirdPartyApplication:
                 json={
                     "id": "app1",
                     "name": "patched-app",
+                    "loginPageUrl": "https://login.example.com",
+                    "description": "patched description",
+                    "logo": "logo-data",
+                    "approvedCallbackUrls": ["https://cb.example.com"],
+                    "permissionsScopes": [{"name": "read", "description": "Read", "values": ["roleA"]}],
+                    "attributesScopes": [{"name": "email", "description": "Email", "values": ["email"]}],
+                    "jwtBearerSettings": {"audience": "aud"},
+                    "customAttributes": {"team": "blue"},
                     "forcePkce": False,
+                    "defaultAudience": "my-audience",
                 },
                 follow_redirects=False,
             )
@@ -393,6 +411,7 @@ class TestThirdPartyApplication:
                 client.mgmt.third_party_application.search_consents(
                     app_id="app1",
                     user_id="user1",
+                    consent_id="c1",
                     page=1,
                     limit=10,
                     tenant_id="tenant1",
@@ -413,6 +432,7 @@ class TestThirdPartyApplication:
                 json={
                     "appId": "app1",
                     "userId": "user1",
+                    "consentId": "c1",
                     "page": 1,
                     "limit": 10,
                     "tenantId": "tenant1",
