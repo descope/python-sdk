@@ -1729,6 +1729,139 @@ latest_tenant_token = descope_client.mgmt.outbound_application_by_token.fetch_te
 )
 ```
 
+### Manage Third Party Applications
+
+Third party applications let external apps use Descope as an identity provider via OAuth/OIDC.
+
+```python
+# Create a third party application (returns the generated id and secret)
+resp = descope_client.mgmt.third_party_application.create(
+    name="my-app",
+    login_page_url="https://my-app.com/login",
+    description="My third party app",  # Optional
+    approved_callback_urls=["https://my-app.com/callback"],  # Optional
+    permissions_scopes=[{"name": "read", "description": "Read access", "values": ["roleA"]}],  # Optional
+    force_pkce=True,  # Optional
+)
+app_id = resp["id"]
+
+# Update will override all fields as is. Use carefully.
+descope_client.mgmt.third_party_application.update(
+    id=app_id,
+    name="my-app",
+    login_page_url="https://my-app.com/login",
+)
+
+# Patch only the provided fields
+descope_client.mgmt.third_party_application.patch(id=app_id, description="updated")
+
+# Load / load all
+app = descope_client.mgmt.third_party_application.load(app_id)
+all_apps = descope_client.mgmt.third_party_application.load_all()
+
+# Rotate or fetch the application secret
+new_secret = descope_client.mgmt.third_party_application.rotate_secret(app_id)
+secret = descope_client.mgmt.third_party_application.get_secret(app_id)
+
+# Search and delete user consents
+consents = descope_client.mgmt.third_party_application.search_consents(app_id=app_id, limit=10)
+descope_client.mgmt.third_party_application.delete_consents(app_id=app_id, user_ids=["u1"])
+descope_client.mgmt.third_party_application.delete_tenant_consents("tenant-id")
+
+# Application deletion cannot be undone. Use carefully.
+descope_client.mgmt.third_party_application.delete(app_id)
+descope_client.mgmt.third_party_application.delete_batch([app_id])
+```
+
+### Manage Lists
+
+Manage allow/deny lists of texts, IPs, or arbitrary JSON.
+
+```python
+# Create a list. list_type is one of "texts", "ips", or "json".
+resp = descope_client.mgmt.list.create(
+    name="blocked-ips",
+    list_type="ips",
+    description="Blocked addresses",  # Optional
+    data=["1.2.3.0/24"],  # Optional initial data
+)
+list_id = resp["list"]["id"]
+
+# Load
+descope_client.mgmt.list.load(list_id)
+descope_client.mgmt.list.load_by_name("blocked-ips")
+descope_client.mgmt.list.load_all()
+
+# Update / delete (deletion cannot be undone)
+descope_client.mgmt.list.update(id=list_id, name="blocked-ips", description="updated")
+descope_client.mgmt.list.delete(list_id)
+
+# Import multiple lists at once
+descope_client.mgmt.list.import_lists([{"name": "deny", "type": "texts", "data": ["foo"]}])
+
+# IP lists
+descope_client.mgmt.list.add_ips(list_id, ["10.0.0.1"])
+descope_client.mgmt.list.remove_ips(list_id, ["10.0.0.1"])
+is_blocked = descope_client.mgmt.list.check_ip(list_id, "10.0.0.1")
+
+# Text lists
+descope_client.mgmt.list.add_texts(list_id, ["spam@example.com"])
+descope_client.mgmt.list.remove_texts(list_id, ["spam@example.com"])
+has_text = descope_client.mgmt.list.check_text(list_id, "spam@example.com")
+
+# Clear all entries
+descope_client.mgmt.list.clear(list_id)
+```
+
+### Manage Password Settings
+
+Get and configure the password policy for the project or a specific tenant.
+
+```python
+# Get password settings (omit tenant_id for project-level settings)
+settings = descope_client.mgmt.password.get_settings()
+tenant_settings = descope_client.mgmt.password.get_settings("tenant-id")
+
+# Configure settings. The settings dict mirrors the fields returned by get_settings,
+# e.g. {"minLength": 8, "expiration": True, "expirationWeeks": 4, "reuse": True, "reuseAmount": 6}
+descope_client.mgmt.password.configure_settings(
+    tenant_id="tenant-id",
+    settings={"minLength": 10, "nonAlphanumeric": True, "number": True, "uppercase": True},
+)
+```
+
+### Analytics
+
+Search analytics records, optionally filtered and grouped.
+
+```python
+from datetime import datetime, timedelta
+
+results = descope_client.mgmt.analytics.search(
+    from_ts=datetime.now() - timedelta(days=7),  # Optional, no older than 12 months
+    methods=["password", "otp"],  # Optional auth methods
+    geos=["US", "IL"],  # Optional country codes
+    group_by_action=True,  # Optional grouping flags
+)
+```
+
+### Manage Scope Claim Mapping
+
+Map OAuth/OIDC scopes to JWT claims for the project.
+
+```python
+# Get the current mappings
+mappings = descope_client.mgmt.scope_claim_mapping.get()
+
+# Set replaces all existing mappings. Each entry: {"scope": str, "claims": dict, "description": str}
+descope_client.mgmt.scope_claim_mapping.set(
+    mappings=[{"scope": "profile", "claims": {"name": "name"}, "description": "Profile scope"}],
+)
+
+# Delete all mappings
+descope_client.mgmt.scope_claim_mapping.delete()
+```
+
 ### Manage Descopers
 
 You can create, update, delete, load or list Descopers (users who have access to the Descope console):

@@ -2653,8 +2653,8 @@ class TestUser:
                 params=None,
                 json={
                     "source": "auth0",
-                    "users": b'{"users":[]}',
-                    "hashes": b'{"hashes":[]}',
+                    "users": "eyJ1c2VycyI6W119",
+                    "hashes": "eyJoYXNoZXMiOltdfQ==",
                     "dryrun": True,
                 },
                 follow_redirects=False,
