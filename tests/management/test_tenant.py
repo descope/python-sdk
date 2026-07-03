@@ -556,3 +556,29 @@ class TestTenant:
                 json={"tenantId": "t1", "actorId": "admin-actor-1"},
                 follow_redirects=False,
             )
+
+    async def test_revoke_sso_configuration_link(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flow
+        with client.mock_mgmt_post(make_response(status=500)) as _:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.tenant.revoke_sso_configuration_link(tenant_id="t1"))
+
+        # Test success flow
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            await client.invoke(
+                client.mgmt.tenant.revoke_sso_configuration_link(
+                    tenant_id="t1",
+                    sso_id="sso123",
+                )
+            )
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.tenant_revoke_sso_configuration_link_path}",
+                headers=MGMT_HEADERS,
+                params=None,
+                json={"tenantId": "t1", "ssoId": "sso123"},
+                follow_redirects=False,
+            )

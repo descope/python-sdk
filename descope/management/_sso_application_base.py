@@ -88,3 +88,38 @@ class SSOApplicationBase:
             "defaultSignatureAlgorithm": default_signature_algorithm,
         }
         return body
+
+    @staticmethod
+    def _compose_create_update_wsfed_body(
+        name: str,
+        login_page_url: str,
+        realm: str,
+        reply_url: str,
+        id: Optional[str] = None,
+        description: Optional[str] = None,
+        logo: Optional[str] = None,
+        enabled: Optional[bool] = True,
+        reply_allowed_callbacks: Optional[List[str]] = None,
+        attribute_mapping: Optional[List[SAMLIDPAttributeMappingInfo]] = None,
+        groups_mapping: Optional[List[SAMLIDPGroupsMappingInfo]] = None,
+        force_authentication: Optional[bool] = False,
+        logout_redirect_url: Optional[str] = None,
+        error_redirect_url: Optional[str] = None,
+    ) -> dict:
+        body: dict[str, Any] = {
+            "id": id,
+            "name": name,
+            "description": description,
+            "enabled": enabled,
+            "logo": logo,
+            "loginPageUrl": login_page_url,
+            "realm": realm,
+            "replyUrl": reply_url,
+            "replyAllowedCallbacks": reply_allowed_callbacks if reply_allowed_callbacks else [],
+            "attributeMapping": saml_idp_attribute_mapping_info_to_dict(attribute_mapping),
+            "groupsMapping": saml_idp_groups_mapping_info_to_dict(groups_mapping),
+            "forceAuthentication": force_authentication,
+            "logoutRedirectUrl": logout_redirect_url,
+            "errorRedirectUrl": error_redirect_url,
+        }
+        return body
