@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.9.1](https://github.com/descope/python-sdk/compare/descope-2.9.0...descope-2.9.1) (2026-07-03)
+
+
+### Bug Fixes
+
+* **management:** add missing endpoints for python-sdk go-sdk parity ([#1599](https://github.com/descope/python-sdk/issues/1599)) ([0c9d2ad](https://github.com/descope/python-sdk/commit/0c9d2adfd62bbc5724190fca73a6351b2ed685f1))
+
 ## [2.9.0](https://github.com/descope/python-sdk/compare/descope-2.8.0...descope-2.9.0) (2026-06-28)
 
 
