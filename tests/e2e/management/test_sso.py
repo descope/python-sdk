@@ -225,8 +225,7 @@ class TestE2E_ManagementSSO:
             assert f"tenantId={tid}" in settings["spACSUrl"]
             assert settings["redirectUrl"] == "https://redirect"
             assert settings.get("domain", "") == "domain.com"
-            assert "domain.com" in settings["domains"]
-            assert "app.domain.com" in settings["domains"]
+            assert set(settings["domains"]) == {"domain.com", "app.domain.com"}
 
             await descope_client.invoke(
                 descope_client.mgmt.sso.configure_via_metadata(
@@ -251,7 +250,7 @@ class TestE2E_ManagementSSO:
             assert f"tenantId={tid}" in settings["spACSUrl"]
             assert settings.get("redirectUrl", "") == "https://redirect"
             assert settings.get("domain", "") == "domain2.com"
-            assert "domain2.com" in settings["domains"]
+            assert set(settings["domains"]) == {"domain2.com", "app.domain2.com"}
             user_mapping = settings.get("userMapping", {})
             assert user_mapping == {
                 "name": "MyName",
