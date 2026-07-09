@@ -8,11 +8,6 @@ on:
   schedule:
     - cron: "0 8 * * *"
   workflow_dispatch:
-    inputs:
-      skip_debounce:
-        description: Skip the 5-minute e2e debounce (for urgent re-runs)
-        type: boolean
-        default: false
 
 concurrency:
   group: check-${{ github.ref }}
@@ -167,16 +162,6 @@ jobs:
           python-version: "3.13"
       - name: Install dependencies
         run: uv sync --all-extras --locked
-      - name: Debounce
-        # Waits 1 min before running so rapid pushes to the same PR cancel the stale run
-        # (via the global cancel-in-progress) before any e2e work starts.
-        # Skip via the 'quick-e2e' PR label or the skip_debounce workflow_dispatch input.
-        if: >
-          github.event_name == 'pull_request' &&
-          github.actor != 'renovate[bot]' &&
-          !contains(github.event.pull_request.labels.*.name, 'quick-e2e') &&
-          inputs.skip_debounce != 'true'
-        run: sleep 60
       - name: Run e2e tests
         if: github.actor != 'renovate[bot]'
         run: uv run pytest tests/e2e -v -m e2e --junitxml=e2e-report.xml
