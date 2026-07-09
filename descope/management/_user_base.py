@@ -136,6 +136,8 @@ class UserBase:
         send_mail: Optional[bool],
         send_sms: Optional[bool],
         locale: Optional[str] = None,
+        template_options: Optional[dict] = None,
+        template_id: str = "",
     ) -> dict:
         users_body = []
         for user in users:
@@ -178,6 +180,10 @@ class UserBase:
             body["sendMail"] = send_mail
         if send_sms is not None:
             body["sendSMS"] = send_sms
+        if template_options is not None:
+            body["templateOptions"] = template_options
+        if template_id != "":
+            body["templateId"] = template_id
         if locale is not None:
             body["locale"] = locale
         return body

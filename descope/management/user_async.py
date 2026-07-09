@@ -240,6 +240,8 @@ class UserAsync(UserBase, AsyncHTTPBase):
         send_mail: Optional[bool] = None,  # send invite via mail, default is according to project settings
         send_sms: Optional[bool] = None,  # send invite via text message, default is according to project settings
         locale: Optional[str] = None,  # locale for the invite message
+        template_options: Optional[dict] = None,  # for providing messaging template options
+        template_id: str = "",  # for overriding the default messaging template
     ) -> dict:
         """
         Create users in batch and invite them via an email / text message.
@@ -261,6 +263,8 @@ class UserAsync(UserBase, AsyncHTTPBase):
                 send_mail,
                 send_sms,
                 locale,
+                template_options=template_options,
+                template_id=template_id,
             ),
         )
         return response.json()
