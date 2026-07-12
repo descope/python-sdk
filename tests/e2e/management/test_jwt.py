@@ -24,4 +24,5 @@ class TestE2E_ManagementJWT:
             try:
                 await descope_client.invoke(descope_client.mgmt.user.delete(login_id))
             except Exception:
+                # best-effort cleanup — user may already be gone; don't mask the test result
                 pass

@@ -66,7 +66,6 @@ class TestE2E_Password:
             assert jwt_response[REFRESH_SESSION_TOKEN_NAME]["jwt"], "Refresh token missing after sign-in"
             assert jwt_response.get("firstSeen") is False
             assert jwt_response.get("user", {}).get("name") == "Test User"
-            refresh_token = jwt_response[REFRESH_SESSION_TOKEN_NAME]["jwt"]
 
             # Replace password
             new_password = _PASSWORD + "a"
@@ -86,6 +85,7 @@ class TestE2E_Password:
             try:
                 await descope_client.invoke(descope_client.mgmt.user.delete(login_id))
             except Exception:
+                # best-effort cleanup — user may already be gone; don't mask the test result
                 pass
 
     async def test_set_temporary_and_active_password(self, descope_client):
@@ -111,4 +111,5 @@ class TestE2E_Password:
             try:
                 await descope_client.invoke(descope_client.mgmt.user.delete(login_id))
             except Exception:
+                # best-effort cleanup — user may already be gone; don't mask the test result
                 pass

@@ -17,7 +17,7 @@ Optional env vars:
 from __future__ import annotations
 
 import os
-import sys
+from urllib.parse import urlparse
 
 import pytest
 
@@ -33,11 +33,12 @@ from descope.descope_client_async import DescopeClientAsync  # noqa: E402
 from tests._unified import UnifiedClientBase  # noqa: E402
 
 if not os.environ.get("DESCOPE_PROJECT_ID") or not os.environ.get("DESCOPE_MANAGEMENT_KEY"):
-    print(
-        "ERROR: DESCOPE_PROJECT_ID and DESCOPE_MANAGEMENT_KEY must be set to run e2e tests",
-        file=sys.stderr,
+    # Skip only the e2e module (not the whole session) so a local `pytest tests/`
+    # without the e2e secrets still runs the unit tests.
+    pytest.skip(
+        "Missing required e2e environment variables: DESCOPE_PROJECT_ID and DESCOPE_MANAGEMENT_KEY",
+        allow_module_level=True,
     )
-    pytest.exit("Missing required e2e environment variables", returncode=1)
 
 
 @pytest.fixture(params=["sync", "async"])
@@ -49,7 +50,7 @@ async def descope_client(request):  # type: ignore[misc]
     project_id = os.environ["DESCOPE_PROJECT_ID"]
     management_key = os.environ["DESCOPE_MANAGEMENT_KEY"]
 
-    skip_verify = "localhost" in os.environ.get("DESCOPE_BASE_URI", "")
+    skip_verify = urlparse(os.environ.get("DESCOPE_BASE_URI", "")).hostname in {"localhost", "127.0.0.1", "::1"}
     if request.param == "sync":
         yield UnifiedClientBase(
             "sync",

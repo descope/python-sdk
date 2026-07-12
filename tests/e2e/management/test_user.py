@@ -185,9 +185,11 @@ class TestE2E_ManagementUser:
                 try:
                     await descope_client.invoke(descope_client.mgmt.role.delete(rname))
                 except Exception:
+                    # best-effort cleanup — role may already be gone; don't mask the test result
                     pass
             for uid in [invited_login_id, invited1_login_id, invited2_login_id]:
                 try:
                     await descope_client.invoke(descope_client.mgmt.user.delete(uid))
                 except Exception:
+                    # best-effort cleanup — user may already be gone; don't mask the test result
                     pass

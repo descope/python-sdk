@@ -1,9 +1,10 @@
 """
 Shared base class for unified sync/async client wrappers.
 
-Both the unit-test UnifiedClient (tests/conftest.py) and the e2e wrapper
-(tests/e2e/conftest.py) inherit from this to share the invoke() pattern
-without coupling e2e code to mock-oriented helpers.
+The unit-test UnifiedClient (tests/conftest.py) subclasses this to add its
+mock_* helpers; the e2e suite (tests/e2e/conftest.py) instantiates
+UnifiedClientBase directly. This shares the invoke() pattern without coupling
+e2e code to mock-oriented helpers.
 """
 
 from __future__ import annotations

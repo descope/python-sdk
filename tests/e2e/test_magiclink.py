@@ -1,6 +1,7 @@
 """E2E test: magic-link sign-up, sign-in, and session flow."""
 
 import uuid
+from urllib.parse import parse_qs, urlparse
 
 import pytest
 
@@ -45,7 +46,7 @@ class TestE2E_Magiclink:
             )
         )
         raw_link = td["link"]
-        token = raw_link[raw_link.index("=") + 1 :]
+        token = parse_qs(urlparse(raw_link).query)["t"][0]
 
         await descope_client.invoke(
             descope_client.magiclink.sign_up_or_in(
@@ -70,7 +71,7 @@ class TestE2E_Magiclink:
             )
         )
         raw_link2 = td2["link"]
-        sign_in_token = raw_link2[raw_link2.index("=") + 1 :]
+        sign_in_token = parse_qs(urlparse(raw_link2).query)["t"][0]
 
         await descope_client.invoke(
             descope_client.magiclink.sign_in(
