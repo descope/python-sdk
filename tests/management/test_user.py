@@ -284,6 +284,8 @@ class TestUser:
                     invite_url="invite.me",
                     send_sms=True,
                     locale="en",
+                    template_options={"k1": "v1"},
+                    template_id="tmpl-1",
                 )
             )
             users = resp["users"]
@@ -326,6 +328,8 @@ class TestUser:
                 "invite": True,
                 "inviteUrl": "invite.me",
                 "sendSMS": True,
+                "templateOptions": {"k1": "v1"},
+                "templateId": "tmpl-1",
                 "locale": "en",
             }
             assert_http_called(
@@ -368,6 +372,8 @@ class TestUser:
                 )
             )
 
+            del expected_users["templateOptions"]
+            del expected_users["templateId"]
             del expected_users["users"][0]["hashedPassword"]
             expected_users["users"][0]["password"] = "clear"
             assert_http_called(
