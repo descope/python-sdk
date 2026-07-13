@@ -54,7 +54,7 @@ class TestSSOSettings:
 
         # Test success flow
         resp_data = json.loads(
-            """{"tenant": {"id": "T2AAAA", "name": "myTenantName", "selfProvisioningDomains": [], "customAttributes": {}, "authType": "saml", "domains": ["lulu", "kuku"]}, "saml": {"idpEntityId": "", "idpSSOUrl": "", "idpCertificate": "", "idpAdditionalCertificates": ["cert1", "cert2"], "defaultSSORoles": ["aa", "bb"], "idpMetadataUrl": "https://dummy.com/metadata", "spEntityId": "", "spACSUrl": "", "spCertificate": "", "attributeMapping": {"name": "name", "email": "email", "username": "", "phoneNumber": "phone", "group": "", "givenName": "", "middleName": "", "familyName": "", "picture": "", "customAttributes": {}}, "groupsMapping": [], "redirectUrl": ""}, "oidc": {"name": "", "clientId": "", "clientSecret": "", "redirectUrl": "", "authUrl": "", "tokenUrl": "", "userDataUrl": "", "scope": [], "JWKsUrl": "", "userAttrMapping": {"loginId": "sub", "username": "", "name": "name", "email": "email", "phoneNumber": "phone_number", "verifiedEmail": "email_verified", "verifiedPhone": "phone_number_verified", "picture": "picture", "givenName": "given_name", "middleName": "middle_name", "familyName": "family_name"}, "manageProviderTokens": false, "callbackDomain": "", "prompt": [], "grantType": "authorization_code", "issuer": ""}}"""
+            """{"tenant": {"id": "T2AAAA", "name": "myTenantName", "selfProvisioningDomains": [], "customAttributes": {}, "authType": "saml", "domains": ["lulu", "kuku"]}, "saml": {"idpEntityId": "", "idpSSOUrl": "", "idpCertificate": "", "idpAdditionalCertificates": ["cert1", "cert2"], "defaultSSORoles": ["aa", "bb"], "idpMetadataUrl": "https://dummy.com/metadata", "spEntityId": "", "spACSUrl": "", "spCertificate": "", "attributeMapping": {"name": "name", "email": "email", "username": "", "phoneNumber": "phone", "group": "", "givenName": "", "middleName": "", "familyName": "", "picture": "", "customAttributes": {}}, "groupsMapping": [], "redirectUrl": "", "lastSuccessTestTime": 777}, "oidc": {"name": "", "clientId": "", "clientSecret": "", "redirectUrl": "", "authUrl": "", "tokenUrl": "", "userDataUrl": "", "scope": [], "JWKsUrl": "", "userAttrMapping": {"loginId": "sub", "username": "", "name": "name", "email": "email", "phoneNumber": "phone_number", "verifiedEmail": "email_verified", "verifiedPhone": "phone_number_verified", "picture": "picture", "givenName": "given_name", "middleName": "middle_name", "familyName": "family_name"}, "manageProviderTokens": false, "callbackDomain": "", "prompt": [], "grantType": "authorization_code", "issuer": "", "lastSuccessTestTime": 888}}"""
         )
         with client.mock_mgmt_get(make_response(resp_data)) as mock_get:
             resp = await client.invoke(client.mgmt.sso.load_settings("T2AAAA"))
@@ -65,6 +65,8 @@ class TestSSOSettings:
             assert saml_settings.get("idpMetadataUrl", "") == "https://dummy.com/metadata"
             assert saml_settings.get("defaultSSORoles", "") == ["aa", "bb"]
             assert saml_settings.get("idpAdditionalCertificates", []) == ["cert1", "cert2"]
+            assert saml_settings.get("lastSuccessTestTime", 0) == 777
+            assert resp.get("oidc", {}).get("lastSuccessTestTime", 0) == 888
             assert_http_called(
                 mock_get,
                 client.mode,
