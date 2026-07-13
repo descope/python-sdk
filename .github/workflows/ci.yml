@@ -98,7 +98,7 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-extras --locked
       - name: Run test suite
-        run: uv run coverage run -m pytest tests
+        run: uv run coverage run -m pytest tests --ignore=tests/e2e
         env:
           COVERAGE_FILE: "coverage.${{ matrix.os }}.${{ matrix.py }}"
       - name: Store coverage file
@@ -143,6 +143,40 @@ jobs:
           name: python-coverage-comment-action
           path: python-coverage-comment-action.txt
 
+  e2e-sandbox:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+    if: >
+      github.event_name != 'pull_request' ||
+      (github.event.pull_request.draft != true &&
+      github.event.pull_request.head.repo.fork == false)
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Install uv
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        with:
+          enable-cache: true
+          python-version: "3.13"
+      - name: Install dependencies
+        run: uv sync --all-extras --locked
+      - name: Run e2e tests
+        if: github.actor != 'renovate[bot]'
+        run: uv run pytest tests/e2e -v -m e2e --junitxml=e2e-report.xml
+        env:
+          DESCOPE_PROJECT_ID: ${{ secrets.DESCOPE_SANDBOX_PROJECT_ID }}
+          DESCOPE_MANAGEMENT_KEY: ${{ secrets.DESCOPE_SANDBOX_MANAGEMENT_KEY }}
+          DESCOPE_BASE_URI: ${{ secrets.DESCOPE_SANDBOX_BASE_URI }}
+      - name: Publish e2e test report
+        if: always() && github.actor != 'renovate[bot]'
+        uses: mikepenz/action-junit-report@3a81627bfac62268172037048872e8ebd4207e6d # v6.4.1
+        with:
+          report_paths: e2e-report.xml
+          check_name: E2E Test Report
+
   gitleaks:
     name: gitleaks
     runs-on: ubuntu-latest
@@ -159,7 +193,7 @@ jobs:
     name: All Checks Passed
     runs-on: ubuntu-latest
     permissions: {}
-    needs: [validate-pr-title, lint, build, coverage, gitleaks]
+    needs: [validate-pr-title, lint, build, coverage, gitleaks, e2e-sandbox]
     # Must run unconditionally so this required status check always reports a
     # real conclusion. If it were skipped (e.g. via an `if` that drops out when
     # a dependency fails), branch protection would treat the skip as a pass.
