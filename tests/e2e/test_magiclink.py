@@ -5,7 +5,7 @@ from urllib.parse import parse_qs, urlparse
 
 import pytest
 
-from descope import DeliveryMethod
+from descope import AuthException, DeliveryMethod
 from descope.common import REFRESH_SESSION_TOKEN_NAME, SESSION_TOKEN_NAME
 
 pytestmark = pytest.mark.e2e
@@ -17,22 +17,27 @@ def _extract_project_id_from_iss(iss: str) -> str:
 
 
 class TestE2E_Magiclink:
-    @pytest.fixture(autouse=True)
-    async def _cleanup(self, descope_client):
-        """Delete all test users after each test."""
-        yield
-        await descope_client.invoke(descope_client.mgmt.user.delete_all_test_users())
+    @pytest.fixture
+    async def created_users(self, descope_client):
+        login_ids: list[str] = []
+        yield login_ids
+        for lid in login_ids:
+            try:
+                await descope_client.invoke(descope_client.mgmt.user.delete(lid))
+            except AuthException as e:
+                if e.status_code and e.status_code >= 500:
+                    raise
 
-    async def test_magiclink_methods(self, descope_client):
+    async def test_magiclink_methods(self, descope_client, created_users):
         login_id = f"user-{uuid.uuid4()}"
+        created_users.append(login_id)
         uri = "http://test.me"
 
-        # Create a test user
         await descope_client.invoke(
             descope_client.mgmt.user.create_test_user(
                 login_id=login_id,
-                email="doron@google.com",
-                phone="+972-52-5554321",
+                email=f"e2e-{uuid.uuid4().hex[:8]}@example.com",
+                phone="+12025550142",
                 display_name="foo bar test",
             )
         )

@@ -4,6 +4,8 @@ import uuid
 
 import pytest
 
+from descope import AuthException
+
 pytestmark = pytest.mark.e2e
 
 
@@ -23,6 +25,6 @@ class TestE2E_ManagementJWT:
         finally:
             try:
                 await descope_client.invoke(descope_client.mgmt.user.delete(login_id))
-            except Exception:
-                # best-effort cleanup — user may already be gone; don't mask the test result
-                pass
+            except AuthException as e:
+                if e.status_code and e.status_code >= 500:
+                    raise

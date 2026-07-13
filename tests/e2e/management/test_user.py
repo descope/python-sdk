@@ -12,11 +12,6 @@ pytestmark = pytest.mark.e2e
 
 
 class TestE2E_ManagementUser:
-    @pytest.fixture(autouse=True)
-    async def _cleanup(self, descope_client):
-        yield
-        await descope_client.invoke(descope_client.mgmt.user.delete_all_test_users())
-
     async def test_management_user_capabilities(self, descope_client):
         user_login_id = f"des-{uuid.uuid4().hex[:8]}@copeland.com"
         invited_login_id = f"des-invited-{uuid.uuid4().hex[:8]}@copeland.com"
@@ -108,8 +103,8 @@ class TestE2E_ManagementUser:
             create_resp = await descope_client.invoke(
                 descope_client.mgmt.user.create_test_user(
                     login_id=test_user_login_id,
-                    email="doron@google.com",
-                    phone="+972-52-5554321",
+                    email=f"e2e-{uuid.uuid4().hex[:8]}@example.com",
+                    phone="+12025550142",
                     display_name="foo bar test",
                 )
             )
@@ -122,8 +117,7 @@ class TestE2E_ManagementUser:
 
             search_resp = await descope_client.invoke(descope_client.mgmt.user.search_all(test_users_only=True))
             test_users = search_resp.get("users", [])
-            assert len(test_users) == 1
-            assert test_users[0]["userId"] == test_user_id
+            assert any(u["userId"] == test_user_id for u in test_users)
 
             gen_resp = await descope_client.invoke(
                 descope_client.mgmt.user.generate_otp_for_test_user(
@@ -147,7 +141,7 @@ class TestE2E_ManagementUser:
             assert jwt_response[REFRESH_SESSION_TOKEN_NAME]["jwt"]
             assert jwt_response["user"]["userId"] == test_user_id
 
-            await descope_client.invoke(descope_client.mgmt.user.delete_all_test_users())
+            await descope_client.invoke(descope_client.mgmt.user.delete(test_user_login_id))
             with pytest.raises(AuthException):
                 await descope_client.invoke(descope_client.mgmt.user.load_by_user_id(test_user_id))
 
@@ -184,12 +178,22 @@ class TestE2E_ManagementUser:
             for rname in [role1_name, role2_name]:
                 try:
                     await descope_client.invoke(descope_client.mgmt.role.delete(rname))
-                except Exception:
-                    # best-effort cleanup — role may already be gone; don't mask the test result
-                    pass
-            for uid in [invited_login_id, invited1_login_id, invited2_login_id]:
+                except AuthException as e:
+                    if e.status_code and e.status_code >= 500:
+                        raise
+            login_ids = [
+                user_login_id,
+                updated_login_id,
+                test_user_login_id,
+                invited_login_id,
+                invited1_login_id,
+                invited2_login_id,
+            ]
+            for uid in login_ids:
+                if not uid:
+                    continue
                 try:
                     await descope_client.invoke(descope_client.mgmt.user.delete(uid))
-                except Exception:
-                    # best-effort cleanup — user may already be gone; don't mask the test result
-                    pass
+                except AuthException as e:
+                    if e.status_code and e.status_code >= 500:
+                        raise

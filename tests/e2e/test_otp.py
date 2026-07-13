@@ -9,27 +9,34 @@ import uuid
 
 import pytest
 
-from descope import DeliveryMethod
+from descope import AuthException, DeliveryMethod
 from descope.common import REFRESH_SESSION_TOKEN_NAME, SESSION_TOKEN_NAME
 
 pytestmark = pytest.mark.e2e
 
+_PHONE = "+12025550142"
+
 
 class TestE2E_OTP:
-    @pytest.fixture(autouse=True)
-    async def _cleanup(self, descope_client):
-        """Delete all test users after each test."""
-        yield
-        await descope_client.invoke(descope_client.mgmt.user.delete_all_test_users())
+    @pytest.fixture
+    async def created_users(self, descope_client):
+        login_ids: list[str] = []
+        yield login_ids
+        for lid in login_ids:
+            try:
+                await descope_client.invoke(descope_client.mgmt.user.delete(lid))
+            except AuthException as e:
+                if e.status_code and e.status_code >= 500:
+                    raise
 
-    async def test_otp_sign_up_and_sign_in(self, descope_client):
+    async def test_otp_sign_up_and_sign_in(self, descope_client, created_users):
         login_id = f"user-{uuid.uuid4()}"
+        created_users.append(login_id)
 
-        # Create a test user with a phone number for SMS OTP
         await descope_client.invoke(
             descope_client.mgmt.user.create_test_user(
                 login_id=login_id,
-                phone="+972-52-5554321",
+                phone=_PHONE,
                 display_name="E2E OTP Test User",
             )
         )
@@ -46,7 +53,7 @@ class TestE2E_OTP:
             descope_client.otp.sign_up(
                 method=DeliveryMethod.SMS,
                 login_id=login_id,
-                user={"name": "E2E OTP Test User", "phone": "+972-52-5554321"},
+                user={"name": "E2E OTP Test User", "phone": _PHONE},
             )
         )
         code = generate_res.get("code", "")

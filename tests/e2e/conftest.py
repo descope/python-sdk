@@ -2,8 +2,9 @@
 Fixtures for the e2e test suite.
 
 Requires a real Descope backend reachable at DESCOPE_BASE_URI (defaults to
-https://api.descope.com).  The suite fails at collection time when the required
-env vars are absent.
+https://api.descope.com). When the required env vars are absent the e2e tests
+are skipped (not errored), so a local `pytest tests/` still runs the unit suite
+and fork PRs without repository secrets collect cleanly.
 
 Required env vars:
   DESCOPE_PROJECT_ID       — the project to run tests against
@@ -21,24 +22,17 @@ from urllib.parse import urlparse
 
 import pytest
 
-try:
-    from dotenv import load_dotenv
+if not os.environ.get("GITHUB_ACTIONS"):
+    try:
+        from dotenv import load_dotenv
 
-    load_dotenv()  # populate env from .env before the env-var check below
-except ImportError:  # python-dotenv is a dev-only extra; tolerate its absence
-    pass
+        load_dotenv()
+    except ImportError:
+        pass
 
 from descope import DescopeClient  # noqa: E402
 from descope.descope_client_async import DescopeClientAsync  # noqa: E402
 from tests._unified import UnifiedClientBase  # noqa: E402
-
-if not os.environ.get("DESCOPE_PROJECT_ID") or not os.environ.get("DESCOPE_MANAGEMENT_KEY"):
-    # Skip only the e2e module (not the whole session) so a local `pytest tests/`
-    # without the e2e secrets still runs the unit tests.
-    pytest.skip(
-        "Missing required e2e environment variables: DESCOPE_PROJECT_ID and DESCOPE_MANAGEMENT_KEY",
-        allow_module_level=True,
-    )
 
 
 @pytest.fixture(params=["sync", "async"])
@@ -47,10 +41,16 @@ async def descope_client(request):  # type: ignore[misc]
     Parametrized fixture — yields a UnifiedClientBase wrapping DescopeClient (sync)
     or DescopeClientAsync (async) against a real backend. Each consuming test runs twice.
     """
-    project_id = os.environ["DESCOPE_PROJECT_ID"]
-    management_key = os.environ["DESCOPE_MANAGEMENT_KEY"]
+    project_id = os.environ.get("DESCOPE_PROJECT_ID")
+    management_key = os.environ.get("DESCOPE_MANAGEMENT_KEY")
+    if not project_id or not management_key:
+        pytest.skip("Missing required e2e environment variables: DESCOPE_PROJECT_ID and DESCOPE_MANAGEMENT_KEY")
 
-    skip_verify = urlparse(os.environ.get("DESCOPE_BASE_URI", "")).hostname in {"localhost", "127.0.0.1", "::1"}
+    base_uri = os.environ.get("DESCOPE_BASE_URI", "")
+    skip_verify = urlparse(base_uri).hostname in {"localhost", "127.0.0.1", "::1"}
+    if base_uri and not skip_verify and urlparse(base_uri).scheme != "https":
+        pytest.fail(f"DESCOPE_BASE_URI must use https for a remote target, got: {base_uri}")
+
     if request.param == "sync":
         yield UnifiedClientBase(
             "sync",
