@@ -42,7 +42,8 @@ Documentation = "https://docs.descope.com"
 [dependency-groups]
 dev = [
     "pre-commit==3.8.0",
-    "ruff==0.15.18",
+    "python-dotenv>=1.2.1",
+    "ruff==0.15.19",
 ]
 types = [
     # mypy 1.12+ requires Python 3.10+; on 3.9 we stay on the last 1.11.x line.
@@ -81,6 +82,9 @@ build-backend = "uv_build"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+markers = [
+    "e2e: end-to-end tests against a real Descope backend (require DESCOPE_PROJECT_ID and DESCOPE_MANAGEMENT_KEY)",
+]
 
 [tool.coverage.run]
 relative_files = true
@@ -120,6 +124,8 @@ ignore = [
 "descope/management/user_async.py" = ["N803", "N806"]
 # Tests intentionally use blind exception checks and raw attribute access
 "tests/**" = ["B017", "B018"]
+# e2e test classes use a TestE2E_<Area> naming scheme for readable grouping
+"tests/e2e/**" = ["N801"]
 
 [tool.pylic]
 # License names match the long-form `License` metadata field that pylic reads
