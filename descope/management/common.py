@@ -133,7 +133,6 @@ class MgmtV1:
     outbound_scim_update_path = "/v1/mgmt/outbound/scim/update"
     outbound_scim_delete_path = "/v1/mgmt/outbound/scim/delete"
     outbound_scim_load_path = "/v1/mgmt/outbound/scim"
-    outbound_scim_load_all_path = "/v1/mgmt/outbound/scim"
     outbound_scim_set_enabled_path = "/v1/mgmt/outbound/scim/enabled/set"
 
     # engine

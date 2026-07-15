@@ -21,13 +21,6 @@ CONFIG_RESPONSE = {
     }
 }
 
-CONFIGS_RESPONSE = {
-    "configurations": [
-        {"id": "scim1", "name": "Test SCIM 1", "appId": "app1", "version": 1},
-        {"id": "scim2", "name": "Test SCIM 2", "appId": "app2", "version": 2},
-    ]
-}
-
 MGMT_HEADERS = {
     **default_headers,
     "Authorization": f"Bearer {PROJECT_ID}:key",
@@ -184,28 +177,6 @@ class TestOutboundSCIM:
         with client.mock_mgmt_get(make_response(status=500)):
             with pytest.raises(AuthException):
                 await client.invoke(client.mgmt.outbound_scim.load_configuration("scim1"))
-
-    async def test_load_all_configurations_success(self, client_factory):
-        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
-
-        with client.mock_mgmt_get(make_response(CONFIGS_RESPONSE)) as mock_get:
-            response = await client.invoke(client.mgmt.outbound_scim.load_all_configurations())
-            assert response == CONFIGS_RESPONSE
-            assert_http_called(
-                mock_get,
-                client.mode,
-                f"{DEFAULT_BASE_URL}{MgmtV1.outbound_scim_load_all_path}",
-                headers=MGMT_HEADERS,
-                params=None,
-                follow_redirects=True,
-            )
-
-    async def test_load_all_configurations_failure(self, client_factory):
-        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
-
-        with client.mock_mgmt_get(make_response(status=500)):
-            with pytest.raises(AuthException):
-                await client.invoke(client.mgmt.outbound_scim.load_all_configurations())
 
     async def test_set_enabled_success(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")

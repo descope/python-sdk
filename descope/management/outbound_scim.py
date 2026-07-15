@@ -108,20 +108,6 @@ class OutboundSCIM(OutboundSCIMBase, HTTPBase):
         response = self._http.get(f"{MgmtV1.outbound_scim_load_path}/{id}")
         return response.json()
 
-    def load_all_configurations(self) -> dict:
-        """
-        Load all outbound SCIM configurations for the project.
-
-        Return value (dict):
-        Return dict in the format
-             {"configurations": [{"id": <id>, "name": <name>, ...}, ...]}
-
-        Raise:
-        AuthException: raised if load operation fails
-        """
-        response = self._http.get(MgmtV1.outbound_scim_load_all_path)
-        return response.json()
-
     def set_enabled(
         self,
         id: str,
