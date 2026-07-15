@@ -25,6 +25,7 @@ class GroupAsync(AsyncHTTPBase):
                 {
                     "id": <group id>,
                     "display": <display name>,
+                    "source": <"scim" or "jit">,
                     "members":[
                         {
                             "loginId": <loginId>,
@@ -67,6 +68,7 @@ class GroupAsync(AsyncHTTPBase):
                 {
                     "id": <group id>,
                     "display": <display name>,
+                    "source": <"scim" or "jit">,
                     "members":[
                         {
                             "loginId": <loginId>,
@@ -112,6 +114,7 @@ class GroupAsync(AsyncHTTPBase):
                 {
                     "id": <group id>,
                     "display": <display name>,
+                    "source": <"scim" or "jit">,
                     "members":[
                         {
                             "loginId": <loginId>,

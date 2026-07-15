@@ -21,6 +21,7 @@ class Group(HTTPBase):
                 {
                     "id": <group id>,
                     "display": <display name>,
+                    "source": <"scim" or "jit">,
                     "members":[
                         {
                             "loginId": <loginId>,
@@ -63,6 +64,7 @@ class Group(HTTPBase):
                 {
                     "id": <group id>,
                     "display": <display name>,
+                    "source": <"scim" or "jit">,
                     "members":[
                         {
                             "loginId": <loginId>,
@@ -108,6 +110,7 @@ class Group(HTTPBase):
                 {
                     "id": <group id>,
                     "display": <display name>,
+                    "source": <"scim" or "jit">,
                     "members":[
                         {
                             "loginId": <loginId>,
