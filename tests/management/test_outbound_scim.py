@@ -9,8 +9,6 @@ from tests.testutils import PUBLIC_KEY_DICT
 
 CONFIG_RESPONSE = {
     "configuration": {
-        "id": "scim1",
-        "name": "Test SCIM",
         "appId": "app1",
         "configuration": {"baseUrl": "https://scim.example.com"},
         "enabled": True,
@@ -35,7 +33,6 @@ class TestOutboundSCIM:
         with client.mock_mgmt_post(make_response(CONFIG_RESPONSE)) as mock_post:
             response = await client.invoke(
                 client.mgmt.outbound_scim.create_configuration(
-                    "Test SCIM",
                     "app1",
                     {"baseUrl": "https://scim.example.com"},
                 )
@@ -48,7 +45,6 @@ class TestOutboundSCIM:
                 headers=MGMT_HEADERS,
                 params=None,
                 json={
-                    "name": "Test SCIM",
                     "appId": "app1",
                     "configuration": {"baseUrl": "https://scim.example.com"},
                 },
@@ -59,7 +55,7 @@ class TestOutboundSCIM:
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         with client.mock_mgmt_post(make_response(CONFIG_RESPONSE)) as mock_post:
-            response = await client.invoke(client.mgmt.outbound_scim.create_configuration("Test SCIM", "app1"))
+            response = await client.invoke(client.mgmt.outbound_scim.create_configuration("app1"))
             assert response == CONFIG_RESPONSE
             assert_http_called(
                 mock_post,
@@ -67,7 +63,7 @@ class TestOutboundSCIM:
                 f"{DEFAULT_BASE_URL}{MgmtV1.outbound_scim_create_path}",
                 headers=MGMT_HEADERS,
                 params=None,
-                json={"name": "Test SCIM", "appId": "app1"},
+                json={"appId": "app1"},
                 follow_redirects=False,
             )
 
@@ -76,7 +72,7 @@ class TestOutboundSCIM:
 
         with client.mock_mgmt_post(make_response(status=500)):
             with pytest.raises(AuthException):
-                await client.invoke(client.mgmt.outbound_scim.create_configuration("Test SCIM", "app1"))
+                await client.invoke(client.mgmt.outbound_scim.create_configuration("app1"))
 
     async def test_update_configuration_success(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
@@ -84,10 +80,9 @@ class TestOutboundSCIM:
         with client.mock_mgmt_post(make_response(CONFIG_RESPONSE)) as mock_post:
             response = await client.invoke(
                 client.mgmt.outbound_scim.update_configuration(
-                    "scim1",
+                    "app1",
                     3,
                     {"baseUrl": "https://scim.example.com"},
-                    "Updated Name",
                 )
             )
             assert response == CONFIG_RESPONSE
@@ -98,32 +93,25 @@ class TestOutboundSCIM:
                 headers=MGMT_HEADERS,
                 params=None,
                 json={
-                    "id": "scim1",
+                    "appId": "app1",
                     "version": 3,
-                    "name": "Updated Name",
                     "configuration": {"baseUrl": "https://scim.example.com"},
                 },
                 follow_redirects=False,
             )
 
-    async def test_update_configuration_without_name_success(self, client_factory):
+    async def test_update_configuration_no_config_success(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         with client.mock_mgmt_post(make_response(CONFIG_RESPONSE)) as mock_post:
-            await client.invoke(
-                client.mgmt.outbound_scim.update_configuration("scim1", 3, {"baseUrl": "https://scim.example.com"})
-            )
+            await client.invoke(client.mgmt.outbound_scim.update_configuration("app1", 3))
             assert_http_called(
                 mock_post,
                 client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.outbound_scim_update_path}",
                 headers=MGMT_HEADERS,
                 params=None,
-                json={
-                    "id": "scim1",
-                    "version": 3,
-                    "configuration": {"baseUrl": "https://scim.example.com"},
-                },
+                json={"appId": "app1", "version": 3},
                 follow_redirects=False,
             )
 
@@ -132,20 +120,20 @@ class TestOutboundSCIM:
 
         with client.mock_mgmt_post(make_response(status=500)):
             with pytest.raises(AuthException):
-                await client.invoke(client.mgmt.outbound_scim.update_configuration("scim1", 3, {}))
+                await client.invoke(client.mgmt.outbound_scim.update_configuration("app1", 3, {}))
 
     async def test_delete_configuration_success(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         with client.mock_mgmt_post(make_response({})) as mock_post:
-            await client.invoke(client.mgmt.outbound_scim.delete_configuration("scim1"))
+            await client.invoke(client.mgmt.outbound_scim.delete_configuration("app1"))
             assert_http_called(
                 mock_post,
                 client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.outbound_scim_delete_path}",
                 headers=MGMT_HEADERS,
                 params=None,
-                json={"id": "scim1"},
+                json={"appId": "app1"},
                 follow_redirects=False,
             )
 
@@ -154,18 +142,18 @@ class TestOutboundSCIM:
 
         with client.mock_mgmt_post(make_response(status=500)):
             with pytest.raises(AuthException):
-                await client.invoke(client.mgmt.outbound_scim.delete_configuration("scim1"))
+                await client.invoke(client.mgmt.outbound_scim.delete_configuration("app1"))
 
     async def test_load_configuration_success(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         with client.mock_mgmt_get(make_response(CONFIG_RESPONSE)) as mock_get:
-            response = await client.invoke(client.mgmt.outbound_scim.load_configuration("scim1"))
+            response = await client.invoke(client.mgmt.outbound_scim.load_configuration("app1"))
             assert response == CONFIG_RESPONSE
             assert_http_called(
                 mock_get,
                 client.mode,
-                f"{DEFAULT_BASE_URL}{MgmtV1.outbound_scim_load_path}/scim1",
+                f"{DEFAULT_BASE_URL}{MgmtV1.outbound_scim_load_path}/app1",
                 headers=MGMT_HEADERS,
                 params=None,
                 follow_redirects=True,
@@ -176,13 +164,13 @@ class TestOutboundSCIM:
 
         with client.mock_mgmt_get(make_response(status=500)):
             with pytest.raises(AuthException):
-                await client.invoke(client.mgmt.outbound_scim.load_configuration("scim1"))
+                await client.invoke(client.mgmt.outbound_scim.load_configuration("app1"))
 
     async def test_set_enabled_success(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         with client.mock_mgmt_post(make_response(CONFIG_RESPONSE)) as mock_post:
-            response = await client.invoke(client.mgmt.outbound_scim.set_enabled("scim1", True))
+            response = await client.invoke(client.mgmt.outbound_scim.set_enabled("app1", True))
             assert response == CONFIG_RESPONSE
             assert_http_called(
                 mock_post,
@@ -190,7 +178,7 @@ class TestOutboundSCIM:
                 f"{DEFAULT_BASE_URL}{MgmtV1.outbound_scim_set_enabled_path}",
                 headers=MGMT_HEADERS,
                 params=None,
-                json={"id": "scim1", "enabled": True},
+                json={"appId": "app1", "enabled": True},
                 follow_redirects=False,
             )
 
@@ -198,14 +186,14 @@ class TestOutboundSCIM:
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         with client.mock_mgmt_post(make_response(CONFIG_RESPONSE)) as mock_post:
-            await client.invoke(client.mgmt.outbound_scim.set_enabled("scim1", False))
+            await client.invoke(client.mgmt.outbound_scim.set_enabled("app1", False))
             assert_http_called(
                 mock_post,
                 client.mode,
                 f"{DEFAULT_BASE_URL}{MgmtV1.outbound_scim_set_enabled_path}",
                 headers=MGMT_HEADERS,
                 params=None,
-                json={"id": "scim1", "enabled": False},
+                json={"appId": "app1", "enabled": False},
                 follow_redirects=False,
             )
 
@@ -214,34 +202,31 @@ class TestOutboundSCIM:
 
         with client.mock_mgmt_post(make_response(status=500)):
             with pytest.raises(AuthException):
-                await client.invoke(client.mgmt.outbound_scim.set_enabled("scim1", True))
+                await client.invoke(client.mgmt.outbound_scim.set_enabled("app1", True))
 
     def test_compose_create_body(self):
-        body = OutboundSCIM._compose_create_body("Test SCIM", "app1", {"baseUrl": "https://scim.example.com"})
+        body = OutboundSCIM._compose_create_body("app1", {"baseUrl": "https://scim.example.com"})
         assert body == {
-            "name": "Test SCIM",
             "appId": "app1",
             "configuration": {"baseUrl": "https://scim.example.com"},
         }
 
     def test_compose_create_body_without_configuration(self):
-        body = OutboundSCIM._compose_create_body("Test SCIM", "app1")
-        assert body == {"name": "Test SCIM", "appId": "app1"}
+        body = OutboundSCIM._compose_create_body("app1")
+        assert body == {"appId": "app1"}
 
     def test_compose_update_body(self):
         body = OutboundSCIM._compose_update_body(
-            "scim1",
+            "app1",
             5,
             {"baseUrl": "https://scim.example.com"},
-            "New Name",
         )
         assert body == {
-            "id": "scim1",
+            "appId": "app1",
             "version": 5,
-            "name": "New Name",
             "configuration": {"baseUrl": "https://scim.example.com"},
         }
 
-    def test_compose_update_body_without_optionals(self):
-        body = OutboundSCIM._compose_update_body("scim1", 5)
-        assert body == {"id": "scim1", "version": 5}
+    def test_compose_update_body_without_configuration(self):
+        body = OutboundSCIM._compose_update_body("app1", 5)
+        assert body == {"appId": "app1", "version": 5}

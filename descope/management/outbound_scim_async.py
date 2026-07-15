@@ -12,125 +12,123 @@ class OutboundSCIMAsync(OutboundSCIMBase, AsyncHTTPBase):
 
     async def create_configuration(
         self,
-        name: str,
         app_id: str,
         configuration: Optional[dict] = None,
     ) -> dict:
         """
-        Create a new outbound SCIM configuration. The configuration ID is provisioned
-        automatically by Descope and returned in the response.
+        Create a new outbound SCIM configuration on the federated SSO application
+        identified by app_id. The connector name is derived server-side from the app.
 
         Args:
-        name (str): The outbound SCIM configuration's name.
-        app_id (str): The ID of the outbound application this SCIM configuration binds to.
+        app_id (str): The federated SSO application id this SCIM configuration binds to.
         configuration (dict): Optional provider-specific SCIM configuration dictionary.
 
         Return value (dict):
         Return dict in the format
-             {"configuration": {"id": <id>, "name": <name>, "appId": <app_id>,
-                                "configuration": {...}, "enabled": <bool>,
-                                "lastExportTime": <int>, "lastProcessingTime": <int>,
-                                "failures": <int>, "version": <int>}}
+             {"configuration": {"appId": <app_id>, "configuration": {...},
+                                "enabled": <bool>, "lastExportTime": <int>,
+                                "lastProcessingTime": <int>, "failures": <int>,
+                                "version": <int>}}
 
         Raise:
         AuthException: raised if create operation fails
         """
         response = await self._http.post(
             MgmtV1.outbound_scim_create_path,
-            body=OutboundSCIMBase._compose_create_body(name, app_id, configuration),
+            body=OutboundSCIMBase._compose_create_body(app_id, configuration),
         )
         return response.json()
 
     async def update_configuration(
         self,
-        id: str,
+        app_id: str,
         version: int,
         configuration: Optional[dict] = None,
-        name: Optional[str] = None,
     ) -> dict:
         """
-        Update an existing outbound SCIM configuration. The version must match the
-        currently stored version — otherwise the update is rejected as a conflict.
+        Update the outbound SCIM configuration attached to the given federated SSO app.
+        The version must match the currently stored version — otherwise the update is
+        rejected as a conflict.
 
         Args:
-        id (str): The ID of the outbound SCIM configuration to update.
+        app_id (str): The federated SSO application id.
         version (int): The currently stored version, used for optimistic concurrency.
         configuration (dict): Optional updated provider-specific SCIM configuration.
-        name (str): Optional updated configuration name.
 
         Return value (dict):
         Return dict in the format
-             {"configuration": {"id": <id>, "name": <name>, ...}}
+             {"configuration": {"appId": <app_id>, ...}}
 
         Raise:
         AuthException: raised if update operation fails
         """
         response = await self._http.post(
             MgmtV1.outbound_scim_update_path,
-            body=OutboundSCIMBase._compose_update_body(id, version, configuration, name),
+            body=OutboundSCIMBase._compose_update_body(app_id, version, configuration),
         )
         return response.json()
 
     async def delete_configuration(
         self,
-        id: str,
+        app_id: str,
     ):
         """
-        Delete an existing outbound SCIM configuration. IMPORTANT: This action is
-        irreversible. Use carefully.
+        Delete the outbound SCIM configuration attached to the given federated SSO app.
+        IMPORTANT: This action is irreversible. Use carefully.
 
         Args:
-        id (str): The ID of the outbound SCIM configuration to delete.
+        app_id (str): The federated SSO application id.
 
         Raise:
         AuthException: raised if deletion operation fails
         """
-        await self._http.post(MgmtV1.outbound_scim_delete_path, body={"id": id})
+        await self._http.post(MgmtV1.outbound_scim_delete_path, body={"appId": app_id})
 
     async def load_configuration(
         self,
-        id: str,
+        app_id: str,
     ) -> dict:
         """
-        Load an outbound SCIM configuration by ID.
+        Load the outbound SCIM configuration attached to the given federated SSO app.
 
         Args:
-        id (str): The ID of the outbound SCIM configuration to load.
+        app_id (str): The federated SSO application id.
 
         Return value (dict):
         Return dict in the format
-             {"configuration": {"id": <id>, "name": <name>, "appId": <app_id>,
-                                "configuration": {...}, "enabled": <bool>,
-                                "lastExportTime": <int>, "lastProcessingTime": <int>,
-                                "failures": <int>, "version": <int>}}
+             {"configuration": {"appId": <app_id>, "configuration": {...},
+                                "enabled": <bool>, "lastExportTime": <int>,
+                                "lastProcessingTime": <int>, "failures": <int>,
+                                "version": <int>}}
 
         Raise:
         AuthException: raised if load operation fails
         """
-        response = await self._http.get(f"{MgmtV1.outbound_scim_load_path}/{id}")
+        response = await self._http.get(f"{MgmtV1.outbound_scim_load_path}/{app_id}")
         return response.json()
 
     async def set_enabled(
         self,
-        id: str,
+        app_id: str,
         enabled: bool,
     ) -> dict:
         """
-        Enable or disable an outbound SCIM configuration.
+        Enable or disable the outbound SCIM configuration attached to the given
+        federated SSO app.
 
         Args:
-        id (str): The ID of the outbound SCIM configuration to update.
+        app_id (str): The federated SSO application id.
         enabled (bool): Whether the SCIM configuration should be enabled.
 
         Return value (dict):
         Return dict in the format
-             {"configuration": {"id": <id>, "name": <name>, "enabled": <bool>, ...}}
+             {"configuration": {"appId": <app_id>, "enabled": <bool>, ...}}
 
         Raise:
         AuthException: raised if the operation fails
         """
         response = await self._http.post(
             MgmtV1.outbound_scim_set_enabled_path,
-            body={"id": id, "enabled": enabled},
+            body={"appId": app_id, "enabled": enabled},
         )
         return response.json()
