@@ -128,6 +128,13 @@ class MgmtV1:
     outbound_application_batch_upload_user_tokens_path = "/v1/mgmt/outbound/app/user/oauthtoken/batch/upload"
     outbound_application_batch_upload_tenant_tokens_path = "/v1/mgmt/outbound/app/tenant/oauthtoken/batch/upload"
 
+    # outbound scim
+    outbound_scim_create_path = "/v1/mgmt/outbound/scim/create"
+    outbound_scim_update_path = "/v1/mgmt/outbound/scim/update"
+    outbound_scim_delete_path = "/v1/mgmt/outbound/scim/delete"
+    outbound_scim_load_path = "/v1/mgmt/outbound/scim"
+    outbound_scim_set_enabled_path = "/v1/mgmt/outbound/scim/enabled/set"
+
     # engine
     engine_create_path = "/v1/mgmt/engine/create"
     engine_update_path = "/v1/mgmt/engine/update"
