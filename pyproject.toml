@@ -64,7 +64,7 @@ tests = [
     # release that still supports it (1.2.0). Bumping this to 1.4.0 (renovate, #1584)
     # made the locked resolution unsatisfiable for the 3.9 split and broke CI's
     # install step. Keep ==1.2.0 on the 3.9 entry.
-    "pytest-asyncio==1.2.0; python_version < '3.10'",
+    "pytest-asyncio==1.4.0; python_version < '3.10'",
     "pytest-asyncio==1.4.0; python_version >= '3.10'",
     "coverage[toml]>=7.3.1,<8",
 ]
