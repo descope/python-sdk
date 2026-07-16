@@ -2,30 +2,21 @@
 
 Mirror the SCIM connector template
 (``content/connectors/templates/scim/metadata.json``) so callers get IDE/mypy
-completion when constructing an ``OutboundSCIMConfigurationData`` dict. All
-fields are ``NotRequired`` at the ``TypedDict`` level, but ``base_url`` /
-``baseUrl`` is required by the backend on Create — enforce that at the call
-site, not in the type. Secret-typed fields (``hmacSecret``, ``awsAccessKeyId``,
-``awsSecretAccessKey``, ``rfc9421PrivateKey``) are stored encrypted server-side
-and returned masked on Load — never plaintext.
+completion when constructing an ``OutboundSCIMConfigurationData`` dict.
+Optional-field TypedDicts are declared with ``total=False``; the backend
+requires ``baseUrl`` on Create but that's enforced at the call site, not in
+the type. Secret-typed fields (``hmacSecret``, ``awsAccessKeyId``,
+``awsSecretAccessKey``, ``rfc9421PrivateKey``) are stored encrypted
+server-side and returned masked on Load — never plaintext.
 """
 
 from __future__ import annotations
 
-import sys
-from typing import List
-
-# TypedDict is available since 3.8 in typing. Literal is available since 3.8 in
-# typing. Python 3.9 remains the floor, so both are safe from the stdlib.
-from typing import TypedDict
-
-if sys.version_info >= (3, 11):
-    from typing import Literal, NotRequired
-else:  # pragma: no cover
-    from typing import Literal
-
-    from typing_extensions import NotRequired
-
+# TypedDict, Literal, and List are all stdlib since Python 3.8; the project's
+# declared floor is 3.9 so no version guard is needed. All TypedDicts here
+# declare fields via ``total=False`` rather than ``NotRequired``, so no
+# ``typing_extensions`` import is needed either.
+from typing import List, Literal, TypedDict
 
 OutboundSCIMHTTPAuthMethod = Literal[
     "none",
