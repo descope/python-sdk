@@ -2,12 +2,14 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
+from descope.management.outbound_scim_types import OutboundSCIMConfigurationData
+
 
 class OutboundSCIMBase:
     @staticmethod
     def _compose_create_body(
         app_id: str,
-        configuration: Optional[dict] = None,
+        configuration: Optional[OutboundSCIMConfigurationData] = None,
     ) -> dict:
         body: dict[str, Any] = {
             "appId": app_id,
@@ -20,7 +22,7 @@ class OutboundSCIMBase:
     def _compose_update_body(
         app_id: str,
         version: int,
-        configuration: Optional[dict] = None,
+        configuration: Optional[OutboundSCIMConfigurationData] = None,
     ) -> dict:
         body: dict[str, Any] = {
             "appId": app_id,

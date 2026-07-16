@@ -5,13 +5,14 @@ from typing import Optional
 from descope._http_base import HTTPBase
 from descope.management._outbound_scim_base import OutboundSCIMBase
 from descope.management.common import MgmtV1
+from descope.management.outbound_scim_types import OutboundSCIMConfigurationData
 
 
 class OutboundSCIM(OutboundSCIMBase, HTTPBase):
     def create_configuration(
         self,
         app_id: str,
-        configuration: Optional[dict] = None,
+        configuration: Optional[OutboundSCIMConfigurationData] = None,
     ) -> dict:
         """
         Create a new outbound SCIM configuration on the federated SSO application
@@ -41,7 +42,7 @@ class OutboundSCIM(OutboundSCIMBase, HTTPBase):
         self,
         app_id: str,
         version: int,
-        configuration: Optional[dict] = None,
+        configuration: Optional[OutboundSCIMConfigurationData] = None,
     ) -> dict:
         """
         Update the outbound SCIM configuration attached to the given federated SSO app.

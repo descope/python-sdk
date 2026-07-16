@@ -34,7 +34,10 @@ class TestOutboundSCIM:
             response = await client.invoke(
                 client.mgmt.outbound_scim.create_configuration(
                     "app1",
-                    {"baseUrl": "https://scim.example.com"},
+                    {
+                        "baseUrl": "https://scim.example.com",
+                        "authentication": {"method": "bearerToken", "bearerToken": "shh"},
+                    },
                 )
             )
             assert response == CONFIG_RESPONSE
@@ -46,7 +49,10 @@ class TestOutboundSCIM:
                 params=None,
                 json={
                     "appId": "app1",
-                    "configuration": {"baseUrl": "https://scim.example.com"},
+                    "configuration": {
+                        "baseUrl": "https://scim.example.com",
+                        "authentication": {"method": "bearerToken", "bearerToken": "shh"},
+                    },
                 },
                 follow_redirects=False,
             )
@@ -82,7 +88,10 @@ class TestOutboundSCIM:
                 client.mgmt.outbound_scim.update_configuration(
                     "app1",
                     3,
-                    {"baseUrl": "https://scim.example.com"},
+                    {
+                        "baseUrl": "https://scim.example.com",
+                        "authentication": {"method": "bearerToken", "bearerToken": "shh"},
+                    },
                 )
             )
             assert response == CONFIG_RESPONSE
@@ -95,7 +104,10 @@ class TestOutboundSCIM:
                 json={
                     "appId": "app1",
                     "version": 3,
-                    "configuration": {"baseUrl": "https://scim.example.com"},
+                    "configuration": {
+                        "baseUrl": "https://scim.example.com",
+                        "authentication": {"method": "bearerToken", "bearerToken": "shh"},
+                    },
                 },
                 follow_redirects=False,
             )
