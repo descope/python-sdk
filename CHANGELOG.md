@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.10.0](https://github.com/descope/python-sdk/compare/descope-2.9.1...descope-2.10.0) (2026-07-18)
+
+
+### Features
+
+* document external-group source on group listing responses ([#1620](https://github.com/descope/python-sdk/issues/1620)) ([03be991](https://github.com/descope/python-sdk/commit/03be991aad24fa4f0ce340df22390dc43e1d7262))
+* document lastSuccessTestTime on SSO settings load response ([#1618](https://github.com/descope/python-sdk/issues/1618)) ([813c7db](https://github.com/descope/python-sdk/commit/813c7db489d7aeaa98f496722ddda6e330ffbd87))
+* **mgmt:** add outbound SCIM configuration management wrapper ([#1615](https://github.com/descope/python-sdk/issues/1615)) ([173213b](https://github.com/descope/python-sdk/commit/173213b0fbad100217269043e176588142fda4eb))
+* **tests:** add e2e test suite ([#1609](https://github.com/descope/python-sdk/issues/1609)) ([e083fd6](https://github.com/descope/python-sdk/commit/e083fd6e8b853e443fbd879ccd39e427ed853d1f))
+
+
+### Bug Fixes
+
+* **mgmt:** support template_id and template_options in invite_batch ([#1610](https://github.com/descope/python-sdk/issues/1610)) ([cac4a48](https://github.com/descope/python-sdk/commit/cac4a48bba952706fc2111262b968f9bbe9ae88f))
+
 ## [2.9.1](https://github.com/descope/python-sdk/compare/descope-2.9.0...descope-2.9.1) (2026-07-03)
 
 
