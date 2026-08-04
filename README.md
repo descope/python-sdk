@@ -1228,6 +1228,14 @@ groups_resp = descope_client.mgmt.group.load_all_groups(
     tenant_id="tenant-id",
 )
 
+# Load only the groups that came from a specific SSO configuration (each returned group
+# carries an "ssoId" field identifying its origin; use "default_ssoid" for the tenant's
+# default SSO configuration)
+groups_resp = descope_client.mgmt.group.load_all_groups(
+    tenant_id="tenant-id",
+    sso_id="sso-config-id",
+)
+
 # Load all groups for the given user IDs (can be found in the user's JWT)
 groups_resp = descope_client.mgmt.group.load_all_groups_for_members(
     tenant_id="tenant-id",

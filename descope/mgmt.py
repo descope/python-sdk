@@ -20,6 +20,7 @@ from descope.management.outbound_application import (
     OutboundApplication,
     OutboundApplicationByToken,
 )
+from descope.management.outbound_scim import OutboundSCIM
 from descope.management.password import Password
 from descope.management.permission import Permission
 from descope.management.project import Project
@@ -59,6 +60,7 @@ class MGMT:
         self._management_key = ManagementKey(http_client)
         self._outbound_application = OutboundApplication(http_client)
         self._outbound_application_by_token = OutboundApplicationByToken(http_client)
+        self._outbound_scim = OutboundSCIM(http_client)
         self._password = Password(http_client)
         self._permission = Permission(http_client)
         self._project = Project(http_client)
@@ -162,6 +164,11 @@ class MGMT:
     def outbound_application_by_token(self):
         # No management key check for outbound_app_token (as authentication for those methods is done by inbound app token)
         return self._outbound_application_by_token
+
+    @property
+    def outbound_scim(self):
+        self._ensure_management_key("outbound_scim")
+        return self._outbound_scim
 
     @property
     def descoper(self):

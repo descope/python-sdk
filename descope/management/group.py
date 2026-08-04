@@ -25,6 +25,7 @@ class Group(HTTPBase):
                 {
                     "id": <group id>,
                     "display": <display name>,
+                    "source": <"scim" or "jit">,
                     "ssoId": <sso configuration id>,
                     "members":[
                         {
@@ -75,6 +76,8 @@ class Group(HTTPBase):
                 {
                     "id": <group id>,
                     "display": <display name>,
+                    "source": <"scim" or "jit">,
+                    "ssoId": <sso configuration id>,
                     "members":[
                         {
                             "loginId": <loginId>,
@@ -127,6 +130,8 @@ class Group(HTTPBase):
                 {
                     "id": <group id>,
                     "display": <display name>,
+                    "source": <"scim" or "jit">,
+                    "ssoId": <sso configuration id>,
                     "members":[
                         {
                             "loginId": <loginId>,

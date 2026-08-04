@@ -29,6 +29,7 @@ class GroupAsync(AsyncHTTPBase):
                 {
                     "id": <group id>,
                     "display": <display name>,
+                    "source": <"scim" or "jit">,
                     "ssoId": <sso configuration id>,
                     "members":[
                         {
@@ -79,6 +80,8 @@ class GroupAsync(AsyncHTTPBase):
                 {
                     "id": <group id>,
                     "display": <display name>,
+                    "source": <"scim" or "jit">,
+                    "ssoId": <sso configuration id>,
                     "members":[
                         {
                             "loginId": <loginId>,
@@ -131,6 +134,8 @@ class GroupAsync(AsyncHTTPBase):
                 {
                     "id": <group id>,
                     "display": <display name>,
+                    "source": <"scim" or "jit">,
+                    "ssoId": <sso configuration id>,
                     "members":[
                         {
                             "loginId": <loginId>,

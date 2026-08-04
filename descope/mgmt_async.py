@@ -20,6 +20,7 @@ from descope.management.outbound_application_async import (
     OutboundApplicationAsync,
     OutboundApplicationByTokenAsync,
 )
+from descope.management.outbound_scim_async import OutboundSCIMAsync
 from descope.management.password_async import PasswordAsync
 from descope.management.permission_async import PermissionAsync
 from descope.management.project_async import ProjectAsync
@@ -61,6 +62,7 @@ class MGMTAsync:
         self._management_key = ManagementKeyAsync(http_client)
         self._outbound_application = OutboundApplicationAsync(http_client)
         self._outbound_application_by_token = OutboundApplicationByTokenAsync(http_client)
+        self._outbound_scim = OutboundSCIMAsync(http_client)
         self._password = PasswordAsync(http_client)
         self._permission = PermissionAsync(http_client)
         self._project = ProjectAsync(http_client)
@@ -164,6 +166,11 @@ class MGMTAsync:
     def outbound_application_by_token(self) -> OutboundApplicationByTokenAsync:
         # No management key check for outbound_app_token (as authentication for those methods is done by inbound app token)
         return self._outbound_application_by_token
+
+    @property
+    def outbound_scim(self) -> OutboundSCIMAsync:
+        self._ensure_management_key("outbound_scim")
+        return self._outbound_scim
 
     @property
     def descoper(self) -> DescoperAsync:
