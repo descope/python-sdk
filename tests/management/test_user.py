@@ -2239,6 +2239,37 @@ class TestUser:
                 follow_redirects=False,
             )
 
+    async def test_user_remove_recovery_codes(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.remove_recovery_codes("login-id"))
+
+        # Test success flow
+        with client.mock_mgmt_post(make_response({})) as mock_post:
+            await client.invoke(
+                client.mgmt.user.remove_recovery_codes(
+                    "login-id",
+                )
+            )
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_remove_recovery_codes_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "loginId": "login-id",
+                },
+                follow_redirects=False,
+            )
+
     async def test_generate_magic_link_for_test_user(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
