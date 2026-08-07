@@ -1585,10 +1585,10 @@ class User(UserBase, HTTPBase):
         login_id: str,
     ) -> None:
         """
-            Removes all recovery codes for the user with the given login ID.
+            Removes all recovery codes for the user with the given login ID or user ID.
 
         Args:
-        login_id (str): The login ID of the user to remove recovery codes for.
+        login_id (str): The login ID or user ID of the user to remove recovery codes for.
 
         Raise:
         AuthException: raised if the operation fails

@@ -306,7 +306,7 @@ response = descope_client.mgmt.user.remove_totp_seed(login_id=login_id)
 
 #### Deleting Recovery Codes
 
-Pass the loginId to the function to revoke all of the user's recovery codes.
+Pass the user's login ID or user ID to the function to revoke all of the user's recovery codes.
 
 ```python
 response = descope_client.mgmt.user.remove_recovery_codes(login_id=login_id)
