@@ -1110,10 +1110,22 @@ descope_client.mgmt.role.update_batch(
 
 # Delete a batch of roles in a single atomic transaction. This action is irreversible. Use carefully.
 descope_client.mgmt.role.delete_batch(
+    roles=["Role 1", "Role 2"],
+    tenant_id="<tenant_id>",  # Optional, the tenant the roles belong to
+)
+
+# Role objects are also accepted, as long as they all belong to the same tenant.
+descope_client.mgmt.role.delete_batch(
     roles=[
         {"name": "Role 1"},
         {"name": "Role 2", "tenantId": "<tenant_id>"},
     ]
+)
+
+# Roles can also be deleted in a batch by their IDs.
+descope_client.mgmt.role.delete_batch_by_ids(
+    role_ids=["<role_id_1>", "<role_id_2>"],
+    tenant_id="<tenant_id>",  # Optional, the tenant the roles belong to
 )
 
 # Role deletion cannot be undone. Use carefully.

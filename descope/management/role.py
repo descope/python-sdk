@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from descope._http_base import HTTPBase
-from descope.management.common import MgmtV1
+from descope.management.common import MgmtV1, role_delete_batch_body
 
 
 class Role(HTTPBase):
@@ -95,23 +95,27 @@ class Role(HTTPBase):
 
     def delete_batch(
         self,
-        roles: List[dict],
+        roles: List[Union[str, dict]],
+        tenant_id: Optional[str] = None,
     ):
         """
         Delete a batch of roles in a single atomic transaction.
         IMPORTANT: This action is irreversible. Use carefully.
 
         Args:
-        roles (List[dict]): List of role objects to delete, each with:
+        roles (List[Union[str, dict]]): List of role names to delete, or role objects each with:
             - name (str): role name.
             - tenantId (str): Optional tenant ID.
+        tenant_id (str): Optional tenant ID the roles belong to.
 
         Raise:
+        ValueError: raised if roles is empty, holds an entry without a name,
+            or spans more than one tenant
         AuthException: raised if deletion operation fails
         """
         self._http.post(
             MgmtV1.role_delete_batch_path,
-            body={"roles": roles},
+            body=role_delete_batch_body(roles, tenant_id),
         )
 
     def delete_batch_by_ids(
@@ -128,8 +132,12 @@ class Role(HTTPBase):
         tenant_id (str): Optional tenant ID the roles belong to.
 
         Raise:
+        ValueError: raised if role_ids is empty
         AuthException: raised if deletion operation fails
         """
+        if not role_ids:
+            raise ValueError("role_ids list cannot be empty")
+
         self._http.post(
             MgmtV1.role_delete_batch_path,
             body={"roleIds": role_ids, "tenantId": tenant_id},
