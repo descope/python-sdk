@@ -338,13 +338,26 @@ class TestRole:
                 await client.invoke(client.mgmt.role.delete_batch([]))
             mock.assert_not_called()
 
-        # The pre-fix signature took role objects, which never filtered the deletion
+        # Entries without a name would silently drop out of the filter
         with client.mock_mgmt_post(make_response()) as mock:
             with pytest.raises(ValueError):
-                await client.invoke(client.mgmt.role.delete_batch([{"name": "R1"}]))
+                await client.invoke(client.mgmt.role.delete_batch([{"id": "ROL1"}]))
             mock.assert_not_called()
 
-        # Test success flow
+        # The endpoint takes a single tenant, so a batch spanning tenants is rejected
+        with client.mock_mgmt_post(make_response()) as mock:
+            with pytest.raises(ValueError):
+                await client.invoke(
+                    client.mgmt.role.delete_batch(
+                        [
+                            {"name": "R1", "tenantId": "t1"},
+                            {"name": "R2", "tenantId": "t2"},
+                        ]
+                    )
+                )
+            mock.assert_not_called()
+
+        # Test success flow with role names
         with client.mock_mgmt_post(make_response()) as mock:
             assert await client.invoke(client.mgmt.role.delete_batch(["R1", "R2"], "t1")) is None
             assert_http_called(
@@ -375,6 +388,33 @@ class TestRole:
                 },
                 params=None,
                 json={"roleNames": ["R1"], "tenantId": None},
+                follow_redirects=False,
+            )
+
+        # Test success flow with role objects, the shape accepted before the fix
+        with client.mock_mgmt_post(make_response()) as mock:
+            assert (
+                await client.invoke(
+                    client.mgmt.role.delete_batch(
+                        [
+                            {"name": "R1", "tenantId": "t1"},
+                            {"name": "R2"},
+                        ]
+                    )
+                )
+                is None
+            )
+            assert_http_called(
+                mock,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.role_delete_batch_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={"roleNames": ["R1", "R2"], "tenantId": "t1"},
                 follow_redirects=False,
             )
 
