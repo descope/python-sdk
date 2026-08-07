@@ -105,7 +105,7 @@ def main():
             logging.info("Deleting a batch of roles")
             descope_client.mgmt.role.delete_batch(
                 [
-                    {"name": "Updated Batch Role 1"},
+                    "Updated Batch Role 1",
                 ]
             )
 

@@ -97,23 +97,33 @@ class RoleAsync(AsyncHTTPBase):
 
     async def delete_batch(
         self,
-        roles: List[dict],
+        role_names: List[str],
+        tenant_id: Optional[str] = None,
     ):
         """
-        Delete a batch of roles in a single atomic transaction.
+        Delete a batch of roles by name in a single atomic transaction.
         IMPORTANT: This action is irreversible. Use carefully.
 
         Args:
-        roles (List[dict]): List of role objects to delete, each with:
-            - name (str): role name.
-            - tenantId (str): Optional tenant ID.
+        role_names (List[str]): List of role names to delete.
+        tenant_id (str): Optional tenant ID the roles belong to.
 
         Raise:
+        ValueError: raised if role_names is empty or is not a list of names
         AuthException: raised if deletion operation fails
         """
+        if not role_names:
+            raise ValueError("role_names list cannot be empty")
+
+        if any(not isinstance(name, str) for name in role_names):
+            raise ValueError(
+                'role_names must be a list of role names, e.g. ["Role 1", "Role 2"]. '
+                "To delete by role ID use delete_batch_by_ids."
+            )
+
         await self._http.post(
             MgmtV1.role_delete_batch_path,
-            body={"roles": roles},
+            body={"roleNames": role_names, "tenantId": tenant_id},
         )
 
     async def delete_batch_by_ids(
@@ -130,8 +140,12 @@ class RoleAsync(AsyncHTTPBase):
         tenant_id (str): Optional tenant ID the roles belong to.
 
         Raise:
+        ValueError: raised if role_ids is empty
         AuthException: raised if deletion operation fails
         """
+        if not role_ids:
+            raise ValueError("role_ids list cannot be empty")
+
         await self._http.post(
             MgmtV1.role_delete_batch_path,
             body={"roleIds": role_ids, "tenantId": tenant_id},

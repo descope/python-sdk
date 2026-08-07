@@ -330,21 +330,23 @@ class TestRole:
         # Test failed flow
         with client.mock_mgmt_post(make_response(status=500)) as mock:
             with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.role.delete_batch(["R1"]))
+
+        # An empty list would delete every role in the project, so it is rejected
+        with client.mock_mgmt_post(make_response()) as mock:
+            with pytest.raises(ValueError):
+                await client.invoke(client.mgmt.role.delete_batch([]))
+            mock.assert_not_called()
+
+        # The pre-fix signature took role objects, which never filtered the deletion
+        with client.mock_mgmt_post(make_response()) as mock:
+            with pytest.raises(ValueError):
                 await client.invoke(client.mgmt.role.delete_batch([{"name": "R1"}]))
+            mock.assert_not_called()
 
         # Test success flow
         with client.mock_mgmt_post(make_response()) as mock:
-            assert (
-                await client.invoke(
-                    client.mgmt.role.delete_batch(
-                        [
-                            {"name": "R1", "tenantId": "t1"},
-                            {"name": "R2"},
-                        ]
-                    )
-                )
-                is None
-            )
+            assert await client.invoke(client.mgmt.role.delete_batch(["R1", "R2"], "t1")) is None
             assert_http_called(
                 mock,
                 client.mode,
@@ -355,12 +357,24 @@ class TestRole:
                     "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
-                json={
-                    "roles": [
-                        {"name": "R1", "tenantId": "t1"},
-                        {"name": "R2"},
-                    ]
+                json={"roleNames": ["R1", "R2"], "tenantId": "t1"},
+                follow_redirects=False,
+            )
+
+        # Test success flow without a tenant
+        with client.mock_mgmt_post(make_response()) as mock:
+            assert await client.invoke(client.mgmt.role.delete_batch(["R1"])) is None
+            assert_http_called(
+                mock,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.role_delete_batch_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
+                params=None,
+                json={"roleNames": ["R1"], "tenantId": None},
                 follow_redirects=False,
             )
 
@@ -371,6 +385,12 @@ class TestRole:
         with client.mock_mgmt_post(make_response(status=500)) as mock:
             with pytest.raises(AuthException):
                 await client.invoke(client.mgmt.role.delete_batch_by_ids(["ROL1"]))
+
+        # An empty list would delete every role in the project, so it is rejected
+        with client.mock_mgmt_post(make_response()) as mock:
+            with pytest.raises(ValueError):
+                await client.invoke(client.mgmt.role.delete_batch_by_ids([]))
+            mock.assert_not_called()
 
         # Test success flow
         with client.mock_mgmt_post(make_response()) as mock:
