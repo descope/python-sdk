@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.11.1](https://github.com/descope/python-sdk/compare/descope-2.11.0...descope-2.11.1) (2026-08-07)
+
+
+### Bug Fixes
+
+* **role:** send roleNames on batch delete instead of an ignored roles array ([#1651](https://github.com/descope/python-sdk/issues/1651)) ([426d369](https://github.com/descope/python-sdk/commit/426d369e785cf5698663acb9a3394496eb52eb01))
+
 ## [2.11.0](https://github.com/descope/python-sdk/compare/descope-2.10.0...descope-2.11.0) (2026-08-07)
 
 
