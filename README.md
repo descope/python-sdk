@@ -580,6 +580,7 @@ except AuthException as e:
 - When enabled, only the **most recent** HTTP response is stored
 - `get_last_response()` returns `None` when verbose mode is disabled
 - The response object provides dict-like access to JSON data while also exposing HTTP metadata
+- Check for a response with `if response is not None:` — a response object is always truthy, including when the body is empty or not JSON
 
 **Available metadata on response objects:**
 - `response.headers` - HTTP response headers (dict-like object)

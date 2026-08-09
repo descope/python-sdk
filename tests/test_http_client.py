@@ -159,11 +159,15 @@ class TestDescopeResponse(unittest.TestCase):
         mock_response.json.return_value = {"data": "test"}
         assert DescopeResponse(mock_response).is_json is True
 
-    def test_empty_json_body_is_falsy(self):
-        """Existing truthiness semantics for JSON bodies are preserved."""
+    def test_empty_json_body_is_truthy(self):
+        """Truthiness means "a response exists", not "the body is non-empty"."""
         mock_response = Mock()
         mock_response.json.return_value = {}
-        assert bool(DescopeResponse(mock_response)) is False
+        resp = DescopeResponse(mock_response)
+
+        assert bool(resp) is True
+        mock_response.json.assert_not_called()  # truthiness must not parse the body
+        assert len(resp) == 0
 
     @patch("httpx.get")
     def test_verbose_mode_captures_response_before_error(self, mock_get):

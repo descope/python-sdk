@@ -50,6 +50,12 @@ class DescopeResponse:
 
     This allows backward compatibility (acting like a dict) while exposing
     HTTP metadata like cf-ray headers for debugging.
+
+    Members that need the parsed body (``json()``, ``__getitem__``, ``get``,
+    ``keys``, ``values``, ``items``, ``__len__``, ``__iter__``, ``__contains__``)
+    raise on a non-JSON body. Inspecting the response itself never does:
+    ``bool()`` is always True, and ``str()``/``repr()`` fall back to the raw
+    text, so a response is always loggable. Use ``is_json`` to check first.
     """
 
     def __init__(self, response: httpx.Response):
@@ -105,10 +111,10 @@ class DescopeResponse:
             return f"DescopeResponse(status_code={self.raw.status_code}, text={self.raw.text[:200]!r})"
 
     def __bool__(self):
-        try:
-            return bool(self.json())
-        except ValueError:
-            return True
+        # A response object is always truthy: truthiness answers "did I get a
+        # response", not "is the body non-empty". Must stay explicit — without
+        # it Python falls back to __len__, which parses the body.
+        return True
 
     def __len__(self):
         return len(self.json())
