@@ -35,6 +35,33 @@ class TestGroup:
                 follow_redirects=False,
             )
 
+    async def test_load_all_groups_with_sso_id(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # sso_id scopes the load to one SSO configuration; it is sent only when provided
+        # (the exact-match json assertion in test_load_all_groups proves it is absent otherwise)
+        with client.mock_mgmt_post(make_response({})) as mock_post:
+            assert (
+                await client.invoke(client.mgmt.group.load_all_groups("someTenantId", sso_id="sso-config-1"))
+                is not None
+            )
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.group_load_all_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "tenantId": "someTenantId",
+                    "ssoId": "sso-config-1",
+                },
+                follow_redirects=False,
+            )
+
     async def test_load_all_groups_for_members(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 

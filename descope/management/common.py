@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 
 class SessionExpirationUnit(Enum):
@@ -85,6 +85,42 @@ def url_params_to_dict(url_params: Optional[List[URLParam]] = None) -> list:
     if url_params is None:
         return []
     return [param.to_dict() for param in url_params]
+
+
+def role_delete_batch_body(
+    roles: List[Union[str, dict]],
+    tenant_id: Optional[str] = None,
+) -> dict:
+    """
+    Build the request body for the role batch delete endpoint.
+
+    Accepts role names, or role objects with a "name" key and an optional
+    "tenantId", and returns the roleNames/tenantId body the endpoint filters on.
+    An empty list is rejected: the endpoint deletes every role when it receives
+    no filter.
+    """
+    if not roles:
+        raise ValueError("roles list cannot be empty")
+
+    role_names: List[str] = []
+    tenant_ids = set()
+    for role in roles:
+        if isinstance(role, str):
+            role_names.append(role)
+        elif isinstance(role, dict) and isinstance(role.get("name"), str):
+            role_names.append(role["name"])
+            if role.get("tenantId") is not None:
+                tenant_ids.add(role["tenantId"])
+        else:
+            raise ValueError('roles must be role names or dicts with a "name" key')
+
+    if tenant_id is not None:
+        tenant_ids.add(tenant_id)
+
+    if len(tenant_ids) > 1:
+        raise ValueError("all roles in a batch delete must belong to the same tenant")
+
+    return {"roleNames": role_names, "tenantId": next(iter(tenant_ids), None)}
 
 
 class MgmtV1:
@@ -177,6 +213,7 @@ class MgmtV1:
     user_expire_password_path = "/v1/mgmt/user/password/expire"
     user_remove_all_passkeys_path = "/v1/mgmt/user/passkeys/delete"
     user_remove_totp_seed_path = "/v1/mgmt/user/totp/delete"
+    user_remove_recovery_codes_path = "/v1/mgmt/user/recovery-codes/delete"
     user_add_tenant_path = "/v1/mgmt/user/update/tenant/add"
     user_remove_tenant_path = "/v1/mgmt/user/update/tenant/remove"
     user_generate_otp_for_test_path = "/v1/mgmt/tests/generate/otp"

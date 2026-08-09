@@ -1580,6 +1580,25 @@ class User(UserBase, HTTPBase):
         )
         return
 
+    def remove_recovery_codes(
+        self,
+        login_id: str,
+    ) -> None:
+        """
+            Removes all recovery codes for the user with the given login ID or user ID.
+
+        Args:
+        login_id (str): The login ID or user ID of the user to remove recovery codes for.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        self._http.post(
+            MgmtV1.user_remove_recovery_codes_path,
+            body={"loginId": login_id},
+        )
+        return
+
     def generate_otp_for_test_user(
         self,
         method: DeliveryMethod,

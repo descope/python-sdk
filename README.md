@@ -304,6 +304,14 @@ Pass the loginId to the function to remove the user's TOTP seed.
 response = descope_client.mgmt.user.remove_totp_seed(login_id=login_id)
 ```
 
+#### Deleting Recovery Codes
+
+Pass the user's login ID or user ID to the function to revoke all of the user's recovery codes.
+
+```python
+response = descope_client.mgmt.user.remove_recovery_codes(login_id=login_id)
+```
+
 ### Passwords
 
 The user can also authenticate with a password, though it's recommended to
@@ -1105,10 +1113,22 @@ descope_client.mgmt.role.update_batch(
 
 # Delete a batch of roles in a single atomic transaction. This action is irreversible. Use carefully.
 descope_client.mgmt.role.delete_batch(
+    roles=["Role 1", "Role 2"],
+    tenant_id="<tenant_id>",  # Optional, the tenant the roles belong to
+)
+
+# Role objects are also accepted, as long as they all belong to the same tenant.
+descope_client.mgmt.role.delete_batch(
     roles=[
         {"name": "Role 1"},
         {"name": "Role 2", "tenantId": "<tenant_id>"},
     ]
+)
+
+# Roles can also be deleted in a batch by their IDs.
+descope_client.mgmt.role.delete_batch_by_ids(
+    role_ids=["<role_id_1>", "<role_id_2>"],
+    tenant_id="<tenant_id>",  # Optional, the tenant the roles belong to
 )
 
 # Role deletion cannot be undone. Use carefully.
@@ -1229,6 +1249,14 @@ You can query SSO groups:
 # Load all groups for a given tenant id
 groups_resp = descope_client.mgmt.group.load_all_groups(
     tenant_id="tenant-id",
+)
+
+# Load only the groups that came from a specific SSO configuration (each returned group
+# carries an "ssoId" field identifying its origin; use "default_ssoid" for the tenant's
+# default SSO configuration)
+groups_resp = descope_client.mgmt.group.load_all_groups(
+    tenant_id="tenant-id",
+    sso_id="sso-config-id",
 )
 
 # Load all groups for the given user IDs (can be found in the user's JWT)

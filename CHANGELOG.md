@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.11.1](https://github.com/descope/python-sdk/compare/descope-2.11.0...descope-2.11.1) (2026-08-07)
+
+
+### Bug Fixes
+
+* **role:** send roleNames on batch delete instead of an ignored roles array ([#1651](https://github.com/descope/python-sdk/issues/1651)) ([426d369](https://github.com/descope/python-sdk/commit/426d369e785cf5698663acb9a3394496eb52eb01))
+
+## [2.11.0](https://github.com/descope/python-sdk/compare/descope-2.10.0...descope-2.11.0) (2026-08-07)
+
+
+### Features
+
+* add remove_recovery_codes user management method ([#1643](https://github.com/descope/python-sdk/issues/1643)) ([8531622](https://github.com/descope/python-sdk/commit/8531622318b9146560a5bb6816f853483f817402))
+* **mgmt:** load external groups scoped to a specific SSO config ([#1641](https://github.com/descope/python-sdk/issues/1641)) ([972a025](https://github.com/descope/python-sdk/commit/972a025bce423fb05399e1ec307a9f4decad9b50))
+
+
+### Bug Fixes
+
+* **deps:** restore mypy &lt;1.12 bound on the Python 3.9 types pin ([#1647](https://github.com/descope/python-sdk/issues/1647)) ([8386f19](https://github.com/descope/python-sdk/commit/8386f190aef992274b05046dd631572fdcfd5f5c))
+
+
+### Documentation
+
+* remove_recovery_codes accepts login ID or user ID ([#1649](https://github.com/descope/python-sdk/issues/1649)) ([e91d91e](https://github.com/descope/python-sdk/commit/e91d91e177cda6cd7dc16d6178d15a2e3697b759))
+
 ## [2.10.0](https://github.com/descope/python-sdk/compare/descope-2.9.1...descope-2.10.0) (2026-07-18)
 
 
