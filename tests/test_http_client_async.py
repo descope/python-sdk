@@ -317,18 +317,6 @@ class TestAsyncVerbose:
         assert last is not None
         assert last.status_code == 200
 
-    async def test_put_captures_response_when_verbose(self):
-        client = make_async_client(verbose=True)
-        client._async_client.put = AsyncMock(
-            return_value=make_resp(status=200, json_data={"replaced": 1}, headers={"cf-ray": "r5"})
-        )
-
-        await client.put("/x", body={})
-
-        last = client.get_last_response()
-        assert last is not None
-        assert last.status_code == 200
-
     async def test_delete_captures_response_when_verbose(self):
         client = make_async_client(verbose=True)
         client._async_client.delete = AsyncMock(

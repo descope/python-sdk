@@ -104,8 +104,6 @@ class HTTPClient(HTTPClientBase):
                 timeout=self.timeout_seconds,
             )
         )
-        if self.verbose:
-            self._thread_local.last_response = DescopeResponse(response)
         self._raise_from_response(response)
         return response
 

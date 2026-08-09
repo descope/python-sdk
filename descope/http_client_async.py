@@ -109,8 +109,6 @@ class HTTPClientAsync(HTTPClientBase):
                 params=params,
             )
         )
-        if self.verbose:
-            self._last_response_var.set(DescopeResponse(response))
         self._raise_from_response(response)
         return response
 
