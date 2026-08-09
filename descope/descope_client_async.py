@@ -322,4 +322,4 @@ class DescopeClientAsync(DescopeClientBase):
         """Get the last HTTP response when verbose mode is enabled."""
         mgmt_resp = self._mgmt_http.get_last_response()
         auth_resp = self._auth_http.get_last_response()
-        return mgmt_resp if mgmt_resp is not None else auth_resp
+        return mgmt_resp or auth_resp

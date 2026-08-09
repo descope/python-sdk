@@ -145,14 +145,29 @@ class TestDescopeResponse(unittest.TestCase):
         assert resp.text == html
         assert resp.headers.get("cf-ray") == "abc123"
         assert resp.ok is False
-        assert resp == resp
-        assert resp != DescopeResponse(mock_response)
+        # Equality falls back to identity rather than raising
+        assert (resp == DescopeResponse(mock_response)) is False
 
         # Explicit JSON access still raises
         with self.assertRaises(json.JSONDecodeError):
             resp.json()
         with self.assertRaises(json.JSONDecodeError):
-            resp["errorCode"]
+            resp.__getitem__("errorCode")
+
+    def test_long_non_json_body_is_truncated_in_str_and_repr(self):
+        """Body size is upstream-controlled, so logging must not echo it unbounded."""
+        body = "x" * 5000
+        mock_response = Mock()
+        mock_response.json.side_effect = json.JSONDecodeError("Expecting value", body, 0)
+        mock_response.status_code = 502
+        mock_response.text = body
+
+        resp = DescopeResponse(mock_response)
+
+        assert len(str(resp)) < 300
+        assert "5000 chars" in str(resp)
+        assert len(repr(resp)) < 300
+        assert resp.text == body  # full body still reachable
 
     def test_is_json_true_for_json_body(self):
         mock_response = Mock()
@@ -294,6 +309,24 @@ class TestHTTPClient(unittest.TestCase):
         last_resp = client.get_last_response()
         assert last_resp is not None
         assert last_resp["updated"] == "user1"
+        assert last_resp.status_code == 200
+
+    @patch("httpx.put")
+    def test_verbose_mode_captures_put_response(self, mock_put):
+        """Test that PUT responses are captured in verbose mode."""
+        mock_response = Mock()
+        mock_response.is_success = True
+        mock_response.json.return_value = {"replaced": "user1"}
+        mock_response.headers = {"cf-ray": "put123"}
+        mock_response.status_code = 200
+        mock_put.return_value = mock_response
+
+        client = HTTPClient(project_id="test123", verbose=True)
+        client.put("/users/1", body={"name": "replaced"})
+
+        last_resp = client.get_last_response()
+        assert last_resp is not None
+        assert last_resp["replaced"] == "user1"
         assert last_resp.status_code == 200
 
     @patch("httpx.delete")

@@ -387,7 +387,7 @@ class DescopeClient(DescopeClientBase):
                 client.mgmt.user.create(login_id="test@example.com")
             except AuthException:
                 resp = client.get_last_response()
-                if resp is not None:
+                if resp:
                     # Access metadata for debugging
                     cf_ray = resp.headers.get("cf-ray")
                     status = resp.status_code
@@ -398,4 +398,4 @@ class DescopeClient(DescopeClientBase):
 
         # Return whichever is not None, preferring mgmt if both exist
         # (in practice, only one should be non-None at a time)
-        return mgmt_resp if mgmt_resp is not None else auth_resp
+        return mgmt_resp or auth_resp

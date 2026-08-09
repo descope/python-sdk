@@ -35,7 +35,7 @@ def example_with_verbose_mode():
 
         # Access the last response metadata
         response = client.get_last_response()
-        if response is not None:
+        if response:
             logger.info("Request succeeded!")
             logger.info("Status: %s", response.status_code)
             logger.info("cf-ray: %s", response.headers.get("cf-ray"))
@@ -44,7 +44,7 @@ def example_with_verbose_mode():
     except AuthException:
         # When an error occurs, capture the response metadata for debugging
         response = client.get_last_response()
-        if response is not None:
+        if response:
             logger.error("Request failed with status %s", response.status_code)
             logger.error("cf-ray: %s", response.headers.get("cf-ray"))
             logger.error("x-request-id: %s", response.headers.get("x-request-id"))

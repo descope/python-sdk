@@ -565,7 +565,7 @@ try:
 except AuthException as e:
     # Access the last response metadata for debugging
     response = client.get_last_response()
-    if response is not None:
+    if response:
         logger.error(f"Request failed with status {response.status_code}")
         logger.error(f"cf-ray: {response.headers.get('cf-ray')}")
         logger.error(f"x-request-id: {response.headers.get('x-request-id')}")
@@ -580,7 +580,7 @@ except AuthException as e:
 - When enabled, only the **most recent** HTTP response is stored
 - `get_last_response()` returns `None` when verbose mode is disabled
 - The response object provides dict-like access to JSON data while also exposing HTTP metadata
-- Check for a response with `if response is not None:` — a response object is always truthy, including when the body is empty or not JSON
+- A response object is always truthy, including when the body is empty or not JSON, so `if response:` is a safe presence check
 
 **Available metadata on response objects:**
 - `response.headers` - HTTP response headers (dict-like object)

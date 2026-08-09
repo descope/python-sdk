@@ -30,6 +30,9 @@ def sdk_version():
     return version("descope")
 
 
+# Longest non-JSON body echoed into str()/repr() of a response
+_MAX_TEXT_PREVIEW = 200
+
 # HTTP status codes that should trigger automatic retries
 _RETRY_STATUS_CODES = {503, 520, 521, 522, 524, 530}
 # Delays in seconds between retries: first retry after 100ms, subsequent retries after 5s
@@ -96,19 +99,26 @@ class DescopeResponse:
     def get(self, key, default=None):
         return self.json().get(key, default)
 
+    def _text_preview(self):
+        """Bounded view of a non-JSON body: its size is upstream-controlled."""
+        text = self.raw.text
+        if len(text) <= _MAX_TEXT_PREVIEW:
+            return text
+        return f"{text[:_MAX_TEXT_PREVIEW]}... ({len(text)} chars, use .text for the full body)"
+
     # Inspection dunders never parse-fail: a non-JSON body (an nginx 502 HTML
     # page, for example) must still be loggable and truthy as a response object.
     def __str__(self):
         try:
             return str(self.json())
         except ValueError:
-            return self.raw.text
+            return self._text_preview()
 
     def __repr__(self):
         try:
             return f"DescopeResponse({repr(self.json())})"
         except ValueError:
-            return f"DescopeResponse(status_code={self.raw.status_code}, text={self.raw.text[:200]!r})"
+            return f"DescopeResponse(status_code={self.raw.status_code}, text={self._text_preview()!r})"
 
     def __bool__(self):
         # A response object is always truthy: truthiness answers "did I get a
