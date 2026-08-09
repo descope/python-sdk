@@ -104,6 +104,8 @@ class HTTPClient(HTTPClientBase):
                 timeout=self.timeout_seconds,
             )
         )
+        if self.verbose:
+            self._thread_local.last_response = DescopeResponse(response)
         self._raise_from_response(response)
         return response
 
@@ -172,7 +174,7 @@ class HTTPClient(HTTPClientBase):
                 client.mgmt.user.create(login_id="u1")
             except AuthException:
                 resp = client.get_last_response()
-                if resp:
+                if resp is not None:
                     logger.error(f"cf-ray: {resp.headers.get('cf-ray')}")
         """
         return getattr(self._thread_local, "last_response", None)

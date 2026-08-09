@@ -565,7 +565,7 @@ try:
 except AuthException as e:
     # Access the last response metadata for debugging
     response = client.get_last_response()
-    if response:
+    if response is not None:
         logger.error(f"Request failed with status {response.status_code}")
         logger.error(f"cf-ray: {response.headers.get('cf-ray')}")
         logger.error(f"x-request-id: {response.headers.get('x-request-id')}")
@@ -587,7 +587,9 @@ except AuthException as e:
 - `response.text` - Raw response body as text (str)
 - `response.url` - Request URL (str)
 - `response.ok` - Whether status code is < 400 (bool)
-- `response.json()` - Parsed JSON response (dict/list)
+- `response.json()` - Parsed JSON response (dict/list), raises if the body is not JSON
+- `response.is_json` - Whether the body can be parsed as JSON (bool)
+- `response.raw` - The underlying `httpx.Response`
 - `response["key"]` - Dict-like access to JSON data (for backward compatibility)
 
 For a complete example, see [samples/verbose_mode_example.py](https://github.com/descope/python-sdk/blob/main/samples/verbose_mode_example.py).

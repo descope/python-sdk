@@ -62,6 +62,15 @@ class DescopeResponse:
             self._json_data = self.raw.json()
         return self._json_data
 
+    @property
+    def is_json(self) -> bool:
+        """True if the response body can be parsed as JSON."""
+        try:
+            self.json()
+        except ValueError:
+            return False
+        return True
+
     # Dict-like interface for backward compatibility
     def __getitem__(self, key):
         return self.json()[key]
@@ -81,22 +90,36 @@ class DescopeResponse:
     def get(self, key, default=None):
         return self.json().get(key, default)
 
+    # Inspection dunders never parse-fail: a non-JSON body (an nginx 502 HTML
+    # page, for example) must still be loggable and truthy as a response object.
     def __str__(self):
-        return str(self.json())
+        try:
+            return str(self.json())
+        except ValueError:
+            return self.raw.text
 
     def __repr__(self):
-        return f"DescopeResponse({repr(self.json())})"
+        try:
+            return f"DescopeResponse({repr(self.json())})"
+        except ValueError:
+            return f"DescopeResponse(status_code={self.raw.status_code}, text={self.raw.text[:200]!r})"
 
     def __bool__(self):
-        return bool(self.json())
+        try:
+            return bool(self.json())
+        except ValueError:
+            return True
 
     def __len__(self):
         return len(self.json())
 
     def __eq__(self, other):
-        if isinstance(other, DescopeResponse):
-            return self.json() == other.json()
-        return self.json() == other
+        try:
+            if isinstance(other, DescopeResponse):
+                return self.json() == other.json()
+            return self.json() == other
+        except ValueError:
+            return self is other
 
     def __ne__(self, other):
         return not self.__eq__(other)

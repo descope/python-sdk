@@ -1,3 +1,4 @@
+import json
 import os
 import unittest
 from unittest.mock import Mock, patch
@@ -123,6 +124,46 @@ class TestDescopeResponse(unittest.TestCase):
 
         assert resp.cookies.get("session") == "abc123"
         assert resp.content == b'{"data":"test"}'
+
+    def test_non_json_body_is_inspectable(self):
+        """A non-JSON body (e.g. an nginx 502 HTML page) must not break inspection."""
+        html = "<html><head><title>502 Bad Gateway</title></head></html>"
+        mock_response = Mock()
+        mock_response.json.side_effect = json.JSONDecodeError("Expecting value", html, 0)
+        mock_response.status_code = 502
+        mock_response.text = html
+        mock_response.headers = {"cf-ray": "abc123"}
+        mock_response.is_success = False
+
+        resp = DescopeResponse(mock_response)
+
+        assert bool(resp) is True
+        assert str(resp) == html
+        assert "502" in repr(resp)
+        assert resp.is_json is False
+        assert resp.status_code == 502
+        assert resp.text == html
+        assert resp.headers.get("cf-ray") == "abc123"
+        assert resp.ok is False
+        assert resp == resp
+        assert resp != DescopeResponse(mock_response)
+
+        # Explicit JSON access still raises
+        with self.assertRaises(json.JSONDecodeError):
+            resp.json()
+        with self.assertRaises(json.JSONDecodeError):
+            resp["errorCode"]
+
+    def test_is_json_true_for_json_body(self):
+        mock_response = Mock()
+        mock_response.json.return_value = {"data": "test"}
+        assert DescopeResponse(mock_response).is_json is True
+
+    def test_empty_json_body_is_falsy(self):
+        """Existing truthiness semantics for JSON bodies are preserved."""
+        mock_response = Mock()
+        mock_response.json.return_value = {}
+        assert bool(DescopeResponse(mock_response)) is False
 
     @patch("httpx.get")
     def test_verbose_mode_captures_response_before_error(self, mock_get):

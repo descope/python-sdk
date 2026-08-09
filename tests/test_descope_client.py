@@ -839,3 +839,33 @@ class TestDescopeClient:
         assert last_resp["user"]["id"] == "u1"
         assert last_resp.headers.get("cf-ray") == "mgmt-ray-123"
         assert last_resp.status_code == 200
+
+    async def test_verbose_mode_returns_response_on_non_json_body(self, client_factory):
+        """get_last_response() must not parse the body: a 502 HTML page is still returned."""
+        html = "<html><head><title>502 Bad Gateway</title></head></html>"
+        mock_response = mock.Mock()
+        mock_response.is_success = False
+        mock_response.status_code = 502
+        mock_response.text = html
+        mock_response.headers = {"cf-ray": "mgmt-ray-502"}
+        mock_response.json.side_effect = json.JSONDecodeError("Expecting value", html, 0)
+
+        client = client_factory.make(
+            PROJECT_ID,
+            public_key=PUBLIC_KEY_DICT,
+            management_key="test-mgmt-key",
+            verbose=True,
+        )
+        if client_factory.mode == "async":
+            client._raw._license_attempted = True
+
+        with client.mock_mgmt_post(mock_response):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.create(login_id="test@example.com"))
+
+        last_resp = client.get_last_response()
+        assert last_resp is not None
+        assert last_resp.status_code == 502
+        assert last_resp.text == html
+        assert last_resp.headers.get("cf-ray") == "mgmt-ray-502"
+        assert last_resp.is_json is False
