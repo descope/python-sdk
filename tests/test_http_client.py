@@ -1,3 +1,4 @@
+import json
 import os
 import unittest
 from unittest.mock import Mock, patch
@@ -123,6 +124,65 @@ class TestDescopeResponse(unittest.TestCase):
 
         assert resp.cookies.get("session") == "abc123"
         assert resp.content == b'{"data":"test"}'
+
+    def test_non_json_body_is_inspectable(self):
+        """A non-JSON body (e.g. an nginx 502 HTML page) must not break inspection."""
+        html = "<html><head><title>502 Bad Gateway</title></head></html>"
+        mock_response = Mock()
+        mock_response.json.side_effect = json.JSONDecodeError("Expecting value", html, 0)
+        mock_response.status_code = 502
+        mock_response.text = html
+        mock_response.headers = {"cf-ray": "abc123"}
+        mock_response.is_success = False
+
+        resp = DescopeResponse(mock_response)
+
+        assert bool(resp) is True
+        assert str(resp) == html
+        assert "502" in repr(resp)
+        assert resp.is_json is False
+        assert resp.status_code == 502
+        assert resp.text == html
+        assert resp.headers.get("cf-ray") == "abc123"
+        assert resp.ok is False
+        # Equality falls back to identity rather than raising
+        assert (resp == DescopeResponse(mock_response)) is False
+
+        # Explicit JSON access still raises
+        with self.assertRaises(json.JSONDecodeError):
+            resp.json()
+        with self.assertRaises(json.JSONDecodeError):
+            resp.__getitem__("errorCode")
+
+    def test_long_non_json_body_is_truncated_in_str_and_repr(self):
+        """Body size is upstream-controlled, so logging must not echo it unbounded."""
+        body = "x" * 5000
+        mock_response = Mock()
+        mock_response.json.side_effect = json.JSONDecodeError("Expecting value", body, 0)
+        mock_response.status_code = 502
+        mock_response.text = body
+
+        resp = DescopeResponse(mock_response)
+
+        assert len(str(resp)) < 300
+        assert "5000 chars" in str(resp)
+        assert len(repr(resp)) < 300
+        assert resp.text == body  # full body still reachable
+
+    def test_is_json_true_for_json_body(self):
+        mock_response = Mock()
+        mock_response.json.return_value = {"data": "test"}
+        assert DescopeResponse(mock_response).is_json is True
+
+    def test_empty_json_body_is_truthy(self):
+        """Truthiness means "a response exists", not "the body is non-empty"."""
+        mock_response = Mock()
+        mock_response.json.return_value = {}
+        resp = DescopeResponse(mock_response)
+
+        assert bool(resp) is True
+        mock_response.json.assert_not_called()  # truthiness must not parse the body
+        assert len(resp) == 0
 
     @patch("httpx.get")
     def test_verbose_mode_captures_response_before_error(self, mock_get):

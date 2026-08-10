@@ -30,6 +30,9 @@ def sdk_version():
     return version("descope")
 
 
+# Longest non-JSON body echoed into str()/repr() of a response
+_MAX_TEXT_PREVIEW = 200
+
 # HTTP status codes that should trigger automatic retries
 _RETRY_STATUS_CODES = {503, 520, 521, 522, 524, 530}
 # Delays in seconds between retries: first retry after 100ms, subsequent retries after 5s
@@ -50,6 +53,12 @@ class DescopeResponse:
 
     This allows backward compatibility (acting like a dict) while exposing
     HTTP metadata like cf-ray headers for debugging.
+
+    Members that need the parsed body (``json()``, ``__getitem__``, ``get``,
+    ``keys``, ``values``, ``items``, ``__len__``, ``__iter__``, ``__contains__``)
+    raise on a non-JSON body. Inspecting the response itself never does:
+    ``bool()`` is always True, and ``str()``/``repr()`` fall back to the raw
+    text, so a response is always loggable. Use ``is_json`` to check first.
     """
 
     def __init__(self, response: httpx.Response):
@@ -61,6 +70,15 @@ class DescopeResponse:
         if self._json_data is None:
             self._json_data = self.raw.json()
         return self._json_data
+
+    @property
+    def is_json(self) -> bool:
+        """True if the response body can be parsed as JSON."""
+        try:
+            self.json()
+        except ValueError:
+            return False
+        return True
 
     # Dict-like interface for backward compatibility
     def __getitem__(self, key):
@@ -81,22 +99,43 @@ class DescopeResponse:
     def get(self, key, default=None):
         return self.json().get(key, default)
 
+    def _text_preview(self):
+        """Bounded view of a non-JSON body: its size is upstream-controlled."""
+        text = self.raw.text
+        if len(text) <= _MAX_TEXT_PREVIEW:
+            return text
+        return f"{text[:_MAX_TEXT_PREVIEW]}... ({len(text)} chars, use .text for the full body)"
+
+    # Inspection dunders never parse-fail: a non-JSON body (an nginx 502 HTML
+    # page, for example) must still be loggable and truthy as a response object.
     def __str__(self):
-        return str(self.json())
+        try:
+            return str(self.json())
+        except ValueError:
+            return self._text_preview()
 
     def __repr__(self):
-        return f"DescopeResponse({repr(self.json())})"
+        try:
+            return f"DescopeResponse({repr(self.json())})"
+        except ValueError:
+            return f"DescopeResponse(status_code={self.raw.status_code}, text={self._text_preview()!r})"
 
     def __bool__(self):
-        return bool(self.json())
+        # A response object is always truthy: truthiness answers "did I get a
+        # response", not "is the body non-empty". Must stay explicit — without
+        # it Python falls back to __len__, which parses the body.
+        return True
 
     def __len__(self):
         return len(self.json())
 
     def __eq__(self, other):
-        if isinstance(other, DescopeResponse):
-            return self.json() == other.json()
-        return self.json() == other
+        try:
+            if isinstance(other, DescopeResponse):
+                return self.json() == other.json()
+            return self.json() == other
+        except ValueError:
+            return self is other
 
     def __ne__(self, other):
         return not self.__eq__(other)

@@ -588,6 +588,7 @@ except AuthException as e:
 - When enabled, only the **most recent** HTTP response is stored
 - `get_last_response()` returns `None` when verbose mode is disabled
 - The response object provides dict-like access to JSON data while also exposing HTTP metadata
+- A response object is always truthy, including when the body is empty or not JSON, so `if response:` is a safe presence check
 
 **Available metadata on response objects:**
 - `response.headers` - HTTP response headers (dict-like object)
@@ -595,7 +596,9 @@ except AuthException as e:
 - `response.text` - Raw response body as text (str)
 - `response.url` - Request URL (str)
 - `response.ok` - Whether status code is < 400 (bool)
-- `response.json()` - Parsed JSON response (dict/list)
+- `response.json()` - Parsed JSON response (dict/list), raises if the body is not JSON
+- `response.is_json` - Whether the body can be parsed as JSON (bool)
+- `response.raw` - The underlying `httpx.Response`
 - `response["key"]` - Dict-like access to JSON data (for backward compatibility)
 
 For a complete example, see [samples/verbose_mode_example.py](https://github.com/descope/python-sdk/blob/main/samples/verbose_mode_example.py).
