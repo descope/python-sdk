@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.11.2](https://github.com/descope/python-sdk/compare/descope-2.11.1...descope-2.11.2) (2026-08-10)
+
+
+### Bug Fixes
+
+* **http:** return last response for non-JSON bodies ([#1653](https://github.com/descope/python-sdk/issues/1653)) ([524aef3](https://github.com/descope/python-sdk/commit/524aef3ac1a7d846855d5e65743945e2a1911a53))
+
 ## [2.11.1](https://github.com/descope/python-sdk/compare/descope-2.11.0...descope-2.11.1) (2026-08-07)
 
 
