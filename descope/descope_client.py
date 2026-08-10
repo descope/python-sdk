@@ -7,6 +7,7 @@ from typing import Iterable
 import httpx
 
 from descope._client_base import DescopeClientBase
+from descope._http_client_base import ThreadLocalLastResponseStore
 from descope.auth import Auth
 from descope.authmethod.enchantedlink import EnchantedLink  # noqa: F401
 from descope.authmethod.magiclink import MagicLink  # noqa: F401
@@ -54,6 +55,10 @@ class DescopeClient(DescopeClientBase):
             base_url=base_url,
             verbose=verbose,
         )
+        # One store shared by every HTTP client below, so get_last_response()
+        # returns the genuinely most recent response rather than picking between
+        # per-client slots that were overwritten independently.
+        self._last_response_store = ThreadLocalLastResponseStore()
         auth_http_client = HTTPClient(
             project_id=self._project_id,
             base_url=base_url,
@@ -61,6 +66,7 @@ class DescopeClient(DescopeClientBase):
             secure=not skip_verify,
             management_key=auth_management_key or os.getenv("DESCOPE_AUTH_MANAGEMENT_KEY"),
             verbose=verbose,
+            last_response_store=self._last_response_store,
         )
         self._auth = Auth(
             self._project_id,
@@ -87,6 +93,7 @@ class DescopeClient(DescopeClientBase):
             secure=auth_http_client.secure,
             management_key=management_key or os.getenv("DESCOPE_MANAGEMENT_KEY"),
             verbose=verbose,
+            last_response_store=self._last_response_store,
         )
         self._mgmt = MGMT(
             http_client=mgmt_http_client,
@@ -378,7 +385,8 @@ class DescopeClient(DescopeClientBase):
 
         Returns:
             DescopeResponse: The last response if verbose mode is enabled.
-                           Returns the most recent response from either auth or mgmt operations.
+                           Returns the most recent response across auth and mgmt
+                           operations, whichever ran last.
                            None if verbose mode is disabled or no requests have been made.
 
         Example:
@@ -392,10 +400,4 @@ class DescopeClient(DescopeClientBase):
                     cf_ray = resp.headers.get("cf-ray")
                     status = resp.status_code
         """
-        # Return the most recently used response
-        mgmt_resp = self._mgmt_http_client.get_last_response()
-        auth_resp = self._auth_http_client.get_last_response()
-
-        # Return whichever is not None, preferring mgmt if both exist
-        # (in practice, only one should be non-None at a time)
-        return mgmt_resp or auth_resp
+        return self._last_response_store.get()

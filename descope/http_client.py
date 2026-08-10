@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import threading
 import time
 from typing import cast
 
@@ -12,6 +11,7 @@ from descope._http_client_base import (
     DEFAULT_TIMEOUT_SECONDS,
     DescopeResponse,
     HTTPClientBase,
+    ThreadLocalLastResponseStore,
 )
 
 
@@ -25,6 +25,7 @@ class HTTPClient(HTTPClientBase):
         secure: bool = True,
         management_key: str | None = None,
         verbose: bool = False,
+        last_response_store: ThreadLocalLastResponseStore | None = None,
     ) -> None:
         super().__init__(
             project_id,
@@ -34,7 +35,9 @@ class HTTPClient(HTTPClientBase):
             management_key=management_key,
             verbose=verbose,
         )
-        self._thread_local = threading.local()
+        # Shared by every client of one DescopeClient when passed in, so
+        # get_last_response() sees a single ordering across auth and mgmt.
+        self.last_response_store = last_response_store or ThreadLocalLastResponseStore()
 
     # ------------- public API -------------
     def get(
@@ -56,7 +59,7 @@ class HTTPClient(HTTPClientBase):
             )
         )
         if self.verbose:
-            self._thread_local.last_response = DescopeResponse(response)
+            self.last_response_store.set(DescopeResponse(response))
         self._raise_from_response(response)
         return response
 
@@ -81,7 +84,7 @@ class HTTPClient(HTTPClientBase):
             )
         )
         if self.verbose:
-            self._thread_local.last_response = DescopeResponse(response)
+            self.last_response_store.set(DescopeResponse(response))
         self._raise_from_response(response)
         return response
 
@@ -105,7 +108,7 @@ class HTTPClient(HTTPClientBase):
             )
         )
         if self.verbose:
-            self._thread_local.last_response = DescopeResponse(response)
+            self.last_response_store.set(DescopeResponse(response))
         self._raise_from_response(response)
         return response
 
@@ -129,7 +132,7 @@ class HTTPClient(HTTPClientBase):
             )
         )
         if self.verbose:
-            self._thread_local.last_response = DescopeResponse(response)
+            self.last_response_store.set(DescopeResponse(response))
         self._raise_from_response(response)
         return response
 
@@ -151,7 +154,7 @@ class HTTPClient(HTTPClientBase):
             )
         )
         if self.verbose:
-            self._thread_local.last_response = DescopeResponse(response)
+            self.last_response_store.set(DescopeResponse(response))
         self._raise_from_response(response)
         return response
 
@@ -165,6 +168,10 @@ class HTTPClient(HTTPClientBase):
         This method is thread-safe: each thread will receive its own
         last response when using a shared client instance.
 
+        When the store is shared with other clients — as ``DescopeClient`` does
+        for its auth and management clients — this reports the last response
+        across all of them, not just the ones this client issued.
+
         Returns:
             DescopeResponse: The last response if verbose mode is enabled, None otherwise.
 
@@ -177,7 +184,7 @@ class HTTPClient(HTTPClientBase):
                 if resp:
                     logger.error(f"cf-ray: {resp.headers.get('cf-ray')}")
         """
-        return getattr(self._thread_local, "last_response", None)
+        return self.last_response_store.get()
 
     # ------------- helpers -------------
     def _execute_with_retry(self, request_fn) -> httpx.Response:

@@ -1,8 +1,10 @@
 import json
 import os
+import threading
 import unittest
 from unittest.mock import Mock, patch
 
+from descope._http_client_base import ThreadLocalLastResponseStore
 from descope.http_client import DescopeResponse, HTTPClient
 
 
@@ -359,6 +361,51 @@ class TestHTTPClient(unittest.TestCase):
         assert last_resp is not None
         assert last_resp["deleted"] == "user1"
         assert last_resp.status_code == 204
+
+    @patch("httpx.get")
+    @patch("httpx.post")
+    def test_clients_sharing_a_store_see_one_ordering(self, mock_post, mock_get):
+        """A shared store makes "last" mean last, regardless of which client wrote it."""
+        mgmt_response = Mock()
+        mgmt_response.is_success = True
+        mgmt_response.json.return_value = {"src": "mgmt"}
+        mock_post.return_value = mgmt_response
+
+        auth_response = Mock()
+        auth_response.is_success = True
+        auth_response.json.return_value = {"src": "auth"}
+        mock_get.return_value = auth_response
+
+        store = ThreadLocalLastResponseStore()
+        mgmt = HTTPClient(project_id="test123", verbose=True, last_response_store=store)
+        auth = HTTPClient(project_id="test123", verbose=True, last_response_store=store)
+
+        mgmt.post("/x", body={})
+        assert store.get()["src"] == "mgmt"
+
+        auth.get("/x")
+        assert store.get()["src"] == "auth"
+
+    def test_shared_store_is_still_per_thread(self):
+        """Sharing one store must not leak a response between threads."""
+        store = ThreadLocalLastResponseStore()
+        seen = {}
+        both_written = threading.Barrier(2)
+
+        def worker(name):
+            response = Mock()
+            response.json.return_value = {"thread": name}
+            store.set(DescopeResponse(response))
+            both_written.wait()  # neither reads until both have written
+            seen[name] = store.get()["thread"]
+
+        threads = [threading.Thread(target=worker, args=(name,)) for name in ("a", "b")]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert seen == {"a": "a", "b": "b"}
 
     def test_raises_auth_exception_with_empty_project_id(self):
         """Test that HTTPClient raises AuthException when project_id is empty."""

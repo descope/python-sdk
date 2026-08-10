@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import contextvars
 from typing import Awaitable, Callable, cast
 
 import httpx
@@ -10,6 +9,7 @@ from descope._http_client_base import (
     _RETRY_DELAYS_SECONDS,
     _RETRY_STATUS_CODES,
     DEFAULT_TIMEOUT_SECONDS,
+    ContextVarLastResponseStore,
     DescopeResponse,
     HTTPClientBase,
 )
@@ -25,6 +25,7 @@ class HTTPClientAsync(HTTPClientBase):
         secure: bool = True,
         management_key: str | None = None,
         verbose: bool = False,
+        last_response_store: ContextVarLastResponseStore | None = None,
     ) -> None:
         super().__init__(
             project_id,
@@ -38,9 +39,9 @@ class HTTPClientAsync(HTTPClientBase):
             verify=self.client_verify,
             timeout=self.timeout_seconds,
         )
-        self._last_response_var: contextvars.ContextVar[DescopeResponse | None] = contextvars.ContextVar(
-            "descope_async_last_response", default=None
-        )
+        # Shared by every client of one DescopeClientAsync when passed in, so
+        # get_last_response() sees a single ordering across auth and mgmt.
+        self.last_response_store = last_response_store or ContextVarLastResponseStore()
         # Optional one-shot async hook invoked before the first request goes
         # out. Used by ``DescopeClientAsync`` to lazily run the license
         # handshake on ``_mgmt_http`` without blocking the event loop in
@@ -65,7 +66,7 @@ class HTTPClientAsync(HTTPClientBase):
             )
         )
         if self.verbose:
-            self._last_response_var.set(DescopeResponse(response))
+            self.last_response_store.set(DescopeResponse(response))
         self._raise_from_response(response)
         return response
 
@@ -88,7 +89,7 @@ class HTTPClientAsync(HTTPClientBase):
             )
         )
         if self.verbose:
-            self._last_response_var.set(DescopeResponse(response))
+            self.last_response_store.set(DescopeResponse(response))
         self._raise_from_response(response)
         return response
 
@@ -110,7 +111,7 @@ class HTTPClientAsync(HTTPClientBase):
             )
         )
         if self.verbose:
-            self._last_response_var.set(DescopeResponse(response))
+            self.last_response_store.set(DescopeResponse(response))
         self._raise_from_response(response)
         return response
 
@@ -132,7 +133,7 @@ class HTTPClientAsync(HTTPClientBase):
             )
         )
         if self.verbose:
-            self._last_response_var.set(DescopeResponse(response))
+            self.last_response_store.set(DescopeResponse(response))
         self._raise_from_response(response)
         return response
 
@@ -152,7 +153,7 @@ class HTTPClientAsync(HTTPClientBase):
             )
         )
         if self.verbose:
-            self._last_response_var.set(DescopeResponse(response))
+            self.last_response_store.set(DescopeResponse(response))
         self._raise_from_response(response)
         return response
 
@@ -162,8 +163,12 @@ class HTTPClientAsync(HTTPClientBase):
 
         Uses a ContextVar (not threading.local) so each concurrent async task sees its
         own last response, even though all tasks share one event-loop thread.
+
+        When the store is shared with other clients — as ``DescopeClientAsync`` does
+        for its auth and management clients — this reports the last response across
+        all of them, not just the ones this client issued.
         """
-        return self._last_response_var.get()
+        return self.last_response_store.get()
 
     async def _async_execute_with_retry(self, request_fn) -> httpx.Response:
         if self._pre_request_hook is not None:

@@ -840,6 +840,70 @@ class TestDescopeClient:
         assert last_resp.headers.get("cf-ray") == "mgmt-ray-123"
         assert last_resp.status_code == 200
 
+    async def test_verbose_mode_returns_most_recent_across_mgmt_then_auth(self, client_factory):
+        """A mgmt call followed by an auth call must return the auth response, not the mgmt one."""
+        mgmt_response = mock.Mock()
+        mgmt_response.is_success = True
+        mgmt_response.json.return_value = {"user": {"id": "u1"}}
+        mgmt_response.headers = {"cf-ray": "mgmt-ray"}
+        mgmt_response.status_code = 200
+
+        auth_response = mock.Mock()
+        auth_response.is_success = True
+        auth_response.json.return_value = {"userId": "u1"}
+        auth_response.headers = {"cf-ray": "auth-ray"}
+        auth_response.status_code = 200
+
+        client = client_factory.make(
+            PROJECT_ID,
+            public_key=PUBLIC_KEY_DICT,
+            management_key="test-mgmt-key",
+            verbose=True,
+        )
+        if client_factory.mode == "async":
+            client._raw._license_attempted = True
+
+        with client.mock_mgmt_post(mgmt_response):
+            await client.invoke(client.mgmt.user.create(login_id="test@example.com"))
+        assert client.get_last_response().headers.get("cf-ray") == "mgmt-ray"
+
+        with client.mock_get(auth_response):
+            await client.invoke(client.me("dummy-refresh-token"))
+
+        assert client.get_last_response().headers.get("cf-ray") == "auth-ray"
+
+    async def test_verbose_mode_returns_most_recent_across_auth_then_mgmt(self, client_factory):
+        """And the other way round — the store has no built-in preference for either side."""
+        auth_response = mock.Mock()
+        auth_response.is_success = True
+        auth_response.json.return_value = {"userId": "u1"}
+        auth_response.headers = {"cf-ray": "auth-ray"}
+        auth_response.status_code = 200
+
+        mgmt_response = mock.Mock()
+        mgmt_response.is_success = True
+        mgmt_response.json.return_value = {"user": {"id": "u1"}}
+        mgmt_response.headers = {"cf-ray": "mgmt-ray"}
+        mgmt_response.status_code = 200
+
+        client = client_factory.make(
+            PROJECT_ID,
+            public_key=PUBLIC_KEY_DICT,
+            management_key="test-mgmt-key",
+            verbose=True,
+        )
+        if client_factory.mode == "async":
+            client._raw._license_attempted = True
+
+        with client.mock_get(auth_response):
+            await client.invoke(client.me("dummy-refresh-token"))
+        assert client.get_last_response().headers.get("cf-ray") == "auth-ray"
+
+        with client.mock_mgmt_post(mgmt_response):
+            await client.invoke(client.mgmt.user.create(login_id="test@example.com"))
+
+        assert client.get_last_response().headers.get("cf-ray") == "mgmt-ray"
+
     async def test_verbose_mode_returns_response_on_non_json_body(self, client_factory):
         """get_last_response() must not parse the body: a 502 HTML page is still returned."""
         html = "<html><head><title>502 Bad Gateway</title></head></html>"
