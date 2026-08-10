@@ -4,6 +4,7 @@ from __future__ import annotations
 import os
 import platform
 import ssl
+from functools import cached_property
 from http import HTTPStatus
 from importlib.metadata import version
 
@@ -59,19 +60,27 @@ class DescopeResponse:
     raise on a non-JSON body. Inspecting the response itself never does:
     ``bool()`` is always True, and ``str()``/``repr()`` fall back to the raw
     text, so a response is always loggable. Use ``is_json`` to check first.
+
+    The wrapped response is already complete, so the derived accessors are
+    ``cached_property``. ``functools.cache`` is not usable here: it keys on
+    ``self``, which is unhashable (``__eq__`` without ``__hash__``) and would
+    be pinned alive by the module-level cache. A failed parse is not cached —
+    ``cached_property`` stores nothing when the getter raises — so a non-JSON
+    body keeps raising from ``json()`` rather than caching a sentinel.
     """
 
     def __init__(self, response: httpx.Response):
         self.raw = response
-        self._json_data = None
+
+    @cached_property
+    def _json_data(self):
+        return self.raw.json()
 
     def json(self):
         """Get the parsed JSON response, cached after first access."""
-        if self._json_data is None:
-            self._json_data = self.raw.json()
         return self._json_data
 
-    @property
+    @cached_property
     def is_json(self) -> bool:
         """True if the response body can be parsed as JSON."""
         try:
@@ -144,37 +153,37 @@ class DescopeResponse:
         return iter(self.json())
 
     # HTTP metadata properties
-    @property
+    @cached_property
     def headers(self):
         """Access response headers (e.g., response.headers.get('cf-ray'))."""
         return self.raw.headers
 
-    @property
+    @cached_property
     def status_code(self):
         """HTTP status code."""
         return self.raw.status_code
 
-    @property
+    @cached_property
     def cookies(self):
         """Response cookies."""
         return self.raw.cookies
 
-    @property
+    @cached_property
     def text(self):
         """Raw response text."""
         return self.raw.text
 
-    @property
+    @cached_property
     def content(self):
         """Raw response content (bytes)."""
         return self.raw.content
 
-    @property
+    @cached_property
     def url(self):
         """Request URL."""
         return self.raw.url
 
-    @property
+    @cached_property
     def ok(self):
         """True if status code indicates success (2xx)."""
         return self.raw.is_success

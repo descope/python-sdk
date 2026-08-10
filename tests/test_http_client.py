@@ -311,6 +311,37 @@ class TestHTTPClient(unittest.TestCase):
         assert last_resp["updated"] == "user1"
         assert last_resp.status_code == 200
 
+    @patch("httpx.put")
+    def test_verbose_mode_captures_put_response(self, mock_put):
+        """Test that PUT responses are captured in verbose mode."""
+        mock_response = Mock()
+        mock_response.is_success = True
+        mock_response.json.return_value = {"replaced": "user1"}
+        mock_response.headers = {"cf-ray": "put123"}
+        mock_response.status_code = 200
+        mock_put.return_value = mock_response
+
+        client = HTTPClient(project_id="test123", verbose=True)
+        client.put("/users/1", body={"name": "replaced"})
+
+        last_resp = client.get_last_response()
+        assert last_resp is not None
+        assert last_resp["replaced"] == "user1"
+        assert last_resp.status_code == 200
+
+    @patch("httpx.put")
+    def test_verbose_mode_not_capture_put_when_disabled(self, mock_put):
+        """Test that PUT responses are NOT captured when verbose mode is disabled."""
+        mock_response = Mock()
+        mock_response.is_success = True
+        mock_response.json.return_value = {"replaced": "user1"}
+        mock_put.return_value = mock_response
+
+        client = HTTPClient(project_id="test123", verbose=False)
+        client.put("/users/1", body={"name": "replaced"})
+
+        assert client.get_last_response() is None
+
     @patch("httpx.delete")
     def test_verbose_mode_captures_delete_response(self, mock_delete):
         """Test that DELETE responses are captured in verbose mode."""
