@@ -63,12 +63,19 @@ class DescopeResponse:
     ``bool()`` is always True, and ``str()``/``repr()`` fall back to the raw
     text, so a response is always loggable. Use ``is_json`` to check first.
 
-    The wrapped response is already complete, so the derived accessors are
-    ``cached_property``. ``functools.cache`` is not usable here: it keys on
-    ``self``, which is unhashable (``__eq__`` without ``__hash__``) and would
-    be pinned alive by the module-level cache. A failed parse is not cached —
-    ``cached_property`` stores nothing when the getter raises — so a non-JSON
-    body keeps raising from ``json()`` rather than caching a sentinel.
+    Body parsing is cached, since the wrapped response is already complete:
+    ``_json_data`` and ``is_json`` are ``cached_property``. A failed parse is not
+    cached — ``cached_property`` stores nothing when the getter raises — so a
+    non-JSON body keeps raising from ``json()`` rather than caching a sentinel.
+    ``functools.cache`` is not usable here: it keys on ``self``, which is
+    unhashable (``__eq__`` without ``__hash__``) and would be pinned alive by the
+    module-level cache.
+
+    The HTTP metadata accessors below stay plain properties on purpose. httpx
+    already caches ``text``/``content``/``cookies`` internally, the rest are
+    attribute reads, and on Python 3.9-3.11 ``cached_property`` takes a
+    descriptor-wide lock on first access — so caching them would cost more than
+    it saves and would make them assignable.
     """
 
     def __init__(self, response: httpx.Response):
@@ -155,37 +162,37 @@ class DescopeResponse:
         return iter(self.json())
 
     # HTTP metadata properties
-    @cached_property
+    @property
     def headers(self):
         """Access response headers (e.g., response.headers.get('cf-ray'))."""
         return self.raw.headers
 
-    @cached_property
+    @property
     def status_code(self):
         """HTTP status code."""
         return self.raw.status_code
 
-    @cached_property
+    @property
     def cookies(self):
         """Response cookies."""
         return self.raw.cookies
 
-    @cached_property
+    @property
     def text(self):
         """Raw response text."""
         return self.raw.text
 
-    @cached_property
+    @property
     def content(self):
         """Raw response content (bytes)."""
         return self.raw.content
 
-    @cached_property
+    @property
     def url(self):
         """Request URL."""
         return self.raw.url
 
-    @cached_property
+    @property
     def ok(self):
         """True if status code indicates success (2xx)."""
         return self.raw.is_success
