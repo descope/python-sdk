@@ -63,19 +63,9 @@ class DescopeResponse:
     ``bool()`` is always True, and ``str()``/``repr()`` fall back to the raw
     text, so a response is always loggable. Use ``is_json`` to check first.
 
-    Body parsing is cached, since the wrapped response is already complete:
-    ``_json_data`` and ``is_json`` are ``cached_property``. A failed parse is not
-    cached — ``cached_property`` stores nothing when the getter raises — so a
-    non-JSON body keeps raising from ``json()`` rather than caching a sentinel.
-    ``functools.cache`` is not usable here: it keys on ``self``, which is
-    unhashable (``__eq__`` without ``__hash__``) and would be pinned alive by the
-    module-level cache.
-
-    The HTTP metadata accessors below stay plain properties on purpose. httpx
-    already caches ``text``/``content``/``cookies`` internally, the rest are
-    attribute reads, and on Python 3.9-3.11 ``cached_property`` takes a
-    descriptor-wide lock on first access — so caching them would cost more than
-    it saves and would make them assignable.
+    Only body parsing is cached. The metadata accessors stay plain properties:
+    httpx already caches ``text``/``content``/``cookies``, and on Python 3.9-3.11
+    ``cached_property`` takes a descriptor-wide lock on first access.
     """
 
     def __init__(self, response: httpx.Response):
@@ -199,11 +189,7 @@ class DescopeResponse:
 
 
 class ThreadLocalLastResponseStore:
-    """One last-response slot, isolated per thread.
-
-    Shared by every ``HTTPClient`` a ``DescopeClient`` owns, so "last" means the
-    most recent response across auth and management calls rather than per-client.
-    """
+    """One last-response slot, isolated per thread."""
 
     def __init__(self) -> None:
         self._local = threading.local()
@@ -218,9 +204,7 @@ class ThreadLocalLastResponseStore:
 class ContextVarLastResponseStore:
     """One last-response slot, isolated per async task.
 
-    ContextVar rather than threading.local: every asyncio task runs on the same
-    event-loop thread, so a thread-local slot would be a single slot shared by
-    all concurrent tasks.
+    ContextVar rather than threading.local: asyncio tasks share one thread.
     """
 
     def __init__(self) -> None:

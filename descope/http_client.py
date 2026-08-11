@@ -35,8 +35,6 @@ class HTTPClient(HTTPClientBase):
             management_key=management_key,
             verbose=verbose,
         )
-        # Shared by every client of one DescopeClient when passed in, so
-        # get_last_response() sees a single ordering across auth and mgmt.
         self.last_response_store = last_response_store or ThreadLocalLastResponseStore()
 
     # ------------- public API -------------
@@ -168,9 +166,8 @@ class HTTPClient(HTTPClientBase):
         This method is thread-safe: each thread will receive its own
         last response when using a shared client instance.
 
-        When the store is shared with other clients — as ``DescopeClient`` does
-        for its auth and management clients — this reports the last response
-        across all of them, not just the ones this client issued.
+        With a shared store — as ``DescopeClient`` uses for its auth and
+        management clients — this reports the last response across all of them.
 
         Returns:
             DescopeResponse: The last response if verbose mode is enabled, None otherwise.

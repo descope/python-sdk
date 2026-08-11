@@ -88,9 +88,6 @@ class DescopeClientAsync(DescopeClientBase):
             verbose=verbose,
         )
 
-        # One store shared by every HTTP client below, so get_last_response()
-        # returns the genuinely most recent response rather than picking between
-        # per-client slots that were overwritten independently.
         self._last_response_store = ContextVarLastResponseStore()
         self._auth_http = HTTPClientAsync(
             project_id=self._project_id,

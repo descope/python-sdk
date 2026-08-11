@@ -55,9 +55,6 @@ class DescopeClient(DescopeClientBase):
             base_url=base_url,
             verbose=verbose,
         )
-        # One store shared by every HTTP client below, so get_last_response()
-        # returns the genuinely most recent response rather than picking between
-        # per-client slots that were overwritten independently.
         self._last_response_store = ThreadLocalLastResponseStore()
         auth_http_client = HTTPClient(
             project_id=self._project_id,
@@ -101,8 +98,6 @@ class DescopeClient(DescopeClientBase):
             fga_cache_url=fga_cache_url,
         )
 
-        # Direct handles on the underlying clients. Verbose mode no longer reads
-        # these — get_last_response() goes through the shared store above.
         self._auth_http_client = auth_http_client
         self._mgmt_http_client = mgmt_http_client
 

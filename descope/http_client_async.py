@@ -39,8 +39,6 @@ class HTTPClientAsync(HTTPClientBase):
             verify=self.client_verify,
             timeout=self.timeout_seconds,
         )
-        # Shared by every client of one DescopeClientAsync when passed in, so
-        # get_last_response() sees a single ordering across auth and mgmt.
         self.last_response_store = last_response_store or ContextVarLastResponseStore()
         # Optional one-shot async hook invoked before the first request goes
         # out. Used by ``DescopeClientAsync`` to lazily run the license
@@ -164,9 +162,8 @@ class HTTPClientAsync(HTTPClientBase):
         Uses a ContextVar (not threading.local) so each concurrent async task sees its
         own last response, even though all tasks share one event-loop thread.
 
-        When the store is shared with other clients — as ``DescopeClientAsync`` does
-        for its auth and management clients — this reports the last response across
-        all of them, not just the ones this client issued.
+        With a shared store — as ``DescopeClientAsync`` uses for its auth and
+        management clients — this reports the last response across all of them.
         """
         return self.last_response_store.get()
 
