@@ -62,10 +62,6 @@ class DescopeResponse:
     raise on a non-JSON body. Inspecting the response itself never does:
     ``bool()`` is always True, and ``str()``/``repr()`` fall back to the raw
     text, so a response is always loggable. Use ``is_json`` to check first.
-
-    Only body parsing is cached. The metadata accessors stay plain properties:
-    httpx already caches ``text``/``content``/``cookies``, and on Python 3.9-3.11
-    ``cached_property`` takes a descriptor-wide lock on first access.
     """
 
     def __init__(self, response: httpx.Response):
@@ -204,7 +200,9 @@ class ThreadLocalLastResponseStore:
 class ContextVarLastResponseStore:
     """One last-response slot, isolated per async task.
 
-    ContextVar rather than threading.local: asyncio tasks share one thread.
+    ContextVar rather than threading.local: every asyncio task runs on the same
+    event-loop thread, so a thread-local slot would be a single slot shared by
+    all concurrent tasks.
     """
 
     def __init__(self) -> None:

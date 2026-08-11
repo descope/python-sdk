@@ -161,9 +161,6 @@ class HTTPClientAsync(HTTPClientBase):
 
         Uses a ContextVar (not threading.local) so each concurrent async task sees its
         own last response, even though all tasks share one event-loop thread.
-
-        With a shared store — as ``DescopeClientAsync`` uses for its auth and
-        management clients — this reports the last response across all of them.
         """
         return self.last_response_store.get()
 

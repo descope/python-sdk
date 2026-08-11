@@ -166,9 +166,6 @@ class HTTPClient(HTTPClientBase):
         This method is thread-safe: each thread will receive its own
         last response when using a shared client instance.
 
-        With a shared store — as ``DescopeClient`` uses for its auth and
-        management clients — this reports the last response across all of them.
-
         Returns:
             DescopeResponse: The last response if verbose mode is enabled, None otherwise.
 
