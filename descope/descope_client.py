@@ -101,7 +101,8 @@ class DescopeClient(DescopeClientBase):
             fga_cache_url=fga_cache_url,
         )
 
-        # Store references to HTTP clients for verbose mode access
+        # Direct handles on the underlying clients. Verbose mode no longer reads
+        # these — get_last_response() goes through the shared store above.
         self._auth_http_client = auth_http_client
         self._mgmt_http_client = mgmt_http_client
 
