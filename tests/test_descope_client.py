@@ -840,6 +840,32 @@ class TestDescopeClient:
         assert last_resp.headers.get("cf-ray") == "mgmt-ray-123"
         assert last_resp.status_code == 200
 
+    async def test_auth_and_mgmt_share_one_last_response_store(self, client_factory):
+        """The auth and mgmt clients must hold the same store object, not two equal ones.
+
+        This is the invariant that makes `get_last_response()` a single read. The
+        ordering tests cannot catch a re-split on their own: once both clients write
+        to one store, reading either of them returns the same response, so a stale
+        `mgmt_resp or auth_resp` still looks correct. Pin the identity instead.
+        """
+        client = client_factory.make(
+            PROJECT_ID,
+            public_key=PUBLIC_KEY_DICT,
+            management_key="test-mgmt-key",
+            verbose=True,
+        )
+        raw = client._raw
+        if client_factory.mode == "sync":
+            auth_store = raw._auth_http_client.last_response_store
+            mgmt_store = raw._mgmt_http_client.last_response_store
+        else:
+            auth_store = raw._auth_http.last_response_store
+            mgmt_store = raw._mgmt_http.last_response_store
+
+        assert auth_store is mgmt_store
+        assert raw._last_response_store is auth_store
+        assert raw._mgmt._outbound_application_by_token._http.last_response_store is auth_store
+
     async def test_verbose_mode_returns_most_recent_across_mgmt_then_auth(self, client_factory):
         """A mgmt call followed by an auth call must return the auth response, not the mgmt one."""
         mgmt_response = mock.Mock()
