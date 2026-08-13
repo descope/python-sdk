@@ -958,3 +958,60 @@ class TestOutboundApplicationByToken:
                         "tenant789",
                     )
                 )
+
+
+class TestOutboundApplicationByTokenVerbose:
+    async def test_by_token_response_reaches_client_get_last_response(self, client_factory):
+        """The by-token client builds its own key-less HTTPClient.
+
+        It has to be handed the owning client's verbose flag and last-response store,
+        or its responses are invisible to DescopeClient.get_last_response().
+        """
+        client = client_factory.make(
+            PROJECT_ID,
+            PUBLIC_KEY_DICT,
+            False,
+            management_key="test-mgmt-key",
+            verbose=True,
+        )
+        if client_factory.mode == "async":
+            client._raw._license_attempted = True
+
+        response = make_response(TOKEN_RESPONSE)
+        response.headers = {"cf-ray": "by-token-ray"}
+
+        with client.mock_mgmt_by_token_post(response):
+            await client.invoke(
+                client.mgmt.outbound_application_by_token.fetch_token_by_scopes(
+                    DUMMY_TOKEN,
+                    "app123",
+                    "user456",
+                    ["read"],
+                )
+            )
+
+        last_resp = client.get_last_response()
+        assert last_resp is not None
+        assert last_resp.headers.get("cf-ray") == "by-token-ray"
+
+    async def test_by_token_not_captured_when_verbose_disabled(self, client_factory):
+        client = client_factory.make(
+            PROJECT_ID,
+            PUBLIC_KEY_DICT,
+            False,
+            management_key="test-mgmt-key",
+        )
+        if client_factory.mode == "async":
+            client._raw._license_attempted = True
+
+        with client.mock_mgmt_by_token_post(make_response(TOKEN_RESPONSE)):
+            await client.invoke(
+                client.mgmt.outbound_application_by_token.fetch_token_by_scopes(
+                    DUMMY_TOKEN,
+                    "app123",
+                    "user456",
+                    ["read"],
+                )
+            )
+
+        assert client.get_last_response() is None

@@ -64,6 +64,39 @@ class TestDescopeResponse(unittest.TestCase):
         # json() should only be called once on the underlying response
         assert mock_response.json.call_count == 1
 
+    def test_null_json_body_parses_once(self):
+        """A `null` body is a real cached value, not a miss to retry.
+
+        The old `if self._json_data is None` sentinel re-parsed on every access here,
+        which test_json_caching cannot catch because its body is a dict.
+        """
+        mock_response = Mock()
+        mock_response.json.return_value = None
+
+        resp = DescopeResponse(mock_response)
+
+        assert resp.json() is None
+        assert resp.json() is None
+        assert mock_response.json.call_count == 1
+
+    def test_is_json_does_not_reparse_non_json_body(self):
+        """is_json probes by parsing, so an unparseable body must not re-probe."""
+        body = "<html>502</html>"
+        mock_response = Mock()
+        mock_response.json.side_effect = json.JSONDecodeError("Expecting value", body, 0)
+        mock_response.text = body
+
+        resp = DescopeResponse(mock_response)
+
+        assert resp.is_json is False
+        assert resp.is_json is False
+        assert resp.is_json is False
+        assert mock_response.json.call_count == 1
+
+        # A failed parse is not cached, so json() itself still raises every time.
+        with self.assertRaises(json.JSONDecodeError):
+            resp.json()
+
     def test_dict_like_values_items(self):
         """Test that values() and items() work correctly."""
         mock_response = Mock()
