@@ -12,6 +12,9 @@ from descope.management.sso_settings import (
     SSOSAMLSettings,
     SSOSAMLSettingsByMetadata,
     SSOSettings,
+    XAAIssuerSettings,
+    XAAJWTBearerSettings,
+    XAASettings,
 )
 from tests.common import DEFAULT_BASE_URL, default_headers
 from tests.conftest import PROJECT_ID, assert_http_called, make_response
@@ -269,6 +272,197 @@ class TestSSOSettings:
                     },
                     "redirectUrl": "https://redirect.com",
                     "domains": ["domain.com"],
+                },
+                follow_redirects=False,
+            )
+
+    async def test_configure_xaa_settings(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flow
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.sso.configure_xaa_settings(
+                        "tenant-id",
+                        XAASettings(
+                            enabled=True,
+                            settings=XAAJWTBearerSettings(
+                                issuers={
+                                    "https://issuer.example.com": XAAIssuerSettings(
+                                        jwks_uri="https://issuer.example.com/jwks",
+                                    )
+                                }
+                            ),
+                        ),
+                    )
+                )
+
+        # Test success flow (with ssoId)
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            result = await client.invoke(
+                client.mgmt.sso.configure_xaa_settings(
+                    "tenant-id",
+                    XAASettings(
+                        enabled=True,
+                        settings=XAAJWTBearerSettings(
+                            issuers={
+                                "https://issuer.example.com": XAAIssuerSettings(
+                                    jwks_uri="https://issuer.example.com/jwks",
+                                    sign_algorithm="RS256",
+                                    user_info_uri="https://issuer.example.com/userinfo",
+                                    external_id_field_name="sub",
+                                    jit_disabled=True,
+                                    attribute_mapping=AttributeMapping(
+                                        email="email",
+                                        group="groups",
+                                    ),
+                                )
+                            },
+                            jwt_bearer_grant_type_audience_to_use="clientId",
+                        ),
+                        role_mappings=[RoleMapping(groups=["grp1"], role_name="rl1")],
+                        default_sso_roles=["aa", "bb"],
+                        groups_priority=["group1"],
+                        group_priority_enabled=True,
+                        allow_override_roles=True,
+                    ),
+                    sso_id="sso-1",
+                )
+            )
+            assert result is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_configure_xaa_settings}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "tenantId": "tenant-id",
+                    "enabled": True,
+                    "settings": {
+                        "issuers": {
+                            "https://issuer.example.com": {
+                                "jwksUri": "https://issuer.example.com/jwks",
+                                "signAlgorithm": "RS256",
+                                "userInfoUri": "https://issuer.example.com/userinfo",
+                                "externalIdFieldName": "sub",
+                                "jitDisabled": True,
+                                "attributeMapping": {
+                                    "name": None,
+                                    "email": "email",
+                                    "phoneNumber": None,
+                                    "group": "groups",
+                                    "givenName": None,
+                                    "middleName": None,
+                                    "familyName": None,
+                                    "picture": None,
+                                    "customAttributes": None,
+                                },
+                            }
+                        },
+                        "jwtBearerGrantTypeAudienceToUse": "clientId",
+                        "jwtBearerGrantTypeScopeToUse": None,
+                        "jwtBearerGrantTypeCustomClaimsToUse": None,
+                    },
+                    "roleMappings": [{"groups": ["grp1"], "roleName": "rl1"}],
+                    "defaultSSORoles": ["aa", "bb"],
+                    "fgaMappings": None,
+                    "groupsPriority": ["group1"],
+                    "groupPriorityEnabled": True,
+                    "allowOverrideRoles": True,
+                    "ssoId": "sso-1",
+                },
+                follow_redirects=False,
+            )
+
+    async def test_load_xaa_settings(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flow
+        with client.mock_mgmt_get(make_response(status=500)) as mock_get:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.sso.load_xaa_settings("tenant-id"))
+
+        # Test success flow (with ssoId)
+        resp_data = json.loads(
+            """{"ssoId": "sso-1", "enabled": true, "settings": {"issuers": {"https://issuer.example.com": {"jwksUri": "https://issuer.example.com/jwks", "signAlgorithm": "RS256"}}}, "groupsMapping": [{"role": {"id": "r1", "name": "role1"}, "groups": ["g1"]}], "defaultSSORoles": ["aa"], "groupPriorityEnabled": true, "allowOverrideRoles": true}"""
+        )
+        with client.mock_mgmt_get(make_response(resp_data)) as mock_get:
+            resp = await client.invoke(client.mgmt.sso.load_xaa_settings("tenant-id", "sso-1"))
+            assert resp.get("ssoId") == "sso-1"
+            assert resp.get("enabled") is True
+            assert resp.get("settings", {}).get("issuers", {}).get("https://issuer.example.com", {}).get("jwksUri") == "https://issuer.example.com/jwks"
+            assert resp.get("groupsMapping")[0]["role"]["name"] == "role1"
+            assert_http_called(
+                mock_get,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_configure_xaa_settings}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params={"tenantId": "tenant-id", "ssoId": "sso-1"},
+                follow_redirects=True,
+            )
+
+    async def test_load_all_xaa_settings(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flow
+        with client.mock_mgmt_get(make_response(status=500)) as mock_get:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.sso.load_all_xaa_settings("tenant-id"))
+
+        # Test success flow
+        resp_data = json.loads(
+            """{"XAASettings": [{"ssoId": "sso-1", "enabled": true}, {"ssoId": "sso-2", "enabled": false}]}"""
+        )
+        with client.mock_mgmt_get(make_response(resp_data)) as mock_get:
+            resp = await client.invoke(client.mgmt.sso.load_all_xaa_settings("tenant-id"))
+            settings = resp.get("XAASettings", [])
+            assert len(settings) == 2
+            assert settings[0]["ssoId"] == "sso-1"
+            assert settings[1]["ssoId"] == "sso-2"
+            assert_http_called(
+                mock_get,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_load_all_xaa_settings}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params={"tenantId": "tenant-id"},
+                follow_redirects=True,
+            )
+
+    async def test_delete_xaa_settings(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flow
+        with client.mock_mgmt_delete(make_response(status=500)) as mock_delete:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.sso.delete_xaa_settings("tenant-id"))
+
+        # Test success flow (with ssoId)
+        with client.mock_mgmt_delete(make_response()) as mock_delete:
+            await client.invoke(client.mgmt.sso.delete_xaa_settings("tenant-id", "sso-1"))
+
+            assert_http_called(
+                mock_delete,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_configure_xaa_settings}",
+                params={"tenantId": "tenant-id", "ssoId": "sso-1"},
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
                 },
                 follow_redirects=False,
             )

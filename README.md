@@ -1804,6 +1804,54 @@ descope_client.mgmt.third_party_application.delete(app_id)
 descope_client.mgmt.third_party_application.delete_batch([app_id])
 ```
 
+### Manage Cross-App Access (XAA / ID-JAG)
+
+Cross-App Access (XAA), built on the OAuth identity-assertion authorization grant (ID-JAG), lets a tenant trust external OIDC issuers so a token minted by a trusted issuer can be exchanged for a Descope token (the RFC 7523 `jwt-bearer` grant). XAA trust is configured **per SSO configuration** of a tenant through the SSO management API, addressed by its `sso_id` (omit it, or pass an empty string, for the tenant's default SSO configuration). The trusted issuers are set together with the config-level shared group/role mapping. The exported `XAASettings`, `XAAJWTBearerSettings`, and `XAAIssuerSettings` classes describe the write payload; the same issuer shape is returned under a tenant's `idJagSettings` by the tenant get-settings API.
+
+```python
+from descope import AttributeMapping, RoleMapping, XAAIssuerSettings, XAAJWTBearerSettings, XAASettings
+
+# Configure XAA trust for a single SSO configuration ('' / omit sso_id = the default SSO configuration).
+descope_client.mgmt.sso.configure_xaa_settings(
+    "my-tenant-id",
+    XAASettings(
+        enabled=True,
+        settings=XAAJWTBearerSettings(
+            issuers={
+                # Key is the trusted issuer URL.
+                "https://issuer.example.com": XAAIssuerSettings(
+                    jwks_uri="https://issuer.example.com/.well-known/jwks.json",
+                    sign_algorithm="RS256",
+                    user_info_uri="https://issuer.example.com/userinfo",
+                    external_id_field_name="sub",  # assertion claim used as the login id
+                    jit_disabled=False,            # JIT provisioning on
+                    attribute_mapping=AttributeMapping(
+                        email="email",
+                        name="name",
+                        group="groups",            # assertion claim that carries the user's groups
+                    ),
+                ),
+            },
+        ),
+        # Config-level shared group/role mapping (shared across SAML / OIDC / SCIM / XAA for this sso_id).
+        role_mappings=[RoleMapping(groups=["admins"], role_name="Tenant Admin")],
+        default_sso_roles=["Member"],
+    ),
+    sso_id="",  # optional; omit for the default SSO configuration
+)
+
+# Load the XAA settings for a single SSO configuration.
+xaa = descope_client.mgmt.sso.load_xaa_settings("my-tenant-id", "")
+
+# Load the XAA settings for every SSO configuration of the tenant.
+all_xaa = descope_client.mgmt.sso.load_all_xaa_settings("my-tenant-id")
+
+# Delete the XAA settings of a single SSO configuration.
+descope_client.mgmt.sso.delete_xaa_settings("my-tenant-id", "")
+```
+
+> Group-to-role mapping is **not** configured per issuer. `role_mappings`, `default_sso_roles`, and `fga_mappings` passed to `configure_xaa_settings` are the config-level shared mapping: the same mapping is shared across SAML / OIDC / SCIM / XAA for that `sso_id`. Each issuer only maps the assertion's groups claim (via `attribute_mapping.group`); how those group names resolve to roles is defined once, per SSO configuration. On load, this shared mapping is returned as `groupsMapping` (role references by id and name), mirroring the SAML settings load shape.
+
 ### Manage Lists
 
 Manage allow/deny lists of texts, IPs, or arbitrary JSON.
