@@ -396,7 +396,10 @@ class TestSSOSettings:
             resp = await client.invoke(client.mgmt.sso.load_xaa_settings("tenant-id", "sso-1"))
             assert resp.get("ssoId") == "sso-1"
             assert resp.get("enabled") is True
-            assert resp.get("settings", {}).get("issuers", {}).get("https://issuer.example.com", {}).get("jwksUri") == "https://issuer.example.com/jwks"
+            assert (
+                resp.get("settings", {}).get("issuers", {}).get("https://issuer.example.com", {}).get("jwksUri")
+                == "https://issuer.example.com/jwks"
+            )
             assert resp.get("groupsMapping")[0]["role"]["name"] == "role1"
             assert_http_called(
                 mock_get,

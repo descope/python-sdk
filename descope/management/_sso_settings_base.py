@@ -196,7 +196,9 @@ class SSOSettingsBase:
             return None
         issuers = None
         if settings.issuers is not None:
-            issuers = {url: SSOSettingsBase._issuer_settings_to_dict(issuer) for url, issuer in settings.issuers.items()}
+            issuers = {
+                url: SSOSettingsBase._issuer_settings_to_dict(issuer) for url, issuer in settings.issuers.items()
+            }
         return {
             "issuers": issuers,
             "jwtBearerGrantTypeAudienceToUse": settings.jwt_bearer_grant_type_audience_to_use,
