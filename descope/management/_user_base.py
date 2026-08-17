@@ -95,6 +95,7 @@ class UserBase:
         sso_app_ids: Optional[List[str]] = None,
         template_id: str = "",
         locale: Optional[str] = None,
+        status: Optional[str] = None,
     ) -> dict:
         body = UserBase._compose_update_body(
             login_id=login_id,
@@ -127,6 +128,8 @@ class UserBase:
             body["templateId"] = template_id
         if locale is not None:
             body["locale"] = locale
+        if status is not None:
+            body["status"] = status
         return body
 
     @staticmethod
