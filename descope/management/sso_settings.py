@@ -55,6 +55,48 @@ class AttributeMapping:
         self.custom_attributes = custom_attributes
 
 
+class XAAIssuerSettings:
+    """
+    Cross-App Access (XAA / ID-JAG) trusted-issuer settings, including per-issuer JIT provisioning and
+    user attribute / group-to-role mapping (parity with the SSO login JIT). Describes the shape of each
+    entry under a tenant's ``idJagSettings.issuers`` map, as returned by the tenant get-settings API.
+    """
+
+    def __init__(
+        self,
+        jwks_uri: Optional[str] = None,
+        sign_algorithm: Optional[str] = None,
+        user_info_uri: Optional[str] = None,
+        external_id_field_name: Optional[str] = None,
+        jit_disabled: Optional[bool] = None,
+        attribute_mapping: Optional[AttributeMapping] = None,
+        role_mappings: Optional[List[RoleMapping]] = None,
+        default_sso_roles: Optional[List[str]] = None,
+        groups_priority: Optional[List[str]] = None,
+        allow_override_roles: Optional[bool] = None,
+    ):
+        self.jwks_uri = jwks_uri
+        self.sign_algorithm = sign_algorithm
+        self.user_info_uri = user_info_uri
+        self.external_id_field_name = external_id_field_name
+        self.jit_disabled = jit_disabled
+        self.attribute_mapping = attribute_mapping
+        self.role_mappings = role_mappings
+        self.default_sso_roles = default_sso_roles
+        self.groups_priority = groups_priority
+        self.allow_override_roles = allow_override_roles
+
+
+class XAAJWTBearerSettings:
+    """
+    A tenant's Cross-App Access (XAA / ID-JAG) trust config: the set of trusted issuers keyed by issuer
+    URL. Returned as ``idJagSettings`` by the tenant get-settings API.
+    """
+
+    def __init__(self, issuers: Optional[Dict[str, XAAIssuerSettings]] = None):
+        self.issuers = issuers
+
+
 class OIDCAttributeMapping:
     """
     Represents tenant OIDC attribute mapping.
