@@ -26,9 +26,7 @@ class TestUser:
                 await client.invoke(client.mgmt.user.create("valid-id"))
 
         with pytest.raises(AuthException) as exc_info:
-            await client.invoke(
-                client.mgmt.user.create("valid-id", status="invalid_status")
-            )
+            await client.invoke(client.mgmt.user.create("valid-id", status="invalid_status"))
         assert "Invalid status value: invalid_status" in str(exc_info.value)
 
         # Test success flow
