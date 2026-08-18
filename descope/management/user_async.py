@@ -63,17 +63,7 @@ class UserAsync(UserBase, AsyncHTTPBase):
         Raise:
         AuthException: raised if create operation fails
         """
-        if status is not None and status not in [
-            "enabled",
-            "disabled",
-            "invited",
-            "expired",
-        ]:
-            raise AuthException(
-                400,
-                ERROR_TYPE_INVALID_ARGUMENT,
-                f"Invalid status value: {status}. Must be one of: enabled, disabled, invited, expired",
-            )
+        UserBase._validate_status(status)
         role_names = [] if role_names is None else role_names
         user_tenants = [] if user_tenants is None else user_tenants
 
@@ -407,17 +397,7 @@ class UserAsync(UserBase, AsyncHTTPBase):
         Raise:
         AuthException: raised if patch operation fails
         """
-        if status is not None and status not in [
-            "enabled",
-            "disabled",
-            "invited",
-            "expired",
-        ]:
-            raise AuthException(
-                400,
-                ERROR_TYPE_INVALID_ARGUMENT,
-                f"Invalid status value: {status}. Must be one of: enabled, disabled, invited, expired",
-            )
+        UserBase._validate_status(status)
         response = await self._http.patch(
             MgmtV1.user_patch_path,
             body=UserBase._compose_patch_body(
@@ -465,17 +445,7 @@ class UserAsync(UserBase, AsyncHTTPBase):
         """
         # Validate status fields for all users
         for user in users:
-            if user.status is not None and user.status not in [
-                "enabled",
-                "disabled",
-                "invited",
-                "expired",
-            ]:
-                raise AuthException(
-                    400,
-                    ERROR_TYPE_INVALID_ARGUMENT,
-                    f"Invalid status value: {user.status} for user {user.login_id}. Must be one of: enabled, disabled, invited, expired",
-                )
+            UserBase._validate_status(user.status, user.login_id)
 
         response = await self._http.patch(
             MgmtV1.user_patch_batch_path,
