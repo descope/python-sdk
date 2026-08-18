@@ -120,6 +120,7 @@ class XAASettings:
         groups_priority: Optional[List[str]] = None,  # list of group names in priority order (first = highest priority)
         group_priority_enabled: Optional[bool] = None,
         allow_override_roles: Optional[bool] = None,
+        provider_id: Optional[str] = None,  # selected IdP provider template id (mirrors SSO SAML providerID)
     ):
         self.enabled = enabled
         self.settings = settings
@@ -129,6 +130,7 @@ class XAASettings:
         self.groups_priority = groups_priority
         self.group_priority_enabled = group_priority_enabled
         self.allow_override_roles = allow_override_roles
+        self.provider_id = provider_id
 
 
 class OIDCAttributeMapping:

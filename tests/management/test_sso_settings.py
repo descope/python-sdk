@@ -326,6 +326,7 @@ class TestSSOSettings:
                         groups_priority=["group1"],
                         group_priority_enabled=True,
                         allow_override_roles=True,
+                        provider_id="prov1",
                     ),
                     sso_id="sso-1",
                 )
@@ -376,6 +377,7 @@ class TestSSOSettings:
                     "groupPriorityEnabled": True,
                     "allowOverrideRoles": True,
                     "ssoId": "sso-1",
+                    "providerID": "prov1",
                 },
                 follow_redirects=False,
             )

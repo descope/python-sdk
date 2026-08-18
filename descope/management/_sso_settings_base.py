@@ -225,6 +225,8 @@ class SSOSettingsBase:
         }
         if sso_id:
             body["ssoId"] = sso_id
+        if settings.provider_id:
+            body["providerID"] = settings.provider_id
         return body
 
     @staticmethod
