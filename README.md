@@ -21,8 +21,8 @@
 | descope/authmethod/otp\_async.py                        |       53 |        1 |     98% |        74 |
 | descope/authmethod/password.py                          |       49 |        1 |     98% |       119 |
 | descope/authmethod/password\_async.py                   |       43 |        1 |     98% |        62 |
-| descope/descope\_client.py                              |      126 |        3 |     98% |   124-126 |
-| descope/descope\_client\_async.py                       |      154 |        1 |     99% |       203 |
+| descope/descope\_client.py                              |      126 |        3 |     98% |   127-129 |
+| descope/descope\_client\_async.py                       |      154 |        1 |     99% |       207 |
 | descope/jwt\_common.py                                  |       51 |        4 |     92% | 27-29, 96 |
 | descope/management/\_lists\_base.py                     |       40 |        1 |     98% |        20 |
 | descope/management/\_outbound\_application\_base.py     |       58 |        4 |     93% |92, 96, 98, 100 |
@@ -40,7 +40,7 @@
 | descope/management/role\_async.py                       |       47 |        1 |     98% |       323 |
 | descope/management/user.py                              |      285 |        4 |     99% |716, 1063, 1065, 1067 |
 | descope/management/user\_async.py                       |      286 |        4 |     99% |721, 1068, 1070, 1072 |
-|                                               **TOTAL** | **6202** |  **110** | **98%** |           |
+|                                               **TOTAL** | **6221** |  **110** | **98%** |           |
 
 73 files skipped due to complete coverage.
 
