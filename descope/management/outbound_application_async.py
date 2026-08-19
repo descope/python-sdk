@@ -729,6 +729,8 @@ class OutboundApplicationByTokenAsync(AsyncHTTPBase):
             timeout_seconds=http_client.timeout_seconds,
             secure=http_client.secure,
             management_key=None,  # Override the management key for this client
+            verbose=http_client.verbose,
+            last_response_store=http_client.last_response_store,
         )
         super().__init__(no_key_client)
 
