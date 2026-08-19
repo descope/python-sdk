@@ -59,8 +59,8 @@ class XAAIssuerSettings:
     """
     Cross-App Access (XAA / ID-JAG) trusted-issuer settings, including per-issuer JIT provisioning and
     user attribute mapping (parity with the SSO login JIT). Group-to-role mapping reuses the tenant's
-    shared SSO group mapping. Describes the shape of each entry under a tenant's ``idJagSettings.issuers``
-    map, as returned by the tenant get-settings API.
+    shared SSO group mapping. Describes the shape of each entry under the trust config's ``issuers`` map,
+    as returned by the dedicated Load XAA settings API (``load_xaa_settings`` / ``load_all_xaa_settings``).
     """
 
     def __init__(
@@ -83,8 +83,9 @@ class XAAIssuerSettings:
 class XAAJWTBearerSettings:
     """
     A tenant's Cross-App Access (XAA / ID-JAG) trust config: the set of trusted issuers keyed by issuer
-    URL, plus the jwt-bearer grant configuration. Returned as ``idJagSettings`` by the tenant
-    get-settings API and used as the ``settings`` field of the XAA configure request.
+    URL, plus the jwt-bearer grant configuration. Used as the ``settings`` field of the XAA configure
+    request, and returned under ``settings`` by the dedicated Load XAA settings API
+    (``load_xaa_settings`` / ``load_all_xaa_settings``).
     """
 
     def __init__(

@@ -1811,7 +1811,7 @@ descope_client.mgmt.third_party_application.delete_batch([app_id])
 
 ### Manage Cross-App Access (XAA / ID-JAG)
 
-Cross-App Access (XAA), built on the OAuth identity-assertion authorization grant (ID-JAG), lets a tenant trust external OIDC issuers so a token minted by a trusted issuer can be exchanged for a Descope token (the RFC 7523 `jwt-bearer` grant). XAA trust is configured **per SSO configuration** of a tenant through the SSO management API, addressed by its `sso_id` (omit it, or pass an empty string, for the tenant's default SSO configuration). The trusted issuers are set together with the config-level shared group/role mapping. The exported `XAASettings`, `XAAJWTBearerSettings`, and `XAAIssuerSettings` classes describe the write payload; the same issuer shape is returned under a tenant's `idJagSettings` by the tenant get-settings API.
+Cross-App Access (XAA), built on the OAuth identity-assertion authorization grant (ID-JAG), lets a tenant trust external OIDC issuers so a token minted by a trusted issuer can be exchanged for a Descope token (the RFC 7523 `jwt-bearer` grant). XAA trust is configured **per SSO configuration** of a tenant through the SSO management API, addressed by its `sso_id` (omit it, or pass an empty string, for the tenant's default SSO configuration). The trusted issuers are set together with the config-level shared group/role mapping. The exported `XAASettings`, `XAAJWTBearerSettings`, and `XAAIssuerSettings` classes describe the write payload; the same shape is returned by the dedicated Load XAA settings API (`load_xaa_settings` / `load_all_xaa_settings`), not on tenant load.
 
 ```python
 from descope import AttributeMapping, RoleMapping, XAAIssuerSettings, XAAJWTBearerSettings, XAASettings
