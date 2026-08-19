@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.12.0](https://github.com/descope/python-sdk/compare/descope-2.11.2...descope-2.12.0) (2026-08-18)
+
+
+### Features
+
+* support status field on user create, document invite caveat ([#1665](https://github.com/descope/python-sdk/issues/1665)) ([bfcb192](https://github.com/descope/python-sdk/commit/bfcb19275070fadc4b5cf07d3471896cead563be))
+
 ## [2.11.2](https://github.com/descope/python-sdk/compare/descope-2.11.1...descope-2.11.2) (2026-08-10)
 
 

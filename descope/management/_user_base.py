@@ -9,6 +9,8 @@ from descope.management.common import (
 )
 from descope.management.user_pwd import UserPassword
 
+VALID_USER_STATUSES = ["enabled", "disabled", "invited", "expired"]
+
 
 class UserObj:
     def __init__(
@@ -72,6 +74,16 @@ class CreateUserObj:
 
 class UserBase:
     @staticmethod
+    def _validate_status(status: Optional[str], login_id: Optional[str] = None) -> None:
+        if status is not None and status not in VALID_USER_STATUSES:
+            suffix = f" for user {login_id}" if login_id is not None else ""
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                f"Invalid status value: {status}{suffix}. Must be one of: {', '.join(VALID_USER_STATUSES)}",
+            )
+
+    @staticmethod
     def _compose_create_body(
         login_id: str,
         email: Optional[str],
@@ -95,6 +107,7 @@ class UserBase:
         sso_app_ids: Optional[List[str]] = None,
         template_id: str = "",
         locale: Optional[str] = None,
+        status: Optional[str] = None,
     ) -> dict:
         body = UserBase._compose_update_body(
             login_id=login_id,
@@ -127,6 +140,8 @@ class UserBase:
             body["templateId"] = template_id
         if locale is not None:
             body["locale"] = locale
+        if status is not None:
+            body["status"] = status
         return body
 
     @staticmethod
