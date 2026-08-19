@@ -700,6 +700,11 @@ descope_client.mgmt.user.invite(
     invite_url="invite.me"
 )
 
+# NOTE: `invite` only controls whether an invitation message is sent - it does NOT
+# change the user's status. A newly invited user starts out in the "invited" status,
+# not "enabled". If your use case requires the user to be active immediately, set
+# `status="enabled"` explicitly via `create`/`patch`, or call `activate()` afterwards.
+
 # Batch invite
 descope_client.mgmt.user.invite_batch(
     users=[
