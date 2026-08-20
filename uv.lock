@@ -627,7 +627,7 @@ wheels = [
 
 [[package]]
 name = "descope"
-version = "2.12.0"
+version = "2.12.1"
 source = { editable = "." }
 dependencies = [
     { name = "certifi" },

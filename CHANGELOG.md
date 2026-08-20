@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.12.1](https://github.com/descope/python-sdk/compare/descope-2.12.0...descope-2.12.1) (2026-08-20)
+
+
+### Bug Fixes
+
+* add status field to create_test_user, matching create() ([#1668](https://github.com/descope/python-sdk/issues/1668)) ([a9d8f13](https://github.com/descope/python-sdk/commit/a9d8f1330e2ef16ea98043518bc49db4222a2a91))
+* **http-client:** make get_last_response report the actual last response ([#1655](https://github.com/descope/python-sdk/issues/1655)) ([2ff2c1f](https://github.com/descope/python-sdk/commit/2ff2c1f5848cf0eae2924e8e83f8d3541eb66cb9))
+
 ## [2.12.0](https://github.com/descope/python-sdk/compare/descope-2.11.2...descope-2.12.0) (2026-08-18)
 
 
