@@ -38,9 +38,9 @@
 | descope/management/outbound\_application\_async.py      |      119 |        1 |     99% |       613 |
 | descope/management/role.py                              |       47 |        1 |     98% |       321 |
 | descope/management/role\_async.py                       |       47 |        1 |     98% |       323 |
-| descope/management/user.py                              |      285 |        4 |     99% |716, 1063, 1065, 1067 |
-| descope/management/user\_async.py                       |      286 |        4 |     99% |721, 1068, 1070, 1072 |
-|                                               **TOTAL** | **6221** |  **110** | **98%** |           |
+| descope/management/user.py                              |      286 |        4 |     99% |720, 1067, 1069, 1071 |
+| descope/management/user\_async.py                       |      287 |        4 |     99% |725, 1072, 1074, 1076 |
+|                                               **TOTAL** | **6223** |  **110** | **98%** |           |
 
 73 files skipped due to complete coverage.
 
