@@ -382,6 +382,79 @@ class TestSSOSettings:
                 follow_redirects=False,
             )
 
+    async def test_configure_xaa_settings_without_jwt_bearer_settings(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # No per-issuer settings at all (config-level mapping only)
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            await client.invoke(client.mgmt.sso.configure_xaa_settings("tenant-id", XAASettings(enabled=False)))
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_configure_xaa_settings}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "tenantId": "tenant-id",
+                    "enabled": False,
+                    "settings": None,
+                    "roleMappings": [],
+                    "defaultSSORoles": None,
+                    "fgaMappings": None,
+                    "groupsPriority": None,
+                    "groupPriorityEnabled": None,
+                    "allowOverrideRoles": None,
+                },
+                follow_redirects=False,
+            )
+
+    async def test_configure_xaa_settings_with_none_issuer_entry(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # An issuer entry with no per-issuer settings, using defaults
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            await client.invoke(
+                client.mgmt.sso.configure_xaa_settings(
+                    "tenant-id",
+                    XAASettings(
+                        enabled=True,
+                        settings=XAAJWTBearerSettings(issuers={"https://issuer.example.com": None}),
+                    ),
+                )
+            )
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_configure_xaa_settings}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "tenantId": "tenant-id",
+                    "enabled": True,
+                    "settings": {
+                        "issuers": {"https://issuer.example.com": None},
+                        "jwtBearerGrantTypeAudienceToUse": None,
+                        "jwtBearerGrantTypeScopeToUse": None,
+                        "jwtBearerGrantTypeCustomClaimsToUse": None,
+                    },
+                    "roleMappings": [],
+                    "defaultSSORoles": None,
+                    "fgaMappings": None,
+                    "groupsPriority": None,
+                    "groupPriorityEnabled": None,
+                    "allowOverrideRoles": None,
+                },
+                follow_redirects=False,
+            )
+
     async def test_load_xaa_settings(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
