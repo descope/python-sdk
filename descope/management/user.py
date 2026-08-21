@@ -109,6 +109,7 @@ class User(UserBase, HTTPBase):
         invite_url: Optional[str] = None,
         additional_login_ids: Optional[List[str]] = None,
         sso_app_ids: Optional[List[str]] = None,
+        status: Optional[str] = None,
     ) -> dict:
         """
         Create a new test user.
@@ -127,6 +128,7 @@ class User(UserBase, HTTPBase):
         picture (str): Optional url for user picture
         custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
         sso_app_ids (List[str]): Optional, list of SSO applications IDs to be associated with the user.
+        status (str): Optional status field. Can be one of: "enabled", "disabled", "invited", "expired".
 
         Return value (dict):
         Return dict in the format
@@ -136,6 +138,7 @@ class User(UserBase, HTTPBase):
         Raise:
         AuthException: raised if create operation fails
         """
+        UserBase._validate_status(status)
         role_names = [] if role_names is None else role_names
         user_tenants = [] if user_tenants is None else user_tenants
 
@@ -162,6 +165,7 @@ class User(UserBase, HTTPBase):
                 None,
                 additional_login_ids,
                 sso_app_ids,
+                status=status,
             ),
         )
         return response.json()

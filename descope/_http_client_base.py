@@ -1,9 +1,12 @@
 # This is not part of the public API but a code helper
 from __future__ import annotations
 
+import contextvars
 import os
 import platform
 import ssl
+import threading
+from functools import cached_property
 from http import HTTPStatus
 from importlib.metadata import version
 
@@ -63,15 +66,16 @@ class DescopeResponse:
 
     def __init__(self, response: httpx.Response):
         self.raw = response
-        self._json_data = None
+
+    @cached_property
+    def _json_data(self):
+        return self.raw.json()
 
     def json(self):
         """Get the parsed JSON response, cached after first access."""
-        if self._json_data is None:
-            self._json_data = self.raw.json()
         return self._json_data
 
-    @property
+    @cached_property
     def is_json(self) -> bool:
         """True if the response body can be parsed as JSON."""
         try:
@@ -178,6 +182,39 @@ class DescopeResponse:
     def ok(self):
         """True if status code indicates success (2xx)."""
         return self.raw.is_success
+
+
+class ThreadLocalLastResponseStore:
+    """One last-response slot, isolated per thread."""
+
+    def __init__(self) -> None:
+        self._local = threading.local()
+
+    def set(self, response: DescopeResponse) -> None:
+        self._local.last_response = response
+
+    def get(self) -> DescopeResponse | None:
+        return getattr(self._local, "last_response", None)
+
+
+class ContextVarLastResponseStore:
+    """One last-response slot, isolated per async task.
+
+    ContextVar rather than threading.local: every asyncio task runs on the same
+    event-loop thread, so a thread-local slot would be a single slot shared by
+    all concurrent tasks.
+    """
+
+    def __init__(self) -> None:
+        self._var: contextvars.ContextVar[DescopeResponse | None] = contextvars.ContextVar(
+            "descope_async_last_response", default=None
+        )
+
+    def set(self, response: DescopeResponse) -> None:
+        self._var.set(response)
+
+    def get(self) -> DescopeResponse | None:
+        return self._var.get()
 
 
 class HTTPClientBase:
