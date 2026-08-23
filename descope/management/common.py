@@ -241,6 +241,8 @@ class MgmtV1:
     sso_configure_oidc_settings = "/v1/mgmt/sso/oidc"
     sso_configure_saml_settings = "/v1/mgmt/sso/saml"
     sso_configure_saml_by_metadata_settings = "/v1/mgmt/sso/saml/metadata"
+    sso_configure_xaa_settings = "/v1/mgmt/sso/xaa/settings"
+    sso_load_all_xaa_settings = "/v1/mgmt/sso/xaa/settings/all"
 
     # jwt
     update_jwt_path = "/v1/mgmt/jwt/update"

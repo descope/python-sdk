@@ -45,6 +45,9 @@ from descope.management.sso_settings import (
     SSOOIDCSettings,
     SSOSAMLSettings,
     SSOSAMLSettingsByMetadata,
+    XAAIssuerSettings,
+    XAAJWTBearerSettings,
+    XAASettings,
 )
 from descope.management.user import UserObj
 from descope.management.user_pwd import (
@@ -96,6 +99,9 @@ __all__ = [
     "SSOOIDCSettings",
     "SSOSAMLSettings",
     "SSOSAMLSettingsByMetadata",
+    "XAAIssuerSettings",
+    "XAAJWTBearerSettings",
+    "XAASettings",
     "UserObj",
     "UserPassword",
     "UserPasswordBcrypt",
