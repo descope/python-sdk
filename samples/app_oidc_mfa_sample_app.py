@@ -113,8 +113,8 @@ def callback():
             client_secret=CLIENT_SECRET,
             redirect_uri=CALLBACK_URL,
         )
-    except AuthException as e:
-        return f"MFA exchange failed: {e}", 401
+    except AuthException:
+        return "MFA exchange failed", 401
 
     # tokens is the raw OIDC shape: access_token, id_token, refresh_token, expires_in, scope.
     # Treating a successful exchange as "MFA passed" - wire this into your own session logic
