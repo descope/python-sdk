@@ -405,6 +405,7 @@ class MgmtV1:
     sso_redirect_path = "/v1/mgmt/sso/redirect"
     sso_load_all_settings_path = "/v2/mgmt/sso/settings/all"
     sso_new_settings_path = "/v1/mgmt/sso/settings/new"
+    sso_configure_auth_type_path = "/v1/mgmt/sso/settings/authtype"
 
     # tenant revoke sso config link
     tenant_revoke_sso_configuration_link_path = "/v1/mgmt/tenant/adminlinks/sso/revoke"

@@ -250,6 +250,30 @@ class SSOSettingsAsync(SSOSettingsBase, AsyncHTTPBase):
             ),
         )
 
+    async def configure_auth_type(
+        self,
+        tenant_id: str,
+        auth_type: str,
+        sso_id: Optional[str] = None,
+    ):
+        """
+        Set the authentication type of a single SSO configuration, leaving its stored SAML/OIDC
+        settings, mappings and domains untouched.
+
+        Args:
+        tenant_id (str): The tenant ID the configuration belongs to
+        auth_type (str): "none" disables the configuration without deleting it, "saml" or "oidc"
+            enable it on that protocol with its stored settings, so re-enabling needs no payload.
+        sso_id (str): Optional, the SSO configuration id (for multi-SSO). Omit for the default SSO configuration.
+
+        Raise:
+        AuthException: raised if configuration operation fails
+        """
+        await self._http.post(
+            MgmtV1.sso_configure_auth_type_path,
+            body=SSOSettingsAsync._compose_configure_auth_type_body(tenant_id, auth_type, sso_id),
+        )
+
     async def configure_xaa_settings(
         self,
         tenant_id: str,

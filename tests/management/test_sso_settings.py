@@ -1343,6 +1343,56 @@ class TestSSOSettings:
                 follow_redirects=True,
             )
 
+    async def test_configure_auth_type(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flow
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.sso.configure_auth_type("tenant-id", "none"))
+
+        # Test success flow (disable a specific configuration)
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            result = await client.invoke(client.mgmt.sso.configure_auth_type("tenant-id", "none", sso_id="sso-1"))
+            assert result is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_configure_auth_type_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "tenantId": "tenant-id",
+                    "authType": "none",
+                    "ssoId": "sso-1",
+                },
+                follow_redirects=False,
+            )
+
+        # Test success flow (the default configuration carries no ssoId)
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            await client.invoke(client.mgmt.sso.configure_auth_type("tenant-id", "saml"))
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_configure_auth_type_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "tenantId": "tenant-id",
+                    "authType": "saml",
+                },
+                follow_redirects=False,
+            )
+
     async def test_new_settings(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
