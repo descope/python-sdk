@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.13.0](https://github.com/descope/python-sdk/compare/descope-2.12.1...descope-2.13.0) (2026-08-24)
+
+
+### Features
+
+* **sso:** add configure_auth_type to enable or disable an SSO configuration ([#1675](https://github.com/descope/python-sdk/issues/1675)) ([6aa30b7](https://github.com/descope/python-sdk/commit/6aa30b7a876521018ae74fa1133ebcbac154c17f))
+* **xaa:** add cross-app access (ID-JAG) mapping types ([#1664](https://github.com/descope/python-sdk/issues/1664)) ([5fb78ec](https://github.com/descope/python-sdk/commit/5fb78ecf6a715a2b2ab1246002c7fb6368478306))
+
 ## [2.12.1](https://github.com/descope/python-sdk/compare/descope-2.12.0...descope-2.12.1) (2026-08-20)
 
 
