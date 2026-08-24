@@ -47,6 +47,23 @@ class TestSSOSettings:
                 follow_redirects=False,
             )
 
+        # Test success flow (a specific SSO configuration of a multi-SSO tenant)
+        with client.mock_mgmt_delete(make_response()) as mock_delete:
+            await client.invoke(client.mgmt.sso.delete_settings("tenant-id", sso_id="conf1"))
+
+            assert_http_called(
+                mock_delete,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_settings_path}",
+                params={"tenantId": "tenant-id", "ssoId": "conf1"},
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                follow_redirects=False,
+            )
+
     async def test_load_settings(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 

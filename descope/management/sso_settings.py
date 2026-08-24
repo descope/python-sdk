@@ -427,19 +427,25 @@ class SSOSettings(SSOSettingsBase, HTTPBase):
     def delete_settings(
         self,
         tenant_id: str,
+        sso_id: Optional[str] = None,
     ):
         """
         Delete SSO setting for the provided tenant_id.
 
         Args:
         tenant_id (str): The tenant ID of the desired SSO Settings to delete
+        sso_id (str): Optional, the SSO configuration id (for multi-SSO). Omit for the default SSO configuration.
 
         Raise:
         AuthException: raised if delete operation fails
         """
+        params = {"tenantId": tenant_id}
+        if sso_id:
+            params["ssoId"] = sso_id
+
         self._http.delete(
             MgmtV1.sso_settings_path,
-            params={"tenantId": tenant_id},
+            params=params,
         )
 
     def configure_auth_type(
