@@ -8,6 +8,7 @@ import httpx
 
 from descope._client_base import DescopeClientBase
 from descope.auth import Auth
+from descope.authmethod.app import App  # noqa: F401
 from descope.authmethod.enchantedlink import EnchantedLink  # noqa: F401
 from descope.authmethod.magiclink import MagicLink  # noqa: F401
 from descope.authmethod.oauth import OAuth  # noqa: F401
@@ -74,6 +75,7 @@ class DescopeClient(DescopeClientBase):
         self._oauth = OAuth(self._auth)
         self._saml = SAML(self._auth)  # deprecated
         self._sso = SSO(self._auth)
+        self._app = App(self._auth)
         self._otp = OTP(self._auth)
         self._totp = TOTP(self._auth)
         self._webauthn = WebAuthn(self._auth)
@@ -165,6 +167,10 @@ class DescopeClient(DescopeClientBase):
     @property
     def sso(self):
         return self._sso
+
+    @property
+    def app(self):
+        return self._app
 
     @property
     def webauthn(self):
