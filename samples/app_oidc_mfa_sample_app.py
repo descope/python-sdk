@@ -82,7 +82,7 @@ def login():
             # ID> explicitly instead, if you'd rather override per-call than change the app's
             # default.
         )
-    except AuthException as e:
+    except AuthException:
         return "Failed to start MFA", 500
 
     # Stash what exchange_token will need - this is a redirect, so it can't carry state itself
