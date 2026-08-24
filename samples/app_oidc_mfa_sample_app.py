@@ -82,7 +82,7 @@ def login():
             # default.
         )
     except AuthException as e:
-        return f"Failed to start MFA: {e}", 500
+        return "Failed to start MFA", 500
 
     # Stash what exchange_token will need - this is a redirect, so it can't carry state itself
     session["code_verifier"] = resp["code_verifier"]
