@@ -6,7 +6,7 @@ import httpx
 
 from descope._authmethod_base import AuthMethodBase
 from descope.authmethod._app_base import AppBase
-from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, ERROR_TYPE_SERVER_ERROR, AuthException
+from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 
 
 class App(AppBase, AuthMethodBase):
@@ -80,10 +80,11 @@ class App(AppBase, AuthMethodBase):
         CONFIRMED LIVE end-to-end: a real login through the URL from ``start``, followed by
         this call with the resulting code, code_verifier, and the app's client_secret,
         returned real access/refresh/ID tokens (see ``AppBase`` for the details). This
-        bypasses the SDK's normal HTTP layer deliberately - the token endpoint is a standard
-        OAuth2 endpoint (form-encoded body, client credentials in the body, no Descope bearer
-        header), confirmed working via ``client_secret_post`` (secret in the body, per the
-        project's discovery document).
+        deliberately bypasses the SDK's default headers/JSON body - the token endpoint is a
+        standard OAuth2 endpoint (form-encoded body, client credentials in the body, no
+        Descope bearer header), confirmed working via ``client_secret_post`` (secret in the
+        body, per the project's discovery document). Retries and rate-limit handling still go
+        through the shared HTTP client.
 
         Args:
             app_id (str): The Federated App ID passed to ``start``
@@ -108,13 +109,14 @@ class App(AppBase, AuthMethodBase):
             client_secret if client_secret else "",
             redirect_uri if redirect_uri else "",
         )
-        response = httpx.post(
-            f"{self._http.base_url}/oauth2/v1/{self._auth.project_id}/token",
-            data=body,
-            follow_redirects=False,
-            verify=self._http.client_verify,
-            timeout=self._http.timeout_seconds,
+        response = self._http._execute_with_retry(
+            lambda: httpx.post(
+                f"{self._http.base_url}/oauth2/v1/{self._auth.project_id}/token",
+                data=body,
+                follow_redirects=False,
+                verify=self._http.client_verify,
+                timeout=self._http.timeout_seconds,
+            )
         )
-        if response.status_code >= 400:
-            raise AuthException(response.status_code, ERROR_TYPE_SERVER_ERROR, response.text)
+        self._http._raise_from_response(response)
         return response.json()
