@@ -29,7 +29,7 @@ config registers a different redirect URI.
 
 import os
 
-from flask import Flask, redirect, request, session
+from flask import Flask, escape, redirect, request, session
 
 from descope import AuthException, DescopeClient
 
@@ -99,7 +99,9 @@ def callback():
     error = request.args.get("error")
 
     if error:
-        return f"MFA failed: {error} - {request.args.get('error_description', '')}", 401
+        safe_error = escape(error)
+        safe_error_description = escape(request.args.get("error_description", ""))
+        return f"MFA failed: {safe_error} - {safe_error_description}", 401
     if not code or state != session.get("expected_state"):
         return "Invalid or missing callback params", 400
 
