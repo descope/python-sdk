@@ -11,6 +11,9 @@ if TYPE_CHECKING:
         SSOOIDCSettings,
         SSOSAMLSettings,
         SSOSAMLSettingsByMetadata,
+        XAAIssuerSettings,
+        XAAJWTBearerSettings,
+        XAASettings,
     )
 
 
@@ -166,6 +169,79 @@ class SSOSettingsBase:
             },
             "domains": domains,
         }
+
+    @staticmethod
+    def _issuer_settings_to_dict(
+        issuer: Optional[XAAIssuerSettings],
+    ) -> Optional[dict]:
+        if issuer is None:
+            return None
+        attr_mapping = None
+        if issuer.attribute_mapping is not None:
+            attr_mapping = SSOSettingsBase._attribute_mapping_to_dict(issuer.attribute_mapping)
+        return {
+            "jwksUri": issuer.jwks_uri,
+            "signAlgorithm": issuer.sign_algorithm,
+            "userInfoUri": issuer.user_info_uri,
+            "externalIdFieldName": issuer.external_id_field_name,
+            "jitDisabled": issuer.jit_disabled,
+            "attributeMapping": attr_mapping,
+        }
+
+    @staticmethod
+    def _jwt_bearer_settings_to_dict(
+        settings: Optional[XAAJWTBearerSettings],
+    ) -> Optional[dict]:
+        if settings is None:
+            return None
+        issuers = None
+        if settings.issuers is not None:
+            issuers = {
+                url: SSOSettingsBase._issuer_settings_to_dict(issuer) for url, issuer in settings.issuers.items()
+            }
+        return {
+            "issuers": issuers,
+            "jwtBearerGrantTypeAudienceToUse": settings.jwt_bearer_grant_type_audience_to_use,
+            "jwtBearerGrantTypeScopeToUse": settings.jwt_bearer_grant_type_scope_to_use,
+            "jwtBearerGrantTypeCustomClaimsToUse": settings.jwt_bearer_grant_type_custom_claims_to_use,
+        }
+
+    @staticmethod
+    def _compose_configure_auth_type_body(
+        tenant_id: str,
+        auth_type: str,
+        sso_id: Optional[str],
+    ) -> dict:
+        body: dict = {
+            "tenantId": tenant_id,
+            "authType": auth_type,
+        }
+        if sso_id:
+            body["ssoId"] = sso_id
+        return body
+
+    @staticmethod
+    def _compose_configure_xaa_settings_body(
+        tenant_id: str,
+        settings: XAASettings,
+        sso_id: Optional[str],
+    ) -> dict:
+        body: dict = {
+            "tenantId": tenant_id,
+            "enabled": settings.enabled,
+            "settings": SSOSettingsBase._jwt_bearer_settings_to_dict(settings.settings),
+            "roleMappings": SSOSettingsBase._role_mapping_to_dict(settings.role_mappings),
+            "defaultSSORoles": settings.default_sso_roles,
+            "fgaMappings": SSOSettingsBase._fga_mappings_to_dict(settings.fga_mappings),
+            "groupsPriority": settings.groups_priority,
+            "groupPriorityEnabled": settings.group_priority_enabled,
+            "allowOverrideRoles": settings.allow_override_roles,
+        }
+        if sso_id:
+            body["ssoId"] = sso_id
+        if settings.provider_id:
+            body["providerID"] = settings.provider_id
+        return body
 
     @staticmethod
     def _compose_configure_saml_settings_body(

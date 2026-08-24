@@ -8,6 +8,7 @@ from typing import Iterable
 import httpx
 
 from descope._client_base import DescopeClientBase
+from descope._http_client_base import ContextVarLastResponseStore
 from descope.auth_async import AuthAsync
 from descope.authmethod.app_async import AppAsync
 from descope.authmethod.enchantedlink_async import EnchantedLinkAsync
@@ -88,6 +89,7 @@ class DescopeClientAsync(DescopeClientBase):
             verbose=verbose,
         )
 
+        self._last_response_store = ContextVarLastResponseStore()
         self._auth_http = HTTPClientAsync(
             project_id=self._project_id,
             base_url=base_url,
@@ -95,6 +97,7 @@ class DescopeClientAsync(DescopeClientBase):
             secure=not skip_verify,
             management_key=auth_management_key or os.getenv("DESCOPE_AUTH_MANAGEMENT_KEY"),
             verbose=verbose,
+            last_response_store=self._last_response_store,
         )
         self._mgmt_http = HTTPClientAsync(
             project_id=self._project_id,
@@ -103,6 +106,7 @@ class DescopeClientAsync(DescopeClientBase):
             secure=not skip_verify,
             management_key=management_key or os.getenv("DESCOPE_MANAGEMENT_KEY"),
             verbose=verbose,
+            last_response_store=self._last_response_store,
         )
         self._auth = AuthAsync(
             self._project_id,
@@ -325,7 +329,9 @@ class DescopeClientAsync(DescopeClientBase):
         return await self._auth.select_tenant(tenant_id, refresh_token)
 
     def get_last_response(self):
-        """Get the last HTTP response when verbose mode is enabled."""
-        mgmt_resp = self._mgmt_http.get_last_response()
-        auth_resp = self._auth_http.get_last_response()
-        return mgmt_resp or auth_resp
+        """Get the last HTTP response when verbose mode is enabled.
+
+        Returns the most recent response across auth and mgmt operations,
+        whichever ran last.
+        """
+        return self._last_response_store.get()

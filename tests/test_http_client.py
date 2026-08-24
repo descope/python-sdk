@@ -1,8 +1,10 @@
 import json
 import os
+import threading
 import unittest
 from unittest.mock import Mock, patch
 
+from descope._http_client_base import ThreadLocalLastResponseStore
 from descope.http_client import DescopeResponse, HTTPClient
 
 
@@ -61,6 +63,39 @@ class TestDescopeResponse(unittest.TestCase):
         assert result1 == result2
         # json() should only be called once on the underlying response
         assert mock_response.json.call_count == 1
+
+    def test_null_json_body_parses_once(self):
+        """A `null` body is a real cached value, not a miss to retry.
+
+        The old `if self._json_data is None` sentinel re-parsed on every access here,
+        which test_json_caching cannot catch because its body is a dict.
+        """
+        mock_response = Mock()
+        mock_response.json.return_value = None
+
+        resp = DescopeResponse(mock_response)
+
+        assert resp.json() is None
+        assert resp.json() is None
+        assert mock_response.json.call_count == 1
+
+    def test_is_json_does_not_reparse_non_json_body(self):
+        """is_json probes by parsing, so an unparseable body must not re-probe."""
+        body = "<html>502</html>"
+        mock_response = Mock()
+        mock_response.json.side_effect = json.JSONDecodeError("Expecting value", body, 0)
+        mock_response.text = body
+
+        resp = DescopeResponse(mock_response)
+
+        assert resp.is_json is False
+        assert resp.is_json is False
+        assert resp.is_json is False
+        assert mock_response.json.call_count == 1
+
+        # A failed parse is not cached, so json() itself still raises every time.
+        with self.assertRaises(json.JSONDecodeError):
+            resp.json()
 
     def test_dict_like_values_items(self):
         """Test that values() and items() work correctly."""
@@ -311,6 +346,37 @@ class TestHTTPClient(unittest.TestCase):
         assert last_resp["updated"] == "user1"
         assert last_resp.status_code == 200
 
+    @patch("httpx.put")
+    def test_verbose_mode_captures_put_response(self, mock_put):
+        """Test that PUT responses are captured in verbose mode."""
+        mock_response = Mock()
+        mock_response.is_success = True
+        mock_response.json.return_value = {"replaced": "user1"}
+        mock_response.headers = {"cf-ray": "put123"}
+        mock_response.status_code = 200
+        mock_put.return_value = mock_response
+
+        client = HTTPClient(project_id="test123", verbose=True)
+        client.put("/users/1", body={"name": "replaced"})
+
+        last_resp = client.get_last_response()
+        assert last_resp is not None
+        assert last_resp["replaced"] == "user1"
+        assert last_resp.status_code == 200
+
+    @patch("httpx.put")
+    def test_verbose_mode_not_capture_put_when_disabled(self, mock_put):
+        """Test that PUT responses are NOT captured when verbose mode is disabled."""
+        mock_response = Mock()
+        mock_response.is_success = True
+        mock_response.json.return_value = {"replaced": "user1"}
+        mock_put.return_value = mock_response
+
+        client = HTTPClient(project_id="test123", verbose=False)
+        client.put("/users/1", body={"name": "replaced"})
+
+        assert client.get_last_response() is None
+
     @patch("httpx.delete")
     def test_verbose_mode_captures_delete_response(self, mock_delete):
         """Test that DELETE responses are captured in verbose mode."""
@@ -328,6 +394,51 @@ class TestHTTPClient(unittest.TestCase):
         assert last_resp is not None
         assert last_resp["deleted"] == "user1"
         assert last_resp.status_code == 204
+
+    @patch("httpx.get")
+    @patch("httpx.post")
+    def test_clients_sharing_a_store_see_one_ordering(self, mock_post, mock_get):
+        """A shared store makes "last" mean last, regardless of which client wrote it."""
+        mgmt_response = Mock()
+        mgmt_response.is_success = True
+        mgmt_response.json.return_value = {"src": "mgmt"}
+        mock_post.return_value = mgmt_response
+
+        auth_response = Mock()
+        auth_response.is_success = True
+        auth_response.json.return_value = {"src": "auth"}
+        mock_get.return_value = auth_response
+
+        store = ThreadLocalLastResponseStore()
+        mgmt = HTTPClient(project_id="test123", verbose=True, last_response_store=store)
+        auth = HTTPClient(project_id="test123", verbose=True, last_response_store=store)
+
+        mgmt.post("/x", body={})
+        assert store.get()["src"] == "mgmt"
+
+        auth.get("/x")
+        assert store.get()["src"] == "auth"
+
+    def test_shared_store_is_still_per_thread(self):
+        """Sharing one store must not leak a response between threads."""
+        store = ThreadLocalLastResponseStore()
+        seen = {}
+        both_written = threading.Barrier(2)
+
+        def worker(name):
+            response = Mock()
+            response.json.return_value = {"thread": name}
+            store.set(DescopeResponse(response))
+            both_written.wait()  # neither reads until both have written
+            seen[name] = store.get()["thread"]
+
+        threads = [threading.Thread(target=worker, args=(name,)) for name in ("a", "b")]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert seen == {"a": "a", "b": "b"}
 
     def test_raises_auth_exception_with_empty_project_id(self):
         """Test that HTTPClient raises AuthException when project_id is empty."""

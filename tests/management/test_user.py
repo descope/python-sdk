@@ -25,6 +25,10 @@ class TestUser:
             with pytest.raises(AuthException):
                 await client.invoke(client.mgmt.user.create("valid-id"))
 
+        with pytest.raises(AuthException) as exc_info:
+            await client.invoke(client.mgmt.user.create("valid-id", status="invalid_status"))
+        assert "Invalid status value: invalid_status" in str(exc_info.value)
+
         # Test success flow
         with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
             resp = await client.invoke(
@@ -40,6 +44,7 @@ class TestUser:
                     custom_attributes={"ak": "av"},
                     additional_login_ids=["id-1", "id-2"],
                     sso_app_ids=["app1", "app2"],
+                    status="disabled",
                 )
             )
             user = resp["user"]
@@ -70,6 +75,7 @@ class TestUser:
                     "invite": False,
                     "additionalLoginIds": ["id-1", "id-2"],
                     "ssoAppIDs": ["app1", "app2"],
+                    "status": "disabled",
                 },
                 follow_redirects=False,
             )
@@ -136,6 +142,10 @@ class TestUser:
             with pytest.raises(AuthException):
                 await client.invoke(client.mgmt.user.create("valid-id"))
 
+        with pytest.raises(AuthException) as exc_info:
+            await client.invoke(client.mgmt.user.create_test_user("valid-id", status="invalid_status"))
+        assert "Invalid status value: invalid_status" in str(exc_info.value)
+
         # Test success flow
         with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
             resp = await client.invoke(
@@ -148,6 +158,7 @@ class TestUser:
                         AssociatedTenant("tenant2", ["role1", "role2"]),
                     ],
                     custom_attributes={"ak": "av"},
+                    status="disabled",
                 )
             )
             user = resp["user"]
@@ -178,6 +189,7 @@ class TestUser:
                     "invite": False,
                     "additionalLoginIds": None,
                     "ssoAppIDs": None,
+                    "status": "disabled",
                 },
                 follow_redirects=False,
             )

@@ -11,6 +11,7 @@ from descope.management.sso_settings import (
     SSOOIDCSettings,
     SSOSAMLSettings,
     SSOSAMLSettingsByMetadata,
+    XAASettings,
 )
 
 
@@ -159,19 +160,25 @@ class SSOSettingsAsync(SSOSettingsBase, AsyncHTTPBase):
     async def delete_settings(
         self,
         tenant_id: str,
+        sso_id: Optional[str] = None,
     ):
         """
         Delete SSO setting for the provided tenant_id.
 
         Args:
         tenant_id (str): The tenant ID of the desired SSO Settings to delete
+        sso_id (str): Optional, the SSO configuration id (for multi-SSO). Omit for the default SSO configuration.
 
         Raise:
         AuthException: raised if delete operation fails
         """
+        params = {"tenantId": tenant_id}
+        if sso_id:
+            params["ssoId"] = sso_id
+
         await self._http.delete(
             MgmtV1.sso_settings_path,
-            params={"tenantId": tenant_id},
+            params=params,
         )
 
     async def configure_oidc_settings(
@@ -247,6 +254,125 @@ class SSOSettingsAsync(SSOSettingsBase, AsyncHTTPBase):
             body=SSOSettingsAsync._compose_configure_saml_settings_by_metadata_body(
                 tenant_id, settings, redirect_url, domains
             ),
+        )
+
+    async def configure_auth_type(
+        self,
+        tenant_id: str,
+        auth_type: str,
+        sso_id: Optional[str] = None,
+    ):
+        """
+        Set the authentication type of a single SSO configuration, leaving its stored SAML/OIDC
+        settings, mappings and domains untouched.
+
+        Args:
+        tenant_id (str): The tenant ID the configuration belongs to
+        auth_type (str): "none" disables the configuration without deleting it, "saml" or "oidc"
+            enable it on that protocol with its stored settings, so re-enabling needs no payload.
+        sso_id (str): Optional, the SSO configuration id (for multi-SSO). Omit for the default SSO configuration.
+
+        Raise:
+        AuthException: raised if configuration operation fails
+        """
+        await self._http.post(
+            MgmtV1.sso_configure_auth_type_path,
+            body=SSOSettingsAsync._compose_configure_auth_type_body(tenant_id, auth_type, sso_id),
+        )
+
+    async def configure_xaa_settings(
+        self,
+        tenant_id: str,
+        settings: XAASettings,
+        sso_id: Optional[str] = None,
+    ):
+        """
+        Configure Cross-App Access (XAA / ID-JAG) trust settings for a single SSO configuration of a tenant.
+
+        Args:
+        tenant_id (str): The tenant ID to be configured
+        settings (XAASettings): The trusted issuers + grant configuration together with the config-level
+            shared group/role mapping. The shared mapping is shared across SAML / OIDC / SCIM / XAA for the sso_id.
+        sso_id (str): Optional, the SSO configuration id (for multi-SSO). Omit for the default SSO configuration.
+
+        Raise:
+        AuthException: raised if configuration operation fails
+        """
+        await self._http.post(
+            MgmtV1.sso_configure_xaa_settings,
+            body=SSOSettingsAsync._compose_configure_xaa_settings_body(tenant_id, settings, sso_id),
+        )
+
+    async def load_xaa_settings(
+        self,
+        tenant_id: str,
+        sso_id: Optional[str] = None,
+    ) -> dict:
+        """
+        Load the Cross-App Access (XAA / ID-JAG) trust settings for a single SSO configuration of a tenant.
+
+        Args:
+        tenant_id (str): The tenant ID of the desired XAA settings
+        sso_id (str): Optional, the SSO configuration id (for multi-SSO). Omit for the default SSO configuration.
+
+        Return value (dict):
+        Containing the loaded XAA settings.
+
+        Raise:
+        AuthException: raised if load operation fails
+        """
+        params = {"tenantId": tenant_id}
+        if sso_id:
+            params["ssoId"] = sso_id
+        response = await self._http.get(
+            uri=MgmtV1.sso_configure_xaa_settings,
+            params=params,
+        )
+        return response.json()
+
+    async def load_all_xaa_settings(
+        self,
+        tenant_id: str,
+    ) -> dict:
+        """
+        Load the Cross-App Access (XAA / ID-JAG) trust settings for every SSO configuration of a tenant.
+
+        Args:
+        tenant_id (str): The tenant ID of the desired XAA settings
+
+        Return value (dict):
+        Containing all loaded XAA settings under the ``XAASettings`` key.
+
+        Raise:
+        AuthException: raised if load operation fails
+        """
+        response = await self._http.get(
+            uri=MgmtV1.sso_load_all_xaa_settings,
+            params={"tenantId": tenant_id},
+        )
+        return response.json()
+
+    async def delete_xaa_settings(
+        self,
+        tenant_id: str,
+        sso_id: Optional[str] = None,
+    ):
+        """
+        Delete the Cross-App Access (XAA / ID-JAG) trust settings of a single SSO configuration of a tenant.
+
+        Args:
+        tenant_id (str): The tenant ID of the desired XAA settings to delete
+        sso_id (str): Optional, the SSO configuration id (for multi-SSO). Omit for the default SSO configuration.
+
+        Raise:
+        AuthException: raised if delete operation fails
+        """
+        params = {"tenantId": tenant_id}
+        if sso_id:
+            params["ssoId"] = sso_id
+        await self._http.delete(
+            MgmtV1.sso_configure_xaa_settings,
+            params=params,
         )
 
     # DEPRECATED

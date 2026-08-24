@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.13.0](https://github.com/descope/python-sdk/compare/descope-2.12.1...descope-2.13.0) (2026-08-24)
+
+
+### Features
+
+* **sso:** add configure_auth_type to enable or disable an SSO configuration ([#1675](https://github.com/descope/python-sdk/issues/1675)) ([6aa30b7](https://github.com/descope/python-sdk/commit/6aa30b7a876521018ae74fa1133ebcbac154c17f))
+* **xaa:** add cross-app access (ID-JAG) mapping types ([#1664](https://github.com/descope/python-sdk/issues/1664)) ([5fb78ec](https://github.com/descope/python-sdk/commit/5fb78ecf6a715a2b2ab1246002c7fb6368478306))
+
+## [2.12.1](https://github.com/descope/python-sdk/compare/descope-2.12.0...descope-2.12.1) (2026-08-20)
+
+
+### Bug Fixes
+
+* add status field to create_test_user, matching create() ([#1668](https://github.com/descope/python-sdk/issues/1668)) ([a9d8f13](https://github.com/descope/python-sdk/commit/a9d8f1330e2ef16ea98043518bc49db4222a2a91))
+* **http-client:** make get_last_response report the actual last response ([#1655](https://github.com/descope/python-sdk/issues/1655)) ([2ff2c1f](https://github.com/descope/python-sdk/commit/2ff2c1f5848cf0eae2924e8e83f8d3541eb66cb9))
+
+## [2.12.0](https://github.com/descope/python-sdk/compare/descope-2.11.2...descope-2.12.0) (2026-08-18)
+
+
+### Features
+
+* support status field on user create, document invite caveat ([#1665](https://github.com/descope/python-sdk/issues/1665)) ([bfcb192](https://github.com/descope/python-sdk/commit/bfcb19275070fadc4b5cf07d3471896cead563be))
+
 ## [2.11.2](https://github.com/descope/python-sdk/compare/descope-2.11.1...descope-2.11.2) (2026-08-10)
 
 

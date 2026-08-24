@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from descope._http_client_base import ContextVarLastResponseStore, DescopeResponse
 from descope.exceptions import AuthException, RateLimitException
 from descope.http_client import _RETRY_DELAYS_SECONDS, _RETRY_STATUS_CODES
 from descope.http_client_async import HTTPClientAsync
@@ -12,7 +14,14 @@ from tests.testutils import SSLMatcher
 _DEFAULT_BASE_URL = "https://api.descope.com"
 
 
-def make_async_client(*, secure=True, verbose=False, project_id="test123", base_url=_DEFAULT_BASE_URL):
+def make_async_client(
+    *,
+    secure=True,
+    verbose=False,
+    project_id="test123",
+    base_url=_DEFAULT_BASE_URL,
+    last_response_store=None,
+):
     """Build an AsyncHTTPClient with a mocked _async_client (no real socket).
 
     base_url is passed explicitly so tests are never affected by the
@@ -25,6 +34,7 @@ def make_async_client(*, secure=True, verbose=False, project_id="test123", base_
             timeout_seconds=60,
             secure=secure,
             verbose=verbose,
+            last_response_store=last_response_store,
         )
 
 
@@ -317,6 +327,27 @@ class TestAsyncVerbose:
         assert last is not None
         assert last.status_code == 200
 
+    async def test_put_captures_response_when_verbose(self):
+        client = make_async_client(verbose=True)
+        client._async_client.put = AsyncMock(
+            return_value=make_resp(status=200, json_data={"replaced": 1}, headers={"cf-ray": "r5"})
+        )
+
+        await client.put("/x", body={})
+
+        last = client.get_last_response()
+        assert last is not None
+        assert last.status_code == 200
+        assert last.headers.get("cf-ray") == "r5"
+
+    async def test_put_does_not_capture_when_not_verbose(self):
+        client = make_async_client(verbose=False)
+        client._async_client.put = AsyncMock(return_value=make_resp())
+
+        await client.put("/x", body={})
+
+        assert client.get_last_response() is None
+
     async def test_delete_captures_response_when_verbose(self):
         client = make_async_client(verbose=True)
         client._async_client.delete = AsyncMock(
@@ -328,6 +359,36 @@ class TestAsyncVerbose:
         last = client.get_last_response()
         assert last is not None
         assert last.status_code == 200
+
+
+class TestAsyncSharedLastResponseStore:
+    async def test_clients_sharing_a_store_see_one_ordering(self):
+        """A shared store makes "last" mean last, regardless of which client wrote it."""
+        store = ContextVarLastResponseStore()
+        mgmt = make_async_client(verbose=True, last_response_store=store)
+        auth = make_async_client(verbose=True, last_response_store=store)
+        mgmt._async_client.post = AsyncMock(return_value=make_resp(json_data={"src": "mgmt"}))
+        auth._async_client.get = AsyncMock(return_value=make_resp(json_data={"src": "auth"}))
+
+        await mgmt.post("/x", body={})
+        assert store.get()["src"] == "mgmt"
+
+        await auth.get("/x")
+        assert store.get()["src"] == "auth"
+
+    async def test_shared_store_is_still_per_task(self):
+        """Sharing one store must not leak a response between concurrent tasks."""
+        store = ContextVarLastResponseStore()
+        seen = {}
+
+        async def worker(name):
+            store.set(DescopeResponse(make_resp(json_data={"task": name})))
+            await asyncio.sleep(0)  # let the sibling task write before reading
+            seen[name] = store.get()["task"]
+
+        await asyncio.gather(worker("a"), worker("b"))
+
+        assert seen == {"a": "a", "b": "b"}
 
 
 class TestAsyncErrors:
