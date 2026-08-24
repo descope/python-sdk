@@ -29,7 +29,8 @@ config registers a different redirect URI.
 
 import os
 
-from flask import Flask, escape, redirect, request, session
+from flask import Flask, redirect, request, session
+from markupsafe import escape
 
 from descope import AuthException, DescopeClient
 
