@@ -207,6 +207,20 @@ class SSOSettingsBase:
         }
 
     @staticmethod
+    def _compose_configure_auth_type_body(
+        tenant_id: str,
+        auth_type: str,
+        sso_id: Optional[str],
+    ) -> dict:
+        body: dict = {
+            "tenantId": tenant_id,
+            "authType": auth_type,
+        }
+        if sso_id:
+            body["ssoId"] = sso_id
+        return body
+
+    @staticmethod
     def _compose_configure_xaa_settings_body(
         tenant_id: str,
         settings: XAASettings,

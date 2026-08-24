@@ -987,6 +987,14 @@ descope_client.mgmt.sso.configure_oidc_settings(
     domains=["tenant-users.com"] # Users authentication with these domains will be logged in to this tenant
 )
 
+# You can disable an SSO configuration without deleting it, and enable it again later.
+# Its settings, mappings and domains are kept, so re-enabling needs no payload.
+descope_client.mgmt.sso.configure_auth_type(
+    tenant_id, # Which tenant the configuration belongs to
+    "none", # "none" disables it; "saml" or "oidc" enable it on that protocol
+    sso_id="my-sso-id" # Optional, omit for the tenant's default SSO configuration
+)
+
 # DEPRECATED (use load_settings(..) function instead)
 # You can get SSO settings for a tenant
 sso_settings_res = descope_client.mgmt.sso.get_settings("tenant-id")

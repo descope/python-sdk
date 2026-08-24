@@ -427,19 +427,49 @@ class SSOSettings(SSOSettingsBase, HTTPBase):
     def delete_settings(
         self,
         tenant_id: str,
+        sso_id: Optional[str] = None,
     ):
         """
         Delete SSO setting for the provided tenant_id.
 
         Args:
         tenant_id (str): The tenant ID of the desired SSO Settings to delete
+        sso_id (str): Optional, the SSO configuration id (for multi-SSO). Omit for the default SSO configuration.
 
         Raise:
         AuthException: raised if delete operation fails
         """
+        params = {"tenantId": tenant_id}
+        if sso_id:
+            params["ssoId"] = sso_id
+
         self._http.delete(
             MgmtV1.sso_settings_path,
-            params={"tenantId": tenant_id},
+            params=params,
+        )
+
+    def configure_auth_type(
+        self,
+        tenant_id: str,
+        auth_type: str,
+        sso_id: Optional[str] = None,
+    ):
+        """
+        Set the authentication type of a single SSO configuration, leaving its stored SAML/OIDC
+        settings, mappings and domains untouched.
+
+        Args:
+        tenant_id (str): The tenant ID the configuration belongs to
+        auth_type (str): "none" disables the configuration without deleting it, "saml" or "oidc"
+            enable it on that protocol with its stored settings, so re-enabling needs no payload.
+        sso_id (str): Optional, the SSO configuration id (for multi-SSO). Omit for the default SSO configuration.
+
+        Raise:
+        AuthException: raised if configuration operation fails
+        """
+        self._http.post(
+            MgmtV1.sso_configure_auth_type_path,
+            body=SSOSettings._compose_configure_auth_type_body(tenant_id, auth_type, sso_id),
         )
 
     def configure_oidc_settings(
