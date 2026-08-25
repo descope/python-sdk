@@ -30,7 +30,24 @@ class EnchantedLinkAsync(EnchantedLinkBase, AsyncAuthMethodBase):
         validate_refresh_token_provided(login_options, refresh_token)
 
         body = self._compose_signin_body(login_id, uri, login_options)
-        url = self._compose_signin_url()
+        url = self._compose_signin_url(DeliveryMethod.EMAIL)
+        response = await self._http.post(url, body=body, pswd=refresh_token)
+        return response.json()
+
+    async def sign_in_with_phone(
+        self,
+        phone: str,
+        uri: str,
+        login_options: LoginOptions | None = None,
+        refresh_token: str | None = None,
+    ) -> dict:
+        """Send an enchanted-link SMS for sign-in; returns the pending-ref and link-id."""
+        self._validate_sign_in_login_id(phone)
+
+        validate_refresh_token_provided(login_options, refresh_token)
+
+        body = self._compose_signin_body(phone, uri, login_options)
+        url = self._compose_signin_url(DeliveryMethod.SMS)
         response = await self._http.post(url, body=body, pswd=refresh_token)
         return response.json()
 
@@ -52,8 +69,31 @@ class EnchantedLinkAsync(EnchantedLinkBase, AsyncAuthMethodBase):
                 f"Login ID {login_id} is not valid for email",
             )
 
-        body = self._compose_signup_body(login_id, uri, user, signup_options)
-        url = self._compose_signup_url()
+        body = self._compose_signup_body(DeliveryMethod.EMAIL, login_id, uri, user, signup_options)
+        url = self._compose_signup_url(DeliveryMethod.EMAIL)
+        response = await self._http.post(url, body=body)
+        return response.json()
+
+    async def sign_up_with_phone(
+        self,
+        phone: str,
+        uri: str,
+        user: dict | None = None,
+        signup_options: SignUpOptions | None = None,
+    ) -> dict:
+        """Send an enchanted-link SMS for sign-up; returns the pending-ref and link-id."""
+        if not user:
+            user = {}
+
+        if not self._auth.adjust_and_verify_delivery_method(DeliveryMethod.SMS, phone, user):
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                f"Login ID {phone} is not valid for phone",
+            )
+
+        body = self._compose_signup_body(DeliveryMethod.SMS, phone, uri, user, signup_options)
+        url = self._compose_signup_url(DeliveryMethod.SMS)
         response = await self._http.post(url, body=body)
         return response.json()
 
@@ -68,7 +108,22 @@ class EnchantedLinkAsync(EnchantedLinkBase, AsyncAuthMethodBase):
             )
 
         body = self._compose_signin_body(login_id, uri, login_options)
-        url = self._compose_sign_up_or_in_url()
+        url = self._compose_sign_up_or_in_url(DeliveryMethod.EMAIL)
+        response = await self._http.post(url, body=body)
+        return response.json()
+
+    async def sign_up_or_in_with_phone(self, phone: str, uri: str, signup_options: SignUpOptions | None = None) -> dict:
+        """Send an enchanted-link SMS for sign-up or sign-in depending on whether the user exists."""
+        login_options: LoginOptions | None = None
+        if signup_options is not None:
+            login_options = LoginOptions(
+                custom_claims=signup_options.customClaims,
+                template_options=signup_options.templateOptions,
+                template_id=signup_options.templateId,
+            )
+
+        body = self._compose_signin_body(phone, uri, login_options)
+        url = self._compose_sign_up_or_in_url(DeliveryMethod.SMS)
         response = await self._http.post(url, body=body)
         return response.json()
 
