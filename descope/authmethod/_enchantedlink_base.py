@@ -33,16 +33,16 @@ class EnchantedLinkBase:
             raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "Identifier cannot be empty")
 
     @staticmethod
-    def _compose_signin_url() -> str:
-        return Auth.compose_url(EndpointsV1.sign_in_auth_enchantedlink_path, DeliveryMethod.EMAIL)
+    def _compose_signin_url(method: DeliveryMethod) -> str:
+        return Auth.compose_url(EndpointsV1.sign_in_auth_enchantedlink_path, method)
 
     @staticmethod
-    def _compose_signup_url() -> str:
-        return Auth.compose_url(EndpointsV1.sign_up_auth_enchantedlink_path, DeliveryMethod.EMAIL)
+    def _compose_signup_url(method: DeliveryMethod) -> str:
+        return Auth.compose_url(EndpointsV1.sign_up_auth_enchantedlink_path, method)
 
     @staticmethod
-    def _compose_sign_up_or_in_url() -> str:
-        return Auth.compose_url(EndpointsV1.sign_up_or_in_auth_enchantedlink_path, DeliveryMethod.EMAIL)
+    def _compose_sign_up_or_in_url(method: DeliveryMethod) -> str:
+        return Auth.compose_url(EndpointsV1.sign_up_or_in_auth_enchantedlink_path, method)
 
     @staticmethod
     def _compose_signin_body(
@@ -58,6 +58,7 @@ class EnchantedLinkBase:
 
     @staticmethod
     def _compose_signup_body(
+        method: DeliveryMethod,
         login_id: str,
         uri: str,
         user: dict | None = None,
@@ -70,7 +71,7 @@ class EnchantedLinkBase:
 
         if user is not None:
             body["user"] = user
-            method_str, val = Auth.get_login_id_by_method(DeliveryMethod.EMAIL, user)
+            method_str, val = Auth.get_login_id_by_method(method, user)
             body[method_str] = val
         return body
 
