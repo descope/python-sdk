@@ -584,7 +584,10 @@ class SSOSettings(SSOSettingsBase, HTTPBase):
 
         Return value (dict):
         Containing the loaded XAA settings (ssoId, enabled, settings, groupsMapping, defaultSSORoles,
-        fgaMappings, groupsPriority, groupPriorityEnabled, allowOverrideRoles).
+        fgaMappings, groupsPriority, groupPriorityEnabled, allowOverrideRoles, audience).
+        audience is read-only: the project-level audience a requesting application must present in its
+        ID-JAG token. It carries no tenant segment - it equals the issuer the project publishes - so the
+        identity provider must send the tenant id in the token's aud_tenant claim.
 
         Raise:
         AuthException: raised if load operation fails

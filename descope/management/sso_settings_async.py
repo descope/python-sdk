@@ -316,7 +316,10 @@ class SSOSettingsAsync(SSOSettingsBase, AsyncHTTPBase):
         sso_id (str): Optional, the SSO configuration id (for multi-SSO). Omit for the default SSO configuration.
 
         Return value (dict):
-        Containing the loaded XAA settings.
+        Containing the loaded XAA settings, including the read-only project-level audience a requesting
+        application must present in its ID-JAG token. The audience carries no tenant segment - it equals
+        the issuer the project publishes - so the identity provider must send the tenant id in the
+        token's aud_tenant claim.
 
         Raise:
         AuthException: raised if load operation fails

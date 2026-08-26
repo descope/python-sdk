@@ -482,7 +482,7 @@ class TestSSOSettings:
 
         # Test success flow (with ssoId)
         resp_data = json.loads(
-            """{"ssoId": "sso-1", "enabled": true, "settings": {"issuers": {"https://issuer.example.com": {"jwksUri": "https://issuer.example.com/jwks", "signAlgorithm": "RS256"}}}, "groupsMapping": [{"role": {"id": "r1", "name": "role1"}, "groups": ["g1"]}], "defaultSSORoles": ["aa"], "groupPriorityEnabled": true, "allowOverrideRoles": true}"""
+            """{"ssoId": "sso-1", "enabled": true, "settings": {"issuers": {"https://issuer.example.com": {"jwksUri": "https://issuer.example.com/jwks", "signAlgorithm": "RS256"}}}, "groupsMapping": [{"role": {"id": "r1", "name": "role1"}, "groups": ["g1"]}], "defaultSSORoles": ["aa"], "groupPriorityEnabled": true, "allowOverrideRoles": true, "audience": "https://api.descope.com/v1/apps/P1"}"""
         )
         with client.mock_mgmt_get(make_response(resp_data)) as mock_get:
             resp = await client.invoke(client.mgmt.sso.load_xaa_settings("tenant-id", "sso-1"))
@@ -493,6 +493,8 @@ class TestSSOSettings:
                 == "https://issuer.example.com/jwks"
             )
             assert resp.get("groupsMapping")[0]["role"]["name"] == "role1"
+            # Read-only, project-level: no tenant segment - the tenant travels in the aud_tenant claim.
+            assert resp.get("audience") == "https://api.descope.com/v1/apps/P1"
             assert_http_called(
                 mock_get,
                 client.mode,
