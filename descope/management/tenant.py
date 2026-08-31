@@ -106,6 +106,51 @@ class Tenant(TenantBase, HTTPBase):
             ),
         )
 
+    def patch_tenant(
+        self,
+        id: str,
+        name: Optional[str] = None,
+        self_provisioning_domains: Optional[List[str]] = None,
+        custom_attributes: Optional[dict] = None,
+        disabled: Optional[bool] = None,
+        enforce_sso: Optional[bool] = None,
+        enforce_sso_exclusions: Optional[List[str]] = None,
+        federated_app_ids: Optional[List[str]] = None,
+        role_inheritance: Optional[str] = None,
+    ) -> None:
+        """
+        Patch an existing tenant. Only the given fields will be updated; omitted fields are left unchanged.
+
+        Args:
+        id (str): The ID of the tenant to patch.
+        name (str): Optional updated tenant name.
+        self_provisioning_domains (List[str]): Optional list of domains associated with this tenant.
+            Users authenticating from these domains will be associated with this tenant.
+        custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
+        disabled (bool): Optional, login to the tenant will be disabled
+        enforce_sso (bool): Optional, login to the tenant is possible only using the configured sso
+        enforce_sso_exclusions (List[str]): Optional, list of user IDs excluded from SSO enforcement
+        federated_app_ids (List[str]): Optional, list of federated application IDs
+        role_inheritance (str): Optional, role inheritance setting for the tenant
+
+        Raise:
+        AuthException: raised if patch operation fails
+        """
+        self._http.patch(
+            MgmtV1.tenant_patch_path,
+            body=TenantBase._compose_patch_body(
+                id,
+                name,
+                self_provisioning_domains,
+                custom_attributes,
+                disabled,
+                enforce_sso,
+                enforce_sso_exclusions,
+                federated_app_ids,
+                role_inheritance,
+            ),
+        )
+
     def update_settings(
         self,
         id: str,

@@ -127,6 +127,7 @@ class MgmtV1:
     # tenant
     tenant_create_path = "/v1/mgmt/tenant/create"
     tenant_update_path = "/v1/mgmt/tenant/update"
+    tenant_patch_path = "/v1/mgmt/tenant/patch"
     tenant_delete_path = "/v1/mgmt/tenant/delete"
     tenant_load_path = "/v1/mgmt/tenant"
     tenant_settings_path = "/v1/mgmt/tenant/settings"

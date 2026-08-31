@@ -144,6 +144,64 @@ class TestTenant:
                 follow_redirects=False,
             )
 
+    async def test_patch_tenant(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flow
+        with client.mock_mgmt_patch(make_response(status=500)) as _:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.tenant.patch_tenant("valid-id"))
+
+        # Test success flow with id only
+        with client.mock_mgmt_patch(make_response()) as mock_patch:
+            result = await client.invoke(client.mgmt.tenant.patch_tenant("t1"))
+            assert result is None
+            assert_http_called(
+                mock_patch,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.tenant_patch_path}",
+                headers=MGMT_HEADERS,
+                params=None,
+                json={"id": "t1"},
+                follow_redirects=False,
+            )
+
+        # Test success flow with all fields
+        with client.mock_mgmt_patch(make_response()) as mock_patch:
+            result = await client.invoke(
+                client.mgmt.tenant.patch_tenant(
+                    "t1",
+                    name="new-name",
+                    self_provisioning_domains=["domain.com"],
+                    custom_attributes={"k1": "v1"},
+                    disabled=True,
+                    enforce_sso=True,
+                    enforce_sso_exclusions=["user1", "user2"],
+                    federated_app_ids=["app1", "app2"],
+                    role_inheritance="tenant2",
+                )
+            )
+            assert result is None
+            assert_http_called(
+                mock_patch,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.tenant_patch_path}",
+                headers=MGMT_HEADERS,
+                params=None,
+                json={
+                    "id": "t1",
+                    "name": "new-name",
+                    "selfProvisioningDomains": ["domain.com"],
+                    "customAttributes": {"k1": "v1"},
+                    "disabled": True,
+                    "enforceSSO": True,
+                    "enforceSSOExclusions": ["user1", "user2"],
+                    "federatedAppIds": ["app1", "app2"],
+                    "roleInheritance": "tenant2",
+                },
+                follow_redirects=False,
+            )
+
     async def test_delete(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
