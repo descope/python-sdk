@@ -231,6 +231,10 @@ class SSOSAMLSettings:
         # NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
         sp_acs_url: Optional[str] = None,
         sp_entity_id: Optional[str] = None,
+        # Leave the SAML AuthnRequest Descope sends to the IdP unsigned. Set it only for IdPs that reject a
+        # signed request because their trusted provider entry holds no signing certificate for Descope.
+        # Appended last to preserve positional compatibility for existing callers.
+        disable_sign_request: bool = False,
     ):
         self.idp_url = idp_url
         self.idp_entity_id = idp_entity_id
@@ -245,6 +249,7 @@ class SSOSAMLSettings:
         self.fga_mappings = fga_mappings
         self.config_fga_tenant_id_resource_prefix = config_fga_tenant_id_resource_prefix
         self.config_fga_tenant_id_resource_suffix = config_fga_tenant_id_resource_suffix
+        self.disable_sign_request = disable_sign_request
 
 
 class SSOSAMLSettingsByMetadata:
@@ -268,6 +273,9 @@ class SSOSAMLSettingsByMetadata:
         # IdP entity ID - set so IdP-initiated login can resolve the tenant by the SAML response issuer.
         # Appended last to preserve positional compatibility for existing callers.
         idp_entity_id: Optional[str] = None,
+        # Leave the SAML AuthnRequest Descope sends to the IdP unsigned. Set it only for IdPs that reject a
+        # signed request because their trusted provider entry holds no signing certificate for Descope.
+        disable_sign_request: bool = False,
     ):
         self.idp_metadata_url = idp_metadata_url
         self.idp_entity_id = idp_entity_id
@@ -280,6 +288,7 @@ class SSOSAMLSettingsByMetadata:
         self.fga_mappings = fga_mappings
         self.config_fga_tenant_id_resource_prefix = config_fga_tenant_id_resource_prefix
         self.config_fga_tenant_id_resource_suffix = config_fga_tenant_id_resource_suffix
+        self.disable_sign_request = disable_sign_request
 
 
 class SSOSettings(SSOSettingsBase, HTTPBase):
