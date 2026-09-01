@@ -624,6 +624,12 @@ descope_client.mgmt.tenant.update(
     custom_attributes={"attribute-name": "value"},
 )
 
+# Patch only updates the fields you pass in - everything else on the tenant is left untouched.
+descope_client.mgmt.tenant.patch_tenant(
+    id="my-custom-id",
+    disabled=True,
+)
+
 # Managing the tenant's settings
 # Getting the settings
 descope_client.mgmt.tenant.load_settings(id="my-custom-id")
