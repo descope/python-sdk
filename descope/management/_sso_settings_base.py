@@ -270,6 +270,9 @@ class SSOSettingsBase:
                 "fgaMappings": SSOSettingsBase._fga_mappings_to_dict(settings.fga_mappings),
                 "configFGATenantIDResourcePrefix": settings.config_fga_tenant_id_resource_prefix,
                 "configFGATenantIDResourceSuffix": settings.config_fga_tenant_id_resource_suffix,
+                # always sent: the server takes the settings object as a full replacement, so omitting the
+                # flag on an update would silently turn request signing back on
+                "disableSignRequest": settings.disable_sign_request,
             },
             "redirectUrl": redirect_url,
             "domains": domains,
@@ -300,6 +303,9 @@ class SSOSettingsBase:
                 "fgaMappings": SSOSettingsBase._fga_mappings_to_dict(settings.fga_mappings),
                 "configFGATenantIDResourcePrefix": settings.config_fga_tenant_id_resource_prefix,
                 "configFGATenantIDResourceSuffix": settings.config_fga_tenant_id_resource_suffix,
+                # always sent: the server takes the settings object as a full replacement, so omitting the
+                # flag on an update would silently turn request signing back on
+                "disableSignRequest": settings.disable_sign_request,
             },
             "redirectUrl": redirect_url,
             "domains": domains,

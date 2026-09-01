@@ -963,6 +963,16 @@ descope_client.mgmt.sso.configure_saml_settings_by_metadata(
     domains=["tenant-users.com"] # Users authentication with these domains will be logged in to this tenant
 )
 
+# Descope signs the SAML AuthnRequest it sends to the IdP. A few IdPs reject a signed request because
+# their trusted provider entry holds no signing certificate for Descope - pass disable_sign_request
+# (available on both settings classes above) to send the request unsigned for that configuration only.
+settings = SSOSAMLSettings(
+	idp_url="https://dummy.com",
+	idp_entity_id="my-idp-entity-id",
+	idp_cert="my-idp-certificate",
+	disable_sign_request=True,
+)
+
 # You can Configure SSO OIDC settings for a tenant manually.
 settings = SSOOIDCSettings(
 	name="myProvider",
