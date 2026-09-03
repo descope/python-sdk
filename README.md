@@ -256,6 +256,31 @@ The session and refresh JWTs should be returned to the caller, and passed with e
 
 Note: the descope_client.saml.start(..) and descope_client.saml.exchange_token(..) functions are DEPRECATED, use the above sso functions instead
 
+### App (Federated Apps)
+
+Plug an [OIDC Federated App](https://docs.descope.com/identity-federation/applications) configured on the [Descope console](https://app.descope.com/applications) into a pre-existing/homegrown login process, with Descope acting as the IDP - a real OAuth2 authorize/token pair. (The console also supports SAML and WS-Fed federated apps, but those are IDP-initiated with no code, no token, and no `exchange_token` step at all - a fundamentally different shape this SDK doesn't cover; only OIDC is supported here.)
+
+```python
+resp = descope_client.app.start(
+    app_id="my-federated-app-id", # The Federated App ID from the Descope console
+    return_url="https://my-app.com/callback", # must match a redirect URI registered on the app
+    login_hint="user@example.com", # Optional hint about the user's login identifier
+)
+# Persist resp["state"] and resp["code_verifier"] (e.g. server-side session) until the callback,
+# then redirect the browser to resp["url"]. This call makes no network request - it just builds
+# the URL (and a fresh PKCE pair) locally, since the authorize endpoint 303-redirects rather
+# than returning JSON.
+
+# On the callback (code arrives as a query param):
+jwt_response = descope_client.app.exchange_token(app_id, code, code_verifier=resp["code_verifier"])
+# jwt_response is the raw OAuth2/OIDC token shape (access_token, id_token, refresh_token, ...) -
+# not this SDK's usual sessionJwt/refreshJwt shape.
+```
+
+`start` always generates a PKCE pair as a safe default (covers apps configured as public or unspecified OAuth clients). If the app is configured as a confidential client instead, also pass `client_secret` to `exchange_token`. This whole path - `start`, a real login, and `exchange_token` - has been confirmed end-to-end against a live confidential-client test app.
+
+For a "homegrown first factor, Descope for MFA only" integration, pass `flow` to pick which Descope Flow the login page runs (overriding the app's console default) along with `login_hint` set to the user your own backend already identified - see `samples/app_oidc_mfa_sample_app.py` for a full runnable example.
+
 ### TOTP Authentication
 
 The user can authenticate using an authenticator app, such as Google Authenticator.

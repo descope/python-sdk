@@ -74,6 +74,8 @@ class EndpointsV1:
     auth_sso_start_path = "/v1/auth/sso/authorize"
     sso_exchange_token_path = "/v1/auth/sso/exchange"
 
+    # app (federated apps - oidc only; see AppBase for why saml/wsfed aren't supported)
+
     # totp
     sign_up_auth_totp_path = "/v1/auth/totp/signup"
     verify_totp_path = "/v1/auth/totp/verify"
