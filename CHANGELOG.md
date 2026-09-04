@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.14.0](https://github.com/descope/python-sdk/compare/descope-2.13.0...descope-2.14.0) (2026-09-04)
+
+
+### Features
+
+* add patch_tenant for partial tenant updates ([#1682](https://github.com/descope/python-sdk/issues/1682)) ([5d1bca3](https://github.com/descope/python-sdk/commit/5d1bca3d08a0c67676540ca00fecf6a8a55c54a4))
+* **sso:** allow disabling SAML AuthnRequest signing per SSO configuration ([#1684](https://github.com/descope/python-sdk/issues/1684)) ([bb45d1c](https://github.com/descope/python-sdk/commit/bb45d1c50dd7bc66b74ae82a1e5d0b3b84e7c04b))
+
+
+### Documentation
+
+* **xaa:** document the read-only project-level audience on the XAA load response ([#1677](https://github.com/descope/python-sdk/issues/1677)) ([3499f1d](https://github.com/descope/python-sdk/commit/3499f1d0562a7c287b2c6cf37e168c1222a49e4d))
+
 ## [2.13.0](https://github.com/descope/python-sdk/compare/descope-2.12.1...descope-2.13.0) (2026-08-24)
 
 
