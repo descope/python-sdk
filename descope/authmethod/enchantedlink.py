@@ -158,3 +158,31 @@ class EnchantedLink(EnchantedLinkBase, AuthMethodBase):
         uri = EndpointsV1.update_user_email_enchantedlink_path
         response = self._http.post(uri, body=body, pswd=refresh_token)
         return response.json()
+
+    def update_user_phone(
+        self,
+        login_id: str,
+        phone: str,
+        refresh_token: str,
+        add_to_login_ids: bool = False,
+        on_merge_use_existing: bool = False,
+        template_options: dict | None = None,
+        template_id: str | None = None,
+        provider_id: str | None = None,
+    ) -> dict:
+        self._validate_login_id(login_id)
+
+        Auth.validate_phone(DeliveryMethod.SMS, phone)
+
+        body = self._compose_update_user_phone_body(
+            login_id,
+            phone,
+            add_to_login_ids,
+            on_merge_use_existing,
+            template_options,
+            template_id,
+            provider_id,
+        )
+        url = self._compose_update_phone_url(DeliveryMethod.SMS)
+        response = self._http.post(url, body=body, pswd=refresh_token)
+        return response.json()

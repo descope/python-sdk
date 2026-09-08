@@ -152,7 +152,8 @@ The session and refresh JWTs should be returned to the caller, and passed with e
 ### Enchanted Link
 
 Using the Enchanted Link APIs enables users to sign in by clicking a link
-delivered to their email address. The email will include 3 different links,
+delivered to their email address or, with the `*_with_phone` variants, to their
+phone number by SMS. The message will include 3 different links,
 and the user will have to click the right one, based on the 2-digit number that is
 displayed when initiating the authentication process.
 
@@ -176,6 +177,28 @@ resp = descope_client.enchantedlink.sign_up_or_in(
 link_identifier = resp["linkId"] # Show the user which link they should press in their email
 pending_ref = resp["pendingRef"] # Used to poll for a valid session
 masked_email = resp["maskedEmail"] # The email that the message was sent to in a masked format
+```
+
+To deliver the link by SMS instead, use the phone variants — `sign_up_with_phone`,
+`sign_in_with_phone` and `sign_up_or_in_with_phone`. They return `maskedPhone` in place
+of `maskedEmail`:
+
+```python
+resp = descope_client.enchantedlink.sign_up_or_in_with_phone(
+    phone=phone,
+    uri="http://myapp.com/verify-enchanted-link", # Set redirect URI here or via console
+)
+link_identifier = resp["linkId"] # Show the user which link they should press in their SMS
+pending_ref = resp["pendingRef"] # Used to poll for a valid session
+masked_phone = resp["maskedPhone"] # The phone number that the message was sent to in a masked format
+```
+
+An existing user's email or phone can be updated with an enchanted link sent to the new
+address, which the user must click to confirm the change:
+
+```python
+descope_client.enchantedlink.update_user_email(login_id, new_email, refresh_token)
+descope_client.enchantedlink.update_user_phone(login_id, new_phone, refresh_token)
 ```
 
 After sending the link, you must poll to receive a valid session using the `pending_ref` from

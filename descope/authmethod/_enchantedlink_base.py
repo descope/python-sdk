@@ -45,6 +45,10 @@ class EnchantedLinkBase:
         return Auth.compose_url(EndpointsV1.sign_up_or_in_auth_enchantedlink_path, method)
 
     @staticmethod
+    def _compose_update_phone_url(method: DeliveryMethod) -> str:
+        return Auth.compose_url(EndpointsV1.update_user_phone_enchantedlink_path, method)
+
+    @staticmethod
     def _compose_signin_body(
         login_id: str,
         uri: str,
@@ -92,6 +96,30 @@ class EnchantedLinkBase:
         body: dict[str, str | bool | dict] = {
             "loginId": login_id,
             "email": email,
+            "addToLoginIDs": add_to_login_ids,
+            "onMergeUseExisting": on_merge_use_existing,
+        }
+        if template_options is not None:
+            body["templateOptions"] = template_options
+        if template_id is not None:
+            body["templateId"] = template_id
+        if provider_id is not None:
+            body["providerId"] = provider_id
+        return body
+
+    @staticmethod
+    def _compose_update_user_phone_body(
+        login_id: str,
+        phone: str,
+        add_to_login_ids: bool,
+        on_merge_use_existing: bool,
+        template_options: dict | None = None,
+        template_id: str | None = None,
+        provider_id: str | None = None,
+    ) -> dict:
+        body: dict[str, str | bool | dict] = {
+            "loginId": login_id,
+            "phone": phone,
             "addToLoginIDs": add_to_login_ids,
             "onMergeUseExisting": on_merge_use_existing,
         }
