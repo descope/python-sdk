@@ -190,6 +190,48 @@ class TestEnchantedLink:
             follow_redirects=False,
         )
 
+    async def test_sign_up_or_in_forwards_signup_options(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
+
+        with client.mock_post(make_response({"pendingRef": "ref123"})) as mock_post:
+            result = await client.invoke(
+                client.enchantedlink.sign_up_or_in(
+                    "dummy@dummy.com",
+                    "http://r.me",
+                    SignUpOptions(
+                        revoke_other_sessions=True,
+                        custom_claims={"k1": "v1"},
+                        template_options={"blah": "blah"},
+                        template_id="tmpl1",
+                    ),
+                )
+            )
+        assert result is not None
+        assert_http_called(
+            mock_post,
+            client.mode,
+            f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_or_in_auth_enchantedlink_path}/email",
+            headers={
+                **common.default_headers,
+                "Authorization": f"Bearer {PROJECT_ID}",
+                "x-descope-project-id": PROJECT_ID,
+            },
+            params=None,
+            json={
+                "loginId": "dummy@dummy.com",
+                "URI": "http://r.me",
+                "loginOptions": {
+                    "stepup": False,
+                    "mfa": False,
+                    "customClaims": {"k1": "v1"},
+                    "revokeOtherSessions": True,
+                    "templateOptions": {"blah": "blah"},
+                    "templateId": "tmpl1",
+                },
+            },
+            follow_redirects=False,
+        )
+
     async def test_sign_up_or_in_with_phone(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
 
