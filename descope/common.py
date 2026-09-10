@@ -59,6 +59,7 @@ class EndpointsV1:
     verify_enchantedlink_auth_path = "/v1/auth/enchantedlink/verify"
     get_session_enchantedlink_auth_path = "/v1/auth/enchantedlink/pending-session"
     update_user_email_enchantedlink_path = "/v1/auth/enchantedlink/update/email"
+    update_user_phone_enchantedlink_path = "/v1/auth/enchantedlink/update/phone"
 
     # oauth
     oauth_start_path = "/v1/auth/oauth/authorize"
