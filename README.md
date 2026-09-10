@@ -152,8 +152,7 @@ The session and refresh JWTs should be returned to the caller, and passed with e
 ### Enchanted Link
 
 Using the Enchanted Link APIs enables users to sign in by clicking a link
-delivered to their email address or, with the `*_with_phone` variants, to their
-phone number by SMS. The message will include 3 different links,
+delivered to their email address. The email will include 3 different links,
 and the user will have to click the right one, based on the 2-digit number that is
 displayed when initiating the authentication process.
 
@@ -181,7 +180,8 @@ masked_email = resp["maskedEmail"] # The email that the message was sent to in a
 
 To deliver the link by SMS instead, use the phone variants — `sign_up_with_phone`,
 `sign_in_with_phone` and `sign_up_or_in_with_phone`. They return `maskedPhone` in place
-of `maskedEmail`:
+of `maskedEmail`. The SMS carries only the correct link, so there is nothing for the
+user to choose:
 
 ```python
 resp = descope_client.enchantedlink.sign_up_or_in_with_phone(
