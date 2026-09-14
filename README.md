@@ -10,15 +10,13 @@
 | descope/\_http\_base.py                                 |       11 |        1 |     91% |         8 |
 | descope/auth.py                                         |       90 |        5 |     94% |96-98, 102, 141, 174 |
 | descope/auth\_async.py                                  |      127 |        1 |     99% |       169 |
-| descope/authmethod/\_enchantedlink\_base.py             |       51 |        4 |     92% |69, 98, 100, 102 |
+| descope/authmethod/\_enchantedlink\_base.py             |       64 |        7 |     89% |74, 103, 105, 107, 127, 129, 131 |
 | descope/authmethod/\_magiclink\_base.py                 |       61 |        7 |     89% |74, 103, 105, 107, 127, 129, 131 |
 | descope/authmethod/\_otp\_base.py                       |       64 |        7 |     89% |60, 97, 99, 101, 124, 126, 128 |
-| descope/authmethod/enchantedlink.py                     |       48 |        2 |     96% |    42, 59 |
-| descope/authmethod/enchantedlink\_async.py              |       47 |        2 |     96% |    46, 64 |
-| descope/authmethod/magiclink.py                         |       53 |        2 |     96% |    46, 69 |
-| descope/authmethod/magiclink\_async.py                  |       51 |        2 |     96% |    50, 74 |
-| descope/authmethod/otp.py                               |       55 |        1 |     98% |       112 |
-| descope/authmethod/otp\_async.py                        |       53 |        1 |     98% |        74 |
+| descope/authmethod/enchantedlink.py                     |       79 |        2 |     97% |    58, 80 |
+| descope/authmethod/enchantedlink\_async.py              |       78 |        2 |     97% |    63, 86 |
+| descope/authmethod/magiclink.py                         |       53 |        1 |     98% |        46 |
+| descope/authmethod/magiclink\_async.py                  |       51 |        1 |     98% |        50 |
 | descope/authmethod/password.py                          |       49 |        1 |     98% |       119 |
 | descope/authmethod/password\_async.py                   |       43 |        1 |     98% |        62 |
 | descope/descope\_client.py                              |      126 |        3 |     98% |   127-129 |
@@ -40,9 +38,9 @@
 | descope/management/role\_async.py                       |       47 |        1 |     98% |       323 |
 | descope/management/user.py                              |      286 |        4 |     99% |720, 1067, 1069, 1071 |
 | descope/management/user\_async.py                       |      287 |        4 |     99% |725, 1072, 1074, 1076 |
-|                                               **TOTAL** | **6350** |  **110** | **98%** |           |
+|                                               **TOTAL** | **6426** |  **109** | **98%** |           |
 
-73 files skipped due to complete coverage.
+75 files skipped due to complete coverage.
 
 
 ## Setup coverage badge
