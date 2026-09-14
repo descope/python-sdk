@@ -1,11 +1,12 @@
 import pytest
 
-from descope import AuthException
+from descope import AuthException, DeliveryMethod
 from descope.authmethod.enchantedlink import EnchantedLink
 from descope.common import (
     REFRESH_SESSION_COOKIE_NAME,
     EndpointsV1,
     LoginOptions,
+    SignUpOptions,
 )
 from tests.conftest import PROJECT_ID, assert_http_called, make_response
 from tests.testutils import PUBLIC_KEY_DICT, VALID_REFRESH_TOKEN, VALID_SESSION_TOKEN
@@ -15,9 +16,15 @@ from . import common
 
 class TestEnchantedLink:
     def test_compose_urls(self):
-        assert EnchantedLink._compose_signin_url() == "/v1/auth/enchantedlink/signin/email"
-        assert EnchantedLink._compose_signup_url() == "/v1/auth/enchantedlink/signup/email"
-        assert EnchantedLink._compose_sign_up_or_in_url() == "/v1/auth/enchantedlink/signup-in/email"
+        assert EnchantedLink._compose_signin_url(DeliveryMethod.EMAIL) == "/v1/auth/enchantedlink/signin/email"
+        assert EnchantedLink._compose_signup_url(DeliveryMethod.EMAIL) == "/v1/auth/enchantedlink/signup/email"
+        assert (
+            EnchantedLink._compose_sign_up_or_in_url(DeliveryMethod.EMAIL) == "/v1/auth/enchantedlink/signup-in/email"
+        )
+        assert EnchantedLink._compose_signin_url(DeliveryMethod.SMS) == "/v1/auth/enchantedlink/signin/sms"
+        assert EnchantedLink._compose_signup_url(DeliveryMethod.SMS) == "/v1/auth/enchantedlink/signup/sms"
+        assert EnchantedLink._compose_sign_up_or_in_url(DeliveryMethod.SMS) == "/v1/auth/enchantedlink/signup-in/sms"
+        assert EnchantedLink._compose_update_phone_url(DeliveryMethod.SMS) == "/v1/auth/enchantedlink/update/phone/sms"
 
     def test_compose_body(self):
         assert EnchantedLink._compose_signin_body("id1", "uri1") == {
@@ -59,6 +66,26 @@ class TestEnchantedLink:
             },
             params=None,
             json={"loginId": "dummy@dummy.com", "URI": "http://r.me", "loginOptions": {}},
+            follow_redirects=False,
+        )
+
+    async def test_sign_in_with_phone(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
+
+        with client.mock_post(make_response({"pendingRef": "ref123", "linkId": "lnk1"})) as mock_post:
+            result = await client.invoke(client.enchantedlink.sign_in_with_phone("+11234567890", "http://r.me"))
+        assert result is not None
+        assert_http_called(
+            mock_post,
+            client.mode,
+            f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_in_auth_enchantedlink_path}/sms",
+            headers={
+                **common.default_headers,
+                "Authorization": f"Bearer {PROJECT_ID}",
+                "x-descope-project-id": PROJECT_ID,
+            },
+            params=None,
+            json={"loginId": "+11234567890", "URI": "http://r.me", "loginOptions": {}},
             follow_redirects=False,
         )
 
@@ -106,6 +133,37 @@ class TestEnchantedLink:
             result = await client.invoke(client.enchantedlink.sign_up("dummy@dummy.com", "http://r.me", user))
         assert result is not None
 
+    async def test_sign_up_with_phone(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
+        user = {"name": "John"}
+
+        # Validation error - invalid phone
+        with pytest.raises(AuthException):
+            await client.invoke(client.enchantedlink.sign_up_with_phone("id", "http://r.me", {"phone": "not-valid"}))
+
+        # Success + payload
+        with client.mock_post(make_response({"pendingRef": "ref123", "linkId": "lnk1"})) as mock_post:
+            result = await client.invoke(client.enchantedlink.sign_up_with_phone("+11234567890", "http://r.me", user))
+        assert result is not None
+        assert_http_called(
+            mock_post,
+            client.mode,
+            f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_auth_enchantedlink_path}/sms",
+            headers={
+                **common.default_headers,
+                "Authorization": f"Bearer {PROJECT_ID}",
+                "x-descope-project-id": PROJECT_ID,
+            },
+            params=None,
+            json={
+                "loginId": "+11234567890",
+                "URI": "http://r.me",
+                "user": {"name": "John", "phone": "+11234567890"},
+                "phone": "+11234567890",
+            },
+            follow_redirects=False,
+        )
+
     async def test_sign_up_or_in(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
 
@@ -129,6 +187,110 @@ class TestEnchantedLink:
             },
             params=None,
             json={"loginId": "dummy@dummy.com", "URI": "http://r.me", "loginOptions": {}},
+            follow_redirects=False,
+        )
+
+    async def test_sign_up_or_in_forwards_signup_options(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
+
+        with client.mock_post(make_response({"pendingRef": "ref123"})) as mock_post:
+            result = await client.invoke(
+                client.enchantedlink.sign_up_or_in(
+                    "dummy@dummy.com",
+                    "http://r.me",
+                    SignUpOptions(
+                        revoke_other_sessions=True,
+                        custom_claims={"k1": "v1"},
+                        template_options={"blah": "blah"},
+                        template_id="tmpl1",
+                    ),
+                )
+            )
+        assert result is not None
+        assert_http_called(
+            mock_post,
+            client.mode,
+            f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_or_in_auth_enchantedlink_path}/email",
+            headers={
+                **common.default_headers,
+                "Authorization": f"Bearer {PROJECT_ID}",
+                "x-descope-project-id": PROJECT_ID,
+            },
+            params=None,
+            json={
+                "loginId": "dummy@dummy.com",
+                "URI": "http://r.me",
+                "loginOptions": {
+                    "stepup": False,
+                    "mfa": False,
+                    "customClaims": {"k1": "v1"},
+                    "revokeOtherSessions": True,
+                    "templateOptions": {"blah": "blah"},
+                    "templateId": "tmpl1",
+                },
+            },
+            follow_redirects=False,
+        )
+
+    async def test_sign_up_or_in_with_phone(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
+
+        with client.mock_post(make_response({"pendingRef": "ref123"})) as mock_post:
+            result = await client.invoke(client.enchantedlink.sign_up_or_in_with_phone("+11234567890", "http://r.me"))
+        assert result is not None
+        assert_http_called(
+            mock_post,
+            client.mode,
+            f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_or_in_auth_enchantedlink_path}/sms",
+            headers={
+                **common.default_headers,
+                "Authorization": f"Bearer {PROJECT_ID}",
+                "x-descope-project-id": PROJECT_ID,
+            },
+            params=None,
+            json={"loginId": "+11234567890", "URI": "http://r.me", "loginOptions": {}},
+            follow_redirects=False,
+        )
+
+    async def test_sign_up_or_in_with_phone_forwards_signup_options(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
+
+        with client.mock_post(make_response({"pendingRef": "ref123"})) as mock_post:
+            result = await client.invoke(
+                client.enchantedlink.sign_up_or_in_with_phone(
+                    "+11234567890",
+                    "http://r.me",
+                    SignUpOptions(
+                        revoke_other_sessions=True,
+                        custom_claims={"k1": "v1"},
+                        template_options={"blah": "blah"},
+                        template_id="tmpl1",
+                    ),
+                )
+            )
+        assert result is not None
+        assert_http_called(
+            mock_post,
+            client.mode,
+            f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_or_in_auth_enchantedlink_path}/sms",
+            headers={
+                **common.default_headers,
+                "Authorization": f"Bearer {PROJECT_ID}",
+                "x-descope-project-id": PROJECT_ID,
+            },
+            params=None,
+            json={
+                "loginId": "+11234567890",
+                "URI": "http://r.me",
+                "loginOptions": {
+                    "stepup": False,
+                    "mfa": False,
+                    "customClaims": {"k1": "v1"},
+                    "revokeOtherSessions": True,
+                    "templateOptions": {"blah": "blah"},
+                    "templateId": "tmpl1",
+                },
+            },
             follow_redirects=False,
         )
 
@@ -224,6 +386,52 @@ class TestEnchantedLink:
             json={
                 "loginId": "dummy@dummy.com",
                 "email": "new@example.com",
+                "addToLoginIDs": False,
+                "onMergeUseExisting": False,
+            },
+            follow_redirects=False,
+        )
+
+    async def test_update_user_phone(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
+        refresh_token = VALID_REFRESH_TOKEN
+
+        # Validation errors
+        with pytest.raises(AuthException):
+            await client.invoke(client.enchantedlink.update_user_phone("", "+11234567890", refresh_token))
+        with pytest.raises(AuthException):
+            await client.invoke(client.enchantedlink.update_user_phone(None, "+11234567890", refresh_token))
+        with pytest.raises(AuthException):
+            await client.invoke(client.enchantedlink.update_user_phone("id", "", refresh_token))
+        with pytest.raises(AuthException):
+            await client.invoke(client.enchantedlink.update_user_phone("id", "not-a-phone", refresh_token))
+
+        # HTTP error
+        with client.mock_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.enchantedlink.update_user_phone("id", "+11234567890", refresh_token))
+
+        # Success + payload
+        with client.mock_post(
+            make_response({"pendingRef": "ref123", "linkId": "lnk1", "maskedPhone": "+1123*****90"})
+        ) as mock_post:
+            result = await client.invoke(
+                client.enchantedlink.update_user_phone("dummy@dummy.com", "+11234567890", refresh_token)
+            )
+        assert result["maskedPhone"] == "+1123*****90"
+        assert_http_called(
+            mock_post,
+            client.mode,
+            f"{common.DEFAULT_BASE_URL}{EndpointsV1.update_user_phone_enchantedlink_path}/sms",
+            headers={
+                **common.default_headers,
+                "Authorization": f"Bearer {PROJECT_ID}:{refresh_token}",
+                "x-descope-project-id": PROJECT_ID,
+            },
+            params=None,
+            json={
+                "loginId": "dummy@dummy.com",
+                "phone": "+11234567890",
                 "addToLoginIDs": False,
                 "onMergeUseExisting": False,
             },
