@@ -1,4 +1,5 @@
 import json
+import os
 import unittest
 from enum import Enum
 from http import HTTPStatus
@@ -146,6 +147,43 @@ class TestAuth(common.DescopeTest):
         self.assertEqual(
             "https://api.use1.descope.com",
             Auth.base_url_for_project_id("Puse12aAc4T2V93bddihGEx2Ryhc8e5Zfoobar"),
+        )
+
+    @staticmethod
+    def _regions_under_test():
+        raw = os.environ.get("REGIONS")
+        if not raw:
+            return ["use1", "euc1", "euw2", "aps1", "aps2", "cac1", "sae1"]
+
+        try:
+            parsed = json.loads(raw)
+        except ValueError as exc:
+            raise ValueError(
+                f"REGIONS must be a JSON array of symbols or region objects, got: {raw}"
+            ) from exc
+
+        symbols = [r if isinstance(r, str) else r.get("symbol") for r in parsed]
+        symbols = [s for s in symbols if s]
+        if not symbols:
+            raise ValueError(f"REGIONS parsed but yielded no region symbols: {raw}")
+        return symbols
+
+    def test_base_url_resolves_every_region(self):
+        regions = self._regions_under_test()
+        ksuid = "2aAc4T2V93bddihGEx2Ryhc8e5Z"
+
+        for region in regions:
+            with self.subTest(region=region):
+                self.assertEqual(
+                    f"https://api.{region}.descope.com",
+                    Auth.base_url_for_project_id(f"P{region}{ksuid}"),
+                )
+
+    def test_base_url_resolves_a_region_that_does_not_exist(self):
+        ksuid = "2aAc4T2V93bddihGEx2Ryhc8e5Z"
+        self.assertEqual(
+            "https://api.zz99.descope.com",
+            Auth.base_url_for_project_id(f"Pzz99{ksuid}"),
         )
 
     def test_verify_delivery_method(self):
