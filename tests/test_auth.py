@@ -158,9 +158,7 @@ class TestAuth(common.DescopeTest):
         try:
             parsed = json.loads(raw)
         except ValueError as exc:
-            raise ValueError(
-                f"REGIONS must be a JSON array of symbols or region objects, got: {raw}"
-            ) from exc
+            raise ValueError(f"REGIONS must be a JSON array of symbols or region objects, got: {raw}") from exc
 
         symbols = [r if isinstance(r, str) else r.get("symbol") for r in parsed]
         symbols = [s for s in symbols if s]
