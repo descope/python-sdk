@@ -10,6 +10,7 @@ import httpx
 from descope._client_base import DescopeClientBase
 from descope._http_client_base import ContextVarLastResponseStore
 from descope.auth_async import AuthAsync
+from descope.authmethod.app_async import AppAsync
 from descope.authmethod.enchantedlink_async import EnchantedLinkAsync
 from descope.authmethod.magiclink_async import MagicLinkAsync
 from descope.authmethod.oauth_async import OAuthAsync
@@ -125,6 +126,7 @@ class DescopeClientAsync(DescopeClientBase):
         self._oauth = OAuthAsync(self._auth)
         self._saml = SAMLAsync(self._auth)  # deprecated
         self._sso = SSOAsync(self._auth)
+        self._app = AppAsync(self._auth)
         self._otp = OTPAsync(self._auth)
         self._totp = TOTPAsync(self._auth)
         self._webauthn = WebAuthnAsync(self._auth)
@@ -165,6 +167,10 @@ class DescopeClientAsync(DescopeClientBase):
     @property
     def sso(self) -> SSOAsync:
         return self._sso
+
+    @property
+    def app(self) -> AppAsync:
+        return self._app
 
     @property
     def webauthn(self) -> WebAuthnAsync:
