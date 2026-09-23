@@ -67,6 +67,7 @@ class MagicLink(MagicLinkBase, AuthMethodBase):
         login_options: LoginOptions | None = None
         if signup_options is not None:
             login_options = LoginOptions(
+                revoke_other_sessions=signup_options.revokeOtherSessions,
                 custom_claims=signup_options.customClaims,
                 template_options=signup_options.templateOptions,
                 template_id=signup_options.templateId,

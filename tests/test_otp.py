@@ -6,6 +6,7 @@ from descope.common import (
     REFRESH_SESSION_COOKIE_NAME,
     EndpointsV1,
     LoginOptions,
+    SignUpOptions,
 )
 from tests.conftest import PROJECT_ID, assert_http_called, make_response
 from tests.testutils import PUBLIC_KEY_DICT, VALID_REFRESH_TOKEN, VALID_SESSION_TOKEN
@@ -122,6 +123,47 @@ class TestOTP:
             },
             params=None,
             json={"loginId": "dummy@dummy.com", "loginOptions": {}},
+            follow_redirects=False,
+        )
+
+    async def test_sign_up_or_in_forwards_signup_options(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT)
+
+        with client.mock_post(make_response({"maskedEmail": "du***@***my.com"})) as mock_post:
+            result = await client.invoke(
+                client.otp.sign_up_or_in(
+                    DeliveryMethod.EMAIL,
+                    "dummy@dummy.com",
+                    SignUpOptions(
+                        revoke_other_sessions=True,
+                        custom_claims={"k1": "v1"},
+                        template_options={"blah": "blah"},
+                        template_id="tmpl1",
+                    ),
+                )
+            )
+        assert result is not None
+        assert_http_called(
+            mock_post,
+            client.mode,
+            f"{common.DEFAULT_BASE_URL}{EndpointsV1.sign_up_or_in_auth_otp_path}/email",
+            headers={
+                **common.default_headers,
+                "Authorization": f"Bearer {PROJECT_ID}",
+                "x-descope-project-id": PROJECT_ID,
+            },
+            params=None,
+            json={
+                "loginId": "dummy@dummy.com",
+                "loginOptions": {
+                    "stepup": False,
+                    "mfa": False,
+                    "customClaims": {"k1": "v1"},
+                    "revokeOtherSessions": True,
+                    "templateOptions": {"blah": "blah"},
+                    "templateId": "tmpl1",
+                },
+            },
             follow_redirects=False,
         )
 

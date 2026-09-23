@@ -27,7 +27,23 @@ class EnchantedLink(EnchantedLinkBase, AuthMethodBase):
         validate_refresh_token_provided(login_options, refresh_token)
 
         body = self._compose_signin_body(login_id, uri, login_options)
-        url = self._compose_signin_url()
+        url = self._compose_signin_url(DeliveryMethod.EMAIL)
+        response = self._http.post(url, body=body, pswd=refresh_token)
+        return response.json()
+
+    def sign_in_with_phone(
+        self,
+        phone: str,
+        uri: str,
+        login_options: LoginOptions | None = None,
+        refresh_token: str | None = None,
+    ) -> dict:
+        self._validate_sign_in_login_id(phone)
+
+        validate_refresh_token_provided(login_options, refresh_token)
+
+        body = self._compose_signin_body(phone, uri, login_options)
+        url = self._compose_signin_url(DeliveryMethod.SMS)
         response = self._http.post(url, body=body, pswd=refresh_token)
         return response.json()
 
@@ -48,8 +64,30 @@ class EnchantedLink(EnchantedLinkBase, AuthMethodBase):
                 f"Login ID {login_id} is not valid for email",
             )
 
-        body = self._compose_signup_body(login_id, uri, user, signup_options)
-        url = self._compose_signup_url()
+        body = self._compose_signup_body(DeliveryMethod.EMAIL, login_id, uri, user, signup_options)
+        url = self._compose_signup_url(DeliveryMethod.EMAIL)
+        response = self._http.post(url, body=body)
+        return response.json()
+
+    def sign_up_with_phone(
+        self,
+        phone: str,
+        uri: str,
+        user: dict | None = None,
+        signup_options: SignUpOptions | None = None,
+    ) -> dict:
+        if not user:
+            user = {}
+
+        if not self._auth.adjust_and_verify_delivery_method(DeliveryMethod.SMS, phone, user):
+            raise AuthException(
+                400,
+                ERROR_TYPE_INVALID_ARGUMENT,
+                f"Login ID {phone} is not valid for phone",
+            )
+
+        body = self._compose_signup_body(DeliveryMethod.SMS, phone, uri, user, signup_options)
+        url = self._compose_signup_url(DeliveryMethod.SMS)
         response = self._http.post(url, body=body)
         return response.json()
 
@@ -57,13 +95,29 @@ class EnchantedLink(EnchantedLinkBase, AuthMethodBase):
         login_options: LoginOptions | None = None
         if signup_options is not None:
             login_options = LoginOptions(
+                revoke_other_sessions=signup_options.revokeOtherSessions,
                 custom_claims=signup_options.customClaims,
                 template_options=signup_options.templateOptions,
                 template_id=signup_options.templateId,
             )
 
         body = self._compose_signin_body(login_id, uri, login_options)
-        url = self._compose_sign_up_or_in_url()
+        url = self._compose_sign_up_or_in_url(DeliveryMethod.EMAIL)
+        response = self._http.post(url, body=body)
+        return response.json()
+
+    def sign_up_or_in_with_phone(self, phone: str, uri: str, signup_options: SignUpOptions | None = None) -> dict:
+        login_options: LoginOptions | None = None
+        if signup_options is not None:
+            login_options = LoginOptions(
+                revoke_other_sessions=signup_options.revokeOtherSessions,
+                custom_claims=signup_options.customClaims,
+                template_options=signup_options.templateOptions,
+                template_id=signup_options.templateId,
+            )
+
+        body = self._compose_signin_body(phone, uri, login_options)
+        url = self._compose_sign_up_or_in_url(DeliveryMethod.SMS)
         response = self._http.post(url, body=body)
         return response.json()
 
@@ -105,4 +159,32 @@ class EnchantedLink(EnchantedLinkBase, AuthMethodBase):
         )
         uri = EndpointsV1.update_user_email_enchantedlink_path
         response = self._http.post(uri, body=body, pswd=refresh_token)
+        return response.json()
+
+    def update_user_phone(
+        self,
+        login_id: str,
+        phone: str,
+        refresh_token: str,
+        add_to_login_ids: bool = False,
+        on_merge_use_existing: bool = False,
+        template_options: dict | None = None,
+        template_id: str | None = None,
+        provider_id: str | None = None,
+    ) -> dict:
+        self._validate_login_id(login_id)
+
+        Auth.validate_phone(DeliveryMethod.SMS, phone)
+
+        body = self._compose_update_user_phone_body(
+            login_id,
+            phone,
+            add_to_login_ids,
+            on_merge_use_existing,
+            template_options,
+            template_id,
+            provider_id,
+        )
+        url = self._compose_update_phone_url(DeliveryMethod.SMS)
+        response = self._http.post(url, body=body, pswd=refresh_token)
         return response.json()
