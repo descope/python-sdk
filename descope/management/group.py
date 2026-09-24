@@ -32,7 +32,7 @@ class Group(HTTPBase):
                             "loginId": <loginId>,
                             "userId": <userId>,
                             "display": <display name>,
-                            "source": <"scim" or "jit">
+                            "source": <"scim" or "jit"; absent for memberships recorded before provenance tracking>
                         }
                     ]
                 }
@@ -84,7 +84,7 @@ class Group(HTTPBase):
                             "loginId": <loginId>,
                             "userId": <userId>,
                             "display": <display name>,
-                            "source": <"scim" or "jit">
+                            "source": <"scim" or "jit"; absent for memberships recorded before provenance tracking>
                         }
                     ]
                 }
@@ -139,7 +139,7 @@ class Group(HTTPBase):
                             "loginId": <loginId>,
                             "userId": <userId>,
                             "display": <display name>,
-                            "source": <"scim" or "jit">
+                            "source": <"scim" or "jit"; absent for memberships recorded before provenance tracking>
                         }
                     ]
                 }
