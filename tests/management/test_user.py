@@ -1,6 +1,6 @@
 import pytest
 
-from descope import AssociatedTenant, AuthException
+from descope import AssociatedFamily, AssociatedTenant, AuthException, CustomAttribute
 from descope.common import DeliveryMethod, LoginOptions
 from descope.management.common import MgmtV1, Sort
 from descope.management.user import UserObj
@@ -2868,5 +2868,254 @@ class TestUser:
                     "recoveryPhone": "+1234567890",
                     "verified": True,
                 },
+                follow_redirects=False,
+            )
+
+    async def test_family_associations_on_create_update_patch(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+        families = [
+            AssociatedFamily("f1", ["Family Admin"], {"nickname": "Mom"}),
+            AssociatedFamily("f2"),
+        ]
+        expected = [
+            {"familyId": "f1", "roleNames": ["Family Admin"], "familyScopedAttributes": {"nickname": "Mom"}},
+            {"familyId": "f2"},
+        ]
+
+        def sent(mock_http, path):
+            assert mock_http.call_args.args[0] == f"{DEFAULT_BASE_URL}{path}"
+            return mock_http.call_args.kwargs["json"]
+
+        # Not sent when omitted
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            await client.invoke(client.mgmt.user.create("name@example.com"))
+            assert "familyAssociations" not in sent(mock_post, MgmtV1.user_create_path)
+
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            resp = await client.invoke(client.mgmt.user.create("name@example.com", family_associations=families))
+            assert resp["user"]["id"] == "u1"
+            assert sent(mock_post, MgmtV1.user_create_path)["familyAssociations"] == expected
+
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            await client.invoke(client.mgmt.user.create_test_user("name@example.com", family_associations=families))
+            assert sent(mock_post, MgmtV1.test_user_create_path)["familyAssociations"] == expected
+
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            await client.invoke(client.mgmt.user.invite("name@example.com", family_associations=families))
+            body = sent(mock_post, MgmtV1.user_create_path)
+            assert body["invite"] is True
+            assert body["familyAssociations"] == expected
+
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1"}})) as mock_post:
+            await client.invoke(client.mgmt.user.update("name@example.com", family_associations=families))
+            assert sent(mock_post, MgmtV1.user_update_path)["familyAssociations"] == expected
+
+        with client.mock_mgmt_patch(make_response({"user": {"id": "u1"}})) as mock_patch:
+            await client.invoke(client.mgmt.user.patch("name@example.com", family_associations=families))
+            assert sent(mock_patch, MgmtV1.user_patch_path) == {
+                "loginId": "name@example.com",
+                "familyAssociations": expected,
+            }
+
+        # Batch create and batch patch carry the associations per user
+        users = [
+            UserObj("a@example.com", family_associations=families),
+            UserObj("b@example.com"),
+        ]
+        with client.mock_mgmt_post(make_response({"createdUsers": []})) as mock_post:
+            await client.invoke(client.mgmt.user.invite_batch(users))
+            body_users = sent(mock_post, MgmtV1.user_create_batch_path)["users"]
+            assert body_users[0]["familyAssociations"] == expected
+            assert "familyAssociations" not in body_users[1]
+
+        with client.mock_mgmt_patch(make_response({"patchedUsers": []})) as mock_patch:
+            await client.invoke(client.mgmt.user.patch_batch(users))
+            assert sent(mock_patch, MgmtV1.user_patch_batch_path) == {
+                "users": [
+                    {"loginId": "a@example.com", "familyAssociations": expected},
+                    {"loginId": "b@example.com"},
+                ]
+            }
+
+    async def test_search_all_by_family(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_post(make_response({"users": [{"id": "u1", "dependent": True}]})) as mock_post:
+            resp = await client.invoke(client.mgmt.user.search_all(family_ids=["f1"], dependent=True))
+            assert resp["users"][0]["dependent"] is True
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.users_search_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "tenantIds": [],
+                    "roleNames": [],
+                    "limit": 0,
+                    "page": 0,
+                    "testUsersOnly": False,
+                    "withTestUser": False,
+                    "familyIds": ["f1"],
+                    "dependent": True,
+                },
+                follow_redirects=False,
+            )
+
+        # dependent=False is sent explicitly, not dropped
+        with client.mock_mgmt_post(make_response({"users": []})) as mock_post:
+            await client.invoke(client.mgmt.user.search_all(dependent=False))
+            body = mock_post.call_args.kwargs["json"]
+            assert body["dependent"] is False
+            assert "familyIds" not in body
+
+    async def test_add_families(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.add_families("name@example.com", [AssociatedFamily("f1")]))
+
+        # Test success flow
+        user = {"id": "u1", "userFamilies": [{"familyId": "f1", "roleNames": ["Family Admin"]}]}
+        with client.mock_mgmt_post(make_response({"user": user})) as mock_post:
+            resp = await client.invoke(
+                client.mgmt.user.add_families(
+                    "name@example.com",
+                    [
+                        AssociatedFamily("f1", family_scoped_attributes={"nickname": "Mommy"}),
+                        AssociatedFamily("f2", role_names=["Family Admin"]),
+                    ],
+                )
+            )
+            assert resp["user"] == user
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_add_families_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "loginId": "name@example.com",
+                    "familyAssociations": [
+                        {"familyId": "f1", "familyScopedAttributes": {"nickname": "Mommy"}},
+                        {"familyId": "f2", "roleNames": ["Family Admin"]},
+                    ],
+                },
+                follow_redirects=False,
+            )
+
+    async def test_remove_families(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.remove_families("name@example.com", ["f1"]))
+
+        # Test success flow
+        with client.mock_mgmt_post(make_response({"user": {"id": "u1", "userFamilies": []}})) as mock_post:
+            resp = await client.invoke(client.mgmt.user.remove_families("name@example.com", ["f1", "f2"]))
+            assert resp["user"]["userFamilies"] == []
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_remove_families_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={"loginId": "name@example.com", "familyIds": ["f1", "f2"]},
+                follow_redirects=False,
+            )
+
+    async def test_load_family_scoped_custom_attributes(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_get(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.load_family_scoped_custom_attributes())
+
+        # Test success flow
+        data = {"data": [{"name": "nickname", "type": 1}]}
+        with client.mock_mgmt_get(make_response(data)) as mock_get:
+            resp = await client.invoke(client.mgmt.user.load_family_scoped_custom_attributes())
+            assert resp == data
+            assert_http_called(
+                mock_get,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_load_family_scoped_custom_attributes_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                follow_redirects=True,
+            )
+
+    async def test_create_family_scoped_custom_attributes(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+        attributes = [CustomAttribute("nickname", 1, display_name="Nickname")]
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.create_family_scoped_custom_attributes(attributes))
+
+        # Test success flow
+        data = {"data": [{"name": "nickname", "type": 1, "displayName": "Nickname"}]}
+        with client.mock_mgmt_post(make_response(data)) as mock_post:
+            resp = await client.invoke(client.mgmt.user.create_family_scoped_custom_attributes(attributes))
+            assert resp == data
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_create_family_scoped_custom_attributes_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={"attributes": [{"name": "nickname", "type": 1, "displayName": "Nickname"}]},
+                follow_redirects=False,
+            )
+
+    async def test_delete_family_scoped_custom_attributes(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response(status=500)):
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.delete_family_scoped_custom_attributes(["nickname"]))
+
+        # Test success flow
+        with client.mock_mgmt_post(make_response({"data": []})) as mock_post:
+            resp = await client.invoke(client.mgmt.user.delete_family_scoped_custom_attributes(["nickname"]))
+            assert resp == {"data": []}
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_delete_family_scoped_custom_attributes_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={"names": ["nickname"]},
                 follow_redirects=False,
             )

@@ -136,6 +136,20 @@ class MgmtV1:
     tenant_update_default_roles_path = "/v1/mgmt/tenant/updateDefaultRoles"
     tenant_generate_sso_configuration_link_path = "/v2/mgmt/tenant/adminlinks/sso/generate"
 
+    # family
+    family_create_path = "/v1/mgmt/family/create"
+    family_update_path = "/v1/mgmt/family/update"
+    family_delete_path = "/v1/mgmt/family/delete"
+    family_search_path = "/v1/mgmt/family/search"
+    family_dependent_create_path = "/v1/mgmt/family/dependent/create"
+    family_dependent_delete_path = "/v1/mgmt/family/dependent/delete"
+    family_impersonate_path = "/v1/mgmt/family/impersonate"
+    family_stop_impersonation_path = "/v1/mgmt/family/impersonate/stop"
+    family_settings_path = "/v1/mgmt/family/settings"
+    family_load_custom_attributes_path = "/v1/mgmt/family/customattributes"
+    family_create_custom_attributes_path = "/v1/mgmt/family/customattribute/create"
+    family_delete_custom_attributes_path = "/v1/mgmt/family/customattribute/delete"
+
     # sso application
     sso_application_oidc_create_path = "/v1/mgmt/sso/idp/app/oidc/create"
     sso_application_saml_create_path = "/v1/mgmt/sso/idp/app/saml/create"
@@ -217,6 +231,8 @@ class MgmtV1:
     user_remove_recovery_codes_path = "/v1/mgmt/user/recovery-codes/delete"
     user_add_tenant_path = "/v1/mgmt/user/update/tenant/add"
     user_remove_tenant_path = "/v1/mgmt/user/update/tenant/remove"
+    user_add_families_path = "/v1/mgmt/user/update/family/add"
+    user_remove_families_path = "/v1/mgmt/user/update/family/remove"
     user_generate_otp_for_test_path = "/v1/mgmt/tests/generate/otp"
     user_generate_magic_link_for_test_path = "/v1/mgmt/tests/generate/magiclink"
     user_generate_enchanted_link_for_test_path = "/v1/mgmt/tests/generate/enchantedlink"
@@ -429,6 +445,9 @@ class MgmtV1:
     user_create_custom_attribute_path = "/v1/mgmt/user/customattribute/create"
     user_delete_custom_attribute_path = "/v1/mgmt/user/customattribute/delete"
     user_load_custom_attributes_path = "/v1/mgmt/user/customattributes"
+    user_load_family_scoped_custom_attributes_path = "/v1/mgmt/user/families/customattributes"
+    user_create_family_scoped_custom_attributes_path = "/v1/mgmt/user/families/customattribute/create"
+    user_delete_family_scoped_custom_attributes_path = "/v1/mgmt/user/families/customattribute/delete"
     user_delete_batch_path = "/v1/mgmt/user/delete/batch"
     user_import_path = "/v1/mgmt/user/import"
     user_delete_passkey_path = "/v1/mgmt/user/passkey/delete"
@@ -567,6 +586,93 @@ def associated_tenants_to_dict(associated_tenants: List[AssociatedTenant]) -> li
                 }
             )
     return associated_tenant_list
+
+
+class AssociatedFamily:
+    """
+    Represents a family association for a User. The family_id is required to denote which family
+    the user belongs to. The role_names array is an optional list of the user's roles within that
+    family, and family_scoped_attributes is an optional dict of the user's custom attribute values
+    scoped to that family. When adding a user to a family they already belong to, omitting
+    role_names or family_scoped_attributes leaves the existing values unchanged.
+    """
+
+    def __init__(
+        self,
+        family_id: str,
+        role_names: Optional[List[str]] = None,
+        family_scoped_attributes: Optional[dict] = None,
+    ):
+        self.family_id = family_id
+        self.role_names = role_names
+        self.family_scoped_attributes = family_scoped_attributes
+
+    def to_dict(self) -> dict:
+        res: Dict[str, Any] = {"familyId": self.family_id}
+        if self.role_names is not None:
+            res["roleNames"] = self.role_names
+        if self.family_scoped_attributes is not None:
+            res["familyScopedAttributes"] = self.family_scoped_attributes
+        return res
+
+
+def associated_families_to_dict(associated_families: Optional[List[AssociatedFamily]]) -> list:
+    return [associated_family.to_dict() for associated_family in associated_families or []]
+
+
+class CustomAttributeOption:
+    """
+    Represents a selectable option of a single-select or multi-select custom attribute.
+    """
+
+    def __init__(self, value: str, label: str):
+        self.value = value
+        self.label = label
+
+    def to_dict(self) -> dict:
+        return {"value": self.value, "label": self.label}
+
+
+class CustomAttribute:
+    """
+    Represents a custom attribute definition, as used by the family custom attributes
+    and the family-scoped user custom attributes APIs.
+
+    The type is an integer: 1 = string, 2 = number, 3 = boolean, 4 = single select,
+    5 = multi select, 6 = date, 7 = month and day.
+    """
+
+    def __init__(
+        self,
+        name: str,
+        type: int,
+        display_name: Optional[str] = None,
+        options: Optional[List[CustomAttributeOption]] = None,
+        view_permissions: Optional[List[str]] = None,
+        edit_permissions: Optional[List[str]] = None,
+    ):
+        self.name = name
+        self.type = type
+        self.display_name = display_name
+        self.options = options
+        self.view_permissions = view_permissions
+        self.edit_permissions = edit_permissions
+
+    def to_dict(self) -> dict:
+        res: Dict[str, Any] = {"name": self.name, "type": self.type}
+        if self.display_name is not None:
+            res["displayName"] = self.display_name
+        if self.options is not None:
+            res["options"] = [option.to_dict() for option in self.options]
+        if self.view_permissions is not None:
+            res["viewPermissions"] = self.view_permissions
+        if self.edit_permissions is not None:
+            res["editPermissions"] = self.edit_permissions
+        return res
+
+
+def custom_attributes_to_dict(attributes: List[CustomAttribute]) -> list:
+    return [attribute.to_dict() for attribute in attributes]
 
 
 class SAMLIDPAttributeMappingInfo:

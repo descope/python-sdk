@@ -70,23 +70,24 @@ These sections show how to use the SDK to perform permission and user management
 
 1. [Manage Tenants](#manage-tenants)
 2. [Manage Users](#manage-users)
-3. [Manage Access Keys](#manage-access-keys)
-4. [Manage SSO Setting](#manage-sso-setting)
-5. [Manage Permissions](#manage-permissions)
-6. [Manage Roles](#manage-roles)
-7. [Query SSO Groups](#query-sso-groups)
-8. [Manage Flows](#manage-flows-and-theme)
-9. [Manage JWTs](#manage-jwts)
-10. [Impersonate](#impersonate)
-11. [Embedded links](#embedded-links)
-12. [Audit](#audit)
-13. [Manage FGA (Fine-grained Authorization)](#manage-fga-fine-grained-authorization)
-14. [Manage Project](#manage-project)
-15. [Manage SSO Applications](#manage-sso-applications)
-16. [Manage Outbound Applications](#manage-outbound-applications)
-17. [Manage Descopers](#manage-descopers)
-18. [Manage Management Keys](#manage-management-keys)
-19. [Manage Engines](#manage-engines)
+3. [Manage Families](#manage-families)
+4. [Manage Access Keys](#manage-access-keys)
+5. [Manage SSO Setting](#manage-sso-setting)
+6. [Manage Permissions](#manage-permissions)
+7. [Manage Roles](#manage-roles)
+8. [Query SSO Groups](#query-sso-groups)
+9. [Manage Flows](#manage-flows-and-theme)
+10. [Manage JWTs](#manage-jwts)
+11. [Impersonate](#impersonate)
+12. [Embedded links](#embedded-links)
+13. [Audit](#audit)
+14. [Manage FGA (Fine-grained Authorization)](#manage-fga-fine-grained-authorization)
+15. [Manage Project](#manage-project)
+16. [Manage SSO Applications](#manage-sso-applications)
+17. [Manage Outbound Applications](#manage-outbound-applications)
+18. [Manage Descopers](#manage-descopers)
+19. [Manage Management Keys](#manage-management-keys)
+20. [Manage Engines](#manage-engines)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -849,6 +850,114 @@ descope_client.mgmt.user.set_active_password("<login-id>", "<some-password>")
 # Or alternatively, expire a user password
 descope_client.mgmt.user.expirePassword("<login-id>")
 ```
+
+### Manage Families
+
+Family accounts group users - for example a guardian and their dependents - that share access and
+family-scoped attributes. Enable family accounts for the project, then create families, add users to them
+and manage dependents:
+
+```Python
+from descope import AssociatedFamily, CustomAttribute
+
+# Load and update the project's family account settings. Omitted fields are left unchanged.
+settings = descope_client.mgmt.family.load_settings()
+descope_client.mgmt.family.update_settings(
+    enabled=True,
+    max_family_members=6,
+    allow_multiple_families_users=True,
+)
+
+# Define custom attributes on the family entity itself (type 1 is a string attribute)
+descope_client.mgmt.family.create_custom_attributes([CustomAttribute("plan", 1, display_name="Plan")])
+attributes = descope_client.mgmt.family.load_custom_attributes()["data"]
+descope_client.mgmt.family.delete_custom_attributes(["plan"])
+
+# Create a family. You can optionally set your own family ID.
+family = descope_client.mgmt.family.create(
+    name="Demo Family",
+    custom_attributes={"plan": "free"},
+    family_id="my-family-id",  # This is optional.
+)["family"]
+
+# Update only changes the fields you pass in - everything else on the family is left untouched.
+descope_client.mgmt.family.update(id="my-family-id", name="Demo Family (renamed)")
+
+# Search families. Called with no arguments, returns all families.
+families = descope_client.mgmt.family.search(family_ids=["my-family-id"])["families"]
+    for family in families:
+        # Do something
+
+# Family deletion cannot be undone. Use carefully.
+descope_client.mgmt.family.delete(id="my-family-id")
+```
+
+Users are added to families with `AssociatedFamily`, which can also set the user's roles in the family and
+family-scoped attribute values - user attributes whose values are held per family membership:
+
+```Python
+# Define family-scoped user attributes (a separate set from the plain user custom attributes)
+descope_client.mgmt.user.create_family_scoped_custom_attributes(
+    [CustomAttribute("nickname", 1, display_name="Nickname")]
+)
+attributes = descope_client.mgmt.user.load_family_scoped_custom_attributes()["data"]
+descope_client.mgmt.user.delete_family_scoped_custom_attributes(["nickname"])
+
+# Create a user straight into a family. family_associations is also accepted by
+# create_test_user, invite, update, patch and on UserObj for batch operations.
+descope_client.mgmt.user.create(
+    login_id="guardian@example.com",
+    email="guardian@example.com",
+    family_associations=[
+        AssociatedFamily("my-family-id", ["Family Admin"], {"nickname": "Mom"}),
+    ],
+)
+
+# Add a user to families. For a family the user already belongs to, given roles and
+# family-scoped attributes are merged, and omitting them leaves the existing values unchanged.
+descope_client.mgmt.user.add_families(
+    login_id="guardian@example.com",
+    family_associations=[AssociatedFamily("my-family-id", family_scoped_attributes={"nickname": "Mommy"})],
+)
+
+# Remove a user from families
+descope_client.mgmt.user.remove_families(login_id="guardian@example.com", family_ids=["my-family-id"])
+
+# Search users by family, optionally only dependents
+users = descope_client.mgmt.user.search_all(family_ids=["my-family-id"], dependent=True)["users"]
+```
+
+User responses include `dependent` (whether the user is a family dependent) and `userFamilies`, a list of
+`{"familyId", "roleNames", "permissions", "familyScopedAttributes"}` entries.
+
+A dependent is a user with no login credentials of their own, managed by the family's members. Family members
+holding the "Family Impersonate Dependents" permission in the family can impersonate its dependents:
+
+```Python
+# Create a dependent. The login ID is derived from the name when omitted - the email and
+# phone are never used as the login ID, since a dependent may share them with their guardian.
+dependent = descope_client.mgmt.family.create_dependent(
+    family_id="my-family-id",
+    name="Demo Kid",
+    family_scoped_attributes={"my-family-id": {"nickname": "Kiddo"}},
+)["user"]
+
+# Impersonate the dependent, optionally scoping the session to the dependent's family
+jwt = descope_client.mgmt.family.impersonate_dependent(
+    impersonator_user_id_or_login_id="guardian@example.com",
+    dependent_login_id=dependent["loginIds"][0],
+    selected_family="my-family-id",
+)
+
+# Stop impersonating and return to the family member's own session
+jwt = descope_client.mgmt.family.stop_impersonation(jwt)
+
+# Delete a dependent. The family is inferred from the dependent. Regular family members
+# are removed with user.remove_families instead.
+descope_client.mgmt.family.delete_dependent(user_id=dependent["userId"])
+```
+
+For a complete end-to-end example, see [samples/management/family_sample_app.py](https://github.com/descope/python-sdk/blob/main/samples/management/family_sample_app.py).
 
 ### Manage Access Keys
 
