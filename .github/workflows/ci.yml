@@ -101,7 +101,6 @@ jobs:
         run: uv run coverage run -m pytest tests --ignore=tests/e2e
         env:
           COVERAGE_FILE: "coverage.${{ matrix.os }}.${{ matrix.py }}"
-          REGIONS: ${{ vars.DESCOPE_PROD_REGIONS }}
       - name: Store coverage file
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
