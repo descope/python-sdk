@@ -133,7 +133,8 @@ class TestFamily:
 
         # Test success flow
         with client.mock_mgmt_post(make_response()) as mock_post:
-            assert await client.invoke(client.mgmt.family.delete("f1")) is None
+            resp = await client.invoke(client.mgmt.family.delete("f1"))
+            assert resp is None
             assert_post(mock_post, client.mode, MgmtV1.family_delete_path, {"id": "f1"})
 
     async def test_search(self, client_factory):
@@ -237,7 +238,8 @@ class TestFamily:
 
         # Test success flow
         with client.mock_mgmt_post(make_response()) as mock_post:
-            assert await client.invoke(client.mgmt.family.delete_dependent("u1")) is None
+            resp = await client.invoke(client.mgmt.family.delete_dependent("u1"))
+            assert resp is None
             assert_post(mock_post, client.mode, MgmtV1.family_dependent_delete_path, {"userId": "u1"})
 
     async def test_impersonate_dependent(self, client_factory):
