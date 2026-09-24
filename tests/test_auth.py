@@ -152,9 +152,12 @@ class TestAuth(common.DescopeTest):
     @staticmethod
     def _regions_under_test():
         raw = os.environ.get("REGIONS")
-        if not raw:
+        if raw is None:
             # Point REGIONS at the list devops maintains: descope/etc#18332.
             return ["use1", "euc1", "euw2", "aps1", "aps2", "cac1", "sae1"]
+
+        if not raw.strip():
+            raise ValueError("REGIONS is set but empty; expected a JSON array of symbols or region objects")
 
         try:
             parsed = json.loads(raw)
