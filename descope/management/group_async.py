@@ -35,7 +35,8 @@ class GroupAsync(AsyncHTTPBase):
                         {
                             "loginId": <loginId>,
                             "userId": <userId>,
-                            "display": <display name>
+                            "display": <display name>,
+                            "source": <"scim" or "jit"; absent for memberships recorded before provenance tracking>
                         }
                     ]
                 }
@@ -86,7 +87,8 @@ class GroupAsync(AsyncHTTPBase):
                         {
                             "loginId": <loginId>,
                             "userId": <userId>,
-                            "display": <display name>
+                            "display": <display name>,
+                            "source": <"scim" or "jit"; absent for memberships recorded before provenance tracking>
                         }
                     ]
                 }
@@ -140,7 +142,8 @@ class GroupAsync(AsyncHTTPBase):
                         {
                             "loginId": <loginId>,
                             "userId": <userId>,
-                            "display": <display name>
+                            "display": <display name>,
+                            "source": <"scim" or "jit"; absent for memberships recorded before provenance tracking>
                         }
                     ]
                 }
