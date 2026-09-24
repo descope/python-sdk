@@ -153,6 +153,7 @@ class TestAuth(common.DescopeTest):
     def _regions_under_test():
         raw = os.environ.get("REGIONS")
         if not raw:
+            # Point REGIONS at the list devops maintains: descope/etc#18332.
             return ["use1", "euc1", "euw2", "aps1", "aps2", "cac1", "sae1"]
 
         try:
