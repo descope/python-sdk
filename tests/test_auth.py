@@ -161,10 +161,15 @@ class TestAuth(common.DescopeTest):
         except ValueError as exc:
             raise ValueError(f"REGIONS must be a JSON array of symbols or region objects, got: {raw}") from exc
 
-        symbols = [r if isinstance(r, str) else r.get("symbol") for r in parsed]
-        symbols = [s for s in symbols if s]
-        if not symbols:
-            raise ValueError(f"REGIONS parsed but yielded no region symbols: {raw}")
+        if not isinstance(parsed, list) or not parsed:
+            raise ValueError(f"REGIONS must be a non-empty JSON array, got: {raw}")
+
+        symbols = []
+        for entry in parsed:
+            symbol = entry if isinstance(entry, str) else entry.get("symbol") if isinstance(entry, dict) else None
+            if not isinstance(symbol, str) or not symbol:
+                raise ValueError(f"REGIONS entry is missing a region symbol: {entry!r}")
+            symbols.append(symbol)
         return symbols
 
     def test_base_url_resolves_every_region(self):
