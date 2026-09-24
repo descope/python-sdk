@@ -17,6 +17,7 @@ Optional environment variables:
 The script exits with a non-zero status if any step, including a cleanup step, fails.
 """
 
+import base64
 import json
 import logging
 import os
@@ -40,6 +41,16 @@ def step(name: str, call: Callable[[], Any], log_result: bool = True) -> Any:
     if log_result and result is not None:
         logger.info(json.dumps(result, indent=2, default=str))
     return result
+
+
+def log_session_claims(jwt: str) -> None:
+    """Log the identity claims of a session JWT: the subject, the acting user (set while impersonating)
+    and the selected family. The token itself is a live session credential, so it is never logged. The
+    payload is decoded without verifying the signature, which is fine for display only - validate tokens
+    with the SDK before trusting them."""
+    payload = jwt.split(".")[1]
+    claims = json.loads(base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4)))
+    logger.info(json.dumps({k: claims.get(k) for k in ("sub", "act", "dcf")}, indent=2))
 
 
 def main() -> int:
@@ -172,7 +183,13 @@ def main() -> int:
             lambda: family.impersonate_dependent(guardian_login_id, dependent["loginIds"][0], fid),
             log_result=False,  # keep session tokens out of the logs
         )
-        step("family.stop_impersonation", lambda: family.stop_impersonation(impersonation_jwt), log_result=False)
+        # sub is the dependent, act is the guardian acting on their behalf, dcf is the selected family
+        log_session_claims(impersonation_jwt)
+        guardian_jwt = step(
+            "family.stop_impersonation", lambda: family.stop_impersonation(impersonation_jwt), log_result=False
+        )
+        # Back to the guardian's own session: sub is the guardian and act is gone
+        log_session_claims(guardian_jwt)
 
         # --- Membership removal ---------------------------------------------------------------
         # Kept when skipping cleanup, so the family shows both the guardian and the dependent
