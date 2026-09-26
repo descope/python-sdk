@@ -70,23 +70,24 @@ These sections show how to use the SDK to perform permission and user management
 
 1. [Manage Tenants](#manage-tenants)
 2. [Manage Users](#manage-users)
-3. [Manage Access Keys](#manage-access-keys)
-4. [Manage SSO Setting](#manage-sso-setting)
-5. [Manage Permissions](#manage-permissions)
-6. [Manage Roles](#manage-roles)
-7. [Query SSO Groups](#query-sso-groups)
-8. [Manage Flows](#manage-flows-and-theme)
-9. [Manage JWTs](#manage-jwts)
-10. [Impersonate](#impersonate)
-11. [Embedded links](#embedded-links)
-12. [Audit](#audit)
-13. [Manage FGA (Fine-grained Authorization)](#manage-fga-fine-grained-authorization)
-14. [Manage Project](#manage-project)
-15. [Manage SSO Applications](#manage-sso-applications)
-16. [Manage Outbound Applications](#manage-outbound-applications)
-17. [Manage Descopers](#manage-descopers)
-18. [Manage Management Keys](#manage-management-keys)
-19. [Manage Engines](#manage-engines)
+3. [Manage Families](#manage-families)
+4. [Manage Access Keys](#manage-access-keys)
+5. [Manage SSO Setting](#manage-sso-setting)
+6. [Manage Permissions](#manage-permissions)
+7. [Manage Roles](#manage-roles)
+8. [Query SSO Groups](#query-sso-groups)
+9. [Manage Flows](#manage-flows-and-theme)
+10. [Manage JWTs](#manage-jwts)
+11. [Impersonate](#impersonate)
+12. [Embedded links](#embedded-links)
+13. [Audit](#audit)
+14. [Manage FGA (Fine-grained Authorization)](#manage-fga-fine-grained-authorization)
+15. [Manage Project](#manage-project)
+16. [Manage SSO Applications](#manage-sso-applications)
+17. [Manage Outbound Applications](#manage-outbound-applications)
+18. [Manage Descopers](#manage-descopers)
+19. [Manage Management Keys](#manage-management-keys)
+20. [Manage Engines](#manage-engines)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -112,9 +113,7 @@ masked_address = descope_client.otp.sign_up(method=DeliveryMethod.EMAIL, login_i
 The user will receive a code using the selected delivery method. Verify that code using:
 
 ```python
-jwt_response = descope_client.otp.verify_code(
-    method=DeliveryMethod.EMAIL, login_id=email, code=value
-)
+jwt_response = descope_client.otp.verify_code(method=DeliveryMethod.EMAIL, login_id=email, code=value)
 session_token = jwt_response[SESSION_TOKEN_NAME].get("jwt")
 refresh_token = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("jwt")
 ```
@@ -135,7 +134,7 @@ from descope import DeliveryMethod
 masked_address = descope_client.magiclink.sign_up_or_in(
     method=DeliveryMethod.EMAIL,
     login_id="desmond@descope.com",
-    uri="http://myapp.com/verify-magic-link", # Set redirect URI here or via console
+    uri="http://myapp.com/verify-magic-link",  # Set redirect URI here or via console
 )
 ```
 
@@ -171,11 +170,11 @@ The user can either `sign up`, `sign in` or `sign up or in`
 ```python
 resp = descope_client.enchantedlink.sign_up_or_in(
     login_id=email,
-    uri="http://myapp.com/verify-enchanted-link", # Set redirect URI here or via console
+    uri="http://myapp.com/verify-enchanted-link",  # Set redirect URI here or via console
 )
-link_identifier = resp["linkId"] # Show the user which link they should press in their email
-pending_ref = resp["pendingRef"] # Used to poll for a valid session
-masked_email = resp["maskedEmail"] # The email that the message was sent to in a masked format
+link_identifier = resp["linkId"]  # Show the user which link they should press in their email
+pending_ref = resp["pendingRef"]  # Used to poll for a valid session
+masked_email = resp["maskedEmail"]  # The email that the message was sent to in a masked format
 ```
 
 To deliver the link by SMS instead, use the phone variants — `sign_up_with_phone`,
@@ -186,11 +185,11 @@ user to choose:
 ```python
 resp = descope_client.enchantedlink.sign_up_or_in_with_phone(
     phone=phone,
-    uri="http://myapp.com/verify-enchanted-link", # Set redirect URI here or via console
+    uri="http://myapp.com/verify-enchanted-link",  # Set redirect URI here or via console
 )
-link_identifier = resp["linkId"] # Show the user which link they should press in their SMS
-pending_ref = resp["pendingRef"] # Used to poll for a valid session
-masked_phone = resp["maskedPhone"] # The phone number that the message was sent to in a masked format
+link_identifier = resp["linkId"]  # Show the user which link they should press in their SMS
+pending_ref = resp["pendingRef"]  # Used to poll for a valid session
+masked_phone = resp["maskedPhone"]  # The phone number that the message was sent to in a masked format
 ```
 
 An existing user's email or phone can be updated with an enchanted link sent to the new
@@ -212,8 +211,8 @@ while not done and i < max_tries:
         sleep(4)
         jwt_response = descope_client.enchantedlink.get_session(pending_ref)
         done = True
-    except AuthException as e: # Poll while still receiving 401 Unauthorized
-        if e.status_code != 401: # Other failures means something's wrong, abort
+    except AuthException as e:  # Poll while still receiving 401 Unauthorized
+        if e.status_code != 401:  # Other failures means something's wrong, abort
             logging.info(f"Failed pending session, err: {e}")
             done = True
 
@@ -239,10 +238,9 @@ The session and refresh JWTs should be returned to the caller, and passed with e
 Users can authenticate using their social logins, using the OAuth protocol. Configure your OAuth settings on the [Descope console](https://app.descope.com/settings/authentication/social). To start a flow call:
 
 ```python
-
 descope_client.oauth.start(
-    provider="google", # Choose an oauth provider out of the supported providers
-    return_url="https://my-app.com/handle-oauth", # Can be configured in the console instead of here
+    provider="google",  # Choose an oauth provider out of the supported providers
+    return_url="https://my-app.com/handle-oauth",  # Can be configured in the console instead of here
 )
 ```
 
@@ -262,8 +260,8 @@ Users can authenticate to a specific tenant using SAML/OIDC based on the tenant 
 
 ```python
 descope_client.sso.start(
-    tenant="my-tenant-ID", # Choose which tenant to log into
-    return_url="https://my-app.com/handle-sso", # Can be configured in the console instead of here
+    tenant="my-tenant-ID",  # Choose which tenant to log into
+    return_url="https://my-app.com/handle-sso",  # Can be configured in the console instead of here
 )
 ```
 
@@ -311,7 +309,7 @@ the app produces.
 ```python
 jwt_response = descope_client.totp.sign_in_code(
     login_id=email,
-    code=code, # Code from authenticator app
+    code=code,  # Code from authenticator app
 )
 session_token = jwt_response[SESSION_TOKEN_NAME].get("jwt")
 refresh_token = jwt_response[REFRESH_SESSION_TOKEN_NAME].get("jwt")
@@ -584,15 +582,12 @@ logger = logging.getLogger(__name__)
 client = DescopeClient(
     project_id="<Project ID>",
     management_key="<Management Key>",
-    verbose=True  # Enable response metadata capture
+    verbose=True,  # Enable response metadata capture
 )
 
 try:
     # Make any API call
-    client.mgmt.user.create(
-        login_id="test@example.com",
-        email="test@example.com"
-    )
+    client.mgmt.user.create(login_id="test@example.com", email="test@example.com")
 except AuthException as e:
     # Access the last response metadata for debugging
     response = client.get_last_response()
@@ -848,16 +843,121 @@ You can also set a temporary password that the user will be forced to change on 
 For a user that already has an active password, you can expire their current password, effectively requiring them to change it on the next login.
 
 ```Python
-
 # Set a user's temporary password
-descope_client.mgmt.user.set_temporary_password('<login-id>', '<some-password>');
-
+descope_client.mgmt.user.set_temporary_password("<login-id>", "<some-password>")
 # Set a user's password
-descope_client.mgmt.user.set_active_password('<login-id>', '<some-password>');
-
+descope_client.mgmt.user.set_active_password("<login-id>", "<some-password>")
 # Or alternatively, expire a user password
-descope_client.mgmt.user.expirePassword('<login-id>');
+descope_client.mgmt.user.expirePassword("<login-id>")
 ```
+
+### Manage Families
+
+Family accounts group users - for example a guardian and their dependents - that share access and
+family-scoped attributes. Enable family accounts for the project, then create families, add users to them
+and manage dependents:
+
+```Python
+from descope import AssociatedFamily, CustomAttribute
+
+# Load and update the project's family account settings. Omitted fields are left unchanged.
+settings = descope_client.mgmt.family.load_settings()
+descope_client.mgmt.family.update_settings(
+    enabled=True,
+    max_family_members=6,
+    allow_multiple_families_users=True,
+)
+
+# Define custom attributes on the family entity itself (type 1 is a string attribute)
+descope_client.mgmt.family.create_custom_attributes([CustomAttribute("plan", 1, display_name="Plan")])
+attributes = descope_client.mgmt.family.load_custom_attributes()["data"]
+descope_client.mgmt.family.delete_custom_attributes(["plan"])
+
+# Create a family. You can optionally set your own family ID.
+family = descope_client.mgmt.family.create(
+    name="Demo Family",
+    custom_attributes={"plan": "free"},
+    family_id="my-family-id",  # This is optional.
+)["family"]
+
+# Update only changes the fields you pass in - everything else on the family is left untouched.
+descope_client.mgmt.family.update(id="my-family-id", name="Demo Family (renamed)")
+
+# Search families. Called with no arguments, returns all families.
+families = descope_client.mgmt.family.search(family_ids=["my-family-id"])["families"]
+    for family in families:
+        # Do something
+
+# Family deletion cannot be undone. Use carefully.
+descope_client.mgmt.family.delete(id="my-family-id")
+```
+
+Users are added to families with `AssociatedFamily`, which can also set the user's roles in the family and
+family-scoped attribute values - user attributes whose values are held per family membership:
+
+```Python
+# Define family-scoped user attributes (a separate set from the plain user custom attributes)
+descope_client.mgmt.user.create_family_scoped_custom_attributes(
+    [CustomAttribute("nickname", 1, display_name="Nickname")]
+)
+attributes = descope_client.mgmt.user.load_family_scoped_custom_attributes()["data"]
+descope_client.mgmt.user.delete_family_scoped_custom_attributes(["nickname"])
+
+# Create a user straight into a family. family_associations is also accepted by
+# create_test_user, invite, update, patch and on UserObj for batch operations.
+descope_client.mgmt.user.create(
+    login_id="guardian@example.com",
+    email="guardian@example.com",
+    family_associations=[
+        AssociatedFamily("my-family-id", ["Family Admin"], {"nickname": "Mom"}),
+    ],
+)
+
+# Add a user to families. For a family the user already belongs to, given roles and
+# family-scoped attributes are merged, and omitting them leaves the existing values unchanged.
+descope_client.mgmt.user.add_families(
+    login_id="guardian@example.com",
+    family_associations=[AssociatedFamily("my-family-id", family_scoped_attributes={"nickname": "Mommy"})],
+)
+
+# Remove a user from families
+descope_client.mgmt.user.remove_families(login_id="guardian@example.com", family_ids=["my-family-id"])
+
+# Search users by family, optionally only dependents
+users = descope_client.mgmt.user.search_all(family_ids=["my-family-id"], dependent=True)["users"]
+```
+
+User responses include `dependent` (whether the user is a family dependent) and `userFamilies`, a list of
+`{"familyId", "roleNames", "permissions", "familyScopedAttributes"}` entries.
+
+A dependent is a user with no login credentials of their own, managed by the family's members. Family members
+holding the "Family Impersonate Dependents" permission in the family can impersonate its dependents:
+
+```Python
+# Create a dependent. The login ID is derived from the name when omitted - the email and
+# phone are never used as the login ID, since a dependent may share them with their guardian.
+dependent = descope_client.mgmt.family.create_dependent(
+    family_id="my-family-id",
+    name="Demo Kid",
+    family_scoped_attributes={"my-family-id": {"nickname": "Kiddo"}},
+)["user"]
+
+# Impersonate the dependent, optionally scoping the session to the dependent's family
+jwt = descope_client.mgmt.family.impersonate_dependent(
+    impersonator_user_id_or_login_id="guardian@example.com",
+    dependent_login_id=dependent["loginIds"][0],
+    selected_family="my-family-id",
+)
+
+# Stop impersonating and return to the family member's own session
+jwt = descope_client.mgmt.family.stop_impersonation(jwt)
+
+# Delete a dependent. The family is inferred from the dependent. Regular family members
+# are removed with user.remove_families instead.
+descope_client.mgmt.family.delete_dependent(user_id=dependent["userId"])
+```
+
+For a complete end-to-end example, see [samples/management/family_sample_app.py](https://github.com/descope/python-sdk/blob/main/samples/management/family_sample_app.py).
 
 ### Manage Access Keys
 
@@ -917,9 +1017,7 @@ Exchange the access key and provide optional access key login options:
 
 ```python
 loc = AccessKeyLoginOptions(custom_claims={"k1": "v1"})
-jwt_response = descope_client.exchange_access_key(
-  access_key="accessKey", login_options=loc
-)
+jwt_response = descope_client.exchange_access_key(access_key="accessKey", login_options=loc)
 ```
 
 ### Manage SSO Setting
@@ -937,101 +1035,101 @@ from descope import (
     SSOSAMLSettings,
     AttributeMapping,
     RoleMapping,
-    SSOSAMLSettingsByMetadata
+    SSOSAMLSettingsByMetadata,
 )
 
 # You can Configure SSO SAML settings for a tenant manually.
 settings = SSOSAMLSettings(
-	idp_url="https://dummy.com/saml",
-	idp_entity_id="entity1234",
-	idp_cert="my certificate",
-	attribute_mapping=AttributeMapping(
-		name="name",
-		given_name="givenName",
-		middle_name="middleName",
-		family_name="familyName",
-		picture="picture",
-		email="email",
-		phone_number="phoneNumber",
-		group="groups"
-	),
-	role_mappings=[RoleMapping(groups=["grp1"], role="rl1")],
+    idp_url="https://dummy.com/saml",
+    idp_entity_id="entity1234",
+    idp_cert="my certificate",
+    attribute_mapping=AttributeMapping(
+        name="name",
+        given_name="givenName",
+        middle_name="middleName",
+        family_name="familyName",
+        picture="picture",
+        email="email",
+        phone_number="phoneNumber",
+        group="groups",
+    ),
+    role_mappings=[RoleMapping(groups=["grp1"], role="rl1")],
 )
 descope_client.mgmt.sso.configure_saml_settings(
-	tenant_id, # Which tenant this configuration is for
-	settings, # The SAML settings
-	redirect_url="https://your.domain.com", # Global redirection after successful authentication
-    domains=["tenant-users.com"] # Users authentication with these domains will be logged in to this tenant
+    tenant_id,  # Which tenant this configuration is for
+    settings,  # The SAML settings
+    redirect_url="https://your.domain.com",  # Global redirection after successful authentication
+    domains=["tenant-users.com"],  # Users authentication with these domains will be logged in to this tenant
 )
 
 # You can Configure SSO SAML settings for a tenant by fetching them from an IDP metadata URL.
 settings = SSOSAMLSettingsByMetadata(
-	idp_metadata_url="https://dummy.com/metadata",
-	attribute_mapping=AttributeMapping(
-		name="myName",
-		given_name="givenName",
-		middle_name="middleName",
-		family_name="familyName",
-		picture="picture",
-		email="email",
-		phone_number="phoneNumber",
-		group="groups"
-	),
-	role_mappings=[RoleMapping(groups=["grp1"], role="rl1")],
+    idp_metadata_url="https://dummy.com/metadata",
+    attribute_mapping=AttributeMapping(
+        name="myName",
+        given_name="givenName",
+        middle_name="middleName",
+        family_name="familyName",
+        picture="picture",
+        email="email",
+        phone_number="phoneNumber",
+        group="groups",
+    ),
+    role_mappings=[RoleMapping(groups=["grp1"], role="rl1")],
 )
 descope_client.mgmt.sso.configure_saml_settings_by_metadata(
-	tenant_id, # Which tenant this configuration is for
-	settings,  # The SAML settings
-	redirect_url="https://your.domain.com", # Global redirection after successful authentication
-    domains=["tenant-users.com"] # Users authentication with these domains will be logged in to this tenant
+    tenant_id,  # Which tenant this configuration is for
+    settings,  # The SAML settings
+    redirect_url="https://your.domain.com",  # Global redirection after successful authentication
+    domains=["tenant-users.com"],  # Users authentication with these domains will be logged in to this tenant
 )
 
 # Descope signs the SAML AuthnRequest it sends to the IdP. A few IdPs reject a signed request because
 # their trusted provider entry holds no signing certificate for Descope - pass disable_sign_request
 # (available on both settings classes above) to send the request unsigned for that configuration only.
 settings = SSOSAMLSettings(
-	idp_url="https://dummy.com",
-	idp_entity_id="my-idp-entity-id",
-	idp_cert="my-idp-certificate",
-	disable_sign_request=True,
+    idp_url="https://dummy.com",
+    idp_entity_id="my-idp-entity-id",
+    idp_cert="my-idp-certificate",
+    disable_sign_request=True,
 )
 
 # You can Configure SSO OIDC settings for a tenant manually.
 settings = SSOOIDCSettings(
-	name="myProvider",
-	client_id="myId",
-	client_secret="secret",
+    name="myProvider",
+    client_id="myId",
+    client_secret="secret",
     redirect_url="https://your.domain.com",
-	auth_url="https://dummy.com/auth",
-	token_url="https://dummy.com/token",
-	user_data_url="https://dummy.com/userInfo",
-	scope=["openid", "profile", "email"],
-	attribute_mapping=OIDCAttributeMapping(
-		login_id="subject",
-		name="name",
-		given_name="givenName",
-		middle_name="middleName",
-		family_name="familyName",
-		email="email",
-		verified_email="verifiedEmail",
-		username="username",
-		phone_number="phoneNumber",
-		verified_phone="verifiedPhone",
-		picture="picture"
-	)
+    auth_url="https://dummy.com/auth",
+    token_url="https://dummy.com/token",
+    user_data_url="https://dummy.com/userInfo",
+    scope=["openid", "profile", "email"],
+    attribute_mapping=OIDCAttributeMapping(
+        login_id="subject",
+        name="name",
+        given_name="givenName",
+        middle_name="middleName",
+        family_name="familyName",
+        email="email",
+        verified_email="verifiedEmail",
+        username="username",
+        phone_number="phoneNumber",
+        verified_phone="verifiedPhone",
+        picture="picture",
+    ),
 )
 descope_client.mgmt.sso.configure_oidc_settings(
-	tenant_id, # Which tenant this configuration is for
-	settings, # The OIDC provider settings
-    domains=["tenant-users.com"] # Users authentication with these domains will be logged in to this tenant
+    tenant_id,  # Which tenant this configuration is for
+    settings,  # The OIDC provider settings
+    domains=["tenant-users.com"],  # Users authentication with these domains will be logged in to this tenant
 )
 
 # You can disable an SSO configuration without deleting it, and enable it again later.
 # Its settings, mappings and domains are kept, so re-enabling needs no payload.
 descope_client.mgmt.sso.configure_auth_type(
-    tenant_id, # Which tenant the configuration belongs to
-    "none", # "none" disables it; "saml" or "oidc" enable it on that protocol
-    sso_id="my-sso-id" # Optional, omit for the tenant's default SSO configuration
+    tenant_id,  # Which tenant the configuration belongs to
+    "none",  # "none" disables it; "saml" or "oidc" enable it on that protocol
+    sso_id="my-sso-id",  # Optional, omit for the tenant's default SSO configuration
 )
 
 # DEPRECATED (use load_settings(..) function instead)
@@ -1041,29 +1139,29 @@ sso_settings_res = descope_client.mgmt.sso.get_settings("tenant-id")
 # DEPRECATED (use configure_saml_settings(..) function instead)
 # You can configure SSO settings manually by setting the required fields directly
 descope_client.mgmt.sso.configure(
-    tenant_id, # Which tenant this configuration is for
+    tenant_id,  # Which tenant this configuration is for
     idp_url="https://idp.com",
     entity_id="my-idp-entity-id",
     idp_cert="<your-cert-here>",
-    redirect_url="https://your.domain.com", # Global redirection after successful authentication
-    domains=["tenant-users.com"] # Users authentication with these domains will be logged in to this tenant
+    redirect_url="https://your.domain.com",  # Global redirection after successful authentication
+    domains=["tenant-users.com"],  # Users authentication with these domains will be logged in to this tenant
 )
 
 # DEPRECATED (use configure_saml_settings_by_metadata(..) function instead)
 # Alternatively, configure using an SSO metadata URL
 descope_client.mgmt.sso.configure_via_metadata(
-    tenant_id, # Which tenant this configuration is for
+    tenant_id,  # Which tenant this configuration is for
     idp_metadata_url="https://idp.com/my-idp-metadata",
-    redirect_url="", # Redirect URL will have to be provided in every authentication call
-    domains=None # Remove the current domains configuration if a value was previously set
+    redirect_url="",  # Redirect URL will have to be provided in every authentication call
+    domains=None,  # Remove the current domains configuration if a value was previously set
 )
 
 # DEPRECATED (use configure_saml_settings() or configure_saml_settings_by_metadata(..) functions instead)
 # Map IDP groups to Descope roles, or map user attributes.
 # This function overrides any previous mapping (even when empty). Use carefully.
 descope_client.mgmt.sso.mapping(
-    tenant_id, # Which tenant this mapping is for
-    role_mappings = [RoleMapping(["IDP_ADMIN"], "Tenant Admin")],
+    tenant_id,  # Which tenant this mapping is for
+    role_mappings=[RoleMapping(["IDP_ADMIN"], "Tenant Admin")],
     attribute_mapping=AttributeMapping(name="IDP_NAME", phone_number="IDP_PHONE"),
 )
 ```
@@ -1340,35 +1438,26 @@ You can add custom claims to a valid JWT.
 ```python
 updated_jwt = descope_client.mgmt.jwt.update_jwt(
     jwt="original-jwt",
-    custom_claims={
-        "custom-key1": "custom-value1",
-        "custom-key2": "custom-value2"
-    },
+    custom_claims={"custom-key1": "custom-value1", "custom-key2": "custom-value2"},
 )
 ```
 
 Generate a JWT for a user, simulating a signin request.
 
 ```python
-jwt_response = descope_client.mgmt.jwt.sign_in(
-    login_id="dummy"
-)
+jwt_response = descope_client.mgmt.jwt.sign_in(login_id="dummy")
 ```
 
 Generate a JWT for a user, simulating a signup request.
 
 ```python
-jwt_response = descope_client.mgmt.jwt.sign_up(
-    login_id="dummy"
-)
+jwt_response = descope_client.mgmt.jwt.sign_up(login_id="dummy")
 ```
 
 Generate a JWT for a user, simulating a signup or in request.
 
 ```python
-jwt_response = descope_client.mgmt.jwt.sign_up_or_in(
-    login_id="dummy"
-)
+jwt_response = descope_client.mgmt.jwt.sign_up_or_in(login_id="dummy")
 ```
 
 ### Impersonate
@@ -1382,8 +1471,8 @@ refresh_jwt = descope_client.mgmt.jwt.impersonate(
     impersonator_id="<Login ID impersonator>",
     login_id="<Login ID of impersonated person>",
     validate_consent=True,
-    custom_claims={"key1":"value1"},
-    tenant_id="<One of the tenants the impersonated user belongs to>"
+    custom_claims={"key1": "value1"},
+    tenant_id="<One of the tenants the impersonated user belongs to>",
 )
 ```
 
@@ -1398,7 +1487,7 @@ Embedded links can be created to directly receive a verifiable token without sen
 This token can then be verified using the magic link 'verify' function, either directly or through a flow.
 
 ```python
-token = descope_client.mgmt.user.generate_embedded_link("desmond@descope.com", {"key1":"value1"}, 120)
+token = descope_client.mgmt.user.generate_embedded_link("desmond@descope.com", {"key1": "value1"}, 120)
 ```
 
 ### Audit
@@ -1408,10 +1497,7 @@ Below are some examples. For a full list of available search criteria options, s
 
 ```python
 # Full text search on last 10 days
-audits = descope_client.mgmt.audit.search(
-    text="some-text",
-    from_ts=datetime.now(timezone.utc)-timedelta(days=10)
-)
+audits = descope_client.mgmt.audit.search(text="some-text", from_ts=datetime.now(timezone.utc) - timedelta(days=10))
 # Search successful logins in the last 30 days
 audits = descope_client.mgmt.audit.search(actions=["LoginSucceed"])
 ```
@@ -1777,38 +1863,38 @@ Fetch outbound application tokens using an inbound application token that includ
 ```python
 # Fetch user token with specific scopes
 user_token = descope_client.mgmt.outbound_application_by_token.fetch_token_by_scopes(
-	"inbound-app-token",
+    "inbound-app-token",
     "my-app-id",
     "user-id",
     ["read", "write"],
     {"refreshToken": True},  # Optional
-    "tenant-id"  # Optional
+    "tenant-id",  # Optional
 )
 
 # Fetch latest user token
 latest_user_token = descope_client.mgmt.outbound_application_by_token.fetch_token(
-	"inbound-app-token",
+    "inbound-app-token",
     "my-app-id",
     "user-id",
     "tenant-id",  # Optional
-    {"forceRefresh": True}  # Optional
+    {"forceRefresh": True},  # Optional
 )
 
 # Fetch tenant token with specific scopes
 tenant_token = descope_client.mgmt.outbound_application_by_token.fetch_tenant_token_by_scopes(
-	"inbound-app-token",
+    "inbound-app-token",
     "my-app-id",
     "tenant-id",
     ["read", "write"],
-    {"refreshToken": True}  # Optional
+    {"refreshToken": True},  # Optional
 )
 
 # Fetch latest tenant token
 latest_tenant_token = descope_client.mgmt.outbound_application_by_token.fetch_tenant_token(
-	"inbound-app-token",
+    "inbound-app-token",
     "my-app-id",
     "tenant-id",
-    {"forceRefresh": True}  # Optional
+    {"forceRefresh": True},  # Optional
 )
 ```
 
@@ -1876,11 +1962,11 @@ descope_client.mgmt.sso.configure_xaa_settings(
                     sign_algorithm="RS256",
                     user_info_uri="https://issuer.example.com/userinfo",
                     external_id_field_name="sub",  # assertion claim used as the login id
-                    jit_disabled=False,            # JIT provisioning on
+                    jit_disabled=False,  # JIT provisioning on
                     attribute_mapping=AttributeMapping(
                         email="email",
                         name="name",
-                        group="groups",            # assertion claim that carries the user's groups
+                        group="groups",  # assertion claim that carries the user's groups
                     ),
                 ),
             },
