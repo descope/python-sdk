@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.15.0](https://github.com/descope/python-sdk/compare/descope-2.14.0...descope-2.15.0) (2026-09-26)
+
+
+### Features
+
+* **enchantedlink:** add SMS delivery support ([#1690](https://github.com/descope/python-sdk/issues/1690)) ([912a420](https://github.com/descope/python-sdk/commit/912a42073c5efadb07c7115fcae285478d34adcc))
+
 ## [2.14.0](https://github.com/descope/python-sdk/compare/descope-2.13.0...descope-2.14.0) (2026-09-04)
 
 
