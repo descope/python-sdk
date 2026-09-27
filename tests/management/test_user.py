@@ -2973,6 +2973,16 @@ class TestUser:
             assert body["dependent"] is False
             assert "familyIds" not in body
 
+    async def test_search_all_test_users_by_family(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_post(make_response({"users": []})) as mock_post:
+            await client.invoke(client.mgmt.user.search_all_test_users(family_ids=["f1"], dependent=False))
+            assert mock_post.call_args.args[0] == f"{DEFAULT_BASE_URL}{MgmtV1.test_users_search_path}"
+            body = mock_post.call_args.kwargs["json"]
+            assert body["familyIds"] == ["f1"]
+            assert body["dependent"] is False
+
     async def test_add_families(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 

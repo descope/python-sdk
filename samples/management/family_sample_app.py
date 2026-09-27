@@ -68,17 +68,16 @@ def main() -> int:
     family = descope_client.mgmt.family
     user = descope_client.mgmt.user
 
-    # Unique suffix so reruns and parallel runs don't collide
     run = format(int(time.time() * 1000), "x")
     family_attr = f"plan_{run}"
     family_scoped_attr = f"nickname_{run}"
     guardian_login_id = f"guardian-{run}@example.com"
 
     # --- Settings -----------------------------------------------------------------------------
-    original_settings = step("family.load_settings", family.load_settings)
+    original_settings = step("family.get_settings", family.get_settings)
     step(
-        "family.update_settings (enable families)",
-        lambda: family.update_settings(enabled=True, allow_multiple_families_users=True),
+        "family.configure_settings (enable families)",
+        lambda: family.configure_settings(enabled=True, allow_multiple_families_users=True),
     )
 
     family_id: Optional[str] = None
@@ -90,8 +89,6 @@ def main() -> int:
 
     try:
         # --- Attribute definitions ------------------------------------------------------------
-        # Family attributes live on the family entity; family-scoped attributes are user attributes
-        # whose values are stored per family membership.
         step(
             "family.create_custom_attributes",
             lambda: family.create_custom_attributes(
@@ -122,14 +119,13 @@ def main() -> int:
             "family.update (rename + change attribute)",
             lambda: family.update(fid, name=f"Demo Family {run} (renamed)", custom_attributes={family_attr: "premium"}),
         )
-        step("family.search by id", lambda: family.search(family_ids=[fid]))
+        step("family.search_all by id", lambda: family.search_all(ids=[fid]))
         step(
-            "family.search by custom attribute",
-            lambda: family.search(custom_attributes={family_attr: "premium"}),
+            "family.search_all by custom attribute",
+            lambda: family.search_all(custom_attributes={family_attr: "premium"}),
         )
 
         # --- Guardian (regular member) --------------------------------------------------------
-        # A user can be created straight into a family, or added later with user.add_families.
         step(
             "user.create (guardian, created into the family)",
             lambda: user.create(
@@ -145,7 +141,6 @@ def main() -> int:
         )
         guardian_created = True
 
-        # add_families on a family the user already belongs to merges - here it updates the nickname only
         guardian = step(
             "user.add_families (update family-scoped attribute)",
             lambda: user.add_families(
@@ -162,7 +157,7 @@ def main() -> int:
                 fid,
                 name=f"Demo Kid {run}",
                 given_name="Demo",
-                family_scoped_attributes={fid: {family_scoped_attr: "Kiddo"}},
+                family_scoped_attributes={family_scoped_attr: "Kiddo"},
             ),
         )["user"]
         dependent_user_id = dependent["userId"]
@@ -245,8 +240,8 @@ def main() -> int:
             max_members = original_settings.get("maxFamilyMembers")
             cleanup.append(
                 (
-                    "family.update_settings (restore original)",
-                    lambda: family.update_settings(
+                    "family.configure_settings (restore original)",
+                    lambda: family.configure_settings(
                         enabled=original_settings.get("enabled", False),
                         max_family_members=max_members if max_members else None,
                         allow_multiple_families_users=original_settings.get("allowMultipleFamiliesUsers", False),

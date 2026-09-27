@@ -65,10 +65,10 @@ class TestFamily:
             resp = await client.invoke(
                 client.mgmt.family.create(
                     "Demo Family",
+                    id="f1",
                     custom_attributes={"plan": "free"},
                     photo="https://example.com/photo.png",
                     disabled=False,
-                    family_id="f1",
                 )
             )
             assert resp["family"]["id"] == "f1"
@@ -78,10 +78,10 @@ class TestFamily:
                 MgmtV1.family_create_path,
                 {
                     "name": "Demo Family",
+                    "familyId": "f1",
                     "customAttributes": {"plan": "free"},
                     "photo": "https://example.com/photo.png",
                     "disabled": False,
-                    "familyId": "f1",
                 },
             )
 
@@ -137,30 +137,30 @@ class TestFamily:
             assert resp is None
             assert_post(mock_post, client.mode, MgmtV1.family_delete_path, {"id": "f1"})
 
-    async def test_search(self, client_factory):
+    async def test_search_all(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flow
         with client.mock_mgmt_post(make_response(status=500)):
             with pytest.raises(AuthException):
-                await client.invoke(client.mgmt.family.search())
+                await client.invoke(client.mgmt.family.search_all())
 
         # Test success flow, no filters returns all families
         with client.mock_mgmt_post(make_response({"families": [FAMILY]})) as mock_post:
-            resp = await client.invoke(client.mgmt.family.search())
+            resp = await client.invoke(client.mgmt.family.search_all())
             assert resp["families"] == [FAMILY]
             assert_post(mock_post, client.mode, MgmtV1.family_search_path, {})
 
         # Test success flow, all filters
         with client.mock_mgmt_post(make_response({"families": [FAMILY]})) as mock_post:
             await client.invoke(
-                client.mgmt.family.search(
-                    family_ids=["f1"],
-                    free_text="demo",
-                    family_names=["Demo Family"],
+                client.mgmt.family.search_all(
+                    ids=["f1"],
+                    names=["Demo Family"],
+                    text="demo",
+                    custom_attributes={"plan": "free"},
                     page=0,
                     size=10,
-                    custom_attributes={"plan": "free"},
                 )
             )
             assert_post(
@@ -206,7 +206,7 @@ class TestFamily:
                     family_name="Kid",
                     picture="https://example.com/kid.png",
                     custom_attributes={"ak": "av"},
-                    family_scoped_attributes={"f1": {"nickname": "Kiddo"}},
+                    family_scoped_attributes={"nickname": "Kiddo"},
                 )
             )
             assert_post(
@@ -245,6 +245,12 @@ class TestFamily:
     async def test_impersonate_dependent(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
+        # Test empty input
+        with pytest.raises(AuthException):
+            await client.invoke(client.mgmt.family.impersonate_dependent("", "demo-kid"))
+        with pytest.raises(AuthException):
+            await client.invoke(client.mgmt.family.impersonate_dependent("guardian", ""))
+
         # Test failed flow
         with client.mock_mgmt_post(make_response(status=500)):
             with pytest.raises(AuthException):
@@ -279,6 +285,10 @@ class TestFamily:
     async def test_stop_impersonation(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
+        # Test empty input
+        with pytest.raises(AuthException):
+            await client.invoke(client.mgmt.family.stop_impersonation(""))
+
         # Test failed flow
         with client.mock_mgmt_post(make_response(status=500)):
             with pytest.raises(AuthException):
@@ -303,41 +313,41 @@ class TestFamily:
                 {"jwt": "imp-jwt", "customClaims": {"k1": "v1"}, "refreshDuration": 300},
             )
 
-    async def test_load_settings(self, client_factory):
+    async def test_get_settings(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flow
         with client.mock_mgmt_get(make_response(status=500)):
             with pytest.raises(AuthException):
-                await client.invoke(client.mgmt.family.load_settings())
+                await client.invoke(client.mgmt.family.get_settings())
 
         # Test success flow
         settings = {"enabled": True, "maxFamilyMembers": 6, "allowMultipleFamiliesUsers": False}
         with client.mock_mgmt_get(make_response(settings)) as mock_get:
-            resp = await client.invoke(client.mgmt.family.load_settings())
+            resp = await client.invoke(client.mgmt.family.get_settings())
             assert resp == settings
             assert_get(mock_get, client.mode, MgmtV1.family_settings_path)
 
-    async def test_update_settings(self, client_factory):
+    async def test_configure_settings(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flow
         with client.mock_mgmt_post(make_response(status=500)):
             with pytest.raises(AuthException):
-                await client.invoke(client.mgmt.family.update_settings(enabled=True))
+                await client.invoke(client.mgmt.family.configure_settings(enabled=True))
 
         settings = {"enabled": True, "maxFamilyMembers": 6, "allowMultipleFamiliesUsers": True}
 
         # Test success flow, partial update
         with client.mock_mgmt_post(make_response(settings)) as mock_post:
-            resp = await client.invoke(client.mgmt.family.update_settings(enabled=True))
+            resp = await client.invoke(client.mgmt.family.configure_settings(enabled=True))
             assert resp == settings
             assert_post(mock_post, client.mode, MgmtV1.family_settings_path, {"enabled": True})
 
         # Test success flow, all fields
         with client.mock_mgmt_post(make_response(settings)) as mock_post:
             await client.invoke(
-                client.mgmt.family.update_settings(
+                client.mgmt.family.configure_settings(
                     enabled=True, max_family_members=6, allow_multiple_families_users=True
                 )
             )
@@ -367,6 +377,7 @@ class TestFamily:
                 4,
                 display_name="Tier",
                 options=[CustomAttributeOption("gold", "Gold"), CustomAttributeOption("silver", "Silver")],
+                default_value="silver",
                 view_permissions=["view"],
                 edit_permissions=["edit"],
             ),
@@ -397,6 +408,7 @@ class TestFamily:
                                 {"value": "gold", "label": "Gold"},
                                 {"value": "silver", "label": "Silver"},
                             ],
+                            "defaultValue": "silver",
                             "viewPermissions": ["view"],
                             "editPermissions": ["edit"],
                         },

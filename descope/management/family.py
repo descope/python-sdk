@@ -2,6 +2,7 @@ from typing import List, Optional
 
 from descope._http_base import HTTPBase
 from descope.management._family_base import FamilyBase
+from descope.management._jwt_base import JWTBase
 from descope.management.common import (
     CustomAttribute,
     MgmtV1,
@@ -13,10 +14,10 @@ class Family(FamilyBase, HTTPBase):
     def create(
         self,
         name: str,
+        id: Optional[str] = None,
         custom_attributes: Optional[dict] = None,
         photo: Optional[str] = None,
         disabled: Optional[bool] = None,
-        family_id: Optional[str] = None,
     ) -> dict:
         """
         Create a new family with the given name. Family IDs are provisioned automatically, but can be
@@ -24,11 +25,11 @@ class Family(FamilyBase, HTTPBase):
 
         Args:
         name (str): The family's name.
+        id (str): Optional family ID. A random ID is generated when omitted.
         custom_attributes (dict): Optional, the family's custom attribute values, keyed by attribute name.
             The attributes must first be defined with `create_custom_attributes`.
         photo (str): Optional URL of the family's photo.
         disabled (bool): Optional, whether the family is disabled.
-        family_id (str): Optional family ID. A random ID is generated when omitted.
 
         Return value (dict):
         Return dict in the format
@@ -39,7 +40,7 @@ class Family(FamilyBase, HTTPBase):
         """
         response = self._http.post(
             MgmtV1.family_create_path,
-            body=FamilyBase._compose_create_body(name, custom_attributes, photo, disabled, family_id),
+            body=FamilyBase._compose_create_body(name, id, custom_attributes, photo, disabled),
         )
         return response.json()
 
@@ -53,11 +54,13 @@ class Family(FamilyBase, HTTPBase):
     ) -> dict:
         """
         Update an existing family. Only the given fields are updated; omitted fields are left unchanged.
+        custom_attributes replaces all of the family's custom attributes, it is not merged.
 
         Args:
         id (str): The ID of the family to update.
         name (str): Optional updated family name.
         custom_attributes (dict): Optional, the family's custom attribute values, keyed by attribute name.
+            Replaces all of the family's custom attributes.
         photo (str): Optional URL of the family's photo.
         disabled (bool): Optional, whether the family is disabled.
 
@@ -87,25 +90,25 @@ class Family(FamilyBase, HTTPBase):
         """
         self._http.post(MgmtV1.family_delete_path, body={"id": id})
 
-    def search(
+    def search_all(
         self,
-        family_ids: Optional[List[str]] = None,
-        free_text: Optional[str] = None,
-        family_names: Optional[List[str]] = None,
+        ids: Optional[List[str]] = None,
+        names: Optional[List[str]] = None,
+        text: Optional[str] = None,
+        custom_attributes: Optional[dict] = None,
         page: Optional[int] = None,
         size: Optional[int] = None,
-        custom_attributes: Optional[dict] = None,
     ) -> dict:
         """
         Search families. Called with no arguments, returns all families.
 
         Args:
-        family_ids (List[str]): Optional list of family IDs to filter by.
-        free_text (str): Optional free text search among the families' attributes.
-        family_names (List[str]): Optional list of family names to filter by.
+        ids (List[str]): Optional list of family IDs to filter by.
+        names (List[str]): Optional list of family names to filter by.
+        text (str): Optional free text search among the families' attributes.
+        custom_attributes (dict): Optional, search for families with the given custom attribute values.
         page (int): Optional pagination control. Pages start at 0.
         size (int): Optional page size (up to 1000).
-        custom_attributes (dict): Optional, search for families with the given custom attribute values.
 
         Return value (dict):
         Return dict in the format
@@ -117,7 +120,7 @@ class Family(FamilyBase, HTTPBase):
         """
         response = self._http.post(
             MgmtV1.family_search_path,
-            body=FamilyBase._compose_search_body(family_ids, free_text, family_names, page, size, custom_attributes),
+            body=FamilyBase._compose_search_body(ids, names, text, custom_attributes, page, size),
         )
         return response.json()
 
@@ -151,8 +154,8 @@ class Family(FamilyBase, HTTPBase):
         family_name (str): Optional family name.
         picture (str): Optional URL of the user's picture.
         custom_attributes (dict): Optional, the user's custom attribute values.
-        family_scoped_attributes (dict): Optional, family-scoped custom attribute values, in the
-            format {<family_id>: {<attribute_name>: <value>}}.
+        family_scoped_attributes (dict): Optional, the dependent's family-scoped custom attribute values
+            in this family, in the format {<attribute_name>: <value>}.
 
         Return value (dict):
         Return dict in the format
@@ -215,6 +218,8 @@ class Family(FamilyBase, HTTPBase):
         Raise:
         AuthException: raised if impersonation fails
         """
+        JWTBase._validate_impersonator_id(impersonator_user_id_or_login_id)
+        JWTBase._validate_login_id(dependent_login_id)
         response = self._http.post(
             MgmtV1.family_impersonate_path,
             body=FamilyBase._compose_impersonate_body(
@@ -242,13 +247,14 @@ class Family(FamilyBase, HTTPBase):
         Raise:
         AuthException: raised if the operation fails
         """
+        JWTBase._validate_jwt(jwt)
         response = self._http.post(
             MgmtV1.family_stop_impersonation_path,
             body=FamilyBase._compose_stop_impersonation_body(jwt, custom_claims, refresh_duration),
         )
         return response.json().get("jwt", "")
 
-    def load_settings(self) -> dict:
+    def get_settings(self) -> dict:
         """
         Load the project's family account settings.
 
@@ -262,14 +268,14 @@ class Family(FamilyBase, HTTPBase):
         response = self._http.get(MgmtV1.family_settings_path)
         return response.json()
 
-    def update_settings(
+    def configure_settings(
         self,
         enabled: Optional[bool] = None,
         max_family_members: Optional[int] = None,
         allow_multiple_families_users: Optional[bool] = None,
     ) -> dict:
         """
-        Update the project's family account settings. Omitted fields are left unchanged.
+        Configure the project's family account settings. Omitted fields are left unchanged.
 
         Args:
         enabled (bool): Optional, whether family accounts are enabled for the project.

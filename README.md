@@ -748,7 +748,9 @@ descope_client.mgmt.user.invite_batch(
     send_sms=True,
 )
 
-# Update will override all fields as is. Use carefully.
+# Update will override all fields as is, including family memberships: omitting
+# family_associations removes the user from all of their families, and updating a dependent
+# requires family_associations with the dependent's family. Use carefully, or use patch instead.
 descope_client.mgmt.user.update(
     login_id="desmond@descope.com",
     email="desmond@descope.com",
@@ -860,9 +862,9 @@ and manage dependents:
 ```Python
 from descope import AssociatedFamily, CustomAttribute
 
-# Load and update the project's family account settings. Omitted fields are left unchanged.
-settings = descope_client.mgmt.family.load_settings()
-descope_client.mgmt.family.update_settings(
+# Get and configure the project's family account settings. Omitted fields are left unchanged.
+settings = descope_client.mgmt.family.get_settings()
+descope_client.mgmt.family.configure_settings(
     enabled=True,
     max_family_members=6,
     allow_multiple_families_users=True,
@@ -877,16 +879,17 @@ descope_client.mgmt.family.delete_custom_attributes(["plan"])
 family = descope_client.mgmt.family.create(
     name="Demo Family",
     custom_attributes={"plan": "free"},
-    family_id="my-family-id",  # This is optional.
+    id="my-family-id",  # This is optional.
 )["family"]
 
 # Update only changes the fields you pass in - everything else on the family is left untouched.
+# custom_attributes replaces all of the family's custom attributes, it is not merged.
 descope_client.mgmt.family.update(id="my-family-id", name="Demo Family (renamed)")
 
 # Search families. Called with no arguments, returns all families.
-families = descope_client.mgmt.family.search(family_ids=["my-family-id"])["families"]
-    for family in families:
-        # Do something
+families = descope_client.mgmt.family.search_all(ids=["my-family-id"])["families"]
+for family in families:
+    print(family["name"])
 
 # Family deletion cannot be undone. Use carefully.
 descope_client.mgmt.family.delete(id="my-family-id")
@@ -939,7 +942,7 @@ holding the "Family Impersonate Dependents" permission in the family can imperso
 dependent = descope_client.mgmt.family.create_dependent(
     family_id="my-family-id",
     name="Demo Kid",
-    family_scoped_attributes={"my-family-id": {"nickname": "Kiddo"}},
+    family_scoped_attributes={"nickname": "Kiddo"},
 )["user"]
 
 # Impersonate the dependent, optionally scoping the session to the dependent's family

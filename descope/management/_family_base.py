@@ -7,20 +7,20 @@ class FamilyBase:
     @staticmethod
     def _compose_create_body(
         name: str,
+        id: Optional[str],
         custom_attributes: Optional[dict],
         photo: Optional[str],
         disabled: Optional[bool],
-        family_id: Optional[str],
     ) -> dict:
         body: dict[str, Any] = {"name": name}
+        if id is not None:
+            body["familyId"] = id
         if custom_attributes is not None:
             body["customAttributes"] = custom_attributes
         if photo is not None:
             body["photo"] = photo
         if disabled is not None:
             body["disabled"] = disabled
-        if family_id is not None:
-            body["familyId"] = family_id
         return body
 
     @staticmethod
@@ -44,26 +44,26 @@ class FamilyBase:
 
     @staticmethod
     def _compose_search_body(
-        family_ids: Optional[List[str]],
-        free_text: Optional[str],
-        family_names: Optional[List[str]],
+        ids: Optional[List[str]],
+        names: Optional[List[str]],
+        text: Optional[str],
+        custom_attributes: Optional[dict],
         page: Optional[int],
         size: Optional[int],
-        custom_attributes: Optional[dict],
     ) -> dict:
         body: dict[str, Any] = {}
-        if family_ids is not None:
-            body["familyIds"] = family_ids
-        if free_text is not None:
-            body["freeText"] = free_text
-        if family_names is not None:
-            body["familyNames"] = family_names
+        if ids is not None:
+            body["familyIds"] = ids
+        if names is not None:
+            body["familyNames"] = names
+        if text is not None:
+            body["freeText"] = text
+        if custom_attributes is not None:
+            body["customAttributes"] = custom_attributes
         if page is not None:
             body["page"] = page
         if size is not None:
             body["size"] = size
-        if custom_attributes is not None:
-            body["customAttributes"] = custom_attributes
         return body
 
     @staticmethod
@@ -81,19 +81,26 @@ class FamilyBase:
         family_scoped_attributes: Optional[dict],
     ) -> dict:
         body: dict[str, Any] = {"familyId": family_id}
-        optional_fields = {
-            "loginId": login_id,
-            "name": name,
-            "email": email,
-            "phone": phone,
-            "givenName": given_name,
-            "middleName": middle_name,
-            "familyName": family_name,
-            "picture": picture,
-            "customAttributes": custom_attributes,
-            "familyScopedAttributes": family_scoped_attributes,
-        }
-        body.update({k: v for k, v in optional_fields.items() if v is not None})
+        if login_id is not None:
+            body["loginId"] = login_id
+        if name is not None:
+            body["name"] = name
+        if email is not None:
+            body["email"] = email
+        if phone is not None:
+            body["phone"] = phone
+        if given_name is not None:
+            body["givenName"] = given_name
+        if middle_name is not None:
+            body["middleName"] = middle_name
+        if family_name is not None:
+            body["familyName"] = family_name
+        if picture is not None:
+            body["picture"] = picture
+        if custom_attributes is not None:
+            body["customAttributes"] = custom_attributes
+        if family_scoped_attributes is not None:
+            body["familyScopedAttributes"] = {family_id: family_scoped_attributes}
         return body
 
     @staticmethod

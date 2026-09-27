@@ -313,7 +313,9 @@ class UserAsync(UserBase, AsyncHTTPBase):
     ) -> dict:
         """
         Update an existing user with the given various fields. IMPORTANT: All parameters are used as overrides
-        to the existing user. Empty fields will override populated fields. Use carefully.
+        to the existing user. Empty fields will override populated fields, including family memberships:
+        omitting family_associations removes the user from all of their families, and updating a dependent
+        requires family_associations with the dependent's family. Use carefully.
         Use `patch` for partial updates instead.
 
         Args:
@@ -333,7 +335,8 @@ class UserAsync(UserBase, AsyncHTTPBase):
         sso_app_ids (List[str]): Optional, list of SSO applications IDs to be associated with the user.
         test (bool, optional): Set to True to update a test user. Defaults to False.
         family_associations (List[AssociatedFamily]): Optional list of the user's families, and optionally, their roles and
-            family-scoped attribute values per family.
+            family-scoped attribute values per family. Replaces the user's family memberships, so None or an
+            empty list removes the user from all families.
 
         Return value (dict):
         Return dict in the format
@@ -800,6 +803,8 @@ class UserAsync(UserBase, AsyncHTTPBase):
         to_modified_time: Optional[int] = None,
         tenant_role_ids: Optional[dict] = None,
         tenant_role_names: Optional[dict] = None,
+        family_ids: Optional[List[str]] = None,
+        dependent: Optional[bool] = None,
     ) -> dict:
         """
         Search all test users.
@@ -825,6 +830,8 @@ class UserAsync(UserBase, AsyncHTTPBase):
             Dict value is in the form of {"tenant_id": {"values":["role_id1", "role_id2"], "and": True}} if you want to match all roles (AND) or any role (OR).
         tenant_role_names (dict): Optional mapping of tenant ID to list of role names.
             Dict value is in the form of {"tenant_id": {"values":["role_name1", "role_name2"], "and": True}} if you want to match all roles (AND) or any role (OR).
+        family_ids (List[str]): Optional list of family IDs. Only users that are members of at least one of these families are returned.
+        dependent (bool): Optional, filter by whether the user is a family dependent (a user with no login credentials of their own).
 
         Return value (dict):
         Return dict in the format
@@ -883,6 +890,10 @@ class UserAsync(UserBase, AsyncHTTPBase):
             body["tenantRoleIds"] = tenant_role_ids
         if tenant_role_names is not None:
             body["tenantRoleNames"] = tenant_role_names
+        if family_ids is not None:
+            body["familyIds"] = family_ids
+        if dependent is not None:
+            body["dependent"] = dependent
 
         response = await self._http.post(
             MgmtV1.test_users_search_path,

@@ -616,8 +616,8 @@ class AssociatedFamily:
         return res
 
 
-def associated_families_to_dict(associated_families: Optional[List[AssociatedFamily]]) -> list:
-    return [associated_family.to_dict() for associated_family in associated_families or []]
+def associated_families_to_dict(associated_families: List[AssociatedFamily]) -> list:
+    return [associated_family.to_dict() for associated_family in associated_families]
 
 
 class CustomAttributeOption:
@@ -648,6 +648,7 @@ class CustomAttribute:
         type: int,
         display_name: Optional[str] = None,
         options: Optional[List[CustomAttributeOption]] = None,
+        default_value: Optional[Any] = None,
         view_permissions: Optional[List[str]] = None,
         edit_permissions: Optional[List[str]] = None,
     ):
@@ -655,6 +656,7 @@ class CustomAttribute:
         self.type = type
         self.display_name = display_name
         self.options = options
+        self.default_value = default_value
         self.view_permissions = view_permissions
         self.edit_permissions = edit_permissions
 
@@ -664,6 +666,8 @@ class CustomAttribute:
             res["displayName"] = self.display_name
         if self.options is not None:
             res["options"] = [option.to_dict() for option in self.options]
+        if self.default_value is not None:
+            res["defaultValue"] = self.default_value
         if self.view_permissions is not None:
             res["viewPermissions"] = self.view_permissions
         if self.edit_permissions is not None:
