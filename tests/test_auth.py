@@ -153,7 +153,8 @@ class TestAuth(common.DescopeTest):
     def _regions_under_test():
         raw = os.environ.get("REGIONS")
         if raw is None:
-            # Point REGIONS at the list devops maintains: descope/etc#18332.
+            # Local runs only. CI sets REGIONS from the list devops generates:
+            # https://imgs.descope.com/regions/regions.json (descope/etc#18332).
             return ["use1", "euc1", "euw2", "aps1", "aps2", "cac1", "sae1"]
 
         if not raw.strip():
