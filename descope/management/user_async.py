@@ -348,6 +348,7 @@ class UserAsync(UserBase, AsyncHTTPBase):
         """
         role_names = [] if role_names is None else role_names
         user_tenants = [] if user_tenants is None else user_tenants
+        family_associations = [] if family_associations is None else family_associations
 
         response = await self._http.post(
             MgmtV1.user_update_path,
