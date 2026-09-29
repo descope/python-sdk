@@ -102,7 +102,7 @@ jobs:
         # job on purpose: falling back to the embedded list would let a broken sync look green.
         shell: bash
         run: |
-          regions=$(curl --fail --silent --show-error --retry 3 --retry-all-errors \
+          regions=$(curl --fail --silent --show-error --connect-timeout 10 --max-time 30 --retry 3 --retry-all-errors \
             https://imgs.descope.com/regions/regions.json | jq --compact-output --exit-status '.prod')
           echo "REGIONS=$regions" >> "$GITHUB_ENV"
       - name: Run test suite
