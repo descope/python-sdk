@@ -981,6 +981,67 @@ class TestSSOSettings:
                 follow_redirects=False,
             )
 
+    @pytest.mark.parametrize(
+        "default_sso_roles, expect_replace",
+        [([], True), (None, False), (["aa"], False)],
+    )
+    async def test_configure_saml_settings_replace_default_sso_roles(
+        self, client_factory, default_sso_roles, expect_replace
+    ):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            await client.invoke(
+                client.mgmt.sso.configure_saml_settings(
+                    "tenant-id",
+                    SSOSAMLSettings(
+                        idp_url="http://dummy.com",
+                        idp_entity_id="ent1234",
+                        idp_cert="cert",
+                        default_sso_roles=default_sso_roles,
+                    ),
+                )
+            )
+            settings = mock_post.call_args.kwargs["json"]["settings"]
+            assert settings["defaultSSORoles"] == default_sso_roles
+            if expect_replace:
+                assert settings["replaceDefaultSSORoles"] is True
+            else:
+                assert "replaceDefaultSSORoles" not in settings
+
+    @pytest.mark.parametrize(
+        "default_sso_roles, expect_replace",
+        [([], True), (None, False), (["aa"], False)],
+    )
+    async def test_configure_saml_settings_by_metadata_replace_default_sso_roles(
+        self, client_factory, default_sso_roles, expect_replace
+    ):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            await client.invoke(
+                client.mgmt.sso.configure_saml_settings_by_metadata(
+                    "tenant-id",
+                    SSOSAMLSettingsByMetadata(
+                        idp_metadata_url="http://dummy.com/metadata",
+                        default_sso_roles=default_sso_roles,
+                    ),
+                )
+            )
+            settings = mock_post.call_args.kwargs["json"]["settings"]
+            assert settings["defaultSSORoles"] == default_sso_roles
+            if expect_replace:
+                assert settings["replaceDefaultSSORoles"] is True
+            else:
+                assert "replaceDefaultSSORoles" not in settings
+
+    async def test_configure_xaa_settings_never_sends_replace_default_sso_roles(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            await client.invoke(client.mgmt.sso.configure_xaa_settings("tenant-id", XAASettings(default_sso_roles=[])))
+            assert "replaceDefaultSSORoles" not in mock_post.call_args.kwargs["json"]
+
     # Testing DEPRECATED functions
     async def test_get_settings(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
