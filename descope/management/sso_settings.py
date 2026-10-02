@@ -222,7 +222,7 @@ class SSOSAMLSettings:
         idp_cert: str,
         attribute_mapping: Optional[AttributeMapping] = None,
         role_mappings: Optional[List[RoleMapping]] = None,
-        default_sso_roles: Optional[List[str]] = None,
+        default_sso_roles: Optional[List[str]] = None,  # an empty list clears the default SSO roles, None keeps them
         idp_additional_certs: Optional[List[str]] = None,
         groups_priority: Optional[List[str]] = None,  # list of group names in priority order (first = highest priority)
         fga_mappings: Optional[Dict[str, FGAGroupMapping]] = None,  # map of IDP group name -> FGA relations
@@ -262,7 +262,7 @@ class SSOSAMLSettingsByMetadata:
         idp_metadata_url: str,
         attribute_mapping: Optional[AttributeMapping] = None,
         role_mappings: Optional[List[RoleMapping]] = None,
-        default_sso_roles: Optional[List[str]] = None,
+        default_sso_roles: Optional[List[str]] = None,  # an empty list clears the default SSO roles, None keeps them
         groups_priority: Optional[List[str]] = None,  # list of group names in priority order (first = highest priority)
         fga_mappings: Optional[Dict[str, FGAGroupMapping]] = None,  # map of IDP group name -> FGA relations
         config_fga_tenant_id_resource_prefix: Optional[str] = None,
@@ -517,6 +517,7 @@ class SSOSettings(SSOSettingsBase, HTTPBase):
         Args:
         tenant_id (str): The tenant ID to be configured
         settings (SSOSAMLSettings): The SAML settings to be configured for this tenant (all settings parameters are required).
+            settings.default_sso_roles: use an empty list to clear the tenant's default SSO roles, or None to keep the stored ones.
         redirect_url (str): Optional,the Redirect URL to use after successful authentication, or empty string to reset it (if not given it has to be set when starting an SSO authentication via the request).
         domains (List[str]): Optional, domains used to associate users authenticating via SSO with this tenant. Use empty list or None to reset them.
 
@@ -542,6 +543,7 @@ class SSOSettings(SSOSettingsBase, HTTPBase):
         Args:
         tenant_id (str): The tenant ID to be configured
         settings (SSOSAMLSettingsByMetadata): The SAML settings to be configured for this tenant (all settings parameters are required).
+            settings.default_sso_roles: use an empty list to clear the tenant's default SSO roles, or None to keep the stored ones.
         redirect_url (str): Optional, the Redirect URL to use after successful authentication, or empty string to reset it (if not given it has to be set when starting an SSO authentication via the request).
         domains (List[str]): Optional, domains used to associate users authenticating via SSO with this tenant. Use empty list or None to reset them.
 
