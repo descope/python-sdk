@@ -862,9 +862,9 @@ and manage dependents:
 ```Python
 from descope import AssociatedFamily, CustomAttribute
 
-# Get and configure the project's family account settings. Omitted fields are left unchanged.
-settings = descope_client.mgmt.family.get_settings()
-descope_client.mgmt.family.configure_settings(
+# Load and update the project's family account settings. Omitted fields are left unchanged.
+settings = descope_client.mgmt.family.load_settings()
+descope_client.mgmt.family.update_settings(
     enabled=True,
     max_family_members=6,
     allow_multiple_families_users=True,

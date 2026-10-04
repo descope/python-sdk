@@ -258,7 +258,7 @@ class FamilyAsync(FamilyBase, AsyncHTTPBase):
         )
         return response.json().get("jwt", "")
 
-    async def get_settings(self) -> dict:
+    async def load_settings(self) -> dict:
         """
         Load the project's family account settings.
 
@@ -272,14 +272,14 @@ class FamilyAsync(FamilyBase, AsyncHTTPBase):
         response = await self._http.get(MgmtV1.family_settings_path)
         return response.json()
 
-    async def configure_settings(
+    async def update_settings(
         self,
         enabled: Optional[bool] = None,
         max_family_members: Optional[int] = None,
         allow_multiple_families_users: Optional[bool] = None,
     ) -> dict:
         """
-        Configure the project's family account settings. Omitted fields are left unchanged.
+        Update the project's family account settings. Omitted fields are left unchanged.
 
         Args:
         enabled (bool): Optional, whether family accounts are enabled for the project.
