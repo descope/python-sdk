@@ -74,10 +74,10 @@ def main() -> int:
     guardian_login_id = f"guardian-{run}@example.com"
 
     # --- Settings -----------------------------------------------------------------------------
-    original_settings = step("family.load_settings", family.load_settings)
+    original_settings = step("family.get_settings", family.get_settings)
     step(
-        "family.update_settings (enable families)",
-        lambda: family.update_settings(enabled=True, allow_multiple_families_users=True),
+        "family.configure_settings (enable families)",
+        lambda: family.configure_settings(enabled=True, allow_multiple_families_users=True),
     )
 
     family_id: Optional[str] = None
@@ -240,8 +240,8 @@ def main() -> int:
             max_members = original_settings.get("maxFamilyMembers")
             cleanup.append(
                 (
-                    "family.update_settings (restore original)",
-                    lambda: family.update_settings(
+                    "family.configure_settings (restore original)",
+                    lambda: family.configure_settings(
                         enabled=original_settings.get("enabled", False),
                         max_family_members=max_members if max_members else None,
                         allow_multiple_families_users=original_settings.get("allowMultipleFamiliesUsers", False),

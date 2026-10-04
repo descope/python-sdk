@@ -254,7 +254,7 @@ class Family(FamilyBase, HTTPBase):
         )
         return response.json().get("jwt", "")
 
-    def load_settings(self) -> dict:
+    def get_settings(self) -> dict:
         """
         Load the project's family account settings.
 
@@ -268,14 +268,14 @@ class Family(FamilyBase, HTTPBase):
         response = self._http.get(MgmtV1.family_settings_path)
         return response.json()
 
-    def update_settings(
+    def configure_settings(
         self,
         enabled: Optional[bool] = None,
         max_family_members: Optional[int] = None,
         allow_multiple_families_users: Optional[bool] = None,
     ) -> dict:
         """
-        Update the project's family account settings. Omitted fields are left unchanged.
+        Configure the project's family account settings. Omitted fields are left unchanged.
 
         Args:
         enabled (bool): Optional, whether family accounts are enabled for the project.

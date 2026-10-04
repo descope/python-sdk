@@ -313,41 +313,41 @@ class TestFamily:
                 {"jwt": "imp-jwt", "customClaims": {"k1": "v1"}, "refreshDuration": 300},
             )
 
-    async def test_load_settings(self, client_factory):
+    async def test_get_settings(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flow
         with client.mock_mgmt_get(make_response(status=500)):
             with pytest.raises(AuthException):
-                await client.invoke(client.mgmt.family.load_settings())
+                await client.invoke(client.mgmt.family.get_settings())
 
         # Test success flow
         settings = {"enabled": True, "maxFamilyMembers": 6, "allowMultipleFamiliesUsers": False}
         with client.mock_mgmt_get(make_response(settings)) as mock_get:
-            resp = await client.invoke(client.mgmt.family.load_settings())
+            resp = await client.invoke(client.mgmt.family.get_settings())
             assert resp == settings
             assert_get(mock_get, client.mode, MgmtV1.family_settings_path)
 
-    async def test_update_settings(self, client_factory):
+    async def test_configure_settings(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
         # Test failed flow
         with client.mock_mgmt_post(make_response(status=500)):
             with pytest.raises(AuthException):
-                await client.invoke(client.mgmt.family.update_settings(enabled=True))
+                await client.invoke(client.mgmt.family.configure_settings(enabled=True))
 
         settings = {"enabled": True, "maxFamilyMembers": 6, "allowMultipleFamiliesUsers": True}
 
         # Test success flow, partial update
         with client.mock_mgmt_post(make_response(settings)) as mock_post:
-            resp = await client.invoke(client.mgmt.family.update_settings(enabled=True))
+            resp = await client.invoke(client.mgmt.family.configure_settings(enabled=True))
             assert resp == settings
             assert_post(mock_post, client.mode, MgmtV1.family_settings_path, {"enabled": True})
 
         # Test success flow, all fields
         with client.mock_mgmt_post(make_response(settings)) as mock_post:
             await client.invoke(
-                client.mgmt.family.update_settings(
+                client.mgmt.family.configure_settings(
                     enabled=True, max_family_members=6, allow_multiple_families_users=True
                 )
             )
