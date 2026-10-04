@@ -9,6 +9,7 @@ from descope.management.audit import Audit
 from descope.management.authz import Authz
 from descope.management.descoper import Descoper
 from descope.management.engine import Engine
+from descope.management.family import Family
 from descope.management.fga import FGA
 from descope.management.flow import Flow
 from descope.management.group import Group
@@ -51,6 +52,7 @@ class MGMT:
         self._authz = Authz(http_client, fga_cache_url=fga_cache_url)
         self._descoper = Descoper(http_client)
         self._engine = Engine(http_client)
+        self._family = Family(http_client)
         self._fga = FGA(http_client, fga_cache_url=fga_cache_url)
         self._flow = Flow(http_client)
         self._group = Group(http_client)
@@ -84,6 +86,11 @@ class MGMT:
     def tenant(self):
         self._ensure_management_key("tenant")
         return self._tenant
+
+    @property
+    def family(self):
+        self._ensure_management_key("family")
+        return self._family
 
     @property
     def sso_application(self):

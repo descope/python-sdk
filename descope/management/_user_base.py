@@ -4,7 +4,9 @@ from typing import Any, List, Optional
 
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 from descope.management.common import (
+    AssociatedFamily,
     AssociatedTenant,
+    associated_families_to_dict,
     associated_tenants_to_dict,
 )
 from descope.management.user_pwd import UserPassword
@@ -33,6 +35,7 @@ class UserObj:
         password: Optional[UserPassword] = None,
         seed: Optional[str] = None,
         status: Optional[str] = None,
+        family_associations: Optional[List[AssociatedFamily]] = None,
     ):
         self.login_id = login_id
         self.email = email
@@ -52,6 +55,7 @@ class UserObj:
         self.password = password
         self.seed = seed
         self.status = status
+        self.family_associations = family_associations
 
 
 class CreateUserObj:
@@ -108,6 +112,7 @@ class UserBase:
         template_id: str = "",
         locale: Optional[str] = None,
         status: Optional[str] = None,
+        family_associations: Optional[List[AssociatedFamily]] = None,
     ) -> dict:
         body = UserBase._compose_update_body(
             login_id=login_id,
@@ -124,6 +129,7 @@ class UserBase:
             custom_attributes=custom_attributes,
             additional_login_ids=additional_login_ids,
             sso_app_ids=sso_app_ids,
+            family_associations=family_associations,
         )
         body["invite"] = invite
         if verified_email is not None:
@@ -183,6 +189,7 @@ class UserBase:
                 password=password,
                 hashed_password=hashed_password,
                 seed=user.seed,
+                family_associations=user.family_associations,
             )
             if user.status is not None:
                 u_body["status"] = user.status
@@ -224,6 +231,7 @@ class UserBase:
         password: Optional[str] = None,
         hashed_password: Optional[dict] = None,
         seed: Optional[str] = None,
+        family_associations: Optional[List[AssociatedFamily]] = None,
     ) -> dict:
         res = {
             "loginId": login_id,
@@ -254,6 +262,8 @@ class UserBase:
             res["hashedPassword"] = hashed_password
         if seed is not None:
             res["seed"] = seed
+        if family_associations is not None:
+            res["familyAssociations"] = associated_families_to_dict(family_associations)
         return res
 
     @staticmethod
@@ -274,6 +284,7 @@ class UserBase:
         sso_app_ids: Optional[List[str]],
         status: Optional[str],
         test: bool = False,
+        family_associations: Optional[List[AssociatedFamily]] = None,
     ) -> dict:
         res: dict[str, Any] = {
             "loginId": login_id,
@@ -308,6 +319,8 @@ class UserBase:
             res["status"] = status
         if test:
             res["test"] = test
+        if family_associations is not None:
+            res["familyAssociations"] = associated_families_to_dict(family_associations)
         return res
 
     @staticmethod
@@ -334,6 +347,7 @@ class UserBase:
                 sso_app_ids=user.sso_app_ids,
                 status=user.status,
                 test=test,
+                family_associations=user.family_associations,
             )
             users_body.append(user_body)
 
