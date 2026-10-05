@@ -1024,6 +1024,44 @@ class TestUser:
                 follow_redirects=False,
             )
 
+        # Test success flow with lock reason filters
+        with client.mock_mgmt_post(
+            make_response({"users": [{"id": "u1", "lockReason": "password", "tempLockExpiration": 1791105360}]})
+        ) as mock_post:
+            resp = await client.invoke(
+                client.mgmt.user.search_all(
+                    ["t1"],
+                    ["r1"],
+                    lock_reasons=["password", "totp"],
+                    temp_lock_reasons=["recovery_codes"],
+                )
+            )
+            users = resp["users"]
+            assert users[0]["lockReason"] == "password"
+            assert users[0]["tempLockExpiration"] == 1791105360
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.users_search_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "tenantIds": ["t1"],
+                    "roleNames": ["r1"],
+                    "limit": 0,
+                    "page": 0,
+                    "testUsersOnly": False,
+                    "withTestUser": False,
+                    "lockReasons": ["password", "totp"],
+                    "tempLockReasons": ["recovery_codes"],
+                },
+                follow_redirects=False,
+            )
+
         # Test success flow with text and sort
         with client.mock_mgmt_post(make_response({"users": [{"id": "u1"}, {"id": "u2"}]})) as mock_post:
             sort = [Sort(field="kuku", desc=True), Sort(field="bubu")]
@@ -1234,6 +1272,44 @@ class TestUser:
                     "withTestUser": True,
                     "ssoAppIds": ["app1"],
                     "loginIds": ["l1"],
+                },
+                follow_redirects=False,
+            )
+
+        # Test success flow with lock reason filters
+        with client.mock_mgmt_post(
+            make_response({"users": [{"id": "u1", "lockReason": "password", "tempLockExpiration": 1791105360}]})
+        ) as mock_post:
+            resp = await client.invoke(
+                client.mgmt.user.search_all_test_users(
+                    ["t1"],
+                    ["r1"],
+                    lock_reasons=["password", "totp"],
+                    temp_lock_reasons=["recovery_codes"],
+                )
+            )
+            users = resp["users"]
+            assert users[0]["lockReason"] == "password"
+            assert users[0]["tempLockExpiration"] == 1791105360
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.test_users_search_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "tenantIds": ["t1"],
+                    "roleNames": ["r1"],
+                    "limit": 0,
+                    "page": 0,
+                    "testUsersOnly": True,
+                    "withTestUser": True,
+                    "lockReasons": ["password", "totp"],
+                    "tempLockReasons": ["recovery_codes"],
                 },
                 follow_redirects=False,
             )

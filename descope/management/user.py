@@ -677,6 +677,8 @@ class User(UserBase, HTTPBase):
         tenant_role_names: Optional[dict] = None,
         family_ids: Optional[List[str]] = None,
         dependent: Optional[bool] = None,
+        lock_reasons: Optional[List[str]] = None,
+        temp_lock_reasons: Optional[List[str]] = None,
     ) -> dict:
         """
         Search all users.
@@ -707,6 +709,11 @@ class User(UserBase, HTTPBase):
             Dict value is in the form of {"tenant_id": {"values":["role_name1", "role_name2"], "and": True}} if you want to match all roles (AND) or any role (OR).
         family_ids (List[str]): Optional list of family IDs. Only users that are members of at least one of these families are returned.
         dependent (bool): Optional, filter by whether the user is a family dependent (a user with no login credentials of their own).
+        lock_reasons (List[str]): Optional list of lock reasons. Only users disabled by brute-force protection with one of these
+            reasons are returned. Allowed values: "password", "totp", "recovery_codes", "security_questions".
+        temp_lock_reasons (List[str]): Optional list of lock reasons. Only users currently temporarily locked with one of these
+            reasons are returned. Allowed values: "password", "recovery_codes", "security_questions" (TOTP has no temporary lock).
+            A user is temporarily locked while its tempLockExpiration (unix seconds, 0 when none) is greater than now.
 
         Return value (dict):
         Return dict in the format
@@ -772,6 +779,10 @@ class User(UserBase, HTTPBase):
             body["familyIds"] = family_ids
         if dependent is not None:
             body["dependent"] = dependent
+        if lock_reasons is not None:
+            body["lockReasons"] = lock_reasons
+        if temp_lock_reasons is not None:
+            body["tempLockReasons"] = temp_lock_reasons
 
         response = self._http.post(
             MgmtV1.users_search_path,
@@ -801,6 +812,8 @@ class User(UserBase, HTTPBase):
         tenant_role_names: Optional[dict] = None,
         family_ids: Optional[List[str]] = None,
         dependent: Optional[bool] = None,
+        lock_reasons: Optional[List[str]] = None,
+        temp_lock_reasons: Optional[List[str]] = None,
     ) -> dict:
         """
         Search all test users.
@@ -828,6 +841,11 @@ class User(UserBase, HTTPBase):
             Dict value is in the form of {"tenant_id": {"values":["role_name1", "role_name2"], "and": True}} if you want to match all roles (AND) or any role (OR).
         family_ids (List[str]): Optional list of family IDs. Only users that are members of at least one of these families are returned.
         dependent (bool): Optional, filter by whether the user is a family dependent (a user with no login credentials of their own).
+        lock_reasons (List[str]): Optional list of lock reasons. Only users disabled by brute-force protection with one of these
+            reasons are returned. Allowed values: "password", "totp", "recovery_codes", "security_questions".
+        temp_lock_reasons (List[str]): Optional list of lock reasons. Only users currently temporarily locked with one of these
+            reasons are returned. Allowed values: "password", "recovery_codes", "security_questions" (TOTP has no temporary lock).
+            A user is temporarily locked while its tempLockExpiration (unix seconds, 0 when none) is greater than now.
 
         Return value (dict):
         Return dict in the format
@@ -890,6 +908,10 @@ class User(UserBase, HTTPBase):
             body["familyIds"] = family_ids
         if dependent is not None:
             body["dependent"] = dependent
+        if lock_reasons is not None:
+            body["lockReasons"] = lock_reasons
+        if temp_lock_reasons is not None:
+            body["tempLockReasons"] = temp_lock_reasons
 
         response = self._http.post(
             MgmtV1.test_users_search_path,
