@@ -151,30 +151,11 @@ class TestAuth(common.DescopeTest):
 
     @staticmethod
     def _regions_under_test():
-        raw = os.environ.get("REGIONS")
-        if raw is None:
-            # Local runs only. CI sets REGIONS from the list devops generates:
+        if not os.environ.get("CI"):
+            # Local runs. CI fetches the regions devops generates into REGIONS:
             # https://imgs.descope.com/regions/regions.json (descope/etc#18332).
             return ["use1", "euc1", "euw2", "aps1", "aps2", "cac1", "sae1"]
-
-        if not raw.strip():
-            raise ValueError("REGIONS is set but empty; expected a JSON array of symbols or region objects")
-
-        try:
-            parsed = json.loads(raw)
-        except ValueError as exc:
-            raise ValueError(f"REGIONS must be a JSON array of symbols or region objects, got: {raw}") from exc
-
-        if not isinstance(parsed, list) or not parsed:
-            raise ValueError(f"REGIONS must be a non-empty JSON array, got: {raw}")
-
-        symbols = []
-        for entry in parsed:
-            symbol = entry if isinstance(entry, str) else entry.get("symbol") if isinstance(entry, dict) else None
-            if not isinstance(symbol, str) or not symbol:
-                raise ValueError(f"REGIONS entry is missing a region symbol: {entry!r}")
-            symbols.append(symbol)
-        return symbols
+        return [region["symbol"] for region in json.loads(os.environ["REGIONS"])]
 
     def test_base_url_resolves_every_region(self):
         regions = self._regions_under_test()
