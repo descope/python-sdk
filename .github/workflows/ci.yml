@@ -97,6 +97,16 @@ jobs:
           python-version: ${{ matrix.py }}
       - name: Install dependencies
         run: uv sync --all-extras --locked
+      - name: Fetch production regions
+        # The region list devops generates daily (descope/etc#18332). A failed fetch fails the
+        # job on purpose: falling back to the embedded list would let a broken sync look green.
+        shell: bash
+        run: |
+          regions=$(curl --fail --silent --show-error --connect-timeout 10 --max-time 30 --retry 3 --retry-all-errors \
+            https://imgs.descope.com/regions/regions.json | jq --compact-output \
+            '.prod | if type == "array" and length > 0 and all(.[]; (.symbol | type) == "string" and (.symbol | length) > 0)
+             then . else error("regions.json: prod must be a non-empty array of {symbol} objects") end')
+          echo "REGIONS=$regions" >> "$GITHUB_ENV"
       - name: Run test suite
         run: uv run coverage run -m pytest tests --ignore=tests/e2e
         env:
