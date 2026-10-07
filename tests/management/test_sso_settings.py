@@ -198,6 +198,56 @@ class TestSSOSettings:
                 follow_redirects=False,
             )
 
+    # usePkce is sent only when set, and False has to be sent as False so PKCE can be turned off.
+    @pytest.mark.parametrize("use_pkce", [True, False])
+    async def test_configure_oidc_settings_use_pkce(self, client_factory, use_pkce):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            await client.invoke(
+                client.mgmt.sso.configure_oidc_settings(
+                    "tenant-id",
+                    SSOOIDCSettings(name="myName", client_id="cid", use_pkce=use_pkce),
+                    ["domain.com"],
+                )
+            )
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_configure_oidc_settings}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "tenantId": "tenant-id",
+                    "settings": {
+                        "name": "myName",
+                        "clientId": "cid",
+                        "clientSecret": None,
+                        "redirectUrl": None,
+                        "authUrl": None,
+                        "tokenUrl": None,
+                        "userDataUrl": None,
+                        "scope": None,
+                        "JWKsUrl": None,
+                        "manageProviderTokens": False,
+                        "callbackDomain": None,
+                        "prompt": None,
+                        "grantType": None,
+                        "issuer": None,
+                        "userAttrMapping": None,
+                        "groupsPriority": None,
+                        "fgaMappings": None,
+                        "usePkce": use_pkce,
+                    },
+                    "domains": ["domain.com"],
+                },
+                follow_redirects=False,
+            )
+
     async def test_configure_saml_settings(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 

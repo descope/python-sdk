@@ -154,7 +154,7 @@ class SSOSettingsBase:
                 "picture": settings.attribute_mapping.picture,
             }
 
-        return {
+        body: dict = {
             "tenantId": tenant_id,
             "settings": {
                 "name": settings.name,
@@ -177,6 +177,10 @@ class SSOSettingsBase:
             },
             "domains": domains,
         }
+        # Optional on the server: an omitted usePkce keeps the stored value, so send it only when set.
+        if settings.use_pkce is not None:
+            body["settings"]["usePkce"] = settings.use_pkce
+        return body
 
     @staticmethod
     def _issuer_settings_to_dict(

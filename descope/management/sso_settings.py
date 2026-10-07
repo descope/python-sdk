@@ -190,6 +190,10 @@ class SSOOIDCSettings:
         issuer: Optional[str] = None,
         groups_priority: Optional[List[str]] = None,  # list of group names in priority order (first = highest priority)
         fga_mappings: Optional[Dict[str, FGAGroupMapping]] = None,  # map of IDP group name -> FGA relations
+        # Send a PKCE (S256) code challenge to the IdP and the code verifier on the code exchange.
+        # None keeps the stored value, False turns it off. Not allowed with the implicit grant type.
+        # Appended last to preserve positional compatibility for existing callers.
+        use_pkce: Optional[bool] = None,
     ):
         self.name = name
         self.client_id = client_id
@@ -208,6 +212,7 @@ class SSOOIDCSettings:
         self.issuer = issuer
         self.groups_priority = groups_priority
         self.fga_mappings = fga_mappings
+        self.use_pkce = use_pkce
 
 
 class SSOSAMLSettings:

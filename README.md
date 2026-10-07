@@ -1120,6 +1120,7 @@ settings = SSOOIDCSettings(
         verified_phone="verifiedPhone",
         picture="picture",
     ),
+    use_pkce=True,  # Optional, send a PKCE code challenge to the IdP; omit (None) to keep the stored value
 )
 descope_client.mgmt.sso.configure_oidc_settings(
     tenant_id,  # Which tenant this configuration is for
