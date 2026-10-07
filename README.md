@@ -24,7 +24,7 @@
 | descope/jwt\_common.py                                  |       51 |        4 |     92% | 27-29, 96 |
 | descope/management/\_lists\_base.py                     |       40 |        1 |     98% |        20 |
 | descope/management/\_outbound\_application\_base.py     |       58 |        4 |     93% |92, 96, 98, 100 |
-| descope/management/\_sso\_settings\_base.py             |       95 |        1 |     99% |         7 |
+| descope/management/\_sso\_settings\_base.py             |       98 |        1 |     99% |         7 |
 | descope/management/\_third\_party\_application\_base.py |       24 |        4 |     83% |32, 34, 36, 38 |
 | descope/management/\_user\_base.py                      |      162 |       11 |     93% |71-76, 142, 202, 252, 254, 256 |
 | descope/management/audit.py                             |       49 |       11 |     78% |75, 77, 79, 81, 83, 85, 87, 89, 91, 93, 95 |
@@ -38,7 +38,7 @@
 | descope/management/role\_async.py                       |       47 |        1 |     98% |       323 |
 | descope/management/user.py                              |      318 |        4 |     99% |757, 1131, 1133, 1135 |
 | descope/management/user\_async.py                       |      319 |        4 |     99% |762, 1136, 1138, 1140 |
-|                                               **TOTAL** | **6760** |  **109** | **98%** |           |
+|                                               **TOTAL** | **6764** |  **109** | **98%** |           |
 
 78 files skipped due to complete coverage.
 
