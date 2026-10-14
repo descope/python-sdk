@@ -31,6 +31,8 @@ class OutboundApplicationBase:
         pkce: Optional[bool] = None,
         access_type: Optional[AccessType] = None,
         prompt: Optional[List[PromptType]] = None,
+        use_dcr: bool = False,
+        dcr_url: str = "",
     ) -> dict:
         body: dict[str, Any] = {
             "name": name,
@@ -66,6 +68,8 @@ class OutboundApplicationBase:
             body["accessType"] = access_type.value
         if prompt is not None:
             body["prompt"] = [p.value for p in prompt]
+        body["useDcr"] = use_dcr
+        body["dcrUrl"] = dcr_url
         return body
 
     @staticmethod

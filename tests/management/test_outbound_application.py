@@ -104,6 +104,38 @@ class TestOutboundApplication:
             with pytest.raises(AuthException):
                 await client.invoke(client.mgmt.outbound_application.create_application("Test App"))
 
+    async def test_create_application_with_dcr_success(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_post(make_response(APP_RESPONSE)) as mock_post:
+            response = await client.invoke(
+                client.mgmt.outbound_application.create_application(
+                    "Test App",
+                    description="Test Description",
+                    client_secret="secret",
+                    use_dcr=True,
+                    dcr_url="https://example.com/register",
+                )
+            )
+            assert response == APP_RESPONSE
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.outbound_application_create_path}",
+                headers=MGMT_HEADERS,
+                params=None,
+                json={
+                    "name": "Test App",
+                    "id": None,
+                    "description": "Test Description",
+                    "logo": None,
+                    "clientSecret": "secret",
+                    "useDcr": True,
+                    "dcrUrl": "https://example.com/register",
+                },
+                follow_redirects=False,
+            )
+
     async def test_update_application_success(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
@@ -194,6 +226,41 @@ class TestOutboundApplication:
         with client.mock_mgmt_post(make_response(status=500)):
             with pytest.raises(AuthException):
                 await client.invoke(client.mgmt.outbound_application.update_application("app123", "Updated App"))
+
+    async def test_update_application_with_dcr_success(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_post(make_response(APP_RESPONSE)) as mock_post:
+            response = await client.invoke(
+                client.mgmt.outbound_application.update_application(
+                    "app123",
+                    "Updated App",
+                    description="Updated Description",
+                    client_secret="new-secret",
+                    use_dcr=True,
+                    dcr_url="https://example.com/register",
+                )
+            )
+            assert response == APP_RESPONSE
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.outbound_application_update_path}",
+                headers=MGMT_HEADERS,
+                params=None,
+                json={
+                    "app": {
+                        "name": "Updated App",
+                        "id": "app123",
+                        "description": "Updated Description",
+                        "logo": None,
+                        "clientSecret": "new-secret",
+                        "useDcr": True,
+                        "dcrUrl": "https://example.com/register",
+                    }
+                },
+                follow_redirects=False,
+            )
 
     async def test_delete_application_success(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
@@ -351,6 +418,9 @@ class TestOutboundApplication:
             "clientSecret": "secret",
         }
 
+        expected_body["useDcr"] = False
+        expected_body["dcrUrl"] = ""
+
         assert body == expected_body
 
     def test_compose_create_update_body_without_client_secret(self):
@@ -364,6 +434,9 @@ class TestOutboundApplication:
             "description": "Test Description",
             "logo": "https://example.com/logo.png",
         }
+
+        expected_body["useDcr"] = False
+        expected_body["dcrUrl"] = ""
 
         assert body == expected_body
 
@@ -420,6 +493,9 @@ class TestOutboundApplication:
             "prompt": ["login", "consent"],
         }
 
+        expected_body["useDcr"] = False
+        expected_body["dcrUrl"] = ""
+
         assert body == expected_body
 
     def test_compose_create_update_body_with_partial_new_parameters(self):
@@ -447,6 +523,9 @@ class TestOutboundApplication:
             "accessType": "online",
         }
 
+        expected_body["useDcr"] = False
+        expected_body["dcrUrl"] = ""
+
         assert body == expected_body
 
     def test_compose_create_update_body_with_url_params_only(self):
@@ -469,6 +548,9 @@ class TestOutboundApplication:
             "tokenUrlParams": [{"name": "grant_type", "value": "authorization_code"}],
         }
 
+        expected_body["useDcr"] = False
+        expected_body["dcrUrl"] = ""
+
         assert body == expected_body
 
     def test_compose_create_update_body_with_prompt_types(self):
@@ -485,6 +567,9 @@ class TestOutboundApplication:
             "logo": None,
             "prompt": ["login", "consent", "select_account"],
         }
+
+        expected_body["useDcr"] = False
+        expected_body["dcrUrl"] = ""
 
         assert body == expected_body
 
@@ -503,6 +588,9 @@ class TestOutboundApplication:
             "description": "Test Description",
             "logo": None,
         }
+
+        expected_body["useDcr"] = False
+        expected_body["dcrUrl"] = ""
 
         assert body == expected_body
 
@@ -526,6 +614,9 @@ class TestOutboundApplication:
             "defaultScopes": [],
             "prompt": [],
         }
+
+        expected_body["useDcr"] = False
+        expected_body["dcrUrl"] = ""
 
         assert body == expected_body
 
