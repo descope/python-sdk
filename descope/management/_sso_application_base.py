@@ -30,6 +30,7 @@ class SSOApplicationBase:
         logo: Optional[str] = None,
         enabled: Optional[bool] = True,
         force_authentication: Optional[bool] = False,
+        client_type: Optional[str] = None,
     ) -> dict:
         body: dict[str, Any] = {
             "name": name,
@@ -40,6 +41,9 @@ class SSOApplicationBase:
             "loginPageUrl": login_page_url,
             "forceAuthentication": force_authentication,
         }
+        # Omitted (not sent as null) when unset, so callers that don't pass it send the same body as before
+        if client_type is not None:
+            body["clientType"] = client_type
         return body
 
     @staticmethod

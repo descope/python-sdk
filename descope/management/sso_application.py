@@ -21,6 +21,7 @@ class SSOApplication(SSOApplicationBase, HTTPBase):
         logo: Optional[str] = None,
         enabled: Optional[bool] = True,
         force_authentication: Optional[bool] = False,
+        client_type: Optional[str] = None,
     ) -> dict:
         """
         Create a new OIDC sso application with the given name. SSO application IDs are provisioned automatically, but can be provided
@@ -34,6 +35,8 @@ class SSOApplication(SSOApplicationBase, HTTPBase):
         logo (str): Optional sso application logo.
         enabled (bool): Optional (default True) does the sso application will be enabled or disabled.
         force_authentication (bool): Optional determine if the IdP should force the user to re-authenticate.
+        client_type (str): Optional OAuth client type, "confidential" or "public". Leaving it empty selects the
+            legacy client type, which newer Descope accounts can't use.
 
         Return value (dict):
         Return dict in the format
@@ -53,6 +56,7 @@ class SSOApplication(SSOApplicationBase, HTTPBase):
                 logo,
                 enabled,
                 force_authentication,
+                client_type,
             ),
         )
         return response.json()
@@ -164,6 +168,7 @@ class SSOApplication(SSOApplicationBase, HTTPBase):
         logo: Optional[str] = None,
         enabled: Optional[bool] = True,
         force_authentication: Optional[bool] = False,
+        client_type: Optional[str] = None,
     ):
         """
         Update an existing OIDC sso application with the given parameters. IMPORTANT: All parameters are used as overrides
@@ -177,6 +182,10 @@ class SSOApplication(SSOApplicationBase, HTTPBase):
         logo (str): Optional sso application logo.
         enabled (bool): Optional (default True) does the sso application will be enabled or disabled.
         force_authentication (bool): Optional determine if the IdP should force the user to re-authenticate.
+        client_type (str): Optional OAuth client type, "confidential" or "public". Leaving it empty selects the
+            legacy client type, which newer Descope accounts can't use. Since update overrides all fields, omitting
+            it resets the app to the legacy client type (or the update is rejected on newer accounts), so pass the
+            app's current client type.
 
         Raise:
         AuthException: raised if update operation fails
@@ -193,6 +202,7 @@ class SSOApplication(SSOApplicationBase, HTTPBase):
                 logo,
                 enabled,
                 force_authentication,
+                client_type,
             ),
         )
 

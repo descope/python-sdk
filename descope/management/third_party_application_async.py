@@ -21,6 +21,7 @@ class ThirdPartyApplicationAsync(AsyncHTTPBase):
         custom_attributes: Optional[Dict[str, Any]] = None,
         force_pkce: Optional[bool] = None,
         default_audience: Optional[str] = None,
+        client_type: Optional[str] = None,
     ) -> dict:
         """
         Create a new third party application with the given parameters.
@@ -40,6 +41,8 @@ class ThirdPartyApplicationAsync(AsyncHTTPBase):
         custom_attributes (Dict[str, Any]): Optional custom attributes.
         force_pkce (bool): Optional flag to require PKCE on the authorization-code flow.
         default_audience (str): Optional default aud of issued tokens: "projectId", "clientId", or "" (both).
+        client_type (str): Optional OAuth client type, "confidential" or "public". Leaving it empty selects the
+            legacy client type, which newer Descope accounts can't use.
 
         Return value (dict):
         Return dict in the format
@@ -61,6 +64,7 @@ class ThirdPartyApplicationAsync(AsyncHTTPBase):
             custom_attributes=custom_attributes,
             force_pkce=force_pkce,
             default_audience=default_audience,
+            client_type=client_type,
         )
         response = await self._http.post(MgmtV1.thirdparty_application_create_path, body=body)
         return response.json()
@@ -79,6 +83,7 @@ class ThirdPartyApplicationAsync(AsyncHTTPBase):
         custom_attributes: Optional[Dict[str, Any]] = None,
         force_pkce: Optional[bool] = None,
         default_audience: Optional[str] = None,
+        client_type: Optional[str] = None,
     ):
         """
         Update an existing third party application with the given parameters.
@@ -98,6 +103,10 @@ class ThirdPartyApplicationAsync(AsyncHTTPBase):
         custom_attributes (Dict[str, Any]): Optional custom attributes.
         force_pkce (bool): Optional flag to require PKCE on the authorization-code flow.
         default_audience (str): Optional default aud of issued tokens.
+        client_type (str): Optional OAuth client type, "confidential" or "public". Leaving it empty selects the
+            legacy client type, which newer Descope accounts can't use. Since update overrides all fields, omitting
+            it resets the app to the legacy client type (or the update is rejected on newer accounts), so pass the
+            app's current client type.
 
         Raise:
         AuthException: raised if update operation fails
@@ -115,6 +124,7 @@ class ThirdPartyApplicationAsync(AsyncHTTPBase):
             custom_attributes=custom_attributes,
             force_pkce=force_pkce,
             default_audience=default_audience,
+            client_type=client_type,
         )
         await self._http.post(MgmtV1.thirdparty_application_update_path, body=body)
 
@@ -132,6 +142,7 @@ class ThirdPartyApplicationAsync(AsyncHTTPBase):
         custom_attributes: Optional[Dict[str, Any]] = None,
         force_pkce: Optional[bool] = None,
         default_audience: Optional[str] = None,
+        client_type: Optional[str] = None,
     ):
         """
         Patch an existing third party application with the given parameters.
@@ -150,6 +161,7 @@ class ThirdPartyApplicationAsync(AsyncHTTPBase):
         custom_attributes (Dict[str, Any]): Optional custom attributes.
         force_pkce (bool): Optional flag to require PKCE on the authorization-code flow.
         default_audience (str): Optional default aud of issued tokens.
+        client_type (str): Optional OAuth client type, "confidential" or "public". Left unchanged when omitted.
 
         Raise:
         AuthException: raised if patch operation fails
@@ -177,6 +189,8 @@ class ThirdPartyApplicationAsync(AsyncHTTPBase):
             body["forcePkce"] = force_pkce
         if default_audience is not None:
             body["defaultAudience"] = default_audience
+        if client_type is not None:
+            body["clientType"] = client_type
         await self._http.post(MgmtV1.thirdparty_application_patch_path, body=body)
 
     async def delete(self, id: str):
