@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.16.0](https://github.com/descope/python-sdk/compare/descope-2.15.0...descope-2.16.0) (2026-10-19)
+
+
+### Features
+
+* **lists:** add check_texts to check multiple texts in one call ([#1727](https://github.com/descope/python-sdk/issues/1727)) ([6742eb1](https://github.com/descope/python-sdk/commit/6742eb1f70d5dd8b6da6c680a6d3e1c6c90054cc))
+* **sso:** usePkce on tenant OIDC SSO settings ([#1716](https://github.com/descope/python-sdk/issues/1716)) ([cf607b9](https://github.com/descope/python-sdk/commit/cf607b9623a884b86186876a8fb4ab33f51579ae))
+* support lock reason in user search ([#1712](https://github.com/descope/python-sdk/issues/1712)) ([6bd0f56](https://github.com/descope/python-sdk/commit/6bd0f5640ed5b5e12c57cb813b2accf3ab6f40d8))
+
 ## [2.15.0](https://github.com/descope/python-sdk/compare/descope-2.14.0...descope-2.15.0) (2026-10-04)
 
 
