@@ -233,6 +233,28 @@ class Lists(ListsBase, HTTPBase):
         result = response.json()
         return result.get("exists", False)
 
+    def check_texts(self, id: str, texts: List[str], match_all: bool = False) -> bool:
+        """
+        Check if texts exist in a text list in a single call. The list must be of type "texts".
+
+        Args:
+        id (str): The ID of the text list.
+        texts (List[str]): The texts to check (up to 100, non-empty).
+        match_all (bool): Optional, when True all texts must exist in the list.
+            Defaults to False, meaning at least one of the texts must exist.
+
+        Return value (bool):
+        True if any of the texts exists in the list (or all of them when match_all is True), False otherwise.
+
+        Raise:
+        AuthException: raised if operation fails
+        """
+        response = self._http.post(
+            MgmtV1.list_text_check_path, body=ListsBase._compose_check_texts_body(id, texts, match_all)
+        )
+        result = response.json()
+        return result.get("exists", False)
+
     def clear(self, id: str):
         """
         Clear all data from a list. The list metadata (name, description, type) is

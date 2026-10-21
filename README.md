@@ -2033,6 +2033,9 @@ is_blocked = descope_client.mgmt.list.check_ip(list_id, "10.0.0.1")
 descope_client.mgmt.list.add_texts(list_id, ["spam@example.com"])
 descope_client.mgmt.list.remove_texts(list_id, ["spam@example.com"])
 has_text = descope_client.mgmt.list.check_text(list_id, "spam@example.com")
+# Check up to 100 texts in one call: True if any exists, or only if all exist with match_all=True
+has_any = descope_client.mgmt.list.check_texts(list_id, ["spam@example.com", "+15555555555"])
+has_all = descope_client.mgmt.list.check_texts(list_id, ["spam@example.com", "+15555555555"], match_all=True)
 
 # Clear all entries
 descope_client.mgmt.list.clear(list_id)
