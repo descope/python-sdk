@@ -39,8 +39,8 @@ class ThirdPartyApplication(HTTPBase):
         custom_attributes (Dict[str, Any]): Optional custom attributes.
         force_pkce (bool): Optional flag to require PKCE on the authorization-code flow.
         default_audience (str): Optional default aud of issued tokens: "projectId", "clientId", or "" (both).
-        client_type (str): Optional OAuth client type, "confidential" or "public". Leaving it empty selects the
-            legacy client type, which newer Descope accounts can't use.
+        client_type (str): Optional OAuth client type, "confidential" or "public". If omitted, newer Descope
+            accounts get "confidential" and older accounts get the legacy client type.
 
         Return value (dict):
         Return dict in the format
@@ -101,10 +101,9 @@ class ThirdPartyApplication(HTTPBase):
         custom_attributes (Dict[str, Any]): Optional custom attributes.
         force_pkce (bool): Optional flag to require PKCE on the authorization-code flow.
         default_audience (str): Optional default aud of issued tokens.
-        client_type (str): Optional OAuth client type, "confidential" or "public". Leaving it empty selects the
-            legacy client type, which newer Descope accounts can't use. Since update overrides all fields, omitting
-            it resets the app to the legacy client type (or the update is rejected on newer accounts), so pass the
-            app's current client type.
+        client_type (str): Optional OAuth client type, "confidential" or "public". Since update overrides all
+            fields, omitting it resets the app to the legacy client type on older Descope accounts and is rejected
+            on newer accounts, so pass the app's current client type.
 
         Raise:
         AuthException: raised if update operation fails
