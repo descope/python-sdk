@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.16.1](https://github.com/descope/python-sdk/compare/descope-2.16.0...descope-2.16.1) (2026-10-22)
+
+
+### Bug Fixes
+
+* **deps:** require certifi&gt;=2026.10.19 to distrust compromised eMudhra CAs ([#1734](https://github.com/descope/python-sdk/issues/1734)) ([abcd3c9](https://github.com/descope/python-sdk/commit/abcd3c90040bb33e576471097fa807c8565377ca))
+
 ## [2.16.0](https://github.com/descope/python-sdk/compare/descope-2.15.0...descope-2.16.0) (2026-10-19)
 
 
