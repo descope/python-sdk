@@ -373,15 +373,19 @@ class AuthzAsync(AsyncHTTPBase):
         """
         Get all targets and resources changed since the given date.
         Args:
-        since (datetime): only return changes from this given datetime
+        since (datetime): only return changes from this given datetime.
+            Naive datetimes are treated as UTC; aware datetimes preserve their instant.
 
         Return value (dict):
         Dict including "resources" list of strings, "targets" list of strings and "schemaChanged" bool
         Raise:
         AuthException: raised if query fails
         """
+        if since is not None and since.utcoffset() is None:
+            since = since.replace(tzinfo=timezone.utc)
+
         response = await self._http.post(
             MgmtV1.authz_get_modified,
-            body={"since": (int(since.replace(tzinfo=timezone.utc).timestamp() * 1000) if since else 0)},
+            body={"since": int(since.timestamp() * 1000) if since is not None else 0},
         )
         return response.json()["relations"]
