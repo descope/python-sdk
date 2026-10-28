@@ -58,6 +58,48 @@ class TestSSOApplication:
                 follow_redirects=False,
             )
 
+    @pytest.mark.parametrize(
+        "client_type_kwargs, client_type_body",
+        [
+            ({}, {}),
+            ({"client_type": "confidential"}, {"clientType": "confidential"}),
+            ({"client_type": "public"}, {"clientType": "public"}),
+        ],
+    )
+    async def test_create_oidc_application_client_type(self, client_factory, client_type_kwargs, client_type_body):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_post(make_response({"id": "app1"})) as mock_post:
+            await client.invoke(
+                client.mgmt.sso_application.create_oidc_application(
+                    name="name",
+                    login_page_url="http://dummy.com",
+                    **client_type_kwargs,
+                )
+            )
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_application_oidc_create_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "name": "name",
+                    "loginPageUrl": "http://dummy.com",
+                    "enabled": True,
+                    "id": None,
+                    "description": None,
+                    "logo": None,
+                    "forceAuthentication": False,
+                    **client_type_body,
+                },
+                follow_redirects=False,
+            )
+
     async def test_create_saml_application(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
@@ -204,6 +246,49 @@ class TestSSOApplication:
                     "description": None,
                     "logo": None,
                     "forceAuthentication": False,
+                },
+                follow_redirects=False,
+            )
+
+    @pytest.mark.parametrize(
+        "client_type_kwargs, client_type_body",
+        [
+            ({}, {}),
+            ({"client_type": "confidential"}, {"clientType": "confidential"}),
+            ({"client_type": "public"}, {"clientType": "public"}),
+        ],
+    )
+    async def test_update_oidc_application_client_type(self, client_factory, client_type_kwargs, client_type_body):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            await client.invoke(
+                client.mgmt.sso_application.update_oidc_application(
+                    "app1",
+                    "name",
+                    "http://dummy.com",
+                    **client_type_kwargs,
+                )
+            )
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.sso_application_oidc_update_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "id": "app1",
+                    "name": "name",
+                    "loginPageUrl": "http://dummy.com",
+                    "enabled": True,
+                    "description": None,
+                    "logo": None,
+                    "forceAuthentication": False,
+                    **client_type_body,
                 },
                 follow_redirects=False,
             )

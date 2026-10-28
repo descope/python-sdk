@@ -159,6 +159,58 @@ class TestThirdPartyApplication:
                 follow_redirects=False,
             )
 
+    @pytest.mark.parametrize(
+        "client_type_kwargs, client_type_body",
+        [
+            ({}, {}),
+            ({"client_type": "confidential"}, {"clientType": "confidential"}),
+            ({"client_type": "public"}, {"clientType": "public"}),
+        ],
+    )
+    @pytest.mark.parametrize(
+        "method, path, args, base_body",
+        [
+            (
+                "create",
+                MgmtV1.thirdparty_application_create_path,
+                {"name": "test-app", "login_page_url": "http://dummy.com"},
+                {"name": "test-app", "loginPageUrl": "http://dummy.com"},
+            ),
+            (
+                "update",
+                MgmtV1.thirdparty_application_update_path,
+                {"id": "app1", "name": "test-app", "login_page_url": "http://dummy.com"},
+                {"id": "app1", "name": "test-app", "loginPageUrl": "http://dummy.com"},
+            ),
+            (
+                "patch",
+                MgmtV1.thirdparty_application_patch_path,
+                {"id": "app1"},
+                {"id": "app1"},
+            ),
+        ],
+    )
+    async def test_client_type(
+        self, client_factory, method, path, args, base_body, client_type_kwargs, client_type_body
+    ):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_post(make_response({})) as mock_post:
+            await client.invoke(getattr(client.mgmt.third_party_application, method)(**args, **client_type_kwargs))
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={**base_body, **client_type_body},
+                follow_redirects=False,
+            )
+
     async def test_delete(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 

@@ -23,6 +23,7 @@ class SSOApplicationAsync(SSOApplicationBase, AsyncHTTPBase):
         logo: Optional[str] = None,
         enabled: Optional[bool] = True,
         force_authentication: Optional[bool] = False,
+        client_type: Optional[str] = None,
     ) -> dict:
         """
         Create a new OIDC sso application with the given name. SSO application IDs are provisioned automatically, but can be provided
@@ -36,6 +37,8 @@ class SSOApplicationAsync(SSOApplicationBase, AsyncHTTPBase):
         logo (str): Optional sso application logo.
         enabled (bool): Optional (default True) does the sso application will be enabled or disabled.
         force_authentication (bool): Optional determine if the IdP should force the user to re-authenticate.
+        client_type (str): Optional OAuth client type, "confidential" or "public". If omitted, the account's
+            default client type is used; the created app's client type shows which one it got.
 
         Return value (dict):
         Return dict in the format
@@ -55,6 +58,7 @@ class SSOApplicationAsync(SSOApplicationBase, AsyncHTTPBase):
                 logo,
                 enabled,
                 force_authentication,
+                client_type,
             ),
         )
         return response.json()
@@ -166,6 +170,7 @@ class SSOApplicationAsync(SSOApplicationBase, AsyncHTTPBase):
         logo: Optional[str] = None,
         enabled: Optional[bool] = True,
         force_authentication: Optional[bool] = False,
+        client_type: Optional[str] = None,
     ):
         """
         Update an existing OIDC sso application with the given parameters. IMPORTANT: All parameters are used as overrides
@@ -179,6 +184,8 @@ class SSOApplicationAsync(SSOApplicationBase, AsyncHTTPBase):
         logo (str): Optional sso application logo.
         enabled (bool): Optional (default True) does the sso application will be enabled or disabled.
         force_authentication (bool): Optional determine if the IdP should force the user to re-authenticate.
+        client_type (str): Optional OAuth client type, "confidential" or "public". Update overrides all fields,
+            so pass the app's current client type.
 
         Raise:
         AuthException: raised if update operation fails
@@ -195,6 +202,7 @@ class SSOApplicationAsync(SSOApplicationBase, AsyncHTTPBase):
                 logo,
                 enabled,
                 force_authentication,
+                client_type,
             ),
         )
 
