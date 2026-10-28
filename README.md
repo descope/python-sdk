@@ -1650,7 +1650,7 @@ descope_client.mgmt.sso_application.create_oidc_application(
     name="My First sso app",
 	login_page_url="http://dummy.com",
 	id="my-custom-id", # This is optional.
-	client_type="confidential", # "confidential" or "public". If omitted, newer accounts get "confidential".
+	client_type="confidential", # "confidential" or "public". If omitted, the account's default is used.
 )
 
 # Create SAML SSO application
@@ -1671,7 +1671,7 @@ descope_client.mgmt.sso_application.update_oidc_application(
     id="my-custom-id",
     name="My First sso app",
     login_page_url="http://dummy.com",
-    client_type="confidential", # Pass the app's current type: omitting it resets to the legacy type (rejected for newer accounts).
+    client_type="confidential", # Update overrides all fields, so pass the app's current client type.
 )
 
 # Update SAML SSO application
@@ -1917,7 +1917,7 @@ resp = descope_client.mgmt.third_party_application.create(
     approved_callback_urls=["https://my-app.com/callback"],  # Optional
     permissions_scopes=[{"name": "read", "description": "Read access", "values": ["roleA"]}],  # Optional
     force_pkce=True,  # Optional
-    client_type="confidential",  # "confidential" or "public". If omitted, newer accounts get "confidential".
+    client_type="confidential",  # "confidential" or "public". If omitted, the account's default is used.
 )
 app_id = resp["id"]
 
@@ -1926,7 +1926,7 @@ descope_client.mgmt.third_party_application.update(
     id=app_id,
     name="my-app",
     login_page_url="https://my-app.com/login",
-    client_type="confidential",  # Pass the app's current type: omitting it resets to the legacy type (rejected for newer accounts).
+    client_type="confidential",  # Update overrides all fields, so pass the app's current client type.
 )
 
 # Patch only the provided fields

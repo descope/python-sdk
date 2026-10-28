@@ -35,8 +35,8 @@ class SSOApplication(SSOApplicationBase, HTTPBase):
         logo (str): Optional sso application logo.
         enabled (bool): Optional (default True) does the sso application will be enabled or disabled.
         force_authentication (bool): Optional determine if the IdP should force the user to re-authenticate.
-        client_type (str): Optional OAuth client type, "confidential" or "public". If omitted, newer Descope
-            accounts get "confidential" and older accounts get the legacy client type.
+        client_type (str): Optional OAuth client type, "confidential" or "public". If omitted, the account's
+            default client type is used; the created app's client type shows which one it got.
 
         Return value (dict):
         Return dict in the format
@@ -182,9 +182,8 @@ class SSOApplication(SSOApplicationBase, HTTPBase):
         logo (str): Optional sso application logo.
         enabled (bool): Optional (default True) does the sso application will be enabled or disabled.
         force_authentication (bool): Optional determine if the IdP should force the user to re-authenticate.
-        client_type (str): Optional OAuth client type, "confidential" or "public". Since update overrides all
-            fields, omitting it resets the app to the legacy client type on older Descope accounts and is rejected
-            on newer accounts, so pass the app's current client type.
+        client_type (str): Optional OAuth client type, "confidential" or "public". Update overrides all fields,
+            so pass the app's current client type.
 
         Raise:
         AuthException: raised if update operation fails
