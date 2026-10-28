@@ -41,7 +41,6 @@ class SSOApplicationBase:
             "loginPageUrl": login_page_url,
             "forceAuthentication": force_authentication,
         }
-        # Omitted (not sent as null) when unset, so callers that don't pass it send the same body as before
         if client_type is not None:
             body["clientType"] = client_type
         return body
