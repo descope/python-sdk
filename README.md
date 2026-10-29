@@ -2209,13 +2209,33 @@ for key in keys:
     # Do something
 
 # Update a management key
-# IMPORTANT: All parameters will override existing values. Use carefully.
+# IMPORTANT: All parameters will override existing values, except rebac. Use carefully.
 update_resp = descope_client.mgmt.management_key.update(
     id="key-id",
     name="Updated Key Name",
     description="Updated description",
     permitted_ips=["10.0.0.2"],
     status=MgmtKeyStatus.ACTIVE,  # Can be ACTIVE or INACTIVE
+)
+updated_key = update_resp["key"]
+
+# Update a management key's roles
+# The optional rebac parameter replaces the key's current roles without rotating its secret.
+# When rebac is omitted, the key keeps its current roles.
+update_resp = descope_client.mgmt.management_key.update(
+    id="key-id",
+    name="Updated Key Name",
+    description="Updated description",
+    permitted_ips=["10.0.0.2"],
+    status=MgmtKeyStatus.ACTIVE,
+    rebac=MgmtKeyReBac(
+        project_roles=[
+            MgmtKeyProjectRole(
+                project_ids=["project-id-1"],
+                roles=["read-only"]
+            )
+        ],
+    ),
 )
 updated_key = update_resp["key"]
 
