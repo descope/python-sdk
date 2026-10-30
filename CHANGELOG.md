@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.17.0](https://github.com/descope/python-sdk/compare/descope-2.16.1...descope-2.17.0) (2026-10-30)
+
+
+### Features
+
+* **mgmt:** support client type on federated and inbound apps ([#1728](https://github.com/descope/python-sdk/issues/1728)) ([6da9831](https://github.com/descope/python-sdk/commit/6da9831d184f4de05b4b005943382cc3e15714db))
+
 ## [2.16.1](https://github.com/descope/python-sdk/compare/descope-2.16.0...descope-2.16.1) (2026-10-22)
 
 
