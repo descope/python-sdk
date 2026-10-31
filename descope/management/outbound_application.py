@@ -135,6 +135,8 @@ class OutboundApplication(OutboundApplicationBase, HTTPBase):
         pkce: Optional[bool] = None,
         access_type: Optional[AccessType] = None,
         prompt: Optional[List[PromptType]] = None,
+        use_dcr: bool = False,
+        dcr_url: str = "",
     ) -> dict:
         """
         Create a new outbound application with the given name. Outbound application IDs are provisioned automatically, but can be provided
@@ -159,6 +161,8 @@ class OutboundApplication(OutboundApplicationBase, HTTPBase):
         pkce (bool): Optional PKCE (Proof Key for Code Exchange) support.
         access_type (AccessType): Optional OAuth access type.
         prompt (List[PromptType]): Optional OAuth prompt parameters.
+        use_dcr (bool): Whether to use Dynamic Client Registration.
+        dcr_url (str): The Dynamic Client Registration URL.
 
         Return value (dict):
         Return dict in the format
@@ -189,6 +193,8 @@ class OutboundApplication(OutboundApplicationBase, HTTPBase):
                 pkce,
                 access_type,
                 prompt,
+                use_dcr,
+                dcr_url,
             ),
         )
         return response.json()
@@ -213,6 +219,8 @@ class OutboundApplication(OutboundApplicationBase, HTTPBase):
         pkce: Optional[bool] = None,
         access_type: Optional[AccessType] = None,
         prompt: Optional[List[PromptType]] = None,
+        use_dcr: bool = False,
+        dcr_url: str = "",
     ) -> dict:
         """
         Update an existing outbound application with the given parameters. IMPORTANT: All parameters are used as overrides
@@ -237,6 +245,8 @@ class OutboundApplication(OutboundApplicationBase, HTTPBase):
         pkce (bool): Optional PKCE (Proof Key for Code Exchange) support.
         access_type (AccessType): Optional OAuth access type.
         prompt (List[PromptType]): Optional OAuth prompt parameters.
+        use_dcr (bool): Whether to use Dynamic Client Registration.
+        dcr_url (str): The Dynamic Client Registration URL.
 
         Return value (dict):
         Return dict in the format
@@ -268,6 +278,8 @@ class OutboundApplication(OutboundApplicationBase, HTTPBase):
                     pkce,
                     access_type,
                     prompt,
+                    use_dcr,
+                    dcr_url,
                 )
             },
         )

@@ -1750,7 +1750,9 @@ full_app = descope_client.mgmt.outbound_application.create_application(
     callback_domain="myapp.com",
     pkce=True,  # Enable PKCE
     access_type=AccessType.OFFLINE,  # Request refresh tokens
-    prompt=prompts
+    prompt=prompts,
+    use_dcr=True,  # Enable Dynamic Client Registration
+    dcr_url="https://accounts.google.com/dcr",
 )
 
 # Update an outbound application with all parameters
@@ -1773,7 +1775,9 @@ descope_client.mgmt.outbound_application.update_application(
     callback_domain="myapp.com",
     pkce=True,
     access_type=AccessType.OFFLINE,
-    prompt=[PromptType.LOGIN, PromptType.CONSENT, PromptType.SELECT_ACCOUNT]
+    prompt=[PromptType.LOGIN, PromptType.CONSENT, PromptType.SELECT_ACCOUNT],
+    use_dcr=True,
+    dcr_url="https://accounts.google.com/dcr",
 )
 
 # Delete an outbound application by id
