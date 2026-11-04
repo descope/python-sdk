@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+from datetime import datetime, timezone
 from typing import Any, List, Optional
 
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
@@ -12,6 +14,60 @@ from descope.management.common import (
 from descope.management.user_pwd import UserPassword
 
 VALID_USER_STATUSES = ["enabled", "disabled", "invited", "expired"]
+
+_RFC3339_FRACTION = re.compile(r"\.(\d+)")
+
+
+def _datetime_to_rfc3339(value: datetime) -> str:
+    # Naive datetimes are treated as UTC, aware ones are converted to UTC
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    else:
+        value = value.astimezone(timezone.utc)
+    return value.isoformat().replace("+00:00", "Z")
+
+
+def _rfc3339_to_datetime(value: str) -> datetime:
+    # datetime.fromisoformat on Python < 3.11 rejects "Z" and fractions that
+    # are not 3 or 6 digits, so normalize both before parsing
+    value = value.strip()
+    if value.endswith(("Z", "z")):
+        value = value[:-1] + "+00:00"
+    value = _RFC3339_FRACTION.sub(lambda m: "." + m.group(1)[:6].ljust(6, "0"), value, count=1)
+    parsed = datetime.fromisoformat(value)
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+class LogoutSessionRange:
+    """
+    A session creation time range whose sessions are logged out.
+
+    after and before are tz-aware UTC datetimes. after is 1970-01-01T00:00:00Z
+    when the range was created without a lower bound.
+    """
+
+    def __init__(
+        self,
+        id: str,
+        after: datetime,
+        before: datetime,
+        session_types: Optional[List[str]] = None,
+    ):
+        self.id = id
+        self.after = after
+        self.before = before
+        self.session_types = session_types if session_types is not None else []
+
+    @staticmethod
+    def from_dict(data: dict) -> LogoutSessionRange:
+        return LogoutSessionRange(
+            id=data.get("id", ""),
+            after=_rfc3339_to_datetime(data.get("after") or "1970-01-01T00:00:00Z"),
+            before=_rfc3339_to_datetime(data["before"]),
+            session_types=list(data.get("sessionTypes") or []),
+        )
 
 
 class UserObj:
@@ -352,6 +408,22 @@ class UserBase:
             users_body.append(user_body)
 
         return {"users": users_body}
+
+    @staticmethod
+    def _compose_logout_sessions_body(
+        before: datetime,
+        after: Optional[datetime],
+        session_types: Optional[List[str]],
+    ) -> dict:
+        if before is None:
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "before is required")
+        body: dict[str, Any] = {"sessionsCreatedBefore": _datetime_to_rfc3339(before)}
+        # An omitted after means the range is open-ended, so it must not be sent
+        if after is not None:
+            body["sessionsCreatedAfter"] = _datetime_to_rfc3339(after)
+        if session_types:
+            body["sessionTypes"] = session_types
+        return body
 
     @staticmethod
     def _validate_search_pagination(limit: int, page: int) -> None:

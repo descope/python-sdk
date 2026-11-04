@@ -1,12 +1,18 @@
 from __future__ import annotations
 
 import base64
+from datetime import datetime
 from typing import List, Optional, Union
 
 from descope._http_base import AsyncHTTPBase
 from descope.common import DeliveryMethod, LoginOptions, get_method_string
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
-from descope.management._user_base import CreateUserObj, UserBase, UserObj
+from descope.management._user_base import (
+    CreateUserObj,
+    LogoutSessionRange,
+    UserBase,
+    UserObj,
+)
 from descope.management.common import (
     AssociatedFamily,
     AssociatedTenant,
@@ -615,6 +621,68 @@ class UserAsync(UserBase, AsyncHTTPBase):
         await self._http.post(
             MgmtV1.user_logout_path,
             body={"userId": user_id},
+        )
+
+    async def logout_sessions_created_between(
+        self,
+        before: datetime,
+        after: Optional[datetime] = None,
+        session_types: Optional[List[str]] = None,
+    ) -> LogoutSessionRange:
+        """
+        Logs out sessions created in the given time range (optionally only the given
+        session types). Each session is logged out on its next refresh or validation.
+        The range stays active for a year; delete it to stop applying it to new sessions,
+        sessions already logged out stay logged out.
+
+        Args:
+        before (datetime): Log out sessions created before this time.
+        after (datetime): Optional, log out sessions created after this time. Omit for an open-ended range.
+        session_types (List[str]): Optional, only log out sessions of these types.
+        Naive datetimes are treated as UTC, aware datetimes are converted to UTC.
+
+        Return value (LogoutSessionRange):
+        The created range, with after set to 1970-01-01T00:00:00Z when open-ended.
+
+        Raise:
+        AuthException: raised if logout operation fails
+        """
+        response = await self._http.post(
+            MgmtV1.user_logout_sessions_path,
+            body=UserBase._compose_logout_sessions_body(before, after, session_types),
+        )
+        return LogoutSessionRange.from_dict(response.json())
+
+    async def list_logout_session_ranges(self) -> List[LogoutSessionRange]:
+        """
+        List the active session logout ranges.
+
+        Return value (List[LogoutSessionRange]):
+        The active ranges.
+
+        Raise:
+        AuthException: raised if list operation fails
+        """
+        response = await self._http.post(
+            MgmtV1.user_logout_sessions_list_path,
+            body={},
+        )
+        return [LogoutSessionRange.from_dict(r) for r in response.json().get("ranges") or []]
+
+    async def delete_logout_session_range(self, id: str):
+        """
+        Delete a session logout range so it stops applying to new sessions.
+        Sessions already logged out stay logged out.
+
+        Args:
+        id (str): The ID of the range to delete.
+
+        Raise:
+        AuthException: raised if delete operation fails, including when the range is not found
+        """
+        await self._http.post(
+            MgmtV1.user_logout_sessions_delete_path,
+            body={"id": id},
         )
 
     async def load_users(
