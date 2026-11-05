@@ -620,27 +620,31 @@ class User(UserBase, HTTPBase):
 
     def logout_sessions_created_between(
         self,
-        before: datetime,
+        before: Optional[datetime] = None,
         after: Optional[datetime] = None,
         session_types: Optional[List[str]] = None,
     ) -> LogoutSessionRange:
         """
         Logs out sessions created in the given time range (optionally only the given
         session types). Each session is logged out on its next refresh or validation.
-        The range stays active for a year; delete it to stop applying it to new sessions,
-        sessions already logged out stay logged out.
+        before defaults to the server's current time when None; prefer leaving it None
+        over passing the current time, since a before in the future is rejected.
+        Datetimes must be timezone-aware. The range stays active for a year. Deleting it
+        stops it from logging out matching sessions it hasn't logged out yet; sessions
+        already logged out stay logged out.
 
         Args:
-        before (datetime): Log out sessions created before this time.
+        before (datetime): Optional, log out sessions created before this time. Omit to use the server's current time.
         after (datetime): Optional, log out sessions created after this time. Omit for an open-ended range.
         session_types (List[str]): Optional, only log out sessions of these types.
-        Naive datetimes are treated as UTC, aware datetimes are converted to UTC.
+        At least one of before or after is required.
 
         Return value (LogoutSessionRange):
-        The created range, with after set to 1970-01-01T00:00:00Z when open-ended.
+        The range the server stored, which may have a later after than the one requested.
 
         Raise:
-        AuthException: raised if logout operation fails
+        AuthException: raised if logout operation fails, if both before and after are None,
+        or if a datetime is not timezone-aware
         """
         response = self._http.post(
             MgmtV1.user_logout_sessions_path,
@@ -666,8 +670,8 @@ class User(UserBase, HTTPBase):
 
     def delete_logout_session_range(self, id: str):
         """
-        Delete a session logout range so it stops applying to new sessions.
-        Sessions already logged out stay logged out.
+        Deletes a logout sessions range. It stops logging out matching sessions it hasn't
+        logged out yet; sessions already logged out stay logged out.
 
         Args:
         id (str): The ID of the range to delete.

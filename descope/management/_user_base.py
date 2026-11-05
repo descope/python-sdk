@@ -18,12 +18,11 @@ VALID_USER_STATUSES = ["enabled", "disabled", "invited", "expired"]
 _RFC3339_FRACTION = re.compile(r"\.(\d+)")
 
 
-def _datetime_to_rfc3339(value: datetime) -> str:
-    # Naive datetimes are treated as UTC, aware ones are converted to UTC
-    if value.tzinfo is None:
-        value = value.replace(tzinfo=timezone.utc)
-    else:
-        value = value.astimezone(timezone.utc)
+def _datetime_to_rfc3339(value: datetime, name: str) -> str:
+    # Naive datetimes are ambiguous, so reject them; aware ones are converted to UTC
+    if value.tzinfo is None or value.tzinfo.utcoffset(value) is None:
+        raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, f"{name} must be timezone-aware")
+    value = value.astimezone(timezone.utc)
     return value.isoformat().replace("+00:00", "Z")
 
 
@@ -44,8 +43,8 @@ class LogoutSessionRange:
     """
     A session creation time range whose sessions are logged out.
 
-    after and before are tz-aware UTC datetimes. after is 1970-01-01T00:00:00Z
-    when the range was created without a lower bound.
+    after and before are tz-aware UTC datetimes. They are the range the server
+    stored, which may have a later after than the one requested.
     """
 
     def __init__(
@@ -411,16 +410,19 @@ class UserBase:
 
     @staticmethod
     def _compose_logout_sessions_body(
-        before: datetime,
+        before: Optional[datetime],
         after: Optional[datetime],
         session_types: Optional[List[str]],
     ) -> dict:
-        if before is None:
-            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "before is required")
-        body: dict[str, Any] = {"sessionsCreatedBefore": _datetime_to_rfc3339(before)}
+        if before is None and after is None:
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "At least one of before or after is required")
+        body: dict[str, Any] = {}
+        # An omitted before means the server uses its current time, so it must not be sent
+        if before is not None:
+            body["sessionsCreatedBefore"] = _datetime_to_rfc3339(before, "before")
         # An omitted after means the range is open-ended, so it must not be sent
         if after is not None:
-            body["sessionsCreatedAfter"] = _datetime_to_rfc3339(after)
+            body["sessionsCreatedAfter"] = _datetime_to_rfc3339(after, "after")
         if session_types:
             body["sessionTypes"] = session_types
         return body

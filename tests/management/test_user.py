@@ -865,8 +865,24 @@ class TestUser:
             with pytest.raises(AuthException):
                 await client.invoke(client.mgmt.user.logout_sessions_created_between(before))
 
-        with pytest.raises(AuthException):
-            await client.invoke(client.mgmt.user.logout_sessions_created_between(None))
+        # Both before and after omitted, or naive datetimes, are rejected before any request
+        naive = datetime(2026, 10, 1, 0, 0, 0)
+        for kwargs in [
+            {},
+            {"before": None, "after": None},
+            {"before": naive},
+            {"before": before, "after": naive},
+            {"after": naive},
+        ]:
+            with client.mock_mgmt_post(make_response({})) as mock_post:
+                with pytest.raises(AuthException) as exc_info:
+                    await client.invoke(client.mgmt.user.logout_sessions_created_between(**kwargs))
+                assert exc_info.value.status_code == 400
+                mock_post.assert_not_called()
+
+        with client.mock_mgmt_post(make_response({})):
+            with pytest.raises(AuthException, match="must be timezone-aware"):
+                await client.invoke(client.mgmt.user.logout_sessions_created_between(after=naive))
 
         # Test success flow, open-ended range omits after from the body
         with client.mock_mgmt_post(
@@ -902,7 +918,40 @@ class TestUser:
                 follow_redirects=False,
             )
 
-        # Test success flow with after, session types, aware non-UTC and naive datetimes
+        # Test success flow with only after, before is omitted from the body
+        with client.mock_mgmt_post(
+            make_response(
+                {
+                    "id": "r3",
+                    "after": "2026-10-01T00:00:00Z",
+                    "before": "2026-11-01T12:00:00Z",
+                }
+            )
+        ) as mock_post:
+            res = await client.invoke(
+                client.mgmt.user.logout_sessions_created_between(
+                    after=datetime(2026, 10, 1, 0, 0, 0, tzinfo=timezone.utc),
+                )
+            )
+            assert res.id == "r3"
+            assert res.before == before
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_logout_sessions_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "sessionsCreatedAfter": "2026-10-01T00:00:00Z",
+                },
+                follow_redirects=False,
+            )
+
+        # Test success flow with after, session types and aware non-UTC datetimes
         plus_two = timezone(timedelta(hours=2))
         with client.mock_mgmt_post(
             make_response(
@@ -917,7 +966,7 @@ class TestUser:
             res = await client.invoke(
                 client.mgmt.user.logout_sessions_created_between(
                     before=datetime(2026, 11, 1, 12, 0, 0, tzinfo=plus_two),
-                    after=datetime(2026, 10, 1, 0, 0, 0),
+                    after=datetime(2026, 10, 1, 0, 0, 0, tzinfo=timezone.utc),
                     session_types=["web"],
                 )
             )
