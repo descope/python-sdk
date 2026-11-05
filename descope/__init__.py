@@ -52,7 +52,7 @@ from descope.management.sso_settings import (
     XAAJWTBearerSettings,
     XAASettings,
 )
-from descope.management.user import UserObj
+from descope.management.user import LogoutSessionRange, UserObj
 from descope.management.user_pwd import (
     UserPassword,
     UserPasswordBcrypt,
@@ -108,6 +108,7 @@ __all__ = [
     "XAAIssuerSettings",
     "XAAJWTBearerSettings",
     "XAASettings",
+    "LogoutSessionRange",
     "UserObj",
     "UserPassword",
     "UserPasswordBcrypt",
