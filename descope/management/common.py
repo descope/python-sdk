@@ -437,6 +437,7 @@ class MgmtV1:
     thirdparty_application_load_all_path = "/v1/mgmt/thirdparty/apps/load"
     thirdparty_application_rotate_path = "/v1/mgmt/thirdparty/app/rotate"
     thirdparty_application_secret_path = "/v1/mgmt/thirdparty/app/secret"
+    thirdparty_consents_create_path = "/v1/mgmt/thirdparty/consents/create"
     thirdparty_consents_delete_path = "/v1/mgmt/thirdparty/consents/delete"
     thirdparty_consents_delete_tenant_path = "/v1/mgmt/thirdparty/consents/delete/tenant"
     thirdparty_consents_search_path = "/v1/mgmt/thirdparty/consents/search"

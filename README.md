@@ -1940,6 +1940,16 @@ all_apps = descope_client.mgmt.third_party_application.load_all()
 new_secret = descope_client.mgmt.third_party_application.rotate_secret(app_id)
 secret = descope_client.mgmt.third_party_application.get_secret(app_id)
 
+# Create a user consent, e.g. to migrate consents users already granted in another system.
+# Scopes are merged into the user's existing consent for the same application and tenant.
+consent = descope_client.mgmt.third_party_application.create_consent(
+    app_id=app_id,
+    user_id="user-id",
+    scopes=["openid", "read"],  # Must include the application's mandatory scopes
+    tenant_id="tenant-id",  # Optional, the user must be a member of the tenant
+    expire_time=1767225600,  # Optional, seconds since the epoch. 0 (default) means never expires
+)["consent"]
+
 # Search and delete user consents
 consents = descope_client.mgmt.third_party_application.search_consents(app_id=app_id, limit=10)
 descope_client.mgmt.third_party_application.delete_consents(app_id=app_id, user_ids=["u1"])
