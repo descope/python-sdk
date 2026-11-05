@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.17.0](https://github.com/descope/python-sdk/compare/descope-2.16.1...descope-2.17.0) (2026-11-05)
+
+
+### Features
+
+* add create third party application consent to management ([#1756](https://github.com/descope/python-sdk/issues/1756)) ([6074818](https://github.com/descope/python-sdk/commit/6074818ece6f85104971e57672b7969318d4223e))
+* **mgmt:** allow updating management key roles ([#1744](https://github.com/descope/python-sdk/issues/1744)) ([9e5d2cd](https://github.com/descope/python-sdk/commit/9e5d2cdd0954b6461a78794f1e09c8a9cf2fe25d))
+* **mgmt:** support client type on federated and inbound apps ([#1728](https://github.com/descope/python-sdk/issues/1728)) ([6da9831](https://github.com/descope/python-sdk/commit/6da9831d184f4de05b4b005943382cc3e15714db))
+
 ## [2.16.1](https://github.com/descope/python-sdk/compare/descope-2.16.0...descope-2.16.1) (2026-10-22)
 
 
