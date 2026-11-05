@@ -287,6 +287,47 @@ class ThirdPartyApplicationAsync(AsyncHTTPBase):
         response = await self._http.get(MgmtV1.thirdparty_application_secret_path, params={"id": id})
         return response.json()
 
+    async def create_consent(
+        self,
+        app_id: str,
+        user_id: str,
+        scopes: List[str],
+        tenant_id: Optional[str] = None,
+        expire_time: Optional[int] = None,
+    ) -> dict:
+        """
+        Create a user consent for a third party application, e.g. to migrate consents a user
+        already granted in another system so the user is not asked to consent again.
+        The scopes are merged into the user's existing consent for the same application and tenant.
+        Consents of agentic applications cannot be created.
+
+        Args:
+        app_id (str): The third party application ID.
+        user_id (str): The ID of the user who granted the consent.
+        scopes (List[str]): The consented scopes. Each scope must be defined by the application,
+            and the application's mandatory scopes must be included (all of its scopes when it
+            does not allow partial scopes).
+        tenant_id (str): Optional tenant the consent is bound to. The user must be a member of this tenant.
+        expire_time (int): Optional expiration time of the consent, in seconds since the epoch.
+            0 means the consent never expires.
+
+        Return value (dict):
+        Return dict in the format
+             {"consent": {"id": "", "appId": "", "userId": "", "scopes": [], "grantedBy": "",
+                          "createdTime": 0, "tenantId": "", "ExpireTime": 0, ...}}
+        Containing the created (or merged) consent.
+
+        Raise:
+        AuthException: raised if creation operation fails
+        """
+        body: Dict[str, Any] = {"appId": app_id, "userId": user_id, "scopes": scopes}
+        if tenant_id is not None:
+            body["tenantId"] = tenant_id
+        if expire_time is not None:
+            body["expireTime"] = expire_time
+        response = await self._http.post(MgmtV1.thirdparty_consents_create_path, body=body)
+        return response.json()
+
     async def delete_consents(
         self,
         consent_ids: Optional[List[str]] = None,
