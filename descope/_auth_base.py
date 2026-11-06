@@ -4,6 +4,7 @@ import json
 import os
 import re
 from http import HTTPStatus
+from time import monotonic
 from typing import Iterable, Optional
 
 import jwt
@@ -30,6 +31,12 @@ from descope.exceptions import (
 from descope.jwt_common import adjust_properties as jwt_adjust_properties
 from descope.jwt_common import generate_auth_info as jwt_generate_auth_info
 from descope.jwt_common import generate_jwt_response as jwt_generate_jwt_response
+
+# Fetched signing keys are refreshed once this many seconds passed since the last successful fetch.
+_PUBLIC_KEYS_TTL_SECONDS = 600
+# Unknown kids trigger at most one fetch per this many seconds after a successful fetch.
+# Also spaces out failed refresh attempts while an expired set keeps serving cached keys.
+_PUBLIC_KEYS_REFETCH_COOLDOWN_SECONDS = 30
 
 
 class AuthBase:
@@ -65,6 +72,50 @@ class AuthBase:
         else:
             kid, pub_key, alg = self._validate_and_load_public_key(public_key)
             self.public_keys = {kid: (pub_key, alg)}
+        self._keys_fetched_at: Optional[float] = None
+        self._keys_attempted_at: Optional[float] = None
+
+    def _cache_has_kid(self, kid: str | None) -> bool:
+        if kid is None:
+            return bool(self.public_keys)
+        return kid in self.public_keys
+
+    def _public_keys_fetch_due(self, kid: str | None) -> bool:
+        """Return whether the signing keys should be fetched now, recording the attempt if so.
+
+        Caller must hold the public keys lock. A user-provided public key never expires.
+        """
+        now = monotonic()
+        fetched, attempted = self._keys_fetched_at, self._keys_attempted_at
+        if not self._cache_has_kid(kid):
+            due = fetched is None or now - fetched >= _PUBLIC_KEYS_REFETCH_COOLDOWN_SECONDS
+        else:
+            due = (
+                fetched is not None
+                and now - fetched >= _PUBLIC_KEYS_TTL_SECONDS
+                and (attempted is None or now - attempted >= _PUBLIC_KEYS_REFETCH_COOLDOWN_SECONDS)
+            )
+        if due:
+            self._keys_attempted_at = now
+        return due
+
+    def _load_public_keys(self, jwks_data: str) -> None:
+        """Replace the cached key set with the keys in a JWKS response body."""
+        try:
+            jwkeys = json.loads(jwks_data)["keys"]
+        except (ValueError, TypeError, KeyError) as e:
+            raise AuthException(500, ERROR_TYPE_INVALID_PUBLIC_KEY, f"Unable to load jwks. Error: {e}")
+
+        new_keys: dict = {}
+        for key in jwkeys:
+            try:
+                loaded_kid, pub_key, alg = self._validate_and_load_public_key(key)
+                new_keys[loaded_kid] = (pub_key, alg)
+            except AuthException:
+                # Skip invalid JWKS entries and continue loading the rest of the keys.
+                continue
+        self.public_keys = new_keys
+        self._keys_fetched_at = monotonic()
 
     def _raise_rate_limit_exception(self, response):
         try:

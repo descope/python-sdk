@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import copy
-import json
 from typing import Iterable, Optional
 
 from descope._auth_base import AuthBase
@@ -56,43 +55,23 @@ class AuthAsync(AuthBase):
     async def _fetch_public_keys(self) -> None:
         """Fetch JWKS via async HTTP. Caller must hold ``lock_public_keys``."""
         response = await self._http.get(f"{EndpointsV2.public_key_path}/{self.project_id}")
-        jwks_data = response.text
-        try:
-            jwkeys_wrapper = json.loads(jwks_data)
-            jwkeys = jwkeys_wrapper["keys"]
-        except (ValueError, TypeError, KeyError) as e:
-            raise AuthException(500, ERROR_TYPE_INVALID_PUBLIC_KEY, f"Unable to load jwks. Error: {e}")
-
-        new_keys: dict = {}
-        for key in jwkeys:
-            try:
-                loaded_kid, pub_key, alg = AuthAsync._validate_and_load_public_key(key)
-                new_keys[loaded_kid] = (pub_key, alg)
-            except AuthException:
-                # Skip invalid JWKS entries and continue loading the rest of the keys.
-                continue
-        self.public_keys = new_keys
+        self._load_public_keys(response.text)
 
     async def ensure_keys(self, kid: str | None = None) -> None:
         """Pre-warm the JWKS cache.
 
-        Idempotent: returns immediately when the cache already contains the
-        requested kid (or any key, when kid is None). Otherwise serializes
-        concurrent callers behind ``lock_public_keys`` and fetches once.
+        Returns without fetching while the cache is fresh and holds the requested
+        kid (or any key, when kid is None). Otherwise serializes concurrent callers
+        behind ``lock_public_keys`` so they share one fetch.
         """
-        if self._cache_has_kid(kid):
-            return
         async with self.lock_public_keys:
-            if self._cache_has_kid(kid):
-                return
-            await self._fetch_public_keys()
-
-    def _cache_has_kid(self, kid: str | None) -> bool:
-        if not self.public_keys:
-            return False
-        if kid is None:
-            return True
-        return kid in self.public_keys
+            if self._public_keys_fetch_due(kid):
+                try:
+                    await self._fetch_public_keys()
+                except Exception:
+                    # Keep the last good key set; fail only if it cannot serve this token
+                    if not self._cache_has_kid(kid):
+                        raise
 
     def _validate_token(self, token: str, audience: str | None | Iterable[str] = None) -> dict:
         """Sync JWT validation. Caller must have awaited ``ensure_keys(kid)`` first.

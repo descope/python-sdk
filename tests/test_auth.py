@@ -1,6 +1,8 @@
 import json
 import os
+import time
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 from enum import Enum
 from http import HTTPStatus
 from types import SimpleNamespace
@@ -128,6 +130,154 @@ class TestAuth(common.DescopeTest):
             mock_get.return_value.is_success = True
             mock_get.return_value.text = valid_keys_response
             self.assertIsNone(auth._fetch_public_keys())
+
+    def _key_cache_env(self, auth, served, failing=()):
+        """Drive ``auth._validate_token`` with a fake clock and a stubbed keys endpoint.
+
+        ``served`` is a mutable list of kids the endpoint returns, ``failing`` a mutable
+        list that, when non-empty, makes the endpoint fail. Returns ``(clock, fetches, validate)``.
+        """
+        clock = [0.0]
+        fetches = []
+
+        def fake_get(*args, **kwargs):
+            fetches.append(clock[0])
+            if failing:
+                return mock.Mock(is_success=False, status_code=500, text="")
+            return mock.Mock(
+                is_success=True,
+                text=json.dumps({"keys": [dict(self.public_key_dict, kid=k) for k in served]}),
+            )
+
+        def validate(kid):
+            with patch.object(Auth, "_kid_alg_from_token", side_effect=lambda t: (t, "ES384")):
+                with patch.object(auth, "_decode_and_verify_token", return_value={}):
+                    with (
+                        patch("httpx.get", side_effect=fake_get),
+                        patch("descope._auth_base.monotonic", side_effect=lambda: clock[0]),
+                    ):
+                        return auth._validate_token(kid)
+
+        return clock, fetches, validate
+
+    def test_public_keys_cached_within_ttl_and_replaced_after(self):
+        auth = Auth(self.dummy_project_id, http_client=self.make_http_client())
+        served = ["k1", "k2"]
+        clock, fetches, validate = self._key_cache_env(auth, served)
+
+        validate("k1")
+        validate("k2")
+        clock[0] = 599
+        validate("k1")
+        self.assertEqual(len(fetches), 1)
+
+        # After the TTL the whole set is refetched and replaced: a dropped key is rejected
+        served.remove("k1")
+        clock[0] = 601
+        with self.assertRaises(AuthException):
+            validate("k1")
+        self.assertEqual(len(fetches), 2)
+        validate("k2")
+        self.assertEqual(len(fetches), 2)
+
+    def test_public_keys_empty_response_replaces_set(self):
+        auth = Auth(self.dummy_project_id, http_client=self.make_http_client())
+        served = ["k1"]
+        clock, fetches, validate = self._key_cache_env(auth, served)
+        validate("k1")
+
+        served.clear()
+        clock[0] = 601
+        with self.assertRaises(AuthException):
+            validate("k1")
+        self.assertEqual(auth.public_keys, {})
+
+    def test_public_keys_unknown_kid_refetch_cooldown(self):
+        auth = Auth(self.dummy_project_id, http_client=self.make_http_client())
+        clock, fetches, validate = self._key_cache_env(auth, ["k1"])
+        validate("k1")
+
+        clock[0] = 100
+        for _ in range(2):
+            with self.assertRaises(AuthException):
+                validate("unknown")
+        self.assertEqual(len(fetches), 2)
+
+        clock[0] = 129
+        with self.assertRaises(AuthException):
+            validate("unknown")
+        self.assertEqual(len(fetches), 2)
+
+        clock[0] = 131
+        with self.assertRaises(AuthException):
+            validate("unknown")
+        self.assertEqual(len(fetches), 3)
+
+    def test_public_keys_failed_refresh_keeps_cached_keys(self):
+        auth = Auth(self.dummy_project_id, http_client=self.make_http_client())
+        failing = []
+        clock, fetches, validate = self._key_cache_env(auth, ["k1"], failing)
+        validate("k1")
+
+        failing.append(True)
+        clock[0] = 601
+        validate("k1")  # refresh fails, the previous set still serves the token
+        self.assertEqual(len(fetches), 2)
+        validate("k1")  # cached key served without another fetch for 30 s after the failure
+        self.assertEqual(len(fetches), 2)
+        with self.assertRaises(AuthException):
+            validate("unknown")  # a failed fetch does not start the unknown kid cooldown
+        self.assertEqual(len(fetches), 3)
+
+        # Refresh retries are spaced out, and recover once the endpoint does
+        failing.clear()
+        clock[0] = 630
+        validate("k1")
+        self.assertEqual(len(fetches), 3)
+        clock[0] = 632
+        validate("k1")
+        self.assertEqual(len(fetches), 4)
+        validate("k1")
+        self.assertEqual(len(fetches), 4)
+
+    def test_public_keys_failed_fetch_retried_on_next_lookup(self):
+        auth = Auth(self.dummy_project_id, http_client=self.make_http_client())
+        failing = [True]
+        clock, fetches, validate = self._key_cache_env(auth, ["k1"], failing)
+
+        with self.assertRaises(AuthException):
+            validate("k1")
+        failing.clear()
+        validate("k1")
+        self.assertEqual(len(fetches), 2)
+
+    def test_public_keys_unknown_kid_concurrent_callers_share_one_fetch(self):
+        auth = Auth(self.dummy_project_id, http_client=self.make_http_client())
+        fetches = []
+
+        def slow_get(*args, **kwargs):
+            fetches.append(1)
+            time.sleep(0.05)
+            return mock.Mock(is_success=True, text=json.dumps({"keys": [dict(self.public_key_dict, kid="k1")]}))
+
+        def validate():
+            return auth._validate_token("k1")
+
+        with patch.object(Auth, "_kid_alg_from_token", side_effect=lambda t: (t, "ES384")):
+            with patch.object(auth, "_decode_and_verify_token", return_value={}):
+                with patch("httpx.get", side_effect=slow_get):
+                    with ThreadPoolExecutor(max_workers=10) as pool:
+                        for future in [pool.submit(validate) for _ in range(10)]:
+                            future.result()
+        self.assertEqual(len(fetches), 1)
+
+    def test_user_provided_public_key_never_expires(self):
+        auth = Auth(self.dummy_project_id, self.public_key_dict, http_client=self.make_http_client())
+        clock, fetches, validate = self._key_cache_env(auth, [])
+
+        clock[0] = 100000
+        validate(self.public_key_dict["kid"])
+        self.assertEqual(fetches, [])
 
     def test_empty_project_id(self):
         self.assertRaises(AuthException, Auth, http_client=self.make_http_client())

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import copy
-import json
 from threading import Lock
 from typing import Iterable, Optional
 
@@ -79,23 +78,7 @@ class Auth(AuthBase):
         response = self._http.get(
             f"{EndpointsV2.public_key_path}/{self.project_id}",
         )
-
-        jwks_data = response.text
-        try:
-            jwkeys_wrapper = json.loads(jwks_data)
-            jwkeys = jwkeys_wrapper["keys"]
-        except (ValueError, TypeError, KeyError) as e:
-            raise AuthException(500, ERROR_TYPE_INVALID_PUBLIC_KEY, f"Unable to load jwks. Error: {e}")
-
-        # Load all public keys for this project
-        self.public_keys = {}
-        for key in jwkeys:
-            try:
-                loaded_kid, pub_key, alg = Auth._validate_and_load_public_key(key)
-                self.public_keys[loaded_kid] = (pub_key, alg)
-            except AuthException:
-                # just continue to the next key
-                pass
+        self._load_public_keys(response.text)
 
     # public method to validate a token from the management class
     def validate_token(self, token: str, audience: str | None | Iterable[str] = None) -> dict:
@@ -106,9 +89,13 @@ class Auth(AuthBase):
         kid, alg_header = self._kid_alg_from_token(token)
 
         with self.lock_public_keys:
-            if self.public_keys == {} or self.public_keys.get(kid, None) is None:
-                self._fetch_public_keys()
-
+            if self._public_keys_fetch_due(kid):
+                try:
+                    self._fetch_public_keys()
+                except Exception:
+                    # Keep the last good key set; fail only if it cannot serve this token
+                    if kid not in self.public_keys:
+                        raise
             found_key = self.public_keys.get(kid, None)
             if found_key is None:
                 raise AuthException(

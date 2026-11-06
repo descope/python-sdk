@@ -101,6 +101,63 @@ class TestAuthAsyncEnsureKeys:
         finally:
             await http.aclose()
 
+    @pytest.mark.asyncio
+    async def test_keys_ttl_cooldown_and_failed_refresh(self):
+        """Cache stays within TTL, unknown kids are rate limited, failures keep the old set."""
+        http = _make_http_client()
+        auth = AuthAsync(PROJECT_ID, http_client=http)
+        clock = [0.0]
+        other = dict(PUBLIC_KEY_DICT, kid="other")
+        body = {"keys": [PUBLIC_KEY_DICT, other]}
+        state = {"fail": False}
+
+        async def fake_get(*args, **kwargs):
+            if state["fail"]:
+                raise httpx.ConnectError("down")
+            resp = _jwks_response()
+            resp.text = json.dumps(body)
+            return resp
+
+        kid = PUBLIC_KEY_DICT["kid"]
+        try:
+            with patch.object(http._async_client, "get", AsyncMock(side_effect=fake_get)) as mock_get:
+                with patch("descope._auth_base.monotonic", side_effect=lambda: clock[0]):
+                    await auth.ensure_keys(kid)
+                    clock[0] = 599
+                    await auth.ensure_keys(kid)
+                    assert mock_get.call_count == 1
+
+                    # Unknown kid: one fetch per cooldown window (callers then fail in validation)
+                    clock[0] = 600
+                    await auth.ensure_keys("unknown")
+                    await auth.ensure_keys("unknown")
+                    assert mock_get.call_count == 2
+                    clock[0] = 631
+                    await auth.ensure_keys("unknown")
+                    assert mock_get.call_count == 3
+
+                    # Failed refresh after the TTL keeps serving the previous keys
+                    state["fail"] = True
+                    clock[0] = 1300
+                    await auth.ensure_keys(kid)
+                    assert mock_get.call_count == 4
+                    await auth.ensure_keys(kid)  # served from cache, no fetch for 30 s after the failure
+                    assert mock_get.call_count == 4
+                    # A failed fetch does not start the unknown kid cooldown
+                    with pytest.raises(httpx.ConnectError):
+                        await auth.ensure_keys("unknown")
+                    assert mock_get.call_count == 5
+
+                    # A successful refresh replaces the set: dropped keys are rejected
+                    state["fail"] = False
+                    body["keys"] = [other]
+                    clock[0] = 1331
+                    await auth.ensure_keys("other")
+                    assert mock_get.call_count == 6
+                    assert kid not in auth.public_keys
+        finally:
+            await http.aclose()
+
 
 class TestAuthAsyncFetch:
     @pytest.mark.asyncio
