@@ -88,7 +88,7 @@ class Auth(AuthBase):
     def _validate_token(self, token: str, audience: str | None | Iterable[str] = None) -> dict:
         kid, alg_header = self._kid_alg_from_token(token)
 
-        found_key = self.public_keys.get(kid, None)
+        found_key = self._cached_public_key(kid)
         # A cached kid needing no refresh, or whose refresh is already in flight, skips the lock
         if found_key is None or (not self.lock_public_keys.locked() and self._public_keys_fetch_due(kid)):
             with self.lock_public_keys:
@@ -97,13 +97,13 @@ class Auth(AuthBase):
                         self._fetch_public_keys()
                     except Exception:
                         # Keep the last good key set; fail only if it cannot serve this token
-                        if kid not in self.public_keys:
+                        if self._cached_public_key(kid) is None:
                             raise
                     finally:
                         self._mark_public_keys_attempt()
                 # save reference to the found key
                 # (as another thread can change the self.public_keys dict)
-                found_key = self.public_keys.get(kid, None)
+                found_key = self._cached_public_key(kid)
         if found_key is None:
             raise AuthException(
                 500,

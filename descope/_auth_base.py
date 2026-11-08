@@ -37,6 +37,8 @@ _PUBLIC_KEYS_TTL_SECONDS = 600
 # Unknown kids trigger at most one fetch per this many seconds after a successful fetch.
 # Also spaces out failed refresh attempts while an expired set keeps serving cached keys.
 _PUBLIC_KEYS_REFETCH_COOLDOWN_SECONDS = 30
+# Fetched signing keys are not used once this many seconds passed since the last successful fetch.
+_PUBLIC_KEYS_MAX_STALE_SECONDS = 3600
 
 
 class AuthBase:
@@ -75,10 +77,17 @@ class AuthBase:
         self._keys_fetched_at: Optional[float] = None
         self._keys_attempted_at: Optional[float] = None
 
+    def _cached_public_key(self, kid: str) -> Optional[tuple]:
+        """Return the cached key for ``kid``, or None once fetched keys outlived the max stale age."""
+        fetched = self._keys_fetched_at
+        if fetched is not None and monotonic() - fetched >= _PUBLIC_KEYS_MAX_STALE_SECONDS:
+            return None
+        return self.public_keys.get(kid)
+
     def _cache_has_kid(self, kid: str | None) -> bool:
         if kid is None:
-            return bool(self.public_keys)
-        return kid in self.public_keys
+            return any(self._cached_public_key(k) for k in self.public_keys)
+        return self._cached_public_key(kid) is not None
 
     def _public_keys_fetch_due(self, kid: str | None) -> bool:
         """Return whether the signing keys should be fetched now.

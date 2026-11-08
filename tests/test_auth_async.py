@@ -146,6 +146,29 @@ class TestAuthAsyncEnsureKeys:
             await http.aclose()
 
     @pytest.mark.asyncio
+    async def test_ensure_keys_not_used_an_hour_after_last_successful_fetch(self):
+        http = _make_http_client()
+        auth = AuthAsync(PROJECT_ID, http_client=http)
+        clock = [0.0]
+        kid = PUBLIC_KEY_DICT["kid"]
+        try:
+            with patch("descope._auth_base.monotonic", side_effect=lambda: clock[0]):
+                with patch.object(http._async_client, "get", AsyncMock(return_value=_jwks_response())):
+                    await auth.ensure_keys(kid)
+                down = AsyncMock(side_effect=httpx.ConnectError("down"))
+                with patch.object(http._async_client, "get", down):
+                    clock[0] = 3599
+                    await auth.ensure_keys(kid)  # refresh fails, cached key still served
+                    clock[0] = 3600
+                    with pytest.raises(httpx.ConnectError):
+                        await auth.ensure_keys(kid)
+                    with pytest.raises(AuthException):
+                        auth._validate_token(VALID_SESSION_TOKEN)
+                    assert down.call_count == 2
+        finally:
+            await http.aclose()
+
+    @pytest.mark.asyncio
     async def test_keys_ttl_cooldown_and_failed_refresh(self):
         """Cache stays within TTL, unknown kids are rate limited, failures keep the old set."""
         http = _make_http_client()

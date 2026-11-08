@@ -88,7 +88,7 @@ class AuthAsync(AuthBase):
         wrappers warm JWKS *before* that sync flow runs.
         """
         kid, alg_header = self._kid_alg_from_token(token)
-        found_key = self.public_keys.get(kid)
+        found_key = self._cached_public_key(kid)
         if found_key is None:
             raise AuthException(
                 500,

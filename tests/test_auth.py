@@ -284,6 +284,20 @@ class TestAuth(common.DescopeTest):
         validate("k1")
         self.assertEqual(len(fetches), 4)
 
+    def test_public_keys_not_used_an_hour_after_last_successful_fetch(self):
+        auth = Auth(self.dummy_project_id, http_client=self.make_http_client())
+        failing = []
+        clock, fetches, validate = self._key_cache_env(auth, ["k1"], failing)
+        validate("k1")
+
+        failing.append(True)  # the endpoint stays down from here on
+        clock[0] = 3599
+        validate("k1")
+        clock[0] = 3600
+        with self.assertRaises(AuthException):
+            validate("k1")
+        self.assertEqual(len(fetches), 3)
+
     def test_public_keys_failed_fetch_retried_on_next_lookup(self):
         auth = Auth(self.dummy_project_id, http_client=self.make_http_client())
         failing = [True]
