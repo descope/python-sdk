@@ -67,7 +67,7 @@ class SSOApplicationBase:
         force_authentication: Optional[bool] = False,
         logout_redirect_url: Optional[str] = None,
         default_signature_algorithm: Optional[str] = None,
-        single_logout_enabled: Optional[bool] = None,
+        single_logout_enabled: Optional[bool] = False,
         sp_single_logout_url: Optional[str] = None,
         sp_single_logout_binding: Optional[str] = None,
         single_logout_propagation: Optional[str] = None,
@@ -94,17 +94,12 @@ class SSOApplicationBase:
             "forceAuthentication": force_authentication,
             "logoutRedirectUrl": logout_redirect_url,
             "defaultSignatureAlgorithm": default_signature_algorithm,
+            "singleLogoutEnabled": single_logout_enabled,
+            "spSingleLogoutUrl": sp_single_logout_url,
+            "spSingleLogoutBinding": sp_single_logout_binding,
+            "singleLogoutPropagation": single_logout_propagation,
+            "singleLogoutScope": single_logout_scope,
         }
-        # The single logout settings are sent only when given, so an update that leaves them out keeps them
-        for key, value in (
-            ("singleLogoutEnabled", single_logout_enabled),
-            ("spSingleLogoutUrl", sp_single_logout_url),
-            ("spSingleLogoutBinding", sp_single_logout_binding),
-            ("singleLogoutPropagation", single_logout_propagation),
-            ("singleLogoutScope", single_logout_scope),
-        ):
-            if value is not None:
-                body[key] = value
         return body
 
     @staticmethod

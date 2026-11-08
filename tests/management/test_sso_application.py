@@ -200,6 +200,11 @@ class TestSSOApplication:
                     "forceAuthentication": True,
                     "logoutRedirectUrl": "http://dummy.com/logout",
                     "defaultSignatureAlgorithm": "sha256",
+                    "singleLogoutEnabled": False,
+                    "spSingleLogoutUrl": None,
+                    "spSingleLogoutBinding": None,
+                    "singleLogoutPropagation": None,
+                    "singleLogoutScope": None,
                 },
                 follow_redirects=False,
             )
@@ -396,6 +401,11 @@ class TestSSOApplication:
                     "forceAuthentication": False,
                     "logoutRedirectUrl": None,
                     "defaultSignatureAlgorithm": None,
+                    "singleLogoutEnabled": False,
+                    "spSingleLogoutUrl": None,
+                    "spSingleLogoutBinding": None,
+                    "singleLogoutPropagation": None,
+                    "singleLogoutScope": None,
                 },
                 follow_redirects=False,
             )
