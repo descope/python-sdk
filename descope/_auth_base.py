@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 from http import HTTPStatus
@@ -31,6 +32,8 @@ from descope.exceptions import (
 from descope.jwt_common import adjust_properties as jwt_adjust_properties
 from descope.jwt_common import generate_auth_info as jwt_generate_auth_info
 from descope.jwt_common import generate_jwt_response as jwt_generate_jwt_response
+
+logger = logging.getLogger(__name__)
 
 # Fetched signing keys are refreshed once this many seconds passed since the last successful fetch.
 _PUBLIC_KEYS_TTL_SECONDS = 600
@@ -69,16 +72,22 @@ class AuthBase:
         self.jwt_validation_leeway = jwt_validation_leeway
 
         public_key = public_key or os.getenv("DESCOPE_PUBLIC_KEY")
-        if not public_key:
-            self.public_keys: dict = {}
-        else:
+        # Fetched keys; a user-provided key lives apart so fetches never replace or expire it
+        self.public_keys: dict = {}
+        self._static_public_keys: dict = {}
+        if public_key:
             kid, pub_key, alg = self._validate_and_load_public_key(public_key)
-            self.public_keys = {kid: (pub_key, alg)}
+            self._static_public_keys = {kid: (pub_key, alg)}
         self._keys_fetched_at: Optional[float] = None
         self._keys_attempted_at: Optional[float] = None
+        # Bumped after every fetch so lock waiters can reuse the outcome of the fetch they waited on
+        self._keys_fetch_count = 0
 
     def _cached_public_key(self, kid: str) -> Optional[tuple]:
         """Return the cached key for ``kid``, or None once fetched keys outlived the max stale age."""
+        static_key = self._static_public_keys.get(kid)
+        if static_key is not None:
+            return static_key
         fetched = self._keys_fetched_at
         if fetched is not None and monotonic() - fetched >= _PUBLIC_KEYS_MAX_STALE_SECONDS:
             return None
@@ -86,7 +95,7 @@ class AuthBase:
 
     def _cache_has_kid(self, kid: str | None) -> bool:
         if kid is None:
-            return any(self._cached_public_key(k) for k in self.public_keys)
+            return bool(self._static_public_keys) or any(self._cached_public_key(k) for k in self.public_keys)
         return self._cached_public_key(kid) is not None
 
     def _public_keys_fetch_due(self, kid: str | None) -> bool:
@@ -95,6 +104,8 @@ class AuthBase:
         Pure check: callers may use it as a lock-free pre-check and must repeat it under the
         public keys lock before fetching. A user-provided public key never expires.
         """
+        if kid in self._static_public_keys:
+            return False
         now = monotonic()
         fetched, attempted = self._keys_fetched_at, self._keys_attempted_at
         if fetched is not None and now - fetched >= _PUBLIC_KEYS_MAX_STALE_SECONDS:
@@ -113,6 +124,11 @@ class AuthBase:
     def _mark_public_keys_attempt(self) -> None:
         """Record that a fetch finished, successfully or not, so refresh retries are spaced from its end."""
         self._keys_attempted_at = monotonic()
+        self._keys_fetch_count += 1
+
+    @staticmethod
+    def _log_public_keys_fetch_failure(error: Exception) -> None:
+        logger.warning("Failed to fetch public keys: %s", error)
 
     def _load_public_keys(self, jwks_data: str) -> None:
         """Replace the cached key set with the keys in a JWKS response body."""
@@ -129,6 +145,8 @@ class AuthBase:
             except AuthException:
                 # Skip invalid JWKS entries and continue loading the rest of the keys.
                 continue
+        if not new_keys:
+            raise AuthException(500, ERROR_TYPE_INVALID_PUBLIC_KEY, "Unable to load jwks. Error: no valid keys")
         self.public_keys = new_keys
         self._keys_fetched_at = monotonic()
 

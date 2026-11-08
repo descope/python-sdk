@@ -224,7 +224,7 @@ class TestAuth(common.DescopeTest):
         validate("k2")
         self.assertEqual(len(fetches), 2)
 
-    def test_public_keys_empty_response_replaces_set(self):
+    def test_public_keys_empty_or_missing_keys_keep_last_good_set(self):
         auth = Auth(self.dummy_project_id, http_client=self.make_http_client())
         served = ["k1"]
         clock, fetches, validate = self._key_cache_env(auth, served)
@@ -232,9 +232,11 @@ class TestAuth(common.DescopeTest):
 
         served.clear()
         clock[0] = 601
-        with self.assertRaises(AuthException):
-            validate("k1")
-        self.assertEqual(auth.public_keys, {})
+        validate("k1")  # empty keys is a failed fetch, the previous set still serves the token
+        self.assertEqual(len(fetches), 2)
+        self.assertIn("k1", auth.public_keys)
+        self.assertRaises(AuthException, auth._load_public_keys, "{}")
+        self.assertIn("k1", auth.public_keys)
 
     def test_public_keys_unknown_kid_refetch_cooldown(self):
         auth = Auth(self.dummy_project_id, http_client=self.make_http_client())
@@ -362,6 +364,45 @@ class TestAuth(common.DescopeTest):
         clock[0] = 100000
         validate(self.public_key_dict["kid"])
         self.assertEqual(fetches, [])
+
+    def test_user_provided_public_key_kept_alongside_fetched_keys(self):
+        auth = Auth(self.dummy_project_id, self.public_key_dict, http_client=self.make_http_client())
+        clock, fetches, validate = self._key_cache_env(auth, ["k1"])
+
+        validate("k1")  # unknown kid fetch must not replace the provided key
+        self.assertEqual(len(fetches), 1)
+        clock[0] = 4000  # fetched keys are past the hour cap, the provided key is not
+        validate(self.public_key_dict["kid"])
+        self.assertEqual(len(fetches), 1)
+
+    def test_public_keys_failed_fetch_logs_warning(self):
+        auth = Auth(self.dummy_project_id, http_client=self.make_http_client())
+        clock, fetches, validate = self._key_cache_env(auth, ["k1"], [True])
+
+        with self.assertLogs("descope._auth_base", level="WARNING") as logs:
+            with self.assertRaises(AuthException):
+                validate("k1")
+        self.assertEqual(len(logs.records), 1)
+
+    def test_public_keys_waiters_reuse_failed_fetch(self):
+        auth = Auth(self.dummy_project_id, http_client=self.make_http_client())
+        fetches = []
+
+        def failing_get(*args, **kwargs):
+            fetches.append(1)
+            time.sleep(0.2)
+            return mock.Mock(is_success=False, status_code=500, text="")
+
+        def validate():
+            with self.assertRaises(AuthException):
+                auth._validate_token("k1")
+
+        with patch.object(Auth, "_kid_alg_from_token", side_effect=lambda t: (t, "ES384")):
+            with patch("httpx.get", side_effect=failing_get):
+                with ThreadPoolExecutor(max_workers=10) as pool:
+                    for future in [pool.submit(validate) for _ in range(10)]:
+                        future.result()
+        self.assertEqual(len(fetches), 1)
 
     def test_empty_project_id(self):
         self.assertRaises(AuthException, Auth, http_client=self.make_http_client())

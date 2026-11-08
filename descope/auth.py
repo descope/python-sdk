@@ -91,11 +91,14 @@ class Auth(AuthBase):
         found_key = self._cached_public_key(kid)
         # A cached kid needing no refresh, or whose refresh is already in flight, skips the lock
         if found_key is None or (not self.lock_public_keys.locked() and self._public_keys_fetch_due(kid)):
+            seen = self._keys_fetch_count
             with self.lock_public_keys:
-                if self._public_keys_fetch_due(kid):
+                # Callers that waited on the lock reuse the outcome of the fetch they waited on
+                if self._keys_fetch_count == seen and self._public_keys_fetch_due(kid):
                     try:
                         self._fetch_public_keys()
-                    except Exception:
+                    except Exception as e:
+                        self._log_public_keys_fetch_failure(e)
                         # Keep the last good key set; fail only if it cannot serve this token
                         if self._cached_public_key(kid) is None:
                             raise

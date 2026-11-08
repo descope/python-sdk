@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
@@ -79,8 +80,8 @@ class TestAuthAsyncEnsureKeys:
                 await auth.ensure_keys(PUBLIC_KEY_DICT["kid"])
                 assert mock_get.call_count == 1
                 assert PUBLIC_KEY_DICT["kid"] in auth.public_keys
-                # Stale kid is replaced by the fresh JWKS payload.
-                assert "STALE" not in auth.public_keys
+                # The user-provided key stays alongside the fetched keys.
+                assert auth._cached_public_key("STALE") is not None
         finally:
             await http.aclose()
 
@@ -228,6 +229,72 @@ class TestAuthAsyncEnsureKeys:
                     await auth.ensure_keys("other")
                     assert mock_get.call_count == 6
                     assert kid not in auth.public_keys
+        finally:
+            await http.aclose()
+
+    @pytest.mark.asyncio
+    async def test_empty_keys_keep_last_good_set(self):
+        http = _make_http_client()
+        auth = AuthAsync(PROJECT_ID, http_client=http)
+        clock = [0.0]
+        kid = PUBLIC_KEY_DICT["kid"]
+        empty = _jwks_response()
+        empty.text = json.dumps({"keys": []})
+        try:
+            with patch("descope._auth_base.monotonic", side_effect=lambda: clock[0]):
+                with patch.object(http._async_client, "get", AsyncMock(return_value=_jwks_response())):
+                    await auth.ensure_keys(kid)
+                clock[0] = 601
+                with patch.object(http._async_client, "get", AsyncMock(return_value=empty)) as mock_get:
+                    await auth.ensure_keys(kid)  # empty keys is a failed fetch, the old set still serves
+                    assert mock_get.call_count == 1
+                assert kid in auth.public_keys
+        finally:
+            await http.aclose()
+
+    @pytest.mark.asyncio
+    async def test_failed_fetch_logs_warning(self, caplog):
+        http = _make_http_client()
+        auth = AuthAsync(PROJECT_ID, http_client=http)
+        try:
+            with patch.object(http._async_client, "get", AsyncMock(side_effect=httpx.ConnectError("down"))):
+                with caplog.at_level(logging.WARNING, logger="descope._auth_base"):
+                    with pytest.raises(httpx.ConnectError):
+                        await auth.ensure_keys("unknown")
+            assert len([r for r in caplog.records if r.name == "descope._auth_base"]) == 1
+        finally:
+            await http.aclose()
+
+    @pytest.mark.asyncio
+    async def test_waiters_reuse_failed_fetch(self):
+        http = _make_http_client()
+        auth = AuthAsync(PROJECT_ID, http_client=http)
+
+        async def _slow_failure(*args, **kwargs):
+            await asyncio.sleep(0.05)
+            raise httpx.ConnectError("down")
+
+        try:
+            with patch.object(http._async_client, "get", AsyncMock(side_effect=_slow_failure)) as mock_get:
+                await asyncio.gather(*(auth.ensure_keys("unknown") for _ in range(10)), return_exceptions=True)
+                assert mock_get.call_count == 1
+        finally:
+            await http.aclose()
+
+    @pytest.mark.asyncio
+    async def test_user_provided_key_kept_alongside_fetched_keys(self):
+        http = _make_http_client()
+        static_kid = "static"
+        auth = AuthAsync(PROJECT_ID, public_key=dict(PUBLIC_KEY_DICT, kid=static_kid), http_client=http)
+        clock = [0.0]
+        try:
+            with patch("descope._auth_base.monotonic", side_effect=lambda: clock[0]):
+                with patch.object(http._async_client, "get", AsyncMock(return_value=_jwks_response())) as mock_get:
+                    await auth.ensure_keys(PUBLIC_KEY_DICT["kid"])
+                    clock[0] = 4000  # fetched keys are past the hour cap, the provided key is not
+                    await auth.ensure_keys(static_kid)
+                    assert mock_get.call_count == 1
+                    assert auth._cached_public_key(static_kid) is not None
         finally:
             await http.aclose()
 

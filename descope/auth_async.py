@@ -67,11 +67,14 @@ class AuthAsync(AuthBase):
         """
         if self._cache_has_kid(kid) and (self.lock_public_keys.locked() or not self._public_keys_fetch_due(kid)):
             return
+        seen = self._keys_fetch_count
         async with self.lock_public_keys:
-            if self._public_keys_fetch_due(kid):
+            # Callers that waited on the lock reuse the outcome of the fetch they waited on
+            if self._keys_fetch_count == seen and self._public_keys_fetch_due(kid):
                 try:
                     await self._fetch_public_keys()
-                except Exception:
+                except Exception as e:
+                    self._log_public_keys_fetch_failure(e)
                     # Keep the last good key set; fail only if it cannot serve this token
                     if not self._cache_has_kid(kid):
                         raise
