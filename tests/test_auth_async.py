@@ -282,6 +282,32 @@ class TestAuthAsyncEnsureKeys:
             await http.aclose()
 
     @pytest.mark.asyncio
+    async def test_cancelled_fetch_does_not_stop_waiters_from_fetching(self):
+        http = _make_http_client()
+        auth = AuthAsync(PROJECT_ID, http_client=http)
+        calls = []
+
+        async def _hang_then_serve(*args, **kwargs):
+            calls.append(1)
+            if len(calls) == 1:
+                await asyncio.sleep(60)
+            return _jwks_response()
+
+        kid = PUBLIC_KEY_DICT["kid"]
+        try:
+            with patch.object(http._async_client, "get", AsyncMock(side_effect=_hang_then_serve)):
+                leader = asyncio.create_task(auth.ensure_keys(kid))
+                await asyncio.sleep(0)
+                waiters = [asyncio.create_task(auth.ensure_keys(kid)) for _ in range(3)]
+                await asyncio.sleep(0)  # the waiters queue on the lock behind the hanging fetch
+                leader.cancel()
+                await asyncio.wait_for(asyncio.gather(*waiters), 5)
+                assert len(calls) == 2  # one of the waiters fetched, the rest reused its result
+                assert kid in auth.public_keys
+        finally:
+            await http.aclose()
+
+    @pytest.mark.asyncio
     async def test_user_provided_key_kept_alongside_fetched_keys(self):
         http = _make_http_client()
         static_kid = "static"

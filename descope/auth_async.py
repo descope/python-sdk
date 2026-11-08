@@ -74,11 +74,13 @@ class AuthAsync(AuthBase):
                 try:
                     await self._fetch_public_keys()
                 except Exception as e:
+                    # A cancelled fetch is not an attempt: waiters must run their own fetch
+                    self._mark_public_keys_attempt()
                     self._log_public_keys_fetch_failure(e)
                     # Keep the last good key set; fail only if it cannot serve this token
                     if not self._cache_has_kid(kid):
                         raise
-                finally:
+                else:
                     self._mark_public_keys_attempt()
 
     def _validate_token(self, token: str, audience: str | None | Iterable[str] = None) -> dict:
