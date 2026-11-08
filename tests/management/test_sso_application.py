@@ -400,6 +400,30 @@ class TestSSOApplication:
                 follow_redirects=False,
             )
 
+    async def test_saml_application_single_logout(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            await client.invoke(
+                client.mgmt.sso_application.update_saml_application(
+                    id="id1",
+                    name="name",
+                    login_page_url="http://dummy.com",
+                    use_metadata_info=True,
+                    metadata_url="http://dummy.com/md",
+                    single_logout_enabled=False,
+                    sp_single_logout_url="https://dummy.com/slo",
+                    sp_single_logout_binding="soap",
+                    single_logout_propagation="none",
+                    single_logout_scope="allSessions",
+                )
+            )
+            body = mock_post.call_args.kwargs["json"]
+            assert body["singleLogoutEnabled"] is False
+            assert body["spSingleLogoutUrl"] == "https://dummy.com/slo"
+            assert body["spSingleLogoutBinding"] == "soap"
+            assert body["singleLogoutPropagation"] == "none"
+            assert body["singleLogoutScope"] == "allSessions"
+
     async def test_delete(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 

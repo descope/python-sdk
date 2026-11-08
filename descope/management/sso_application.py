@@ -83,6 +83,11 @@ class SSOApplication(SSOApplicationBase, HTTPBase):
         force_authentication: Optional[bool] = False,
         logout_redirect_url: Optional[str] = None,
         default_signature_algorithm: Optional[str] = None,
+        single_logout_enabled: Optional[bool] = None,
+        sp_single_logout_url: Optional[str] = None,
+        sp_single_logout_binding: Optional[str] = None,
+        single_logout_propagation: Optional[str] = None,
+        single_logout_scope: Optional[str] = None,
     ) -> dict:
         """
         Create a new SAML sso application with the given name. SSO application IDs are provisioned automatically, but can be provided
@@ -109,6 +114,11 @@ class SSOApplication(SSOApplicationBase, HTTPBase):
         force_authentication (bool): Optional determine if the IdP should force the user to re-authenticate.
         logout_redirect_url (str): Optional Target URL to which the user will be redirected upon logout completion.
         default_signature_algorithm (str): Optional signature algorithm for SAML responses. Use "sha256" to opt in to SHA-256. Leave empty for the default (SHA-1). Only applies to IdP-initiated flows.
+        single_logout_enabled (bool): Optional turn SAML Single Logout (SLO) on or off. When on, the SP can log the user out with a signed LogoutRequest, and it is sent a LogoutRequest when the user's session ends. The single logout arguments are sent only when given, so an update that leaves them out keeps the current values.
+        sp_single_logout_url (str): Optional the SP's SingleLogoutService URL. Required when single logout is on and use_metadata_info is off; empty takes it from the SP metadata.
+        sp_single_logout_binding (str): Optional the binding of sp_single_logout_url: "redirect" (default), "post" or "soap" (server to server, requires an https URL). Empty takes it from the SP metadata.
+        single_logout_propagation (str): Optional what a logout started by the SP reaches: "allApps" (default) also logs the user out of the other applications in the session, "none" only ends the user's session.
+        single_logout_scope (str): Optional which sessions a logout started by the SP ends: "session" (default) only the one the LogoutRequest names, "allSessions" every session of the user.
 
         Return value (dict):
         Return dict in the format
@@ -155,6 +165,11 @@ class SSOApplication(SSOApplicationBase, HTTPBase):
                 force_authentication,
                 logout_redirect_url,
                 default_signature_algorithm,
+                single_logout_enabled=single_logout_enabled,
+                sp_single_logout_url=sp_single_logout_url,
+                sp_single_logout_binding=sp_single_logout_binding,
+                single_logout_propagation=single_logout_propagation,
+                single_logout_scope=single_logout_scope,
             ),
         )
         return response.json()
@@ -226,6 +241,11 @@ class SSOApplication(SSOApplicationBase, HTTPBase):
         force_authentication: Optional[bool] = False,
         logout_redirect_url: Optional[str] = None,
         default_signature_algorithm: Optional[str] = None,
+        single_logout_enabled: Optional[bool] = None,
+        sp_single_logout_url: Optional[str] = None,
+        sp_single_logout_binding: Optional[str] = None,
+        single_logout_propagation: Optional[str] = None,
+        single_logout_scope: Optional[str] = None,
     ):
         """
         Update an existing SAML sso application with the given parameters. IMPORTANT: All parameters are used as overrides
@@ -252,6 +272,11 @@ class SSOApplication(SSOApplicationBase, HTTPBase):
         force_authentication (bool): Optional determine if the IdP should force the user to re-authenticate.
         logout_redirect_url (str): Optional Target URL to which the user will be redirected upon logout completion.
         default_signature_algorithm (str): Optional signature algorithm for SAML responses. Use "sha256" to opt in to SHA-256. Leave empty for the default (SHA-1). Only applies to IdP-initiated flows.
+        single_logout_enabled (bool): Optional turn SAML Single Logout (SLO) on or off. When on, the SP can log the user out with a signed LogoutRequest, and it is sent a LogoutRequest when the user's session ends. The single logout arguments are sent only when given, so an update that leaves them out keeps the current values.
+        sp_single_logout_url (str): Optional the SP's SingleLogoutService URL. Required when single logout is on and use_metadata_info is off; empty takes it from the SP metadata.
+        sp_single_logout_binding (str): Optional the binding of sp_single_logout_url: "redirect" (default), "post" or "soap" (server to server, requires an https URL). Empty takes it from the SP metadata.
+        single_logout_propagation (str): Optional what a logout started by the SP reaches: "allApps" (default) also logs the user out of the other applications in the session, "none" only ends the user's session.
+        single_logout_scope (str): Optional which sessions a logout started by the SP ends: "session" (default) only the one the LogoutRequest names, "allSessions" every session of the user.
 
         Raise:
         AuthException: raised if update operation fails
@@ -294,6 +319,11 @@ class SSOApplication(SSOApplicationBase, HTTPBase):
                 force_authentication,
                 logout_redirect_url,
                 default_signature_algorithm,
+                single_logout_enabled=single_logout_enabled,
+                sp_single_logout_url=sp_single_logout_url,
+                sp_single_logout_binding=sp_single_logout_binding,
+                single_logout_propagation=single_logout_propagation,
+                single_logout_scope=single_logout_scope,
             ),
         )
 
