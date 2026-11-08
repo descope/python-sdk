@@ -130,7 +130,7 @@ class TestAuthAsyncEnsureKeys:
 
         try:
             with (
-                patch.object(http._async_client, "get", AsyncMock(side_effect=_slow_get)),
+                patch.object(http._async_client, "get", AsyncMock(side_effect=_slow_get)) as mock_get,
                 patch("descope._auth_base.monotonic", side_effect=lambda: clock[0]),
             ):
                 await auth.ensure_keys(PUBLIC_KEY_DICT["kid"])
@@ -140,7 +140,8 @@ class TestAuthAsyncEnsureKeys:
                 await asyncio.sleep(0)  # the unknown kid caller queues on the lock
                 auth.lock_public_keys.release()  # reads unlocked, but the queued caller goes first
                 await asyncio.wait_for(auth.ensure_keys(PUBLIC_KEY_DICT["kid"]), 0.5)
-                await waiter
+                await asyncio.wait_for(waiter, 5)
+                assert mock_get.call_count == 2  # the queued caller did fetch
         finally:
             await http.aclose()
 
