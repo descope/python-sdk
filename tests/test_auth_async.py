@@ -118,6 +118,33 @@ class TestAuthAsyncEnsureKeys:
             await http.aclose()
 
     @pytest.mark.asyncio
+    async def test_ensure_keys_fresh_cached_kid_does_not_queue_behind_fetch(self):
+        """Right after the lock is released to a queued fetcher, a fresh cached kid still returns at once."""
+        http = _make_http_client()
+        auth = AuthAsync(PROJECT_ID, http_client=http)
+        clock = [0.0]
+
+        async def _slow_get(*args, **kwargs):
+            await asyncio.sleep(1)
+            return _jwks_response()
+
+        try:
+            with (
+                patch.object(http._async_client, "get", AsyncMock(side_effect=_slow_get)),
+                patch("descope._auth_base.monotonic", side_effect=lambda: clock[0]),
+            ):
+                await auth.ensure_keys(PUBLIC_KEY_DICT["kid"])
+                clock[0] = 100  # cached set still fresh, unknown kid fetch allowed
+                await auth.lock_public_keys.acquire()
+                waiter = asyncio.create_task(auth.ensure_keys("unknown"))
+                await asyncio.sleep(0)  # the unknown kid caller queues on the lock
+                auth.lock_public_keys.release()  # reads unlocked, but the queued caller goes first
+                await asyncio.wait_for(auth.ensure_keys(PUBLIC_KEY_DICT["kid"]), 0.5)
+                await waiter
+        finally:
+            await http.aclose()
+
+    @pytest.mark.asyncio
     async def test_keys_ttl_cooldown_and_failed_refresh(self):
         """Cache stays within TTL, unknown kids are rate limited, failures keep the old set."""
         http = _make_http_client()

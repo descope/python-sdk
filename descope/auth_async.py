@@ -65,7 +65,7 @@ class AuthAsync(AuthBase):
         is already in flight. Otherwise serializes concurrent callers behind
         ``lock_public_keys`` so they share one fetch.
         """
-        if self._cache_has_kid(kid) and self.lock_public_keys.locked():
+        if self._cache_has_kid(kid) and (self.lock_public_keys.locked() or not self._public_keys_fetch_due(kid)):
             return
         async with self.lock_public_keys:
             if self._public_keys_fetch_due(kid):

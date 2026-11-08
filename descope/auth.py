@@ -89,8 +89,8 @@ class Auth(AuthBase):
         kid, alg_header = self._kid_alg_from_token(token)
 
         found_key = self.public_keys.get(kid, None)
-        # A cached kid is served as is instead of waiting behind an in-flight fetch
-        if found_key is None or not self.lock_public_keys.locked():
+        # A cached kid needing no refresh, or whose refresh is already in flight, skips the lock
+        if found_key is None or (not self.lock_public_keys.locked() and self._public_keys_fetch_due(kid)):
             with self.lock_public_keys:
                 if self._public_keys_fetch_due(kid):
                     try:

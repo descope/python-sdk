@@ -83,7 +83,8 @@ class AuthBase:
     def _public_keys_fetch_due(self, kid: str | None) -> bool:
         """Return whether the signing keys should be fetched now.
 
-        Caller must hold the public keys lock. A user-provided public key never expires.
+        Pure check: callers may use it as a lock-free pre-check and must repeat it under the
+        public keys lock before fetching. A user-provided public key never expires.
         """
         now = monotonic()
         fetched, attempted = self._keys_fetched_at, self._keys_attempted_at

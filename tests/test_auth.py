@@ -172,6 +172,19 @@ class TestAuth(common.DescopeTest):
             self.assertEqual(pool.submit(validate, "k1").result(timeout=5), {})
         self.assertEqual(len(fetches), 1)
 
+    def test_public_keys_fresh_cached_kid_skips_lock(self):
+        auth = Auth(self.dummy_project_id, http_client=self.make_http_client())
+        clock, fetches, validate = self._key_cache_env(auth, ["k1"])
+        validate("k1")
+
+        # A lock that reads free but would block (another thread is about to take it)
+        auth.lock_public_keys = mock.MagicMock()
+        auth.lock_public_keys.locked.return_value = False
+        auth.lock_public_keys.__enter__.side_effect = AssertionError("fresh cached kid must not wait on the lock")
+        clock[0] = 599
+        self.assertEqual(validate("k1"), {})
+        self.assertEqual(len(fetches), 1)
+
     def test_public_keys_refresh_retry_spaced_from_end_of_slow_failed_fetch(self):
         auth = Auth(self.dummy_project_id, http_client=self.make_http_client())
         failing, fetch_seconds = [], [0]
