@@ -296,7 +296,33 @@ class TestAuth(common.DescopeTest):
         clock[0] = 3600
         with self.assertRaises(AuthException):
             validate("k1")
+        self.assertEqual(len(fetches), 2)  # within 30 s of the failed attempt: no fetch
+
+    def test_public_keys_fetches_spaced_after_an_hour_without_success(self):
+        auth = Auth(self.dummy_project_id, http_client=self.make_http_client())
+        failing = []
+        clock, fetches, validate = self._key_cache_env(auth, ["k1"], failing)
+        validate("k1")
+
+        failing.append(True)
+        clock[0] = 3600
+        with self.assertRaises(AuthException):
+            validate("k1")  # failed attempt
+        self.assertEqual(len(fetches), 2)
+        clock[0] = 3629
+        with self.assertRaises(AuthException) as cm:
+            validate("k1")
+        self.assertIn("Public key not found", str(cm.exception))
+        self.assertEqual(len(fetches), 2)
+        clock[0] = 3630
+        with self.assertRaises(AuthException):
+            validate("k1")
         self.assertEqual(len(fetches), 3)
+
+        failing.clear()
+        clock[0] = 3660
+        validate("k1")
+        self.assertEqual(len(fetches), 4)
 
     def test_public_keys_failed_fetch_retried_on_next_lookup(self):
         auth = Auth(self.dummy_project_id, http_client=self.make_http_client())

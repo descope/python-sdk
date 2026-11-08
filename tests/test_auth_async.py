@@ -160,10 +160,16 @@ class TestAuthAsyncEnsureKeys:
                     clock[0] = 3599
                     await auth.ensure_keys(kid)  # refresh fails, cached key still served
                     clock[0] = 3600
-                    with pytest.raises(httpx.ConnectError):
-                        await auth.ensure_keys(kid)
+                    await auth.ensure_keys(kid)  # within 30 s of the failed attempt: no fetch
                     with pytest.raises(AuthException):
                         auth._validate_token(VALID_SESSION_TOKEN)
+                    assert down.call_count == 1
+                    clock[0] = 3628
+                    await auth.ensure_keys(kid)
+                    assert down.call_count == 1
+                    clock[0] = 3629  # 30 s after the failed attempt at 3599
+                    with pytest.raises(httpx.ConnectError):
+                        await auth.ensure_keys(kid)
                     assert down.call_count == 2
         finally:
             await http.aclose()

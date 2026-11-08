@@ -97,7 +97,10 @@ class AuthBase:
         """
         now = monotonic()
         fetched, attempted = self._keys_fetched_at, self._keys_attempted_at
-        if not self._cache_has_kid(kid):
+        if fetched is not None and now - fetched >= _PUBLIC_KEYS_MAX_STALE_SECONDS:
+            # Cached keys are no longer usable: space attempts from the last failed one
+            due = attempted is None or now - attempted >= _PUBLIC_KEYS_REFETCH_COOLDOWN_SECONDS
+        elif not self._cache_has_kid(kid):
             due = fetched is None or now - fetched >= _PUBLIC_KEYS_REFETCH_COOLDOWN_SECONDS
         else:
             due = (
