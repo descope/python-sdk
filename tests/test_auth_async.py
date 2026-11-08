@@ -102,6 +102,22 @@ class TestAuthAsyncEnsureKeys:
             await http.aclose()
 
     @pytest.mark.asyncio
+    async def test_ensure_keys_cached_kid_not_blocked_by_inflight_fetch(self):
+        http = _make_http_client()
+        auth = AuthAsync(PROJECT_ID, http_client=http)
+        clock = [0.0]
+        try:
+            with patch.object(http._async_client, "get", AsyncMock(return_value=_jwks_response())) as mock_get:
+                with patch("descope._auth_base.monotonic", side_effect=lambda: clock[0]):
+                    await auth.ensure_keys(PUBLIC_KEY_DICT["kid"])
+                    clock[0] = 601  # refresh due, but another caller is already fetching
+                    async with auth.lock_public_keys:
+                        await asyncio.wait_for(auth.ensure_keys(PUBLIC_KEY_DICT["kid"]), 5)
+                    assert mock_get.call_count == 1
+        finally:
+            await http.aclose()
+
+    @pytest.mark.asyncio
     async def test_keys_ttl_cooldown_and_failed_refresh(self):
         """Cache stays within TTL, unknown kids are rate limited, failures keep the old set."""
         http = _make_http_client()

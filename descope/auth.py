@@ -88,26 +88,30 @@ class Auth(AuthBase):
     def _validate_token(self, token: str, audience: str | None | Iterable[str] = None) -> dict:
         kid, alg_header = self._kid_alg_from_token(token)
 
-        with self.lock_public_keys:
-            if self._public_keys_fetch_due(kid):
-                try:
-                    self._fetch_public_keys()
-                except Exception:
-                    # Keep the last good key set; fail only if it cannot serve this token
-                    if kid not in self.public_keys:
-                        raise
-            found_key = self.public_keys.get(kid, None)
-            if found_key is None:
-                raise AuthException(
-                    500,
-                    ERROR_TYPE_INVALID_PUBLIC_KEY,
-                    "Unable to validate public key. Public key not found.",
-                )
-            # save reference to the founded key
-            # (as another thread can change the self.public_keys dict)
-            copy_key = found_key
+        found_key = self.public_keys.get(kid, None)
+        # A cached kid is served as is instead of waiting behind an in-flight fetch
+        if found_key is None or not self.lock_public_keys.locked():
+            with self.lock_public_keys:
+                if self._public_keys_fetch_due(kid):
+                    try:
+                        self._fetch_public_keys()
+                    except Exception:
+                        # Keep the last good key set; fail only if it cannot serve this token
+                        if kid not in self.public_keys:
+                            raise
+                    finally:
+                        self._mark_public_keys_attempt()
+                # save reference to the found key
+                # (as another thread can change the self.public_keys dict)
+                found_key = self.public_keys.get(kid, None)
+        if found_key is None:
+            raise AuthException(
+                500,
+                ERROR_TYPE_INVALID_PUBLIC_KEY,
+                "Unable to validate public key. Public key not found.",
+            )
 
-        return self._decode_and_verify_token(token, audience, copy_key, alg_header)
+        return self._decode_and_verify_token(token, audience, found_key, alg_header)
 
     def validate_session(self, session_token: str, audience: str | None | Iterable[str] = None) -> dict:
         if not session_token:

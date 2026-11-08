@@ -81,7 +81,7 @@ class AuthBase:
         return kid in self.public_keys
 
     def _public_keys_fetch_due(self, kid: str | None) -> bool:
-        """Return whether the signing keys should be fetched now, recording the attempt if so.
+        """Return whether the signing keys should be fetched now.
 
         Caller must hold the public keys lock. A user-provided public key never expires.
         """
@@ -95,9 +95,11 @@ class AuthBase:
                 and now - fetched >= _PUBLIC_KEYS_TTL_SECONDS
                 and (attempted is None or now - attempted >= _PUBLIC_KEYS_REFETCH_COOLDOWN_SECONDS)
             )
-        if due:
-            self._keys_attempted_at = now
         return due
+
+    def _mark_public_keys_attempt(self) -> None:
+        """Record that a fetch finished, successfully or not, so refresh retries are spaced from its end."""
+        self._keys_attempted_at = monotonic()
 
     def _load_public_keys(self, jwks_data: str) -> None:
         """Replace the cached key set with the keys in a JWKS response body."""

@@ -131,17 +131,19 @@ class TestAuth(common.DescopeTest):
             mock_get.return_value.text = valid_keys_response
             self.assertIsNone(auth._fetch_public_keys())
 
-    def _key_cache_env(self, auth, served, failing=()):
+    def _key_cache_env(self, auth, served, failing=(), fetch_seconds=(0,)):
         """Drive ``auth._validate_token`` with a fake clock and a stubbed keys endpoint.
 
         ``served`` is a mutable list of kids the endpoint returns, ``failing`` a mutable
-        list that, when non-empty, makes the endpoint fail. Returns ``(clock, fetches, validate)``.
+        list that, when non-empty, makes the endpoint fail, ``fetch_seconds[0]`` how far
+        each fetch advances the clock. Returns ``(clock, fetches, validate)``.
         """
         clock = [0.0]
         fetches = []
 
         def fake_get(*args, **kwargs):
             fetches.append(clock[0])
+            clock[0] += fetch_seconds[0]
             if failing:
                 return mock.Mock(is_success=False, status_code=500, text="")
             return mock.Mock(
@@ -159,6 +161,35 @@ class TestAuth(common.DescopeTest):
                         return auth._validate_token(kid)
 
         return clock, fetches, validate
+
+    def test_public_keys_cached_kid_served_during_inflight_fetch(self):
+        auth = Auth(self.dummy_project_id, http_client=self.make_http_client())
+        clock, fetches, validate = self._key_cache_env(auth, ["k1"])
+        validate("k1")
+
+        clock[0] = 601  # refresh due, but another caller is already fetching
+        with ThreadPoolExecutor(max_workers=1) as pool, auth.lock_public_keys:
+            self.assertEqual(pool.submit(validate, "k1").result(timeout=5), {})
+        self.assertEqual(len(fetches), 1)
+
+    def test_public_keys_refresh_retry_spaced_from_end_of_slow_failed_fetch(self):
+        auth = Auth(self.dummy_project_id, http_client=self.make_http_client())
+        failing, fetch_seconds = [], [0]
+        clock, fetches, validate = self._key_cache_env(auth, ["k1"], failing, fetch_seconds)
+        validate("k1")
+
+        failing.append(True)
+        fetch_seconds[0] = 60  # the refresh hangs until it times out
+        clock[0] = 601
+        validate("k1")
+        self.assertEqual(clock[0], 661)
+        validate("k1")
+        clock[0] = 690
+        validate("k1")
+        self.assertEqual(len(fetches), 2)
+        clock[0] = 691
+        validate("k1")
+        self.assertEqual(len(fetches), 3)
 
     def test_public_keys_cached_within_ttl_and_replaced_after(self):
         auth = Auth(self.dummy_project_id, http_client=self.make_http_client())

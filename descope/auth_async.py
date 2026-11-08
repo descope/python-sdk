@@ -61,9 +61,12 @@ class AuthAsync(AuthBase):
         """Pre-warm the JWKS cache.
 
         Returns without fetching while the cache is fresh and holds the requested
-        kid (or any key, when kid is None). Otherwise serializes concurrent callers
-        behind ``lock_public_keys`` so they share one fetch.
+        kid (or any key, when kid is None), or when the kid is cached and a fetch
+        is already in flight. Otherwise serializes concurrent callers behind
+        ``lock_public_keys`` so they share one fetch.
         """
+        if self._cache_has_kid(kid) and self.lock_public_keys.locked():
+            return
         async with self.lock_public_keys:
             if self._public_keys_fetch_due(kid):
                 try:
@@ -72,6 +75,8 @@ class AuthAsync(AuthBase):
                     # Keep the last good key set; fail only if it cannot serve this token
                     if not self._cache_has_kid(kid):
                         raise
+                finally:
+                    self._mark_public_keys_attempt()
 
     def _validate_token(self, token: str, audience: str | None | Iterable[str] = None) -> dict:
         """Sync JWT validation. Caller must have awaited ``ensure_keys(kid)`` first.
