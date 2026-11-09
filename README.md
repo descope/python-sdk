@@ -4,12 +4,12 @@
 
 | Name                                                    |    Stmts |     Miss |   Cover |   Missing |
 |-------------------------------------------------------- | -------: | -------: | ------: | --------: |
-| descope/\_auth\_base.py                                 |      185 |        1 |     99% |        98 |
+| descope/\_auth\_base.py                                 |      240 |        1 |     99% |       182 |
 | descope/\_authmethod\_base.py                           |       13 |        1 |     92% |        15 |
 | descope/\_client\_base.py                               |       89 |        3 |     97% |49, 140, 190 |
 | descope/\_http\_base.py                                 |       11 |        1 |     91% |         8 |
-| descope/auth.py                                         |       90 |        5 |     94% |96-98, 102, 141, 174 |
-| descope/auth\_async.py                                  |      127 |        1 |     99% |       169 |
+| descope/auth.py                                         |       85 |        3 |     96% |85, 135, 168 |
+| descope/auth\_async.py                                  |      114 |        1 |     99% |       158 |
 | descope/authmethod/\_enchantedlink\_base.py             |       64 |        7 |     89% |74, 103, 105, 107, 127, 129, 131 |
 | descope/authmethod/\_magiclink\_base.py                 |       61 |        7 |     89% |74, 103, 105, 107, 127, 129, 131 |
 | descope/authmethod/\_otp\_base.py                       |       64 |        7 |     89% |60, 97, 99, 101, 124, 126, 128 |
@@ -38,7 +38,7 @@
 | descope/management/role\_async.py                       |       47 |        1 |     98% |       323 |
 | descope/management/user.py                              |      318 |        4 |     99% |757, 1131, 1133, 1135 |
 | descope/management/user\_async.py                       |      319 |        4 |     99% |762, 1136, 1138, 1140 |
-|                                               **TOTAL** | **6804** |  **109** | **98%** |           |
+|                                               **TOTAL** | **6841** |  **107** | **98%** |           |
 
 78 files skipped due to complete coverage.
 
