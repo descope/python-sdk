@@ -1666,7 +1666,7 @@ descope_client.mgmt.sso_application.create_saml_application(
 	# Optional SAML Single Logout (SLO): the SP can log the user out with a signed LogoutRequest,
 	# and it is sent one when the user's session ends
 	single_logout_enabled=True,
-	single_logout_propagation="allApps", # "allApps" or "none"
+	single_logout_propagation="allApps", # "none" (default) or "allApps"
 	single_logout_scope="session", # "session" or "allSessions"
 )
 

@@ -40,8 +40,8 @@ class SSOApplicationAsync(SSOApplicationBase, AsyncHTTPBase):
         force_authentication (bool): Optional determine if the IdP should force the user to re-authenticate.
         client_type (str): Optional OAuth client type, "confidential" or "public". If omitted, the account's
             default client type is used; the created app's client type shows which one it got.
-        logout_propagation (str): Optional how far a logout at the app's end-session endpoint reaches: "allApps"
-            (default) also logs the user out of their other applications, "none" only ends the user's sessions.
+        logout_propagation (str): Optional how far a logout at the app's end-session endpoint reaches: "none"
+            (default) only ends the user's sessions, "allApps" also logs the user out of their other applications.
 
         Return value (dict):
         Return dict in the format
@@ -123,7 +123,7 @@ class SSOApplicationAsync(SSOApplicationBase, AsyncHTTPBase):
         single_logout_enabled (bool): Optional turn SAML Single Logout (SLO) on or off. When on, the SP can log the user out with a signed LogoutRequest, and it is sent a LogoutRequest, naming the user by the app's NameID, when a logout reaches the user's apps (logout of all devices, an admin logout, or another app's logout that propagates); that includes every SLO app the user can sign in to, not only ones the user used. A logout without a browser (logout of all devices, an admin logout) reaches only apps with the "soap" binding.
         sp_single_logout_url (str): Optional the SP's SingleLogoutService URL. Required when single logout is on and use_metadata_info is off; empty takes it from the SP metadata.
         sp_single_logout_binding (str): Optional the binding of sp_single_logout_url: "redirect" (default), "post" or "soap" (server to server, requires an https URL). Empty takes it from the SP metadata.
-        single_logout_propagation (str): Optional what a logout started by the SP reaches: "allApps" (default) also logs the user out of their other applications, "none" only ends the user's session.
+        single_logout_propagation (str): Optional what a logout started by the SP reaches: "none" (default) only ends the user's session, "allApps" also logs the user out of their other applications.
         single_logout_scope (str): Optional which sessions a logout started by the SP ends: "session" (default) only the one the LogoutRequest names, "allSessions" every session of the user.
 
         Return value (dict):
@@ -206,8 +206,8 @@ class SSOApplicationAsync(SSOApplicationBase, AsyncHTTPBase):
         force_authentication (bool): Optional determine if the IdP should force the user to re-authenticate.
         client_type (str): Optional OAuth client type, "confidential" or "public". Update overrides all fields,
             so pass the app's current client type.
-        logout_propagation (str): Optional how far a logout at the app's end-session endpoint reaches: "allApps"
-            (default) or "none". Update overrides all fields, so pass the app's current value.
+        logout_propagation (str): Optional how far a logout at the app's end-session endpoint reaches: "none"
+            (default) or "allApps". Update overrides all fields, so pass the app's current value.
 
         Raise:
         AuthException: raised if update operation fails
@@ -285,7 +285,7 @@ class SSOApplicationAsync(SSOApplicationBase, AsyncHTTPBase):
         single_logout_enabled (bool): Optional turn SAML Single Logout (SLO) on or off. When on, the SP can log the user out with a signed LogoutRequest, and it is sent a LogoutRequest, naming the user by the app's NameID, when a logout reaches the user's apps (logout of all devices, an admin logout, or another app's logout that propagates); that includes every SLO app the user can sign in to, not only ones the user used. A logout without a browser (logout of all devices, an admin logout) reaches only apps with the "soap" binding.
         sp_single_logout_url (str): Optional the SP's SingleLogoutService URL. Required when single logout is on and use_metadata_info is off; empty takes it from the SP metadata.
         sp_single_logout_binding (str): Optional the binding of sp_single_logout_url: "redirect" (default), "post" or "soap" (server to server, requires an https URL). Empty takes it from the SP metadata.
-        single_logout_propagation (str): Optional what a logout started by the SP reaches: "allApps" (default) also logs the user out of their other applications, "none" only ends the user's session.
+        single_logout_propagation (str): Optional what a logout started by the SP reaches: "none" (default) only ends the user's session, "allApps" also logs the user out of their other applications.
         single_logout_scope (str): Optional which sessions a logout started by the SP ends: "session" (default) only the one the LogoutRequest names, "allSessions" every session of the user.
 
         Raise:
