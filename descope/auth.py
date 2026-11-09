@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import copy
-import json
 from threading import Lock
 from typing import Iterable, Optional
 
@@ -79,23 +78,7 @@ class Auth(AuthBase):
         response = self._http.get(
             f"{EndpointsV2.public_key_path}/{self.project_id}",
         )
-
-        jwks_data = response.text
-        try:
-            jwkeys_wrapper = json.loads(jwks_data)
-            jwkeys = jwkeys_wrapper["keys"]
-        except (ValueError, TypeError, KeyError) as e:
-            raise AuthException(500, ERROR_TYPE_INVALID_PUBLIC_KEY, f"Unable to load jwks. Error: {e}")
-
-        # Load all public keys for this project
-        self.public_keys = {}
-        for key in jwkeys:
-            try:
-                loaded_kid, pub_key, alg = Auth._validate_and_load_public_key(key)
-                self.public_keys[loaded_kid] = (pub_key, alg)
-            except AuthException:
-                # just continue to the next key
-                pass
+        self._load_public_keys(response.text)
 
     # public method to validate a token from the management class
     def validate_token(self, token: str, audience: str | None | Iterable[str] = None) -> dict:
@@ -105,22 +88,33 @@ class Auth(AuthBase):
     def _validate_token(self, token: str, audience: str | None | Iterable[str] = None) -> dict:
         kid, alg_header = self._kid_alg_from_token(token)
 
-        with self.lock_public_keys:
-            if self.public_keys == {} or self.public_keys.get(kid, None) is None:
-                self._fetch_public_keys()
+        found_key = self._cached_public_key(kid)
+        # A cached kid needing no refresh, or whose refresh is already in flight, skips the lock
+        if found_key is None or (not self.lock_public_keys.locked() and self._public_keys_fetch_due(kid)):
+            seen = self._keys_fetch_count
+            with self.lock_public_keys:
+                # Callers that waited on the lock reuse the outcome of the fetch they waited on
+                if self._keys_fetch_count == seen and self._public_keys_fetch_due(kid):
+                    try:
+                        self._fetch_public_keys()
+                    except Exception as e:
+                        self._log_public_keys_fetch_failure(e)
+                        # Keep the last good key set; fail only if it cannot serve this token
+                        if self._cached_public_key(kid) is None:
+                            raise
+                    finally:
+                        self._mark_public_keys_attempt()
+                # save reference to the found key
+                # (as another thread can change the self.public_keys dict)
+                found_key = self._cached_public_key(kid)
+        if found_key is None:
+            raise AuthException(
+                500,
+                ERROR_TYPE_INVALID_PUBLIC_KEY,
+                "Unable to validate public key. Public key not found.",
+            )
 
-            found_key = self.public_keys.get(kid, None)
-            if found_key is None:
-                raise AuthException(
-                    500,
-                    ERROR_TYPE_INVALID_PUBLIC_KEY,
-                    "Unable to validate public key. Public key not found.",
-                )
-            # save reference to the founded key
-            # (as another thread can change the self.public_keys dict)
-            copy_key = found_key
-
-        return self._decode_and_verify_token(token, audience, copy_key, alg_header)
+        return self._decode_and_verify_token(token, audience, found_key, alg_header)
 
     def validate_session(self, session_token: str, audience: str | None | Iterable[str] = None) -> dict:
         if not session_token:
