@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.17.1](https://github.com/descope/python-sdk/compare/descope-2.17.0...descope-2.17.1) (2026-11-09)
+
+
+### Bug Fixes
+
+* **auth:** refresh cached signing keys and rate limit unknown kid refetch ([#1759](https://github.com/descope/python-sdk/issues/1759)) ([c2a6826](https://github.com/descope/python-sdk/commit/c2a68264b581f3c503c48ab16117d4d6d3fae18d))
+
 ## [2.17.0](https://github.com/descope/python-sdk/compare/descope-2.16.1...descope-2.17.0) (2026-11-05)
 
 
