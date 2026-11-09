@@ -24,6 +24,7 @@ class SSOApplicationAsync(SSOApplicationBase, AsyncHTTPBase):
         enabled: Optional[bool] = True,
         force_authentication: Optional[bool] = False,
         client_type: Optional[str] = None,
+        logout_propagation: Optional[str] = None,
     ) -> dict:
         """
         Create a new OIDC sso application with the given name. SSO application IDs are provisioned automatically, but can be provided
@@ -39,6 +40,8 @@ class SSOApplicationAsync(SSOApplicationBase, AsyncHTTPBase):
         force_authentication (bool): Optional determine if the IdP should force the user to re-authenticate.
         client_type (str): Optional OAuth client type, "confidential" or "public". If omitted, the account's
             default client type is used; the created app's client type shows which one it got.
+        logout_propagation (str): Optional how far a logout at the app's end-session endpoint reaches: "allApps"
+            (default) also logs the user out of their other applications, "none" only ends the user's sessions.
 
         Return value (dict):
         Return dict in the format
@@ -59,6 +62,7 @@ class SSOApplicationAsync(SSOApplicationBase, AsyncHTTPBase):
                 enabled,
                 force_authentication,
                 client_type,
+                logout_propagation,
             ),
         )
         return response.json()
@@ -186,6 +190,7 @@ class SSOApplicationAsync(SSOApplicationBase, AsyncHTTPBase):
         enabled: Optional[bool] = True,
         force_authentication: Optional[bool] = False,
         client_type: Optional[str] = None,
+        logout_propagation: Optional[str] = None,
     ):
         """
         Update an existing OIDC sso application with the given parameters. IMPORTANT: All parameters are used as overrides
@@ -201,6 +206,8 @@ class SSOApplicationAsync(SSOApplicationBase, AsyncHTTPBase):
         force_authentication (bool): Optional determine if the IdP should force the user to re-authenticate.
         client_type (str): Optional OAuth client type, "confidential" or "public". Update overrides all fields,
             so pass the app's current client type.
+        logout_propagation (str): Optional how far a logout at the app's end-session endpoint reaches: "allApps"
+            (default) or "none". Update overrides all fields, so pass the app's current value.
 
         Raise:
         AuthException: raised if update operation fails
@@ -218,6 +225,7 @@ class SSOApplicationAsync(SSOApplicationBase, AsyncHTTPBase):
                 enabled,
                 force_authentication,
                 client_type,
+                logout_propagation,
             ),
         )
 

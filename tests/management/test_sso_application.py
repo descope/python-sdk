@@ -64,6 +64,7 @@ class TestSSOApplication:
             ({}, {}),
             ({"client_type": "confidential"}, {"clientType": "confidential"}),
             ({"client_type": "public"}, {"clientType": "public"}),
+            ({"logout_propagation": "none"}, {"logoutPropagation": "none"}),
         ],
     )
     async def test_create_oidc_application_client_type(self, client_factory, client_type_kwargs, client_type_body):
@@ -261,6 +262,7 @@ class TestSSOApplication:
             ({}, {}),
             ({"client_type": "confidential"}, {"clientType": "confidential"}),
             ({"client_type": "public"}, {"clientType": "public"}),
+            ({"logout_propagation": "none"}, {"logoutPropagation": "none"}),
         ],
     )
     async def test_update_oidc_application_client_type(self, client_factory, client_type_kwargs, client_type_body):

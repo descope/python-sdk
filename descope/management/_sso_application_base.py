@@ -31,6 +31,7 @@ class SSOApplicationBase:
         enabled: Optional[bool] = True,
         force_authentication: Optional[bool] = False,
         client_type: Optional[str] = None,
+        logout_propagation: Optional[str] = None,
     ) -> dict:
         body: dict[str, Any] = {
             "name": name,
@@ -43,6 +44,8 @@ class SSOApplicationBase:
         }
         if client_type is not None:
             body["clientType"] = client_type
+        if logout_propagation is not None:
+            body["logoutPropagation"] = logout_propagation
         return body
 
     @staticmethod
