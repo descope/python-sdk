@@ -118,10 +118,10 @@ class SSOApplication(SSOApplicationBase, HTTPBase):
         force_authentication (bool): Optional determine if the IdP should force the user to re-authenticate.
         logout_redirect_url (str): Optional Target URL to which the user will be redirected upon logout completion.
         default_signature_algorithm (str): Optional signature algorithm for SAML responses. Use "sha256" to opt in to SHA-256. Leave empty for the default (SHA-1). Only applies to IdP-initiated flows.
-        single_logout_enabled (bool): Optional turn SAML Single Logout (SLO) on or off. When on, the SP can log the user out with a signed LogoutRequest, and it is sent a LogoutRequest when the user's session ends.
+        single_logout_enabled (bool): Optional turn SAML Single Logout (SLO) on or off. When on, the SP can log the user out with a signed LogoutRequest, and it is sent a LogoutRequest, naming the user by the app's NameID, when a logout reaches the user's apps (logout of all devices, an admin logout, or another app's logout that propagates); that includes every SLO app the user can sign in to, not only ones the user used.
         sp_single_logout_url (str): Optional the SP's SingleLogoutService URL. Required when single logout is on and use_metadata_info is off; empty takes it from the SP metadata.
         sp_single_logout_binding (str): Optional the binding of sp_single_logout_url: "redirect" (default), "post" or "soap" (server to server, requires an https URL). Empty takes it from the SP metadata.
-        single_logout_propagation (str): Optional what a logout started by the SP reaches: "allApps" (default) also logs the user out of the other applications in the session, "none" only ends the user's session.
+        single_logout_propagation (str): Optional what a logout started by the SP reaches: "allApps" (default) also logs the user out of their other applications, "none" only ends the user's session.
         single_logout_scope (str): Optional which sessions a logout started by the SP ends: "session" (default) only the one the LogoutRequest names, "allSessions" every session of the user.
 
         Return value (dict):
@@ -280,10 +280,10 @@ class SSOApplication(SSOApplicationBase, HTTPBase):
         force_authentication (bool): Optional determine if the IdP should force the user to re-authenticate.
         logout_redirect_url (str): Optional Target URL to which the user will be redirected upon logout completion.
         default_signature_algorithm (str): Optional signature algorithm for SAML responses. Use "sha256" to opt in to SHA-256. Leave empty for the default (SHA-1). Only applies to IdP-initiated flows.
-        single_logout_enabled (bool): Optional turn SAML Single Logout (SLO) on or off. When on, the SP can log the user out with a signed LogoutRequest, and it is sent a LogoutRequest when the user's session ends.
+        single_logout_enabled (bool): Optional turn SAML Single Logout (SLO) on or off. When on, the SP can log the user out with a signed LogoutRequest, and it is sent a LogoutRequest, naming the user by the app's NameID, when a logout reaches the user's apps (logout of all devices, an admin logout, or another app's logout that propagates); that includes every SLO app the user can sign in to, not only ones the user used.
         sp_single_logout_url (str): Optional the SP's SingleLogoutService URL. Required when single logout is on and use_metadata_info is off; empty takes it from the SP metadata.
         sp_single_logout_binding (str): Optional the binding of sp_single_logout_url: "redirect" (default), "post" or "soap" (server to server, requires an https URL). Empty takes it from the SP metadata.
-        single_logout_propagation (str): Optional what a logout started by the SP reaches: "allApps" (default) also logs the user out of the other applications in the session, "none" only ends the user's session.
+        single_logout_propagation (str): Optional what a logout started by the SP reaches: "allApps" (default) also logs the user out of their other applications, "none" only ends the user's session.
         single_logout_scope (str): Optional which sessions a logout started by the SP ends: "session" (default) only the one the LogoutRequest names, "allSessions" every session of the user.
 
         Raise:
