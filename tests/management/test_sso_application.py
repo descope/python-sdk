@@ -33,6 +33,7 @@ class TestSSOApplication:
                     name="name",
                     login_page_url="http://dummy.com",
                     force_authentication=True,
+                    notify_on_force_logout=True,
                 )
             )
             assert resp["id"] == "app1"
@@ -54,6 +55,9 @@ class TestSSOApplication:
                     "description": None,
                     "logo": None,
                     "forceAuthentication": True,
+                    "logoutPropagation": None,
+                    "backChannelLogoutUrl": None,
+                    "notifyOnForceLogout": True,
                 },
                 follow_redirects=False,
             )
@@ -64,6 +68,9 @@ class TestSSOApplication:
             ({}, {}),
             ({"client_type": "confidential"}, {"clientType": "confidential"}),
             ({"client_type": "public"}, {"clientType": "public"}),
+            ({"logout_propagation": "none"}, {"logoutPropagation": "none"}),
+            ({"back_channel_logout_url": "https://dummy.com/bcl"}, {"backChannelLogoutUrl": "https://dummy.com/bcl"}),
+            ({"notify_on_force_logout": True}, {"notifyOnForceLogout": True}),
         ],
     )
     async def test_create_oidc_application_client_type(self, client_factory, client_type_kwargs, client_type_body):
@@ -95,6 +102,9 @@ class TestSSOApplication:
                     "description": None,
                     "logo": None,
                     "forceAuthentication": False,
+                    "logoutPropagation": None,
+                    "backChannelLogoutUrl": None,
+                    "notifyOnForceLogout": False,
                     **client_type_body,
                 },
                 follow_redirects=False,
@@ -200,6 +210,12 @@ class TestSSOApplication:
                     "forceAuthentication": True,
                     "logoutRedirectUrl": "http://dummy.com/logout",
                     "defaultSignatureAlgorithm": "sha256",
+                    "singleLogoutEnabled": False,
+                    "spSingleLogoutUrl": None,
+                    "spSingleLogoutBinding": None,
+                    "singleLogoutPropagation": None,
+                    "singleLogoutScope": None,
+                    "notifyOnForceLogout": False,
                 },
                 follow_redirects=False,
             )
@@ -246,6 +262,9 @@ class TestSSOApplication:
                     "description": None,
                     "logo": None,
                     "forceAuthentication": False,
+                    "logoutPropagation": None,
+                    "backChannelLogoutUrl": None,
+                    "notifyOnForceLogout": False,
                 },
                 follow_redirects=False,
             )
@@ -256,6 +275,9 @@ class TestSSOApplication:
             ({}, {}),
             ({"client_type": "confidential"}, {"clientType": "confidential"}),
             ({"client_type": "public"}, {"clientType": "public"}),
+            ({"logout_propagation": "none"}, {"logoutPropagation": "none"}),
+            ({"back_channel_logout_url": "https://dummy.com/bcl"}, {"backChannelLogoutUrl": "https://dummy.com/bcl"}),
+            ({"notify_on_force_logout": True}, {"notifyOnForceLogout": True}),
         ],
     )
     async def test_update_oidc_application_client_type(self, client_factory, client_type_kwargs, client_type_body):
@@ -288,6 +310,9 @@ class TestSSOApplication:
                     "description": None,
                     "logo": None,
                     "forceAuthentication": False,
+                    "logoutPropagation": None,
+                    "backChannelLogoutUrl": None,
+                    "notifyOnForceLogout": False,
                     **client_type_body,
                 },
                 follow_redirects=False,
@@ -396,9 +421,41 @@ class TestSSOApplication:
                     "forceAuthentication": False,
                     "logoutRedirectUrl": None,
                     "defaultSignatureAlgorithm": None,
+                    "singleLogoutEnabled": False,
+                    "spSingleLogoutUrl": None,
+                    "spSingleLogoutBinding": None,
+                    "singleLogoutPropagation": None,
+                    "singleLogoutScope": None,
+                    "notifyOnForceLogout": False,
                 },
                 follow_redirects=False,
             )
+
+    async def test_saml_application_single_logout(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            await client.invoke(
+                client.mgmt.sso_application.update_saml_application(
+                    id="id1",
+                    name="name",
+                    login_page_url="http://dummy.com",
+                    use_metadata_info=True,
+                    metadata_url="http://dummy.com/md",
+                    single_logout_enabled=False,
+                    sp_single_logout_url="https://dummy.com/slo",
+                    sp_single_logout_binding="soap",
+                    single_logout_propagation="none",
+                    single_logout_scope="allSessions",
+                    notify_on_force_logout=True,
+                )
+            )
+            body = mock_post.call_args.kwargs["json"]
+            assert body["singleLogoutEnabled"] is False
+            assert body["spSingleLogoutUrl"] == "https://dummy.com/slo"
+            assert body["spSingleLogoutBinding"] == "soap"
+            assert body["singleLogoutPropagation"] == "none"
+            assert body["singleLogoutScope"] == "allSessions"
+            assert body["notifyOnForceLogout"] is True
 
     async def test_delete(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
@@ -468,8 +525,9 @@ class TestSSOApplication:
                 "acsAllowedCallbacks": [],
                 "subjectNameIdType": "",
                 "subjectNameIdFormat": "",
+                "notifyOnForceLogout": True,
             },
-            "oidcSettings": {"loginPageUrl": "", "issuer": "", "discoveryUrl": ""},
+            "oidcSettings": {"loginPageUrl": "", "issuer": "", "discoveryUrl": "", "notifyOnForceLogout": True},
         }
         with client.mock_mgmt_get(make_response(load_resp)) as mock_get:
             resp = await client.invoke(client.mgmt.sso_application.load("app1"))
@@ -478,6 +536,8 @@ class TestSSOApplication:
             assert resp["samlSettings"]["loginPageUrl"] == "http://dummy.com/login"
             assert resp["samlSettings"]["useMetadataInfo"] is True
             assert resp["samlSettings"]["metadataUrl"] == "http://dummy.com/md"
+            assert resp["samlSettings"]["notifyOnForceLogout"] is True
+            assert resp["oidcSettings"]["notifyOnForceLogout"] is True
             assert resp["samlSettings"]["attributeMapping"] == [{"name": "email", "type": "", "value": "attrVal1"}]
             assert resp["samlSettings"]["groupsMapping"] == [
                 {

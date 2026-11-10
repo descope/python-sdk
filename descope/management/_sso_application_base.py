@@ -31,6 +31,9 @@ class SSOApplicationBase:
         enabled: Optional[bool] = True,
         force_authentication: Optional[bool] = False,
         client_type: Optional[str] = None,
+        logout_propagation: Optional[str] = None,
+        back_channel_logout_url: Optional[str] = None,
+        notify_on_force_logout: Optional[bool] = False,
     ) -> dict:
         body: dict[str, Any] = {
             "name": name,
@@ -40,6 +43,9 @@ class SSOApplicationBase:
             "enabled": enabled,
             "loginPageUrl": login_page_url,
             "forceAuthentication": force_authentication,
+            "logoutPropagation": logout_propagation,
+            "backChannelLogoutUrl": back_channel_logout_url,
+            "notifyOnForceLogout": notify_on_force_logout,
         }
         if client_type is not None:
             body["clientType"] = client_type
@@ -67,6 +73,12 @@ class SSOApplicationBase:
         force_authentication: Optional[bool] = False,
         logout_redirect_url: Optional[str] = None,
         default_signature_algorithm: Optional[str] = None,
+        single_logout_enabled: Optional[bool] = False,
+        sp_single_logout_url: Optional[str] = None,
+        sp_single_logout_binding: Optional[str] = None,
+        single_logout_propagation: Optional[str] = None,
+        single_logout_scope: Optional[str] = None,
+        notify_on_force_logout: Optional[bool] = False,
     ) -> dict:
         body: dict[str, Any] = {
             "id": id,
@@ -89,6 +101,12 @@ class SSOApplicationBase:
             "forceAuthentication": force_authentication,
             "logoutRedirectUrl": logout_redirect_url,
             "defaultSignatureAlgorithm": default_signature_algorithm,
+            "singleLogoutEnabled": single_logout_enabled,
+            "spSingleLogoutUrl": sp_single_logout_url,
+            "spSingleLogoutBinding": sp_single_logout_binding,
+            "singleLogoutPropagation": single_logout_propagation,
+            "singleLogoutScope": single_logout_scope,
+            "notifyOnForceLogout": notify_on_force_logout,
         }
         return body
 
