@@ -1651,6 +1651,7 @@ descope_client.mgmt.sso_application.create_oidc_application(
 	login_page_url="http://dummy.com",
 	id="my-custom-id", # This is optional.
 	client_type="confidential", # "confidential" or "public". If omitted, the account's default is used.
+	back_channel_logout_url="https://dummy.com/backchannel-logout", # Optional
 	notify_on_force_logout=True, # Optional: send the app's back-channel logout URL a logout token when the user is force logged out.
 )
 
@@ -1679,6 +1680,7 @@ descope_client.mgmt.sso_application.update_oidc_application(
     name="My First sso app",
     login_page_url="http://dummy.com",
     client_type="confidential", # Update overrides all fields, so pass the app's current client type.
+    back_channel_logout_url="https://dummy.com/backchannel-logout", # An update without it clears it.
 )
 
 # Update SAML SSO application

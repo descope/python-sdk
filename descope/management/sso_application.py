@@ -23,7 +23,8 @@ class SSOApplication(SSOApplicationBase, HTTPBase):
         force_authentication: Optional[bool] = False,
         client_type: Optional[str] = None,
         logout_propagation: Optional[str] = None,
-        notify_on_force_logout: bool = False,
+        back_channel_logout_url: Optional[str] = None,
+        notify_on_force_logout: Optional[bool] = False,
     ) -> dict:
         """
         Create a new OIDC sso application with the given name. SSO application IDs are provisioned automatically, but can be provided
@@ -41,6 +42,8 @@ class SSOApplication(SSOApplicationBase, HTTPBase):
             default client type is used; the created app's client type shows which one it got.
         logout_propagation (str): Optional how far a logout at the app's end-session endpoint reaches: "none"
             (default) only ends the user's sessions, "allApps" also logs the user out of their other applications.
+        back_channel_logout_url (str): Optional the app's OIDC back-channel logout URL: it is sent a logout token
+            when a logout reaches the app. notify_on_force_logout needs it.
         notify_on_force_logout (bool): Optional whether a force logout of the user (the Console's, or the management
             API's logout of all of a user's devices) notifies this app: with a back-channel logout URL, it is sent a
             logout token. Off by default.
@@ -64,7 +67,8 @@ class SSOApplication(SSOApplicationBase, HTTPBase):
                 enabled,
                 force_authentication,
                 client_type,
-                logout_propagation,
+                logout_propagation=logout_propagation,
+                back_channel_logout_url=back_channel_logout_url,
                 notify_on_force_logout=notify_on_force_logout,
             ),
         )
@@ -97,7 +101,7 @@ class SSOApplication(SSOApplicationBase, HTTPBase):
         sp_single_logout_binding: Optional[str] = None,
         single_logout_propagation: Optional[str] = None,
         single_logout_scope: Optional[str] = None,
-        notify_on_force_logout: bool = False,
+        notify_on_force_logout: Optional[bool] = False,
     ) -> dict:
         """
         Create a new SAML sso application with the given name. SSO application IDs are provisioned automatically, but can be provided
@@ -124,10 +128,10 @@ class SSOApplication(SSOApplicationBase, HTTPBase):
         force_authentication (bool): Optional determine if the IdP should force the user to re-authenticate.
         logout_redirect_url (str): Optional Target URL to which the user will be redirected upon logout completion.
         default_signature_algorithm (str): Optional signature algorithm for SAML responses. Use "sha256" to opt in to SHA-256. Leave empty for the default (SHA-1). Only applies to IdP-initiated flows.
-        single_logout_enabled (bool): Optional turn SAML Single Logout (SLO) on or off. When on, the SP can log the user out with a signed LogoutRequest, and it is sent a LogoutRequest, naming the user by the app's NameID, when a logout reaches the user's apps (the user's own logout of all devices, a force logout when the app's notify_on_force_logout is on, or another app's logout that propagates); that includes every SLO app the user can sign in to, not only ones the user used. A logout without a browser (the user's own logout of all devices, a force logout) reaches only apps with the "soap" binding.
+        single_logout_enabled (bool): Optional turn SAML Single Logout (SLO) on or off. When on, the SP can log the user out with a signed LogoutRequest, and it is sent a LogoutRequest, naming the user by the app's NameID, when a logout reaches the user's apps (the user's own logout of all devices, a force logout when the app's notify_on_force_logout is on, or another app's logout that propagates); that includes every SLO app the user can sign in to, not only ones the user used. A logout without a browser (the user's own logout of all devices, a force logout) reaches only apps with the "soap" binding. Off by default.
         sp_single_logout_url (str): Optional the SP's SingleLogoutService URL. Required when single logout is on and use_metadata_info is off; empty takes it from the SP metadata.
-        sp_single_logout_binding (str): Optional the binding of sp_single_logout_url: "redirect" (default), "post" or "soap" (server to server, requires an https URL). Empty takes it from the SP metadata.
-        single_logout_propagation (str): Optional what a logout started by the SP reaches: "none" (default) only ends the user's session, "allApps" also logs the user out of their other applications.
+        sp_single_logout_binding (str): Optional the binding of sp_single_logout_url: "redirect", "post" or "soap" (server to server, requires an https URL). Empty is the default: with an SP Single Logout URL, HTTP-Redirect; without one, from the SP metadata (SOAP when it offers an https SOAP endpoint, else HTTP-Redirect, else HTTP-POST). Without a URL, an explicit binding takes the metadata endpoint with that binding.
+        single_logout_propagation (str): Optional what a logout started by the SP reaches: "none" (default) only ends the user's session, "allApps" also logs the user out of their other applications (OIDC applications only when every session of the user ended).
         single_logout_scope (str): Optional which sessions a logout started by the SP ends: "session" (default) only the one the LogoutRequest names, "allSessions" every session of the user.
         notify_on_force_logout (bool): Optional whether a force logout of the user (the Console's, or the management API's logout of all of a user's devices) notifies this app: with single logout over the "soap" binding, it is sent a LogoutRequest. Off by default.
 
@@ -197,7 +201,8 @@ class SSOApplication(SSOApplicationBase, HTTPBase):
         force_authentication: Optional[bool] = False,
         client_type: Optional[str] = None,
         logout_propagation: Optional[str] = None,
-        notify_on_force_logout: bool = False,
+        back_channel_logout_url: Optional[str] = None,
+        notify_on_force_logout: Optional[bool] = False,
     ):
         """
         Update an existing OIDC sso application with the given parameters. IMPORTANT: All parameters are used as overrides
@@ -215,6 +220,9 @@ class SSOApplication(SSOApplicationBase, HTTPBase):
             so pass the app's current client type.
         logout_propagation (str): Optional how far a logout at the app's end-session endpoint reaches: "none"
             (default) or "allApps". Update overrides all fields, so pass the app's current value.
+        back_channel_logout_url (str): Optional the app's OIDC back-channel logout URL: it is sent a logout token
+            when a logout reaches the app. notify_on_force_logout needs it. Update overrides all fields, so an
+            update without it clears it.
         notify_on_force_logout (bool): Optional whether a force logout of the user (the Console's, or the management
             API's logout of all of a user's devices) notifies this app: with a back-channel logout URL, it is sent a
             logout token. Off by default. Update overrides all fields, so pass the app's current value.
@@ -235,7 +243,8 @@ class SSOApplication(SSOApplicationBase, HTTPBase):
                 enabled,
                 force_authentication,
                 client_type,
-                logout_propagation,
+                logout_propagation=logout_propagation,
+                back_channel_logout_url=back_channel_logout_url,
                 notify_on_force_logout=notify_on_force_logout,
             ),
         )
@@ -267,7 +276,7 @@ class SSOApplication(SSOApplicationBase, HTTPBase):
         sp_single_logout_binding: Optional[str] = None,
         single_logout_propagation: Optional[str] = None,
         single_logout_scope: Optional[str] = None,
-        notify_on_force_logout: bool = False,
+        notify_on_force_logout: Optional[bool] = False,
     ):
         """
         Update an existing SAML sso application with the given parameters. IMPORTANT: All parameters are used as overrides
@@ -294,10 +303,10 @@ class SSOApplication(SSOApplicationBase, HTTPBase):
         force_authentication (bool): Optional determine if the IdP should force the user to re-authenticate.
         logout_redirect_url (str): Optional Target URL to which the user will be redirected upon logout completion.
         default_signature_algorithm (str): Optional signature algorithm for SAML responses. Use "sha256" to opt in to SHA-256. Leave empty for the default (SHA-1). Only applies to IdP-initiated flows.
-        single_logout_enabled (bool): Optional turn SAML Single Logout (SLO) on or off. When on, the SP can log the user out with a signed LogoutRequest, and it is sent a LogoutRequest, naming the user by the app's NameID, when a logout reaches the user's apps (the user's own logout of all devices, a force logout when the app's notify_on_force_logout is on, or another app's logout that propagates); that includes every SLO app the user can sign in to, not only ones the user used. A logout without a browser (the user's own logout of all devices, a force logout) reaches only apps with the "soap" binding.
+        single_logout_enabled (bool): Optional turn SAML Single Logout (SLO) on or off. When on, the SP can log the user out with a signed LogoutRequest, and it is sent a LogoutRequest, naming the user by the app's NameID, when a logout reaches the user's apps (the user's own logout of all devices, a force logout when the app's notify_on_force_logout is on, or another app's logout that propagates); that includes every SLO app the user can sign in to, not only ones the user used. A logout without a browser (the user's own logout of all devices, a force logout) reaches only apps with the "soap" binding. Off by default: update overrides all fields, so an update without it turns single logout off.
         sp_single_logout_url (str): Optional the SP's SingleLogoutService URL. Required when single logout is on and use_metadata_info is off; empty takes it from the SP metadata.
-        sp_single_logout_binding (str): Optional the binding of sp_single_logout_url: "redirect" (default), "post" or "soap" (server to server, requires an https URL). Empty takes it from the SP metadata.
-        single_logout_propagation (str): Optional what a logout started by the SP reaches: "none" (default) only ends the user's session, "allApps" also logs the user out of their other applications.
+        sp_single_logout_binding (str): Optional the binding of sp_single_logout_url: "redirect", "post" or "soap" (server to server, requires an https URL). Empty is the default: with an SP Single Logout URL, HTTP-Redirect; without one, from the SP metadata (SOAP when it offers an https SOAP endpoint, else HTTP-Redirect, else HTTP-POST). Without a URL, an explicit binding takes the metadata endpoint with that binding.
+        single_logout_propagation (str): Optional what a logout started by the SP reaches: "none" (default) only ends the user's session, "allApps" also logs the user out of their other applications (OIDC applications only when every session of the user ended).
         single_logout_scope (str): Optional which sessions a logout started by the SP ends: "session" (default) only the one the LogoutRequest names, "allSessions" every session of the user.
         notify_on_force_logout (bool): Optional whether a force logout of the user (the Console's, or the management API's logout of all of a user's devices) notifies this app: with single logout over the "soap" binding, it is sent a LogoutRequest. Off by default.
 

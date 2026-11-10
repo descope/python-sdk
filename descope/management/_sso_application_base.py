@@ -32,7 +32,8 @@ class SSOApplicationBase:
         force_authentication: Optional[bool] = False,
         client_type: Optional[str] = None,
         logout_propagation: Optional[str] = None,
-        notify_on_force_logout: bool = False,
+        back_channel_logout_url: Optional[str] = None,
+        notify_on_force_logout: Optional[bool] = False,
     ) -> dict:
         body: dict[str, Any] = {
             "name": name,
@@ -42,12 +43,12 @@ class SSOApplicationBase:
             "enabled": enabled,
             "loginPageUrl": login_page_url,
             "forceAuthentication": force_authentication,
+            "logoutPropagation": logout_propagation,
+            "backChannelLogoutUrl": back_channel_logout_url,
             "notifyOnForceLogout": notify_on_force_logout,
         }
         if client_type is not None:
             body["clientType"] = client_type
-        if logout_propagation is not None:
-            body["logoutPropagation"] = logout_propagation
         return body
 
     @staticmethod
@@ -77,7 +78,7 @@ class SSOApplicationBase:
         sp_single_logout_binding: Optional[str] = None,
         single_logout_propagation: Optional[str] = None,
         single_logout_scope: Optional[str] = None,
-        notify_on_force_logout: bool = False,
+        notify_on_force_logout: Optional[bool] = False,
     ) -> dict:
         body: dict[str, Any] = {
             "id": id,
