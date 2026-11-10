@@ -1651,6 +1651,7 @@ descope_client.mgmt.sso_application.create_oidc_application(
 	login_page_url="http://dummy.com",
 	id="my-custom-id", # This is optional.
 	client_type="confidential", # "confidential" or "public". If omitted, the account's default is used.
+	notify_on_force_logout=True, # Optional: send the app's back-channel logout URL a logout token when the user is force logged out.
 )
 
 # Create SAML SSO application
@@ -1664,10 +1665,11 @@ descope_client.mgmt.sso_application.create_saml_application(
 	force_authentication=False,
 	logout_redirect_url="http://dummy.com/logout",
 	# Optional SAML Single Logout (SLO): the SP can log the user out with a signed LogoutRequest,
-	# and it is sent one when the user's session ends
+	# and it is sent one when a logout reaches the user's applications
 	single_logout_enabled=True,
 	single_logout_propagation="allApps", # "none" (default) or "allApps"
 	single_logout_scope="session", # "session" or "allSessions"
+	notify_on_force_logout=True, # also send it a LogoutRequest on a force logout (requires the "soap" binding)
 )
 
 # Update OIDC SSO application
