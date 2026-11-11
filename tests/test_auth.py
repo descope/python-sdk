@@ -1,6 +1,8 @@
 import json
 import os
+import time
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 from enum import Enum
 from http import HTTPStatus
 from types import SimpleNamespace
@@ -128,6 +130,279 @@ class TestAuth(common.DescopeTest):
             mock_get.return_value.is_success = True
             mock_get.return_value.text = valid_keys_response
             self.assertIsNone(auth._fetch_public_keys())
+
+    def _key_cache_env(self, auth, served, failing=(), fetch_seconds=(0,)):
+        """Drive ``auth._validate_token`` with a fake clock and a stubbed keys endpoint.
+
+        ``served`` is a mutable list of kids the endpoint returns, ``failing`` a mutable
+        list that, when non-empty, makes the endpoint fail, ``fetch_seconds[0]`` how far
+        each fetch advances the clock. Returns ``(clock, fetches, validate)``.
+        """
+        clock = [0.0]
+        fetches = []
+
+        def fake_get(*args, **kwargs):
+            fetches.append(clock[0])
+            clock[0] += fetch_seconds[0]
+            if failing:
+                return mock.Mock(is_success=False, status_code=500, text="")
+            return mock.Mock(
+                is_success=True,
+                text=json.dumps({"keys": [dict(self.public_key_dict, kid=k) for k in served]}),
+            )
+
+        def validate(kid):
+            with patch.object(Auth, "_kid_alg_from_token", side_effect=lambda t: (t, "ES384")):
+                with patch.object(auth, "_decode_and_verify_token", return_value={}):
+                    with (
+                        patch("httpx.get", side_effect=fake_get),
+                        patch("descope._auth_base.monotonic", side_effect=lambda: clock[0]),
+                    ):
+                        return auth._validate_token(kid)
+
+        return clock, fetches, validate
+
+    def test_public_keys_cached_kid_served_during_inflight_fetch(self):
+        auth = Auth(self.dummy_project_id, http_client=self.make_http_client())
+        clock, fetches, validate = self._key_cache_env(auth, ["k1"])
+        validate("k1")
+
+        clock[0] = 601  # refresh due, but another caller is already fetching
+        with ThreadPoolExecutor(max_workers=1) as pool, auth.lock_public_keys:
+            self.assertEqual(pool.submit(validate, "k1").result(timeout=5), {})
+        self.assertEqual(len(fetches), 1)
+
+    def test_public_keys_fresh_cached_kid_skips_lock(self):
+        auth = Auth(self.dummy_project_id, http_client=self.make_http_client())
+        clock, fetches, validate = self._key_cache_env(auth, ["k1"])
+        validate("k1")
+
+        # A lock that reads free but would block (another thread is about to take it)
+        auth.lock_public_keys = mock.MagicMock()
+        auth.lock_public_keys.locked.return_value = False
+        auth.lock_public_keys.__enter__.side_effect = AssertionError("fresh cached kid must not wait on the lock")
+        clock[0] = 599
+        self.assertEqual(validate("k1"), {})
+        self.assertEqual(len(fetches), 1)
+
+    def test_public_keys_refresh_retry_spaced_from_end_of_slow_failed_fetch(self):
+        auth = Auth(self.dummy_project_id, http_client=self.make_http_client())
+        failing, fetch_seconds = [], [0]
+        clock, fetches, validate = self._key_cache_env(auth, ["k1"], failing, fetch_seconds)
+        validate("k1")
+
+        failing.append(True)
+        fetch_seconds[0] = 60  # the refresh hangs until it times out
+        clock[0] = 601
+        validate("k1")
+        self.assertEqual(clock[0], 661)
+        validate("k1")
+        clock[0] = 690
+        validate("k1")
+        self.assertEqual(len(fetches), 2)
+        clock[0] = 691
+        validate("k1")
+        self.assertEqual(len(fetches), 3)
+
+    def test_public_keys_cached_within_ttl_and_replaced_after(self):
+        auth = Auth(self.dummy_project_id, http_client=self.make_http_client())
+        served = ["k1", "k2"]
+        clock, fetches, validate = self._key_cache_env(auth, served)
+
+        validate("k1")
+        validate("k2")
+        clock[0] = 599
+        validate("k1")
+        self.assertEqual(len(fetches), 1)
+
+        # After the TTL the whole set is refetched and replaced: a dropped key is rejected
+        served.remove("k1")
+        clock[0] = 601
+        with self.assertRaises(AuthException):
+            validate("k1")
+        self.assertEqual(len(fetches), 2)
+        validate("k2")
+        self.assertEqual(len(fetches), 2)
+
+    def test_public_keys_empty_or_missing_keys_keep_last_good_set(self):
+        auth = Auth(self.dummy_project_id, http_client=self.make_http_client())
+        served = ["k1"]
+        clock, fetches, validate = self._key_cache_env(auth, served)
+        validate("k1")
+
+        served.clear()
+        clock[0] = 601
+        validate("k1")  # empty keys is a failed fetch, the previous set still serves the token
+        self.assertEqual(len(fetches), 2)
+        self.assertIn("k1", auth.public_keys)
+        self.assertRaises(AuthException, auth._load_public_keys, "{}")
+        self.assertIn("k1", auth.public_keys)
+
+    def test_public_keys_unknown_kid_refetch_cooldown(self):
+        auth = Auth(self.dummy_project_id, http_client=self.make_http_client())
+        clock, fetches, validate = self._key_cache_env(auth, ["k1"])
+        validate("k1")
+
+        clock[0] = 100
+        for _ in range(2):
+            with self.assertRaises(AuthException):
+                validate("unknown")
+        self.assertEqual(len(fetches), 2)
+
+        clock[0] = 129
+        with self.assertRaises(AuthException):
+            validate("unknown")
+        self.assertEqual(len(fetches), 2)
+
+        clock[0] = 131
+        with self.assertRaises(AuthException):
+            validate("unknown")
+        self.assertEqual(len(fetches), 3)
+
+    def test_public_keys_failed_refresh_keeps_cached_keys(self):
+        auth = Auth(self.dummy_project_id, http_client=self.make_http_client())
+        failing = []
+        clock, fetches, validate = self._key_cache_env(auth, ["k1"], failing)
+        validate("k1")
+
+        failing.append(True)
+        clock[0] = 601
+        validate("k1")  # refresh fails, the previous set still serves the token
+        self.assertEqual(len(fetches), 2)
+        validate("k1")  # cached key served without another fetch for 30 s after the failure
+        self.assertEqual(len(fetches), 2)
+        with self.assertRaises(AuthException):
+            validate("unknown")  # a failed fetch does not start the unknown kid cooldown
+        self.assertEqual(len(fetches), 3)
+
+        # Refresh retries are spaced out, and recover once the endpoint does
+        failing.clear()
+        clock[0] = 630
+        validate("k1")
+        self.assertEqual(len(fetches), 3)
+        clock[0] = 632
+        validate("k1")
+        self.assertEqual(len(fetches), 4)
+        validate("k1")
+        self.assertEqual(len(fetches), 4)
+
+    def test_public_keys_not_used_an_hour_after_last_successful_fetch(self):
+        auth = Auth(self.dummy_project_id, http_client=self.make_http_client())
+        failing = []
+        clock, fetches, validate = self._key_cache_env(auth, ["k1"], failing)
+        validate("k1")
+
+        failing.append(True)  # the endpoint stays down from here on
+        clock[0] = 3599
+        validate("k1")
+        clock[0] = 3600
+        with self.assertRaises(AuthException):
+            validate("k1")
+        self.assertEqual(len(fetches), 2)  # within 30 s of the failed attempt: no fetch
+
+    def test_public_keys_fetches_spaced_after_an_hour_without_success(self):
+        auth = Auth(self.dummy_project_id, http_client=self.make_http_client())
+        failing = []
+        clock, fetches, validate = self._key_cache_env(auth, ["k1"], failing)
+        validate("k1")
+
+        failing.append(True)
+        clock[0] = 3600
+        with self.assertRaises(AuthException):
+            validate("k1")  # failed attempt
+        self.assertEqual(len(fetches), 2)
+        clock[0] = 3629
+        with self.assertRaises(AuthException) as cm:
+            validate("k1")
+        self.assertIn("Public key not found", str(cm.exception))
+        self.assertEqual(len(fetches), 2)
+        clock[0] = 3630
+        with self.assertRaises(AuthException):
+            validate("k1")
+        self.assertEqual(len(fetches), 3)
+
+        failing.clear()
+        clock[0] = 3660
+        validate("k1")
+        self.assertEqual(len(fetches), 4)
+
+    def test_public_keys_failed_fetch_retried_on_next_lookup(self):
+        auth = Auth(self.dummy_project_id, http_client=self.make_http_client())
+        failing = [True]
+        clock, fetches, validate = self._key_cache_env(auth, ["k1"], failing)
+
+        with self.assertRaises(AuthException):
+            validate("k1")
+        failing.clear()
+        validate("k1")
+        self.assertEqual(len(fetches), 2)
+
+    def test_public_keys_unknown_kid_concurrent_callers_share_one_fetch(self):
+        auth = Auth(self.dummy_project_id, http_client=self.make_http_client())
+        fetches = []
+
+        def slow_get(*args, **kwargs):
+            fetches.append(1)
+            time.sleep(0.05)
+            return mock.Mock(is_success=True, text=json.dumps({"keys": [dict(self.public_key_dict, kid="k1")]}))
+
+        def validate():
+            return auth._validate_token("k1")
+
+        with patch.object(Auth, "_kid_alg_from_token", side_effect=lambda t: (t, "ES384")):
+            with patch.object(auth, "_decode_and_verify_token", return_value={}):
+                with patch("httpx.get", side_effect=slow_get):
+                    with ThreadPoolExecutor(max_workers=10) as pool:
+                        for future in [pool.submit(validate) for _ in range(10)]:
+                            future.result()
+        self.assertEqual(len(fetches), 1)
+
+    def test_user_provided_public_key_never_expires(self):
+        auth = Auth(self.dummy_project_id, self.public_key_dict, http_client=self.make_http_client())
+        clock, fetches, validate = self._key_cache_env(auth, [])
+
+        clock[0] = 100000
+        validate(self.public_key_dict["kid"])
+        self.assertEqual(fetches, [])
+
+    def test_user_provided_public_key_kept_alongside_fetched_keys(self):
+        auth = Auth(self.dummy_project_id, self.public_key_dict, http_client=self.make_http_client())
+        clock, fetches, validate = self._key_cache_env(auth, ["k1"])
+
+        validate("k1")  # unknown kid fetch must not replace the provided key
+        self.assertEqual(len(fetches), 1)
+        clock[0] = 4000  # fetched keys are past the hour cap, the provided key is not
+        validate(self.public_key_dict["kid"])
+        self.assertEqual(len(fetches), 1)
+
+    def test_public_keys_failed_fetch_logs_warning(self):
+        auth = Auth(self.dummy_project_id, http_client=self.make_http_client())
+        clock, fetches, validate = self._key_cache_env(auth, ["k1"], [True])
+
+        with self.assertLogs("descope._auth_base", level="WARNING") as logs:
+            with self.assertRaises(AuthException):
+                validate("k1")
+        self.assertEqual(len(logs.records), 1)
+
+    def test_public_keys_waiters_reuse_failed_fetch(self):
+        auth = Auth(self.dummy_project_id, http_client=self.make_http_client())
+        fetches = []
+
+        def failing_get(*args, **kwargs):
+            fetches.append(1)
+            time.sleep(0.2)
+            return mock.Mock(is_success=False, status_code=500, text="")
+
+        def validate():
+            with self.assertRaises(AuthException):
+                auth._validate_token("k1")
+
+        with patch.object(Auth, "_kid_alg_from_token", side_effect=lambda t: (t, "ES384")):
+            with patch("httpx.get", side_effect=failing_get):
+                with ThreadPoolExecutor(max_workers=10) as pool:
+                    for future in [pool.submit(validate) for _ in range(10)]:
+                        future.result()
+        self.assertEqual(len(fetches), 1)
 
     def test_empty_project_id(self):
         self.assertRaises(AuthException, Auth, http_client=self.make_http_client())

@@ -1667,6 +1667,8 @@ descope_client.mgmt.sso_application.create_oidc_application(
 	login_page_url="http://dummy.com",
 	id="my-custom-id", # This is optional.
 	client_type="confidential", # "confidential" or "public". If omitted, the account's default is used.
+	back_channel_logout_url="https://dummy.com/backchannel-logout", # Optional
+	notify_on_force_logout=True, # Optional: send the app's back-channel logout URL a logout token when the user is force logged out.
 )
 
 # Create SAML SSO application
@@ -1679,6 +1681,12 @@ descope_client.mgmt.sso_application.create_saml_application(
 	default_relay_state="relayState",
 	force_authentication=False,
 	logout_redirect_url="http://dummy.com/logout",
+	# Optional SAML Single Logout (SLO): the SP can log the user out with a signed LogoutRequest,
+	# and it is sent one when a logout reaches the user's applications
+	single_logout_enabled=True,
+	single_logout_propagation="allApps", # "none" (default) or "allApps"
+	single_logout_scope="session", # "session" or "allSessions"
+	notify_on_force_logout=True, # also send it a LogoutRequest on a force logout (requires the "soap" binding)
 )
 
 # Update OIDC SSO application
@@ -1688,6 +1696,7 @@ descope_client.mgmt.sso_application.update_oidc_application(
     name="My First sso app",
     login_page_url="http://dummy.com",
     client_type="confidential", # Update overrides all fields, so pass the app's current client type.
+    back_channel_logout_url="https://dummy.com/backchannel-logout", # An update without it clears it.
 )
 
 # Update SAML SSO application
@@ -1955,6 +1964,16 @@ all_apps = descope_client.mgmt.third_party_application.load_all()
 # Rotate or fetch the application secret
 new_secret = descope_client.mgmt.third_party_application.rotate_secret(app_id)
 secret = descope_client.mgmt.third_party_application.get_secret(app_id)
+
+# Create a user consent, e.g. to migrate consents users already granted in another system.
+# Scopes are merged into the user's existing consent for the same application and tenant.
+consent = descope_client.mgmt.third_party_application.create_consent(
+    app_id=app_id,
+    user_id="user-id",
+    scopes=["openid", "read"],  # Must include the application's mandatory scopes
+    tenant_id="tenant-id",  # Optional, the user must be a member of the tenant
+    expire_time=1767225600,  # Optional, seconds since the epoch. 0 (default) means never expires
+)["consent"]
 
 # Search and delete user consents
 consents = descope_client.mgmt.third_party_application.search_consents(app_id=app_id, limit=10)
