@@ -26,19 +26,19 @@
 | descope/management/\_outbound\_application\_base.py     |       58 |        4 |     93% |92, 96, 98, 100 |
 | descope/management/\_sso\_settings\_base.py             |       98 |        1 |     99% |         7 |
 | descope/management/\_third\_party\_application\_base.py |       26 |        4 |     85% |33, 35, 37, 39 |
-| descope/management/\_user\_base.py                      |      162 |       11 |     93% |71-76, 142, 202, 252, 254, 256 |
+| descope/management/\_user\_base.py                      |      200 |       12 |     94% |38, 126-131, 197, 257, 307, 309, 311 |
 | descope/management/audit.py                             |       49 |       11 |     78% |75, 77, 79, 81, 83, 85, 87, 89, 91, 93, 95 |
 | descope/management/audit\_async.py                      |       49 |       11 |     78% |77, 79, 81, 83, 85, 87, 89, 91, 93, 95, 97 |
-| descope/management/common.py                            |      545 |        1 |     99% |        86 |
+| descope/management/common.py                            |      548 |        1 |     99% |        86 |
 | descope/management/group.py                             |       24 |        2 |     92% |  104, 154 |
 | descope/management/group\_async.py                      |       25 |        2 |     92% |  108, 158 |
 | descope/management/outbound\_application.py             |      117 |        1 |     99% |       613 |
 | descope/management/outbound\_application\_async.py      |      119 |        1 |     99% |       613 |
 | descope/management/role.py                              |       47 |        1 |     98% |       321 |
 | descope/management/role\_async.py                       |       47 |        1 |     98% |       323 |
-| descope/management/user.py                              |      318 |        4 |     99% |757, 1131, 1133, 1135 |
-| descope/management/user\_async.py                       |      319 |        4 |     99% |762, 1136, 1138, 1140 |
-|                                               **TOTAL** | **6841** |  **107** | **98%** |           |
+| descope/management/user.py                              |      327 |        4 |     99% |829, 1203, 1205, 1207 |
+| descope/management/user\_async.py                       |      328 |        4 |     99% |834, 1208, 1210, 1212 |
+|                                               **TOTAL** | **6900** |  **108** | **98%** |           |
 
 78 files skipped due to complete coverage.
 
