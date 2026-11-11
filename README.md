@@ -819,6 +819,22 @@ descope_client.mgmt.user.logout_user("<login-id>")
 # Logout user from all devices by user ID
 descope_client.mgmt.user.logout_user_by_user_id("<user-id>")
 
+# Logout all sessions created in a time range. before and after are both optional, but at least one is required.
+# Omit before to use the server's current time (don't pass the current time yourself, a before in the future is rejected),
+# omit after for an open-ended range. Datetimes must be timezone-aware.
+# Each session is logged out on its next refresh or validation. The range stays active for a year.
+# The returned range is what the server stored, which may have a later after than requested.
+from datetime import datetime, timedelta, timezone
+# Log out sessions created in the last hour
+logout_range = descope_client.mgmt.user.logout_sessions_created_between(
+    after=datetime.now(timezone.utc) - timedelta(hours=1),
+)
+
+# List active ranges, and delete one. Deleting stops it from logging out matching sessions
+# it hasn't logged out yet; sessions already logged out stay logged out.
+ranges = descope_client.mgmt.user.list_logout_session_ranges()
+descope_client.mgmt.user.delete_logout_session_range(logout_range.id)
+
 # Load users by their user id
 users_resp = descope_client.mgmt.user.load_users(user_ids=["<user-id>"])
 users = users_resp["users"]

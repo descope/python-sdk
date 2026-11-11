@@ -1,9 +1,11 @@
+from datetime import datetime, timedelta, timezone
+
 import pytest
 
 from descope import AssociatedFamily, AssociatedTenant, AuthException, CustomAttribute
 from descope.common import DeliveryMethod, LoginOptions
 from descope.management.common import MgmtV1, Sort
-from descope.management.user import UserObj
+from descope.management.user import LogoutSessionRange, UserObj
 from descope.management.user_pwd import (
     UserPassword,
     UserPasswordBcrypt,
@@ -851,6 +853,221 @@ class TestUser:
                 json={
                     "userId": "u1",
                 },
+                follow_redirects=False,
+            )
+
+    async def test_logout_sessions_created_between(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+        before = datetime(2026, 11, 1, 12, 0, 0, tzinfo=timezone.utc)
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.logout_sessions_created_between(before))
+
+        # Both before and after omitted, or naive datetimes, are rejected before any request
+        naive = datetime(2026, 10, 1, 0, 0, 0)
+        for kwargs in [
+            {},
+            {"before": None, "after": None},
+            {"before": naive},
+            {"before": before, "after": naive},
+            {"after": naive},
+        ]:
+            with client.mock_mgmt_post(make_response({})) as mock_post:
+                with pytest.raises(AuthException) as exc_info:
+                    await client.invoke(client.mgmt.user.logout_sessions_created_between(**kwargs))
+                assert exc_info.value.status_code == 400
+                mock_post.assert_not_called()
+
+        with client.mock_mgmt_post(make_response({})):
+            with pytest.raises(AuthException, match="must be timezone-aware"):
+                await client.invoke(client.mgmt.user.logout_sessions_created_between(after=naive))
+
+        # Test success flow, open-ended range omits after from the body
+        with client.mock_mgmt_post(
+            make_response(
+                {
+                    "id": "r1",
+                    "after": "1970-01-01T00:00:00Z",
+                    "before": "2026-11-01T12:00:00Z",
+                    "sessionTypes": [],
+                }
+            )
+        ) as mock_post:
+            res = await client.invoke(client.mgmt.user.logout_sessions_created_between(before))
+            assert isinstance(res, LogoutSessionRange)
+            assert res.id == "r1"
+            assert res.after == datetime(1970, 1, 1, tzinfo=timezone.utc)
+            assert res.before == before
+            assert res.before.tzinfo is not None
+            assert res.session_types == []
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_logout_sessions_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "sessionsCreatedBefore": "2026-11-01T12:00:00Z",
+                },
+                follow_redirects=False,
+            )
+
+        # Test success flow with only after, before is omitted from the body
+        with client.mock_mgmt_post(
+            make_response(
+                {
+                    "id": "r3",
+                    "after": "2026-10-01T00:00:00Z",
+                    "before": "2026-11-01T12:00:00Z",
+                }
+            )
+        ) as mock_post:
+            res = await client.invoke(
+                client.mgmt.user.logout_sessions_created_between(
+                    after=datetime(2026, 10, 1, 0, 0, 0, tzinfo=timezone.utc),
+                )
+            )
+            assert res.id == "r3"
+            assert res.before == before
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_logout_sessions_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "sessionsCreatedAfter": "2026-10-01T00:00:00Z",
+                },
+                follow_redirects=False,
+            )
+
+        # Test success flow with after, session types and aware non-UTC datetimes
+        plus_two = timezone(timedelta(hours=2))
+        with client.mock_mgmt_post(
+            make_response(
+                {
+                    "id": "r2",
+                    "after": "2026-10-01T00:00:00.123456789Z",
+                    "before": "2026-11-01T10:00:00Z",
+                    "sessionTypes": ["web"],
+                }
+            )
+        ) as mock_post:
+            res = await client.invoke(
+                client.mgmt.user.logout_sessions_created_between(
+                    before=datetime(2026, 11, 1, 12, 0, 0, tzinfo=plus_two),
+                    after=datetime(2026, 10, 1, 0, 0, 0, tzinfo=timezone.utc),
+                    session_types=["web"],
+                )
+            )
+            assert res.id == "r2"
+            assert res.after == datetime(2026, 10, 1, 0, 0, 0, 123456, tzinfo=timezone.utc)
+            assert res.before == datetime(2026, 11, 1, 10, 0, 0, tzinfo=timezone.utc)
+            assert res.session_types == ["web"]
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_logout_sessions_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "sessionsCreatedBefore": "2026-11-01T10:00:00Z",
+                    "sessionsCreatedAfter": "2026-10-01T00:00:00Z",
+                    "sessionTypes": ["web"],
+                },
+                follow_redirects=False,
+            )
+
+    async def test_list_logout_session_ranges(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.user.list_logout_session_ranges())
+
+        # Test success flow
+        with client.mock_mgmt_post(
+            make_response(
+                {
+                    "ranges": [
+                        {
+                            "id": "r1",
+                            "after": "1970-01-01T00:00:00Z",
+                            "before": "2026-11-01T12:00:00Z",
+                            "sessionTypes": [],
+                        },
+                        {
+                            "id": "r2",
+                            "after": "2026-10-01T00:00:00Z",
+                            "before": "2026-11-01T12:00:00Z",
+                            "sessionTypes": ["web", "mobile"],
+                        },
+                    ]
+                }
+            )
+        ) as mock_post:
+            res = await client.invoke(client.mgmt.user.list_logout_session_ranges())
+            assert [r.id for r in res] == ["r1", "r2"]
+            assert res[0].after == datetime(1970, 1, 1, tzinfo=timezone.utc)
+            assert res[1].after == datetime(2026, 10, 1, tzinfo=timezone.utc)
+            assert res[1].before == datetime(2026, 11, 1, 12, 0, 0, tzinfo=timezone.utc)
+            assert res[1].session_types == ["web", "mobile"]
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_logout_sessions_list_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={},
+                follow_redirects=False,
+            )
+
+        # Test empty response
+        with client.mock_mgmt_post(make_response({})):
+            assert await client.invoke(client.mgmt.user.list_logout_session_ranges()) == []
+
+    async def test_delete_logout_session_range(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows, unknown id
+        with client.mock_mgmt_post(make_response(status=404)) as mock_post:
+            with pytest.raises(AuthException) as exc:
+                await client.invoke(client.mgmt.user.delete_logout_session_range("unknown"))
+            assert exc.value.status_code == 404
+
+        # Test success flow
+        with client.mock_mgmt_post(make_response({})) as mock_post:
+            assert await client.invoke(client.mgmt.user.delete_logout_session_range("r1")) is None
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.user_logout_sessions_delete_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={"id": "r1"},
                 follow_redirects=False,
             )
 
