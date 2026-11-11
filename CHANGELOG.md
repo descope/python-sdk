@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.18.0](https://github.com/descope/python-sdk/compare/descope-2.17.1...descope-2.18.0) (2026-11-11)
+
+
+### Features
+
+* **mgmt:** log out sessions by creation time ([#1755](https://github.com/descope/python-sdk/issues/1755)) ([cb60d92](https://github.com/descope/python-sdk/commit/cb60d9223f24029bb4a8bdbe300af92bba85dca9))
+* **sso_application:** add SAML single logout and OIDC logout propagation settings ([#1760](https://github.com/descope/python-sdk/issues/1760)) ([ddee139](https://github.com/descope/python-sdk/commit/ddee13954918677f8d4d0fb21ad5837827951e0f))
+
 ## [2.17.1](https://github.com/descope/python-sdk/compare/descope-2.17.0...descope-2.17.1) (2026-11-09)
 
 
