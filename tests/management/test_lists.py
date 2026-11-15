@@ -298,6 +298,39 @@ class TestLists:
             result = await client.invoke(client.mgmt.list.check_text("list1", "text1"))
             assert result is False
 
+    async def test_check_texts(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(client.mgmt.list.check_texts("list1", ["text1", "text2"]))
+
+        with client.mock_mgmt_post(make_response({"exists": True})) as mock_post:
+            result = await client.invoke(client.mgmt.list.check_texts("list1", ["text1", "text2"]))
+            assert result is True
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.list_text_check_path}",
+                headers=MGMT_HEADERS,
+                params=None,
+                json={"id": "list1", "texts": ["text1", "text2"], "matchAll": False},
+                follow_redirects=False,
+            )
+
+        with client.mock_mgmt_post(make_response({"exists": False})) as mock_post:
+            result = await client.invoke(client.mgmt.list.check_texts("list1", ["text1", "text2"], match_all=True))
+            assert result is False
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.list_text_check_path}",
+                headers=MGMT_HEADERS,
+                params=None,
+                json={"id": "list1", "texts": ["text1", "text2"], "matchAll": True},
+                follow_redirects=False,
+            )
+
     async def test_clear(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 

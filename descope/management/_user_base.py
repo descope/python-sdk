@@ -1,15 +1,72 @@
 from __future__ import annotations
 
+import re
+from datetime import datetime, timezone
 from typing import Any, List, Optional
 
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
 from descope.management.common import (
+    AssociatedFamily,
     AssociatedTenant,
+    associated_families_to_dict,
     associated_tenants_to_dict,
 )
 from descope.management.user_pwd import UserPassword
 
 VALID_USER_STATUSES = ["enabled", "disabled", "invited", "expired"]
+
+_RFC3339_FRACTION = re.compile(r"\.(\d+)")
+
+
+def _datetime_to_rfc3339(value: datetime, name: str) -> str:
+    # Naive datetimes are ambiguous, so reject them; aware ones are converted to UTC
+    if value.tzinfo is None or value.tzinfo.utcoffset(value) is None:
+        raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, f"{name} must be timezone-aware")
+    value = value.astimezone(timezone.utc)
+    return value.isoformat().replace("+00:00", "Z")
+
+
+def _rfc3339_to_datetime(value: str) -> datetime:
+    # datetime.fromisoformat on Python < 3.11 rejects "Z" and fractions that
+    # are not 3 or 6 digits, so normalize both before parsing
+    value = value.strip()
+    if value.endswith(("Z", "z")):
+        value = value[:-1] + "+00:00"
+    value = _RFC3339_FRACTION.sub(lambda m: "." + m.group(1)[:6].ljust(6, "0"), value, count=1)
+    parsed = datetime.fromisoformat(value)
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+class LogoutSessionRange:
+    """
+    A session creation time range whose sessions are logged out.
+
+    after and before are tz-aware UTC datetimes. They are the range the server
+    stored, which may have a later after than the one requested.
+    """
+
+    def __init__(
+        self,
+        id: str,
+        after: datetime,
+        before: datetime,
+        session_types: Optional[List[str]] = None,
+    ):
+        self.id = id
+        self.after = after
+        self.before = before
+        self.session_types = session_types if session_types is not None else []
+
+    @staticmethod
+    def from_dict(data: dict) -> LogoutSessionRange:
+        return LogoutSessionRange(
+            id=data.get("id", ""),
+            after=_rfc3339_to_datetime(data.get("after") or "1970-01-01T00:00:00Z"),
+            before=_rfc3339_to_datetime(data["before"]),
+            session_types=list(data.get("sessionTypes") or []),
+        )
 
 
 class UserObj:
@@ -33,6 +90,7 @@ class UserObj:
         password: Optional[UserPassword] = None,
         seed: Optional[str] = None,
         status: Optional[str] = None,
+        family_associations: Optional[List[AssociatedFamily]] = None,
     ):
         self.login_id = login_id
         self.email = email
@@ -52,6 +110,7 @@ class UserObj:
         self.password = password
         self.seed = seed
         self.status = status
+        self.family_associations = family_associations
 
 
 class CreateUserObj:
@@ -108,6 +167,7 @@ class UserBase:
         template_id: str = "",
         locale: Optional[str] = None,
         status: Optional[str] = None,
+        family_associations: Optional[List[AssociatedFamily]] = None,
     ) -> dict:
         body = UserBase._compose_update_body(
             login_id=login_id,
@@ -124,6 +184,7 @@ class UserBase:
             custom_attributes=custom_attributes,
             additional_login_ids=additional_login_ids,
             sso_app_ids=sso_app_ids,
+            family_associations=family_associations,
         )
         body["invite"] = invite
         if verified_email is not None:
@@ -183,6 +244,7 @@ class UserBase:
                 password=password,
                 hashed_password=hashed_password,
                 seed=user.seed,
+                family_associations=user.family_associations,
             )
             if user.status is not None:
                 u_body["status"] = user.status
@@ -224,6 +286,7 @@ class UserBase:
         password: Optional[str] = None,
         hashed_password: Optional[dict] = None,
         seed: Optional[str] = None,
+        family_associations: Optional[List[AssociatedFamily]] = None,
     ) -> dict:
         res = {
             "loginId": login_id,
@@ -254,6 +317,8 @@ class UserBase:
             res["hashedPassword"] = hashed_password
         if seed is not None:
             res["seed"] = seed
+        if family_associations is not None:
+            res["familyAssociations"] = associated_families_to_dict(family_associations)
         return res
 
     @staticmethod
@@ -274,6 +339,7 @@ class UserBase:
         sso_app_ids: Optional[List[str]],
         status: Optional[str],
         test: bool = False,
+        family_associations: Optional[List[AssociatedFamily]] = None,
     ) -> dict:
         res: dict[str, Any] = {
             "loginId": login_id,
@@ -308,6 +374,8 @@ class UserBase:
             res["status"] = status
         if test:
             res["test"] = test
+        if family_associations is not None:
+            res["familyAssociations"] = associated_families_to_dict(family_associations)
         return res
 
     @staticmethod
@@ -334,10 +402,30 @@ class UserBase:
                 sso_app_ids=user.sso_app_ids,
                 status=user.status,
                 test=test,
+                family_associations=user.family_associations,
             )
             users_body.append(user_body)
 
         return {"users": users_body}
+
+    @staticmethod
+    def _compose_logout_sessions_body(
+        before: Optional[datetime],
+        after: Optional[datetime],
+        session_types: Optional[List[str]],
+    ) -> dict:
+        if before is None and after is None:
+            raise AuthException(400, ERROR_TYPE_INVALID_ARGUMENT, "At least one of before or after is required")
+        body: dict[str, Any] = {}
+        # An omitted before means the server uses its current time, so it must not be sent
+        if before is not None:
+            body["sessionsCreatedBefore"] = _datetime_to_rfc3339(before, "before")
+        # An omitted after means the range is open-ended, so it must not be sent
+        if after is not None:
+            body["sessionsCreatedAfter"] = _datetime_to_rfc3339(after, "after")
+        if session_types:
+            body["sessionTypes"] = session_types
+        return body
 
     @staticmethod
     def _validate_search_pagination(limit: int, page: int) -> None:

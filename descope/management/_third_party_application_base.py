@@ -15,6 +15,7 @@ def compose_create_update_body(
     custom_attributes: Optional[Dict[str, Any]] = None,
     force_pkce: Optional[bool] = None,
     default_audience: Optional[str] = None,
+    client_type: Optional[str] = None,
 ) -> dict:
     body: Dict[str, Any] = {
         "name": name,
@@ -40,4 +41,6 @@ def compose_create_update_body(
         body["forcePkce"] = force_pkce
     if default_audience is not None:
         body["defaultAudience"] = default_audience
+    if client_type is not None:
+        body["clientType"] = client_type
     return body

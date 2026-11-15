@@ -47,5 +47,9 @@ class ListsBase:
         return {"id": id, "text": text}
 
     @staticmethod
+    def _compose_check_texts_body(id: str, texts: List[str], match_all: bool) -> dict:
+        return {"id": id, "texts": texts, "matchAll": match_all}
+
+    @staticmethod
     def _compose_clear_body(id: str) -> dict:
         return {"id": id}

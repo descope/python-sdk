@@ -217,6 +217,7 @@ class SSOSettingsAsync(SSOSettingsBase, AsyncHTTPBase):
         Args:
         tenant_id (str): The tenant ID to be configured
         settings (SSOSAMLSettings): The SAML settings to be configured for this tenant (all settings parameters are required).
+            settings.default_sso_roles: use an empty list to clear the tenant's default SSO roles, or None to keep the stored ones.
         redirect_url (str): Optional,the Redirect URL to use after successful authentication, or empty string to reset it (if not given it has to be set when starting an SSO authentication via the request).
         domains (List[str]): Optional, domains used to associate users authenticating via SSO with this tenant. Use empty list or None to reset them.
 
@@ -242,6 +243,7 @@ class SSOSettingsAsync(SSOSettingsBase, AsyncHTTPBase):
         Args:
         tenant_id (str): The tenant ID to be configured
         settings (SSOSAMLSettingsByMetadata): The SAML settings to be configured for this tenant (all settings parameters are required).
+            settings.default_sso_roles: use an empty list to clear the tenant's default SSO roles, or None to keep the stored ones.
         redirect_url (str): Optional, the Redirect URL to use after successful authentication, or empty string to reset it (if not given it has to be set when starting an SSO authentication via the request).
         domains (List[str]): Optional, domains used to associate users authenticating via SSO with this tenant. Use empty list or None to reset them.
 

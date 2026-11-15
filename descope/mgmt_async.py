@@ -9,6 +9,7 @@ from descope.management.audit_async import AuditAsync
 from descope.management.authz_async import AuthzAsync
 from descope.management.descoper_async import DescoperAsync
 from descope.management.engine_async import EngineAsync
+from descope.management.family_async import FamilyAsync
 from descope.management.fga_async import FGAAsync
 from descope.management.flow_async import FlowAsync
 from descope.management.group_async import GroupAsync
@@ -53,6 +54,7 @@ class MGMTAsync:
         self._authz = AuthzAsync(http_client, fga_cache_url=fga_cache_url)
         self._descoper = DescoperAsync(http_client)
         self._engine = EngineAsync(http_client)
+        self._family = FamilyAsync(http_client)
         self._fga = FGAAsync(http_client, fga_cache_url=fga_cache_url)
         self._flow = FlowAsync(http_client)
         self._group = GroupAsync(http_client)
@@ -86,6 +88,11 @@ class MGMTAsync:
     def tenant(self) -> TenantAsync:
         self._ensure_management_key("tenant")
         return self._tenant
+
+    @property
+    def family(self) -> FamilyAsync:
+        self._ensure_management_key("family")
+        return self._family
 
     @property
     def sso_application(self) -> SSOApplicationAsync:

@@ -1,5 +1,58 @@
 # Changelog
 
+## [2.18.0](https://github.com/descope/python-sdk/compare/descope-2.17.1...descope-2.18.0) (2026-11-11)
+
+
+### Features
+
+* **mgmt:** log out sessions by creation time ([#1755](https://github.com/descope/python-sdk/issues/1755)) ([cb60d92](https://github.com/descope/python-sdk/commit/cb60d9223f24029bb4a8bdbe300af92bba85dca9))
+* **sso_application:** add SAML single logout and OIDC logout propagation settings ([#1760](https://github.com/descope/python-sdk/issues/1760)) ([ddee139](https://github.com/descope/python-sdk/commit/ddee13954918677f8d4d0fb21ad5837827951e0f))
+
+## [2.17.1](https://github.com/descope/python-sdk/compare/descope-2.17.0...descope-2.17.1) (2026-11-09)
+
+
+### Bug Fixes
+
+* **auth:** refresh cached signing keys and rate limit unknown kid refetch ([#1759](https://github.com/descope/python-sdk/issues/1759)) ([c2a6826](https://github.com/descope/python-sdk/commit/c2a68264b581f3c503c48ab16117d4d6d3fae18d))
+
+## [2.17.0](https://github.com/descope/python-sdk/compare/descope-2.16.1...descope-2.17.0) (2026-11-05)
+
+
+### Features
+
+* add create third party application consent to management ([#1756](https://github.com/descope/python-sdk/issues/1756)) ([6074818](https://github.com/descope/python-sdk/commit/6074818ece6f85104971e57672b7969318d4223e))
+* **mgmt:** allow updating management key roles ([#1744](https://github.com/descope/python-sdk/issues/1744)) ([9e5d2cd](https://github.com/descope/python-sdk/commit/9e5d2cdd0954b6461a78794f1e09c8a9cf2fe25d))
+* **mgmt:** support client type on federated and inbound apps ([#1728](https://github.com/descope/python-sdk/issues/1728)) ([6da9831](https://github.com/descope/python-sdk/commit/6da9831d184f4de05b4b005943382cc3e15714db))
+
+## [2.16.1](https://github.com/descope/python-sdk/compare/descope-2.16.0...descope-2.16.1) (2026-10-22)
+
+
+### Bug Fixes
+
+* **deps:** require certifi&gt;=2026.10.19 to distrust compromised eMudhra CAs ([#1734](https://github.com/descope/python-sdk/issues/1734)) ([abcd3c9](https://github.com/descope/python-sdk/commit/abcd3c90040bb33e576471097fa807c8565377ca))
+
+## [2.16.0](https://github.com/descope/python-sdk/compare/descope-2.15.0...descope-2.16.0) (2026-10-19)
+
+
+### Features
+
+* **lists:** add check_texts to check multiple texts in one call ([#1727](https://github.com/descope/python-sdk/issues/1727)) ([6742eb1](https://github.com/descope/python-sdk/commit/6742eb1f70d5dd8b6da6c680a6d3e1c6c90054cc))
+* **sso:** usePkce on tenant OIDC SSO settings ([#1716](https://github.com/descope/python-sdk/issues/1716)) ([cf607b9](https://github.com/descope/python-sdk/commit/cf607b9623a884b86186876a8fb4ab33f51579ae))
+* support lock reason in user search ([#1712](https://github.com/descope/python-sdk/issues/1712)) ([6bd0f56](https://github.com/descope/python-sdk/commit/6bd0f5640ed5b5e12c57cb813b2accf3ab6f40d8))
+
+## [2.15.0](https://github.com/descope/python-sdk/compare/descope-2.14.0...descope-2.15.0) (2026-10-04)
+
+
+### Features
+
+* add family account management API ([#1701](https://github.com/descope/python-sdk/issues/1701)) ([14dc5e6](https://github.com/descope/python-sdk/commit/14dc5e6302d0f151db9aab8f621370d987c80477))
+* **enchantedlink:** add SMS delivery support ([#1690](https://github.com/descope/python-sdk/issues/1690)) ([912a420](https://github.com/descope/python-sdk/commit/912a42073c5efadb07c7115fcae285478d34adcc))
+
+
+### Bug Fixes
+
+* **sso:** allow clearing default SSO roles ([#1708](https://github.com/descope/python-sdk/issues/1708)) ([3a5c9d6](https://github.com/descope/python-sdk/commit/3a5c9d6e773129fce13bcc496abf571eaab27abf))
+
 ## [2.14.0](https://github.com/descope/python-sdk/compare/descope-2.13.0...descope-2.14.0) (2026-09-04)
 
 

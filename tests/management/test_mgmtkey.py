@@ -263,12 +263,83 @@ class TestManagementKey:
                     "x-descope-project-id": PROJECT_ID,
                 },
                 params=None,
+                # reBac is omitted when rebac is not provided, so the key keeps its roles
                 json={
                     "id": "mk1",
                     "name": "updated-key",
                     "description": "updated key",
                     "permittedIps": ["1.2.3.4"],
                     "status": "inactive",
+                },
+                follow_redirects=False,
+            )
+
+    async def test_update_with_rebac(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test success flow with rebac
+        with client.mock_mgmt_patch(
+            make_response(
+                {
+                    "key": {
+                        "id": "mk1",
+                        "name": "updated-key",
+                        "description": "updated key",
+                        "permittedIps": ["1.2.3.4"],
+                        "status": "active",
+                        "createdTime": 1764673442,
+                        "expireTime": 0,
+                        "reBac": {
+                            "companyRoles": ["role1"],
+                            "projectRoles": [{"projectIds": ["proj1"], "roles": ["admin"]}],
+                            "tagRoles": [{"tags": ["tag1"], "roles": ["viewer"]}],
+                        },
+                        "version": 23,
+                        "authzVersion": 2,
+                    },
+                }
+            )
+        ) as mock_patch:
+            resp = await client.invoke(
+                client.mgmt.management_key.update(
+                    id="mk1",
+                    name="updated-key",
+                    description="updated key",
+                    permitted_ips=["1.2.3.4"],
+                    status=MgmtKeyStatus.ACTIVE,
+                    rebac=MgmtKeyReBac(
+                        company_roles=["role1"],
+                        project_roles=[MgmtKeyProjectRole(project_ids=["proj1"], roles=["admin"])],
+                        tag_roles=[MgmtKeyTagRole(tags=["tag1"], roles=["viewer"])],
+                    ),
+                )
+            )
+            key = resp["key"]
+            assert key["id"] == "mk1"
+            assert key["reBac"]["companyRoles"] == ["role1"]
+            assert key["reBac"]["projectRoles"][0]["projectIds"] == ["proj1"]
+            assert key["reBac"]["tagRoles"][0]["tags"] == ["tag1"]
+            assert_http_called(
+                mock_patch,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.mgmt_key_update_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "id": "mk1",
+                    "name": "updated-key",
+                    "description": "updated key",
+                    "permittedIps": ["1.2.3.4"],
+                    "status": "active",
+                    "reBac": {
+                        "companyRoles": ["role1"],
+                        "projectRoles": [{"projectIds": ["proj1"], "roles": ["admin"]}],
+                        "tagRoles": [{"tags": ["tag1"], "roles": ["viewer"]}],
+                    },
                 },
                 follow_redirects=False,
             )

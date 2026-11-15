@@ -125,6 +125,14 @@ class SSOSettingsBase:
         return result
 
     @staticmethod
+    def _set_replace_default_sso_roles(target: dict, default_sso_roles: Optional[List[str]]) -> None:
+        # The server cannot tell an empty defaultSSORoles from an omitted one and keeps the stored roles,
+        # so an explicit empty list also sends replaceDefaultSSORoles to clear them. The flag is sent only
+        # then, and never as False, so every other request stays readable by servers without the field.
+        if default_sso_roles is not None and len(default_sso_roles) == 0:
+            target["replaceDefaultSSORoles"] = True
+
+    @staticmethod
     def _compose_configure_oidc_settings_body(
         tenant_id: str,
         settings: SSOOIDCSettings,
@@ -146,7 +154,7 @@ class SSOSettingsBase:
                 "picture": settings.attribute_mapping.picture,
             }
 
-        return {
+        body: dict = {
             "tenantId": tenant_id,
             "settings": {
                 "name": settings.name,
@@ -169,6 +177,10 @@ class SSOSettingsBase:
             },
             "domains": domains,
         }
+        # Optional on the server: an omitted usePkce keeps the stored value, so send it only when set.
+        if settings.use_pkce is not None:
+            body["settings"]["usePkce"] = settings.use_pkce
+        return body
 
     @staticmethod
     def _issuer_settings_to_dict(
@@ -254,7 +266,7 @@ class SSOSettingsBase:
         if settings.attribute_mapping:
             attr_mapping = SSOSettingsBase._attribute_mapping_to_dict(settings.attribute_mapping)
 
-        return {
+        body: dict = {
             "tenantId": tenant_id,
             "settings": {
                 "idpUrl": settings.idp_url,
@@ -277,6 +289,8 @@ class SSOSettingsBase:
             "redirectUrl": redirect_url,
             "domains": domains,
         }
+        SSOSettingsBase._set_replace_default_sso_roles(body["settings"], settings.default_sso_roles)
+        return body
 
     @staticmethod
     def _compose_configure_saml_settings_by_metadata_body(
@@ -289,7 +303,7 @@ class SSOSettingsBase:
         if settings.attribute_mapping:
             attr_mapping = SSOSettingsBase._attribute_mapping_to_dict(settings.attribute_mapping)
 
-        return {
+        body: dict = {
             "tenantId": tenant_id,
             "settings": {
                 "idpMetadataUrl": settings.idp_metadata_url,
@@ -310,3 +324,5 @@ class SSOSettingsBase:
             "redirectUrl": redirect_url,
             "domains": domains,
         }
+        SSOSettingsBase._set_replace_default_sso_roles(body["settings"], settings.default_sso_roles)
+        return body

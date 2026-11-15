@@ -63,12 +63,14 @@ class ManagementKeyAsync(AsyncHTTPBase):
         description: str,
         permitted_ips: List[str],
         status: MgmtKeyStatus,
+        rebac: Optional[MgmtKeyReBac] = None,
     ) -> dict:
         """
         Update an existing management key.
 
         IMPORTANT: All parameters will override whatever values are currently set
-        in the existing management key. Use carefully.
+        in the existing management key, except for rebac, which is only replaced
+        when provided. Use carefully.
 
         Args:
         id (str): The id of the management key to update.
@@ -76,6 +78,8 @@ class ManagementKeyAsync(AsyncHTTPBase):
         description (str): Updated description.
         permitted_ips (List[str]): Updated list of IP addresses or CIDR ranges.
         status (MgmtKeyStatus): Updated status.
+        rebac (MgmtKeyReBac): Optional RBAC configuration that replaces the key's current roles.
+            If not provided, the key keeps its current roles.
 
         Return value (dict):
         Return dict in the format
@@ -99,6 +103,8 @@ class ManagementKeyAsync(AsyncHTTPBase):
             "permittedIps": permitted_ips if permitted_ips is not None else [],
             "status": status.value,
         }
+        if rebac is not None:
+            body["reBac"] = rebac.to_dict()
 
         response = await self._http.patch(
             MgmtV1.mgmt_key_update_path,

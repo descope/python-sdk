@@ -20,7 +20,10 @@ from descope.exceptions import (
 )
 from descope.http_client import DescopeResponse
 from descope.management.common import (
+    AssociatedFamily,
     AssociatedTenant,
+    CustomAttribute,
+    CustomAttributeOption,
     DescoperAttributes,
     DescoperCreate,
     DescoperProjectRole,
@@ -49,7 +52,7 @@ from descope.management.sso_settings import (
     XAAJWTBearerSettings,
     XAASettings,
 )
-from descope.management.user import UserObj
+from descope.management.user import LogoutSessionRange, UserObj
 from descope.management.user_pwd import (
     UserPassword,
     UserPasswordBcrypt,
@@ -76,7 +79,10 @@ __all__ = [
     "AuthException",
     "RateLimitException",
     "DescopeResponse",
+    "AssociatedFamily",
     "AssociatedTenant",
+    "CustomAttribute",
+    "CustomAttributeOption",
     "DescoperAttributes",
     "DescoperCreate",
     "DescoperProjectRole",
@@ -102,6 +108,7 @@ __all__ = [
     "XAAIssuerSettings",
     "XAAJWTBearerSettings",
     "XAASettings",
+    "LogoutSessionRange",
     "UserObj",
     "UserPassword",
     "UserPasswordBcrypt",

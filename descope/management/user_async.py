@@ -1,16 +1,26 @@
 from __future__ import annotations
 
 import base64
+from datetime import datetime
 from typing import List, Optional, Union
 
 from descope._http_base import AsyncHTTPBase
 from descope.common import DeliveryMethod, LoginOptions, get_method_string
 from descope.exceptions import ERROR_TYPE_INVALID_ARGUMENT, AuthException
-from descope.management._user_base import CreateUserObj, UserBase, UserObj
+from descope.management._user_base import (
+    CreateUserObj,
+    LogoutSessionRange,
+    UserBase,
+    UserObj,
+)
 from descope.management.common import (
+    AssociatedFamily,
     AssociatedTenant,
+    CustomAttribute,
     MgmtV1,
     Sort,
+    associated_families_to_dict,
+    custom_attributes_to_dict,
     sort_to_dict,
 )
 
@@ -37,6 +47,7 @@ class UserAsync(UserBase, AsyncHTTPBase):
         additional_login_ids: Optional[List[str]] = None,
         sso_app_ids: Optional[List[str]] = None,
         status: Optional[str] = None,
+        family_associations: Optional[List[AssociatedFamily]] = None,
     ) -> dict:
         """
         Create a new user. Users can have any number of optional fields, including email, phone number and authorization.
@@ -54,6 +65,8 @@ class UserAsync(UserBase, AsyncHTTPBase):
         custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
         sso_app_ids (List[str]): Optional, list of SSO applications IDs to be associated with the user.
         status (str): Optional status field. Can be one of: "enabled", "disabled", "invited", "expired".
+        family_associations (List[AssociatedFamily]): Optional list of the user's families, and optionally, their roles and
+            family-scoped attribute values per family.
 
         Return value (dict):
         Return dict in the format
@@ -91,6 +104,7 @@ class UserAsync(UserBase, AsyncHTTPBase):
                 additional_login_ids,
                 sso_app_ids,
                 status=status,
+                family_associations=family_associations,
             ),
         )
         return response.json()
@@ -114,6 +128,7 @@ class UserAsync(UserBase, AsyncHTTPBase):
         additional_login_ids: Optional[List[str]] = None,
         sso_app_ids: Optional[List[str]] = None,
         status: Optional[str] = None,
+        family_associations: Optional[List[AssociatedFamily]] = None,
     ) -> dict:
         """
         Create a new test user.
@@ -133,6 +148,8 @@ class UserAsync(UserBase, AsyncHTTPBase):
         custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
         sso_app_ids (List[str]): Optional, list of SSO applications IDs to be associated with the user.
         status (str): Optional status field. Can be one of: "enabled", "disabled", "invited", "expired".
+        family_associations (List[AssociatedFamily]): Optional list of the user's families, and optionally, their roles and
+            family-scoped attribute values per family.
 
         Return value (dict):
         Return dict in the format
@@ -170,6 +187,7 @@ class UserAsync(UserBase, AsyncHTTPBase):
                 additional_login_ids,
                 sso_app_ids,
                 status=status,
+                family_associations=family_associations,
             ),
         )
         return response.json()
@@ -197,6 +215,7 @@ class UserAsync(UserBase, AsyncHTTPBase):
         template_id: str = "",
         test: bool = False,
         locale: Optional[str] = None,  # locale for the invite message
+        family_associations: Optional[List[AssociatedFamily]] = None,
     ) -> dict:
         """
         Create a new user and invite them via an email / text message.
@@ -237,6 +256,7 @@ class UserAsync(UserBase, AsyncHTTPBase):
                 sso_app_ids,
                 template_id,
                 locale,
+                family_associations=family_associations,
             ),
         )
         return response.json()
@@ -295,10 +315,13 @@ class UserAsync(UserBase, AsyncHTTPBase):
         additional_login_ids: Optional[List[str]] = None,
         sso_app_ids: Optional[List[str]] = None,
         test: bool = False,
+        family_associations: Optional[List[AssociatedFamily]] = None,
     ) -> dict:
         """
         Update an existing user with the given various fields. IMPORTANT: All parameters are used as overrides
-        to the existing user. Empty fields will override populated fields. Use carefully.
+        to the existing user. Empty fields will override populated fields, including family memberships:
+        omitting family_associations removes the user from all of their families, and updating a dependent
+        requires family_associations with the dependent's family. Use carefully.
         Use `patch` for partial updates instead.
 
         Args:
@@ -317,6 +340,9 @@ class UserAsync(UserBase, AsyncHTTPBase):
         custom_attributes (dict): Optional, set the different custom attributes values of the keys that were previously configured in Descope console app
         sso_app_ids (List[str]): Optional, list of SSO applications IDs to be associated with the user.
         test (bool, optional): Set to True to update a test user. Defaults to False.
+        family_associations (List[AssociatedFamily]): Optional list of the user's families, and optionally, their roles and
+            family-scoped attribute values per family. Replaces the user's family memberships, so None or an
+            empty list removes the user from all families.
 
         Return value (dict):
         Return dict in the format
@@ -328,6 +354,7 @@ class UserAsync(UserBase, AsyncHTTPBase):
         """
         role_names = [] if role_names is None else role_names
         user_tenants = [] if user_tenants is None else user_tenants
+        family_associations = [] if family_associations is None else family_associations
 
         response = await self._http.post(
             MgmtV1.user_update_path,
@@ -349,6 +376,7 @@ class UserAsync(UserBase, AsyncHTTPBase):
                 additional_login_ids,
                 sso_app_ids,
                 None,
+                family_associations=family_associations,
             ),
         )
         return response.json()
@@ -371,6 +399,7 @@ class UserAsync(UserBase, AsyncHTTPBase):
         sso_app_ids: Optional[List[str]] = None,
         status: Optional[str] = None,
         test: bool = False,
+        family_associations: Optional[List[AssociatedFamily]] = None,
     ) -> dict:
         """
         Patches an existing user with the given various fields. Only the given fields will be used to update the user.
@@ -392,6 +421,8 @@ class UserAsync(UserBase, AsyncHTTPBase):
         sso_app_ids (List[str]): Optional, list of SSO applications IDs to be associated with the user.
         status (str): Optional status field. Can be one of: "enabled", "disabled", "invited", "expired".
         test (bool, optional): Set to True to update a test user. Defaults to False.
+        family_associations (List[AssociatedFamily]): Optional list of the user's families, and optionally, their roles and
+            family-scoped attribute values per family.
 
         Return value (dict):
         Return dict in the format
@@ -421,6 +452,7 @@ class UserAsync(UserBase, AsyncHTTPBase):
                 sso_app_ids,
                 status,
                 test,
+                family_associations=family_associations,
             ),
         )
         return response.json()
@@ -591,6 +623,72 @@ class UserAsync(UserBase, AsyncHTTPBase):
             body={"userId": user_id},
         )
 
+    async def logout_sessions_created_between(
+        self,
+        before: Optional[datetime] = None,
+        after: Optional[datetime] = None,
+        session_types: Optional[List[str]] = None,
+    ) -> LogoutSessionRange:
+        """
+        Logs out sessions created in the given time range (optionally only the given
+        session types). Each session is logged out on its next refresh or validation.
+        before defaults to the server's current time when None; prefer leaving it None
+        over passing the current time, since a before in the future is rejected.
+        Datetimes must be timezone-aware. The range stays active for a year. Deleting it
+        stops it from logging out matching sessions it hasn't logged out yet; sessions
+        already logged out stay logged out.
+
+        Args:
+        before (datetime): Optional, log out sessions created before this time. Omit to use the server's current time.
+        after (datetime): Optional, log out sessions created after this time. Omit for an open-ended range.
+        session_types (List[str]): Optional, only log out sessions of these types.
+        At least one of before or after is required.
+
+        Return value (LogoutSessionRange):
+        The range the server stored, which may have a later after than the one requested.
+
+        Raise:
+        AuthException: raised if logout operation fails, if both before and after are None,
+        or if a datetime is not timezone-aware
+        """
+        response = await self._http.post(
+            MgmtV1.user_logout_sessions_path,
+            body=UserBase._compose_logout_sessions_body(before, after, session_types),
+        )
+        return LogoutSessionRange.from_dict(response.json())
+
+    async def list_logout_session_ranges(self) -> List[LogoutSessionRange]:
+        """
+        List the active session logout ranges.
+
+        Return value (List[LogoutSessionRange]):
+        The active ranges.
+
+        Raise:
+        AuthException: raised if list operation fails
+        """
+        response = await self._http.post(
+            MgmtV1.user_logout_sessions_list_path,
+            body={},
+        )
+        return [LogoutSessionRange.from_dict(r) for r in response.json().get("ranges") or []]
+
+    async def delete_logout_session_range(self, id: str):
+        """
+        Deletes a logout sessions range. It stops logging out matching sessions it hasn't
+        logged out yet; sessions already logged out stay logged out.
+
+        Args:
+        id (str): The ID of the range to delete.
+
+        Raise:
+        AuthException: raised if delete operation fails, including when the range is not found
+        """
+        await self._http.post(
+            MgmtV1.user_logout_sessions_delete_path,
+            body={"id": id},
+        )
+
     async def load_users(
         self,
         user_ids: List[str],
@@ -654,6 +752,10 @@ class UserAsync(UserBase, AsyncHTTPBase):
         user_ids: Optional[List[str]] = None,
         tenant_role_ids: Optional[dict] = None,
         tenant_role_names: Optional[dict] = None,
+        family_ids: Optional[List[str]] = None,
+        dependent: Optional[bool] = None,
+        lock_reasons: Optional[List[str]] = None,
+        temp_lock_reasons: Optional[List[str]] = None,
     ) -> dict:
         """
         Search all users.
@@ -682,6 +784,13 @@ class UserAsync(UserBase, AsyncHTTPBase):
             Dict value is in the form of {"tenant_id": {"values":["role_id1", "role_id2"], "and": True}} if you want to match all roles (AND) or any role (OR).
         tenant_role_names (dict): Optional mapping of tenant ID to list of role names.
             Dict value is in the form of {"tenant_id": {"values":["role_name1", "role_name2"], "and": True}} if you want to match all roles (AND) or any role (OR).
+        family_ids (List[str]): Optional list of family IDs. Only users that are members of at least one of these families are returned.
+        dependent (bool): Optional, filter by whether the user is a family dependent (a user with no login credentials of their own).
+        lock_reasons (List[str]): Optional list of lock reasons. Only users disabled by brute-force protection with one of these
+            reasons are returned. Allowed values: "password", "totp", "recovery_codes", "security_questions".
+        temp_lock_reasons (List[str]): Optional list of lock reasons. Only users currently temporarily locked with one of these
+            reasons are returned. Allowed values: "password", "recovery_codes", "security_questions" (TOTP has no temporary lock).
+            A user is temporarily locked while its tempLockExpiration (unix seconds, 0 when none) is greater than now.
 
         Return value (dict):
         Return dict in the format
@@ -743,6 +852,14 @@ class UserAsync(UserBase, AsyncHTTPBase):
             body["tenantRoleIds"] = tenant_role_ids
         if tenant_role_names is not None:
             body["tenantRoleNames"] = tenant_role_names
+        if family_ids is not None:
+            body["familyIds"] = family_ids
+        if dependent is not None:
+            body["dependent"] = dependent
+        if lock_reasons is not None:
+            body["lockReasons"] = lock_reasons
+        if temp_lock_reasons is not None:
+            body["tempLockReasons"] = temp_lock_reasons
 
         response = await self._http.post(
             MgmtV1.users_search_path,
@@ -770,6 +887,10 @@ class UserAsync(UserBase, AsyncHTTPBase):
         to_modified_time: Optional[int] = None,
         tenant_role_ids: Optional[dict] = None,
         tenant_role_names: Optional[dict] = None,
+        family_ids: Optional[List[str]] = None,
+        dependent: Optional[bool] = None,
+        lock_reasons: Optional[List[str]] = None,
+        temp_lock_reasons: Optional[List[str]] = None,
     ) -> dict:
         """
         Search all test users.
@@ -795,6 +916,13 @@ class UserAsync(UserBase, AsyncHTTPBase):
             Dict value is in the form of {"tenant_id": {"values":["role_id1", "role_id2"], "and": True}} if you want to match all roles (AND) or any role (OR).
         tenant_role_names (dict): Optional mapping of tenant ID to list of role names.
             Dict value is in the form of {"tenant_id": {"values":["role_name1", "role_name2"], "and": True}} if you want to match all roles (AND) or any role (OR).
+        family_ids (List[str]): Optional list of family IDs. Only users that are members of at least one of these families are returned.
+        dependent (bool): Optional, filter by whether the user is a family dependent (a user with no login credentials of their own).
+        lock_reasons (List[str]): Optional list of lock reasons. Only users disabled by brute-force protection with one of these
+            reasons are returned. Allowed values: "password", "totp", "recovery_codes", "security_questions".
+        temp_lock_reasons (List[str]): Optional list of lock reasons. Only users currently temporarily locked with one of these
+            reasons are returned. Allowed values: "password", "recovery_codes", "security_questions" (TOTP has no temporary lock).
+            A user is temporarily locked while its tempLockExpiration (unix seconds, 0 when none) is greater than now.
 
         Return value (dict):
         Return dict in the format
@@ -853,6 +981,14 @@ class UserAsync(UserBase, AsyncHTTPBase):
             body["tenantRoleIds"] = tenant_role_ids
         if tenant_role_names is not None:
             body["tenantRoleNames"] = tenant_role_names
+        if family_ids is not None:
+            body["familyIds"] = family_ids
+        if dependent is not None:
+            body["dependent"] = dependent
+        if lock_reasons is not None:
+            body["lockReasons"] = lock_reasons
+        if temp_lock_reasons is not None:
+            body["tempLockReasons"] = temp_lock_reasons
 
         response = await self._http.post(
             MgmtV1.test_users_search_path,
@@ -1343,6 +1479,64 @@ class UserAsync(UserBase, AsyncHTTPBase):
         response = await self._http.post(
             MgmtV1.user_remove_tenant_path,
             body={"loginId": login_id, "tenantId": tenant_id},
+        )
+        return response.json()
+
+    async def add_families(
+        self,
+        login_id: str,
+        family_associations: List[AssociatedFamily],
+    ) -> dict:
+        """
+        Add a user to one or more families. Each association may also set the user's roles and
+        family-scoped attribute values in that family. Adding a family the user already belongs to
+        merges: given role names are granted on top of the existing ones, given family-scoped
+        attributes are merged into the stored ones, and omitting either leaves it unchanged.
+
+        Args:
+        login_id (str): The login ID of the user to update.
+        family_associations (List[AssociatedFamily]): The families to add the user to (at least one).
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the updated user information.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = await self._http.post(
+            MgmtV1.user_add_families_path,
+            body={
+                "loginId": login_id,
+                "familyAssociations": associated_families_to_dict(family_associations),
+            },
+        )
+        return response.json()
+
+    async def remove_families(
+        self,
+        login_id: str,
+        family_ids: List[str],
+    ) -> dict:
+        """
+        Remove a user from one or more families.
+
+        Args:
+        login_id (str): The login ID of the user to update.
+        family_ids (List[str]): The IDs of the families to remove the user from (at least one).
+
+        Return value (dict):
+        Return dict in the format
+             {"user": {}}
+        Containing the updated user information.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = await self._http.post(
+            MgmtV1.user_remove_families_path,
+            body={"loginId": login_id, "familyIds": family_ids},
         )
         return response.json()
 
@@ -1871,6 +2065,64 @@ class UserAsync(UserBase, AsyncHTTPBase):
         response = await self._http.get(
             MgmtV1.user_load_custom_attributes_path,
             params={},
+        )
+        return response.json()
+
+    async def load_family_scoped_custom_attributes(self) -> dict:
+        """
+        Load the family-scoped user custom attribute definitions. These are user attributes whose
+        values are held per family membership (see `AssociatedFamily.family_scoped_attributes`),
+        and are a separate set from the plain user custom attributes.
+
+        Return value (dict):
+        Return dict in the format
+             {"data": [{"name": <name>, "type": <int>, "displayName": <str>, ...}]}
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = await self._http.get(MgmtV1.user_load_family_scoped_custom_attributes_path)
+        return response.json()
+
+    async def create_family_scoped_custom_attributes(self, attributes: List[CustomAttribute]) -> dict:
+        """
+        Create family-scoped user custom attribute definitions.
+
+        Args:
+        attributes (List[CustomAttribute]): The custom attribute definitions to create.
+
+        Return value (dict):
+        Return dict in the format
+             {"data": [...]}
+        Containing the updated family-scoped custom attribute definitions.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = await self._http.post(
+            MgmtV1.user_create_family_scoped_custom_attributes_path,
+            body={"attributes": custom_attributes_to_dict(attributes)},
+        )
+        return response.json()
+
+    async def delete_family_scoped_custom_attributes(self, names: List[str]) -> dict:
+        """
+        Delete family-scoped user custom attribute definitions by name.
+
+        Args:
+        names (List[str]): The names of the custom attributes to delete.
+
+        Return value (dict):
+        Return dict in the format
+             {"data": [...]}
+        Containing the remaining family-scoped custom attribute definitions.
+
+        Raise:
+        AuthException: raised if the operation fails
+        """
+        response = await self._http.post(
+            MgmtV1.user_delete_family_scoped_custom_attributes_path,
+            body={"names": names},
         )
         return response.json()
 

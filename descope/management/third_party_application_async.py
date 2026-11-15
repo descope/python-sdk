@@ -21,6 +21,7 @@ class ThirdPartyApplicationAsync(AsyncHTTPBase):
         custom_attributes: Optional[Dict[str, Any]] = None,
         force_pkce: Optional[bool] = None,
         default_audience: Optional[str] = None,
+        client_type: Optional[str] = None,
     ) -> dict:
         """
         Create a new third party application with the given parameters.
@@ -40,6 +41,8 @@ class ThirdPartyApplicationAsync(AsyncHTTPBase):
         custom_attributes (Dict[str, Any]): Optional custom attributes.
         force_pkce (bool): Optional flag to require PKCE on the authorization-code flow.
         default_audience (str): Optional default aud of issued tokens: "projectId", "clientId", or "" (both).
+        client_type (str): Optional OAuth client type, "confidential" or "public". If omitted, the account's
+            default client type is used; the created app's client type shows which one it got.
 
         Return value (dict):
         Return dict in the format
@@ -61,6 +64,7 @@ class ThirdPartyApplicationAsync(AsyncHTTPBase):
             custom_attributes=custom_attributes,
             force_pkce=force_pkce,
             default_audience=default_audience,
+            client_type=client_type,
         )
         response = await self._http.post(MgmtV1.thirdparty_application_create_path, body=body)
         return response.json()
@@ -79,6 +83,7 @@ class ThirdPartyApplicationAsync(AsyncHTTPBase):
         custom_attributes: Optional[Dict[str, Any]] = None,
         force_pkce: Optional[bool] = None,
         default_audience: Optional[str] = None,
+        client_type: Optional[str] = None,
     ):
         """
         Update an existing third party application with the given parameters.
@@ -98,6 +103,8 @@ class ThirdPartyApplicationAsync(AsyncHTTPBase):
         custom_attributes (Dict[str, Any]): Optional custom attributes.
         force_pkce (bool): Optional flag to require PKCE on the authorization-code flow.
         default_audience (str): Optional default aud of issued tokens.
+        client_type (str): Optional OAuth client type, "confidential" or "public". Update overrides all fields,
+            so pass the app's current client type.
 
         Raise:
         AuthException: raised if update operation fails
@@ -115,6 +122,7 @@ class ThirdPartyApplicationAsync(AsyncHTTPBase):
             custom_attributes=custom_attributes,
             force_pkce=force_pkce,
             default_audience=default_audience,
+            client_type=client_type,
         )
         await self._http.post(MgmtV1.thirdparty_application_update_path, body=body)
 
@@ -132,6 +140,7 @@ class ThirdPartyApplicationAsync(AsyncHTTPBase):
         custom_attributes: Optional[Dict[str, Any]] = None,
         force_pkce: Optional[bool] = None,
         default_audience: Optional[str] = None,
+        client_type: Optional[str] = None,
     ):
         """
         Patch an existing third party application with the given parameters.
@@ -150,6 +159,7 @@ class ThirdPartyApplicationAsync(AsyncHTTPBase):
         custom_attributes (Dict[str, Any]): Optional custom attributes.
         force_pkce (bool): Optional flag to require PKCE on the authorization-code flow.
         default_audience (str): Optional default aud of issued tokens.
+        client_type (str): Optional OAuth client type, "confidential" or "public". Left unchanged when omitted.
 
         Raise:
         AuthException: raised if patch operation fails
@@ -177,6 +187,8 @@ class ThirdPartyApplicationAsync(AsyncHTTPBase):
             body["forcePkce"] = force_pkce
         if default_audience is not None:
             body["defaultAudience"] = default_audience
+        if client_type is not None:
+            body["clientType"] = client_type
         await self._http.post(MgmtV1.thirdparty_application_patch_path, body=body)
 
     async def delete(self, id: str):
@@ -273,6 +285,47 @@ class ThirdPartyApplicationAsync(AsyncHTTPBase):
         AuthException: raised if get operation fails
         """
         response = await self._http.get(MgmtV1.thirdparty_application_secret_path, params={"id": id})
+        return response.json()
+
+    async def create_consent(
+        self,
+        app_id: str,
+        user_id: str,
+        scopes: List[str],
+        tenant_id: Optional[str] = None,
+        expire_time: Optional[int] = None,
+    ) -> dict:
+        """
+        Create a user consent for a third party application, e.g. to migrate consents a user
+        already granted in another system so the user is not asked to consent again.
+        The scopes are merged into the user's existing consent for the same application and tenant.
+        Consents of agentic applications cannot be created.
+
+        Args:
+        app_id (str): The third party application ID.
+        user_id (str): The ID of the user who granted the consent.
+        scopes (List[str]): The consented scopes. Each scope must be defined by the application,
+            and the application's mandatory scopes must be included (all of its scopes when it
+            does not allow partial scopes).
+        tenant_id (str): Optional tenant the consent is bound to. The user must be a member of this tenant.
+        expire_time (int): Optional expiration time of the consent, in seconds since the epoch.
+            0 means the consent never expires.
+
+        Return value (dict):
+        Return dict in the format
+             {"consent": {"id": "", "appId": "", "userId": "", "scopes": [], "grantedBy": "",
+                          "createdTime": 0, "tenantId": "", "ExpireTime": 0, ...}}
+        Containing the created (or merged) consent.
+
+        Raise:
+        AuthException: raised if creation operation fails
+        """
+        body: Dict[str, Any] = {"appId": app_id, "userId": user_id, "scopes": scopes}
+        if tenant_id is not None:
+            body["tenantId"] = tenant_id
+        if expire_time is not None:
+            body["expireTime"] = expire_time
+        response = await self._http.post(MgmtV1.thirdparty_consents_create_path, body=body)
         return response.json()
 
     async def delete_consents(

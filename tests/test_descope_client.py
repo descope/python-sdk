@@ -95,6 +95,8 @@ class TestDescopeClient:
         with pytest.raises(AuthException):
             _ = descope_client.mgmt.tenant
         with pytest.raises(AuthException):
+            _ = descope_client.mgmt.family
+        with pytest.raises(AuthException):
             _ = descope_client.mgmt.sso_application
         with pytest.raises(AuthException):
             _ = descope_client.mgmt.user

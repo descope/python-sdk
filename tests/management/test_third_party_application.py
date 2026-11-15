@@ -159,6 +159,58 @@ class TestThirdPartyApplication:
                 follow_redirects=False,
             )
 
+    @pytest.mark.parametrize(
+        "client_type_kwargs, client_type_body",
+        [
+            ({}, {}),
+            ({"client_type": "confidential"}, {"clientType": "confidential"}),
+            ({"client_type": "public"}, {"clientType": "public"}),
+        ],
+    )
+    @pytest.mark.parametrize(
+        "method, path, args, base_body",
+        [
+            (
+                "create",
+                MgmtV1.thirdparty_application_create_path,
+                {"name": "test-app", "login_page_url": "http://dummy.com"},
+                {"name": "test-app", "loginPageUrl": "http://dummy.com"},
+            ),
+            (
+                "update",
+                MgmtV1.thirdparty_application_update_path,
+                {"id": "app1", "name": "test-app", "login_page_url": "http://dummy.com"},
+                {"id": "app1", "name": "test-app", "loginPageUrl": "http://dummy.com"},
+            ),
+            (
+                "patch",
+                MgmtV1.thirdparty_application_patch_path,
+                {"id": "app1"},
+                {"id": "app1"},
+            ),
+        ],
+    )
+    async def test_client_type(
+        self, client_factory, method, path, args, base_body, client_type_kwargs, client_type_body
+    ):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_post(make_response({})) as mock_post:
+            await client.invoke(getattr(client.mgmt.third_party_application, method)(**args, **client_type_kwargs))
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={**base_body, **client_type_body},
+                follow_redirects=False,
+            )
+
     async def test_delete(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 
@@ -329,6 +381,89 @@ class TestThirdPartyApplication:
                 },
                 params={"id": "app1"},
                 follow_redirects=True,
+            )
+
+    async def test_create_consent(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        # Test failed flows
+        with client.mock_mgmt_post(make_response(status=500)) as mock_post:
+            with pytest.raises(AuthException):
+                await client.invoke(
+                    client.mgmt.third_party_application.create_consent("app1", "user1", ["openid", "read"])
+                )
+
+        # Test success flow with only the required fields
+        with client.mock_mgmt_post(
+            make_response({"consent": {"id": "c1", "appId": "app1", "userId": "user1", "scopes": ["openid", "read"]}})
+        ) as mock_post:
+            resp = await client.invoke(
+                client.mgmt.third_party_application.create_consent("app1", "user1", ["openid", "read"])
+            )
+            assert resp["consent"]["id"] == "c1"
+            assert resp["consent"]["scopes"] == ["openid", "read"]
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.thirdparty_consents_create_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "appId": "app1",
+                    "userId": "user1",
+                    "scopes": ["openid", "read"],
+                },
+                follow_redirects=False,
+            )
+
+        # Test success flow with all fields
+        with client.mock_mgmt_post(
+            make_response(
+                {
+                    "consent": {
+                        "id": "c1",
+                        "appId": "app1",
+                        "userId": "user1",
+                        "scopes": ["openid"],
+                        "tenantId": "tenant1",
+                        "ExpireTime": 1700000000,
+                    }
+                }
+            )
+        ) as mock_post:
+            resp = await client.invoke(
+                client.mgmt.third_party_application.create_consent(
+                    app_id="app1",
+                    user_id="user1",
+                    scopes=["openid"],
+                    tenant_id="tenant1",
+                    expire_time=1700000000,
+                )
+            )
+            assert resp["consent"]["tenantId"] == "tenant1"
+            assert resp["consent"]["ExpireTime"] == 1700000000
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.thirdparty_consents_create_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "appId": "app1",
+                    "userId": "user1",
+                    "scopes": ["openid"],
+                    "tenantId": "tenant1",
+                    "expireTime": 1700000000,
+                },
+                follow_redirects=False,
             )
 
     async def test_delete_consents(self, client_factory):
