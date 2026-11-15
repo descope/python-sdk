@@ -1776,12 +1776,23 @@ full_app = descope_client.mgmt.outbound_application.create_application(
     pkce=True,  # Enable PKCE
     access_type=AccessType.OFFLINE,  # Request refresh tokens
     prompt=prompts,
-    use_dcr=True,  # Enable Dynamic Client Registration
-    dcr_url="https://accounts.google.com/dcr",
+)
+
+# Create an outbound application that uses Dynamic Client Registration (DCR) instead.
+# DCR registration only happens on create: the provider issues its own client_id/client_secret
+# and overwrites authorization_url, token_url, revocation_url, pkce and default_scopes with its
+# response, so don't set those fields when use_dcr is True.
+dcr_app = descope_client.mgmt.outbound_application.create_application(
+    name="My DCR App",
+    description="An outbound application registered via Dynamic Client Registration",
+    use_dcr=True,
+    dcr_url="https://auth.example.com/register",
 )
 
 # Update an outbound application with all parameters
 # Update will override all fields as is. Use carefully.
+# Update never performs DCR registration - it only runs on create. useDcr/dcrUrl are always sent,
+# so an update that omits them turns DCR off; pass back the app's current use_dcr/dcr_url to keep it on.
 descope_client.mgmt.outbound_application.update_application(
     id="my-app-id",
     name="my updated app",
@@ -1801,8 +1812,6 @@ descope_client.mgmt.outbound_application.update_application(
     pkce=True,
     access_type=AccessType.OFFLINE,
     prompt=[PromptType.LOGIN, PromptType.CONSENT, PromptType.SELECT_ACCOUNT],
-    use_dcr=True,
-    dcr_url="https://accounts.google.com/dcr",
 )
 
 # Delete an outbound application by id

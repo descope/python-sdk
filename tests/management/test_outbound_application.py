@@ -262,6 +262,39 @@ class TestOutboundApplication:
                 follow_redirects=False,
             )
 
+    async def test_update_application_without_dcr_clears_it(self, client_factory):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_post(make_response(APP_RESPONSE)) as mock_post:
+            response = await client.invoke(
+                client.mgmt.outbound_application.update_application(
+                    "app123",
+                    "Updated App",
+                    description="Updated Description",
+                    client_secret="new-secret",
+                )
+            )
+            assert response == APP_RESPONSE
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.outbound_application_update_path}",
+                headers=MGMT_HEADERS,
+                params=None,
+                json={
+                    "app": {
+                        "name": "Updated App",
+                        "id": "app123",
+                        "description": "Updated Description",
+                        "logo": None,
+                        "clientSecret": "new-secret",
+                        "useDcr": False,
+                        "dcrUrl": "",
+                    }
+                },
+                follow_redirects=False,
+            )
+
     async def test_delete_application_success(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 

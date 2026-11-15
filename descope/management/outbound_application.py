@@ -245,8 +245,9 @@ class OutboundApplication(OutboundApplicationBase, HTTPBase):
         pkce (bool): Optional PKCE (Proof Key for Code Exchange) support.
         access_type (AccessType): Optional OAuth access type.
         prompt (List[PromptType]): Optional OAuth prompt parameters.
-        use_dcr (bool): Whether to use Dynamic Client Registration.
-        dcr_url (str): The Dynamic Client Registration URL.
+        use_dcr (bool): Whether the app uses Dynamic Client Registration. Defaults to False, so
+        omitting it disables DCR on an existing app.
+        dcr_url (str): The Dynamic Client Registration URL. Registration itself only runs on create.
 
         Return value (dict):
         Return dict in the format
