@@ -23,7 +23,7 @@
 | descope/descope\_client\_async.py                       |      154 |        1 |     99% |       207 |
 | descope/jwt\_common.py                                  |       51 |        4 |     92% | 27-29, 96 |
 | descope/management/\_lists\_base.py                     |       43 |        1 |     98% |        20 |
-| descope/management/\_outbound\_application\_base.py     |       58 |        4 |     93% |92, 96, 98, 100 |
+| descope/management/\_outbound\_application\_base.py     |       60 |        4 |     93% |96, 100, 102, 104 |
 | descope/management/\_sso\_settings\_base.py             |       98 |        1 |     99% |         7 |
 | descope/management/\_third\_party\_application\_base.py |       26 |        4 |     85% |33, 35, 37, 39 |
 | descope/management/\_user\_base.py                      |      200 |       12 |     94% |38, 126-131, 197, 257, 307, 309, 311 |
@@ -32,13 +32,13 @@
 | descope/management/common.py                            |      548 |        1 |     99% |        86 |
 | descope/management/group.py                             |       24 |        2 |     92% |  104, 154 |
 | descope/management/group\_async.py                      |       25 |        2 |     92% |  108, 158 |
-| descope/management/outbound\_application.py             |      117 |        1 |     99% |       613 |
-| descope/management/outbound\_application\_async.py      |      119 |        1 |     99% |       613 |
+| descope/management/outbound\_application.py             |      117 |        1 |     99% |       626 |
+| descope/management/outbound\_application\_async.py      |      119 |        1 |     99% |       626 |
 | descope/management/role.py                              |       47 |        1 |     98% |       321 |
 | descope/management/role\_async.py                       |       47 |        1 |     98% |       323 |
 | descope/management/user.py                              |      327 |        4 |     99% |829, 1203, 1205, 1207 |
 | descope/management/user\_async.py                       |      328 |        4 |     99% |834, 1208, 1210, 1212 |
-|                                               **TOTAL** | **6900** |  **108** | **98%** |           |
+|                                               **TOTAL** | **6902** |  **108** | **98%** |           |
 
 78 files skipped due to complete coverage.
 
