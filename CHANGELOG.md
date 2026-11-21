@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.19.0](https://github.com/descope/python-sdk/compare/descope-2.18.0...descope-2.19.0) (2026-11-21)
+
+
+### Features
+
+* **outbound-app:** add useDcr and dcrUrl fields to OutboundApp ([#1704](https://github.com/descope/python-sdk/issues/1704)) ([72c5cf4](https://github.com/descope/python-sdk/commit/72c5cf43f0b12004e16dde4c61a5a6ab35056dcc))
+
 ## [2.18.0](https://github.com/descope/python-sdk/compare/descope-2.17.1...descope-2.18.0) (2026-11-11)
 
 
