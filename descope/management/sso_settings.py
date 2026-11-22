@@ -240,6 +240,12 @@ class SSOSAMLSettings:
         # signed request because their trusted provider entry holds no signing certificate for Descope.
         # Appended last to preserve positional compatibility for existing callers.
         disable_sign_request: bool = False,
+        # SAML Single Logout (SLO): a logout with sso_logout=True also logs the user out at the IdP.
+        # Off by default. None keeps the stored value.
+        single_logout_enabled: Optional[bool] = None,
+        # The IdP's SingleLogoutService URL (HTTP-Redirect binding). None keeps the stored value,
+        # an empty string clears it (it is then taken from the IdP metadata).
+        idp_single_logout_url: Optional[str] = None,
     ):
         self.idp_url = idp_url
         self.idp_entity_id = idp_entity_id
@@ -255,6 +261,8 @@ class SSOSAMLSettings:
         self.config_fga_tenant_id_resource_prefix = config_fga_tenant_id_resource_prefix
         self.config_fga_tenant_id_resource_suffix = config_fga_tenant_id_resource_suffix
         self.disable_sign_request = disable_sign_request
+        self.single_logout_enabled = single_logout_enabled
+        self.idp_single_logout_url = idp_single_logout_url
 
 
 class SSOSAMLSettingsByMetadata:
@@ -281,6 +289,12 @@ class SSOSAMLSettingsByMetadata:
         # Leave the SAML AuthnRequest Descope sends to the IdP unsigned. Set it only for IdPs that reject a
         # signed request because their trusted provider entry holds no signing certificate for Descope.
         disable_sign_request: bool = False,
+        # SAML Single Logout (SLO): a logout with sso_logout=True also logs the user out at the IdP.
+        # Off by default. None keeps the stored value.
+        single_logout_enabled: Optional[bool] = None,
+        # The IdP's SingleLogoutService URL (HTTP-Redirect binding). None keeps the stored value,
+        # an empty string clears it (it is then taken from the IdP metadata).
+        idp_single_logout_url: Optional[str] = None,
     ):
         self.idp_metadata_url = idp_metadata_url
         self.idp_entity_id = idp_entity_id
@@ -294,6 +308,8 @@ class SSOSAMLSettingsByMetadata:
         self.config_fga_tenant_id_resource_prefix = config_fga_tenant_id_resource_prefix
         self.config_fga_tenant_id_resource_suffix = config_fga_tenant_id_resource_suffix
         self.disable_sign_request = disable_sign_request
+        self.single_logout_enabled = single_logout_enabled
+        self.idp_single_logout_url = idp_single_logout_url
 
 
 class SSOSettings(SSOSettingsBase, HTTPBase):
@@ -313,6 +329,8 @@ class SSOSettings(SSOSettingsBase, HTTPBase):
              {"tenant": {"id": "T2AAAA", "name": "myTenantName", "selfProvisioningDomains": [], "customAttributes": {}, "authType": "saml", "domains": ["lulu", "kuku"]}, "saml": {"idpEntityId": "", "idpSSOUrl": "", "idpCertificate": "", "idpAdditionalCertificates": [], "idpMetadataUrl": "https://dummy.com/metadata", "spEntityId": "", "spACSUrl": "", "spCertificate": "", "attributeMapping": {"name": "name", "email": "email", "username": "", "phoneNumber": "phone", "group": "", "givenName": "", "middleName": "", "familyName": "", "picture": "", "customAttributes": {}}, "groupsMapping": [], "redirectUrl": "", "lastSuccessTestTime": 0}, "oidc": {"name": "", "clientId": "", "clientSecret": "", "redirectUrl": "", "authUrl": "", "tokenUrl": "", "userDataUrl": "", "scope": [], "JWKsUrl": "", "userAttrMapping": {"loginId": "sub", "username": "", "name": "name", "email": "email", "phoneNumber": "phone_number", "verifiedEmail": "email_verified", "verifiedPhone": "phone_number_verified", "picture": "picture", "givenName": "given_name", "middleName": "middle_name", "familyName": "family_name"}, "manageProviderTokens": False, "callbackDomain": "", "prompt": [], "grantType": "authorization_code", "issuer": "", "lastSuccessTestTime": 0}}
 
         The "lastSuccessTestTime" field (epoch seconds, read-only) reports the last successful SSO test login on the configuration; a non-zero value means the configuration was tested successfully.
+
+        The "saml" settings also hold the SAML Single Logout (SLO) settings: "singleLogoutEnabled", "idpSingleLogoutUrl" (the IdP's SingleLogoutService URL), and "spSingleLogoutUrl" (read-only, Descope's single logout URL to configure in the IdP).
 
         Raise:
         AuthException: raised if load configuration operation fails

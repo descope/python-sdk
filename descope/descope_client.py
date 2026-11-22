@@ -218,13 +218,23 @@ class DescopeClient(DescopeClientBase):
         """
         return self._auth.validate_and_refresh_session(session_token, refresh_token, audience)
 
-    def logout(self, refresh_token: str) -> httpx.Response:
+    def logout(
+        self,
+        refresh_token: str,
+        sso_logout: bool = False,
+        redirect_url: str | None = None,
+    ) -> httpx.Response:
         """
         Logout user from current session and revoke the refresh_token. After calling this function,
             you must invalidate or remove any cookies you have created.
 
         Args:
         refresh_token (str): The refresh token
+        sso_logout (bool): Optional, also log the user out at the SSO IdP when the session signed in through
+            a SAML SSO configuration with single logout turned on. The response JSON then holds "ssoLogoutUrl":
+            send the browser there. It is absent when there is nothing to do at the IdP.
+        redirect_url (str): Optional, with sso_logout, where the browser lands after the IdP logout. Must be in
+            the project's approved domains. Empty uses the SSO configuration's redirect URL.
 
         Return value (httpx.Response): returns the response from the Descope server
 
@@ -233,15 +243,26 @@ class DescopeClient(DescopeClientBase):
         """
         self._require_refresh_token(refresh_token)
         uri = EndpointsV1.logout_path
-        return self._auth.http_client.post(uri, body={}, pswd=refresh_token)
+        body = self._compose_logout_body(sso_logout, redirect_url)
+        return self._auth.http_client.post(uri, body=body, pswd=refresh_token)
 
-    def logout_all(self, refresh_token: str) -> httpx.Response:
+    def logout_all(
+        self,
+        refresh_token: str,
+        sso_logout: bool = False,
+        redirect_url: str | None = None,
+    ) -> httpx.Response:
         """
         Logout user from all active sessions and revoke the refresh_token. After calling this function,
             you must invalidate or remove any cookies you have created.
 
         Args:
         refresh_token (str): The refresh token
+        sso_logout (bool): Optional, also log the user out at the SSO IdP when the session signed in through
+            a SAML SSO configuration with single logout turned on. The response JSON then holds "ssoLogoutUrl":
+            send the browser there. It is absent when there is nothing to do at the IdP.
+        redirect_url (str): Optional, with sso_logout, where the browser lands after the IdP logout. Must be in
+            the project's approved domains. Empty uses the SSO configuration's redirect URL.
 
         Return value (httpx.Response): returns the response from the Descope server
 
@@ -250,7 +271,8 @@ class DescopeClient(DescopeClientBase):
         """
         self._require_refresh_token(refresh_token)
         uri = EndpointsV1.logout_all_path
-        return self._auth.http_client.post(uri, body={}, pswd=refresh_token)
+        body = self._compose_logout_body(sso_logout, redirect_url)
+        return self._auth.http_client.post(uri, body=body, pswd=refresh_token)
 
     def me(self, refresh_token: str) -> dict:
         """

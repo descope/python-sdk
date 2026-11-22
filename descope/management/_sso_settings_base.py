@@ -133,6 +133,15 @@ class SSOSettingsBase:
             target["replaceDefaultSSORoles"] = True
 
     @staticmethod
+    def _set_single_logout(target: dict, settings: SSOSAMLSettings | SSOSAMLSettingsByMetadata) -> None:
+        # Optional on the server: an omitted field keeps the stored value, so send each one only when set.
+        # An empty idpSingleLogoutUrl is sent as is, it clears the stored URL.
+        if settings.single_logout_enabled is not None:
+            target["singleLogoutEnabled"] = settings.single_logout_enabled
+        if settings.idp_single_logout_url is not None:
+            target["idpSingleLogoutUrl"] = settings.idp_single_logout_url
+
+    @staticmethod
     def _compose_configure_oidc_settings_body(
         tenant_id: str,
         settings: SSOOIDCSettings,
@@ -290,6 +299,7 @@ class SSOSettingsBase:
             "domains": domains,
         }
         SSOSettingsBase._set_replace_default_sso_roles(body["settings"], settings.default_sso_roles)
+        SSOSettingsBase._set_single_logout(body["settings"], settings)
         return body
 
     @staticmethod
@@ -325,4 +335,5 @@ class SSOSettingsBase:
             "domains": domains,
         }
         SSOSettingsBase._set_replace_default_sso_roles(body["settings"], settings.default_sso_roles)
+        SSOSettingsBase._set_single_logout(body["settings"], settings)
         return body

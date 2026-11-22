@@ -86,6 +86,16 @@ class DescopeClientBase:
             )
 
     @staticmethod
+    def _compose_logout_body(sso_logout: bool, redirect_url: str | None) -> dict:
+        """Body for logout / logout_all. Without the SSO logout options it stays empty, as before."""
+        body: dict = {}
+        if sso_logout:
+            body["ssoLogout"] = True
+        if redirect_url:
+            body["redirectUrl"] = redirect_url
+        return body
+
+    @staticmethod
     def _require_access_key(access_key) -> None:
         """Guard for exchange_access_key."""
         if not access_key:
