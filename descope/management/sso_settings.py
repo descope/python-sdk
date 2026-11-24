@@ -240,6 +240,11 @@ class SSOSAMLSettings:
         # signed request because their trusted provider entry holds no signing certificate for Descope.
         # Appended last to preserve positional compatibility for existing callers.
         disable_sign_request: bool = False,
+        # Audience values a SAML assertion may carry in place of this configuration's SP entity ID, for IdPs that
+        # send a different audience and cannot be changed. Exact match (surrounding whitespace ignored), and an
+        # empty string accepts an empty audience. Up to 20 values of up to 1000 characters each.
+        # None keeps the stored values; a list replaces them, and an empty list clears them.
+        accepted_audiences: Optional[List[str]] = None,
     ):
         self.idp_url = idp_url
         self.idp_entity_id = idp_entity_id
@@ -255,6 +260,7 @@ class SSOSAMLSettings:
         self.config_fga_tenant_id_resource_prefix = config_fga_tenant_id_resource_prefix
         self.config_fga_tenant_id_resource_suffix = config_fga_tenant_id_resource_suffix
         self.disable_sign_request = disable_sign_request
+        self.accepted_audiences = accepted_audiences
 
 
 class SSOSAMLSettingsByMetadata:
@@ -281,6 +287,11 @@ class SSOSAMLSettingsByMetadata:
         # Leave the SAML AuthnRequest Descope sends to the IdP unsigned. Set it only for IdPs that reject a
         # signed request because their trusted provider entry holds no signing certificate for Descope.
         disable_sign_request: bool = False,
+        # Audience values a SAML assertion may carry in place of this configuration's SP entity ID, for IdPs that
+        # send a different audience and cannot be changed. Exact match (surrounding whitespace ignored), and an
+        # empty string accepts an empty audience. Up to 20 values of up to 1000 characters each.
+        # None keeps the stored values; a list replaces them, and an empty list clears them.
+        accepted_audiences: Optional[List[str]] = None,
     ):
         self.idp_metadata_url = idp_metadata_url
         self.idp_entity_id = idp_entity_id
@@ -294,6 +305,7 @@ class SSOSAMLSettingsByMetadata:
         self.config_fga_tenant_id_resource_prefix = config_fga_tenant_id_resource_prefix
         self.config_fga_tenant_id_resource_suffix = config_fga_tenant_id_resource_suffix
         self.disable_sign_request = disable_sign_request
+        self.accepted_audiences = accepted_audiences
 
 
 class SSOSettings(SSOSettingsBase, HTTPBase):
@@ -313,6 +325,8 @@ class SSOSettings(SSOSettingsBase, HTTPBase):
              {"tenant": {"id": "T2AAAA", "name": "myTenantName", "selfProvisioningDomains": [], "customAttributes": {}, "authType": "saml", "domains": ["lulu", "kuku"]}, "saml": {"idpEntityId": "", "idpSSOUrl": "", "idpCertificate": "", "idpAdditionalCertificates": [], "idpMetadataUrl": "https://dummy.com/metadata", "spEntityId": "", "spACSUrl": "", "spCertificate": "", "attributeMapping": {"name": "name", "email": "email", "username": "", "phoneNumber": "phone", "group": "", "givenName": "", "middleName": "", "familyName": "", "picture": "", "customAttributes": {}}, "groupsMapping": [], "redirectUrl": "", "lastSuccessTestTime": 0}, "oidc": {"name": "", "clientId": "", "clientSecret": "", "redirectUrl": "", "authUrl": "", "tokenUrl": "", "userDataUrl": "", "scope": [], "JWKsUrl": "", "userAttrMapping": {"loginId": "sub", "username": "", "name": "name", "email": "email", "phoneNumber": "phone_number", "verifiedEmail": "email_verified", "verifiedPhone": "phone_number_verified", "picture": "picture", "givenName": "given_name", "middleName": "middle_name", "familyName": "family_name"}, "manageProviderTokens": False, "callbackDomain": "", "prompt": [], "grantType": "authorization_code", "issuer": "", "lastSuccessTestTime": 0}}
 
         The "lastSuccessTestTime" field (epoch seconds, read-only) reports the last successful SSO test login on the configuration; a non-zero value means the configuration was tested successfully.
+
+        The "saml" settings also hold "acceptedAudiences": the audience values a SAML assertion may carry in place of the SP entity ID.
 
         Raise:
         AuthException: raised if load configuration operation fails

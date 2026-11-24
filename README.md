@@ -1113,6 +1113,16 @@ settings = SSOSAMLSettings(
     disable_sign_request=True,
 )
 
+# A SAML assertion's audience must match the configuration's SP entity ID. For an IdP that sends a different audience
+# and cannot be changed, list the extra values it may send in accepted_audiences (both settings classes above take it).
+# Values match exactly (surrounding whitespace ignored), and "" accepts an empty audience. Up to 20 values.
+# Omitted (None) keeps the stored values, a list replaces them, and an empty list clears them.
+# load_settings returns them under "saml" as "acceptedAudiences".
+settings = SSOSAMLSettingsByMetadata(
+    idp_metadata_url="https://dummy.com/metadata",
+    accepted_audiences=["https://idp-sends-this-audience.com"],
+)
+
 # You can Configure SSO OIDC settings for a tenant manually.
 settings = SSOOIDCSettings(
     name="myProvider",
