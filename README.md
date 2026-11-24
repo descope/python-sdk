@@ -89,7 +89,7 @@ These sections show how to use the SDK to perform permission and user management
 19. [Manage Management Keys](#manage-management-keys)
 20. [Manage Engines](#manage-engines)
 
-If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
+If you wish to run any of our code samples and play with them, check out our [Code Samples](#code-samples) section.
 
 If you're performing end-to-end testing, check out the [Utils for your end to end (e2e) tests and integration tests](#utils-for-your-end-to-end-e2e-tests-and-integration-tests) section. You will need to use the `DescopeClient` object created under [Setup](#setup-1) guide.
 
