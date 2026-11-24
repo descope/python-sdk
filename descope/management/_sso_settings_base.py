@@ -133,6 +133,14 @@ class SSOSettingsBase:
             target["replaceDefaultSSORoles"] = True
 
     @staticmethod
+    def _set_accepted_audiences(target: dict, accepted_audiences: Optional[List[str]]) -> None:
+        # The server keeps the stored audiences when acceptedAudiences is empty or omitted, so a list (an empty
+        # one included) also sends replaceAcceptedAudiences to replace them. None sends neither field and keeps them.
+        if accepted_audiences is not None:
+            target["acceptedAudiences"] = accepted_audiences
+            target["replaceAcceptedAudiences"] = True
+
+    @staticmethod
     def _set_single_logout(target: dict, settings: SSOSAMLSettings | SSOSAMLSettingsByMetadata) -> None:
         # Optional on the server: an omitted field keeps the stored value, so send each one only when set.
         # An empty idpSingleLogoutUrl is sent as is, it clears the stored URL.
@@ -299,6 +307,7 @@ class SSOSettingsBase:
             "domains": domains,
         }
         SSOSettingsBase._set_replace_default_sso_roles(body["settings"], settings.default_sso_roles)
+        SSOSettingsBase._set_accepted_audiences(body["settings"], settings.accepted_audiences)
         SSOSettingsBase._set_single_logout(body["settings"], settings)
         return body
 
@@ -335,5 +344,6 @@ class SSOSettingsBase:
             "domains": domains,
         }
         SSOSettingsBase._set_replace_default_sso_roles(body["settings"], settings.default_sso_roles)
+        SSOSettingsBase._set_accepted_audiences(body["settings"], settings.accepted_audiences)
         SSOSettingsBase._set_single_logout(body["settings"], settings)
         return body

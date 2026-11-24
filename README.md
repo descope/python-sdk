@@ -89,7 +89,7 @@ These sections show how to use the SDK to perform permission and user management
 19. [Manage Management Keys](#manage-management-keys)
 20. [Manage Engines](#manage-engines)
 
-If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
+If you wish to run any of our code samples and play with them, check out our [Code Samples](#code-samples) section.
 
 If you're performing end-to-end testing, check out the [Utils for your end to end (e2e) tests and integration tests](#utils-for-your-end-to-end-e2e-tests-and-integration-tests) section. You will need to use the `DescopeClient` object created under [Setup](#setup-1) guide.
 
@@ -1123,6 +1123,16 @@ settings = SSOSAMLSettings(
     idp_entity_id="my-idp-entity-id",
     idp_cert="my-idp-certificate",
     disable_sign_request=True,
+)
+
+# A SAML assertion's audience must match the configuration's SP entity ID. For an IdP that sends a different audience
+# and cannot be changed, list the extra values it may send in accepted_audiences (both settings classes above take it).
+# Values match exactly (surrounding whitespace ignored), and "" accepts an empty audience. Up to 20 values.
+# Omitted (None) keeps the stored values, a list replaces them, and an empty list clears them.
+# load_settings returns them under "saml" as "acceptedAudiences".
+settings = SSOSAMLSettingsByMetadata(
+    idp_metadata_url="https://dummy.com/metadata",
+    accepted_audiences=["https://idp-sends-this-audience.com"],
 )
 
 # SAML Single Logout (SLO), off by default, lets a logout with sso_logout=True log the user out at the IdP too
