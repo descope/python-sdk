@@ -182,7 +182,7 @@ jobs:
           DESCOPE_BASE_URI: ${{ secrets.DESCOPE_SANDBOX_BASE_URI }}
       - name: Publish e2e test report
         if: always() && github.actor != 'renovate[bot]'
-        uses: mikepenz/action-junit-report@8a133bfa3ecb0ea9024c1e2ae788b4c25f6cdb9d # v6.6.2
+        uses: mikepenz/action-junit-report@4a26df3e2ae132254ba12a53f65a388d0961e786 # v6.7.0
         with:
           report_paths: e2e-report.xml
           check_name: E2E Test Report
