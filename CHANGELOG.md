@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.19.0](https://github.com/descope/python-sdk/compare/descope-2.18.0...descope-2.19.0) (2026-11-26)
+
+
+### Features
+
+* **mgmt:** add scim_only filter to user search_all ([#1785](https://github.com/descope/python-sdk/issues/1785)) ([f6501c7](https://github.com/descope/python-sdk/commit/f6501c7ccf846a34c474f32b9ee448b53c43fa06))
+* **outbound-app:** add useDcr and dcrUrl fields to OutboundApp ([#1704](https://github.com/descope/python-sdk/issues/1704)) ([72c5cf4](https://github.com/descope/python-sdk/commit/72c5cf43f0b12004e16dde4c61a5a6ab35056dcc))
+* **sso:** accepted audiences per SAML SSO configuration ([#1781](https://github.com/descope/python-sdk/issues/1781)) ([17019e9](https://github.com/descope/python-sdk/commit/17019e92f665c5e575afea29780ddf99391e7758))
+* **sso:** SAML single logout for tenant SSO ([#1778](https://github.com/descope/python-sdk/issues/1778)) ([16865b8](https://github.com/descope/python-sdk/commit/16865b85521c459db528a35b94a2f3a61bf65cbf))
+
+
+### Documentation
+
+* fix README jump link to Code Samples ([#1782](https://github.com/descope/python-sdk/issues/1782)) ([d0928eb](https://github.com/descope/python-sdk/commit/d0928ebd04572d39de0cf97311ef853f60ba5029)), closes [#1780](https://github.com/descope/python-sdk/issues/1780)
+
 ## [2.18.0](https://github.com/descope/python-sdk/compare/descope-2.17.1...descope-2.18.0) (2026-11-11)
 
 
