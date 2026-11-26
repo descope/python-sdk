@@ -751,6 +751,7 @@ class User(UserBase, HTTPBase):
         dependent: Optional[bool] = None,
         lock_reasons: Optional[List[str]] = None,
         temp_lock_reasons: Optional[List[str]] = None,
+        scim_only: bool = False,
     ) -> dict:
         """
         Search all users.
@@ -786,6 +787,7 @@ class User(UserBase, HTTPBase):
         temp_lock_reasons (List[str]): Optional list of lock reasons. Only users currently temporarily locked with one of these
             reasons are returned. Allowed values: "password", "recovery_codes", "security_questions" (TOTP has no temporary lock).
             A user is temporarily locked while its tempLockExpiration (unix seconds, 0 when none) is greater than now.
+        scim_only (bool): Optional, return only users that were provisioned or updated by SCIM.
 
         Return value (dict):
         Return dict in the format
@@ -855,6 +857,8 @@ class User(UserBase, HTTPBase):
             body["lockReasons"] = lock_reasons
         if temp_lock_reasons is not None:
             body["tempLockReasons"] = temp_lock_reasons
+        if scim_only:
+            body["scimOnly"] = scim_only
 
         response = self._http.post(
             MgmtV1.users_search_path,
