@@ -1148,6 +1148,64 @@ class TestSSOSettings:
             keys = ("acceptedAudiences", "replaceAcceptedAudiences")
             assert {k: settings[k] for k in keys if k in settings} == expected
 
+    # The single logout fields are optional on the server (an omitted one keeps the stored value), so each is sent
+    # only when set. False and an empty URL are sent as is: they turn single logout off and clear the IdP URL.
+    @pytest.mark.parametrize(
+        "single_logout_enabled, idp_single_logout_url, expected",
+        [
+            (None, None, {}),
+            (True, "https://idp.com/slo", {"singleLogoutEnabled": True, "idpSingleLogoutUrl": "https://idp.com/slo"}),
+            (False, "", {"singleLogoutEnabled": False, "idpSingleLogoutUrl": ""}),
+        ],
+    )
+    async def test_configure_saml_settings_single_logout(
+        self, client_factory, single_logout_enabled, idp_single_logout_url, expected
+    ):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            await client.invoke(
+                client.mgmt.sso.configure_saml_settings(
+                    "tenant-id",
+                    SSOSAMLSettings(
+                        idp_url="http://dummy.com",
+                        idp_entity_id="ent1234",
+                        idp_cert="cert",
+                        single_logout_enabled=single_logout_enabled,
+                        idp_single_logout_url=idp_single_logout_url,
+                    ),
+                )
+            )
+            settings = mock_post.call_args.kwargs["json"]["settings"]
+            assert {k: settings[k] for k in ("singleLogoutEnabled", "idpSingleLogoutUrl") if k in settings} == expected
+
+    @pytest.mark.parametrize(
+        "single_logout_enabled, idp_single_logout_url, expected",
+        [
+            (None, None, {}),
+            (True, "https://idp.com/slo", {"singleLogoutEnabled": True, "idpSingleLogoutUrl": "https://idp.com/slo"}),
+            (False, "", {"singleLogoutEnabled": False, "idpSingleLogoutUrl": ""}),
+        ],
+    )
+    async def test_configure_saml_settings_by_metadata_single_logout(
+        self, client_factory, single_logout_enabled, idp_single_logout_url, expected
+    ):
+        client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
+
+        with client.mock_mgmt_post(make_response()) as mock_post:
+            await client.invoke(
+                client.mgmt.sso.configure_saml_settings_by_metadata(
+                    "tenant-id",
+                    SSOSAMLSettingsByMetadata(
+                        idp_metadata_url="http://dummy.com/metadata",
+                        single_logout_enabled=single_logout_enabled,
+                        idp_single_logout_url=idp_single_logout_url,
+                    ),
+                )
+            )
+            settings = mock_post.call_args.kwargs["json"]["settings"]
+            assert {k: settings[k] for k in ("singleLogoutEnabled", "idpSingleLogoutUrl") if k in settings} == expected
+
     async def test_configure_xaa_settings_never_sends_replace_default_sso_roles(self, client_factory):
         client = client_factory.make(PROJECT_ID, PUBLIC_KEY_DICT, False, "key")
 

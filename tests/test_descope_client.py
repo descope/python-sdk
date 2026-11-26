@@ -153,6 +153,43 @@ class TestDescopeClient:
         with descope_client.mock_post(make_response(status=200)):
             assert await descope_client.invoke(descope_client.logout_all("")) is not None
 
+    @pytest.mark.parametrize("method, path", [("logout", "logout_path"), ("logout_all", "logout_all_path")])
+    async def test_logout_sso_logout(self, descope_client, method, path):
+        logout = getattr(descope_client, method)
+        url = f"{common.DEFAULT_BASE_URL}{getattr(EndpointsV1, path)}"
+        headers = {
+            **common.default_headers,
+            "Authorization": f"Bearer {PROJECT_ID}:rt",
+            "x-descope-project-id": PROJECT_ID,
+        }
+
+        # Without the SSO logout options the body stays empty, as before
+        with descope_client.mock_post(make_response()) as mock_post:
+            await descope_client.invoke(logout("rt"))
+        assert_http_called(
+            mock_post, descope_client.mode, url, headers=headers, json={}, follow_redirects=False, params=None
+        )
+
+        # With them, the response carries the URL to send the browser to
+        data = {"ssoLogoutUrl": "https://idp.com/slo?SAMLRequest=abc"}
+        with descope_client.mock_post(make_response(data)) as mock_post:
+            res = await descope_client.invoke(logout("rt", sso_logout=True, redirect_url="https://app.com/bye"))
+        assert res.json()["ssoLogoutUrl"] == "https://idp.com/slo?SAMLRequest=abc"
+        assert_http_called(
+            mock_post,
+            descope_client.mode,
+            url,
+            headers=headers,
+            json={"ssoLogout": True, "redirectUrl": "https://app.com/bye"},
+            follow_redirects=False,
+            params=None,
+        )
+
+        # redirect_url is optional: the SSO configuration's redirect URL is used then
+        with descope_client.mock_post(make_response()) as mock_post:
+            await descope_client.invoke(logout("rt", sso_logout=True))
+        assert mock_post.call_args.kwargs["json"] == {"ssoLogout": True}
+
     async def test_me(self, descope_client):
         with pytest.raises(AuthException):
             await descope_client.invoke(descope_client.me(None))

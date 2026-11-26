@@ -245,6 +245,12 @@ class SSOSAMLSettings:
         # empty string accepts an empty audience. Up to 20 values of up to 1000 characters each.
         # None keeps the stored values; a list replaces them, and an empty list clears them.
         accepted_audiences: Optional[List[str]] = None,
+        # SAML Single Logout (SLO): a logout with sso_logout=True also logs the user out at the IdP.
+        # Off by default. None keeps the stored value.
+        single_logout_enabled: Optional[bool] = None,
+        # The IdP's SingleLogoutService URL (HTTP-Redirect binding). None keeps the stored value,
+        # an empty string clears it (it is then taken from the IdP metadata).
+        idp_single_logout_url: Optional[str] = None,
     ):
         self.idp_url = idp_url
         self.idp_entity_id = idp_entity_id
@@ -261,6 +267,8 @@ class SSOSAMLSettings:
         self.config_fga_tenant_id_resource_suffix = config_fga_tenant_id_resource_suffix
         self.disable_sign_request = disable_sign_request
         self.accepted_audiences = accepted_audiences
+        self.single_logout_enabled = single_logout_enabled
+        self.idp_single_logout_url = idp_single_logout_url
 
 
 class SSOSAMLSettingsByMetadata:
@@ -292,6 +300,12 @@ class SSOSAMLSettingsByMetadata:
         # empty string accepts an empty audience. Up to 20 values of up to 1000 characters each.
         # None keeps the stored values; a list replaces them, and an empty list clears them.
         accepted_audiences: Optional[List[str]] = None,
+        # SAML Single Logout (SLO): a logout with sso_logout=True also logs the user out at the IdP.
+        # Off by default. None keeps the stored value.
+        single_logout_enabled: Optional[bool] = None,
+        # The IdP's SingleLogoutService URL (HTTP-Redirect binding). None keeps the stored value,
+        # an empty string clears it (it is then taken from the IdP metadata).
+        idp_single_logout_url: Optional[str] = None,
     ):
         self.idp_metadata_url = idp_metadata_url
         self.idp_entity_id = idp_entity_id
@@ -306,6 +320,8 @@ class SSOSAMLSettingsByMetadata:
         self.config_fga_tenant_id_resource_suffix = config_fga_tenant_id_resource_suffix
         self.disable_sign_request = disable_sign_request
         self.accepted_audiences = accepted_audiences
+        self.single_logout_enabled = single_logout_enabled
+        self.idp_single_logout_url = idp_single_logout_url
 
 
 class SSOSettings(SSOSettingsBase, HTTPBase):
@@ -327,6 +343,8 @@ class SSOSettings(SSOSettingsBase, HTTPBase):
         The "lastSuccessTestTime" field (epoch seconds, read-only) reports the last successful SSO test login on the configuration; a non-zero value means the configuration was tested successfully.
 
         The "saml" settings also hold "acceptedAudiences": the audience values a SAML assertion may carry in place of the SP entity ID.
+
+        The "saml" settings also hold the SAML Single Logout (SLO) settings: "singleLogoutEnabled", "idpSingleLogoutUrl" (the IdP's SingleLogoutService URL), and "spSingleLogoutUrl" (read-only, Descope's single logout URL to configure in the IdP).
 
         Raise:
         AuthException: raised if load configuration operation fails

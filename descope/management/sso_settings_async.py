@@ -35,6 +35,8 @@ class SSOSettingsAsync(SSOSettingsBase, AsyncHTTPBase):
 
         The "saml" settings also hold "acceptedAudiences": the audience values a SAML assertion may carry in place of the SP entity ID.
 
+        The "saml" settings also hold the SAML Single Logout (SLO) settings: "singleLogoutEnabled", "idpSingleLogoutUrl" (the IdP's SingleLogoutService URL), and "spSingleLogoutUrl" (read-only, Descope's single logout URL to configure in the IdP).
+
         Raise:
         AuthException: raised if load configuration operation fails
         """

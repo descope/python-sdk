@@ -269,15 +269,33 @@ class DescopeClientAsync(DescopeClientBase):
             self._ensure_present(refresh_token, "Refresh token is missing", ERROR_TYPE_INVALID_TOKEN)
             return await self.refresh_session(refresh_token, audience)
 
-    async def logout(self, refresh_token: str):
-        """Logout the user from the current session and revoke the refresh token."""
-        self._require_refresh_token(refresh_token)
-        return await self._auth_http.post(EndpointsV1.logout_path, body={}, pswd=refresh_token)
+    async def logout(
+        self,
+        refresh_token: str,
+        sso_logout: bool = False,
+        redirect_url: str | None = None,
+    ):
+        """Logout the user from the current session and revoke the refresh token.
 
-    async def logout_all(self, refresh_token: str):
-        """Logout the user from all active sessions and revoke the refresh token."""
+        With sso_logout, see DescopeClient.logout: the response JSON may hold "ssoLogoutUrl".
+        """
         self._require_refresh_token(refresh_token)
-        return await self._auth_http.post(EndpointsV1.logout_all_path, body={}, pswd=refresh_token)
+        body = self._compose_logout_body(sso_logout, redirect_url)
+        return await self._auth_http.post(EndpointsV1.logout_path, body=body, pswd=refresh_token)
+
+    async def logout_all(
+        self,
+        refresh_token: str,
+        sso_logout: bool = False,
+        redirect_url: str | None = None,
+    ):
+        """Logout the user from all active sessions and revoke the refresh token.
+
+        With sso_logout, see DescopeClient.logout_all: the response JSON may hold "ssoLogoutUrl".
+        """
+        self._require_refresh_token(refresh_token)
+        body = self._compose_logout_body(sso_logout, redirect_url)
+        return await self._auth_http.post(EndpointsV1.logout_all_path, body=body, pswd=refresh_token)
 
     async def me(self, refresh_token: str) -> dict:
         """Retrieve user details for the refresh token."""

@@ -523,6 +523,18 @@ invalidate all user's refresh tokens. After calling this function, you must inva
 descope_client.logout_all(refresh_token)
 ```
 
+If the user signed in through a tenant's SAML SSO configuration with single logout turned on, pass `sso_logout=True`
+(to `logout` or `logout_all`) to log them out at the identity provider (IdP) too. The response then holds `ssoLogoutUrl`:
+send the browser there. The IdP logs the user out and the browser comes back to `redirect_url`, which must be in the
+project's approved domains (omit it to use the SSO configuration's redirect URL). `ssoLogoutUrl` is absent when there is
+nothing to do at the IdP. The Descope session ends either way.
+
+```python
+res = descope_client.logout(refresh_token, sso_logout=True, redirect_url="https://your.domain.com/signed-out")
+sso_logout_url = res.json().get("ssoLogoutUrl")
+# Redirect the browser to sso_logout_url when set, or straight to your signed-out page otherwise
+```
+
 ### History
 
 You can get the current session user history.
@@ -1121,6 +1133,15 @@ settings = SSOSAMLSettings(
 settings = SSOSAMLSettingsByMetadata(
     idp_metadata_url="https://dummy.com/metadata",
     accepted_audiences=["https://idp-sends-this-audience.com"],
+)
+
+# SAML Single Logout (SLO), off by default, lets a logout with sso_logout=True log the user out at the IdP too
+# (see Logging Out). Both settings classes above take it. Omitted (None) keeps the stored value.
+# load_settings returns it under "saml", along with "spSingleLogoutUrl": Descope's single logout URL to set in the IdP.
+settings = SSOSAMLSettingsByMetadata(
+    idp_metadata_url="https://dummy.com/metadata",
+    single_logout_enabled=True,
+    idp_single_logout_url="https://dummy.com/slo",  # Optional, the IdP's SingleLogoutService URL. Empty string: from the IdP metadata
 )
 
 # You can Configure SSO OIDC settings for a tenant manually.
