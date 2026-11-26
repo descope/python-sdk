@@ -1279,6 +1279,32 @@ class TestUser:
                 follow_redirects=False,
             )
 
+        # Test success flow with scim_only filter
+        with client.mock_mgmt_post(make_response({"users": [{"id": "u1"}]})) as mock_post:
+            resp = await client.invoke(client.mgmt.user.search_all(scim_only=True))
+            assert resp["users"][0]["id"] == "u1"
+            assert_http_called(
+                mock_post,
+                client.mode,
+                f"{DEFAULT_BASE_URL}{MgmtV1.users_search_path}",
+                headers={
+                    **default_headers,
+                    "Authorization": f"Bearer {PROJECT_ID}:key",
+                    "x-descope-project-id": PROJECT_ID,
+                },
+                params=None,
+                json={
+                    "tenantIds": [],
+                    "roleNames": [],
+                    "limit": 0,
+                    "page": 0,
+                    "testUsersOnly": False,
+                    "withTestUser": False,
+                    "scimOnly": True,
+                },
+                follow_redirects=False,
+            )
+
         # Test success flow with text and sort
         with client.mock_mgmt_post(make_response({"users": [{"id": "u1"}, {"id": "u2"}]})) as mock_post:
             sort = [Sort(field="kuku", desc=True), Sort(field="bubu")]
