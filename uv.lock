@@ -627,7 +627,7 @@ wheels = [
 
 [[package]]
 name = "descope"
-version = "2.18.0"
+version = "2.19.0"
 source = { editable = "." }
 default-groups = "all"
 dependencies = [
